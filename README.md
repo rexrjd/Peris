@@ -4,8 +4,8 @@ Browser strategy game prototype built with React, TypeScript, Vite, Phaser and S
 
 ## What this version adds
 
-- Google authentication through Supabase
-- One persistent player record per Google account
+- anonymous name-only authentication through Supabase
+- One persistent player record per anonymous name-only account
 - Shared multiplayer map
 - Realtime player movement
 - Blue marker = you, red marker = another player
@@ -21,15 +21,15 @@ Open Supabase > SQL Editor, create a new query, paste everything from:
 
 Run it once.
 
-### 2. Google login
+### 2. anonymous name-only login
 
-Open Supabase > Authentication > Providers > Google and enable it.
+Open Supabase > Authentication > Providers > anonymous name-only and enable it.
 
-In Google Cloud create an OAuth Web application and use the callback URL shown by Supabase. It will look like:
+In anonymous name-only Cloud create an OAuth Web application and use the callback URL shown by Supabase. It will look like:
 
 `https://YOUR_PROJECT.supabase.co/auth/v1/callback`
 
-Paste the Google Client ID and Client Secret back into Supabase.
+Paste the anonymous name-only Client ID and Client Secret back into Supabase.
 
 ### 3. Redirect URLs
 

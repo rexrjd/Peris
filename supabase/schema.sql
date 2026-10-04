@@ -1,4 +1,5 @@
--- Run this entire file once in Supabase > SQL Editor > New query.
+-- PERIS anonymous-name multiplayer schema
+-- Run this whole file once in Supabase > SQL Editor > New query.
 
 create table if not exists public.players (
   id uuid primary key references auth.users(id) on delete cascade,
@@ -9,6 +10,10 @@ create table if not exists public.players (
   y integer not null default 350 check (y >= 0 and y <= 700),
   updated_at timestamptz not null default now()
 );
+
+-- Player names are unique regardless of capitalization.
+create unique index if not exists players_display_name_lower_key
+on public.players (lower(display_name));
 
 alter table public.players enable row level security;
 
@@ -31,7 +36,7 @@ to authenticated
 using (auth.uid() = id)
 with check (auth.uid() = id);
 
--- Add the table to Supabase Realtime. The DO block avoids an error if it is already added.
+-- Add players to Supabase Realtime if it is not already present.
 do $$
 begin
   alter publication supabase_realtime add table public.players;

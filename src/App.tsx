@@ -5,15 +5,6 @@ import { GameCanvas } from './game/GameCanvas'
 import { supabase } from './lib/supabase'
 import type { Player } from './types/game'
 
-function startingPosition(seed: string) {
-  let hash = 0
-  for (let i = 0; i < seed.length; i += 1) hash = (hash * 31 + seed.charCodeAt(i)) >>> 0
-  return {
-    x: 100 + (hash % 900),
-    y: 100 + ((hash >>> 8) % 500),
-  }
-}
-
 export default function App() {
   const [session, setSession] = useState<Session | null>(null)
   const [authLoading, setAuthLoading] = useState(true)
@@ -55,55 +46,7 @@ export default function App() {
       return
     }
 
-    let cancelled = false
-
-    const initialize = async () => {
-      const user = session.user
-      const displayName =
-        user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || 'Player'
-      const avatarUrl = user.user_metadata?.avatar_url ?? null
-
-      const { data: existing, error: selectError } = await supabase
-        .from('players')
-        .select('id')
-        .eq('id', user.id)
-        .maybeSingle()
-
-      if (selectError) {
-        if (!cancelled) setGameError(selectError.message)
-        return
-      }
-
-      if (!existing) {
-        const position = startingPosition(user.id)
-        const { error: insertError } = await supabase.from('players').insert({
-          id: user.id,
-          email: user.email ?? null,
-          display_name: displayName,
-          avatar_url: avatarUrl,
-          x: position.x,
-          y: position.y,
-        })
-
-        if (insertError) {
-          if (!cancelled) setGameError(insertError.message)
-          return
-        }
-      } else {
-        await supabase
-          .from('players')
-          .update({
-            email: user.email ?? null,
-            display_name: displayName,
-            avatar_url: avatarUrl,
-          })
-          .eq('id', user.id)
-      }
-
-      if (!cancelled) await loadPlayers()
-    }
-
-    void initialize()
+    void loadPlayers()
 
     const channel = supabase
       .channel('peris-players')
@@ -115,7 +58,6 @@ export default function App() {
       .subscribe()
 
     return () => {
-      cancelled = true
       void supabase.removeChannel(channel)
     }
   }, [session, loadPlayers])
@@ -159,16 +101,10 @@ export default function App() {
         <div className="topbar-right">
           <div className="online-pill">{players.length} player{players.length === 1 ? '' : 's'} on map</div>
           <div className="profile-block">
-            {session.user.user_metadata?.avatar_url && (
-              <img src={session.user.user_metadata.avatar_url} alt="" className="avatar" />
-            )}
             <div>
-              <strong>{currentPlayer?.display_name ?? session.user.email}</strong>
-              <small>{session.user.email}</small>
+              <strong>{currentPlayer?.display_name ?? 'Player'}</strong>
+              <small>Anonymous prototype account</small>
             </div>
-            <button className="signout-button" onClick={() => void supabase.auth.signOut()}>
-              Sign out
-            </button>
           </div>
         </div>
       </header>
@@ -200,13 +136,13 @@ export default function App() {
 
         <aside className="panel">
           <h2>Shared world</h2>
-          <p className="hint">Blue is you. Red markers are other signed-in players.</p>
+          <p className="hint">Blue is you. Red markers are other players.</p>
           <dl>
             <div><dt>Players</dt><dd>{players.length}</dd></div>
             <div><dt>Your X</dt><dd>{currentPlayer?.x ?? '—'}</dd></div>
             <div><dt>Your Y</dt><dd>{currentPlayer?.y ?? '—'}</dd></div>
           </dl>
-          <p className="hint">Open Peris with a second Google account to test multiplayer.</p>
+          <p className="hint">Open Peris in another browser or on another device and choose a second name to test multiplayer.</p>
         </aside>
       </section>
     </main>

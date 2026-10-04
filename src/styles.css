@@ -142,3 +142,37 @@ h2 { font-size: 18px; color: #d7c68d; }
   .profile-block { align-items: flex-start; flex-wrap: wrap; }
   .topbar-right { justify-content: flex-start; }
 }
+
+.name-form {
+  display: grid;
+  gap: 10px;
+  margin-top: 20px;
+  text-align: left;
+}
+
+.name-form label {
+  color: #d7c68d;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.name-form input {
+  width: 100%;
+  padding: 13px 14px;
+  border: 1px solid #545e4c;
+  background: #0f130e;
+  color: #f3efe4;
+  outline: none;
+  font: inherit;
+}
+
+.name-form input:focus {
+  border-color: #c9a85d;
+}
+
+.login-note {
+  margin: 16px 0 0;
+  color: #7f8879;
+  font-size: 12px;
+  line-height: 1.45;
+}
