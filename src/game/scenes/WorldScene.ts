@@ -1,10 +1,17 @@
 import * as Phaser from 'phaser'
+import type { Player } from '../../types/game'
+
+type MoveHandler = (x: number, y: number) => void
 
 export class WorldScene extends Phaser.Scene {
-  private army?: Phaser.GameObjects.Container
+  private playerMarkers = new Map<string, Phaser.GameObjects.Container>()
+  private currentPlayerId = ''
+  private pendingPlayers: Player[] = []
+  private onMove: MoveHandler
 
-  constructor() {
+  constructor(onMove: MoveHandler) {
     super('world')
+    this.onMove = onMove
   }
 
   create() {
@@ -17,25 +24,15 @@ export class WorldScene extends Phaser.Scene {
 
     this.drawGrid(width, height)
     this.drawTerrain()
-    this.drawSettlement(250, 390, 'Greywatch', 0xd9c98f)
-    this.drawSettlement(820, 260, 'Red Keep', 0xc87561)
-
-    this.army = this.createArmy(355, 345)
 
     this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
-      if (!this.army) return
-
-      this.tweens.add({
-        targets: this.army,
-        x: pointer.worldX,
-        y: pointer.worldY,
-        duration: 700,
-        ease: 'Sine.easeInOut',
-      })
+      const x = Phaser.Math.Clamp(Math.round(pointer.worldX), 30, width - 30)
+      const y = Phaser.Math.Clamp(Math.round(pointer.worldY), 30, height - 30)
+      this.onMove(x, y)
     })
 
     this.add
-      .text(22, 20, 'Click the map to move your army', {
+      .text(22, 20, 'Click the map to move your player', {
         fontFamily: 'system-ui, sans-serif',
         fontSize: '18px',
         color: '#f0ead8',
@@ -43,19 +40,71 @@ export class WorldScene extends Phaser.Scene {
         padding: { x: 12, y: 8 },
       })
       .setDepth(20)
+
+    this.renderPlayers()
+  }
+
+  setPlayers(players: Player[], currentPlayerId: string) {
+    this.pendingPlayers = players
+    this.currentPlayerId = currentPlayerId
+    if (this.sys.isActive()) this.renderPlayers()
+  }
+
+  private renderPlayers() {
+    const alive = new Set(this.pendingPlayers.map((player) => player.id))
+
+    for (const [id, marker] of this.playerMarkers) {
+      if (!alive.has(id)) {
+        marker.destroy(true)
+        this.playerMarkers.delete(id)
+      }
+    }
+
+    for (const player of this.pendingPlayers) {
+      let marker = this.playerMarkers.get(player.id)
+      if (!marker) {
+        marker = this.createPlayerMarker(player)
+        this.playerMarkers.set(player.id, marker)
+      }
+
+      this.tweens.killTweensOf(marker)
+      this.tweens.add({
+        targets: marker,
+        x: player.x,
+        y: player.y,
+        duration: 350,
+        ease: 'Sine.easeOut',
+      })
+    }
+  }
+
+  private createPlayerMarker(player: Player) {
+    const mine = player.id === this.currentPlayerId
+    const container = this.add.container(player.x, player.y)
+    const shadow = this.add.circle(4, 5, 22, 0x000000, 0.3)
+    const ring = this.add.circle(0, 0, 20, mine ? 0x4f78bd : 0xb95d53)
+    const center = this.add.circle(0, 0, 8, mine ? 0xe4ecff : 0xffe5df)
+    const label = this.add
+      .text(0, -36, mine ? `${player.display_name} (you)` : player.display_name, {
+        fontFamily: 'system-ui, sans-serif',
+        fontSize: '15px',
+        color: '#ffffff',
+        backgroundColor: '#11170fcf',
+        padding: { x: 6, y: 3 },
+      })
+      .setOrigin(0.5)
+
+    container.add([shadow, ring, center, label])
+    container.setDepth(mine ? 12 : 10)
+    return container
   }
 
   private drawGrid(width: number, height: number) {
     const grid = this.add.graphics()
     grid.lineStyle(1, 0x8fa184, 0.12)
 
-    for (let x = 0; x <= width; x += 50) {
-      grid.lineBetween(x, 0, x, height)
-    }
-
-    for (let y = 0; y <= height; y += 50) {
-      grid.lineBetween(0, y, width, y)
-    }
+    for (let x = 0; x <= width; x += 50) grid.lineBetween(x, 0, x, height)
+    for (let y = 0; y <= height; y += 50) grid.lineBetween(0, y, width, y)
   }
 
   private drawTerrain() {
@@ -80,40 +129,5 @@ export class WorldScene extends Phaser.Scene {
     terrain.lineTo(720, 535)
     terrain.lineTo(1100, 470)
     terrain.strokePath()
-  }
-
-  private drawSettlement(x: number, y: number, name: string, color: number) {
-    const marker = this.add.container(x, y)
-    const ring = this.add.circle(0, 0, 34, 0x0f140e, 0.72)
-    const keep = this.add.rectangle(0, 0, 34, 34, color)
-    const label = this.add
-      .text(0, 48, name, {
-        fontFamily: 'system-ui, sans-serif',
-        fontSize: '17px',
-        color: '#fff6df',
-        backgroundColor: '#11170fcf',
-        padding: { x: 8, y: 5 },
-      })
-      .setOrigin(0.5)
-
-    marker.add([ring, keep, label])
-  }
-
-  private createArmy(x: number, y: number) {
-    const army = this.add.container(x, y)
-    const shadow = this.add.circle(4, 5, 19, 0x000000, 0.3)
-    const marker = this.add.circle(0, 0, 17, 0x4f78bd)
-    const center = this.add.circle(0, 0, 7, 0xe4ecff)
-    const label = this.add
-      .text(0, -31, '1st Company', {
-        fontFamily: 'system-ui, sans-serif',
-        fontSize: '15px',
-        color: '#ffffff',
-      })
-      .setOrigin(0.5)
-
-    army.add([shadow, marker, center, label])
-    army.setDepth(10)
-    return army
   }
 }

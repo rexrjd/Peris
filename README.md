@@ -1,6 +1,42 @@
 # Peris
 
-Browser strategy game prototype built with React, TypeScript, Vite and Phaser.
+Browser strategy game prototype built with React, TypeScript, Vite, Phaser and Supabase.
+
+## What this version adds
+
+- Google authentication through Supabase
+- One persistent player record per Google account
+- Shared multiplayer map
+- Realtime player movement
+- Blue marker = you, red marker = another player
+- Click anywhere on the map to move
+
+## Required Supabase setup
+
+### 1. Database
+
+Open Supabase > SQL Editor, create a new query, paste everything from:
+
+`supabase/schema.sql`
+
+Run it once.
+
+### 2. Google login
+
+Open Supabase > Authentication > Providers > Google and enable it.
+
+In Google Cloud create an OAuth Web application and use the callback URL shown by Supabase. It will look like:
+
+`https://YOUR_PROJECT.supabase.co/auth/v1/callback`
+
+Paste the Google Client ID and Client Secret back into Supabase.
+
+### 3. Redirect URLs
+
+In Supabase > Authentication > URL Configuration set the production Site URL to your Vercel URL and allow both:
+
+- `http://localhost:5173/**`
+- your Vercel production URL followed by `/**`
 
 ## Local development
 
@@ -9,49 +45,8 @@ npm install
 npm run dev
 ```
 
-Then open the local URL shown by Vite.
+## Deploy
 
-## Production build
+Push the files to GitHub. Vercel will redeploy automatically.
 
-```bash
-npm run build
-```
-
-The built site is written to `dist/`.
-
-## Deploy to Vercel
-
-### Recommended: GitHub integration
-1. Push this project to the `rexrjd/Peris` GitHub repository.
-2. In Vercel, choose **Add New > Project**.
-3. Import the GitHub repository.
-4. Vercel should detect **Vite** automatically.
-5. Build command: `npm run build`
-6. Output directory: `dist`
-7. Deploy.
-
-### ZIP/manual route
-You can also unpack this ZIP locally, push the files to GitHub, and then import the repository into Vercel.
-
-## Current prototype
-
-- React shell/UI
-- Phaser 4 game canvas
-- Placeholder strategic map
-- Two settlements
-- One movable army marker
-- Responsive layout
-
-Click anywhere on the map to move the blue army marker.
-
-## Next milestones
-
-1. Real tile/world data
-2. Settlement selection
-3. Resource state
-4. Unit definitions
-5. Army movement orders
-6. Supabase authentication + PostgreSQL
-7. Authoritative backend logic
-
-Do not put secret API keys directly in source files. Use `.env` locally and Vercel Environment Variables for deployment.
+The current Supabase publishable URL/key are included as temporary client-side fallbacks in `src/lib/supabase.ts`. They can later be replaced with Vercel environment variables named `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`.

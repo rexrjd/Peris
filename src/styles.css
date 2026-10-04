@@ -86,3 +86,59 @@ h2 { font-size: 18px; color: #d7c68d; }
   .panel { display: none; }
   .topbar { align-items: flex-start; flex-direction: column; }
 }
+
+.login-page,
+.loading-page {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: radial-gradient(circle at top, #20281d 0%, #0c0f0b 55%);
+}
+
+.login-card {
+  width: min(460px, 100%);
+  padding: 38px;
+  border: 1px solid #30372c;
+  background: #131712f2;
+  text-align: center;
+}
+
+.login-card h1 { margin: 10px 0 12px; }
+.login-copy { color: #aeb5a8; line-height: 1.55; }
+.google-button,
+.signout-button {
+  border: 1px solid #545e4c;
+  background: #f3efe4;
+  color: #10140f;
+  cursor: pointer;
+  font-weight: 700;
+}
+.google-button { width: 100%; padding: 13px 18px; margin-top: 12px; }
+.google-button:disabled { opacity: 0.65; cursor: wait; }
+.error-message { margin-top: 14px; color: #ff9b91; }
+
+.topbar-right { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: flex-end; }
+.online-pill { border: 1px solid #424a3b; background: #1b2019; padding: 8px 12px; font-size: 13px; }
+.profile-block { display: flex; align-items: center; gap: 10px; }
+.profile-block small { display: block; margin-top: 2px; color: #9ca493; }
+.avatar { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; }
+.signout-button { padding: 8px 10px; }
+.setup-warning {
+  max-width: 1600px;
+  margin: 0 auto 14px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 12px 16px;
+  border: 1px solid #8f6234;
+  background: #2a2117;
+  color: #f0d4ac;
+  font-size: 13px;
+}
+.setup-warning code { color: #fff1d8; }
+
+@media (max-width: 700px) {
+  .profile-block { align-items: flex-start; flex-wrap: wrap; }
+  .topbar-right { justify-content: flex-start; }
+}
