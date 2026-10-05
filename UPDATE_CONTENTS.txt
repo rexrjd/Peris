@@ -1,0 +1,59 @@
+PERIS v6 — UPDATE CONTENTS
+
+Extract into the existing Peris repository root and replace files.
+Run supabase/UPGRADE_V5_TO_V6.sql in Supabase before using multiplayer.
+The upgrade preserves the existing v5 world and accounts. No reset is required.
+See INSTALL_FIRST.txt for the GitHub Desktop / Vercel steps.
+
+This patch contains these new or changed files relative to the supplied v5 archive:
+
+.env.example
+.gitignore
+ARTWORK.md
+INSTALL_FIRST.txt
+README-WORLD-V3.txt
+README.md
+UPDATE_CONTENTS.txt
+index.html
+package-lock.json
+package.json
+public/art/legion-portraits.png
+public/art/peris-dawn.png
+public/favicon.svg
+scripts/standalone.mjs
+src/App.tsx
+src/components/ArmyView.tsx
+src/components/BattleView.tsx
+src/components/Chronicle.tsx
+src/components/Icons.tsx
+src/components/Login.tsx
+src/components/SettlementView.tsx
+src/components/Shared.tsx
+src/game/BattleCanvas.tsx
+src/game/GameCanvas.tsx
+src/game/graphics.ts
+src/game/renderer.ts
+src/game/rules.ts
+src/game/scenes/BattleScene.ts
+src/game/scenes/WorldScene.ts
+src/game/simulation.ts
+src/lib/audio.ts
+src/lib/local.ts
+src/lib/online.ts
+src/lib/supabase.ts
+src/styles.css
+src/types/game.ts
+src/vite-env.d.ts
+supabase/FRESH_INSTALL_V6.sql
+supabase/RESET_AND_CREATE_V4.sql
+supabase/RESET_AND_CREATE_V5.sql
+supabase/UPGRADE_V4_TO_V5_BATTLES.sql
+supabase/UPGRADE_V5_TO_V6.sql
+supabase/schema.sql
+supabase/upgrade-world-v3.sql
+tests/database.test.mjs
+tests/fixtures/v5.sql
+tests/game.test.ts
+
+No source file deletion is needed. Retired reset scripts and legacy scene modules
+are replaced with harmless notices / compatibility modules.

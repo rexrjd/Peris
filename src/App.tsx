@@ -1,554 +1,82 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import type { Session } from '@supabase/supabase-js'
-import { BattleView } from './components/BattleView'
+import { useEffect, useMemo, useState, useSyncExternalStore } from 'react'
 import { Login } from './components/Login'
+import { Crest, Icon } from './components/Icons'
+import { Cost, Modal } from './components/Shared'
+import { SettlementView } from './components/SettlementView'
+import { ArmyView } from './components/ArmyView'
+import { BattleView } from './components/BattleView'
+import { Chronicle, ResultBody } from './components/Chronicle'
 import { GameCanvas } from './game/GameCanvas'
-import { armyPosition } from './game/scenes/WorldScene'
-import { supabase } from './lib/supabase'
-import type {
-  Army,
-  Battle,
-  BattleFormation,
-  Building,
-  BuildingType,
-  Player,
-  Settlement,
-} from './types/game'
+import { armyPosition, clock, dist, liveResources, lootFor, mySide, playerName, QUESTS, RESOURCES, soldierTotal } from './game/rules'
+import type { Battle, Difficulty, MapSelection, Terrain } from './types/game'
+import type { Command, GameEngine } from './lib/local'
+import { createSolo, LocalEngine, readSolo } from './lib/local'
+import { enterOnline, OnlineEngine } from './lib/online'
+import { audioEnabled, setAudio, tone } from './lib/audio'
 
-type ResourceBag = { wood: number; stone: number; food: number; gold: number }
-
-const BUILDING_META: Record<BuildingType, { name: string; icon: string; description: string }> = {
-  lumber: { name: 'Lumber Camp', icon: '♣', description: 'Raises wood production.' },
-  quarry: { name: 'Quarry', icon: '◆', description: 'Raises stone production.' },
-  farm: { name: 'Farmstead', icon: '✦', description: 'Raises food production.' },
-  market: { name: 'Market', icon: '¤', description: 'Raises gold production.' },
+export default function App(){
+ const [engine,setEngine]=useState<GameEngine|null>(null),[busy,setBusy]=useState(false),[error,setError]=useState<string|null>(null)
+ useEffect(()=>()=>engine?.destroy(),[engine])
+ const solo=(name:string,resume:boolean)=>{
+  const save=resume?readSolo():null
+  if(!save&&(name.trim().length<2||name.trim().length>20)){setError('Choose a ruler name of 2–20 characters.');return}
+  setError(null);setEngine(new LocalEngine(save??createSolo(name.trim())))
+ }
+ const online=async(name:string)=>{setBusy(true);setError(null);try{setEngine(await enterOnline(name))}catch(e){setError(e instanceof Error?e.message:'Could not join the world.')}finally{setBusy(false)}}
+ const practice=(terrain:Terrain,difficulty:Difficulty)=>{const e=new LocalEngine(createSolo('Your legion'),false);e.startPractice(terrain,difficulty);setEngine(e);setError(null)}
+ if(!engine)return <Login onSolo={solo} onOnline={name=>void online(name)} onPractice={practice} busy={busy} error={error}/>
+ return <Realm engine={engine} onExit={()=>{engine.destroy();setEngine(null)}}/>
 }
 
-function liveResources(settlement: Settlement | null): ResourceBag | null {
-  if (!settlement) return null
-  const elapsedMinutes = Math.max(0, (Date.now() - new Date(settlement.resources_updated_at).getTime()) / 60000)
-  return {
-    wood: Math.floor(settlement.wood + settlement.wood_rate * elapsedMinutes),
-    stone: Math.floor(settlement.stone + settlement.stone_rate * elapsedMinutes),
-    food: Math.floor(settlement.food + settlement.food_rate * elapsedMinutes),
-    gold: Math.floor(settlement.gold + settlement.gold_rate * elapsedMinutes),
-  }
-}
-
-function buildingCost(type: BuildingType, level: number): ResourceBag {
-  const factor = Math.pow(1.65, Math.max(0, level - 1))
-  const base: Record<BuildingType, ResourceBag> = {
-    lumber: { wood: 150, stone: 90, food: 70, gold: 10 },
-    quarry: { wood: 110, stone: 150, food: 70, gold: 10 },
-    farm: { wood: 100, stone: 80, food: 150, gold: 8 },
-    market: { wood: 140, stone: 130, food: 80, gold: 25 },
-  }
-  return {
-    wood: Math.ceil(base[type].wood * factor),
-    stone: Math.ceil(base[type].stone * factor),
-    food: Math.ceil(base[type].food * factor),
-    gold: Math.ceil(base[type].gold * factor),
-  }
-}
-
-function canAfford(resources: ResourceBag | null, cost: ResourceBag) {
-  if (!resources) return false
-  return resources.wood >= cost.wood && resources.stone >= cost.stone && resources.food >= cost.food && resources.gold >= cost.gold
-}
-
-function formatEta(army: Army | null) {
-  if (!army) return '—'
-  const position = armyPosition(army)
-  if (!position.moving) return 'Ready'
-  const remaining = Math.max(0, new Date(army.arrival_at).getTime() - Date.now())
-  const seconds = Math.ceil(remaining / 1000)
-  const minutes = Math.floor(seconds / 60)
-  const rest = seconds % 60
-  return `${minutes}:${rest.toString().padStart(2, '0')}`
-}
-
-function compactCost(cost: ResourceBag) {
-  return `W ${cost.wood} · S ${cost.stone} · F ${cost.food} · G ${cost.gold}`
-}
-
-function armyTotal(army: Army | undefined | null) {
-  if (!army) return 0
-  return army.infantry + army.archers + army.cavalry
-}
-
-export default function App() {
-  const [session, setSession] = useState<Session | null>(null)
-  const [authLoading, setAuthLoading] = useState(true)
-  const [worldLoading, setWorldLoading] = useState(true)
-  const [players, setPlayers] = useState<Player[]>([])
-  const [settlements, setSettlements] = useState<Settlement[]>([])
-  const [buildings, setBuildings] = useState<Building[]>([])
-  const [armies, setArmies] = useState<Army[]>([])
-  const [battles, setBattles] = useState<Battle[]>([])
-  const [battleFormations, setBattleFormations] = useState<BattleFormation[]>([])
-  const [selectedFormationId, setSelectedFormationId] = useState<number | null>(null)
-  const [dismissedReportId, setDismissedReportId] = useState<number | null>(null)
-  const [gameError, setGameError] = useState<string | null>(null)
-  const [action, setAction] = useState<string | null>(null)
-  const [moveMode, setMoveMode] = useState(false)
-  const [, setClock] = useState(0)
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session)
-      setAuthLoading(false)
-    })
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, nextSession) => {
-      setSession(nextSession)
-      setAuthLoading(false)
-    })
-    return () => listener.subscription.unsubscribe()
-  }, [])
-
-  useEffect(() => {
-    const timer = window.setInterval(() => setClock((value) => value + 1), 1000)
-    return () => window.clearInterval(timer)
-  }, [])
-
-  const currentPlayer = useMemo(
-    () => players.find((player) => player.id === session?.user.id) ?? null,
-    [players, session?.user.id],
-  )
-  const currentSettlement = useMemo(
-    () => settlements.find((settlement) => settlement.owner_id === session?.user.id) ?? null,
-    [settlements, session?.user.id],
-  )
-  const currentArmy = useMemo(
-    () => armies.find((army) => army.owner_id === session?.user.id) ?? null,
-    [armies, session?.user.id],
-  )
-  const currentBuildings = useMemo(
-    () => buildings.filter((building) => building.settlement_id === currentSettlement?.id),
-    [buildings, currentSettlement?.id],
-  )
-  const resources = liveResources(currentSettlement)
-
-  const activeBattle = useMemo(() => {
-    if (!session) return null
-    return battles.find(
-      (battle) => battle.status === 'active'
-        && (battle.attacker_owner_id === session.user.id || battle.defender_owner_id === session.user.id),
-    ) ?? null
-  }, [battles, session])
-
-  const activeBattleFormations = useMemo(
-    () => activeBattle ? battleFormations.filter((formation) => formation.battle_id === activeBattle.id) : [],
-    [activeBattle, battleFormations],
-  )
-
-  const latestResolvedBattle = useMemo(() => {
-    if (!session) return null
-    return [...battles]
-      .filter((battle) => battle.status === 'resolved'
-        && (battle.attacker_owner_id === session.user.id || battle.defender_owner_id === session.user.id))
-      .sort((a, b) => b.id - a.id)[0] ?? null
-  }, [battles, session])
-
-  const buildingByType = useCallback(
-    (type: BuildingType) => currentBuildings.find((building) => building.building_type === type) ?? null,
-    [currentBuildings],
-  )
-
-  const loadWorld = useCallback(async (sync = false) => {
-    if (!session) {
-      setWorldLoading(false)
-      return
-    }
-
-    if (players.length === 0) setWorldLoading(true)
-    if (sync) {
-      const syncResult = await supabase.rpc('sync_my_state')
-      if (syncResult.error && !syncResult.error.message.toLowerCase().includes('function')) {
-        setGameError(syncResult.error.message)
-      }
-    }
-
-    const [playersResult, settlementsResult, buildingsResult, armiesResult, battlesResult, formationsResult] = await Promise.all([
-      supabase.from('players').select('*').order('created_at'),
-      supabase.from('settlements').select('*').order('id'),
-      supabase.from('buildings').select('*').order('id'),
-      supabase.from('armies').select('*').order('id'),
-      supabase.from('battles').select('*').order('id'),
-      supabase.from('battle_formations').select('*').order('id'),
-    ])
-
-    const firstError = playersResult.error
-      ?? settlementsResult.error
-      ?? buildingsResult.error
-      ?? armiesResult.error
-      ?? battlesResult.error
-      ?? formationsResult.error
-
-    if (firstError) {
-      setGameError(firstError.message)
-      setWorldLoading(false)
-      return
-    }
-
-    setPlayers((playersResult.data ?? []) as Player[])
-    setSettlements((settlementsResult.data ?? []) as Settlement[])
-    setBuildings((buildingsResult.data ?? []) as Building[])
-    setArmies((armiesResult.data ?? []) as Army[])
-    setBattles((battlesResult.data ?? []) as Battle[])
-    setBattleFormations((formationsResult.data ?? []) as BattleFormation[])
-    setGameError(null)
-    setWorldLoading(false)
-  }, [session, players.length])
-
-  useEffect(() => {
-    if (!session) {
-      setPlayers([])
-      setSettlements([])
-      setBuildings([])
-      setArmies([])
-      setBattles([])
-      setBattleFormations([])
-      setWorldLoading(false)
-      return
-    }
-
-    void loadWorld(true)
-
-    const channel = supabase
-      .channel('peris-realm-alpha-v5')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'players' }, () => void loadWorld(false))
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'settlements' }, () => void loadWorld(false))
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'buildings' }, () => void loadWorld(false))
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'armies' }, () => void loadWorld(false))
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'battles' }, () => void loadWorld(false))
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'battle_formations' }, () => void loadWorld(false))
-      .subscribe()
-
-    return () => {
-      void supabase.removeChannel(channel)
-    }
-  }, [session, loadWorld])
-
-  useEffect(() => {
-    if (!activeBattle || !session) return
-
-    const mine = activeBattleFormations.find(
-      (formation) => formation.owner_id === session.user.id && formation.soldiers > 0 && formation.status !== 'routed',
-    )
-    const selectedStillValid = activeBattleFormations.some(
-      (formation) => formation.id === selectedFormationId
-        && formation.owner_id === session.user.id
-        && formation.soldiers > 0
-        && formation.status !== 'routed',
-    )
-    if (!selectedStillValid) setSelectedFormationId(mine?.id ?? null)
-  }, [activeBattle, activeBattleFormations, selectedFormationId, session])
-
-  useEffect(() => {
-    if (!activeBattle) return
-    let busy = false
-    const tick = window.setInterval(async () => {
-      if (busy) return
-      busy = true
-      const { error } = await supabase.rpc('advance_battle', { p_battle_id: activeBattle.id })
-      if (error) setGameError(error.message)
-      await loadWorld(false)
-      busy = false
-    }, 850)
-    return () => window.clearInterval(tick)
-  }, [activeBattle, loadWorld])
-
-  const runAction = useCallback(async (label: string, task: () => Promise<{ error: { message: string } | null }>) => {
-    setAction(label)
-    setGameError(null)
-    const result = await task()
-    if (result.error) setGameError(result.error.message)
-    await loadWorld(false)
-    setAction(null)
-  }, [loadWorld])
-
-  const upgradeBuilding = useCallback((type: BuildingType) => {
-    void runAction(`upgrade-${type}`, async () => {
-      const { error } = await supabase.rpc('upgrade_building', { p_building_type: type })
-      return { error }
-    })
-  }, [runAction])
-
-  const recruit = useCallback((type: 'infantry' | 'archers' | 'cavalry') => {
-    const batch = type === 'infantry' ? 10 : type === 'archers' ? 5 : 2
-    void runAction(`recruit-${type}`, async () => {
-      const { error } = await supabase.rpc('recruit_units', {
-        p_infantry: type === 'infantry' ? batch : 0,
-        p_archers: type === 'archers' ? batch : 0,
-        p_cavalry: type === 'cavalry' ? batch : 0,
-      })
-      return { error }
-    })
-  }, [runAction])
-
-  const moveArmy = useCallback(async (targetX: number, targetY: number) => {
-    if (!currentArmy || !moveMode) return
-    setMoveMode(false)
-    setAction('move-army')
-    setGameError(null)
-    const { error } = await supabase.rpc('move_army', {
-      p_target_x: targetX,
-      p_target_y: targetY,
-    })
-    if (error) setGameError(error.message)
-    await loadWorld(false)
-    setAction(null)
-  }, [currentArmy, moveMode, loadWorld])
-
-  const challenge = useCallback((defenderOwnerId: string) => {
-    void runAction(`challenge-${defenderOwnerId}`, async () => {
-      const { error } = await supabase.rpc('create_battle', { p_defender_owner: defenderOwnerId })
-      return { error }
-    })
-  }, [runAction])
-
-  const moveFormation = useCallback(async (formationId: number, x: number, y: number) => {
-    if (!activeBattle) return
-    setGameError(null)
-    const { error } = await supabase.rpc('issue_battle_move', {
-      p_battle_id: activeBattle.id,
-      p_formation_id: formationId,
-      p_target_x: x,
-      p_target_y: y,
-    })
-    if (error) setGameError(error.message)
-    await loadWorld(false)
-  }, [activeBattle, loadWorld])
-
-  const attackFormation = useCallback(async (formationId: number, targetFormationId: number) => {
-    if (!activeBattle) return
-    setGameError(null)
-    const { error } = await supabase.rpc('issue_battle_attack', {
-      p_battle_id: activeBattle.id,
-      p_formation_id: formationId,
-      p_target_formation_id: targetFormationId,
-    })
-    if (error) setGameError(error.message)
-    await loadWorld(false)
-  }, [activeBattle, loadWorld])
-
-  const retreat = useCallback(() => {
-    if (!activeBattle) return
-    void runAction('retreat', async () => {
-      const { error } = await supabase.rpc('retreat_from_battle', { p_battle_id: activeBattle.id })
-      return { error }
-    })
-  }, [activeBattle, runAction])
-
-  if (authLoading) return <main className="loading-page">Loading Peris…</main>
-  if (!session) return <Login hasSession={false} onCreated={() => void loadWorld(false)} />
-  if (worldLoading && players.length === 0 && !gameError) return <main className="loading-page">Entering Realm Alpha…</main>
-
-  if (!currentPlayer && !gameError) {
-    return <Login hasSession onCreated={() => void loadWorld(false)} />
-  }
-
-  if (activeBattle) {
-    return (
-      <>
-        <BattleView
-          battle={activeBattle}
-          formations={activeBattleFormations}
-          players={players}
-          currentPlayerId={session.user.id}
-          selectedFormationId={selectedFormationId}
-          action={action}
-          onSelectFormation={setSelectedFormationId}
-          onMoveFormation={moveFormation}
-          onAttackFormation={attackFormation}
-          onRetreat={retreat}
-        />
-        {gameError && <div className="battle-error-toast">{gameError}</div>}
-      </>
-    )
-  }
-
-  const armyPositionNow = currentArmy ? armyPosition(currentArmy) : null
-  const armyMoving = armyPositionNow?.moving ?? false
-  const rivals = players.filter((player) => player.id !== session.user.id)
-  const latestReportVisible = latestResolvedBattle && latestResolvedBattle.id !== dismissedReportId
-  const latestBattleFormations = latestResolvedBattle
-    ? battleFormations.filter((formation) => formation.battle_id === latestResolvedBattle.id)
-    : []
-  const ownBattleLosses = latestBattleFormations
-    .filter((formation) => formation.owner_id === session.user.id)
-    .reduce((sum, formation) => sum + Math.max(0, formation.initial_soldiers - formation.soldiers), 0)
-  const enemyBattleLosses = latestBattleFormations
-    .filter((formation) => formation.owner_id !== session.user.id)
-    .reduce((sum, formation) => sum + Math.max(0, formation.initial_soldiers - formation.soldiers), 0)
-
-  return (
-    <main className="app-shell">
-      <header className="topbar">
-        <div className="brand-block">
-          <span className="eyebrow">PERIS</span>
-          <h1>Realm Alpha</h1>
-          <small>Persistent strategy prototype</small>
-        </div>
-
-        <div className="resource-strip">
-          <span><i>W</i> Wood <strong>{resources?.wood ?? '—'}</strong><small>+{currentSettlement?.wood_rate ?? 0}/m</small></span>
-          <span><i>S</i> Stone <strong>{resources?.stone ?? '—'}</strong><small>+{currentSettlement?.stone_rate ?? 0}/m</small></span>
-          <span><i>F</i> Food <strong>{resources?.food ?? '—'}</strong><small>+{currentSettlement?.food_rate ?? 0}/m</small></span>
-          <span><i>G</i> Gold <strong>{resources?.gold ?? '—'}</strong><small>+{currentSettlement?.gold_rate ?? 0}/m</small></span>
-        </div>
-
-        <div className="topbar-right">
-          <div className="online-pill"><b>{players.length}</b> ruler{players.length === 1 ? '' : 's'} in realm</div>
-          <div className="profile-block">
-            <strong>{currentPlayer?.display_name ?? 'Ruler'}</strong>
-            <small>{currentSettlement?.name ?? 'Founding realm…'}</small>
-          </div>
-        </div>
-      </header>
-
-      {gameError && (
-        <div className="setup-warning">
-          <strong>{gameError.includes('does not exist') || gameError.includes('column') ? 'Database reset required.' : 'Command failed.'}</strong>
-          <span>{gameError}</span>
-          {(gameError.includes('does not exist') || gameError.includes('column')) && (
-            <span>Run <code>supabase/RESET_AND_CREATE_V5.sql</code> once in Supabase SQL Editor.</span>
-          )}
-        </div>
-      )}
-
-      {latestReportVisible && latestResolvedBattle && (
-        <div className={`battle-report-banner ${latestResolvedBattle.winner_owner_id === session.user.id ? 'victory' : 'defeat'}`}>
-          <div>
-            <span className="panel-kicker">BATTLE REPORT #{latestResolvedBattle.id}</span>
-            <strong>{latestResolvedBattle.winner_owner_id === session.user.id ? 'VICTORY' : latestResolvedBattle.winner_owner_id ? 'DEFEAT' : 'DRAW'}</strong>
-            <small>Your losses: {ownBattleLosses} · Enemy losses: {enemyBattleLosses}</small>
-          </div>
-          <button onClick={() => setDismissedReportId(latestResolvedBattle.id)}>Dismiss</button>
-        </div>
-      )}
-
-      <section className="game-layout">
-        <aside className="panel settlement-panel">
-          <div className="panel-heading">
-            <span className="panel-kicker">YOUR SETTLEMENT</span>
-            <h2>{currentSettlement?.name ?? '—'}</h2>
-          </div>
-
-          <div className="settlement-summary">
-            <div><span>Army size</span><strong>{armyTotal(currentArmy)}</strong></div>
-            <div><span>Position</span><strong>{currentSettlement ? `${currentSettlement.x}, ${currentSettlement.y}` : '—'}</strong></div>
-          </div>
-
-          <h3>Production</h3>
-          <div className="building-list">
-            {(Object.keys(BUILDING_META) as BuildingType[]).map((type) => {
-              const building = buildingByType(type)
-              const level = building?.level ?? 1
-              const cost = buildingCost(type, level)
-              const affordable = canAfford(resources, cost)
-              return (
-                <article className="building-card" key={type}>
-                  <div className="building-icon">{BUILDING_META[type].icon}</div>
-                  <div className="building-info">
-                    <div className="building-title"><strong>{BUILDING_META[type].name}</strong><span>Lv {level}</span></div>
-                    <p>{BUILDING_META[type].description}</p>
-                    <small>{compactCost(cost)}</small>
-                  </div>
-                  <button
-                    className="small-action"
-                    disabled={!affordable || action !== null}
-                    onClick={() => upgradeBuilding(type)}
-                    title={!affordable ? 'Not enough resources' : `Upgrade ${BUILDING_META[type].name}`}
-                  >
-                    {action === `upgrade-${type}` ? '…' : '↑'}
-                  </button>
-                </article>
-              )
-            })}
-          </div>
-        </aside>
-
-        <section className="world-column">
-          <div className="world-toolbar">
-            <div>
-              <strong>World Map</strong>
-              <span>Shared strategic layer · tactical battles open as separate battlefields</span>
-            </div>
-            <div className="map-legend">
-              <span><b className="legend-dot gold" />Your keep</span>
-              <span><b className="legend-dot blue" />Your army</span>
-              <span><b className="legend-dot red" />Other rulers</span>
-            </div>
-          </div>
-          <div className={`game-panel ${moveMode ? 'commanding' : ''}`}>
-            <GameCanvas
-              players={players}
-              settlements={settlements}
-              armies={armies}
-              currentPlayerId={session.user.id}
-              moveMode={moveMode}
-              onMoveArmy={moveArmy}
-            />
-          </div>
-        </section>
-
-        <aside className="panel army-panel">
-          <div className="panel-heading">
-            <span className="panel-kicker">FIELD ARMY</span>
-            <h2>{currentArmy?.name ?? '—'}</h2>
-          </div>
-
-          <div className={`army-status ${armyMoving ? 'moving' : 'ready'}`}>
-            <span>{armyMoving ? 'MARCHING' : 'READY'}</span>
-            <strong>{formatEta(currentArmy)}</strong>
-          </div>
-
-          <div className="unit-list">
-            <div className="unit-row"><span><i>⚔</i> Infantry</span><strong>{currentArmy?.infantry ?? 0}</strong><button disabled={action !== null} onClick={() => recruit('infantry')}>+10</button></div>
-            <div className="unit-row"><span><i>➶</i> Archers</span><strong>{currentArmy?.archers ?? 0}</strong><button disabled={action !== null} onClick={() => recruit('archers')}>+5</button></div>
-            <div className="unit-row"><span><i>♞</i> Cavalry</span><strong>{currentArmy?.cavalry ?? 0}</strong><button disabled={action !== null} onClick={() => recruit('cavalry')}>+2</button></div>
-          </div>
-
-          <button
-            className={`move-button ${moveMode ? 'active' : ''}`}
-            disabled={!currentArmy || action !== null}
-            onClick={() => setMoveMode((value) => !value)}
-          >
-            {moveMode ? 'CANCEL ORDER' : armyMoving ? 'REDIRECT ARMY' : 'MOVE ARMY'}
-          </button>
-
-          <h3 className="rivals-title">Rival armies</h3>
-          <div className="rival-list">
-            {rivals.length === 0 && <p className="rival-empty">A second ruler must join before you can start a field battle.</p>}
-            {rivals.map((rival) => {
-              const rivalArmy = armies.find((army) => army.owner_id === rival.id)
-              return (
-                <article className="rival-card" key={rival.id}>
-                  <div>
-                    <strong>{rival.display_name}</strong>
-                    <small>{armyTotal(rivalArmy)} soldiers</small>
-                  </div>
-                  <button
-                    disabled={!rivalArmy || armyTotal(rivalArmy) <= 0 || !currentArmy || armyTotal(currentArmy) <= 0 || action !== null}
-                    onClick={() => challenge(rival.id)}
-                  >
-                    {action === `challenge-${rival.id}` ? '…' : 'BATTLE'}
-                  </button>
-                </article>
-              )
-            })}
-          </div>
-          <p className="command-help battle-prototype-note">
-            v0.5 starts an immediate test battle. Strategic interception and sieges come after the tactical system is proven.
-          </p>
-        </aside>
-      </section>
-
-      <footer className="prototype-footer">
-        <span>PERIS v0.5 · Economy + strategic movement + Total War-style tactical PvP</span>
-        <span>Next: march-to-contact, sieges, terrain bonuses and battle replays.</span>
-      </footer>
-    </main>
-  )
+function Realm({engine,onExit}:{engine:GameEngine;onExit:()=>void}){
+ const world=useSyncExternalStore(engine.subscribe,()=>engine.snapshot)
+ const [view,setView]=useState<'world'|'settlement'|'army'|'chronicle'>('world'),[selection,setSelection]=useState<MapSelection>({kind:'camp',id:1}),[moveMode,setMoveMode]=useState(false),[busy,setBusy]=useState(false),[notice,setNotice]=useState<{text:string;error:boolean}|null>(null),[help,setHelp]=useState(false),[settings,setSettings]=useState(false),[sound,setSound]=useState(audioEnabled()),[report,setReport]=useState<Battle|null>(null),[rename,setRename]=useState(''),[time,setTime]=useState(Date.now())
+ const [seenReports]=useState(()=>new Set(world.battles.filter(b=>b.status==='resolved').map(b=>b.id)))
+ const offset=useMemo(()=>Date.parse(world.server_now)-Date.now(),[world.server_now]),now=time+offset
+ const player=world.players.find(p=>p.id===engine.playerId)!,town=world.settlements.find(s=>s.owner_id===engine.playerId)!,army=world.armies.find(a=>a.owner_id===engine.playerId)!,resources=liveResources(town,now),active=world.battles.find(b=>b.status==='active')
+ useEffect(()=>{const t=window.setInterval(()=>setTime(Date.now()),250);return()=>window.clearInterval(t)},[])
+ useEffect(()=>{if(!notice)return;const t=window.setTimeout(()=>setNotice(null),4500);return()=>window.clearTimeout(t)},[notice])
+ useEffect(()=>{for(const b of world.battles){if(b.status==='resolved'&&!seenReports.has(b.id)){seenReports.add(b.id);setReport(b);tone(b.winner_owner_id===engine.playerId?'success':'error')}}},[world,engine.playerId,seenReports])
+ const run=async(cmd:Command,message?:string)=>{
+  if(busy&&cmd.type!=='order')return
+  if(cmd.type!=='order')setBusy(true)
+  try{await engine.command(cmd);if(message)setNotice({text:message,error:false});tone('order')}
+  catch(e){setNotice({text:e instanceof Error?e.message:'The order could not be completed.',error:true});tone('error')}
+  finally{if(cmd.type!=='order')setBusy(false)}
+ }
+ const dispatch=(c:Command,m?:string)=>void run(c,m)
+ const exportSave=()=>{const url=URL.createObjectURL(new Blob([JSON.stringify(world,null,2)],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download='Peris-campaign-save.json';a.click();window.setTimeout(()=>URL.revokeObjectURL(url),500)}
+ const selectedCamp=selection?.kind==='camp'?world.camps.find(c=>c.id===selection.id):null
+ const selectedTown=selection?.kind==='settlement'?world.settlements.find(s=>s.id===selection.id):null
+ const selectedArmy=selection?.kind==='army'?world.armies.find(a=>a.id===selection.id):null
+ const moving=army.status==='moving'&&Date.parse(army.arrival_at)>now
+ const cooldown=selectedCamp?world.progress.find(p=>p.camp_id===selectedCamp.id&&p.owner_id===engine.playerId):null
+ const outgoing=world.challenges.filter(c=>c.attacker_owner_id===engine.playerId),incoming=world.challenges.filter(c=>c.defender_owner_id===engine.playerId)
+ const navigate=(v:typeof view)=>{setView(v);setMoveMode(false)}
+ return <>
+  {active?<BattleView world={world} battle={active} engine={engine} run={dispatch} onHelp={()=>setHelp(true)}/>:<div className="realm-shell">
+   <nav className="side-rail" aria-label="Game navigation"><button className="brand-home" title="World map" onClick={()=>navigate('world')}><Crest small/></button><div className="rail-links">{([{id:'world',icon:'world',label:'World'},{id:'settlement',icon:'town',label:'City'},{id:'army',icon:'army',label:'Army'},{id:'chronicle',icon:'report',label:'Deeds'}]as const).map(tab=><button key={tab.id} className={view===tab.id?'active':''} title={tab.label} onClick={()=>navigate(tab.id)}><Icon name={tab.icon} size={24}/><span>{tab.label}</span></button>)}</div><div className="rail-bottom"><button title="How to play" onClick={()=>setHelp(true)}><Icon name="help"/></button><button title="Settings" onClick={()=>{setRename(town.name);setSettings(true)}}><Icon name="crown"/></button><button title="Return to main menu" onClick={onExit}><Icon name="exit"/></button></div></nav>
+   <header className="realm-topbar"><div className="realm-brand"><strong>PERIS</strong><span>THE AGE OF AMBITION</span></div><div className="resource-strip">{RESOURCES.map(k=><div key={k} className={`resource ${resources[k]>=town.capacity?'full':''}`} title={`${resources[k]} / ${town.capacity} capacity`}><Icon name={k} size={23}/><div><strong>{resources[k].toLocaleString()}</strong><small>{k==='wood'?'TIMBER':k.toUpperCase()} <b>+{town[`${k}_rate`]}/m</b></small></div></div>)}</div><div className="ruler"><span className="live-dot"/><div><strong>{player.display_name}</strong><small>{engine.mode==='online'?'SHARED WORLD':'SOLO CAMPAIGN'} · {player.prestige} prestige</small></div></div></header>
+   <main className={`realm-content ${view==='world'?'world-content':''}`}>
+    {view==='world'?<><aside className="campaign-sidebar"><div className="province-title"><span className="eyebrow">CAMPAIGN · CHAPTER I</span><h1>The lost province</h1><p>Six rebel hosts. One land to reclaim.</p></div><div className="sidebar-section"><label className="field-label">REBEL HOSTS <span>{world.progress.filter(p=>p.defeated>0).length} / 6</span></label><div className="camp-list">{world.camps.map(c=>{const cleared=world.progress.some(p=>p.camp_id===c.id&&p.defeated>0);return <button key={c.id} className={selectedCamp?.id===c.id?'selected':''} onClick={()=>setSelection({kind:'camp',id:c.id})}><span className={`camp-tier ${cleared?'cleared':''}`}>{cleared?<Icon name="check" size={14}/>:c.tier}</span><span>{c.name}<small>{c.terrain} · {soldierTotal(c)} soldiers</small></span><Icon name="arrow" size={13}/></button>})}</div></div><div className="sidebar-section objectives"><label className="field-label">YOUR OBJECTIVES</label>{QUESTS.map(q=>{const claimed=world.claims.some(c=>c.quest_id===q.id),completed=player[q.stat]>=q.target;return <div className={`objective ${claimed?'complete':''}`} key={q.id}><div><Icon name={claimed?'check':'flag'} size={15}/><strong>{q.title}</strong></div><p>{q.description}</p><div className="objective-bottom"><small>{Math.min(q.target,player[q.stat])} / {q.target}</small>{claimed?<span>Claimed</span>:completed?<button onClick={()=>dispatch({type:'claim',questId:q.id},'Objective reward collected')} disabled={busy}>Claim reward →</button>:<span>+{q.reward.gold} gold</span>}</div></div>})}</div></aside>
+    <section className="world-stage"><div className="world-toolbar"><div><strong>The province of Peris</strong><span>Discover. March. Conquer.</span></div><div><span className="map-legend"><i/> Your legion <i/> Rebel hosts</span><button className={moveMode?'selected':''} onClick={()=>setMoveMode(m=>!m)}><Icon name="flag" size={16}/>{moveMode?'Cancel march':'March'}</button></div></div><div className="world-map-wrap"><GameCanvas state={{world,playerId:engine.playerId,mode:'world',selection,selectedIds:[],moveMode}} actions={{selectMap:setSelection,moveArmy:(x,y)=>{setMoveMode(false);dispatch({type:'move',x,y},'Marching orders issued')},selectUnits:()=>{},order:()=>{},pause:()=>{},rally:()=>{}}}/>
+      {moveMode&&<div className="map-command-hint"><Icon name="flag"/>Click a destination for your legion.</div>}
+      {selection&&<aside className="map-inspector"><button className="inspector-close" aria-label="Close map details" onClick={()=>setSelection(null)}>×</button>
+       {selectedCamp&&<><span className="eyebrow">REBEL ENCAMPMENT · TIER {selectedCamp.tier}</span><h2>{selectedCamp.name}</h2><p>{selectedCamp.description}</p><div className="camp-force"><span><Icon name="army" size={16}/>{selectedCamp.infantry} infantry</span><span>{selectedCamp.archers} archers</span><span>{selectedCamp.cavalry} cavalry</span></div><div className="camp-tags"><span>{selectedCamp.terrain}</span><span>{selectedCamp.tier===1?'Recruit commander':selectedCamp.tier>=4?'Expert commander':'Veteran commander'}</span></div><label className="field-label">VICTORY SPOILS</label><Cost cost={lootFor(selectedCamp.tier)} compact/><button className="button gold" disabled={busy||moving||!!(cooldown&&Date.parse(cooldown.available_at)>now)||soldierTotal(army)===0} onClick={()=>dispatch({type:'raid',campId:selectedCamp.id},`Marching to ${selectedCamp.name}`)}>{cooldown&&Date.parse(cooldown.available_at)>now?`Regroups in ${clock((Date.parse(cooldown.available_at)-now)/1000)}`:moving?'Legion is marching':'March and engage'}<Icon name="arrow" size={16}/></button><small>Your army travels to the camp, then enters deployment.</small></>}
+       {selectedTown&&<><span className="eyebrow">{selectedTown.owner_id===engine.playerId?'YOUR SETTLEMENT':'RIVAL SETTLEMENT'}</span><h2>{selectedTown.name}</h2><p>Ruled by {playerName(world.players,selectedTown.owner_id)}.</p>{selectedTown.owner_id===engine.playerId?<button className="button gold" onClick={()=>navigate('settlement')}>Enter the city<Icon name="arrow" size={16}/></button>:<button className="button outline" disabled={busy||outgoing.length>0} onClick={()=>dispatch({type:'challenge',ownerId:selectedTown.owner_id},'Battle invitation sent')}>Invite to a live duel</button>}</>}
+       {selectedArmy&&<><span className="eyebrow">{selectedArmy.owner_id===engine.playerId?'YOUR LEGION':'RIVAL LEGION'}</span><h2>{selectedArmy.name}</h2><p>{soldierTotal(selectedArmy)} soldiers under {playerName(world.players,selectedArmy.owner_id)}.</p>{selectedArmy.owner_id===engine.playerId?<><button className="button gold" onClick={()=>{setMoveMode(true);setSelection(null)}}>Give marching orders<Icon name="arrow" size={16}/></button><button className="button outline" onClick={()=>navigate('army')}>Manage troops</button></>:<button className="button outline" disabled={busy||outgoing.length>0} onClick={()=>dispatch({type:'challenge',ownerId:selectedArmy.owner_id},'Battle invitation sent')}>Invite to a live duel</button>}</>}
+      </aside>}
+     </div><footer className="march-status"><div className="legion-badge"><Icon name="army" size={23}/><div><strong>{army.name}</strong><small>{army.infantry} infantry · {army.archers} archers · {army.cavalry} cavalry</small></div></div><div className="march-state"><span className={moving?'marching-dot':'resting-dot'}/><span>{moving?`Marching · ${clock((Date.parse(army.arrival_at)-now)/1000)} to arrival`:dist(armyPosition(army,now),{x:town.x+40,y:town.y+30})<90?'At the keep · ready for orders':'On the field · ready for orders'}</span></div><button onClick={()=>dispatch({type:'move',x:town.x+40,y:town.y+30},'The legion returns home')} disabled={busy}>Return home</button></footer></section></>:
+     view==='settlement'?<SettlementView world={world} playerId={engine.playerId} run={dispatch} busy={busy} now={now}/>:view==='army'?<ArmyView world={world} playerId={engine.playerId} run={dispatch} busy={busy} now={now}/>:<Chronicle world={world} playerId={engine.playerId} onReport={setReport}/>}
+   </main>
+   <footer className="realm-footer"><span>PERIS · EMPIRE PROTOTYPE V0.6</span><span>{engine.mode==='online'?`${world.players.length} rulers in the province`:'Solo progress saved automatically'}<button onClick={()=>setHelp(true)}>How to play</button></span></footer>
+  </div>}
+  {notice&&<div className={`toast ${notice.error?'error':''}`} role="status"><Icon name={notice.error?'shield':'check'}/>{notice.text}<button aria-label="Dismiss notification" onClick={()=>setNotice(null)}>×</button></div>}
+  {engine instanceof OnlineEngine&&engine.error&&<div className="connection-warning">Connection interrupted. Your last world state is displayed; retrying…</div>}
+  {!active&&incoming.length>0&&<div className="challenge-banner"><Icon name="army"/><span>{playerName(world.players,incoming[0].attacker_owner_id)} challenges your legion. <small>Survivors return home; casualties are permanent.</small></span><button className="button gold" disabled={busy} onClick={()=>dispatch({type:'respond',id:incoming[0].id,accept:true})}>Accept battle</button><button className="button outline" disabled={busy} onClick={()=>dispatch({type:'respond',id:incoming[0].id,accept:false})}>Decline</button></div>}
+  {!active&&outgoing.length>0&&<div className="outgoing-challenge">Battle invitation pending · {clock((Date.parse(outgoing[0].expires_at)-now)/1000)}</div>}
+  {report?.result&&<div className="modal-backdrop"><section className="modal result-modal" role="dialog" aria-modal="true" aria-label="Battle result"><ResultBody result={report.result} won={report.winner_owner_id===engine.playerId} side={mySide(report,engine.playerId)} enemyName={report.enemy_name}/><button className="button gold" onClick={()=>{setReport(null);if(engine.mode==='practice')onExit();else navigate('world')}}>{engine.mode==='practice'?'Return to main menu':'Return to the province'}<Icon name="arrow" size={16}/></button></section></div>}
+  {help&&<Modal title="Your orders, General" onClose={()=>setHelp(false)}><p>Develop your city, raise a legion, and reclaim the six rebel camps. The final host guards the fallen capital.</p><ol className="help-steps"><li><strong>Build your economy.</strong> Open City, select a building, and begin an upgrade. Income continues while you are away.</li><li><strong>Raise troops.</strong> Open Army to train infantry, archers, and cavalry. Recruitment works at the keep, in batches.</li><li><strong>March to battle.</strong> Select a camp and choose March and engage. Your legion enters deployment on arrival.</li><li><strong>Command the field.</strong> Left click or drag to select. Shift adds units. Right click moves or attacks. Right-drag sets a line's width and facing.</li><li><strong>Win through position.</strong> Protect archers, brace infantry in Guard, charge cavalry into flanks and rear. Forests reduce ranged damage; ridges favour archers; river shallows slow troops.</li></ol><div className="help-shortcuts"><span>A · select all</span><span>1–9 · select unit</span><span>H · halt</span><span>G · guard</span><span>R · rally</span><span>F · focus selection</span><span>Space · solo pause</span><span>Arrows · camera</span></div><p className="muted">Multiplayer duels require both players to accept and finish deployment. Live combat advances while a participant is connected. Campaign movement, income, and queues are resolved when you return.</p></Modal>}
+  {settings&&<Modal title="Your realm" onClose={()=>setSettings(false)}><label className="field-label" htmlFor="settlement-name">SETTLEMENT NAME</label><input id="settlement-name" value={rename} onChange={e=>setRename(e.target.value)} maxLength={32}/><button className="button gold" disabled={busy} onClick={()=>{dispatch({type:'rename',name:rename},'Settlement renamed');setSettings(false)}}>Save settlement name</button><div className="rule"/><button className="settings-action" onClick={()=>{setAudio(!sound);setSound(!sound)}}><Icon name={sound?'sound':'mute'}/><span>Command sounds</span><b>{sound?'On':'Off'}</b></button>{engine.mode==='solo'&&<button className="settings-action" onClick={exportSave}><Icon name="download"/><span>Export campaign save</span></button>}<p className="muted">Solo campaigns are stored in this browser. Multiplayer uses your existing anonymous account. Returning to the menu keeps the account and realm.</p><button className="button outline" onClick={onExit}>Return to main menu</button></Modal>}
+ </>
 }

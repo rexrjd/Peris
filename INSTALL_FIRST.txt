@@ -1,0 +1,22 @@
+PERIS v6 — INSTALL THIS UPDATE
+
+1. Extract the changed-files ZIP into the root of your existing local Peris repo.
+   Replace files. Keep the .git folder. No Vercel configuration change is needed.
+
+2. Supabase > SQL Editor: run the ENTIRE supabase/UPGRADE_V5_TO_V6.sql file.
+   It preserves your existing v5 campaign and anonymous accounts.
+   Do NOT use a reset. The old reset files now contain harmless notices.
+
+3. Windows local test:
+   npm.cmd install
+   npm.cmd run dev
+   Open http://localhost:5173
+
+4. GitHub Desktop > Peris: commit "Peris v6 Empire prototype", then Push origin.
+   Vercel deploys that commit on your existing project domain.
+
+PLAY NOW WITHOUT INSTALLING:
+Download Peris-v6-playable.html and open it in a current desktop browser.
+Solo Campaign and Quick Battle work immediately. Multiplayer uses the deployed repo.
+
+README.md contains the controls and detailed behavior. ARTWORK.md identifies the art.

@@ -1,8 +1,8 @@
-node_modules
-dist
-.vite
+node_modules/
+dist/
 .env
 .env.*
 !.env.example
+*.tsbuildinfo
 .DS_Store
-.vercel
+standalone/

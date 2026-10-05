@@ -1,204 +1,38 @@
-import { BattleCanvas } from '../game/BattleCanvas'
-import type { Battle, BattleFormation, FormationType, Player } from '../types/game'
+import { useEffect, useState } from 'react'
+import type { Battle, BattleOrder, Formation, World } from '../types/game'
+import type { Command, GameEngine } from '../lib/local'
+import { LocalEngine } from '../lib/local'
+import { clock, mySide, playerName, terrainAt, UNITS } from '../game/rules'
+import { GameCanvas } from '../game/GameCanvas'
+import { Icon, UnitPortrait } from './Icons'
 
-const UNIT_META: Record<FormationType, { label: string; icon: string; role: string }> = {
-  infantry: { label: 'Infantry', icon: '⚔', role: 'Line holders · strong into archers' },
-  archers: { label: 'Archers', icon: '➶', role: 'Long range · vulnerable to cavalry' },
-  cavalry: { label: 'Cavalry', icon: '♞', role: 'Fast shock troops · devastating flanks' },
-}
-
-type Props = {
-  battle: Battle
-  formations: BattleFormation[]
-  players: Player[]
-  currentPlayerId: string
-  selectedFormationId: number | null
-  action: string | null
-  onSelectFormation: (formationId: number) => void
-  onMoveFormation: (formationId: number, x: number, y: number) => void
-  onAttackFormation: (formationId: number, targetFormationId: number) => void
-  onRetreat: () => void
-}
-
-function nameFor(players: Player[], id: string) {
-  return players.find((player) => player.id === id)?.display_name ?? 'Unknown ruler'
-}
-
-function totalSoldiers(formations: BattleFormation[]) {
-  return formations.reduce((sum, formation) => sum + formation.soldiers, 0)
-}
-
-function casualties(formations: BattleFormation[]) {
-  return formations.reduce((sum, formation) => sum + Math.max(0, formation.initial_soldiers - formation.soldiers), 0)
-}
-
-function FormationCard({
-  formation,
-  selected,
-  mine,
-  onSelect,
-}: {
-  formation: BattleFormation
-  selected: boolean
-  mine: boolean
-  onSelect?: () => void
-}) {
-  const meta = UNIT_META[formation.unit_type]
-  const morale = Math.max(0, Math.min(100, Number(formation.morale)))
-  return (
-    <button
-      type="button"
-      className={`formation-card ${selected ? 'selected' : ''} ${formation.status === 'routed' ? 'routed' : ''} ${mine ? 'mine' : 'enemy'}`}
-      onClick={onSelect}
-      disabled={!mine || formation.status === 'routed' || formation.soldiers <= 0}
-    >
-      <div className="formation-card-top">
-        <span className="formation-icon">{meta.icon}</span>
-        <div>
-          <strong>{meta.label}</strong>
-          <small>{meta.role}</small>
-        </div>
-        <b>{formation.soldiers}</b>
-      </div>
-      <div className="formation-stats">
-        <span>Kills <strong>{formation.kills}</strong></span>
-        <span>Status <strong>{formation.charge_ready ? 'charging' : formation.status}</strong></span>
-      </div>
-      <div className="morale-track" title={`Morale ${Math.round(morale)}%`}>
-        <i style={{ width: `${morale}%` }} />
-      </div>
-    </button>
-  )
-}
-
-export function BattleView({
-  battle,
-  formations,
-  players,
-  currentPlayerId,
-  selectedFormationId,
-  action,
-  onSelectFormation,
-  onMoveFormation,
-  onAttackFormation,
-  onRetreat,
-}: Props) {
-  const mine = formations.filter((formation) => formation.owner_id === currentPlayerId)
-  const enemy = formations.filter((formation) => formation.owner_id !== currentPlayerId)
-  const opponentId = battle.attacker_owner_id === currentPlayerId ? battle.defender_owner_id : battle.attacker_owner_id
-  const myName = nameFor(players, currentPlayerId)
-  const enemyName = nameFor(players, opponentId)
-  const isAttacker = battle.attacker_owner_id === currentPlayerId
-
-  return (
-    <main className="battle-shell">
-      <header className="battle-topbar">
-        <div className="battle-title-block">
-          <span className="eyebrow">PERIS · FIELD BATTLE #{battle.id}</span>
-          <h1>{myName} <i>vs</i> {enemyName}</h1>
-          <small>{isAttacker ? 'You are attacking' : 'You are defending'} · server-authoritative tactical simulation</small>
-        </div>
-
-        <div className="battle-score">
-          <div className="battle-score-side friendly">
-            <small>YOUR FORCE</small>
-            <strong>{totalSoldiers(mine)}</strong>
-            <span>{casualties(mine)} casualties</span>
-          </div>
-          <div className="battle-score-center">⚔</div>
-          <div className="battle-score-side hostile">
-            <small>{enemyName.toUpperCase()}</small>
-            <strong>{totalSoldiers(enemy)}</strong>
-            <span>{casualties(enemy)} casualties</span>
-          </div>
-        </div>
-      </header>
-
-      <section className="battle-layout">
-        <aside className="battle-roster battle-roster-left">
-          <div className="battle-roster-heading">
-            <span>YOUR FORMATIONS</span>
-            <small>Select one, then issue orders on the field.</small>
-          </div>
-          <div className="formation-list">
-            {mine.map((formation) => (
-              <FormationCard
-                key={formation.id}
-                formation={formation}
-                selected={formation.id === selectedFormationId}
-                mine
-                onSelect={() => onSelectFormation(formation.id)}
-              />
-            ))}
-          </div>
-
-          <div className="battle-controls-card">
-            <strong>Controls</strong>
-            <p><b>Left click</b> one of your formations.</p>
-            <p><b>Right click ground</b> to move.</p>
-            <p><b>Right click enemy</b> to attack it.</p>
-            <p>Cavalry is fast. Archers fire at range. Long attack runs trigger charges, and flank/rear hits deal extra damage and morale shock.</p>
-          </div>
-        </aside>
-
-        <section className="battlefield-column">
-          <div className="battlefield-toolbar">
-            <div>
-              <strong>Tactical Battlefield</strong>
-              <span>Orders and casualties are synchronized through Supabase.</span>
-            </div>
-            <div className="battle-live-pill"><i /> LIVE</div>
-          </div>
-          <div className="battlefield-panel">
-            <BattleCanvas
-              formations={formations}
-              players={players}
-              currentPlayerId={currentPlayerId}
-              selectedFormationId={selectedFormationId}
-              onSelectFormation={onSelectFormation}
-              onMoveFormation={onMoveFormation}
-              onAttackFormation={onAttackFormation}
-            />
-          </div>
-        </section>
-
-        <aside className="battle-roster battle-roster-right">
-          <div className="battle-roster-heading enemy-heading">
-            <span>ENEMY FORMATIONS</span>
-            <small>Right-click these on the battlefield to focus an attack.</small>
-          </div>
-          <div className="formation-list">
-            {enemy.map((formation) => (
-              <FormationCard
-                key={formation.id}
-                formation={formation}
-                selected={false}
-                mine={false}
-              />
-            ))}
-          </div>
-
-          <div className="battle-doctrine">
-            <strong>Prototype doctrine</strong>
-            <span>Infantry → Archers</span>
-            <span>Cavalry → Archers</span>
-            <span>Infantry resists Cavalry</span>
-            <span>Rear attacks crush morale</span>
-            <span>Long cavalry approaches trigger charge shock</span>
-            <span>Archers have 215px range</span>
-          </div>
-
-          <button className="retreat-button" onClick={onRetreat} disabled={action !== null}>
-            {action === 'retreat' ? 'RETREATING…' : 'RETREAT FROM BATTLE'}
-          </button>
-          <p className="retreat-note">Retreat preserves surviving soldiers but concedes the battle.</p>
-        </aside>
-      </section>
-
-      <footer className="prototype-footer battle-footer">
-        <span>PERIS v0.5 · Tactical formations + morale + live PvP battle</span>
-        <span>Battle simulation advances on the database, not in the browser.</span>
-      </footer>
-    </main>
-  )
+export function BattleView({world,battle,engine,run,onHelp}:{world:World;battle:Battle;engine:GameEngine;run:(c:Command,message?:string)=>void;onHelp:()=>void}){
+ const [selected,setSelected]=useState<number[]>([]),[touchOrder,setTouchOrder]=useState<'select'|'move'|'attack'>('select'),[paused,setPaused]=useState(false),[speed,setSpeed]=useState(1)
+ const fs=world.formations.filter(f=>f.battle_id===battle.id),own=fs.filter(f=>f.owner_id===engine.playerId),enemy=fs.filter(f=>f.owner_id!==engine.playerId),side=mySide(battle,engine.playerId),ready=side==='attacker'?battle.attacker_ready:battle.defender_ready
+ const valid=selected.filter(id=>own.some(f=>f.id===id&&f.soldiers>0&&f.status!=='routed')),unit=own.find(f=>f.id===valid[0]),local=engine instanceof LocalEngine
+ const total=(list:Formation[])=>list.reduce((sum,f)=>sum+f.soldiers,0),initial=(list:Formation[])=>list.reduce((sum,f)=>sum+f.initial_soldiers,0),power=total(own)/Math.max(1,total(own)+total(enemy))*100
+ const rallied=side==='attacker'?battle.rally_attacker:battle.rally_defender
+ const enemyName=battle.mode==='pvp'?playerName(world.players,side==='attacker'?battle.defender_owner_id:battle.attacker_owner_id):battle.enemy_name
+ const order=(o:BattleOrder)=>{if(!o.ids.length)return;run({type:'order',battleId:battle.id,order:o});setTouchOrder('select')}
+ const pause=()=>{if(local){engine.paused=!engine.paused;setPaused(engine.paused)}}
+ useEffect(()=>{setSelected([]);setPaused(false);setSpeed(1)},[battle.id])
+ return <main className="tactical-shell">
+  <header className="battle-header"><div className="battle-heading"><span className="eyebrow">{battle.mode==='practice'?'QUICK BATTLE':battle.mode==='pvp'?'LIVE DUEL':'CAMPAIGN BATTLE'} · {battle.terrain}</span><h1>{enemyName}</h1></div><div className="balance-wrap"><div className="balance-labels"><span>{playerName(world.players,engine.playerId)} <b>{total(own)}</b></span><span><b>{total(enemy)}</b> {enemyName}</span></div><div className="balance-track"><i style={{width:`${power}%`}}/></div><small>{initial(own)-total(own)} friendly losses · {initial(enemy)-total(enemy)} enemy losses</small></div><div className="battle-time"><span>{battle.phase==='deployment'?'DEPLOYMENT':paused?'PAUSED':'BATTLE IN PROGRESS'}</span><strong>{clock(battle.elapsed)}</strong><button aria-label="Battle controls help" onClick={onHelp}><Icon name="help"/></button></div></header>
+  <section className="tactical-body"><div className="tactical-field">
+   {battle.phase==='deployment'&&<div className="deployment-banner"><div><Icon name="flag"/><span><strong>Prepare your battle line</strong><small>Place troops inside your deployment zone. Use right-drag to set facing and width.</small></span></div><button className="button gold" disabled={ready} onClick={()=>run({type:'ready',battleId:battle.id},battle.mode==='pvp'?'Deployment ready':'The battle has begun')}>{ready?'Waiting for opponent…':'Begin battle'}<Icon name="arrow" size={16}/></button></div>}
+   {paused&&<div className="pause-banner">TACTICAL PAUSE <span>You can still give orders.</span></div>}
+   <GameCanvas state={{world,playerId:engine.playerId,mode:'battle',battle,selectedIds:valid,touchOrder}} actions={{selectMap:()=>{},moveArmy:()=>{},selectUnits:setSelected,order,pause,rally:()=>{if(!rallied&&battle.phase==='combat')run({type:'rally',battleId:battle.id},'Your general rallies the host')}}}/>
+   <div className="battle-field-footer"><span>LEFT CLICK select · SHIFT add · LEFT DRAG group · RIGHT CLICK order · RIGHT DRAG line</span><span>SCROLL zoom · MIDDLE DRAG pan · ARROW KEYS pan</span></div>
+  </div><aside className="commander-panel"><span className="eyebrow">COMMAND TENT</span><h2>{unit?UNITS[unit.unit_type].name:'Your orders, General'}</h2><p>{valid.length>1?`${valid.length} formations selected`:unit?unit.label:'Select a unit card or a formation on the field.'}</p>
+   {unit&&<><div className="command-unit-art"><UnitPortrait type={unit.unit_type}/><div><b>{unit.soldiers}</b><span>of {unit.initial_soldiers} soldiers</span><small>{unit.kills} enemy kills</small></div></div><div className="command-meters"><label>Morale <b>{Math.round(unit.morale)}%</b></label><div className="progress-track"><i style={{width:`${unit.morale}%`}}/></div><label>Stamina <b>{Math.round(unit.stamina)}%</b></label><div className="progress-track stamina"><i style={{width:`${unit.stamina}%`}}/></div></div><div className="terrain-note"><Icon name={terrainAt(battle.terrain,unit.x,unit.y).kind==='Forest'?'wood':'world'} size={16}/>{terrainAt(battle.terrain,unit.x,unit.y).kind} · {unit.status}</div></>}
+   <div className="command-actions"><button className={touchOrder==='move'?'selected':''} disabled={!valid.length} onClick={()=>setTouchOrder('move')}><Icon name="arrow" size={16}/>Move</button><button className={touchOrder==='attack'?'selected':''} disabled={!valid.length||battle.phase!=='combat'} onClick={()=>setTouchOrder('attack')}><Icon name="army" size={16}/>Attack</button><button disabled={!valid.length} onClick={()=>order({kind:'halt',ids:valid})}><Icon name="shield" size={16}/>Halt <small>H</small></button><button disabled={!own.length} onClick={()=>setSelected(own.filter(f=>f.status!=='routed'&&f.soldiers>0).map(f=>f.id))}>Select all <small>A</small></button></div>
+   <label className="field-label">FORMATION STANCE</label><div className="stance-tabs">{(['guard','balanced','aggressive']as const).map(stance=><button key={stance} className={unit?.stance===stance?'selected':''} disabled={!valid.length} onClick={()=>order({kind:'stance',ids:valid,stance})}>{stance==='balanced'?'Line':stance==='guard'?'Guard':'Attack'}</button>)}</div><p className="command-tip">Guard holds position and braces against cavalry. Attack trades protection for damage.</p>
+   <label className="field-label" htmlFor="formation-width">FRONTAGE <b>{unit?.columns??10} wide</b></label><input id="formation-width" type="range" min="4" max="20" value={unit?.columns??10} disabled={!valid.length} onChange={e=>order({kind:'width',ids:valid,columns:Number(e.target.value)})}/>
+   <label className="toggle-row"><input type="checkbox" checked={unit?.running??false} disabled={!valid.length} onChange={e=>order({kind:'run',ids:valid,enabled:e.target.checked})}/><span>Run <small>Consumes stamina</small></span></label><label className="toggle-row"><input type="checkbox" checked={unit?.fire_at_will??true} disabled={!valid.length} onChange={e=>order({kind:'fire',ids:valid,enabled:e.target.checked})}/><span>Fire at will <small>Archers engage in range</small></span></label>
+   <button className="button rally" disabled={rallied||battle.phase!=='combat'} onClick={()=>run({type:'rally',battleId:battle.id},'The host regains its courage')}><Icon name="flag" size={16}/>{rallied?'Rally used':'Rally the host'}<small>R</small></button>
+   {local&&<div className="time-controls"><button onClick={pause}>{paused?'▶ Resume':'Ⅱ Pause'}</button>{[1,2,3].map(n=><button key={n} className={speed===n?'selected':''} onClick={()=>{engine.speed=n;setSpeed(n)}}>{n}×</button>)}</div>}
+   <button className="withdraw-button" onClick={()=>run({type:'retreat',battleId:battle.id},'Your army withdraws')}>Withdraw from battle</button><small className="withdraw-note">Concede the field. Surviving soldiers return home.</small>
+  </aside></section>
+  <footer className="unit-tray"><div className="unit-tray-label"><Icon name="army"/><span>YOUR HOST<small>{own.length} formations</small></span></div><div className="unit-cards">{own.map((f,i)=><button key={f.id} className={`unit-card ${valid.includes(f.id)?'selected':''} ${f.status==='routed'?'routed':''}`} disabled={f.soldiers<=0||f.status==='routed'} onClick={e=>setSelected(e.shiftKey?[...new Set([...valid,f.id])]:[f.id])}><span className="unit-hotkey">{i<9?i+1:''}</span><UnitPortrait type={f.unit_type}/><div className="unit-card-meta"><strong>{f.soldiers}</strong><span>{UNITS[f.unit_type].name}</span></div><div className="unit-morale"><i style={{width:`${f.morale}%`}}/></div><small>{f.status==='routed'?'ROUTING':f.charge_ready?'CHARGING':f.stance==='guard'?'GUARD':f.status.toUpperCase()}</small></button>)}</div></footer>
+ </main>
 }
