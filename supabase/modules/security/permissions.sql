@@ -14,7 +14,7 @@ do $$declare r record;signature text;begin
 end $$;
 revoke all on function public.create_player(text),public.sync_my_state(),public.move_army(integer,integer),public.retreat_from_battle(bigint)from public,anon;
 grant execute on function public.create_player(text),public.sync_my_state(),public.move_army(integer,integer),public.retreat_from_battle(bigint)to authenticated;
-grant execute on function public.peris_snapshot(),public.peris_queue_upgrade(text),public.peris_queue_recruit(text,integer),public.peris_raid(integer),public.peris_ready(bigint),
+grant execute on function public.peris_snapshot(),public.peris_map_snapshot(integer,integer,integer,integer),public.peris_march(integer,integer,jsonb),public.peris_queue_upgrade(text),public.peris_queue_recruit(text,integer),public.peris_raid(integer),public.peris_ready(bigint),
  public.peris_order(bigint,jsonb),public.peris_tick(bigint),public.peris_rally(bigint),public.peris_challenge(uuid),public.peris_respond(bigint,boolean),public.peris_claim(text),public.peris_rename(text)to authenticated;
 
 do $$declare t text;begin

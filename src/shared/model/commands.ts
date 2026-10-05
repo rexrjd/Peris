@@ -13,6 +13,7 @@ export type Command = {
     type: 'move';
     x: number;
     y: number;
+    route?: [number, number][];
 } | {
     type: 'raid';
     campId: number;

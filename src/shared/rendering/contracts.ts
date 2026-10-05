@@ -9,6 +9,9 @@ export type RenderState = {
     selection?: MapSelection;
     selectedIds: number[];
     moveMode?: boolean;
+    mapLayers?: { grid: boolean; regions: boolean; resources: boolean };
+    clockOffset?: number;
+    mapFocus?: { x: number; y: number; key: number; zoom?: number };
     touchOrder?: 'select' | 'move' | 'attack';
     paused?: boolean;
 };
@@ -20,4 +23,6 @@ export type RenderActions = {
     pause: () => void;
     rally: () => void;
     menu?: () => void;
+    cancelMove?: () => void;
+    mapViewport?: (bounds: { minX: number; minY: number; maxX: number; maxY: number }) => void;
 };

@@ -16,10 +16,15 @@ v5/v6/v7 source/art files. Personal edits are preserved and reported; move those
 old files outside src, then merge their edits into the new feature modules.
 The full-project ZIP is a clean tree and does not need cleanup if used fresh.
 
-No database migration is required when upgrading the previous v7 release:
-this refactor preserves SQL behavior, save keys and the v6 save format.
-If you are still on v5/v6, run the entire supabase/UPGRADE_TO_V8.sql in Supabase
-SQL Editor. Do not reset your world. Fresh install is for an empty DB only.
+The 200 x 200 continental map requires the updated database migration, including
+when upgrading v7/v8. Run the entire supabase/UPGRADE_TO_V8.sql in Supabase SQL
+Editor after reviewing it. It preserves accounts, world data, save keys and the
+v6 save format. An occupied position or saved route outside [-12800, 12800)
+aborts the upgrade with a manual migration error. It does not relocate or delete
+world entities or historical spawn sites. Review and plan that migration before
+retrying. Do not reset your world. Fresh install is for an empty DB only.
+See MAP_WORLD.md for the shared terrain mask, routed marches and upgrade details.
+No live database migration was executed during map development.
 
 Commit and push in GitHub Desktop; your existing Vercel project deploys it.
 ARCHITECTURE.md maps each gameplay system to its source files.

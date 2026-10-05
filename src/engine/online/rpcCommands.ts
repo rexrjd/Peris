@@ -10,8 +10,9 @@ export function rpcCommand(cmd: Command) {
         args = { p_type: cmd.item, p_quantity: cmd.quantity };
     }
     if (cmd.type === 'move') {
-        fn = 'move_army';
+        fn = cmd.route ? 'peris_march' : 'move_army';
         args = { p_target_x: Math.round(cmd.x), p_target_y: Math.round(cmd.y) };
+        if (cmd.route) args.p_path = cmd.route;
     }
     if (cmd.type === 'raid') {
         fn = 'peris_raid';

@@ -27,4 +27,16 @@ export type World = {
     progress: CampProgress[];
     claims: QuestClaim[];
     challenges: Challenge[];
+    /** Server geography format; version 3 uses the persistent 200 × 200 world. */
+    map?: {
+        version: number;
+        cols: number;
+        rows: number;
+        cell_size: number;
+        seed: number;
+        total_players: number;
+        total_settlements: number;
+        settlements_truncated?: boolean;
+        armies_truncated?: boolean;
+    };
 };
