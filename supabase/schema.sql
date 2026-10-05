@@ -1,4 +1,4 @@
--- PERIS v6 · Empire prototype. Run this entire file in Supabase SQL Editor.
+-- PERIS v7 · Empire prototype. Run this entire file in Supabase SQL Editor.
 -- Requires the v5 schema. Preserves players, settlements, resources and armies.
 -- Safe to run again. No Auth users or campaign data are deleted.
 begin;
@@ -276,7 +276,7 @@ begin
 end $$;
 
 create or replace function public.peris_order(p_battle_id bigint,p_order jsonb) returns jsonb language plpgsql security definer set search_path='' as $$
-declare u uuid:=auth.uid();b public.battles%rowtype;f public.battle_formations%rowtype;t public.battle_formations%rowtype;k text:=p_order->>'kind';px numeric;py numeric;n integer;i integer:=0;col integer;face numeric;
+declare u uuid:=auth.uid();b public.battles%rowtype;f public.battle_formations%rowtype;t public.battle_formations%rowtype;k text:=p_order->>'kind';px numeric;py numeric;n integer;i integer:=0;col integer;face numeric;cx numeric;cy numeric;spacing numeric;ang numeric;
 begin
  select * into b from public.battles where id=p_battle_id for update;
  if u is null or b.id is null or (u is distinct from b.attacker_owner_id and u is distinct from b.defender_owner_id) then raise exception 'Not your battle';end if;
@@ -286,6 +286,9 @@ begin
  select count(*) into n from public.battle_formations where battle_id=b.id and owner_id=u and soldiers>0 and status<>'routed'
  and id in(select value::bigint from jsonb_array_elements_text(p_order->'ids'));
  if n<1 then raise exception 'Select a formation that can receive orders';end if;
+ select avg(x),avg(y) into cx,cy from public.battle_formations where battle_id=b.id and owner_id=u and soldiers>0 and status<>'routed' and id in(select value::bigint from jsonb_array_elements_text(p_order->'ids'));
+ spacing:=least(620.0/greatest(1,n-1),coalesce((p_order->>'columns')::integer,10)*8+24);
+ ang:=coalesce((p_order->>'facing')::numeric,0)*pi()/180;
  if k='attack' then
  if b.phase<>'combat' then raise exception 'Begin the battle before attacking';end if;
  select * into t from public.battle_formations where id=(p_order->>'target')::bigint and battle_id=b.id;
@@ -296,7 +299,8 @@ begin
  and id in(select value::bigint from jsonb_array_elements_text(p_order->'ids')) order by id for update loop
  if k='move' then
  if p_order->>'x' is null or p_order->>'y' is null then raise exception 'Choose a destination';end if;
- px:=greatest(35,least(1165,(p_order->>'x')::numeric+(i-(n-1)/2.0)*48));py:=greatest(40,least(660,(p_order->>'y')::numeric));
+ px:=greatest(35,least(1165,(p_order->>'x')::numeric+case when p_order->>'facing' is null then f.x-cx else -sin(ang)*(i-(n-1)/2.0)*spacing end));
+ py:=greatest(40,least(660,(p_order->>'y')::numeric+case when p_order->>'facing' is null then f.y-cy else cos(ang)*(i-(n-1)/2.0)*spacing end));
  if b.phase='deployment' and ((f.side='attacker' and px>365)or(f.side='defender' and px<835)) then raise exception 'Deploy inside your shaded zone';end if;
  face:=(p_order->>'facing')::numeric;col:=greatest(4,least(20,coalesce((p_order->>'columns')::integer,f.columns)));
  update public.battle_formations set target_x=px,target_y=py,target_facing=face,target_formation_id=null,charge_ready=false,columns=col,

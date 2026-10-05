@@ -1,22 +1,18 @@
-PERIS v6 — INSTALL THIS UPDATE
+PERIS v7 — THE SIX STANDARDS — LATEST CHANGES
 
-1. Extract the changed-files ZIP into the root of your existing local Peris repo.
-   Replace files. Keep the .git folder. No Vercel configuration change is needed.
+1. Extract this ZIP into the root of your existing Peris repository, beside
+   package.json. Replace files. Keep your existing Git repository.
 
-2. Supabase > SQL Editor: run the ENTIRE supabase/UPGRADE_V5_TO_V6.sql file.
-   It preserves your existing v5 campaign and anonymous accounts.
-   Do NOT use a reset. The old reset files now contain harmless notices.
+2. Supabase > SQL Editor: run the ENTIRE supabase/UPGRADE_TO_V7.sql file.
+   This upgrades existing v5/v6 worlds and preserves players and accounts.
+   Do not use a reset or a fresh-install script for an existing world.
 
-3. Windows local test:
-   npm.cmd install
-   npm.cmd run dev
-   Open http://localhost:5173
+3. Local test: npm install, then npm run dev (npm.cmd on Windows).
+   Requires Node 20.19 or later.
 
-4. GitHub Desktop > Peris: commit "Peris v6 Empire prototype", then Push origin.
-   Vercel deploys that commit on your existing project domain.
+4. GitHub Desktop: commit the changes and Push origin.
+   Your existing connected Vercel project deploys the commit.
 
-PLAY NOW WITHOUT INSTALLING:
-Download Peris-v6-playable.html and open it in a current desktop browser.
-Solo Campaign and Quick Battle work immediately. Multiplayer uses the deployed repo.
-
-README.md contains the controls and detailed behavior. ARTWORK.md identifies the art.
+Solo saves retain the v6 format. Hosted saves on the same browser origin resume.
+Use Settings > Campaign Saves to export/import saves between browsers or files.
+See README.md for features and controls; UPDATE_CONTENTS.txt lists patch files.

@@ -78,13 +78,13 @@ export async function enterOnline(name:string):Promise<OnlineEngine>{
   }
   if(!session)throw new Error('The account could not be created. Try again.')
   const {data:existing,error:checkError}=await supabase.from('players').select('id').eq('id',session.user.id).maybeSingle()
-  if(checkError)throw new Error('Run supabase/UPGRADE_V5_TO_V6.sql in the Supabase SQL Editor, then try again.')
+  if(checkError)throw new Error('Run supabase/UPGRADE_TO_V7.sql in the Supabase SQL Editor, then try again.')
   if(!existing){
     if(!/^[A-Za-z0-9 _-]{2,20}$/.test(name.trim()))throw new Error('Choose 2–20 letters, numbers, spaces, _ or -.')
     const {error}=await supabase.rpc('create_player',{p_display_name:name.trim()});if(error)throw new Error(error.message)
   }
   const {data,error}=await supabase.rpc('peris_snapshot')
-  if(error)throw new Error(error.code==='PGRST202'?'Install the v6 SQL upgrade in Supabase first. Your existing realm will be preserved.':error.message)
+  if(error)throw new Error(error.code==='PGRST202'?'Install the v7 SQL upgrade in Supabase first. Your existing realm will be preserved.':error.message)
   const sync=await supabase.rpc('sync_my_state');if(sync.error)throw new Error(sync.error.message)
   return new OnlineEngine(session.user.id,data as World)
 }

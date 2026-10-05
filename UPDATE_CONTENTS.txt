@@ -1,11 +1,9 @@
-PERIS v6 — UPDATE CONTENTS
+PERIS v7 — LATEST CHANGES
 
-Extract into the existing Peris repository root and replace files.
-Run supabase/UPGRADE_V5_TO_V6.sql in Supabase before using multiplayer.
-The upgrade preserves the existing v5 world and accounts. No reset is required.
-See INSTALL_FIRST.txt for the GitHub Desktop / Vercel steps.
+Apply at the repository root and replace files. Compatible patch for v5 or v6.
+Use supabase/UPGRADE_TO_V7.sql for an existing world. See INSTALL_FIRST.txt.
 
-This patch contains these new or changed files relative to the supplied v5 archive:
+Included new or changed files:
 
 .env.example
 .gitignore
@@ -17,20 +15,33 @@ UPDATE_CONTENTS.txt
 index.html
 package-lock.json
 package.json
+public/art/environment-props.png
+public/art/field-soldiers.png
 public/art/legion-portraits.png
+public/art/meadow-ground.png
 public/art/peris-dawn.png
+public/art/roman-city.png
 public/favicon.svg
+public/fonts/OFL.txt
+public/fonts/OpenSans-Bold.ttf
+public/fonts/OpenSans-Regular.ttf
 scripts/standalone.mjs
 src/App.tsx
 src/components/ArmyView.tsx
 src/components/BattleView.tsx
+src/components/CampaignMoments.tsx
 src/components/Chronicle.tsx
+src/components/Codex.tsx
 src/components/Icons.tsx
 src/components/Login.tsx
+src/components/Settings.tsx
 src/components/SettlementView.tsx
 src/components/Shared.tsx
+src/components/WorldView.tsx
 src/game/BattleCanvas.tsx
 src/game/GameCanvas.tsx
+src/game/assets.ts
+src/game/campaign.ts
 src/game/graphics.ts
 src/game/renderer.ts
 src/game/rules.ts
@@ -40,20 +51,25 @@ src/game/simulation.ts
 src/lib/audio.ts
 src/lib/local.ts
 src/lib/online.ts
+src/lib/preferences.ts
+src/lib/saves.ts
 src/lib/supabase.ts
 src/styles.css
 src/types/game.ts
 src/vite-env.d.ts
 supabase/FRESH_INSTALL_V6.sql
+supabase/FRESH_INSTALL_V7.sql
 supabase/RESET_AND_CREATE_V4.sql
 supabase/RESET_AND_CREATE_V5.sql
+supabase/UPGRADE_TO_V7.sql
 supabase/UPGRADE_V4_TO_V5_BATTLES.sql
 supabase/UPGRADE_V5_TO_V6.sql
 supabase/schema.sql
 supabase/upgrade-world-v3.sql
 tests/database.test.mjs
 tests/fixtures/v5.sql
+tests/fresh-database.test.mjs
 tests/game.test.ts
+tests/release.test.ts
 
-No source file deletion is needed. Retired reset scripts and legacy scene modules
-are replaced with harmless notices / compatibility modules.
+No source deletion is required. Build output and dependencies are excluded.

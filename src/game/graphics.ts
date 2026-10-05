@@ -1,16 +1,24 @@
 import { FIELD_H, FIELD_W, seeded, WORLD_H, WORLD_W } from './rules'
 import type { BuildingType, Terrain } from '../types/game'
+import { gameImage, environmentSprite } from './assets'
 
 export const palette={grass:'#888d5c',dark:'#28302c',gold:'#ddc48b',own:'#c95143',enemy:'#688bab'}
-function ellipse(c:CanvasRenderingContext2D,x:number,y:number,rx:number,ry:number,color:string){c.fillStyle=color;c.beginPath();c.ellipse(x,y,rx,ry,0,0,Math.PI*2);c.fill()}
+function ellipse(c:CanvasRenderingContext2D,x:number,y:number,rx:number,ry:number,color:string|CanvasGradient){c.fillStyle=color;c.beginPath();c.ellipse(x,y,rx,ry,0,0,Math.PI*2);c.fill()}
 export function tree(c:CanvasRenderingContext2D,x:number,y:number,size=1,pine=false){
+  const sprite=environmentSprite('oak');if(sprite&&!pine){const width=29*size,height=width*sprite.height/sprite.width;c.drawImage(sprite,x-width/2,y-height+6*size,width,height);return}
   c.save();c.translate(x,y);c.scale(size,size);ellipse(c,4,5,10,5,'#202c2545')
   c.strokeStyle='#65563a';c.lineWidth=3;c.beginPath();c.moveTo(0,2);c.lineTo(0,-9);c.stroke()
   if(pine){c.fillStyle='#354933';c.beginPath();c.moveTo(0,-25);c.lineTo(-9,-5);c.lineTo(10,-5);c.closePath();c.fill();c.fillStyle='#4e6240';c.beginPath();c.moveTo(0,-25);c.lineTo(-6,-7);c.lineTo(0,-7);c.closePath();c.fill()}
-  else{ellipse(c,0,-10,10,11,'#3e5438');ellipse(c,-4,-14,7,7,'#526740');ellipse(c,-5,-16,4,4,'#6c7a4c')}
+  else{
+    const rng=seeded(Math.round(x*37+y*13)),shade=c.createRadialGradient(-4,-17,1,0,-10,14)
+    shade.addColorStop(0,'#929166');shade.addColorStop(.4,'#5e7145');shade.addColorStop(1,'#293e2d')
+    ellipse(c,1,-9,13,13,'#233c2c');ellipse(c,0,-12,12,12,shade)
+    for(let i=0;i<18;i++){const a=rng()*6.28,r=rng()*10;ellipse(c,Math.cos(a)*r,Math.sin(a)*r-12,2+rng()*3,2+rng()*2,['#91a06b70','#7b895950','#b4b67d40','#263d2e66'][i%4])}
+  }
   c.restore()
 }
 export function house(c:CanvasRenderingContext2D,x:number,y:number,scale=1,kind='house',accent='#a14d37'){
+  const sprite=kind==='keep'?environmentSprite('keep'):null;if(sprite){const width=65*scale,height=width*sprite.height/sprite.width;c.drawImage(sprite,x-width/2,y-height+7*scale,width,height);return}
   c.save();c.translate(x,y);c.scale(scale,scale)
   ellipse(c,5,4,19,7,'#20231d4a')
   c.fillStyle='#b9ae8b';c.fillRect(-13,-17,25,21);c.fillStyle='#938e75';c.fillRect(6,-17,6,21)
@@ -34,6 +42,8 @@ export function makeTerrain(mode:'world'|'battle',terrain:Terrain='plains'):HTML
   const c=canvas.getContext('2d')!,w=canvas.width,h=canvas.height,rng=seeded(mode==='world'?98213:7230+terrain.length)
   c.fillStyle=mode==='world'?'#aaa879':'#969568';c.fillRect(0,0,w,h)
   const grad=c.createLinearGradient(0,0,w,h);grad.addColorStop(0,'#d0bd8025');grad.addColorStop(.5,'#61704738');grad.addColorStop(1,'#c2ad613a');c.fillStyle=grad;c.fillRect(0,0,w,h)
+  const ground=gameImage('ground')
+  if(ground.complete&&ground.naturalWidth){c.save();c.globalAlpha=.74;c.filter='blur(.65px)';c.drawImage(ground,0,0,w,h);c.restore();c.fillStyle=mode==='world'?'#d1be8c22':'#63775622';c.fillRect(0,0,w,h)}
   for(let i=0;i<6000;i++){
     const x=rng()*w,y=rng()*h,r=rng()*13+1
     ellipse(c,x,y,r,r*.42,rng()>.5?'#e5d6950c':'#263c2709')
@@ -55,18 +65,21 @@ export function makeTerrain(mode:'world'|'battle',terrain:Terrain='plains'):HTML
     path(c,river,35,'#5a665947');path(c,river,24,'#658e95');path(c,river,18,'#769ba0');path(c,river.map(([x,y])=>[x-6,y]),2,'#c2d1ba66')
     c.save();c.translate(535,425);c.rotate(.08);c.fillStyle='#b4ac89';c.fillRect(-22,-9,75,20);c.strokeStyle='#676d56';c.lineWidth=3;c.strokeRect(-22,-9,75,20);c.restore()
     const forests=[[100,100,150,85],[390,105,125,90],[810,340,120,90],[1000,115,110,90],[410,670,100,45],[100,595,95,110]]
-    for(const [cx,cy,rx,ry]of forests){for(let i=0;i<65;i++){const a=rng()*Math.PI*2,r=Math.sqrt(rng());tree(c,cx+Math.cos(a)*rx*r,cy+Math.sin(a)*ry*r,.55+rng()*.6)}}
+    for(const [cx,cy,rx,ry]of forests){const points=[];for(let i=0;i<65;i++){const a=rng()*Math.PI*2,r=Math.sqrt(rng());points.push([cx+Math.cos(a)*rx*r,cy+Math.sin(a)*ry*r,.55+rng()*.6])}points.sort((a,b)=>a[1]-b[1]);for(const[x,y,size]of points)tree(c,x,y,size)}
     for(let i=0;i<30;i++){
       const x=680+rng()*170,y=25+rng()*90,size=20+rng()*30
+      const hill=environmentSprite('hill');if(hill){const width=size*1.6,height=width*hill.height/hill.width;c.drawImage(hill,x-width/2,y-height+size*.4,width,height);continue}
       c.fillStyle='#898b71';c.beginPath();c.moveTo(x-size,y+size*.4);c.lineTo(x,y-size*.8);c.lineTo(x+size,y+size*.4);c.closePath();c.fill()
       c.fillStyle='#b6b59c';c.beginPath();c.moveTo(x-size,y+size*.4);c.lineTo(x,y-size*.8);c.lineTo(x+5,y+size*.4);c.closePath();c.fill()
     }
     const labels=[[260,85,'O A K W O O D'],[300,600,'THE WESTERN FIELDS'],[868,70,'THE HIGH COUNTRY'],[898,696,'ASHEN MARCHES'] ] as const
     for(const [x,y,label]of labels){c.font='italic 15px Georgia';c.fillStyle='#3f4a3f77';c.textAlign='center';c.fillText(label,x,y)}
     for(let i=0;i<10;i++)house(c,585+rng()*45,278+rng()*25,.55,'house','#6e6553')
+    for(let i=0;i<14;i++)house(c,145+rng()*95,250+rng()*75,.32+rng()*.2,'house','#9c684a')
   }else{
     if(terrain==='highlands'){
-      for(let i=6;i>0;i--){ellipse(c,650,285,190+i*14,135+i*9,`rgba(114,113,70,${.025+i*.007})`)}
+      for(let i=8;i>0;i--){ellipse(c,650,285,190+i*9,135+i*6,`rgba(192,171,111,${.025+i*.009})`)}
+      const ridge=c.createRadialGradient(610,225,20,650,285,225);ridge.addColorStop(0,'#dcce9770');ridge.addColorStop(.5,'#b6ac7950');ridge.addColorStop(1,'#5b654800');c.fillStyle=ridge;c.fillRect(420,85,480,400)
       for(let i=3;i>=0;i--){c.strokeStyle='#d1c18c45';c.lineWidth=1;c.beginPath();c.ellipse(650,285,190-i*30,135-i*22,0,0,Math.PI*2);c.stroke()}
     }
     if(terrain==='river'){
@@ -79,10 +92,12 @@ export function makeTerrain(mode:'world'|'battle',terrain:Terrain='plains'):HTML
     for(const[cx,cy,rx,ry]of woods){const points=[];for(let i=0;i<(terrain==='woods'?130:40);i++){const a=rng()*Math.PI*2,r=Math.sqrt(rng());points.push([cx+Math.cos(a)*rx*r,cy+Math.sin(a)*ry*r])}points.sort((a,b)=>a[1]-b[1]);points.forEach(([x,y])=>tree(c,x,y,.5+rng()*.5))}
     path(c,[[0,350],[330,346],[800,348],[1200,352]],15,'#ccb98b32')
     for(let i=0;i<80;i++){ellipse(c,rng()*w,rng()*h,2+rng()*3,1+rng()*2,'#5b65584b')}
+    // Broken fence and field-edge stones make the landscape feel inhabited.
+    for(const [x,y]of [[45,470],[1085,95]])for(let i=0;i<8;i++){c.strokeStyle='#676249';c.lineWidth=1.5;c.beginPath();c.moveTo(x+i*11,y-6);c.lineTo(x+i*11,y+4);c.stroke();if(i<7){c.strokeStyle='#9c926e';c.beginPath();c.moveTo(x+i*11,y-3);c.lineTo(x+(i+1)*11,y-3);c.stroke()}}
   }
   const vignette=c.createRadialGradient(w/2,h/2,h*.15,w/2,h/2,w*.65);vignette.addColorStop(0,'#151e1700');vignette.addColorStop(1,'#19241b50');c.fillStyle=vignette;c.fillRect(0,0,w,h)
   c.strokeStyle='#37443866';c.lineWidth=3;c.strokeRect(12,12,w-24,h-24)
   return canvas
 }
 
-export const CITY_NODES: {type:BuildingType;x:number;y:number}[]=[{type:'lumber',x:140,y:210},{type:'quarry',x:755,y:155},{type:'farm',x:140,y:420},{type:'market',x:480,y:340},{type:'barracks',x:655,y:330},{type:'stables',x:705,y:450},{type:'wall',x:405,y:190},{type:'storehouse',x:375,y:450}]
+export const CITY_NODES: {type:BuildingType;x:number;y:number}[]=[{type:'lumber',x:145,y:195},{type:'quarry',x:765,y:140},{type:'farm',x:140,y:430},{type:'market',x:470,y:315},{type:'barracks',x:695,y:327},{type:'stables',x:725,y:477},{type:'wall',x:470,y:130},{type:'storehouse',x:385,y:432}]

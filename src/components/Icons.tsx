@@ -3,6 +3,11 @@ export function Icon({name,size=20}:{name:string;size?:number}){
  const shapes:Record<string,React.ReactNode>={
   world:<><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c-6 6-6 12 0 18M12 3c6 6 6 12 0 18"/></>,
   focus:<><circle cx="12" cy="12" r="5"/><path d="M12 2v5M12 17v5M2 12h5M17 12h5"/></>,
+  settings:<><path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="3" fill="currentColor" stroke="none"/><circle cx="15" cy="17" r="3" fill="currentColor" stroke="none"/></>,
+  book:<><path d="M12 5C8 2 3 3 2 4v15c3-2 6-1 10 1 4-2 7-3 10-1V4c-1-1-6-2-10 1v15M6 8h3M15 8h3M6 12h3M15 12h3"/></>,
+  expand:<path d="M3 9V3h6M15 3h6v6M21 15v6h-6M9 21H3v-6"/>,
+  horse:<><path d="M4 20v-8l5-4 3-6 4 2 4 7-4 3-3-2v8M8 20v-6M13 5l2 2M4 12l-2-3"/></>,
+  bow:<><path d="M6 2c16 5 16 15 0 20L6 2ZM3 12h18m-4-3 4 3-4 3"/></>,
   town:<><path d="M3 21V9h5V5h8v4h5v12M2 21h20M9 21v-6h6v6M6 12h1m10 0h1M11 8h2"/></>,
   army:<><path d="m4 3 14 14m-3-2 5-5M20 3 6 17m3-2-5-5M3 18l3 3m12-3 3 3"/></>,
   report:<><path d="M6 3h12v18H6zM9 7h6M9 11h6M9 15h4"/></>,

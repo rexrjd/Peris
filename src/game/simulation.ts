@@ -1,6 +1,12 @@
 import type { Army, Battle, BattleOrder, BattleResult, Difficulty, Effect, Formation, Terrain } from '../types/game'
 import { angleDiff, clamp, dist, emptyResources, terrainAt, UNIT_TYPES, UNITS } from './rules'
 
+export function moveTargets(selected:Formation[],order:BattleOrder){
+  const cx=selected.reduce((n,f)=>n+f.x,0)/selected.length,cy=selected.reduce((n,f)=>n+f.y,0)/selected.length
+  const spacing=Math.min(620/Math.max(1,selected.length-1),(order.columns??10)*8+24),angle=(order.facing??0)*Math.PI/180
+  return selected.map((f,i)=>({id:f.id,x:clamp((order.x??cx)+(order.facing===undefined?f.x-cx:-Math.sin(angle)*(i-(selected.length-1)/2)*spacing),35,1165),y:clamp((order.y??cy)+(order.facing===undefined?f.y-cy:Math.cos(angle)*(i-(selected.length-1)/2)*spacing),40,660)}))
+}
+
 export function makeFormations(battleId:number,army:Pick<Army,'infantry'|'archers'|'cavalry'>,owner:string|null,side:'attacker'|'defender',morale=90):Formation[] {
   let index=0
   const result:Formation[]=[]
@@ -28,8 +34,9 @@ export function applyOrder(b:Battle,formations:Formation[],owner:string,order:Ba
   const selected=formations.filter(f=>order.ids.includes(f.id)&&f.owner_id===owner&&f.soldiers>0&&f.status!=='routed')
   if(!selected.length)throw new Error('Select a formation that can receive orders.')
   const target=formations.find(f=>f.id===order.target)
+  const destinations=moveTargets(selected,order)
   if(order.kind==='move'&&b.phase==='deployment')selected.forEach((f,i)=>{
-    const tx=clamp((order.x??f.x)+(i-(selected.length-1)/2)*48,35,1165)
+    const tx=destinations[i].x
     if((f.side==='attacker'&&tx>365)||(f.side==='defender'&&tx<835))throw new Error('Deploy inside your shaded zone.')
   })
   selected.forEach((f,i)=>{
@@ -39,7 +46,7 @@ export function applyOrder(b:Battle,formations:Formation[],owner:string,order:Ba
       f.target_formation_id=target.id;f.target_x=target.x;f.target_y=target.y;f.status='moving';f.target_facing=null
       f.charge_ready=dist(f,target)>140 && f.unit_type==='cavalry' && f.stamina>35
     }else if(order.kind==='move'){
-      const tx=clamp((order.x??f.x)+(i-(selected.length-1)/2)*48,35,1165),ty=clamp(order.y??f.y,40,660)
+      const tx=destinations[i].x,ty=destinations[i].y
       if(b.phase==='deployment'&&((f.side==='attacker'&&tx>365)||(f.side==='defender'&&tx<835)))throw new Error('Deploy inside your shaded zone.')
       f.target_formation_id=null;f.target_x=tx;f.target_y=ty;f.target_facing=order.facing??null;f.status='moving';f.charge_ready=false
       if(order.columns)f.columns=clamp(Math.round(order.columns),4,20)

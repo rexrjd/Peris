@@ -65,10 +65,12 @@ export class LocalEngine implements GameEngine {
   private last=performance.now()
   private nextSave=0
   private persistent:boolean
+  private alive=true
   private nextId:number
   private finalized=new Set<number>()
   speed=1
   paused=false
+  saveError=false
   constructor(world:World,persistent=true){
     this.snapshot=world;this.mode=persistent?'solo':'practice';this.persistent=persistent
     this.nextId=Math.max(100,Date.now()%100000000)
@@ -79,7 +81,7 @@ export class LocalEngine implements GameEngine {
   }
   subscribe=(fn:()=>void)=>{this.listeners.add(fn);return()=>this.listeners.delete(fn)}
   private publish(){this.snapshot={...this.snapshot,server_now:new Date().toISOString()};this.listeners.forEach(fn=>fn())}
-  private save(){if(this.persistent)try{localStorage.setItem(SAVE_KEY,JSON.stringify(this.snapshot))}catch{/* Keep play available when storage is full. */}}
+  private save(){if(this.persistent)try{localStorage.setItem(SAVE_KEY,JSON.stringify(this.snapshot));this.saveError=false}catch{this.saveError=true}}
   private active(){return this.snapshot.battles.find(b=>b.status==='active')}
   private tick(){
     const now=performance.now(),dt=Math.min(.5,(now-this.last)/1000);this.last=now
@@ -107,9 +109,12 @@ export class LocalEngine implements GameEngine {
     instance.formations.filter(f=>f.owner_id===this.playerId).forEach(f=>f.morale=Math.min(100,90+wall*2))
     this.snapshot.battles.push(instance.battle);this.snapshot.formations.push(...instance.formations)
   }
-  startPractice(terrain:Terrain,difficulty:Difficulty){
-    const a={...this.snapshot.armies[0],infantry:200,archers:90,cavalry:36}
-    const enemy={infantry:difficulty==='easy'?130:difficulty==='hard'?240:180,archers:80,cavalry:36}
+  startPractice(terrain:Terrain,difficulty:Difficulty,doctrine:'balanced'|'infantry'|'cavalry'='balanced'){
+    const composition=doctrine==='infantry'?{infantry:320,archers:60,cavalry:12}:doctrine==='cavalry'?{infantry:160,archers:60,cavalry:90}:{infantry:200,archers:90,cavalry:36}
+    const a={...this.snapshot.armies[0],...composition}
+    const factor=difficulty==='easy'?.72:difficulty==='hard'?1.24:1
+    const total=soldierTotal(composition)
+    const enemy={infantry:Math.round(total*.57*factor),archers:Math.round(total*.27*factor),cavalry:Math.round(total*.12*factor)}
     const instance=newBattle(++this.nextId,this.playerId,a,enemy,terrain,difficulty,'The Crimson Host','practice')
     this.snapshot.battles=[instance.battle];this.snapshot.formations=instance.formations;this.publish()
   }
@@ -186,7 +191,7 @@ export class LocalEngine implements GameEngine {
     }else throw new Error('Live challenges are available in multiplayer.')
     this.publish();this.save()
   }
-  destroy=()=>{window.clearInterval(this.timer);this.save();this.listeners.clear()}
+  destroy=()=>{if(!this.alive)return;this.alive=false;window.clearInterval(this.timer);this.save();this.listeners.clear()}
 }
 
 export function readSolo():World|null{

@@ -1,15 +1,16 @@
 {
   "name": "peris",
   "private": true,
-  "version": "0.6.0",
+  "version": "0.7.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc -p tsconfig.app.json && vite build",
     "build:standalone": "npm run build && node scripts/standalone.mjs",
     "preview": "vite preview",
-    "test": "node --import tsx --test tests/game.test.ts",
-    "test:db": "node tests/database.test.mjs"
+    "test": "node --import tsx --test tests/*.test.ts",
+    "test:db": "node tests/database.test.mjs",
+    "test:fresh": "node tests/fresh-database.test.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.57.4",
