@@ -49,3 +49,43 @@ export type Army = {
   status: 'idle' | 'moving'
   updated_at: string
 }
+
+export type Battle = {
+  id: number
+  attacker_owner_id: string
+  defender_owner_id: string
+  attacker_army_id: number
+  defender_army_id: number
+  status: 'active' | 'resolved'
+  winner_owner_id: string | null
+  started_at: string
+  ended_at: string | null
+  last_tick_at: string
+  result: Record<string, unknown> | null
+}
+
+export type FormationType = 'infantry' | 'archers' | 'cavalry'
+export type FormationSide = 'attacker' | 'defender'
+export type FormationStatus = 'idle' | 'moving' | 'engaged' | 'routed'
+
+export type BattleFormation = {
+  id: number
+  battle_id: number
+  owner_id: string
+  side: FormationSide
+  unit_type: FormationType
+  initial_soldiers: number
+  soldiers: number
+  kills: number
+  morale: number
+  facing: number
+  charge_ready: boolean
+  x: number
+  y: number
+  target_x: number
+  target_y: number
+  target_formation_id: number | null
+  status: FormationStatus
+  damage_pool: number
+  updated_at: string
+}

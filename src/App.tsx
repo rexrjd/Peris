@@ -1,10 +1,19 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
+import { BattleView } from './components/BattleView'
 import { Login } from './components/Login'
 import { GameCanvas } from './game/GameCanvas'
 import { armyPosition } from './game/scenes/WorldScene'
 import { supabase } from './lib/supabase'
-import type { Army, Building, BuildingType, Player, Settlement } from './types/game'
+import type {
+  Army,
+  Battle,
+  BattleFormation,
+  Building,
+  BuildingType,
+  Player,
+  Settlement,
+} from './types/game'
 
 type ResourceBag = { wood: number; stone: number; food: number; gold: number }
 
@@ -62,6 +71,11 @@ function compactCost(cost: ResourceBag) {
   return `W ${cost.wood} · S ${cost.stone} · F ${cost.food} · G ${cost.gold}`
 }
 
+function armyTotal(army: Army | undefined | null) {
+  if (!army) return 0
+  return army.infantry + army.archers + army.cavalry
+}
+
 export default function App() {
   const [session, setSession] = useState<Session | null>(null)
   const [authLoading, setAuthLoading] = useState(true)
@@ -70,6 +84,10 @@ export default function App() {
   const [settlements, setSettlements] = useState<Settlement[]>([])
   const [buildings, setBuildings] = useState<Building[]>([])
   const [armies, setArmies] = useState<Army[]>([])
+  const [battles, setBattles] = useState<Battle[]>([])
+  const [battleFormations, setBattleFormations] = useState<BattleFormation[]>([])
+  const [selectedFormationId, setSelectedFormationId] = useState<number | null>(null)
+  const [dismissedReportId, setDismissedReportId] = useState<number | null>(null)
   const [gameError, setGameError] = useState<string | null>(null)
   const [action, setAction] = useState<string | null>(null)
   const [moveMode, setMoveMode] = useState(false)
@@ -110,6 +128,27 @@ export default function App() {
   )
   const resources = liveResources(currentSettlement)
 
+  const activeBattle = useMemo(() => {
+    if (!session) return null
+    return battles.find(
+      (battle) => battle.status === 'active'
+        && (battle.attacker_owner_id === session.user.id || battle.defender_owner_id === session.user.id),
+    ) ?? null
+  }, [battles, session])
+
+  const activeBattleFormations = useMemo(
+    () => activeBattle ? battleFormations.filter((formation) => formation.battle_id === activeBattle.id) : [],
+    [activeBattle, battleFormations],
+  )
+
+  const latestResolvedBattle = useMemo(() => {
+    if (!session) return null
+    return [...battles]
+      .filter((battle) => battle.status === 'resolved'
+        && (battle.attacker_owner_id === session.user.id || battle.defender_owner_id === session.user.id))
+      .sort((a, b) => b.id - a.id)[0] ?? null
+  }, [battles, session])
+
   const buildingByType = useCallback(
     (type: BuildingType) => currentBuildings.find((building) => building.building_type === type) ?? null,
     [currentBuildings],
@@ -121,7 +160,7 @@ export default function App() {
       return
     }
 
-    setWorldLoading(true)
+    if (players.length === 0) setWorldLoading(true)
     if (sync) {
       const syncResult = await supabase.rpc('sync_my_state')
       if (syncResult.error && !syncResult.error.message.toLowerCase().includes('function')) {
@@ -129,14 +168,22 @@ export default function App() {
       }
     }
 
-    const [playersResult, settlementsResult, buildingsResult, armiesResult] = await Promise.all([
+    const [playersResult, settlementsResult, buildingsResult, armiesResult, battlesResult, formationsResult] = await Promise.all([
       supabase.from('players').select('*').order('created_at'),
       supabase.from('settlements').select('*').order('id'),
       supabase.from('buildings').select('*').order('id'),
       supabase.from('armies').select('*').order('id'),
+      supabase.from('battles').select('*').order('id'),
+      supabase.from('battle_formations').select('*').order('id'),
     ])
 
-    const firstError = playersResult.error ?? settlementsResult.error ?? buildingsResult.error ?? armiesResult.error
+    const firstError = playersResult.error
+      ?? settlementsResult.error
+      ?? buildingsResult.error
+      ?? armiesResult.error
+      ?? battlesResult.error
+      ?? formationsResult.error
+
     if (firstError) {
       setGameError(firstError.message)
       setWorldLoading(false)
@@ -147,9 +194,11 @@ export default function App() {
     setSettlements((settlementsResult.data ?? []) as Settlement[])
     setBuildings((buildingsResult.data ?? []) as Building[])
     setArmies((armiesResult.data ?? []) as Army[])
+    setBattles((battlesResult.data ?? []) as Battle[])
+    setBattleFormations((formationsResult.data ?? []) as BattleFormation[])
     setGameError(null)
     setWorldLoading(false)
-  }, [session])
+  }, [session, players.length])
 
   useEffect(() => {
     if (!session) {
@@ -157,6 +206,8 @@ export default function App() {
       setSettlements([])
       setBuildings([])
       setArmies([])
+      setBattles([])
+      setBattleFormations([])
       setWorldLoading(false)
       return
     }
@@ -164,17 +215,48 @@ export default function App() {
     void loadWorld(true)
 
     const channel = supabase
-      .channel('peris-realm-alpha')
+      .channel('peris-realm-alpha-v5')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'players' }, () => void loadWorld(false))
       .on('postgres_changes', { event: '*', schema: 'public', table: 'settlements' }, () => void loadWorld(false))
       .on('postgres_changes', { event: '*', schema: 'public', table: 'buildings' }, () => void loadWorld(false))
       .on('postgres_changes', { event: '*', schema: 'public', table: 'armies' }, () => void loadWorld(false))
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'battles' }, () => void loadWorld(false))
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'battle_formations' }, () => void loadWorld(false))
       .subscribe()
 
     return () => {
       void supabase.removeChannel(channel)
     }
   }, [session, loadWorld])
+
+  useEffect(() => {
+    if (!activeBattle || !session) return
+
+    const mine = activeBattleFormations.find(
+      (formation) => formation.owner_id === session.user.id && formation.soldiers > 0 && formation.status !== 'routed',
+    )
+    const selectedStillValid = activeBattleFormations.some(
+      (formation) => formation.id === selectedFormationId
+        && formation.owner_id === session.user.id
+        && formation.soldiers > 0
+        && formation.status !== 'routed',
+    )
+    if (!selectedStillValid) setSelectedFormationId(mine?.id ?? null)
+  }, [activeBattle, activeBattleFormations, selectedFormationId, session])
+
+  useEffect(() => {
+    if (!activeBattle) return
+    let busy = false
+    const tick = window.setInterval(async () => {
+      if (busy) return
+      busy = true
+      const { error } = await supabase.rpc('advance_battle', { p_battle_id: activeBattle.id })
+      if (error) setGameError(error.message)
+      await loadWorld(false)
+      busy = false
+    }, 850)
+    return () => window.clearInterval(tick)
+  }, [activeBattle, loadWorld])
 
   const runAction = useCallback(async (label: string, task: () => Promise<{ error: { message: string } | null }>) => {
     setAction(label)
@@ -218,17 +300,87 @@ export default function App() {
     setAction(null)
   }, [currentArmy, moveMode, loadWorld])
 
+  const challenge = useCallback((defenderOwnerId: string) => {
+    void runAction(`challenge-${defenderOwnerId}`, async () => {
+      const { error } = await supabase.rpc('create_battle', { p_defender_owner: defenderOwnerId })
+      return { error }
+    })
+  }, [runAction])
+
+  const moveFormation = useCallback(async (formationId: number, x: number, y: number) => {
+    if (!activeBattle) return
+    setGameError(null)
+    const { error } = await supabase.rpc('issue_battle_move', {
+      p_battle_id: activeBattle.id,
+      p_formation_id: formationId,
+      p_target_x: x,
+      p_target_y: y,
+    })
+    if (error) setGameError(error.message)
+    await loadWorld(false)
+  }, [activeBattle, loadWorld])
+
+  const attackFormation = useCallback(async (formationId: number, targetFormationId: number) => {
+    if (!activeBattle) return
+    setGameError(null)
+    const { error } = await supabase.rpc('issue_battle_attack', {
+      p_battle_id: activeBattle.id,
+      p_formation_id: formationId,
+      p_target_formation_id: targetFormationId,
+    })
+    if (error) setGameError(error.message)
+    await loadWorld(false)
+  }, [activeBattle, loadWorld])
+
+  const retreat = useCallback(() => {
+    if (!activeBattle) return
+    void runAction('retreat', async () => {
+      const { error } = await supabase.rpc('retreat_from_battle', { p_battle_id: activeBattle.id })
+      return { error }
+    })
+  }, [activeBattle, runAction])
+
   if (authLoading) return <main className="loading-page">Loading Peris…</main>
   if (!session) return <Login hasSession={false} onCreated={() => void loadWorld(false)} />
   if (worldLoading && players.length === 0 && !gameError) return <main className="loading-page">Entering Realm Alpha…</main>
 
-  // This also handles a database reset while an anonymous browser session still exists.
   if (!currentPlayer && !gameError) {
     return <Login hasSession onCreated={() => void loadWorld(false)} />
   }
 
+  if (activeBattle) {
+    return (
+      <>
+        <BattleView
+          battle={activeBattle}
+          formations={activeBattleFormations}
+          players={players}
+          currentPlayerId={session.user.id}
+          selectedFormationId={selectedFormationId}
+          action={action}
+          onSelectFormation={setSelectedFormationId}
+          onMoveFormation={moveFormation}
+          onAttackFormation={attackFormation}
+          onRetreat={retreat}
+        />
+        {gameError && <div className="battle-error-toast">{gameError}</div>}
+      </>
+    )
+  }
+
   const armyPositionNow = currentArmy ? armyPosition(currentArmy) : null
   const armyMoving = armyPositionNow?.moving ?? false
+  const rivals = players.filter((player) => player.id !== session.user.id)
+  const latestReportVisible = latestResolvedBattle && latestResolvedBattle.id !== dismissedReportId
+  const latestBattleFormations = latestResolvedBattle
+    ? battleFormations.filter((formation) => formation.battle_id === latestResolvedBattle.id)
+    : []
+  const ownBattleLosses = latestBattleFormations
+    .filter((formation) => formation.owner_id === session.user.id)
+    .reduce((sum, formation) => sum + Math.max(0, formation.initial_soldiers - formation.soldiers), 0)
+  const enemyBattleLosses = latestBattleFormations
+    .filter((formation) => formation.owner_id !== session.user.id)
+    .reduce((sum, formation) => sum + Math.max(0, formation.initial_soldiers - formation.soldiers), 0)
 
   return (
     <main className="app-shell">
@@ -260,8 +412,19 @@ export default function App() {
           <strong>{gameError.includes('does not exist') || gameError.includes('column') ? 'Database reset required.' : 'Command failed.'}</strong>
           <span>{gameError}</span>
           {(gameError.includes('does not exist') || gameError.includes('column')) && (
-            <span>Run <code>supabase/RESET_AND_CREATE_V4.sql</code> once in Supabase SQL Editor.</span>
+            <span>Run <code>supabase/RESET_AND_CREATE_V5.sql</code> once in Supabase SQL Editor.</span>
           )}
+        </div>
+      )}
+
+      {latestReportVisible && latestResolvedBattle && (
+        <div className={`battle-report-banner ${latestResolvedBattle.winner_owner_id === session.user.id ? 'victory' : 'defeat'}`}>
+          <div>
+            <span className="panel-kicker">BATTLE REPORT #{latestResolvedBattle.id}</span>
+            <strong>{latestResolvedBattle.winner_owner_id === session.user.id ? 'VICTORY' : latestResolvedBattle.winner_owner_id ? 'DEFEAT' : 'DRAW'}</strong>
+            <small>Your losses: {ownBattleLosses} · Enemy losses: {enemyBattleLosses}</small>
+          </div>
+          <button onClick={() => setDismissedReportId(latestResolvedBattle.id)}>Dismiss</button>
         </div>
       )}
 
@@ -273,7 +436,7 @@ export default function App() {
           </div>
 
           <div className="settlement-summary">
-            <div><span>Population</span><strong>{currentArmy ? currentArmy.infantry + currentArmy.archers + currentArmy.cavalry : 0}</strong></div>
+            <div><span>Army size</span><strong>{armyTotal(currentArmy)}</strong></div>
             <div><span>Position</span><strong>{currentSettlement ? `${currentSettlement.x}, ${currentSettlement.y}` : '—'}</strong></div>
           </div>
 
@@ -310,7 +473,7 @@ export default function App() {
           <div className="world-toolbar">
             <div>
               <strong>World Map</strong>
-              <span>Real-time shared realm · movement persists while offline</span>
+              <span>Shared strategic layer · tactical battles open as separate battlefields</span>
             </div>
             <div className="map-legend">
               <span><b className="legend-dot gold" />Your keep</span>
@@ -347,10 +510,6 @@ export default function App() {
             <div className="unit-row"><span><i>♞</i> Cavalry</span><strong>{currentArmy?.cavalry ?? 0}</strong><button disabled={action !== null} onClick={() => recruit('cavalry')}>+2</button></div>
           </div>
 
-          <div className="recruit-note">
-            Recruitment is instant in this prototype and spends settlement resources on the server.
-          </div>
-
           <button
             className={`move-button ${moveMode ? 'active' : ''}`}
             disabled={!currentArmy || action !== null}
@@ -358,15 +517,37 @@ export default function App() {
           >
             {moveMode ? 'CANCEL ORDER' : armyMoving ? 'REDIRECT ARMY' : 'MOVE ARMY'}
           </button>
-          <p className="command-help">
-            {moveMode ? 'Click a destination on the map. Travel time is calculated by the database.' : 'Movement cannot be teleported or edited directly by the browser.'}
+
+          <h3 className="rivals-title">Rival armies</h3>
+          <div className="rival-list">
+            {rivals.length === 0 && <p className="rival-empty">A second ruler must join before you can start a field battle.</p>}
+            {rivals.map((rival) => {
+              const rivalArmy = armies.find((army) => army.owner_id === rival.id)
+              return (
+                <article className="rival-card" key={rival.id}>
+                  <div>
+                    <strong>{rival.display_name}</strong>
+                    <small>{armyTotal(rivalArmy)} soldiers</small>
+                  </div>
+                  <button
+                    disabled={!rivalArmy || armyTotal(rivalArmy) <= 0 || !currentArmy || armyTotal(currentArmy) <= 0 || action !== null}
+                    onClick={() => challenge(rival.id)}
+                  >
+                    {action === `challenge-${rival.id}` ? '…' : 'BATTLE'}
+                  </button>
+                </article>
+              )
+            })}
+          </div>
+          <p className="command-help battle-prototype-note">
+            v0.5 starts an immediate test battle. Strategic interception and sieges come after the tactical system is proven.
           </p>
         </aside>
       </section>
 
       <footer className="prototype-footer">
-        <span>PERIS v0.4 · Economy + recruitment + persistent army movement</span>
-        <span>Next milestone: raids, battle reports and territory.</span>
+        <span>PERIS v0.5 · Economy + strategic movement + Total War-style tactical PvP</span>
+        <span>Next: march-to-contact, sieges, terrain bonuses and battle replays.</span>
       </footer>
     </main>
   )

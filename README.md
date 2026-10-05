@@ -1,52 +1,45 @@
-# Peris v0.4 — Realm Alpha
+# PERIS v0.5
 
-Browser-based persistent strategy prototype built with React, Phaser, Supabase and Vercel.
+Browser strategy prototype built with React, TypeScript, Phaser and Supabase.
 
-## What this prototype does
+## Current loop
 
-- Name-only anonymous accounts
-- Server-assigned non-overlapping spawn positions
-- One permanent settlement per ruler
-- Offline resource production
-- Four upgradeable production buildings
-- One persistent army per ruler
-- Server-authoritative recruitment costs
-- Server-authoritative army movement and travel time
-- Shared realtime world for multiple players
+- anonymous ruler creation
+- persistent settlements and resources
+- buildings and recruitment
+- strategic army movement
+- real-time two-player tactical battles
+- selectable infantry, archer and cavalry formations
+- right-click movement and attack orders
+- server-side battle simulation with casualties, morale and routing
+- Rome-style cavalry charges, facing, flank/rear bonuses and morale shock
+- battle result written back to strategic armies
 
-## IMPORTANT: reset the prototype database
+## Database step
 
-This version intentionally replaces the previous prototype schema.
+If you are upgrading the working v0.4 world, run this once in **Supabase > SQL Editor**:
 
-In Supabase:
+`supabase/UPGRADE_V4_TO_V5_BATTLES.sql`
 
-1. Open **SQL Editor**.
-2. Open `supabase/RESET_AND_CREATE_V4.sql` from this repository.
-3. Paste the whole file into a new query.
-4. Run it once.
+That keeps existing rulers, settlements, buildings and strategic armies and adds the tactical battle system.
 
-This removes all existing **public Peris game data** and recreates the world. It does **not** delete Supabase Auth users. Existing anonymous browser sessions will simply be asked to choose a ruler name again.
+For a completely fresh world/reset instead, run:
 
-Do not run the old `schema.sql` or `upgrade-world-v3.sql` after the v4 reset.
+`supabase/RESET_AND_CREATE_V5.sql`
 
-## Local development
+The reset deletes Peris public game-world data but does not delete Supabase Auth users.
 
-```bash
-npm install
-npm run dev
-```
+## Battle controls
 
-## Deployment
+1. Have two rulers in the realm.
+2. In the right-hand **Rival armies** panel, press **BATTLE**.
+3. Both participants are placed into the same tactical battlefield.
+4. Left-click one of your formations.
+5. Right-click ground to move it.
+6. Right-click an enemy formation to attack it.
+7. Infantry, archers and cavalry have different speed/range/matchups.
+8. Long attack runs can prime a charge; rear and flank attacks multiply shock.
+9. Formations can rout from low morale before every soldier is killed.
+10. The surviving soldier counts are written back to each strategic army when the battle ends.
 
-Push to `main` in `rexrjd/Peris`. Vercel is connected to that repository and will redeploy automatically.
-
-## Current game loop
-
-1. Found a realm.
-2. Accumulate resources over real time.
-3. Upgrade production buildings.
-4. Recruit units.
-5. Issue army movement orders on the shared map.
-6. Close the browser and return later — production and travel are based on timestamps.
-
-Next milestone: raids, combat resolution, battle reports and territory control.
+For this prototype, battles can be challenged immediately from anywhere on the strategic map. March-to-contact, interception and sieges are the next strategic-layer integration step.
