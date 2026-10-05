@@ -1,0 +1,44 @@
+/* City and legion */
+.city-column{min-width:0}
+.city-panel{border-color:#b9b07a55;border-radius:0;background:#6c8050;box-shadow:0 6px 35px #0c1d1930;overflow:hidden}
+.city-art{display:block;width:100%;height:auto;max-height:none}
+.city-selection-ring{animation:city-ring 2.3s ease-in-out infinite}
+.city-node{cursor:pointer}
+.city-node:hover rect{stroke:#f7dba5;stroke-width:2px}
+@keyframes city-ring{50%{opacity:.4}}
+.building-grid{padding:20px;gap:10px;grid-template-columns:repeat(4,minmax(0,1fr))}
+.building-grid>button{background:#253728;border:1px solid #a4ac7636;border-radius:3px;padding:15px 10px;gap:10px;color:#c6b57c;text-align:left;min-width:0}
+.building-grid>button>span{font-size:10px;color:#c8ccb0}
+.building-grid small{font-size:8px;color:#879d73;margin-top:6px}
+.building-grid>button.selected{background:linear-gradient(#3f472b,#323e25);border-color:#cfb47790;color:#dec18a}
+.building-grid>button.selected>span{color:#ebd6a7}
+.building-grid>button>svg{width:20px;flex-shrink:0}
+.detail-panel{background:linear-gradient(160deg,#2b3b2a,#202f22);color:#c0c7aa;border-color:#bab4782a;padding:28px 24px}
+.detail-panel .eyebrow{color:#b3a575;font-size:8px}
+.detail-panel h2{font-size:30px;color:#e7d9b4;margin:18px 0 14px}
+.detail-panel>p{font-size:12px;color:#a8b596;line-height:1.7}
+.detail-panel .tag{color:#d2c293}
+.building-emblem{background:radial-gradient(#adab6214,transparent);border-color:#a9af7444;border-radius:50%;color:#d0b780;margin-bottom:18px;box-shadow:inset 0 0 25px #aead6010}
+.benefit{color:#c0c89d;background:#98a8610c;border-color:#99af7240;font-size:11px;padding:13px 10px}
+.detail-panel .cost{color:#c4b67e;gap:14px}
+.detail-panel .cost b{font-size:13px}
+.cost .short{color:#d0916b}
+.detail-panel>.button{width:100%;margin-top:18px}
+.upgrade-comparison{display:flex;align-items:center;justify-content:space-between;margin:20px 0;gap:8px}
+.upgrade-comparison>div{display:flex;flex-direction:column;gap:8px}
+.upgrade-comparison small{font-size:7px;letter-spacing:1px;color:#809976}
+.upgrade-comparison strong{font:20px Georgia;color:#d9c792}
+.upgrade-comparison>svg{color:#788e67;width:16px}
+.upgrade-comparison>div:last-child strong{color:#e6d4a4}
+.queue-card{background:#17291d66;border:1px solid #b5ac7144;border-radius:3px;color:#bdc8a4;padding:16px}
+.queue-card strong{color:#e1d2a4;font-family:Georgia;font-size:20px}
+.queue-card .field-label{color:#9dab83}
+.storage-note{border-color:#abaf7833;color:#8ca37b;font-size:11px;line-height:1.7}
+.detail-panel .rule{background:#a4ac7333}
+.army-view .view-heading{padding-bottom:31px}
+.quantity-input button{background:#30432c;border-color:#a9ad7736;color:#ddc991;min-width:34px}
+.quantity-input input{background:#192d20;border-color:#a9ad7736;color:#e5d3a7;min-height:36px}
+.alert{background:#a7aa5d14;color:#c5c9a5;border-color:#b8aa673f;font-size:12px;line-height:1.8;border-radius:3px}
+.alert.error{background:#a25b3a1b;color:#e6b59b;border-color:#ab7a514d}
+.army-view>.alert{margin:0 30px 22px}
+.army-view>.alert>button{color:#d2b67b;background:none;border:0}

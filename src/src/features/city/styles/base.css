@@ -1,0 +1,42 @@
+/* City and military */
+.view-heading{display:flex;align-items:center;justify-content:space-between;gap:24px;padding:30px 32px 26px}
+.view-heading .eyebrow{font-size:9px;color:#8d8d65;letter-spacing:1.7px}
+.view-heading h1{font-size:33px;margin:11px 0 8px;color:#3d4936}
+.view-heading p{font-size:12px;color:#959780;margin-bottom:0}
+.view-heading .tag{color:#747a59;white-space:nowrap}
+.settlement-layout{display:grid;grid-template-columns:minmax(0,1fr) 280px;min-height:100%}
+.city-column{min-width:0}
+.city-panel{border-top:1px solid #b1b09040;border-bottom:1px solid #999f7a40;background:#acb084;position:relative;line-height:0}
+.city-art{width:100%;max-height:520px;display:block}
+.city-node{cursor:pointer;transition:filter .15s}
+.city-node:hover{filter:brightness(1.18)}
+.city-flag{transform-origin:0% 50%;animation:flag-wave 3s ease-in-out infinite}
+@keyframes flag-wave{50%{transform:skewY(6deg)}}
+.building-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:22px}
+.building-grid button{display:flex;align-items:center;gap:8px;color:#7f8666;background:#d9d9c551;border:1px solid #afb09250;text-align:left;font-size:11px;padding:13px 10px}
+.building-grid button.selected{background:#d0c49f50;border-color:#b3a473;color:#6e623e}
+.building-grid button>span{flex:1}
+.building-grid small{display:block;margin-top:5px;font-size:9px;color:#9ba184}
+.detail-panel{background:#efeadc;border-left:1px solid #b0ad8a44;padding:31px 24px;color:#535a44}
+.detail-panel>.eyebrow{color:#9b9773;font-size:8px;letter-spacing:1.2px}
+.building-emblem{display:flex;align-items:center;justify-content:center;width:106px;height:106px;margin:32px auto 25px;border:1px solid #b4b28b50;background:radial-gradient(#d0c79e44,#bfbd9722);border-radius:50%;color:#9b9469}
+.detail-panel h2{text-align:center;font-size:27px;margin-bottom:13px}
+.detail-panel>.tag{display:flex;justify-content:center;width:max-content;margin:0 auto 20px;color:#919473;background:#bab99515;font-size:9px}
+.detail-panel>p{font-size:12px;color:#91957b;line-height:1.7}
+.benefit{display:flex;gap:9px;font-size:11px;color:#817746;padding:11px 12px;background:#a9a36c18;line-height:1.6}
+.detail-panel>.button{width:100%;margin-top:18px;font-size:12px}
+.detail-panel>.field-label{color:#999572;font-size:9px}
+.queue-card{margin-top:27px;border:1px solid #b8b79540;padding:14px}
+.queue-card .field-label{margin:0 0 10px;font-size:8px;color:#999576}
+.queue-card strong{display:block;font-family:Georgia;font-size:16px;font-weight:400;color:#727750}
+.queue-card .progress-track{margin:13px 0 8px}
+.queue-card small{font-size:10px;color:#97997c}
+.storage-note{display:flex;align-items:center;gap:11px;margin-top:30px;padding-top:22px;border-top:1px solid #a3a57f30;color:#aaa581}
+.storage-note strong{display:block;color:#898d6c;font-weight:400;font-size:11px}
+.storage-note small{display:block;font-size:10px;line-height:1.6;margin-top:5px;color:#9ba087}
+.army-view{padding-bottom:28px}
+.quantity-input{display:flex;align-items:stretch;border:1px solid #b7b39280;background:#e6e1cc}
+.quantity-input button{width:34px;border:0;background:transparent;color:#858358;font-size:21px}
+.quantity-input input{border:0;background:none;color:#697250;padding:10px 5px;text-align:center;appearance:textfield;-moz-appearance:textfield}
+.quantity-input input::-webkit-inner-spin-button,.quantity-input input::-webkit-outer-spin-button{-webkit-appearance:none}
+.army-view>.alert{margin:0 32px 20px}

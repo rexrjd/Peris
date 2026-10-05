@@ -1,0 +1,51 @@
+/* Menu */
+.launcher-shade{background:linear-gradient(90deg,#101c18f5 0%,#10201af0 18%,#15231cba 37%,#192c2330 62%,#14231c05),linear-gradient(0deg,#101c18c9,transparent 24%,transparent 88%,#101c18a0)}
+.launcher-panel{width:398px;margin-left:max(7vw,45px);animation:arrive .65s ease both}
+.launcher-panel .crest{width:50px;height:60px;margin-bottom:25px}
+.launcher-panel h1{font-size:96px;letter-spacing:17px;font-weight:400;margin-bottom:17px;text-shadow:0 4px 20px #10231699}
+.launcher-intro{font-size:21px;line-height:1.6;color:#ded6bd;margin-bottom:26px}
+.launcher-top{left:42px;right:42px;top:28px;align-items:center;color:#ddd3b6;letter-spacing:2px}
+.launcher-top>div{display:flex;gap:20px;letter-spacing:0}
+.launcher-top button{background:none;color:#d9d1b4;border:0;display:flex;gap:7px;align-items:center;padding:6px;font-size:11px}
+.launcher-top button:hover{color:#fff0c7}
+.launcher-bottom{align-items:center;color:#b9c1a8;letter-spacing:1px}
+.launcher-bottom button{background:none;border:0;color:#bbc1a6;font-size:10px;padding:0}
+.mode-tabs{border-bottom-color:#cfb67e38;margin-bottom:21px}
+.mode-tabs button{font-size:12px;color:#afb9a1;padding:12px 0}
+.mode-tabs button.active{border-bottom-color:#dac48c;color:#f1dfb7}
+.menu-save{padding:10px 0 3px;display:flex;flex-direction:column;gap:8px}
+.menu-save strong{font:25px Georgia,serif;color:#e8ddbd}
+.menu-save small{font-size:11px;color:#aeb99d}
+.menu-standards{display:flex;gap:7px;margin-top:5px}
+.menu-standards i{width:34px;height:31px;background:#263f302e;border:1px solid #a1ae762a;color:#849875;display:grid;place-items:center}
+.menu-standards i.claimed{color:#ebd59a;background:#d3b07313;border-color:#d3b07366}
+.launch-cta{height:50px;font-size:13px;margin-top:20px}
+.menu-secondary{background:none;border:0;color:#c5cbb0;width:100%;padding:14px;font-size:11px}
+.menu-secondary:hover{color:#f3dfab}
+.quick-battle-link{padding:20px 0 0;margin-top:17px;font-size:13px;letter-spacing:.4px;color:#e3cb96}
+.quick-battle-link>span{display:flex;align-items:center;gap:10px;font-size:10px;color:#b5bba1}
+.mode-description{font-size:12px;line-height:1.7;color:#afbaa3}
+.launcher-dust{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.launcher-dust i{position:absolute;bottom:-20px;width:3px;height:3px;border-radius:50%;background:#e3c08788;box-shadow:0 0 8px #e8c58655;animation:drift 23s linear infinite}
+@keyframes drift{0%{transform:translate(0,0);opacity:0}15%{opacity:.5}75%{opacity:.15}100%{transform:translate(-120px,-90vh);opacity:0}}
+@keyframes arrive{from{transform:translateY(10px);opacity:0}to{transform:translateY(0);opacity:1}}
+.loading-bar{height:3px;background:#71936b22;overflow:hidden;margin-top:15px}
+.loading-bar i{display:block;width:40%;height:100%;background:#d7c187;animation:loading 1.2s ease-in-out infinite alternate}
+@keyframes loading{to{transform:translateX(150%)}}
+.new-campaign-modal form>.button{width:100%;margin-top:20px}
+.new-realm-note{display:flex;gap:12px;align-items:center;margin-top:16px;border:1px solid var(--line);padding:12px;background:#a5aa6a08}
+.new-realm-note p{font-size:11px;line-height:1.7;margin:0}.new-realm-note svg{flex-shrink:0;color:#cbb982}
+.quick-setup{width:680px;padding:34px}
+.quick-setup>p{font-size:13px;line-height:1.8;color:#b8c1a7}
+.quick-setup .terrain-options{gap:9px;margin:10px 0 12px}
+.terrain-options button{height:100px;padding:16px 8px;gap:14px;background:linear-gradient(#233628cc,#223227cc),url('/art/shared/meadow-ground.png') center/cover;border-color:#aab18035;border-radius:3px;color:#c3c9af;box-shadow:inset 0 0 30px #13231933}
+.terrain-options button.selected{background:linear-gradient(#82764144,#59674155),url('/art/shared/meadow-ground.png') center/cover;border-color:#d9bd7d;color:#f1dfb3;box-shadow:inset 0 0 30px #cbb7790a}
+.terrain-options span{font-size:10px;text-transform:none}
+.setup-terrain-note{display:flex;align-items:center;gap:10px;font-size:11px;color:#b8b99b;line-height:1.6;margin-bottom:20px}
+.doctrine-options{display:grid;gap:7px;margin:11px 0 20px}
+.doctrine-options button{display:flex;align-items:center;gap:14px;text-align:left;padding:12px 15px;border:1px solid #9cac6a33;background:#18281ca0;color:#c9d1b3;border-radius:3px}
+.doctrine-options strong{display:block;font-size:12px}.doctrine-options small{display:block;color:#96a885;font-size:10px;margin-top:4px}
+.doctrine-options button.selected{border-color:#ccb274;background:#b6a2610d;color:#ebd69c}
+.quick-setup select{width:100%;margin-bottom:22px}
+
+

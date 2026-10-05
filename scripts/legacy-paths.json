@@ -1,0 +1,136 @@
+{
+  "public/art/environment-props.png": [
+    "8bd987d1965085ae713a5d3a9443f9acbac068ca6fcf69891e82f3e357ebfd24"
+  ],
+  "public/art/field-soldiers.png": [
+    "a899a515acfa4b2cd1f97f7b1a9d30ee82241dfcffc6d29d8496afe4bbd6378a"
+  ],
+  "public/art/legion-portraits.png": [
+    "cb1f3a97dbbfb036d3e9e07d8390f667787a9f979ba49eed81e303250294103f"
+  ],
+  "public/art/meadow-ground.png": [
+    "108cf053a67d5f0a3c22408c6064515b285929370c1be20455c0cf5c7a3af01f"
+  ],
+  "public/art/peris-dawn.png": [
+    "c51d55c848213b6b736f8ca7b3474c4c3d8855e674ac1651f7c010b2fd146553"
+  ],
+  "public/art/roman-city.png": [
+    "940c0d1ae5b71d86ba829d246010b2594422b49bc7cb0568e0e3e22afb079c80"
+  ],
+  "src/App.tsx": [
+    "382c44cddd452b360c108b65f96a6e739954c13908fbab6cd99d67541c5072f4",
+    "446d1f24869422f10642227e6e142d204abce48996d5d7d210f853be427850f1",
+    "8ce1a36e7dd5c50b37a0c886b007742ca40e1130961b7ed3740a011b56828108"
+  ],
+  "src/components/ArmyView.tsx": [
+    "22b339c0afa0524a3056a96533ac652a01bf7f4c513488b5a8edfa6cf92f7e72",
+    "d79f8ac81717910ecaf49380573a9360bd50dea3b4c5de10a439cc2223cf2b46"
+  ],
+  "src/components/BattleView.tsx": [
+    "62f69e6793d18f370fba096a9158eb1e35450cd282c91fe7dec005cf001c767f",
+    "cecdc62de72f47c25325a97e19086b1d805946e820b6d74e1226d501fb4930f9",
+    "d68091611178acfc1a3829444555f4a216bb429f1893cfc84ad42862ea438449"
+  ],
+  "src/components/CampaignMoments.tsx": [
+    "94b7c6e8bad4de129ee941c929dbd5e17dd1654d101827bc4d27e33910f8eeea"
+  ],
+  "src/components/Chronicle.tsx": [
+    "272410e0f0ae53cdb77ffc621713994eae7e55b6b905dfb2629736b53833b8be",
+    "d03508df9de8d1748b98c8954a156b51c50cb1184614fa68d5ee38564d54b154"
+  ],
+  "src/components/Codex.tsx": [
+    "469571a6500dda6e11c0d160cb13a92dae1fe2dee0cc45cd1e4615ebc729c479"
+  ],
+  "src/components/Icons.tsx": [
+    "65eea110fff01f5c892561ab25949358177be29b0493633bc2ce066efac28728",
+    "b08821e2fcad71bf754988f917c96b2433622b053f52c16ba322494263c67b32"
+  ],
+  "src/components/Login.tsx": [
+    "40d242f6e874c851f36f3dac9efbd6d88f1c439509c4401535b493f4c8b0fc30",
+    "6024bff89392d92962f8a1c42b828f47e63473de43596657f31dbc7f7a459a99",
+    "fb50a5d090ef212e6d1e619e7564b7efbac9a31509b381caa56d9b4d7aab8c5a"
+  ],
+  "src/components/Settings.tsx": [
+    "6ccbf523d4917712ce89f973b8fffe3d9db70aafb8442e6d3851ea63d3182bda"
+  ],
+  "src/components/SettlementView.tsx": [
+    "36a909700e036c916265f8527e629dc7d8d0c0e1287d89656c993f11d04f23fb",
+    "edc23a0939ac2a69b0b6f7ccd3e48ab1ca312f8491b88eca7121f7decb014173"
+  ],
+  "src/components/Shared.tsx": [
+    "113347e1e99e7b1abd25e67dd697f084c95a35aad079414fe0606ce5ee1bb5c1",
+    "ca58fbe79182230aaa7b1391328bc2ccb871ca4a2879e0a12917c66173a7b663"
+  ],
+  "src/components/WorldView.tsx": [
+    "e85a9d2555e315971b974dadfacbe6de59f0d5523d14f225a6cef7f63ca8b35a"
+  ],
+  "src/game/BattleCanvas.tsx": [
+    "2f8693b8f1dfb888e4998115ca8f6eaf3db263ad336837d3b93f41839439698d",
+    "976ba75b4810cf2dab10fe2fe8ac9b68d67d487ede487699fd99a3d8add4bd52"
+  ],
+  "src/game/GameCanvas.tsx": [
+    "1fdd9d769ebfd4b9e28f3cc666995b34966b120261831b68afcc45ba57708c0e",
+    "2a8ae7aa3129030f08c479a6e1626299f0951bc05724b985ca072d4efae23e3b",
+    "eedec4b6928f980dc6e8032e5d462508d24a4297c945774268441a896d87e83b"
+  ],
+  "src/game/assets.ts": [
+    "e2c739dd0fd2e7e13a6e7d59809f8d3050ed796400f6cc5af91804acb2fedf64"
+  ],
+  "src/game/campaign.ts": [
+    "08ba064336ebc655bc0ca56384c7e7c73413a300253f1018e30d29b81157487f"
+  ],
+  "src/game/graphics.ts": [
+    "3fe610210cbcae54ee45757ac03ec3049649d1283084fc9611704c472cd6a723",
+    "dae14126c0b9d573fb7d812708fc42f217d2aaccc5d153d35f97aba7abea4200"
+  ],
+  "src/game/renderer.ts": [
+    "2de009b0b0040249ac8bcf5b9c05e1d7c9bd4d719f752d20ce2285b4bf7792b8",
+    "ff00ec81c67516028345a5a75625737f76ca9f6a823adc1b6281b58cd0c98542"
+  ],
+  "src/game/rules.ts": [
+    "e960bfdbf1b20b146e0b9e19aebac82d8eb57ad2cb4d84c03ac7503a70e70cc7"
+  ],
+  "src/game/scenes/BattleScene.ts": [
+    "19f3d9939155d6ae239cb3df64c80d10b7545b48006dbaa99f3cf16326fb30ac",
+    "cac418a1b1c080c94d56ef0477993d3720ac03783cf0e1de0c76d8592ad805f9"
+  ],
+  "src/game/scenes/WorldScene.ts": [
+    "4b00c68b022fa4133d7d4f525ae0f119ff276f18b3a610bff3bd2c465f31e0f4",
+    "b9df55ba5ed7594aa74ce33116b91116a4f01e915236b95574b1283c9207aaa9"
+  ],
+  "src/game/simulation.ts": [
+    "9c6a55d60fdf5ff60e2a978f88ff4c0d092897de57c72eff506111a260b24c74",
+    "add401fa4752d0dda283c1c2dc603a29f69211c17b6f5efe57006cc44760430c"
+  ],
+  "src/lib/audio.ts": [
+    "8177866104dc3f10d725ad3142d5242d8698d37f118a387db1b678601f45250a",
+    "ff1f1ccc57514a17420d55d981a5d53ca4cb507f030cab918b879e97e4d0d474"
+  ],
+  "src/lib/local.ts": [
+    "c9e5efd0df5b841fc28ddf76a1b7c13f4d0cb61b9e3dbe473c83403bb28e149c",
+    "d953e8814676f7bb82700afc67ba19225f8bec21c031cb12d8ec2d30f08d0444"
+  ],
+  "src/lib/online.ts": [
+    "3fe48d395dda9b0cae4d9c3720cd987feeb933b59f243dbf4ecdf44321d325b7",
+    "48af1c63c6d30df52d65b8edd25ac7962c92bcd32225d836d71759b2a7e4da3c"
+  ],
+  "src/lib/preferences.ts": [
+    "c833fc384e14b6efe25c9f2995c5a8493a380771cb6ceeec7beca225002aa074"
+  ],
+  "src/lib/saves.ts": [
+    "018cbad41a2ec05a49c2569a34247124eee08a7c67a77b3634349eb248b226a3"
+  ],
+  "src/lib/supabase.ts": [
+    "3bb37b67785d54a82ea3480b3b9ea5e7efc3ea02e8c453ace15966939be9dc3f",
+    "89570b166fa428896736ca91486f5baa98ccead1a85cf341fc661a67917d25dc"
+  ],
+  "src/styles.css": [
+    "d908ed931bcfa4a9d71752e34fb35708f9d590a2e6d8e934629d95f7b04398af",
+    "e4f68ae28db60e4bb7d6c1df2ad5e6c36d99e4d18967b85b54e58a50194a4ade",
+    "fb78575943da74381240a51d5f2b97e0def834a88ae0481cb671c57992c064ea"
+  ],
+  "src/types/game.ts": [
+    "34945a4dbd771716bb46bfd57b16e9201409286d207aefb9a365744c53230480",
+    "460ff1635605ccc3da1d4195c945342b83a3ca751018bb1bc44f745bf5309e40"
+  ]
+}

@@ -1,0 +1,19 @@
+.codex-modal{width:840px}
+.codex-modal .modal-tabs{gap:27px}
+.codex-lead{font:italic 23px Georgia!important;color:#e8d6ad!important}
+.codex-steps{display:grid;grid-template-columns:1fr 1fr;gap:25px;margin-top:27px}
+.codex-steps article{display:flex;gap:17px}
+.codex-steps svg{color:#c6b07b;flex-shrink:0;margin-top:5px}
+.codex-steps h3{color:#e7d9b5;font-size:21px;margin:0 0 9px}
+.codex-steps p{font-size:12px;margin:0}
+.codex-note{border-top:1px solid #b2af7c35;padding-top:20px;margin-top:26px;font-size:11px!important;color:#a5b298!important}
+.codex-troops{display:grid;gap:18px}
+.codex-troops article{display:flex;gap:22px;align-items:center;padding:15px 0;border-bottom:1px solid #a9b17a25}
+.codex-troops .unit-portrait{width:92px;height:100px;flex-shrink:0;border:1px solid #af9e6d66}
+.codex-troops h3{font-size:25px;color:#e6d9b2;margin:6px 0 9px}
+.codex-troops p{margin:0;font-size:12px}
+.codex-terrains{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.codex-terrains article{border:1px solid #aab1802d;background:#18281c66;padding:17px;border-radius:3px}
+.codex-terrains h3{font-size:22px;color:#e5d5ae;margin:0 0 11px}
+.codex-terrains p{font-size:12px;margin:0 0 15px}
+.codex-terrains small{color:#d0bc85;font-size:10px;line-height:1.6;display:block}

@@ -1,0 +1,29 @@
+/* The Six Standards — release presentation */
+@font-face{font-family:'Open Sans';src:url('/fonts/OpenSans-Regular.ttf') format('truetype');font-weight:400;font-display:swap}
+@font-face{font-family:'Open Sans';src:url('/fonts/OpenSans-Bold.ttf') format('truetype');font-weight:700;font-display:swap}
+:root{--ink:#142019;--panel:#223025;--panel-deep:#18251d;--gold:#dac08a;--gold-bright:#f0d69e;--paper:#eee4cb;--muted:#a4ae95;--line:#b9ae7b35}
+body,button,input,select,textarea{font-family:'Open Sans',Arial,sans-serif}
+body{background:var(--ink)}
+button,input,select{transition:background .18s,border-color .18s,color .18s,box-shadow .18s}
+button{touch-action:manipulation}
+button:focus-visible,[role=button]:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid #ecd49c;outline-offset:3px}
+button:disabled{cursor:default;opacity:.46}
+h1,h2,h3{font-family:Georgia,'Times New Roman',serif;font-weight:400}
+.eyebrow{font-size:9px;letter-spacing:1.7px}
+.button{min-height:42px;border-radius:3px;font-size:12px;letter-spacing:.2px;gap:10px}
+.button.gold{background:linear-gradient(145deg,#eed7a5,#cfb379);color:#283528;border:1px solid #f4dfa9;box-shadow:0 2px 9px #080d0920,inset 0 1px 0 #fff5d480;font-weight:700}
+.button.gold:hover:not(:disabled){background:linear-gradient(145deg,#fae6ba,#dec78f);box-shadow:0 3px 17px #d7b06b1a}
+.button.outline{border-color:#b9b18255;color:#d8cfb0;background:#18281a44}
+.button.outline:hover:not(:disabled){border-color:#d6c39499;background:#bbaa6612}
+.button.text{background:transparent;border:0;box-shadow:none;color:#c7c4a5}
+.muted{color:#a8ad96;font-size:12px;line-height:1.7}
+kbd{display:inline-block;border:1px solid #aaa57740;background:#9eaa6a0b;color:#b9ba9a;border-radius:2px;padding:2px 5px;font:9px 'Open Sans',sans-serif;white-space:nowrap}
+.field-label{font-size:9px;letter-spacing:1.2px;color:#9ca888}
+.rule{border-color:#c0b88825}
+.progress-track{background:#101d1755;height:5px;border-radius:5px;overflow:hidden}
+.progress-track i{border-radius:5px;background:linear-gradient(90deg,#9b9b69,#d8c28d);transition:width .3s}
+input:not([type=checkbox]):not([type=range]),select{border-radius:3px;background:#17261de0;color:#e5dabb;border-color:#a5ac7855;min-height:43px}
+input[type=range]{accent-color:#cfb47d;cursor:pointer}
+input[type=checkbox]{accent-color:#d8bd86}
+
+

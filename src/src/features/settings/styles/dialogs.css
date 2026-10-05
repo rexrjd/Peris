@@ -1,0 +1,18 @@
+.modal-actions,.save-actions{display:flex;gap:10px;margin-top:20px}
+.modal-actions>.button,.save-actions>.button{flex:1}
+.settings-modal{width:610px}
+.settings-action{width:100%;display:flex;align-items:center;gap:13px;padding:16px 0;border:0;border-bottom:1px solid #aab2782c;background:none;color:#d2d3b5;font-size:12px;text-align:left}
+.settings-action>small{margin-left:auto;font-size:10px;color:#aeb49c}
+.settings-action svg{color:#c0b17e}
+.settings-action:hover{color:#f4dfac}
+.settings-version{display:flex;justify-content:space-between;font-size:8px;letter-spacing:1.2px;color:#798c70;border-top:1px solid #9ba27422;margin-top:30px;padding-top:16px}
+.save-summary{display:flex;align-items:center;gap:14px;margin:25px 0;background:#13231988;border:1px solid #adbc8144;padding:18px;border-radius:4px}
+.save-summary>svg{color:#c3b17b;flex-shrink:0}
+.save-summary strong{font:20px Georgia,serif;color:#e2d6b4}
+.save-summary span{display:block;font-size:10px;color:#99b187;margin-top:7px}
+.save-summary .save-live{margin-left:auto;color:#c3cfab;margin-top:0;font-size:9px}
+.save-actions{margin:0 0 16px}
+.save-actions .button{font-size:11px}
+.import-confirm{padding:20px;background:#c1ab6810;border:1px solid #bca27055;margin-top:20px}
+.import-confirm strong{color:#e5d3a5}
+.import-confirm p{font-size:12px}

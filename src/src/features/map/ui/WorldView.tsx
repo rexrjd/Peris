@@ -1,0 +1,56 @@
+import { useState } from 'react';
+import { type World } from '../../../shared/model/world';
+import { type MapSelection } from '../domain/types';
+import { type Command } from '../../../shared/model/commands';
+import { BRIEFINGS, campaignRank, conquered, nextCampaign, readiness } from '../../campaign/domain/progression';
+import { QUESTS } from '../../campaign/domain/quests';
+import { Icon } from '../../../shared/ui/Icons';
+import { clock } from '../../../shared/time/clock';
+import { GameCanvas } from '../../../engine/rendering/GameCanvas';
+import { soldierTotal } from '../../army/domain/units';
+import { Cost, Modal } from '../../../shared/ui/Shared';
+import { lootFor } from '../../campaign/domain/rewards';
+import { playerName } from '../../campaign/domain/players';
+import { dist } from '../../../shared/math/geometry';
+import { armyPosition } from '../domain/movement';
+type View = 'world' | 'settlement' | 'army' | 'chronicle';
+export function WorldView({ world, playerId, selection, setSelection, moveMode, setMoveMode, run, busy, now, navigate }: {
+    world: World;
+    playerId: string;
+    selection: MapSelection;
+    setSelection: (s: MapSelection) => void;
+    moveMode: boolean;
+    setMoveMode: (b: boolean) => void;
+    run: (c: Command, m?: string) => void;
+    busy: boolean;
+    now: number;
+    navigate: (view: View) => void;
+}) {
+    const [briefing, setBriefing] = useState<number | null>(null);
+    const player = world.players.find(p => p.id === playerId)!, town = world.settlements.find(s => s.owner_id === playerId)!, army = world.armies.find(a => a.owner_id === playerId)!;
+    const done = conquered(world, playerId), next = nextCampaign(world, playerId), camp = selection?.kind === 'camp' ? world.camps.find(c => c.id === selection.id) : null, selectedTown = selection?.kind === 'settlement' ? world.settlements.find(s => s.id === selection.id) : null, selectedArmy = selection?.kind === 'army' ? world.armies.find(a => a.id === selection.id) : null;
+    const moving = army.status === 'moving' && Date.parse(army.arrival_at) > now, training = world.orders.filter(o => o.owner_id === playerId && o.kind === 'recruit'), outgoing = world.challenges.some(c => c.attacker_owner_id === playerId), cooldown = camp ? world.progress.find(p => p.owner_id === playerId && p.camp_id === camp.id) : null, cooling = !!(cooldown && Date.parse(cooldown.available_at) > now);
+    const claimable = QUESTS.filter(q => player[q.stat] >= q.target && !world.claims.some(c => c.owner_id === playerId && c.quest_id === q.id));
+    const upgrade = world.orders.find(o => o.owner_id === playerId && o.kind === 'upgrade');
+    const advice = next ? readiness(world, playerId, next) : null;
+    return <>
+  <aside className="campaign-sidebar"><div className="province-title"><span className="eyebrow">THE SIX STANDARDS</span><h1>A province to restore</h1><p>{campaignRank(done.size)}</p><div className="campaign-progress"><div><i style={{ width: `${done.size / 6 * 100}%` }}/></div><span>{done.size} of 6 standards home</span></div></div>
+   <div className="campaign-trail">{world.camps.map(c => <button key={c.id} className={`${camp?.id === c.id ? 'selected' : ''} ${done.has(c.id) ? 'conquered' : ''} ${next?.id === c.id ? 'next' : ''}`} onClick={() => setSelection({ kind: 'camp', id: c.id })}><span className="trail-marker">{done.has(c.id) ? <Icon name="check" size={17}/> : c.id}</span><span><small>{done.has(c.id) ? 'STANDARD RECOVERED' : next?.id === c.id ? 'NEXT CAMPAIGN' : `CAMPAIGN ${c.id}`}</small><strong>{c.name}</strong><em>{c.terrain === 'woods' ? 'Woodland' : c.terrain === 'river' ? 'River crossing' : c.terrain === 'highlands' ? 'High country' : 'Open country'}</em></span><Icon name="arrow" size={13}/></button>)}</div>
+   <div className="advisor-card"><span className="eyebrow"><Icon name="flag" size={13}/>YOUR NEXT ORDER</span><strong>{next ? advice!.ratio < .9 ? 'Strengthen the legion' : BRIEFINGS[next.id].chapter : 'The province is yours'}</strong><p>{next ? advice!.ratio < .9 ? `Raise your host toward ${BRIEFINGS[next.id].recommended} soldiers before taking ${next.name}.` : BRIEFINGS[next.id].tactic : 'Develop your city, revisit the campaign fields, or invite another ruler to a live duel.'}</p>{next && <button onClick={() => advice!.ratio < .9 ? navigate('army') : setSelection({ kind: 'camp', id: next.id })}>{advice!.ratio < .9 ? 'Visit the training grounds' : 'View the next field'} <Icon name="arrow" size={13}/></button>}</div>
+   {claimable.length > 0 && <div className="reward-card"><span className="eyebrow">REWARDS AWAIT</span>{claimable.map(q => <button key={q.id} disabled={busy} onClick={() => run({ type: 'claim', questId: q.id }, `${q.title} · supplies collected`)}><Icon name="crown" size={19}/><span><strong>{q.title}</strong><small>Collect supplies · +{q.reward.gold} gold</small></span><Icon name="arrow" size={15}/></button>)}</div>}
+   {player.upgrades === 0 && <div className="first-orders"><span className="eyebrow">ESTABLISH YOUR REALM</span><button onClick={() => navigate('settlement')}><Icon name={upgrade ? 'time' : 'town'} size={17}/><span>{upgrade ? `Construction · ${clock((Date.parse(upgrade.finish_at) - now) / 1000)}` : 'Begin your first city upgrade'}</span><Icon name="arrow" size={13}/></button>{player.recruits < 20 && <button onClick={() => navigate('army')}><Icon name="army" size={17}/><span>Train 20 new legionaries</span><Icon name="arrow" size={13}/></button>}</div>}
+  </aside>
+  <section className="world-stage"><div className="world-toolbar"><div><span className="eyebrow">YOUR CAMPAIGN</span><strong>The province of Peris</strong></div><div><span className="map-legend"><i />Your legion <i />Rebel hosts</span><button className={moveMode ? 'selected' : ''} onClick={() => setMoveMode(!moveMode)}><Icon name="flag" size={16}/>{moveMode ? 'Cancel march' : 'March'}</button></div></div>
+   <div className="world-map-wrap"><GameCanvas state={{ world, playerId, mode: 'world', selection, selectedIds: [], moveMode }} actions={{ selectMap: setSelection, moveArmy: (x, y) => { setMoveMode(false); run({ type: 'move', x, y }, 'Marching orders issued'); }, selectUnits: () => { }, order: () => { }, pause: () => { }, rally: () => { } }}/>
+    {moveMode && <div className="map-command-hint"><Icon name="flag"/>Choose a destination for your legion.</div>}
+    {selection && <aside className="map-inspector"><button className="inspector-close" aria-label="Close map details" onClick={() => setSelection(null)}>×</button>
+     {camp && <><span className="eyebrow">{done.has(camp.id) ? 'A STANDARD RECOVERED' : `CAMPAIGN ${camp.id} OF 6`}</span><h2>{camp.name}</h2><p>{camp.description}</p><div className="camp-force"><span><Icon name="shield" size={15}/><b>{camp.infantry}</b> Infantry</span><span><Icon name="bow" size={15}/><b>{camp.archers}</b> Archers</span><span><Icon name="horse" size={15}/><b>{camp.cavalry}</b> Cavalry</span></div><div className={`readiness-note ${readiness(world, playerId, camp).className}`}><Icon name="army" size={16}/><div><strong>{readiness(world, playerId, camp).label}</strong><span>{soldierTotal(army)} in your host · {BRIEFINGS[camp.id].recommended} advised</span></div></div><button className="briefing-button" onClick={() => setBriefing(camp.id)}><Icon name="book" size={15}/>Read the campaign briefing <Icon name="arrow" size={13}/></button><label className="field-label">VICTORY SPOILS</label><Cost cost={lootFor(camp.tier)} compact/><button className="button gold" disabled={busy || moving || cooling || training.length > 0 || soldierTotal(army) === 0} onClick={() => run({ type: 'raid', campId: camp.id }, `The legion marches to ${camp.name}`)}>{cooling ? `Regroups in ${clock((Date.parse(cooldown!.available_at) - now) / 1000)}` : moving ? 'Legion is marching' : training.length > 0 ? 'Training must finish' : soldierTotal(army) === 0 ? 'Raise a new legion' : 'March and engage'}<Icon name="arrow" size={16}/></button><small>Your legion travels to the camp, then enters deployment. Survivors return to the keep.</small></>}
+     {selectedTown && <><span className="eyebrow">{selectedTown.owner_id === playerId ? 'YOUR CITY' : 'A RIVAL REALM'}</span><h2>{selectedTown.name}</h2><p>Ruled by {playerName(world.players, selectedTown.owner_id)}.</p>{selectedTown.owner_id === playerId ? <><div className="town-summary"><span>{world.buildings.filter(b => b.settlement_id === town.id).reduce((n, b) => n + b.level, 0)} development</span><span>{soldierTotal(army)} soldiers</span></div><button className="button gold" onClick={() => navigate('settlement')}>Enter the city<Icon name="arrow" size={16}/></button></> : <button className="button outline" disabled={busy || outgoing} onClick={() => run({ type: 'challenge', ownerId: selectedTown.owner_id }, 'Battle invitation sent')}>Invite to a live duel</button>}</>}
+     {selectedArmy && <><span className="eyebrow">{selectedArmy.owner_id === playerId ? 'YOUR LEGION' : 'RIVAL LEGION'}</span><h2>{selectedArmy.name}</h2><p>{soldierTotal(selectedArmy)} soldiers under {playerName(world.players, selectedArmy.owner_id)}.</p>{selectedArmy.owner_id === playerId ? <><button className="button gold" onClick={() => { setMoveMode(true); setSelection(null); }}>Give marching orders<Icon name="arrow" size={16}/></button><button className="button outline" onClick={() => navigate('army')}>Manage troops</button></> : <button className="button outline" disabled={busy || outgoing} onClick={() => run({ type: 'challenge', ownerId: selectedArmy.owner_id }, 'Battle invitation sent')}>Invite to a live duel</button>}</>}
+    </aside>}
+   </div>
+   <footer className="march-status"><div className="legion-badge"><Icon name="army" size={23}/><div><strong>{army.name}</strong><small>{army.infantry} infantry · {army.archers} archers · {army.cavalry} cavalry</small></div></div><div className="march-state"><span className={moving ? 'marching-dot' : 'resting-dot'}/><span>{moving ? `Marching · ${clock((Date.parse(army.arrival_at) - now) / 1000)}` : dist(armyPosition(army, now), { x: town.x + 40, y: town.y + 30 }) < 90 ? 'At the keep' : 'On the field'}</span></div><button onClick={() => run({ type: 'move', x: town.x + 40, y: town.y + 30 }, 'The legion returns home')} disabled={busy || training.length > 0}>Return home</button></footer>
+  </section>
+  {briefing !== null && <Modal title={BRIEFINGS[briefing].chapter} className="briefing-modal" onClose={() => setBriefing(null)}><span className="eyebrow">CAMPAIGN {briefing} OF 6</span><p className="briefing-story">{BRIEFINGS[briefing].story}</p><div className="briefing-tactics"><Icon name="army" size={30}/><div><h3>Your commander's advice</h3><p>{BRIEFINGS[briefing].tactic}</p></div></div><div className="briefing-foot"><span>{BRIEFINGS[briefing].recommended} soldiers advised</span><button className="button gold" onClick={() => setBriefing(null)}>Return to the map <Icon name="arrow"/></button></div></Modal>}
+ </>;
+}

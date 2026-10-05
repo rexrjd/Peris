@@ -1,0 +1,24 @@
+.recruitment-grid{padding:0 30px;gap:20px}
+.recruitment-card{background:linear-gradient(140deg,#283928,#202e20);border:1px solid #a1ad7045;border-radius:4px;overflow:hidden;box-shadow:0 6px 25px #0e1c1555}
+.recruitment-art{height:220px;background:radial-gradient(ellipse at 20% 20%,#85774f44,#273527);border-bottom-color:#b5a87744}
+.recruitment-art .unit-portrait{left:0;top:0;bottom:auto;height:220px;width:210px;opacity:.98;mask-image:linear-gradient(90deg,#000 78%,transparent)}
+.recruitment-art>span{top:47px;right:22px;font:54px Georgia;color:#ead6a7;text-shadow:0 3px 10px #142112}
+.recruitment-art small{font:8px 'Open Sans';letter-spacing:1px;color:#a0b18c;margin-top:12px}
+.recruitment-body{padding:24px;color:#bfcaab}
+.recruitment-body .eyebrow{font-size:8px;color:#b9a66f}
+.recruitment-body h2{color:#e6d6ae;font-size:31px;margin:10px 0 13px}
+.recruitment-body>p{font-size:11px;color:#97ad83;min-height:32px}
+.unit-facts{display:flex;gap:15px;padding:14px 0;border-top:1px solid #adb27926;border-bottom:1px solid #adb27926;margin:15px 0;color:#829b71;font-size:8px;justify-content:space-between}
+.unit-facts b{color:#bec6a3;font-size:10px;display:block;margin-top:5px;font-weight:400}
+.recruitment-body .field-label{font-size:8px;color:#9daf84;margin-top:20px}
+.recruitment-body .cost{color:#cfb882;gap:13px;margin:20px 0}
+.recruitment-body .cost b{color:#dccaa1;font-size:12px}
+.recruitment-body .cost .short,.recruitment-body .cost .short b{color:#d48e6b}
+.recruitment-body .button{width:100%;font-size:11px}
+.recruitment-body .button small{font-size:10px}
+.training-queue{background:#223623;border:1px solid #a4af7240;border-radius:3px;margin:26px 30px;padding:22px;gap:25px;color:#c6ceb0}
+.training-queue h3{color:#d7c699;font-size:23px;margin-top:9px}
+.training-queue>.muted{font-size:12px;color:#93a37b}
+.training-order strong{color:#dacc9f;font-size:12px}
+.training-order small{font-size:9px;color:#8da77a}
+.training-order>svg{color:#bfa874}

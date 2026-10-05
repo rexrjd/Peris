@@ -1,0 +1,41 @@
+import { type Battle, type BattleResult, type Formation } from '../../battle/domain/types';
+import { Icon } from '../../../shared/ui/Icons';
+import { clock } from '../../../shared/time/clock';
+import { UNITS } from '../../army/domain/units';
+import { Cost } from '../../../shared/ui/Shared';
+import { type World } from '../../../shared/model/world';
+import { type Command } from '../../../shared/model/commands';
+import { campaignRank, conquered } from '../domain/progression';
+import { QUESTS } from '../domain/quests';
+import { mySide } from '../../battle/domain/ownership';
+export function ResultBody({ result, won, draw = false, side = 'attacker', enemyName, formations = [], practice = false }: {
+    result: BattleResult;
+    won: boolean;
+    draw?: boolean;
+    side?: 'attacker' | 'defender';
+    enemyName: string;
+    formations?: Formation[];
+    practice?: boolean;
+}) {
+    const loss = side === 'attacker' ? result.attacker_losses : result.defender_losses, enemyLoss = side === 'attacker' ? result.defender_losses : result.attacker_losses, survivors = side === 'attacker' ? result.attacker_survivors : result.defender_survivors, starting = survivors + loss;
+    const title = draw ? 'The field remains contested' : won ? loss / Math.max(1, starting) < .2 ? 'A decisive victory' : loss / Math.max(1, starting) > .5 ? 'A hard-won victory' : 'Victory' : result.reason === 'Withdrawal' ? 'The field is conceded' : 'The host must regroup';
+    return <><div className={`victory-seal ${won ? 'won' : ''}`}><Icon name={won ? 'crown' : 'shield'} size={42}/></div><span className="eyebrow">{won ? 'YOUR STANDARD STILL FLIES' : draw ? 'A STALEMATE' : 'THE SURVIVORS RETURN HOME'}</span><h2>{title}</h2><p className="result-enemy">{enemyName}</p><div className="result-caption"><span><Icon name="time" size={14}/>{clock(result.duration)}</span><span>{result.reason === 'Army routed' ? 'The opposing line broke' : result.reason === 'Withdrawal' ? 'Orderly withdrawal' : result.reason}</span></div><div className="result-stats"><div><b>{survivors}</b><small>Your survivors</small></div><div><b>{loss}</b><small>Your losses</small></div><div><b>{enemyLoss}</b><small>Enemy losses</small></div></div>
+ {formations.length > 0 && <div className="result-units">{(['infantry', 'archers', 'cavalry'] as const).filter(t => formations.some(f => f.unit_type === t)).map(t => { const list = formations.filter(f => f.unit_type === t); return <div key={t}><Icon name={t === 'infantry' ? 'shield' : t === 'archers' ? 'bow' : 'horse'} size={21}/><span><strong>{UNITS[t].name}</strong><small>{list.reduce((n, f) => n + f.soldiers, 0)} returned · {list.reduce((n, f) => n + f.kills, 0)} enemy kills</small></span><b>{list.reduce((n, f) => n + f.initial_soldiers - f.soldiers, 0)}<small>lost</small></b></div>; })}</div>}
+ {won && Object.values(result.loot ?? {}).some(n => n > 0) && <div className="result-loot"><span className="eyebrow">SUPPLIES BROUGHT HOME</span><Cost cost={result.loot}/></div>}<p className="result-advice">{practice ? 'Your campaign is unaffected. Try another formation or battlefield to refine your command.' : won ? 'The standard is yours. Replace your losses, strengthen the city, and prepare for the next field.' : 'A legion can be rebuilt. Train replacements at the keep; a stronger position can turn the next battle.'}</p></>;
+}
+export function Chronicle({ world, playerId, onReport, run, onEnding }: {
+    world: World;
+    playerId: string;
+    onReport: (b: Battle) => void;
+    run?: (c: Command, m?: string) => void;
+    onEnding?: () => void;
+}) {
+    const player = world.players.find(p => p.id === playerId)!, done = conquered(world, playerId), reports = world.reports.filter(r => r.owner_id === playerId);
+    return <section className="chronicle"><div className="view-heading"><div><span className="eyebrow">THE CHRONICLE</span><h1>A name remembered</h1><p>{campaignRank(done.size)}. The record of a realm you built and the fields you commanded.</p></div><span className="tag">{player.prestige} prestige</span></div>
+ {done.size === 6 && <div className="restored-banner"><Icon name="crown" size={42}/><div><span className="eyebrow">THE CAMPAIGN IS COMPLETE</span><h2>Peris restored</h2><p>All six standards have returned to your keeping.</p></div><button className="button gold" onClick={onEnding}>Relive the triumph <Icon name="arrow"/></button></div>}
+ <div className="chronicle-metrics"><div><Icon name="crown"/><b>{player.victories}</b><span>Victories</span></div><div><Icon name="army"/><b>{player.recruits}</b><span>Soldiers trained</span></div><div><Icon name="town"/><b>{player.upgrades}</b><span>City upgrades</span></div><div><Icon name="flag"/><b>{done.size} / 6</b><span>Standards recovered</span></div></div>
+ <div className="chronicle-objectives"><div className="reports-heading"><h3>Rewards for your realm</h3><span>Milestones</span></div><div className="milestone-grid">{QUESTS.map(q => { const claimed = world.claims.some(c => c.owner_id === playerId && c.quest_id === q.id), complete = player[q.stat] >= q.target; return <article key={q.id} className={claimed ? 'claimed' : complete ? 'claimable' : ''}><Icon name={claimed ? 'check' : q.id === 'builder' ? 'town' : q.id === 'recruiter' ? 'army' : 'crown'} size={26}/><h3>{q.title}</h3><p>{q.description}</p><div className="progress-track"><i style={{ width: `${Math.min(100, player[q.stat] / q.target * 100)}%` }}/></div><div className="milestone-meta"><span>{Math.min(q.target, player[q.stat])} / {q.target}</span><span>{claimed ? 'Collected' : `+${q.reward.gold} gold`}</span></div>{complete && !claimed && run && <button className="button gold" onClick={() => run({ type: 'claim', questId: q.id }, 'Milestone supplies collected')}>Collect supplies</button>}</article>; })}</div></div>
+ <div className="reports-heading"><h3>Fields of battle</h3><span>{reports.length} reports</span></div>{!reports.length ? <div className="empty-state"><Icon name="report" size={40}/><h3>Your first standard awaits.</h3><p>Take The broken standard on the campaign map to begin the restoration.</p></div> : <div className="report-list">{reports.map(r => { const b = world.battles.find(b => b.id === r.battle_id), side = b ? mySide(b, playerId) : 'attacker'; return <button key={r.id} disabled={!b} onClick={() => { if (b)
+        onReport({ ...b, result: r.result }); }}><div className={`report-seal ${r.won ? 'won' : ''}`}><Icon name={r.won ? 'crown' : 'shield'}/></div><div><strong>{r.title}</strong><small>{new Date(r.created_at).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })} · {clock(r.result.duration)} on the field</small></div><span className={r.won ? 'win' : 'loss'}>{r.won ? 'Victory' : 'Regrouped'}</span><span>{side === 'attacker' ? r.result.attacker_losses : r.result.defender_losses} lost</span><Icon name="arrow" size={16}/></button>; })}</div>}
+ </section>;
+}

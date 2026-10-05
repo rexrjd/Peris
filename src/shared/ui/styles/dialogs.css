@@ -1,0 +1,40 @@
+/* Dialogs, settings and guide */
+.modal-backdrop{background:#09140dde;backdrop-filter:blur(7px);z-index:100;animation:arrive .2s ease;padding:24px}
+.modal{background:linear-gradient(140deg,#2b3928,#1d2d23);border:1px solid #c1b17b55;border-radius:5px;box-shadow:0 24px 90px #07100cdf;color:#cfd2b7;padding:35px 36px}
+.modal h2{font-size:32px;color:#f0dfb8;line-height:1.16;margin-bottom:20px}
+.modal p{line-height:1.8;font-size:13px;color:#bfc7ac}
+.modal-close{width:32px;height:32px;top:12px;right:13px;color:#c9c8a9;font-size:26px;background:#19281d77;border-radius:3px}
+.modal-close:hover{background:#b5a57515;color:#f4dfaa}
+.modal-tabs{display:flex;margin-bottom:23px;border-bottom:1px solid #abb38035;gap:14px;overflow-x:auto;flex-shrink:0}
+.modal-tabs button{padding:11px 1px;border:0;border-bottom:2px solid transparent;background:none;color:#a5b399;font-size:11px;white-space:nowrap}
+.modal-tabs button.active,.modal-tabs button[aria-selected=true]{color:#e4cd97;border-bottom-color:#d2b881}
+.setting-toggle{display:flex;align-items:center;gap:16px;padding:16px 0;border-bottom:1px solid #a9b17522;position:relative;cursor:pointer}
+.setting-toggle>span{flex:1}
+.setting-toggle strong{font-size:13px;color:#d8ddc2;display:block}
+.setting-toggle small{display:block;color:#9bad8b;font-size:11px;line-height:1.6;margin-top:5px}
+.setting-toggle input{position:absolute;right:0;opacity:0;width:43px;height:24px;margin:0;cursor:pointer}
+.setting-toggle i{display:block;width:40px;height:22px;border-radius:20px;background:#142319;box-shadow:inset 0 1px 4px #09180d55;border:1px solid #7c926448;position:relative;pointer-events:none}
+.setting-toggle i:after{content:'';position:absolute;left:3px;top:3px;width:14px;height:14px;border-radius:50%;background:#7c8c68;transition:transform .2s,background .2s}
+.setting-toggle input:checked+i{background:#7e93614f;border-color:#bba96c88}
+.setting-toggle input:checked+i:after{transform:translateX(18px);background:#dec58e}
+.setting-toggle input:focus-visible+i{outline:2px solid #e4cb8f;outline-offset:3px}
+.setting-slider{display:flex;flex-wrap:wrap;justify-content:space-between;padding:15px 0 12px;font-size:11px;color:#a8b598;gap:10px}
+.setting-slider b{color:#d7c898}
+.setting-slider input{width:100%;height:12px;margin:0}
+.rename-setting{padding-top:22px}
+.rename-setting>div{display:flex;gap:10px}
+.rename-setting input{width:100%;min-width:0}
+.rename-setting .button{padding:10px 18px}
+.empty-save{padding:20px 0;color:#92a183;font-size:12px}
+.terrain-thumb{height:92px;display:grid;place-items:center;color:#d7cb95;background:linear-gradient(#28402a66,#182a20a0),url('/art/shared/meadow-ground.png') center/cover;margin-bottom:17px}
+.terrain-thumb.terrain-woods{background:radial-gradient(circle at 50% 45%,#466346aa,#102a22df),url('/art/shared/meadow-ground.png') center/cover}
+.terrain-thumb.terrain-river{background:linear-gradient(100deg,#485f3888 37%,#87a49a88 38%,#507f85bb 61%,#485f3888 62%),url('/art/shared/meadow-ground.png') center/cover}
+.terrain-thumb.terrain-highlands{background:radial-gradient(ellipse at 50% 30%,#dec98a77,#3c5828bb),url('/art/shared/meadow-ground.png') center/cover}
+.controls-guide{display:grid;grid-template-columns:1fr 1fr;gap:35px}
+.controls-guide h3{font-size:24px;color:#e0d0a7;margin:0 0 17px}
+.controls-guide p{font-size:12px}
+.controls-guide dl{margin:0}
+.controls-guide dl>div{display:flex;align-items:center;gap:15px;padding:11px 0;border-bottom:1px solid #afba7e22}
+.controls-guide dt{min-width:100px}
+.controls-guide dd{margin:0;font-size:11px;color:#c9cdb0}
+.controls-guide kbd{font-size:10px;padding:5px 8px}
