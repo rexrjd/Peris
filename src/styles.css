@@ -176,3 +176,8 @@ h2 { font-size: 18px; color: #d7c68d; }
   font-size: 12px;
   line-height: 1.45;
 }
+
+.resource-strip strong { margin-left: 5px; }
+.resource-strip small { margin-left: 5px; color: #8f9987; }
+.settlement-title { color: #f3efe4; font-weight: 700; }
+.panel button:disabled { opacity: 0.5; cursor: not-allowed; }

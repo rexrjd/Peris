@@ -1,12 +1,34 @@
 import * as Phaser from 'phaser'
-import type { Player } from '../../types/game'
+import type { Army, Player, Settlement } from '../../types/game'
 
 type MoveHandler = (x: number, y: number) => void
 
+type WorldState = {
+  players: Player[]
+  settlements: Settlement[]
+  armies: Army[]
+}
+
+export function armyPosition(army: Army, nowMs = Date.now()) {
+  if (army.status !== 'moving') return { x: army.target_x, y: army.target_y, progress: 1 }
+
+  const departure = new Date(army.departure_at).getTime()
+  const arrival = new Date(army.arrival_at).getTime()
+  const duration = Math.max(1, arrival - departure)
+  const progress = Phaser.Math.Clamp((nowMs - departure) / duration, 0, 1)
+
+  return {
+    x: Phaser.Math.Linear(army.start_x, army.target_x, progress),
+    y: Phaser.Math.Linear(army.start_y, army.target_y, progress),
+    progress,
+  }
+}
+
 export class WorldScene extends Phaser.Scene {
-  private playerMarkers = new Map<string, Phaser.GameObjects.Container>()
+  private settlementMarkers = new Map<number, Phaser.GameObjects.Container>()
+  private armyMarkers = new Map<number, Phaser.GameObjects.Container>()
   private currentPlayerId = ''
-  private pendingPlayers: Player[] = []
+  private state: WorldState = { players: [], settlements: [], armies: [] }
   private onMove: MoveHandler
 
   constructor(onMove: MoveHandler) {
@@ -32,70 +54,130 @@ export class WorldScene extends Phaser.Scene {
     })
 
     this.add
-      .text(22, 20, 'Click the map to move your player', {
+      .text(22, 20, 'Click the map to send your army', {
         fontFamily: 'system-ui, sans-serif',
         fontSize: '18px',
         color: '#f0ead8',
         backgroundColor: '#11170fcf',
         padding: { x: 12, y: 8 },
       })
-      .setDepth(20)
+      .setDepth(30)
 
-    this.renderPlayers()
+    this.time.addEvent({
+      delay: 100,
+      loop: true,
+      callback: () => this.renderArmies(),
+    })
+
+    this.renderWorld()
   }
 
-  setPlayers(players: Player[], currentPlayerId: string) {
-    this.pendingPlayers = players
+  setWorldState(players: Player[], settlements: Settlement[], armies: Army[], currentPlayerId: string) {
+    this.state = { players, settlements, armies }
     this.currentPlayerId = currentPlayerId
-    if (this.sys.isActive()) this.renderPlayers()
+    if (this.sys.isActive()) this.renderWorld()
   }
 
-  private renderPlayers() {
-    const alive = new Set(this.pendingPlayers.map((player) => player.id))
+  private playerName(ownerId: string) {
+    return this.state.players.find((player) => player.id === ownerId)?.display_name ?? 'Unknown'
+  }
 
-    for (const [id, marker] of this.playerMarkers) {
+  private renderWorld() {
+    this.renderSettlements()
+    this.renderArmies()
+  }
+
+  private renderSettlements() {
+    const alive = new Set(this.state.settlements.map((settlement) => settlement.id))
+
+    for (const [id, marker] of this.settlementMarkers) {
       if (!alive.has(id)) {
         marker.destroy(true)
-        this.playerMarkers.delete(id)
+        this.settlementMarkers.delete(id)
       }
     }
 
-    for (const player of this.pendingPlayers) {
-      let marker = this.playerMarkers.get(player.id)
+    for (const settlement of this.state.settlements) {
+      let marker = this.settlementMarkers.get(settlement.id)
       if (!marker) {
-        marker = this.createPlayerMarker(player)
-        this.playerMarkers.set(player.id, marker)
+        marker = this.createSettlementMarker(settlement)
+        this.settlementMarkers.set(settlement.id, marker)
       }
-
-      this.tweens.killTweensOf(marker)
-      this.tweens.add({
-        targets: marker,
-        x: player.x,
-        y: player.y,
-        duration: 350,
-        ease: 'Sine.easeOut',
-      })
+      marker.setPosition(settlement.x, settlement.y)
     }
   }
 
-  private createPlayerMarker(player: Player) {
-    const mine = player.id === this.currentPlayerId
-    const container = this.add.container(player.x, player.y)
-    const shadow = this.add.circle(4, 5, 22, 0x000000, 0.3)
-    const ring = this.add.circle(0, 0, 20, mine ? 0x4f78bd : 0xb95d53)
-    const center = this.add.circle(0, 0, 8, mine ? 0xe4ecff : 0xffe5df)
+  private renderArmies() {
+    const alive = new Set(this.state.armies.map((army) => army.id))
+
+    for (const [id, marker] of this.armyMarkers) {
+      if (!alive.has(id)) {
+        marker.destroy(true)
+        this.armyMarkers.delete(id)
+      }
+    }
+
+    for (const army of this.state.armies) {
+      let marker = this.armyMarkers.get(army.id)
+      if (!marker) {
+        marker = this.createArmyMarker(army)
+        this.armyMarkers.set(army.id, marker)
+      }
+
+      const position = armyPosition(army)
+      marker.setPosition(position.x, position.y)
+    }
+  }
+
+  private createSettlementMarker(settlement: Settlement) {
+    const mine = settlement.owner_id === this.currentPlayerId
+    const container = this.add.container(settlement.x, settlement.y)
+
+    const shadow = this.add.ellipse(4, 10, 46, 20, 0x000000, 0.3)
+    const outer = this.add.rectangle(0, 0, 34, 34, mine ? 0xc9a85d : 0x8d665f)
+    outer.setStrokeStyle(3, mine ? 0xf3df9d : 0xc88c83)
+    const keep = this.add.rectangle(0, -3, 18, 24, mine ? 0x273b58 : 0x593632)
+    const flag = this.add.triangle(12, -24, 0, 0, 0, 14, 18, 7, mine ? 0xf0d67d : 0xd98379)
     const label = this.add
-      .text(0, -36, mine ? `${player.display_name} (you)` : player.display_name, {
+      .text(0, -48, `${settlement.name}\n${this.playerName(settlement.owner_id)}`, {
         fontFamily: 'system-ui, sans-serif',
-        fontSize: '15px',
+        fontSize: '13px',
+        align: 'center',
         color: '#ffffff',
-        backgroundColor: '#11170fcf',
+        backgroundColor: '#11170fdd',
         padding: { x: 6, y: 3 },
       })
       .setOrigin(0.5)
 
-    container.add([shadow, ring, center, label])
-    container.setDepth(mine ? 12 : 10)
+    container.add([shadow, outer, keep, flag, label])
+    container.setDepth(12)
+    return container
+  }
+
+  private createArmyMarker(army: Army) {
+    const mine = army.owner_id === this.currentPlayerId
+    const position = armyPosition(army)
+    const container = this.add.container(position.x, position.y)
+
+    const shadow = this.add.circle(4, 5, 18, 0x000000, 0.28)
+    const ring = this.add.circle(0, 0, 17, mine ? 0x4f78bd : 0xb95d53)
+    const sword = this.add.text(0, -1, '⚔', {
+      fontFamily: 'Segoe UI Symbol, sans-serif',
+      fontSize: '22px',
+      color: '#ffffff',
+    }).setOrigin(0.5)
+    const label = this.add
+      .text(0, 29, mine ? `${army.name} (you)` : `${this.playerName(army.owner_id)} army`, {
+        fontFamily: 'system-ui, sans-serif',
+        fontSize: '12px',
+        color: '#ffffff',
+        backgroundColor: '#11170fcf',
+        padding: { x: 5, y: 2 },
+      })
+      .setOrigin(0.5)
+
+    container.add([shadow, ring, sword, label])
+    container.setDepth(mine ? 22 : 20)
     return container
   }
 

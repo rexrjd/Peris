@@ -1,21 +1,23 @@
 import { useEffect, useRef } from 'react'
 import * as Phaser from 'phaser'
 import { WorldScene } from './scenes/WorldScene'
-import type { Player } from '../types/game'
+import type { Army, Player, Settlement } from '../types/game'
 
 type Props = {
   players: Player[]
+  settlements: Settlement[]
+  armies: Army[]
   currentPlayerId: string
-  onMove: (x: number, y: number) => void
+  onMoveArmy: (x: number, y: number) => void
 }
 
-export function GameCanvas({ players, currentPlayerId, onMove }: Props) {
+export function GameCanvas({ players, settlements, armies, currentPlayerId, onMoveArmy }: Props) {
   const containerRef = useRef<HTMLDivElement>(null)
   const gameRef = useRef<Phaser.Game | null>(null)
   const sceneRef = useRef<WorldScene | null>(null)
-  const moveRef = useRef(onMove)
+  const moveRef = useRef(onMoveArmy)
 
-  moveRef.current = onMove
+  moveRef.current = onMoveArmy
 
   useEffect(() => {
     if (!containerRef.current || gameRef.current) return
@@ -44,8 +46,8 @@ export function GameCanvas({ players, currentPlayerId, onMove }: Props) {
   }, [])
 
   useEffect(() => {
-    sceneRef.current?.setPlayers(players, currentPlayerId)
-  }, [players, currentPlayerId])
+    sceneRef.current?.setWorldState(players, settlements, armies, currentPlayerId)
+  }, [players, settlements, armies, currentPlayerId])
 
   return <div ref={containerRef} className="phaser-host" />
 }
