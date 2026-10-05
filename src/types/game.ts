@@ -1,11 +1,7 @@
 export type Player = {
   id: string
-  email: string | null
   display_name: string
-  avatar_url: string | null
-  x: number
-  y: number
-  updated_at: string
+  created_at: string
 }
 
 export type Settlement = {
@@ -24,6 +20,16 @@ export type Settlement = {
   gold_rate: number
   resources_updated_at: string
   created_at: string
+}
+
+export type BuildingType = 'lumber' | 'quarry' | 'farm' | 'market'
+
+export type Building = {
+  id: number
+  settlement_id: number
+  building_type: BuildingType
+  level: number
+  updated_at: string
 }
 
 export type Army = {

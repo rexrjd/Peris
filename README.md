@@ -1,42 +1,33 @@
-# Peris
+# Peris v0.4 — Realm Alpha
 
-Browser strategy game prototype built with React, TypeScript, Vite, Phaser and Supabase.
+Browser-based persistent strategy prototype built with React, Phaser, Supabase and Vercel.
 
-## What this version adds
+## What this prototype does
 
-- anonymous name-only authentication through Supabase
-- One persistent player record per anonymous name-only account
-- Shared multiplayer map
-- Realtime player movement
-- Blue marker = you, red marker = another player
-- Click anywhere on the map to move
+- Name-only anonymous accounts
+- Server-assigned non-overlapping spawn positions
+- One permanent settlement per ruler
+- Offline resource production
+- Four upgradeable production buildings
+- One persistent army per ruler
+- Server-authoritative recruitment costs
+- Server-authoritative army movement and travel time
+- Shared realtime world for multiple players
 
-## Required Supabase setup
+## IMPORTANT: reset the prototype database
 
-### 1. Database
+This version intentionally replaces the previous prototype schema.
 
-Open Supabase > SQL Editor, create a new query, paste everything from:
+In Supabase:
 
-`supabase/schema.sql`
+1. Open **SQL Editor**.
+2. Open `supabase/RESET_AND_CREATE_V4.sql` from this repository.
+3. Paste the whole file into a new query.
+4. Run it once.
 
-Run it once.
+This removes all existing **public Peris game data** and recreates the world. It does **not** delete Supabase Auth users. Existing anonymous browser sessions will simply be asked to choose a ruler name again.
 
-### 2. anonymous name-only login
-
-Open Supabase > Authentication > Providers > anonymous name-only and enable it.
-
-In anonymous name-only Cloud create an OAuth Web application and use the callback URL shown by Supabase. It will look like:
-
-`https://YOUR_PROJECT.supabase.co/auth/v1/callback`
-
-Paste the anonymous name-only Client ID and Client Secret back into Supabase.
-
-### 3. Redirect URLs
-
-In Supabase > Authentication > URL Configuration set the production Site URL to your Vercel URL and allow both:
-
-- `http://localhost:5173/**`
-- your Vercel production URL followed by `/**`
+Do not run the old `schema.sql` or `upgrade-world-v3.sql` after the v4 reset.
 
 ## Local development
 
@@ -45,8 +36,17 @@ npm install
 npm run dev
 ```
 
-## Deploy
+## Deployment
 
-Push the files to GitHub. Vercel will redeploy automatically.
+Push to `main` in `rexrjd/Peris`. Vercel is connected to that repository and will redeploy automatically.
 
-The current Supabase publishable URL/key are included as temporary client-side fallbacks in `src/lib/supabase.ts`. They can later be replaced with Vercel environment variables named `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`.
+## Current game loop
+
+1. Found a realm.
+2. Accumulate resources over real time.
+3. Upgrade production buildings.
+4. Recruit units.
+5. Issue army movement orders on the shared map.
+6. Close the browser and return later — production and travel are based on timestamps.
+
+Next milestone: raids, combat resolution, battle reports and territory control.
