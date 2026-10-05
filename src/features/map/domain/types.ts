@@ -14,4 +14,8 @@ export type Camp = {
 export type MapSelection = {
     kind: 'camp' | 'settlement' | 'army';
     id: number;
+} | {
+    kind: 'cell';
+    col: number;
+    row: number;
 } | null;

@@ -8,6 +8,8 @@ const images={},variables={}
 async function data(url){const file=path.resolve(dist,url.replace(/^\//,''));if(!file.startsWith(dist+path.sep))throw new Error(`Invalid asset: ${url}`);return `data:${mime[path.extname(file)]||'application/octet-stream'};base64,${(await fs.readFile(file)).toString('base64')}`}
 async function image(url){if(!images[url]){images[url]=await data(url);variables[url]=`--peris-asset-${Object.keys(images).length}`}return variables[url]}
 let html=await fs.readFile(path.join(dist,'index.html'),'utf8')
+const threeLicense=await fs.readFile(path.join(root,'public','licenses','three.txt'),'utf8')
+html=html.replace('</head>',()=>`<!--\nThree.js license\n${threeLicense.replace(/--/g,'- -')}\n-->\n</head>`)
 for(const[tag,url]of [...html.matchAll(/<link\b[^>]*rel="stylesheet"[^>]*href="([^"]+)"[^>]*>/g)]){
  let css=await fs.readFile(path.join(dist,url.replace(/^\//,'')),'utf8')
  for(const[full,asset]of [...css.matchAll(/url\(\s*['"]?([^'"\)]+)['"]?\s*\)/g)]){

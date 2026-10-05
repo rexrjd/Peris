@@ -1,11 +1,15 @@
 [
   "schema/base.sql",
+  "map/world-bounds.sql",
+  "map/world-terrain.sql",
+  "map/peris_army_position.sql",
   "city/peris_settle.sql",
   "battle/peris_add_formations.sql",
   "campaign/peris_start_raid.sql",
   "campaign/sync_my_state.sql",
   "city/peris_queue_upgrade.sql",
   "army/peris_queue_recruit.sql",
+  "map/peris_march.sql",
   "map/move_army.sql",
   "campaign/peris_raid.sql",
   "battle/peris_ready.sql",
@@ -21,5 +25,6 @@
   "city/peris_rename.sql",
   "accounts/create_player.sql",
   "snapshot/peris_snapshot.sql",
+  "snapshot/peris_map_snapshot.sql",
   "security/permissions.sql"
 ]

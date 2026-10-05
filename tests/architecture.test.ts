@@ -9,7 +9,9 @@ const modules=walk(root)
 const imports=(file:string)=>ts.createSourceFile(file,readFileSync(file,'utf8'),ts.ScriptTarget.Latest,true).statements.filter(ts.isImportDeclaration)
 const isType=(n:ts.ImportDeclaration)=>n.importClause?.isTypeOnly||!!n.importClause?.namedBindings&&ts.isNamedImports(n.importClause.namedBindings)&&!n.importClause.name&&n.importClause.namedBindings.elements.every(e=>e.isTypeOnly)
 test('gameplay domains cannot depend on rendering, UI, adapters or browser APIs',()=>{
- for(const file of modules.filter(f=>f.includes('/domain/'))){
+ const domains=modules.filter(f=>f.split(path.sep).includes('domain'))
+ assert.ok(domains.length>0,'No gameplay domains found; the architecture check must inspect domain modules')
+ for(const file of domains){
   for(const n of imports(file)){const from=(n.moduleSpecifier as ts.StringLiteral).text;if(isType(n))continue
    assert.ok(!/react|platform|\/ui\/|\/rendering\/|\/engine\//.test(from),`${file}: forbidden runtime dependency ${from}`)
   }

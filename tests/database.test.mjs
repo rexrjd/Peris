@@ -13,14 +13,48 @@ await db.exec(await readFile('tests/fixtures/v5.sql','utf8'));
 await admin(`insert into auth.users values('${u}'),('${v}'),('${out}');`);
 await login(u);await rpc('create_player',['Rex']);
 const before=(await snapLegacy()).armies[0];
+const beforeTown=(await db.query('select * from public.settlements')).rows[0];
 await admin(await readFile('supabase/UPGRADE_TO_V8.sql','utf8'));await db.exec(await readFile('supabase/UPGRADE_TO_V8.sql','utf8'));
 await login(u);let w=await snap();assert.equal(w.armies[0].infantry,before.infantry);assert.equal(w.buildings.length,8);
+assert.deepEqual([w.settlements[0].x,w.settlements[0].y],[beforeTown.x,beforeTown.y]);
+assert.deepEqual([w.armies[0].start_x,w.armies[0].start_y,w.armies[0].target_x,w.armies[0].target_y],[before.start_x,before.start_y,before.target_x,before.target_y]);
+assert.equal(w.map.version,3);assert.equal(w.map.cols,200);assert.equal(w.map.rows,200);assert.equal(w.map.cell_size,128);assert.equal(w.map.seed,98213);
+const sites=await db.query('select count(*) as total,count(distinct (x,y)) as positions from public.spawn_points');assert.ok(sites.rows[0].total>1000);assert.equal(sites.rows[0].positions,sites.rows[0].total);
 console.log('PASS · v5 preservation and idempotent upgrade');
 await rpc('peris_queue_upgrade',['farm']);await rejects(()=>rpc('peris_queue_upgrade',['market']),'Concurrent building queue accepted');
 await rpc('peris_queue_recruit',['infantry',20]);await rejects(()=>rpc('move_army',[600,300]),'Army marched before training finished');await rejects(()=>rpc('peris_queue_recruit',['cavalry',-10]),'Negative recruitment accepted');
 await admin(`update public.peris_orders set finish_at=now()-interval '1 minute',started_at=now()-interval '2 minutes';`);await login(u);await rpc('sync_my_state');w=await snap();assert.equal(w.players.find(p=>p.id===u).upgrades,1);assert.equal(w.players.find(p=>p.id===u).recruits,20);await rpc('peris_claim',['builder']);await rejects(()=>rpc('peris_claim',['builder']),'Reward granted twice');
 console.log('PASS · recruitment, upgrade completion and single-use rewards');
-for(const name of ['peris_finish','peris_settle','peris_start_raid','advance_battle','recruit_units','upgrade_building','create_battle']){const rows=await db.query(`select has_function_privilege('authenticated',p.oid,'execute') as permitted from pg_proc p where p.proname=$1`,[name]);assert.ok(rows.rows.every(r=>r.permitted===false),`${name} is accessible`)}
+await rejects(()=>rpc('move_army',[-100000,100000]),'Legacy move RPC crossed the sea');await rejects(()=>rpc('move_army',[100000,-100000]),'Legacy move RPC crossed the sea in the opposite direction');
+await rpc('move_army',[-64,320]);w=await snap();assert.deepEqual([w.armies[0].target_x,w.armies[0].target_y],[-64,320]);
+let a=w.armies[0],seconds=(Date.parse(a.arrival_at)-Date.parse(a.departure_at))/1000;assert.ok(Math.abs(seconds-Math.hypot(a.target_x-a.start_x,a.target_y-a.start_y)/22)<.002);
+await rejects(()=>rpc('move_army',[null,0]),'Null march destination accepted');
+await admin(`update public.settlements set x=-10000,y=10500 where owner_id='${u}'`);await rejects(()=>admin(`update public.settlements set x=12800 where owner_id='${u}'`),'Out-of-world settlement accepted');await rejects(()=>admin(`update public.settlements set food=-1 where owner_id='${u}'`),'Unrelated resource constraint removed');await admin(`update public.settlements set x=${beforeTown.x},y=${beforeTown.y} where owner_id='${u}'`);
+await login(out);await rejects(()=>rpc('move_army',[-20000,-20000]),'Account without an army moved another player army');await login(u);
+console.log('PASS · expanded signed land bounds, original march speed and unchanged ownership guards');
+await admin(`update public.armies set status='idle',start_x=195,start_y=315,target_x=195,target_y=315,march_path=null,march_distance=null where owner_id='${u}'`);await login(u);
+const route=[[195,315],[320,320],[320,448],[448,448]];await rpc('peris_march',[448,448,JSON.stringify(route)]);w=await snap();a=w.armies[0];assert.deepEqual(a.march_path,route);
+const distance=Math.hypot(125,5)+128+128;assert.ok(Math.abs(Number(a.march_distance)-distance)<.00001);assert.ok(Math.abs((Date.parse(a.arrival_at)-Date.parse(a.departure_at))/1000-distance/22)<.002);
+await rejects(()=>rpc('peris_march',[448,448,JSON.stringify([[10000,10000],[320,320],[320,448],[448,448]])]),'Spoofed start position accepted');
+await rejects(()=>rpc('peris_march',[900,315,JSON.stringify([[195,315],[900,315]])]),'Route skipped distant fields');
+await rejects(()=>rpc('peris_march',[448,448,JSON.stringify([[195,315],[320,320]])]),'Wrong route endpoint accepted');
+await rejects(()=>rpc('peris_march',[448,448,JSON.stringify([[195,315],['NaN',320],[448,448]])]),'Nonnumeric route accepted');
+await rejects(()=>rpc('peris_march',[448,448,JSON.stringify(Array.from({length:2001},()=>[195,315]))]),'Unbounded route accepted');
+await admin(`update public.armies set departure_at=now()-interval '5 seconds',arrival_at=now()+interval '5 seconds' where owner_id='${u}'`);
+const midpoint=(await db.query(`select public.peris_army_position(a) as position from public.armies a where owner_id='${u}'`)).rows[0].position;assert.ok(Math.abs(Number(midpoint.x)-320)<2);assert.ok(Number(midpoint.y)>360&&Number(midpoint.y)<415);
+const mask=Buffer.from((await db.query('select encode(walkable,\'hex\') as mask from public.peris_world_map')).rows[0].mask,'hex');
+const land=(col,row)=>col>=-100&&col<100&&row>=-100&&row<100&&!!(mask[((row+100)*200+col+100)>>3]&(1<<(((row+100)*200+col+100)&7)));
+let coastal,corner;
+for(let row=-99;row<99;row++)for(let col=-99;col<99;col++)if(land(col,row)){
+ if(!coastal&&!land(col+1,row))coastal=[col,row];
+ if(!corner&&land(col+1,row+1)&&(!land(col+1,row)||!land(col,row+1)))corner=[col,row];
+}
+assert.ok(coastal);assert.ok(corner);
+for(const [cell,dx,dy]of [[coastal,1,0],[corner,1,1]]){const [col,row]=cell,x=(col+.5)*128,y=(row+.5)*128,tx=x+dx*128,ty=y+dy*128;await admin(`update public.armies set status='idle',start_x=${x},start_y=${y},target_x=${x},target_y=${y},march_path=null,march_distance=null where owner_id='${u}'`);await login(u);await rejects(()=>rpc('peris_march',[tx,ty,JSON.stringify([[x,y],[tx,ty]])]),'Route entered water or cut a sea corner');await rejects(()=>rpc('move_army',[tx,ty]),'Legacy RPC bypassed sea route validation');}
+await admin(`update public.armies set status='idle',start_x=195,start_y=315,target_x=195,target_y=315,march_path=null,march_distance=null where owner_id='${u}'`);await login(u);
+console.log('PASS · authoritative routed distance, midpoint interpolation, spoof/jump rejection and sea-corner protection');
+await login(out);await rejects(()=>rpc('peris_march',[320,320,JSON.stringify([[195,315],[320,320]])]),'Account without an army used the new march RPC');await login(u);
+for(const name of ['peris_finish','peris_settle','peris_start_raid','peris_world_walkable','peris_army_position','advance_battle','recruit_units','upgrade_building','create_battle']){const rows=await db.query(`select has_function_privilege('authenticated',p.oid,'execute') as permitted from pg_proc p where p.proname=$1`,[name]);assert.ok(rows.rows.every(r=>r.permitted===false),`${name} is accessible`)}
 await rejects(()=>db.query(`update public.armies set infantry=1000`),'Direct army edits accepted');
 console.log('PASS · helpers and legacy bypass RPCs are inaccessible');
 await rpc('peris_raid',[1]);await admin(`update public.armies set arrival_at=now()-interval '1 second'where owner_id='${u}'`);await login(u);await rpc('sync_my_state');w=await snap();let b=w.battles.find(b=>b.status==='active'),fs=w.formations,own=fs.filter(f=>f.owner_id===u),enemy=fs.find(f=>f.owner_id===null);
@@ -31,13 +65,31 @@ const offsets=placed.map(f=>Number(f.y)-Number(placed[0].y));await rpc('peris_or
 console.log('PASS · authoritative group movement preserves formation and facing');
 await rejects(()=>rpc('peris_order',[b.id,{kind:'move',ids:own.map(f=>f.id),x:1100,y:300}]),'Invalid deployment accepted');
 await rpc('peris_ready',[b.id]);await rpc('peris_order',[b.id,{kind:'attack',ids:own.map(f=>f.id),target:enemy.id}]);await rejects(()=>rpc('peris_queue_recruit',['infantry',1]),'Recruitment accepted during battle');
+await rejects(()=>rpc('peris_march',[320,320,JSON.stringify([[305,405],[320,320]])]),'New march RPC allowed moving during battle');
 await login(out);await rejects(()=>rpc('peris_tick',[b.id]),'Nonparticipant can tick battle');await rejects(()=>rpc('peris_order',[b.id,{kind:'move',ids:[own[0].id],x:300,y:350}]),'Nonparticipant can issue orders');await login(u);
 await admin(`update public.battle_formations set x=600,y=350,target_x=600,target_y=350,soldiers=case when owner_id is null then 1 else soldiers end,morale=case when owner_id is null then 18 else morale end where battle_id=${b.id};update public.battles set last_tick_at=now()-interval '1 second' where id=${b.id};`);await login(u);await rpc('peris_tick',[b.id]);w=await snap();b=w.battles.find(a=>a.id===b.id);assert.equal(b.status,'resolved');assert.equal(b.winner_side,'attacker');assert.equal(w.reports.length,1);assert.ok(w.reports[0].result.loot.gold>0);const gold=w.settlements.find(s=>s.owner_id===u).gold;await rpc('retreat_from_battle',[b.id]);assert.equal((await snap()).settlements.find(s=>s.owner_id===u).gold,gold);await rejects(()=>rpc('peris_raid',[1]),'Camp cooldown ignored');
 console.log('PASS · battle outcomes, casualties, loot, cooldown and idempotent finalization');
-await login(v);await rpc('create_player',['Ivan']);await login(u);await rpc('peris_challenge',[v]);w=await snap();const invite=w.challenges[0];await rejects(()=>rpc('peris_respond',[invite.id,true]),'Inviter accepted their own invitation');await login(v);await rpc('peris_respond',[invite.id,true]);w=await snap();b=w.battles.find(b=>b.status==='active');assert.equal(b.mode,'pvp');await rpc('peris_ready',[b.id]);assert.equal((await snap()).battles.find(x=>x.id===b.id).phase,'deployment');await login(u);await rpc('peris_ready',[b.id]);assert.equal((await snap()).battles.find(x=>x.id===b.id).phase,'combat');
+await login(v);await rpc('create_player',['Ivan']);await login(u);await rpc('peris_challenge',[v]);w=await snap();assert.equal(w.buildings.length,8);assert.ok(w.settlements.every(s=>s.owner_id===u));assert.ok(w.armies.every(a=>a.owner_id===u));assert.ok(w.players.some(p=>p.id===v&&p.display_name==='Ivan'));const invite=w.challenges[0];await rejects(()=>rpc('peris_respond',[invite.id,true]),'Inviter accepted their own invitation');await login(v);await rpc('peris_respond',[invite.id,true]);w=await snap();b=w.battles.find(b=>b.status==='active');assert.equal(b.mode,'pvp');await rpc('peris_ready',[b.id]);assert.equal((await snap()).battles.find(x=>x.id===b.id).phase,'deployment');await login(u);await rpc('peris_ready',[b.id]);assert.equal((await snap()).battles.find(x=>x.id===b.id).phase,'combat');
 await rpc('peris_order',[b.id,{kind:'stance',ids:(await snap()).formations.filter(f=>f.owner_id===u).map(f=>f.id),stance:'guard'}]);await login(v);await rpc('peris_rally',[b.id]);await rejects(()=>rpc('peris_rally',[b.id]),'Second rally accepted');await rpc('retreat_from_battle',[b.id]);w=await snap();assert.equal(w.reports.length,1);assert.equal(w.reports[0].won,false);await login(u);assert.equal((await snap()).reports.length,2);
 console.log('PASS · two-player invitation, deployment, command ownership, rally and reports');
+for(let i=1;i<=12;i++){const id=`44444444-4444-4444-8444-${String(i).padStart(12,'0')}`;await admin(`insert into auth.users values('${id}')`);await login(id);await rpc('create_player',['Ruler '+i]);}
+w=await snap();assert.ok(w.settlements[0].x<0);assert.equal(w.map.total_players,14);assert.equal(w.map.total_settlements,14);
+await admin(`insert into auth.users select ('55555555-5555-4555-8555-'||lpad(i::text,12,'0'))::uuid from generate_series(1,610)i;
+insert into public.players(id,display_name) select ('55555555-5555-4555-8555-'||lpad(i::text,12,'0'))::uuid,'Viewport '||i from generate_series(1,610)i;
+insert into public.settlements(owner_id,spawn_point_id,name,x,y) select ('55555555-5555-4555-8555-'||lpad(i::text,12,'0'))::uuid,site.id,'Village '||i,5000+i%100,5000+i/100 from (select sp.id,row_number()over(order by sp.id) as i from public.spawn_points sp where not exists(select 1 from public.settlements s where s.spawn_point_id=sp.id)order by sp.id limit 610)site;
+insert into public.armies(owner_id,home_settlement_id,start_x,start_y,target_x,target_y) select s.owner_id,s.id,s.x,s.y,s.x,s.y from public.settlements s where s.owner_id::text like '55555555-5555-4555-8555-%';`);
+await login(u);let view=(await rpc('peris_map_snapshot',[-12800,-12800,12800,12800])).rows[0].result;
+assert.equal(view.settlements.length,601);assert.equal(view.armies.length,601);assert.equal(view.settlements_truncated,true);assert.equal(view.armies_truncated,true);assert.equal(view.total_players,624);
+assert.ok(view.settlements.some(s=>s.owner_id===u));assert.ok(view.armies.some(a=>a.owner_id===u));assert.ok(view.settlements.every(s=>Object.keys(s).sort().join(',')==='id,name,owner_id,x,y'));assert.ok(view.players.every(p=>Object.keys(p).sort().join(',')==='display_name,id'));
+view=(await rpc('peris_map_snapshot',[4900,4900,5200,5200])).rows[0].result;assert.ok(view.settlements.every(s=>s.owner_id===u||(s.x>=4900&&s.x<5200&&s.y>=4900&&s.y<5200)));assert.ok(view.armies.some(a=>a.owner_id===u));
+await admin(`update public.armies set start_x=-10000,target_x=10000,start_y=6000,target_y=6000,status='moving',departure_at=now()-interval '5 minutes',arrival_at=now()+interval '5 minutes' where owner_id='55555555-5555-4555-8555-000000000001'`);await login(u);
+view=(await rpc('peris_map_snapshot',[-1000,5900,1000,6100])).rows[0].result;assert.ok(view.armies.some(a=>a.owner_id==='55555555-5555-4555-8555-000000000001'),'Viewport omitted a moving army whose route crosses it');assert.ok(view.settlements.every(s=>s.owner_id===u));
+await rejects(()=>rpc('peris_map_snapshot',[10,0,0,10]),'Reversed viewport accepted');await rejects(()=>rpc('peris_map_snapshot',[null,0,100,100]),'Null viewport accepted');
+w=await snap();assert.equal(w.buildings.length,8);assert.equal(w.settlements.length,1);assert.equal(w.armies.length,1);assert.equal(w.map.total_players,624);
+console.log('PASS · more than twelve rulers, bounded public viewport, own private state and moving army visibility');
 await db.exec('reset role;set role anon;');await rejects(()=>rpc('peris_snapshot'),'Unauthenticated world access accepted');console.log('PASS · unauthenticated access blocked');
+await rejects(()=>rpc('peris_map_snapshot',[-12800,-12800,12800,12800]),'Unauthenticated map access accepted');await rejects(()=>rpc('move_army',[-20000,20000]),'Unauthenticated march accepted');
+await rejects(()=>rpc('peris_march',[320,320,JSON.stringify([[195,315],[320,320]])]),'Unauthenticated routed march accepted');
 console.log('ALL DATABASE INTEGRATION CHECKS PASSED');
 }catch(e){console.error(e.message,e.where??'');process.exitCode=1}finally{await db.close()}
 async function snapLegacy(){const rows=await db.query('select * from public.armies');return {armies:rows.rows}}

@@ -11,18 +11,22 @@
     "test": "node --import tsx --test tests/*.test.ts",
     "test:db": "node tests/database.test.mjs",
     "test:fresh": "node tests/fresh-database.test.mjs",
+    "build:world": "node --import tsx scripts/build-world.mjs",
+    "check:world": "node --import tsx scripts/build-world.mjs --check",
     "build:sql": "node scripts/build-sql.mjs",
     "check:sql": "node scripts/build-sql.mjs --check"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.57.4",
     "react": "19.1.1",
-    "react-dom": "19.1.1"
+    "react-dom": "19.1.1",
+    "three": "0.186.1"
   },
   "devDependencies": {
     "@electric-sql/pglite": "0.3.10",
     "@types/react": "19.1.13",
     "@types/react-dom": "19.1.9",
+    "@types/three": "0.186.0",
     "@vitejs/plugin-react": "4.7.0",
     "tsx": "4.20.5",
     "typescript": "5.9.2",

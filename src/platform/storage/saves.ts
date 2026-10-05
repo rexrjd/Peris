@@ -1,5 +1,10 @@
 import { SAVE_KEY, readSolo } from './solo';
 import { type World } from '../../shared/model/world';
+import { CELL_SIZE } from '../../features/map/domain/dimensions';
+import { isWalkable, isLegacyWalkable } from '../../features/map/domain/worldGrid';
+// v6 campaigns predate the 200-field map. Keep every legacy position and route
+// unchanged on import/export; new movement remains bounded by current geography.
+const SAVE_MIN = -25600, SAVE_MAX = 25600;
 const backupKey = 'peris-campaign-backup';
 export function backupSolo() { try {
     const old = localStorage.getItem(SAVE_KEY);
@@ -30,9 +35,43 @@ export function validateSave(data: unknown): World {
             invalid();
     if (army.infantry + army.archers + army.cavalry > 1000 || !['idle', 'moving'].includes(army.status))
         invalid();
-    for (const n of [town.x, town.y, army.start_x, army.start_y, army.target_x, army.target_y])
-        if (!Number.isFinite(n) || n < 0 || n > 1250)
+    for (const n of [town.x, army.start_x, army.target_x])
+        if (!Number.isFinite(n) || n < SAVE_MIN || n >= SAVE_MAX)
             invalid();
+    for (const n of [town.y, army.start_y, army.target_y])
+        if (!Number.isFinite(n) || n < SAVE_MIN || n >= SAVE_MAX)
+            invalid();
+    if (army.march_distance != null && (!Number.isFinite(army.march_distance) || army.march_distance < 0))
+        invalid();
+    if (army.march_path != null) {
+        const route = army.march_path;
+        if (!Array.isArray(route) || route.length < 2 || route.length > 2000)
+            invalid();
+        let distance = 0, currentLand = true, legacyLand = true;
+        for (let i = 0; i < route.length; i++) {
+            const point = route[i];
+            if (!Array.isArray(point) || point.length !== 2 || !Number.isFinite(point[0]) || !Number.isFinite(point[1]) || point[0] < SAVE_MIN || point[0] >= SAVE_MAX || point[1] < SAVE_MIN || point[1] >= SAVE_MAX)
+                invalid();
+            const col = Math.floor(point[0] / CELL_SIZE), row = Math.floor(point[1] / CELL_SIZE);
+            currentLand = currentLand && isWalkable(col, row);
+            legacyLand = legacyLand && isLegacyWalkable(col, row);
+            if (i) {
+                const previous = route[i - 1], oldCol = Math.floor(previous[0] / CELL_SIZE), oldRow = Math.floor(previous[1] / CELL_SIZE);
+                const segment = Math.hypot(point[0] - previous[0], point[1] - previous[1]);
+                if (Math.abs(col - oldCol) > 1 || Math.abs(row - oldRow) > 1 || segment === 0 && route.length > 2)
+                    invalid();
+                if (col !== oldCol && row !== oldRow) {
+                    currentLand = currentLand && isWalkable(col, oldRow) && isWalkable(oldCol, row);
+                    legacyLand = legacyLand && isLegacyWalkable(col, oldRow) && isLegacyWalkable(oldCol, row);
+                }
+                distance += segment;
+            }
+        }
+        if ((!currentLand && !legacyLand) || army.march_distance == null || Math.abs(army.march_distance - distance) > Math.max(.01, distance * 1e-8))
+            invalid();
+        if (army.status === 'moving' && (Math.abs(route[0][0] - army.start_x) > 1 || Math.abs(route[0][1] - army.start_y) > 1 || route.at(-1)![0] !== army.target_x || route.at(-1)![1] !== army.target_y))
+            invalid();
+    }
     for (const n of [army.infantry, army.archers, army.cavalry])
         if (!Number.isInteger(n))
             invalid();

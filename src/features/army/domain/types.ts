@@ -16,4 +16,7 @@ export type Army = {
     status: 'idle' | 'moving';
     updated_at: string;
     raid_target_id: number | null;
+    /** Optional for compatibility with old saves and pre-coastal servers. */
+    march_path?: [number, number][] | null;
+    march_distance?: number | null;
 };

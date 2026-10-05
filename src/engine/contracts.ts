@@ -10,4 +10,6 @@ export interface GameEngine {
     subscribe: (fn: () => void) => () => void;
     command: (cmd: Command) => Promise<void>;
     destroy: () => void;
+    /** Online adapters may page public rivals as the strategic camera moves. */
+    setMapViewport?: (bounds: { minX: number; minY: number; maxX: number; maxY: number }) => void;
 }

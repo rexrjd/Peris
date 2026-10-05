@@ -4,8 +4,11 @@ import { BattleRenderer } from '../../features/battle/rendering/BattleRenderer';
 import { clamp } from '../../shared/math/geometry';
 import { tone } from '../../platform/audio/audio';
 import { preferences } from '../../platform/preferences/preferences';
+import { cellAt, cellCenter } from '../../features/map/domain/worldGrid';
 export class InputController {
     private cleanup: (() => void)[] = [];
+    private touches = new Map<number, { x: number; y: number }>();
+    private pinch: { distance: number; zoom: number; anchor: { x: number; y: number } } | null = null;
     constructor(private ctx: RenderContext, private map: MapRenderer, private battle: BattleRenderer) { this.bind(); }
     private on(target: EventTarget, event: string, fn: EventListener, options?: AddEventListenerOptions) { target.addEventListener(event, fn, options); this.cleanup.push(() => target.removeEventListener(event, fn, options)); }
     private coords(e: PointerEvent) { const r = this.ctx.canvas.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; }
@@ -17,6 +20,16 @@ export class InputController {
             this.ctx.canvas.setPointerCapture(e.pointerId);
             const p = this.coords(e), wp = this.ctx.worldPoint(p.x, p.y);
             this.ctx.pointer = p;
+            if (this.ctx.state().mode === 'world' && e.pointerType === 'touch') {
+                this.touches.set(e.pointerId, p);
+                if (this.touches.size === 2) {
+                    const [a, b] = [...this.touches.values()];
+                    this.pinch = { distance: Math.max(1, Math.hypot(a.x - b.x, a.y - b.y)), zoom: this.ctx.camera.zoom, anchor: this.ctx.worldPoint((a.x + b.x) / 2, (a.y + b.y) / 2) };
+                    this.ctx.down = null;
+                    this.ctx.minimapDrag = false;
+                    return;
+                }
+            }
             this.ctx.down = { ...p, wx: wp.x, wy: wp.y, button: e.button, shift: e.shiftKey };
             const mini = this.ctx.miniBounds();
             if (p.x >= mini.x && p.x <= mini.x + mini.w && p.y >= mini.y && p.y <= mini.y + mini.h) {
@@ -26,6 +39,16 @@ export class InputController {
         }) as EventListener);
         this.on(this.ctx.canvas, 'pointermove', ((e: PointerEvent) => {
             const p = this.coords(e), s = this.ctx.state();
+            if (this.touches.has(e.pointerId)) this.touches.set(e.pointerId, p);
+            if (s.mode === 'world' && this.pinch && this.touches.size >= 2) {
+                const [a, b] = [...this.touches.values()], mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+                this.ctx.camera.zoom = clamp(this.pinch.zoom * Math.hypot(a.x - b.x, a.y - b.y) / this.pinch.distance, this.ctx.mapMinZoom, 5);
+                const scale = this.ctx.zoomBase * this.ctx.camera.zoom;
+                this.ctx.camera.x = this.pinch.anchor.x - (mid.x - this.ctx.w / 2) / scale;
+                this.ctx.camera.y = this.pinch.anchor.y - (mid.y - this.ctx.h / 2) / scale;
+                this.ctx.pointer = mid;
+                return;
+            }
             if (this.ctx.minimapDrag) {
                 this.ctx.panMinimap(p);
                 this.ctx.pointer = p;
@@ -39,6 +62,11 @@ export class InputController {
             this.ctx.pointer = p;
         }) as EventListener);
         this.on(this.ctx.canvas, 'pointerup', ((e: PointerEvent) => {
+            this.touches.delete(e.pointerId);
+            if (this.pinch) {
+                if (!this.touches.size) this.pinch = null;
+                return;
+            }
             if (!this.ctx.down)
                 return;
             const down = this.ctx.down;
@@ -50,7 +78,8 @@ export class InputController {
             }
             if (s.mode === 'world') {
                 if (s.moveMode && (e.button === 0 || e.button === 2)) {
-                    a.moveArmy(wp.x, wp.y);
+                    const cell = cellAt(wp.x, wp.y), destination = cellCenter(cell.col, cell.row);
+                    a.moveArmy(destination.x, destination.y);
                     return;
                 }
                 if (drag > 7 || e.button === 1)
@@ -98,11 +127,13 @@ export class InputController {
             else
                 a.selectUnits([]);
         }) as EventListener);
-        this.on(this.ctx.canvas, 'pointercancel', () => { this.ctx.down = null; this.ctx.minimapDrag = false; });
+        this.on(this.ctx.canvas, 'pointercancel', () => { this.ctx.down = null; this.ctx.minimapDrag = false; this.touches.clear(); this.pinch = null; });
         this.on(this.ctx.canvas, 'wheel', ((e: WheelEvent) => {
             e.preventDefault();
+            const rect = this.ctx.canvas.getBoundingClientRect();
+            this.ctx.pointer = { x: e.clientX - rect.left, y: e.clientY - rect.top };
             const before = this.ctx.worldPoint(this.ctx.pointer.x, this.ctx.pointer.y);
-            this.ctx.camera.zoom = clamp(this.ctx.camera.zoom * Math.exp(-e.deltaY * .001), .3, 3.2);
+            this.ctx.zoom(Math.exp(-e.deltaY * .001));
             const after = this.ctx.worldPoint(this.ctx.pointer.x, this.ctx.pointer.y);
             this.ctx.camera.x += before.x - after.x;
             this.ctx.camera.y += before.y - after.y;
@@ -115,6 +146,15 @@ export class InputController {
             const k = e.key.toLowerCase();
             this.ctx.keys.add(k);
             const s = this.ctx.state(), a = this.ctx.actions();
+            if (s.mode === 'world') {
+                if (k === 'h') this.ctx.focusMap('home');
+                if (k === 'f') this.ctx.focusMap('army');
+                if (k === '0') this.ctx.center();
+                if (k === '+' || k === '=') this.ctx.zoom(1.25);
+                if (k === '-') this.ctx.zoom(.8);
+                if (k === 'escape') { a.cancelMove?.(); a.selectMap(null); }
+                if (document.activeElement === this.ctx.canvas && ['arrowleft', 'arrowright', 'arrowup', 'arrowdown', '+', '=', '-', '0'].includes(k)) e.preventDefault();
+            }
             if (s.mode !== 'battle')
                 return;
             if ([' ', 'a', 'h', 'g', 'r', 'f'].includes(k))
@@ -148,7 +188,7 @@ export class InputController {
             }
         }) as EventListener);
         this.on(window, 'keyup', ((e: KeyboardEvent) => { this.ctx.keys.delete(e.key.toLowerCase()); }) as EventListener);
-        this.on(window, 'blur', () => { this.ctx.keys.clear(); this.ctx.down = null; });
+        this.on(window, 'blur', () => { this.ctx.keys.clear(); this.ctx.down = null; this.ctx.minimapDrag = false; this.touches.clear(); this.pinch = null; });
     }
     destroy() { this.cleanup.forEach(fn => fn()); this.cleanup = []; }
 }

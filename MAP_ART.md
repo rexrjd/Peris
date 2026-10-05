@@ -1,0 +1,19 @@
+# PERIS map art
+
+Generated with the built-in image generation tool on 2026-10-05. The user-provided concept is a visual reference; PERIS artwork and region names are original. No image API credentials or external package were used.
+
+Assets:
+- `public/art/map/frontier-atlas-v1.png`: transparent 4 × 4 terrain/landmark atlas.
+- `public/art/map/continental-overview-v1.png`: illustrated continental overview.
+
+The overview is illustrative relief, clipped at runtime to the canonical land mask. Exact cell terrain, ownership and march validity come from game state, never from pixels. Villages and armies are dynamic overlays. Detailed cells use the terrain atlas with vector fallbacks. Tactical troop artwork is independent.
+
+Atlas prompt:
+
+Create one production sprite atlas for original PERIS. Use the supplied fantasy world reference for painterly miniature style only: richly hand-painted medieval cartographic terrain, realistic earthy tones, intricate leaves, roofs and stone, lighting from upper left, elevated isometric camera. Exactly 4 × 4 square slots, transparent background, generous 50-pixel padding, each object entirely contained, no text, labels, UI, grid, borders or watermarks. Readable at 128 pixels. Slot order: oak cluster; pines; crop strips; meadow; snow mountains; rocky mountains; desert dunes; marsh; small player village; walled capital; gothic ruins; elven shrine; volcano; mine/quarry; oasis; coastal cliff and lighthouse. Use original architecture, believable shading, no flat cartoon or neon colors. Requested 2048 pixels; tool returned a 1254-pixel atlas. Renderer derives source rectangles from actual image dimensions.
+
+Overview prompt:
+
+Create one production game background for the original fantasy strategy game PERIS. A square, edge-to-edge, beautifully hand-painted miniature world map, high fidelity naturalistic cartographic relief with intricate trees, craggy mountains, cultivated fields, rivers, marsh pools, dunes and coastline. First reference is STYLE ONLY: borrow painterly detail, earthy fantasy realism, rich deep teal water and atmospheric miniature relief, but absolutely no text, UI, titles, legends, banners, compass, borders or inset panels. Second reference is the EXACT GEOGRAPHIC LAYOUT: fill this exact continental silhouette and the three small islands, preserving their positions and the south-opening narrow sea gulf. Do not reshape or add continents. Map entire image square corresponding to guide. Guide teal is sea, olive is grass/meadow, dark green forest, tan/gold fields, grey-green mountains, pale ivory snow, ochre desert, grey-black southwest darklands, blue-green center river. Use the layout faithfully. Northern crown and northeast are snowy ranges; northwest and western center densely forested; central and southern heartlands golden-green fields and meadows; towering eastern mountain spine behind ochre eastern desert; southwest broken dark volcanic plateau; lower southeast wetlands. One long sinuous river follows the guide from northern center down through heartlands into the southern gulf. Three tiny detached coastal islands at exact guide locations: south-left meadow, south-right forest, east-right grass. Every land area must have rich terrain relief, varied scale and integrated painted shading, not tiled or repeating icons. Ocean has subtle depth gradients, coastline foam and wind currents. Lighting from upper left; low oblique fantasy atlas relief seen from above, no horizon. Terrain landscape only: no villages or castles or structures, these are dynamic gameplay objects rendered separately. No writing anywhere. Artwork must be detailed and striking when shown 1000 pixels wide and geographically aligned for an interactive 400x400 field grid.
+
+The second overview input was generated from the actual domain data with `node --import tsx scripts/render-world-guide.mjs tmp/world-map/continent-guide.png`.

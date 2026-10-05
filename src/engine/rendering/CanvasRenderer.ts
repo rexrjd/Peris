@@ -6,10 +6,10 @@ import { CanvasOverlays } from '../../shared/rendering/overlays';
 import { type RenderActions, type RenderState } from '../../shared/rendering/contracts';
 import { gameImage } from '../../shared/rendering/assets';
 import { makeTerrain } from './terrain';
-import { armyPosition } from '../../features/map/domain/movement';
-import { WORLD_H } from '../../features/map/domain/dimensions';
 import { clamp } from '../../shared/math/geometry';
 import { preferences } from '../../platform/preferences/preferences';
+import { CELL_SIZE, WORLD_MIN_X, WORLD_MIN_Y, WORLD_MAX_X, WORLD_MAX_Y } from '../../features/map/domain/dimensions';
+import { mapArtReady, mapOverviewReady } from '../../features/map/rendering/mapArt';
 /** Canvas lifecycle adapter. Scenes own drawing; InputController owns gestures. */
 export class GameRenderer {
     private ctx: RenderContext;
@@ -24,6 +24,8 @@ export class GameRenderer {
     private lastSelection = '';
     private last = 0;
     private lastTouchOrder = 'select';
+    private lastMapFocus: number | undefined;
+    private lastViewport = '';
     constructor(canvas: HTMLCanvasElement, state: () => RenderState, actions: () => RenderActions) {
         this.ctx = new RenderContext(canvas, state, actions);
         this.map = new MapRenderer(this.ctx);
@@ -40,7 +42,7 @@ export class GameRenderer {
             return;
         const dt = Math.min(.1, (time - (this.last || time)) / 1000);
         this.last = time;
-        const s = this.ctx.state(), c = this.ctx.c, key = `${s.mode}:${s.battle?.id ?? ''}:${s.battle?.terrain ?? 'plains'}:${gameImage('ground').complete}:${gameImage('props').complete}`;
+        const s = this.ctx.state(), c = this.ctx.c, key = s.mode === 'world' ? `world:fields:${mapArtReady()}:${mapOverviewReady()}` : `${s.mode}:${s.battle?.id ?? ''}:${s.battle?.terrain ?? 'plains'}:${gameImage('ground').complete}:${gameImage('props').complete}`;
         if (key !== this.terrainKey) {
             if (!this.terrainKey && s.mode === 'battle')
                 this.ctx.camera.zoom = 1.15;
@@ -49,17 +51,11 @@ export class GameRenderer {
             this.battle.reset();
             this.ctx.setSize();
         }
-        if (s.mode === 'world' && this.ctx.w < 600 && s.selection) {
-            const key = `${s.selection.kind}:${s.selection.id}`;
-            if (key !== this.lastSelection) {
-                this.lastSelection = key;
-                const item = s.selection.kind === 'camp' ? s.world.camps.find(c => c.id === s.selection!.id) : s.selection.kind === 'settlement' ? s.world.settlements.find(c => c.id === s.selection!.id) : s.world.armies.find(c => c.id === s.selection!.id);
-                if (item) {
-                    const pos = 'target_x' in item ? armyPosition(item) : item;
-                    this.ctx.camera.x = pos.x + 150;
-                    this.ctx.camera.y = WORLD_H / 2;
-                }
-            }
+        if (s.mode === 'world' && s.mapFocus && s.mapFocus.key !== this.lastMapFocus) {
+            this.lastMapFocus = s.mapFocus.key;
+            this.ctx.camera.x = s.mapFocus.x;
+            this.ctx.camera.y = s.mapFocus.y;
+            this.ctx.camera.zoom = clamp(s.mapFocus.zoom === 0 ? this.ctx.mapMinZoom : s.mapFocus.zoom ?? (this.ctx.w < 600 ? 3.2 : 1.8), this.ctx.mapMinZoom, 5);
         }
         if (s.mode === 'battle' && this.ctx.w < 600) {
             const key = s.selectedIds.join(',');
@@ -82,8 +78,22 @@ export class GameRenderer {
             this.ctx.camera.y -= pan;
         if (this.ctx.keys.has('arrowdown') || this.ctx.keys.has('k'))
             this.ctx.camera.y += pan;
-        this.ctx.camera.x = clamp(this.ctx.camera.x, 0, 1200);
-        this.ctx.camera.y = clamp(this.ctx.camera.y, 0, s.mode === 'world' ? 770 : 700);
+        if (s.mode === 'world') this.ctx.constrainMapCamera();
+        else {
+            this.ctx.camera.x = clamp(this.ctx.camera.x, 0, 1200);
+            this.ctx.camera.y = clamp(this.ctx.camera.y, 0, 700);
+        }
+        if (s.mode === 'world') {
+            const margin = CELL_SIZE * 4;
+            const bounds = {
+                minX: Math.max(WORLD_MIN_X, Math.floor((this.ctx.camera.x - this.ctx.w / scale / 2 - margin) / CELL_SIZE) * CELL_SIZE),
+                minY: Math.max(WORLD_MIN_Y, Math.floor((this.ctx.camera.y - this.ctx.h / scale / 2 - margin) / CELL_SIZE) * CELL_SIZE),
+                maxX: Math.min(WORLD_MAX_X, Math.ceil((this.ctx.camera.x + this.ctx.w / scale / 2 + margin) / CELL_SIZE) * CELL_SIZE),
+                maxY: Math.min(WORLD_MAX_Y, Math.ceil((this.ctx.camera.y + this.ctx.h / scale / 2 + margin) / CELL_SIZE) * CELL_SIZE),
+            };
+            const viewport = `${bounds.minX}:${bounds.minY}:${bounds.maxX}:${bounds.maxY}`;
+            if (viewport !== this.lastViewport) { this.lastViewport = viewport; this.ctx.actions().mapViewport?.(bounds); }
+        }
         c.setTransform(this.ctx.dpr, 0, 0, this.ctx.dpr, 0, 0);
         c.fillStyle = '#30362b';
         c.fillRect(0, 0, this.ctx.w, this.ctx.h);
@@ -91,10 +101,10 @@ export class GameRenderer {
         c.translate(this.ctx.w / 2, this.ctx.h / 2);
         c.scale(scale, scale);
         c.translate(-this.ctx.camera.x, -this.ctx.camera.y);
-        c.drawImage(this.ctx.terrain!, 0, 0);
-        this.overlays.water(preferences().reducedMotion ? 0 : time);
+        if (s.mode === 'world') this.map.drawTerrain();
+        else { c.drawImage(this.ctx.terrain!, 0, 0); this.overlays.water(preferences().reducedMotion ? 0 : time); }
         if (s.mode === 'world')
-            this.map.draw(time);
+            this.map.draw(preferences().reducedMotion || !preferences().effects ? 0 : time);
         else
             this.battle.draw(s.battle!.elapsed * 1000, s.paused ? 0 : dt);
         c.restore();
@@ -116,11 +126,13 @@ export class GameRenderer {
             }
         }
         this.overlays.minimap();
+        if (s.mode === 'world') this.map.drawHUD();
         this.battle.hover();
         this.frame = requestAnimationFrame(t => this.loop(t));
     }
     zoom(delta: number) { this.ctx.zoom(delta); }
     focus(side: 'own' | 'enemy') { this.ctx.focus(side); }
+    focusMap(target: 'home' | 'army') { this.ctx.focusMap(target); }
     center(x?: number, y?: number) { this.ctx.center(x, y); }
     destroy() { this.running = false; cancelAnimationFrame(this.frame); this.resize.disconnect(); this.input.destroy(); }
 }
