@@ -1,108 +1,35 @@
 import { useState } from 'react';
-import { type BuildingType } from '../domain/types';
+import type { BuildingType } from '../domain/types';
 import { BUILDINGS } from '../domain/buildings';
-import { type World } from '../../../shared/model/world';
-import { type Command } from '../../../shared/model/commands';
+import type { World } from '../../../shared/model/world';
+import type { Command } from '../../../shared/model/commands';
 import { affordable, liveResources } from '../domain/economy';
 import { buildingCost, MAX_BUILDING_LEVEL, upgradeSeconds } from '../domain/construction';
+import { SLOT_BUILDINGS, citySlots, mainLevel, slotCount, slotCost, riversideSlot, armyAttack, type SlotType } from '../domain/slots';
 import { Icon, buildingIcon } from '../../../shared/ui/Icons';
 import { Cost } from '../../../shared/ui/Shared';
 import { clock } from '../../../shared/time/clock';
 import { SettlementScene } from '../rendering/SettlementScene';
-
-function trainingTime(level: number) {
-    return `${Math.round(100 / (1 + Math.max(0, level - 1) * .18))}% time`;
-}
-
-function benefitFor(type: BuildingType, level: number, town: World['settlements'][number]) {
-    const nextLevel = Math.min(MAX_BUILDING_LEVEL, level + 1);
-    if (type === 'lumber') return { now: `${town.wood_rate} / min`, next: `${14 + nextLevel * 8} / min` };
-    if (type === 'quarry') return { now: `${town.stone_rate} / min`, next: `${12 + nextLevel * 7} / min` };
-    if (type === 'farm') return { now: `${town.food_rate} / min`, next: `${18 + nextLevel * 10} / min` };
-    if (type === 'market') return { now: `${town.gold_rate} / min`, next: `${3 + nextLevel * 3} / min` };
-    if (type === 'storehouse') return { now: town.capacity.toLocaleString(), next: (5000 + nextLevel * 2500).toLocaleString() };
-    if (type === 'wall') return { now: `${Math.min(100, 90 + level * 2)}% morale`, next: `${Math.min(100, 90 + nextLevel * 2)}% morale` };
-    return { now: trainingTime(level), next: trainingTime(nextLevel) };
-}
-
-export function SettlementView({ world, playerId, run, busy, now }: {
-    world: World;
-    playerId: string;
-    run: (c: Command, message?: string) => void;
-    busy: boolean;
-    now: number;
-}) {
-    const [selected, setSelected] = useState<BuildingType>('lumber');
-    const town = world.settlements.find(s => s.owner_id === playerId)!;
-    const buildings = world.buildings.filter(b => b.settlement_id === town.id);
-    const building = buildings.find(b => b.building_type === selected)!;
-    const meta = BUILDINGS[selected];
-    const res = liveResources(town, now);
-    const order = world.orders.find(o => o.kind === 'upgrade' && o.owner_id === playerId);
-    const maxed = building.level >= MAX_BUILDING_LEVEL;
-    const cost = buildingCost(selected, building.level);
-    const benefit = benefitFor(selected, building.level, town);
-    const totalDevelopment = buildings.reduce((sum, item) => sum + Math.min(MAX_BUILDING_LEVEL, item.level), 0);
-    const levelText = building.level === 0 ? 'UNBUILT' : `LEVEL ${building.level}`;
-    const nextText = maxed ? 'MASTERED' : `LEVEL ${building.level + 1}`;
-
-    return <div className="settlement-layout">
-        <section className="city-column">
-            <div className="view-heading city-heading">
-                <div>
-                    <span className="eyebrow">YOUR SETTLEMENT</span>
-                    <h1>{town.name}</h1>
-                    <p>Build it one landmark at a time. Every upgrade changes the city itself.</p>
-                </div>
-                <span className="tag">{totalDevelopment} / {buildings.length * MAX_BUILDING_LEVEL} development</span>
-            </div>
-
-            <div className="city-panel">
-                <SettlementScene selected={selected} onSelect={setSelected} levels={Object.fromEntries(buildings.map(item => [item.building_type, item.level]))}/>
-                <div className="city-scene-hint"><span>SELECT A BUILDING</span><b>Upgrade it to watch your city grow</b></div>
-            </div>
-
-            <div className="building-grid" aria-label="Settlement buildings">
-                {buildings.map(item => <button key={item.id} className={selected === item.building_type ? 'selected' : ''} onClick={() => setSelected(item.building_type)}>
-                    <Icon name={buildingIcon(item.building_type)}/>
-                    <span>{BUILDINGS[item.building_type].name}<small>{item.level === 0 ? 'Unbuilt' : `Level ${item.level} / ${MAX_BUILDING_LEVEL}`}</small></span>
-                    {order?.item === item.building_type && <Icon name="time" size={14}/>} 
-                </button>)}
-            </div>
-        </section>
-
-        <aside className="detail-panel">
-            <span className="eyebrow">SETTLEMENT DEVELOPMENT</span>
-            <div className={`building-emblem level-emblem level-${building.level}`}><Icon name={buildingIcon(selected)} size={54}/><span>{building.level}</span></div>
-            <h2>{meta.name}</h2>
-            <span className="tag">{levelText} → {nextText}</span>
-            <p>{meta.description}</p>
-            <div className="benefit"><Icon name="arrow" size={16}/>{meta.effect}</div>
-            <div className="level-track" aria-label={`${meta.name} level ${building.level} of ${MAX_BUILDING_LEVEL}`}>
-                {[1, 2, 3, 4, 5].map(level => <i key={level} className={building.level >= level ? 'filled' : ''}/>) }
-            </div>
-            <div className="upgrade-comparison">
-                <div><small>CURRENT</small><strong>{benefit.now}</strong></div>
-                <Icon name="arrow"/>
-                <div><small>{maxed ? 'FINAL' : 'NEXT LEVEL'}</small><strong>{maxed ? 'MAX' : benefit.next}</strong></div>
-            </div>
-            <div className="rule"/>
-            {!maxed && <>
-                <label className="field-label">UPGRADE COST</label>
-                <Cost cost={cost} resources={res}/>
-                <p className="muted inline"><Icon name="time" size={15}/>{clock(upgradeSeconds(building.level))} construction time</p>
-            </>}
-            <button className="button gold" disabled={busy || !!order || !affordable(res, cost) || maxed} onClick={() => run({ type: 'upgrade', item: selected }, `${meta.name} upgrade started`)}>
-                {maxed ? 'Fully developed' : order ? 'Builders are working' : !affordable(res, cost) ? 'More supplies needed' : building.level === 0 ? 'Construct building' : 'Begin upgrade'}
-                {!maxed && <Icon name="arrow" size={16}/>} 
-            </button>
-            {order && <div className="queue-card">
-                <label className="field-label">UNDER CONSTRUCTION</label>
-                <strong>{BUILDINGS[order.item as BuildingType].name}</strong>
-                <div className="progress-track"><i style={{ width: `${Math.min(100, Math.max(0, (now - Date.parse(order.started_at)) / (Date.parse(order.finish_at) - Date.parse(order.started_at)) * 100))}%` }}/></div>
-                <small>Completes in {clock((Date.parse(order.finish_at) - now) / 1000)}</small>
-            </div>}
-            <div className="storage-note"><Icon name="town"/><div><strong>{town.capacity.toLocaleString()} storage capacity</strong><small>Upgrade the granary to store more of every resource.</small></div></div>
-        </aside>
-    </div>;
+import { cityLayout } from '../rendering/three/layout';
+export function SettlementView({world,playerId,run,busy,now}:{world:World;playerId:string;run:(c:Command,message?:string)=>void;busy:boolean;now:number}) {
+ const [selected,setSelected]=useState('market');
+ const town=world.settlements.find(s=>s.owner_id===playerId)!,buildings=world.buildings.filter(b=>b.settlement_id===town.id);
+ const levels=Object.fromEntries(buildings.map(b=>[b.building_type,b.level])),slots=citySlots(world,town.id),plots=cityLayout(levels,slots),plot=plots.find(p=>p.key===selected)??plots[1];
+ const res=liveResources(town,now),order=world.orders.find(o=>o.kind==='upgrade'&&o.owner_id===playerId),level=plot.level,maxed=level>=MAX_BUILDING_LEVEL;
+ const fishingSite=plot.slot===16;
+ const empty=plot.slot!==undefined&&!plot.type,type=plot.type,meta=type?(plot.slot===undefined?BUILDINGS[type as BuildingType]:SLOT_BUILDINGS[type as SlotType]):null;
+ const fishingUnbuilt=fishingSite&&!slots.some(s=>s.slot_index===16);
+ const cost=type?(plot.slot===undefined?buildingCost(type as BuildingType,level):slotCost(type as SlotType,level)):null;
+ const icon=(type:string|null)=>type==='market'?'town':buildingIcon((type==='warehouse'||type==='granary'?'storehouse':type==='smithy'?'barracks':type==='fishery'?'farm':type??'storehouse') as BuildingType);
+ const orderName=order?.item.startsWith('slot:')?SLOT_BUILDINGS[order.item.split(':')[2] as SlotType]?.name:order?BUILDINGS[order.item as BuildingType]?.name:null;
+ return <div className="settlement-layout"><section className="city-column"><div className="view-heading city-heading"><div><span className="eyebrow">YOUR SETTLEMENT</span><h1>{town.name}</h1><p>Choose a plot and build. Upgrade the main building to expand the city.</p></div><span className="tag">{plots.filter(p=>p.slot!==undefined&&p.slot<16&&p.type).length} / {slotCount(mainLevel(world,town.id))} plots used</span></div>
+ <div className="city-panel"><SettlementScene selected={selected} onSelect={setSelected} levels={levels} slots={slots}/><div className="city-scene-hint"><span>SELECT A BUILDING OR EMPTY PLOT</span><b>Resource buildings sit outside the wall</b></div></div>
+ <div className="building-grid" aria-label="Settlement buildings">{plots.map(p=><button key={p.key} className={plot.key===p.key?'selected':''} onClick={()=>setSelected(p.key)}><Icon name={icon(p.type)}/><span>{p.type?(p.slot===undefined?BUILDINGS[p.type as BuildingType].name:SLOT_BUILDINGS[p.type as SlotType].name):`Empty plot ${p.slot!+1}`}<small>{p.slot!==undefined&&p.slot<16?`Plot ${p.slot+1}${riversideSlot(p.slot)?' · Riverside':''} · `:''}{p.level?`Level ${p.level} / 5`:p.type?'Unbuilt':'Choose building'}</small></span></button>)}</div></section>
+ <aside className="detail-panel"><span className="eyebrow">{empty?'CHOOSE A BUILDING':plot.slot!==undefined&&!fishingSite?`BUILDING PLOT ${plot.slot+1}`:'SETTLEMENT DEVELOPMENT'}</span>
+ {empty?<><h2>Empty plot {plot.slot!+1}</h2><p>{riversideSlot(plot.slot!)?'A riverside plot. Fisheries can be built here.':'Choose a city building for this plot. Fishing has its own site outside the wall.'} You can own several of each building.</p><div className="slot-choices">{(Object.entries(SLOT_BUILDINGS) as [SlotType,typeof SLOT_BUILDINGS[SlotType]][]).filter(([key])=>key!=='fishery').map(([key,item])=>{const riverOK=key!=='fishery'||riversideSlot(plot.slot!);return <div className="slot-choice" key={key}><strong>{item.name}</strong><small>{item.effect}</small><Cost cost={slotCost(key,0)} resources={res}/><button className="button" disabled={busy||!!order||!riverOK||!affordable(res,slotCost(key,0))} onClick={()=>run({type:'buildSlot',slot:plot.slot!,item:key},`${item.name} construction started`)}>{!riverOK?'Riverside plot required':`Build ${item.name}`}</button></div>;})}</div></>:<><div className={`building-emblem level-emblem level-${level}`}><Icon name={icon(type)} size={54}/><span>{level}</span></div><h2>{meta!.name}</h2><span className="tag">{level?`LEVEL ${level}`:'UNBUILT'} → {maxed?'MASTERED':`LEVEL ${level+1}`}</span><p>{meta!.description}</p><div className="benefit"><Icon name="arrow" size={16}/>{meta!.effect}</div>
+ {type==='market'&&<p>{slotCount(level)} building plots now · {maxed?'City fully expanded':`${slotCount(level+1)} after upgrade`}</p>}
+ <div className="level-track">{[1,2,3,4,5].map(l=><i key={l} className={level>=l?'filled':''}/>)}</div><div className="rule"/>{!maxed&&<><label className="field-label">{level?'UPGRADE':'CONSTRUCTION'} COST</label><Cost cost={cost!} resources={res}/><p className="muted inline"><Icon name="time" size={15}/>{clock(upgradeSeconds(level))} construction time</p></>}
+ <button className="button gold" disabled={busy||!!order||maxed||!affordable(res,cost!)} onClick={()=>run(plot.slot===undefined?{type:'upgrade',item:type as BuildingType}:fishingUnbuilt?{type:'buildSlot',slot:16,item:'fishery'}:{type:'upgradeSlot',slot:plot.slot},`${meta!.name} upgrade started`)}>{maxed?'Fully developed':order?'Builders are working':!affordable(res,cost!)?'More supplies needed':level?'Begin upgrade':'Construct building'}</button></>}
+ {order&&<div className="queue-card"><label className="field-label">UNDER CONSTRUCTION</label><strong>{orderName??'Building'}</strong><div className="progress-track"><i style={{width:`${Math.min(100,Math.max(0,(now-Date.parse(order.started_at))/(Date.parse(order.finish_at)-Date.parse(order.started_at))*100))}%`}}/></div><small>Completes in {clock((Date.parse(order.finish_at)-now)/1000)}</small></div>}
+ <div className="storage-note"><Icon name="town"/><div><strong>{town.capacity.toLocaleString()} material storage · {(town.food_capacity??town.capacity).toLocaleString()} food storage</strong><small>Warehouses and granaries stack. Smithies: +{Math.round((armyAttack(world,town.id)-1)*100)}% army damage.</small></div></div></aside></div>;
 }

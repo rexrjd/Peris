@@ -1109,6 +1109,81 @@ create policy "challenge participants" on public.peris_challenges for select to 
 using(attacker_owner_id=auth.uid() or defender_owner_id=auth.uid());
 
 -- Internal helpers are revoked from ALL client roles at the end of the file.
+-- Repeatable city plots; legacy buildings are retained for save compatibility.
+alter table public.settlements add column if not exists food_capacity integer not null default 5000;
+alter table public.settlements add column if not exists city_slots_ready boolean not null default false;
+alter table public.battle_formations add column if not exists attack_multiplier numeric not null default 1 check(attack_multiplier between 1 and 1.6);
+create table if not exists public.peris_city_slots (
+ settlement_id bigint not null references public.settlements(id) on delete cascade,
+ slot_index integer not null check(slot_index between 0 and 16),
+ building_type text not null check(building_type in ('barracks','stables','smithy','warehouse','granary','fishery')),
+ level integer not null default 0 check(level between 0 and 5),
+ primary key(settlement_id,slot_index),check((building_type='fishery')=(slot_index=16))
+);
+alter table public.peris_city_slots enable row level security;
+drop policy if exists "own city slots" on public.peris_city_slots;
+create policy "own city slots" on public.peris_city_slots for select to authenticated using(exists(select 1 from public.settlements s where s.id=settlement_id and s.owner_id=auth.uid()));
+revoke all on public.peris_city_slots from public,anon,authenticated;
+grant select on public.peris_city_slots to authenticated;
+create or replace function public.peris_city_economy(p_sid bigint) returns void language plpgsql security definer set search_path='' as $$
+begin
+ update public.settlements s set
+ wood_rate=14+8*coalesce((select level from public.buildings where settlement_id=s.id and building_type='lumber'),0),
+ stone_rate=12+7*coalesce((select level from public.buildings where settlement_id=s.id and building_type='quarry'),0),
+ food_rate=18+10*coalesce((select level from public.buildings where settlement_id=s.id and building_type='farm'),0)+8*coalesce((select sum(level) from public.peris_city_slots where settlement_id=s.id and building_type='fishery'),0),
+ gold_rate=3+3*coalesce((select level from public.buildings where settlement_id=s.id and building_type='market'),0),
+ capacity=5000+2500*coalesce((select sum(level) from public.peris_city_slots where settlement_id=s.id and building_type='warehouse'),0),
+ food_capacity=5000+2500*coalesce((select sum(level) from public.peris_city_slots where settlement_id=s.id and building_type='granary'),0)
+ where s.id=p_sid;
+end $$;
+create or replace function public.peris_city_migrate(p_sid bigint) returns void language plpgsql security definer set search_path='' as $$
+begin
+ perform 1 from public.settlements where id=p_sid and not city_slots_ready for update;
+ if not found then return;end if;
+ insert into public.peris_city_slots(settlement_id,slot_index,building_type,level)
+ select b.settlement_id,case b.building_type when 'barracks' then 0 when 'stables' then 1 else 2 end,
+ case b.building_type when 'storehouse' then 'warehouse' else b.building_type end,b.level
+ from public.buildings b join public.settlements s on s.id=b.settlement_id
+ where b.settlement_id=p_sid and b.building_type in ('barracks','stables','storehouse') and (b.level>0 or exists(select 1 from public.peris_orders o where o.owner_id=s.owner_id and o.kind='upgrade' and o.item=b.building_type)) on conflict do nothing;
+ -- Preserve the food capacity of old combined storehouses as well.
+ insert into public.peris_city_slots select p_sid,3,'granary',level from public.buildings where settlement_id=p_sid and building_type='storehouse' and level>0 on conflict do nothing;
+ update public.peris_orders o set item='slot:'||(case item when 'barracks' then '0:barracks' when 'stables' then '1:stables' else '2:warehouse' end)
+ where o.owner_id=(select owner_id from public.settlements where id=p_sid) and kind='upgrade' and item in ('barracks','stables','storehouse');
+ update public.settlements set city_slots_ready=true where id=p_sid;
+ perform public.peris_city_economy(p_sid);
+end $$;
+create or replace function public.peris_queue_slot(p_slot integer,p_type text default null) returns jsonb language plpgsql security definer set search_path='' as $$
+declare u uuid:=auth.uid();s public.settlements%rowtype;l integer;main integer;t text;factor numeric;cw numeric;cs numeric;cf numeric;cg numeric;
+begin
+ if u is null then raise exception 'Authentication required';end if;
+ perform public.peris_settle(u);
+ if exists(select 1 from public.battles where status='active' and (attacker_owner_id=u or defender_owner_id=u)) then raise exception 'Finish the current battle first';end if;
+ select * into s from public.settlements where owner_id=u for update;
+ if s.id is null then raise exception 'Realm not found';end if;
+ select level into main from public.buildings where settlement_id=s.id and building_type='market';
+ if p_slot is null or p_slot<0 or p_slot<>16 and p_slot>=6+2*coalesce(main,0) then raise exception 'Upgrade the main building to unlock this plot';end if;
+ if exists(select 1 from public.peris_orders where owner_id=u and kind='upgrade') then raise exception 'Your builders are already working';end if;
+ select level,building_type into l,t from public.peris_city_slots where settlement_id=s.id and slot_index=p_slot;
+ if p_type is not null then
+  if l is not null then raise exception 'This plot is already occupied';end if;
+  if p_type not in ('barracks','stables','smithy','warehouse','granary','fishery') then raise exception 'Unknown building';end if;
+  if (p_type='fishery')<>(p_slot=16) then raise exception 'A fishery needs a riverside plot';end if;
+  t:=p_type;l:=0;
+ elsif l is null or l=0 then raise exception 'This building is not ready';end if;
+ if l>=5 then raise exception 'Maximum building level reached';end if;
+ factor:=power(1.55::numeric,l);
+ cw:=ceil((case t when 'barracks' then 180 when 'stables' then 200 when 'smithy' then 180 when 'warehouse' then 200 else 160 end)*factor);
+ cs:=ceil((case t when 'barracks' then 160 when 'stables' then 120 when 'smithy' then 220 when 'warehouse' then 150 when 'granary' then 120 else 80 end)*factor);
+ cf:=ceil((case t when 'barracks' then 100 when 'stables' then 180 when 'smithy' then 80 when 'warehouse' then 90 else 100 end)*factor);
+ cg:=ceil((case t when 'barracks' then 30 when 'stables' then 45 when 'smithy' then 60 when 'granary' then 15 else 20 end)*factor);
+ if s.wood<cw or s.stone<cs or s.food<cf or s.gold<cg then raise exception 'Your stores cannot cover this cost';end if;
+ update public.settlements set wood=wood-cw,stone=stone-cs,food=food-cf,gold=gold-cg where id=s.id;
+ if p_type is not null then insert into public.peris_city_slots values(s.id,p_slot,t,0);end if;
+ insert into public.peris_orders(owner_id,kind,item,quantity,started_at,finish_at)values(u,'upgrade','slot:'||p_slot||':'||t,1,now(),now()+make_interval(secs=>15+l*10));
+ return jsonb_build_object('ok',true);
+end $$;
+revoke all on function public.peris_city_economy(bigint),public.peris_city_migrate(bigint),public.peris_queue_slot(integer,text) from public,anon,authenticated;
+grant execute on function public.peris_queue_slot(integer,text) to authenticated;
 -- Never shrink an occupied world silently. The enclosing transaction aborts
 -- before changing constraints, terrain or positions when migration is needed.
 alter table public.armies add column if not exists march_path jsonb;
@@ -1202,22 +1277,33 @@ end $$;
 
 create or replace function public.peris_settle(p_owner uuid,p_until timestamptz default now()) returns void
 language plpgsql security definer set search_path='' as $$
-declare s public.settlements%rowtype;o public.peris_orders%rowtype;minutes numeric;l integer;at_time timestamptz;
+declare s public.settlements%rowtype;o public.peris_orders%rowtype;minutes numeric;l integer;at_time timestamptz;target_slot integer;
 begin
  perform 1 from public.players where id=p_owner for update;
  select * into s from public.settlements where owner_id=p_owner for update;
  if s.id is null then return;end if;
+ perform public.peris_city_migrate(s.id);
+ select * into s from public.settlements where id=s.id;
  for o in select * from public.peris_orders where owner_id=p_owner and finish_at<=p_until order by finish_at,id for update loop
  at_time:=greatest(s.resources_updated_at,o.finish_at);minutes:=greatest(0,extract(epoch from(at_time-s.resources_updated_at)))/60;
  s.wood:=least(s.capacity,s.wood+s.wood_rate*minutes);s.stone:=least(s.capacity,s.stone+s.stone_rate*minutes);
- s.food:=least(s.capacity,s.food+s.food_rate*minutes);s.gold:=least(s.capacity,s.gold+s.gold_rate*minutes);
+ s.food:=least(s.food_capacity,s.food+s.food_rate*minutes);s.gold:=least(s.capacity,s.gold+s.gold_rate*minutes);
  s.resources_updated_at:=at_time;
  if o.kind='upgrade' then
+ if o.item like 'slot:%' then
+ target_slot:=split_part(o.item,':',2)::integer;
+ update public.peris_city_slots set level=least(5,level+1) where settlement_id=s.id and peris_city_slots.slot_index=target_slot;
+ s.capacity:=5000+2500*coalesce((select sum(level) from public.peris_city_slots where settlement_id=s.id and building_type='warehouse'),0);
+ s.food_capacity:=5000+2500*coalesce((select sum(level) from public.peris_city_slots where settlement_id=s.id and building_type='granary'),0);
+ s.food_rate:=18+10*coalesce((select level from public.buildings where settlement_id=s.id and building_type='farm'),0)+8*coalesce((select sum(level) from public.peris_city_slots where settlement_id=s.id and building_type='fishery'),0);
+ update public.players set upgrades=upgrades+1 where id=p_owner;
+ else
  update public.buildings set level=least(5,level+1),updated_at=o.finish_at where settlement_id=s.id and building_type=o.item returning level into l;
  update public.players set upgrades=upgrades+1 where id=p_owner;
  if o.item='lumber' then s.wood_rate:=14+l*8;elsif o.item='quarry' then s.stone_rate:=12+l*7;
- elsif o.item='farm' then s.food_rate:=18+l*10;elsif o.item='market' then s.gold_rate:=3+l*3;
+ elsif o.item='farm' then s.food_rate:=18+l*10+8*coalesce((select sum(level) from public.peris_city_slots where settlement_id=s.id and building_type='fishery'),0);elsif o.item='market' then s.gold_rate:=3+l*3;
  elsif o.item='storehouse' then s.capacity:=5000+l*2500;end if;
+ end if;
  else
  update public.armies set infantry=infantry+case when o.item='infantry' then o.quantity else 0 end,
  archers=archers+case when o.item='archers' then o.quantity else 0 end,cavalry=cavalry+case when o.item='cavalry' then o.quantity else 0 end,
@@ -1228,8 +1314,8 @@ begin
  end loop;
  minutes:=greatest(0,extract(epoch from(p_until-s.resources_updated_at)))/60;
  update public.settlements set wood=least(s.capacity,s.wood+s.wood_rate*minutes),stone=least(s.capacity,s.stone+s.stone_rate*minutes),
- food=least(s.capacity,s.food+s.food_rate*minutes),gold=least(s.capacity,s.gold+s.gold_rate*minutes),
- wood_rate=s.wood_rate,stone_rate=s.stone_rate,food_rate=s.food_rate,gold_rate=s.gold_rate,capacity=s.capacity,
+ food=least(s.food_capacity,s.food+s.food_rate*minutes),gold=least(s.capacity,s.gold+s.gold_rate*minutes),
+ wood_rate=s.wood_rate,stone_rate=s.stone_rate,food_rate=s.food_rate,gold_rate=s.gold_rate,capacity=s.capacity,food_capacity=s.food_capacity,
  resources_updated_at=greatest(s.resources_updated_at,p_until) where id=s.id;
  update public.armies set status='idle',start_x=target_x,start_y=target_y,updated_at=p_until
  where owner_id=p_owner and status='moving' and arrival_at<=p_until;
@@ -1251,6 +1337,7 @@ begin
  values(p_battle,p_owner,p_side,typ,(case typ when 'infantry' then 'Legionaries' when 'archers' then 'Sagittarii' else 'Equites' end)||' '||(i+1),amount,amount,least(100,p_morale),px,py,px,py,case when p_side='attacker' then 0 else 180 end,case when typ='cavalry' then 6 else 10 end);
  end loop;
  end loop;
+ update public.battle_formations set attack_multiplier=1+least(.6,coalesce((select sum(c.level)*.04 from public.peris_city_slots c join public.settlements s on s.id=c.settlement_id where s.owner_id=p_owner and c.building_type='smithy'),0)) where battle_id=p_battle and owner_id=p_owner;
 end $$;
 
 create or replace function public.peris_start_raid(p_owner uuid,p_camp integer) returns bigint
@@ -1288,6 +1375,7 @@ create or replace function public.peris_queue_upgrade(p_type text) returns jsonb
 declare u uuid:=auth.uid();s public.settlements%rowtype;l integer;factor numeric;cw numeric;cs numeric;cf numeric;cg numeric;
 begin
  if u is null then raise exception 'Authentication required';end if;
+ if p_type is null or p_type not in ('market','wall','lumber','quarry','farm') then raise exception 'Choose a building plot for this building';end if;
  perform public.peris_settle(u);
  if exists(select 1 from public.battles where status='active' and (attacker_owner_id=u or defender_owner_id=u)) then raise exception 'Finish the current battle first';end if;
  select * into s from public.settlements where owner_id=u for update;
@@ -1323,7 +1411,8 @@ begin
  cw:=p_quantity*case when p_type='archers' then 6 else 4 end;cs:=p_quantity*case when p_type='cavalry' then 7 else 2 end;
  cf:=p_quantity*case p_type when 'infantry' then 6 when 'archers' then 5 else 12 end;cg:=p_quantity*case p_type when 'infantry' then 1 when 'archers' then 2 else 4 end;
  if s.wood<cw or s.stone<cs or s.food<cf or s.gold<cg then raise exception 'Your stores cannot cover this cost';end if;
- select level into l from public.buildings where settlement_id=s.id and building_type=case when p_type='cavalry' then 'stables' else 'barracks' end;
+ select coalesce(sum(level),0) into l from public.peris_city_slots where settlement_id=s.id and building_type=case when p_type='cavalry' then 'stables' else 'barracks' end;
+ if l=0 then raise exception 'Build barracks or stables first';end if;
  select greatest(now(),coalesce(max(finish_at),now())) into at_time from public.peris_orders where owner_id=u and kind='recruit';
  duration:=greatest(5,ceil(p_quantity*case when p_type='cavalry' then 5 else 2 end/(1+(coalesce(l,1)-1)*0.18)));
  update public.settlements set wood=wood-cw,stone=stone-cs,food=food-cf,gold=gold-cg where id=s.id;
@@ -1506,7 +1595,7 @@ begin
  if u=winner then update public.players set victories=victories+1,prestige=prestige+coalesce(tier,1)*25 where id=u;end if;
  if u=b.attacker_owner_id and b.mode='pve' and p_winner='attacker' then
  update public.settlements set wood=least(capacity,wood+(loot->>'wood')::integer),stone=least(capacity,stone+(loot->>'stone')::integer),
- food=least(capacity,food+(loot->>'food')::integer),gold=least(capacity,gold+(loot->>'gold')::integer)where owner_id=u;
+ food=least(food_capacity,food+(loot->>'food')::integer),gold=least(capacity,gold+(loot->>'gold')::integer)where owner_id=u;
  end if;
  name:=case when b.mode='pve' then b.enemy_name else 'Duel against '||coalesce((select display_name from public.players where id=case when u=b.attacker_owner_id then b.defender_owner_id else b.attacker_owner_id end),'rival') end;
  insert into public.peris_reports(owner_id,battle_id,title,won,result)values(u,b.id,name,coalesce(u=winner,false),r)on conflict(owner_id,battle_id)do nothing;
@@ -1591,7 +1680,7 @@ begin
  melee_arc:=case when f.unit_type='archers' and distance<=65 then 0.28 else 1 end;
  difficulty_mult:=case when f.owner_id is null then case b.difficulty when 'hard' then 1.13 when 'easy' then 0.8 else 1 end else 1 end;
  rate:=case f.unit_type when 'infantry' then 0.020 when 'archers' then 0.012 else 0.031 end;
- damage:=f.damage_pool+f.soldiers*rate*matchup*stance_mult*defence*brace*flank*charge*cover*elevation*melee_arc*difficulty_mult*(0.55+f.stamina/220)*dt;
+ damage:=f.damage_pool+f.soldiers*f.attack_multiplier*rate*matchup*stance_mult*defence*brace*flank*charge*cover*elevation*melee_arc*difficulty_mult*(0.55+f.stamina/220)*dt;
  if charge>1 then damage:=damage+f.soldiers*0.06*brace*flank;end if;
  cas:=least(greatest(0,t.soldiers-coalesce((pending->t.id::text->>'loss')::integer,0)),floor(damage)::integer);mor_loss:=cas::numeric/greatest(1,t.initial_soldiers)*85+case when flank>1 then cas*1.2 else 0 end+case when charge>1 then 12 else 0 end;
  update public.battle_formations set damage_pool=damage-cas,kills=kills+cas,charge_ready=case when charge>1 then false else charge_ready end,
@@ -1681,7 +1770,7 @@ begin
  elsif p_quest_id='conqueror' and p.victories>=5 then cw:=1000;cs:=800;cf:=1000;cg:=500;
  else raise exception 'Complete the objective first';end if;
  insert into public.peris_claims(owner_id,quest_id)values(u,p_quest_id);
- update public.settlements set wood=least(capacity,wood+cw),stone=least(capacity,stone+cs),food=least(capacity,food+cf),gold=least(capacity,gold+cg)where owner_id=u;
+ update public.settlements set wood=least(capacity,wood+cw),stone=least(capacity,stone+cs),food=least(food_capacity,food+cf),gold=least(capacity,gold+cg)where owner_id=u;
  return jsonb_build_object('ok',true);
 end $$;
 create or replace function public.peris_rename(p_name text)returns jsonb language plpgsql security definer set search_path='' as $$
@@ -1714,6 +1803,7 @@ create or replace function public.peris_snapshot()returns jsonb language plpgsql
 declare u uuid:=auth.uid();result jsonb;
 begin
  if u is null then raise exception 'Authentication required';end if;
+ perform public.peris_city_migrate(s.id) from public.settlements s where s.owner_id=u;
  select jsonb_build_object('version',6,'server_now',now(),
  'map',jsonb_build_object('version',3,'cols',200,'rows',200,'cell_size',128,'seed',98213,
    'total_players',(select count(*) from public.players),'total_settlements',(select count(*) from public.settlements)),
@@ -1722,6 +1812,7 @@ begin
    or exists(select 1 from public.peris_challenges c where c.status='pending' and c.expires_at>now() and (c.attacker_owner_id=u or c.defender_owner_id=u) and (c.attacker_owner_id=p.id or c.defender_owner_id=p.id))),'[]'::jsonb),
  'settlements',coalesce((select jsonb_agg(s order by id)from public.settlements s where s.owner_id=u),'[]'::jsonb),
  'buildings',coalesce((select jsonb_agg(b order by b.id)from public.buildings b join public.settlements s on s.id=b.settlement_id where s.owner_id=u),'[]'::jsonb),
+ 'city_slots',coalesce((select jsonb_agg(c order by c.slot_index)from public.peris_city_slots c join public.settlements s on s.id=c.settlement_id where s.owner_id=u),'[]'::jsonb),
  'armies',coalesce((select jsonb_agg(a order by id)from public.armies a where a.owner_id=u),'[]'::jsonb),
  'camps',coalesce((select jsonb_agg(c order by id)from public.peris_camps c),'[]'::jsonb),
  'orders',coalesce((select jsonb_agg(o order by finish_at)from public.peris_orders o where owner_id=u),'[]'::jsonb),
@@ -1793,7 +1884,7 @@ do $$declare r record;signature text;begin
 end $$;
 revoke all on function public.create_player(text),public.sync_my_state(),public.move_army(integer,integer),public.retreat_from_battle(bigint)from public,anon;
 grant execute on function public.create_player(text),public.sync_my_state(),public.move_army(integer,integer),public.retreat_from_battle(bigint)to authenticated;
-grant execute on function public.peris_snapshot(),public.peris_map_snapshot(integer,integer,integer,integer),public.peris_march(integer,integer,jsonb),public.peris_queue_upgrade(text),public.peris_queue_recruit(text,integer),public.peris_raid(integer),public.peris_ready(bigint),
+grant execute on function public.peris_snapshot(),public.peris_map_snapshot(integer,integer,integer,integer),public.peris_march(integer,integer,jsonb),public.peris_queue_upgrade(text),public.peris_queue_slot(integer,text),public.peris_queue_recruit(text,integer),public.peris_raid(integer),public.peris_ready(bigint),
  public.peris_order(bigint,jsonb),public.peris_tick(bigint),public.peris_rally(bigint),public.peris_challenge(uuid),public.peris_respond(bigint,boolean),public.peris_claim(text),public.peris_rename(text)to authenticated;
 
 do $$declare t text;begin

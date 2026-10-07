@@ -1,8 +1,13 @@
 import type { BuildingType } from '../../features/city/domain/types';
+import type { SlotType } from '../../features/city/domain/slots';
 import type { UnitType } from '../../features/army/domain/types';
 import type { Battle, BattleOrder } from '../../features/battle/domain/types';
 import type { World } from './world';
 export type Command = {
+    type: 'buildSlot'; slot: number; item: SlotType;
+} | {
+    type: 'upgradeSlot'; slot: number;
+} | {
     type: 'upgrade';
     item: BuildingType;
 } | {

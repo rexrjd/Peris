@@ -12,7 +12,7 @@ export function createCityLandscape() {
     const points: number[] = [], colors: number[] = [];
     const grid = (x: number, z: number): [number, number, number] => {
         const px = -24 + x * 2, pz = -23 + z * 2;
-        const town = px > -9 && px < 9 && pz > -9 && pz < 11;
+        const town = px > -15 && px < 16 && pz > -9 && pz < 16;
         const streamBank = Math.abs(px - streamX(pz)) < 2;
         const hill = Math.max(0, -pz - 8) * .13 + Math.max(0, Math.abs(px) - 10) * .07;
         return [px + (random(x * 23 + z * 71) - .5) * .45, town || streamBank ? -.035 : hill + random(x * 83 + z) * .32 - .08, pz];
@@ -34,7 +34,9 @@ export function createCityLandscape() {
     const road = (x1: number, z1: number, x2: number, z2: number, width = .48) => {
         box(Math.hypot(x2 - x1, z2 - z1), .018, width, (x1 + x2) / 2, -.006, (z1 + z2) / 2, m.road, -Math.atan2(z2 - z1, x2 - x1));
     };
-    for (const plot of CITY_PLOTS) road(-.3, .1, plot.x, plot.z);
+    road(.1,11,6.7,14);road(6.7,14,8.8,14);
+    for(let index=0;index<16;index++) road(0,.1,[-6,-2,2,6.2][index%4],-2+Math.floor(index/4)*4,.26);
+    for (const plot of CITY_PLOTS) { if(Math.abs(plot.x)>11) { road(0,.1,.1,11);road(.1,11,plot.x,13);road(plot.x,13,plot.x,plot.z); } else road(-.3,.1,plot.x,plot.z); }
     road(-.3, .1, -.3, 12, .7); road(-.4, -6.8, -.4, -12, .65);
     // A restrained stream and bridge at the eastern edge.
     const waterPoints: number[] = [], bankPoints: number[] = [];
@@ -56,7 +58,7 @@ export function createCityLandscape() {
         const side = i % 4;
         const x = side < 2 ? -12 + random(i * 11) * 4 : 10.5 + random(i * 7) * 4;
         const z = -8 + random(i * 29) * 18;
-        if (Math.abs(x - streamX(z)) < 1) continue;
+        if (Math.abs(x - streamX(z)) < 1 || CITY_PLOTS.some(p=>Math.hypot(x-p.x,z-p.z)<2.6)) continue;
         const h = .85 + random(i * 37) * 1.1;
         cylinder(.07, h * .42, x, 0, z, m.wood);
         cone(h * .48, h * .9, x, h * .25, z, i % 2 ? m.green : m.leaf);

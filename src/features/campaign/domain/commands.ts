@@ -14,5 +14,5 @@ export function claimObjective(context: LocalCommandContext, cmd: Extract<Comman
         throw new Error('Complete the objective first.');
     w.claims.push({ quest_id: q.id, owner_id: context.playerId });
     for (const k of RESOURCES)
-        s[k] = Math.min(s.capacity, s[k] + q.reward[k]);
+        s[k] = Math.min(k==='food' ? s.food_capacity ?? s.capacity : s.capacity, s[k] + q.reward[k]);
 }

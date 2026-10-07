@@ -1,5 +1,6 @@
 [
   "schema/base.sql",
+  "city/city-slots.sql",
   "map/world-bounds.sql",
   "map/world-terrain.sql",
   "map/peris_army_position.sql",

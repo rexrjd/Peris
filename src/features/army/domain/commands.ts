@@ -6,6 +6,7 @@ import { dist } from '../../../shared/math/geometry';
 import { armyPosition } from '../../map/domain/movement';
 import { UNITS, soldierTotal } from './units';
 import { recruitSeconds } from './recruitment';
+import { slotLevels } from '../../city/domain/slots';
 export function recruitSoldiers(context: LocalCommandContext, cmd: Extract<Command, {
     type: 'recruit';
 }>) {
@@ -21,8 +22,9 @@ export function recruitSoldiers(context: LocalCommandContext, cmd: Extract<Comma
         throw new Error('Army capacity is 1,000 soldiers.');
     if (w.orders.filter(o => o.kind === 'recruit').length >= 3)
         throw new Error('Training queue is full.');
+    const level = slotLevels(w,s.id,cmd.item === 'cavalry' ? 'stables' : 'barracks');
+    if (!level) throw new Error(`Build ${cmd.item==='cavalry'?'stables':'barracks'} first.`);
     spend(multiply(UNITS[cmd.item].cost, cmd.quantity));
-    const level = w.buildings.find(b => b.building_type === (cmd.item === 'cavalry' ? 'stables' : 'barracks'))!.level;
     const start = Math.max(Date.now(), ...w.orders.filter(o => o.kind === 'recruit').map(o => Date.parse(o.finish_at)));
     w.orders.push({ id: context.nextId(), owner_id: context.playerId, kind: 'recruit', item: cmd.item, quantity: cmd.quantity, started_at: new Date(start).toISOString(), finish_at: new Date(start + recruitSeconds(cmd.item, cmd.quantity, level) * 1000).toISOString() });
 }

@@ -1,11 +1,19 @@
-PERIS — SURROUNDING CITY WALLS
+PERIS — BUILDING SLOTS AND LIVING CITY
 
-Apply this after the low-poly city update you already installed.
-Copy the included src folder into the project root, merging folders and replacing files.
-Keep the new cityWalls.ts file. Commit/push and redeploy.
+1. Copy the included src, supabase and tests folders plus package.json into your project root. Merge folders and replace matching files. All city renderer dependencies are included; this supersedes the earlier city graphics/walls patches.
+2. For an existing shared world, run supabase/UPGRADE_CITY_SLOTS.sql in the Supabase SQL editor BEFORE deploying the client. It preserves your world and migrates existing barracks, stables and combined storehouses. Do not run a fresh-install script on an existing world.
+3. Run npm run build, commit/push and redeploy. Solo games need only the updated client; their saves migrate automatically.
 
-Only three source files change.
-Walls now enclose the whole city with road gates and river passages.
-Level 0: foundations; levels 1–2: wooden palisades; levels 3–5: stone fortifications.
-The camera frames the complete perimeter.
-Build and desktop/mobile browser checks passed.
+FEATURES
+- Six empty city plots initially. Main-building upgrades unlock two more plots per level, up to sixteen, and enlarge the city and its surrounding walls.
+- Select a plot to choose barracks, stables, smithy, warehouse or granary. Any of these can be built multiple times and independently upgraded to level five.
+- The main building, walls and resource sites remain unique. Timber, stone, fields and the dedicated riverside fishing site are outside the walls.
+- Each smithy level adds 4% army damage, capped at 60% across all smithies. This applies to campaign battles in solo and shared worlds.
+- Warehouses add 2,500 timber/stone/gold capacity per level; granaries add 2,500 food capacity per level. Multiple buildings stack.
+- Fishing adds 8 food per minute per level and is only buildable at its river site.
+- Walking villagers carry supplies along city roads and through the gate. Reduced-motion settings stop their movement.
+
+CHECKS
+Production build and 55 automated tests passed. Existing database integration/fresh-install checks and dedicated city database checks passed. Desktop/mobile browser checks covered plot choice, construction completion, duplicate buildings and expansion. Run npm run test:city-db for the new database checks.
+
+Included previews are examples, not runtime assets.

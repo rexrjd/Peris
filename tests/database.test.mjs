@@ -22,6 +22,7 @@ assert.equal(w.map.version,3);assert.equal(w.map.cols,200);assert.equal(w.map.ro
 const sites=await db.query('select count(*) as total,count(distinct (x,y)) as positions from public.spawn_points');assert.ok(sites.rows[0].total>1000);assert.equal(sites.rows[0].positions,sites.rows[0].total);
 console.log('PASS · v5 preservation and idempotent upgrade');
 await rpc('peris_queue_upgrade',['farm']);await rejects(()=>rpc('peris_queue_upgrade',['market']),'Concurrent building queue accepted');
+await admin(`insert into public.peris_city_slots values(${w.settlements[0].id},0,'barracks',1) on conflict(settlement_id,slot_index) do update set level=1;`);await login(u);
 await rpc('peris_queue_recruit',['infantry',20]);await rejects(()=>rpc('move_army',[600,300]),'Army marched before training finished');await rejects(()=>rpc('peris_queue_recruit',['cavalry',-10]),'Negative recruitment accepted');
 await admin(`update public.peris_orders set finish_at=now()-interval '1 minute',started_at=now()-interval '2 minutes';`);await login(u);await rpc('sync_my_state');w=await snap();assert.equal(w.players.find(p=>p.id===u).upgrades,1);assert.equal(w.players.find(p=>p.id===u).recruits,20);await rpc('peris_claim',['builder']);await rejects(()=>rpc('peris_claim',['builder']),'Reward granted twice');
 console.log('PASS · recruitment, upgrade completion and single-use rewards');

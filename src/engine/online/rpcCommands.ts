@@ -1,6 +1,9 @@
 import type { Command } from '../../shared/model/commands';
 export function rpcCommand(cmd: Command) {
     let fn = '', args: Record<string, unknown> = {};
+    if (cmd.type==='buildSlot' || cmd.type==='upgradeSlot') {
+        fn='peris_queue_slot';args={p_slot:cmd.slot,p_type:cmd.type==='buildSlot'?cmd.item:null};
+    }
     if (cmd.type === 'upgrade') {
         fn = 'peris_queue_upgrade';
         args = { p_type: cmd.item };

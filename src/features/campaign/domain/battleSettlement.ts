@@ -16,7 +16,7 @@ export function settleBattle(w: World, id: number, owner: string, nextId: () => 
         result.loot = loot;
         p.prestige += camp.tier * 25;
         for (const key of RESOURCES)
-            s[key] = Math.min(s.capacity, s[key] + loot[key]);
+            s[key] = Math.min(key==='food' ? s.food_capacity ?? s.capacity : s.capacity, s[key] + loot[key]);
         const old = w.progress.find(c => c.camp_id === camp.id);
         if (old) {
             old.defeated++;

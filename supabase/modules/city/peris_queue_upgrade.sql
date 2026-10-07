@@ -2,6 +2,7 @@ create or replace function public.peris_queue_upgrade(p_type text) returns jsonb
 declare u uuid:=auth.uid();s public.settlements%rowtype;l integer;factor numeric;cw numeric;cs numeric;cf numeric;cg numeric;
 begin
  if u is null then raise exception 'Authentication required';end if;
+ if p_type is null or p_type not in ('market','wall','lumber','quarry','farm') then raise exception 'Choose a building plot for this building';end if;
  perform public.peris_settle(u);
  if exists(select 1 from public.battles where status='active' and (attacker_owner_id=u or defender_owner_id=u)) then raise exception 'Finish the current battle first';end if;
  select * into s from public.settlements where owner_id=u for update;

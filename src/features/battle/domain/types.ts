@@ -50,6 +50,7 @@ export type Formation = {
     target_formation_id: number | null;
     status: FormationStatus;
     damage_pool: number;
+    attack_multiplier?: number;
     columns: number;
     stance: 'balanced' | 'guard' | 'aggressive';
     running: boolean;

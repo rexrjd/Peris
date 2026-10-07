@@ -90,6 +90,7 @@ export function disposeCityObject(object: THREE.Object3D) {
     const geometries = new Set<THREE.BufferGeometry>(), materials = new Set<THREE.Material>();
     object.traverse(child => {
         if (!(child instanceof THREE.Mesh)) return;
+        if(child instanceof THREE.InstancedMesh) child.dispose();
         geometries.add(child.geometry);
         for (const surface of Array.isArray(child.material) ? child.material : [child.material]) materials.add(surface);
     });

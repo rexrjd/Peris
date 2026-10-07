@@ -6,6 +6,7 @@ export function upgradeBuilding(context: LocalCommandContext, cmd: Extract<Comma
     type: 'upgrade';
 }>) {
     const w = context.world, s = w.settlements[0], now = context.now;
+    if (['barracks','stables','storehouse'].includes(cmd.item)) throw new Error('Choose a building plot to build or upgrade this building.');
     const spend = (cost: ReturnType<typeof buildingCost>) => { if (!affordable(s, cost))
         throw new Error('Your stores cannot cover this cost.'); for (const key of RESOURCES)
         s[key] -= cost[key]; };

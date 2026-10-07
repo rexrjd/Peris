@@ -13,6 +13,7 @@ export type Settlement = Resources & {
     resources_updated_at: string;
     created_at: string;
     capacity: number;
+    food_capacity?: number;
 };
 export type Building = {
     id: number;
