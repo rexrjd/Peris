@@ -4,6 +4,7 @@ import { CITY_PLOTS } from './layout';
 import { createBuildingModel, visualLevel } from './buildingModels';
 import { createCityLandscape } from './landscape';
 import { disposeCityObject } from './modelKit';
+import { createCityWalls } from './cityWalls';
 
 /** Presentation only. Selection returns through React; upgrades stay in the engine. */
 export class CityScene {
@@ -59,7 +60,8 @@ export class CityScene {
             const level = visualLevel(levels[plot.type] ?? 0), previous = this.models.get(plot.type);
             if (previous?.level === level) continue;
             if (previous) { this.scene.remove(previous.model); disposeCityObject(previous.model); }
-            const model = createBuildingModel(plot.type, level); model.position.set(plot.x, .015, plot.z);
+            const model = plot.type === 'wall' ? createCityWalls(level) : createBuildingModel(plot.type, level);
+            model.position.set(plot.x, .015, plot.z);
             this.scene.add(model); this.models.set(plot.type, { level, model });
             changed = true;
         }
@@ -73,7 +75,7 @@ export class CityScene {
         const rect = this.canvas.parentElement!.getBoundingClientRect(); this.width = Math.max(1, rect.width); this.height = Math.max(1, rect.height);
         this.renderer.setSize(this.width, this.height, false);
         // Frame the tallest level-five gate as well as the foreground nameplates.
-        const aspect = this.width / this.height, halfHeight = Math.max(8.9, 11.1 / aspect);
+        const aspect = this.width / this.height, halfHeight = Math.max(10.3, 12.8 / aspect);
         this.camera.left = -halfHeight * aspect; this.camera.right = halfHeight * aspect;
         this.camera.top = halfHeight; this.camera.bottom = -halfHeight; this.camera.updateProjectionMatrix(); this.render();
     }
