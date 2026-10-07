@@ -110,8 +110,11 @@ export class CityScene {
                 for(const plot of this.plots) {
                     const button=this.labelRoot.querySelector<HTMLElement>(`[data-building="${plot.key}"]`);
                     if(!button)continue;
-                    const anchor=new THREE.Vector3(plot.x,.05,plot.z+plot.radius*.74).project(this.camera);
-                    button.style.left=`${(anchor.x+1)*this.width/2}px`;button.style.top=`${(1-anchor.y)*this.height/2}px`;
+                    // Place the wall marker above the gate, clear of the main building behind it.
+                    const wall=plot.type==='wall';
+                    const anchor=new THREE.Vector3(plot.x,wall ? .8 + plot.level * .7 : .05,wall ? plot.z : plot.z+plot.radius*.74).project(this.camera);
+                    const top=(1-anchor.y)*this.height/2-(wall?button.offsetHeight+8:0);
+                    button.style.left=`${(anchor.x+1)*this.width/2}px`;button.style.top=`${wall ? Math.max(8,top) : top}px`;
                 }
             }
             if(!reduced && !document.hidden) this.render();
