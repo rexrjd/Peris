@@ -1,3 +1,4 @@
+import {changeFaction,debugCity} from '../../features/factions/domain/debug';
 import { type GameEngine } from '../contracts';
 import { type Command, type LocalCommandContext } from '../../shared/model/commands';
 import { type World } from '../../shared/model/world';
@@ -108,6 +109,8 @@ export class LocalEngine implements GameEngine {
             throw new Error('Finish the current battle first.');
         const context: LocalCommandContext = { world: this.snapshot, playerId: this.playerId, nextId: () => ++this.nextId, active, now: new Date().toISOString(), paused: value => { this.paused = value; }, finalize: id => this.finalize(id) };
         switch (cmd.type) {
+            case 'setFaction':changeFaction(context,cmd);break;
+            case 'debugCity':debugCity(context,cmd);break;
             case 'researchSpell':researchSpell(context,cmd);break;
             case 'castSpell':castSpell(context,cmd);break;
             case 'buildSlot':

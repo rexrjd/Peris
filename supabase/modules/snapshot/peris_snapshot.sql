@@ -4,6 +4,7 @@ begin
  if u is null then raise exception 'Authentication required';end if;
  perform public.peris_city_migrate(s.id) from public.settlements s where s.owner_id=u;
  select jsonb_build_object('version',6,'server_now',now(),
+ 'debug_enabled',coalesce((select enabled from public.peris_debug_config where id),false),
  'map',jsonb_build_object('version',3,'cols',200,'rows',200,'cell_size',128,'seed',98213,
    'total_players',(select count(*) from public.players),'total_settlements',(select count(*) from public.settlements)),
  'players',coalesce((select jsonb_agg(p order by created_at)from public.players p where p.id=u

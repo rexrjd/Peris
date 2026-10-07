@@ -1,29 +1,41 @@
-PERIS — MAGE TOWER & SPELLS
+PERIS — FACTIONS & CITY DEBUG TOOLS
 
 INSTALL
-1. Merge the included src/, supabase/, tests/, and package.json into your existing project, replacing matching files. This update builds on the previous city-building-slots update.
-2. Existing shared worlds: run supabase/UPGRADE_MAGE_TOWER.sql in the Supabase SQL Editor BEFORE deploying the updated app. If you have not installed the city-building-slots database update yet, run the included supabase/UPGRADE_CITY_SLOTS.sql instead; it now includes the mage tower too. These upgrades preserve existing cities and progress. Do not use a FRESH_INSTALL script on an existing world.
-3. Run npm run build, then push and redeploy through your usual GitHub/Vercel flow.
-Solo campaign saves continue automatically; no database update is needed for solo play.
+Merge src/, supabase/, tests/, and package.json into your existing project, replacing matching files. Apply after the previous city-building-slots update. This ZIP includes the latest mage-tower/spell files too.
 
-PLAY
-Choose an empty city plot and build a Mage tower. The tower is optional, can occupy any unlocked regular plot, and is limited to one per city. It has ten upgrade levels with a different visual at every level. Each level unlocks two spells.
-Select the completed tower and open its spellbook. Research each spell once by paying the displayed resources. Higher-level pages can be viewed before upgrading, but their research remains locked.
-During combat, open Spellbook in the battle command panel, choose a learned spell and its target, and cast. Mana resets each battle: 20 + 10 per tower level. Casting has an eight-second battle-time cooldown. Damage, healing, morale, speed, protection, and resurrection effects work in solo and shared-world combat. Persistent buffs last that battle; attack buffs cap at +50%, protection at 40%, and speed at +75%. Healing and resurrection cannot exceed a formation's starting troop count.
+Shared worlds: run supabase/UPGRADE_FACTIONS_AND_DEBUG.sql BEFORE deploying if the mage-tower database update is already installed. If the city-slots update is installed but the mage update is not, run the included UPGRADE_MAGE_TOWER.sql instead; it includes factions and debug tools. If neither update is installed, use UPGRADE_CITY_SLOTS.sql; it includes all three features. Run one applicable upgrade. Existing cities, resources, armies and progress are preserved. Do not run a FRESH_INSTALL script on an existing world.
 
-SPELLS
-Level 1: Spark, Mend
-Level 2: Ice Bolt, Stone Skin
-Level 3: Lightning, Haste
-Level 4: Fireball, Bless
-Level 5: Terror, Courage
-Level 6: Chain Lightning, Sanctuary
-Level 7: Frost Nova, Battle Trance
-Level 8: Meteor, Resurrection
-Level 9: Storm, Aegis
-Level 10: Inferno, Phoenix
+Then run npm run build and push/redeploy through your usual GitHub/Vercel flow. Solo saves work automatically with no SQL step.
+
+FACTIONS
+Orcs: timber strongholds, hide roofs, tusks and spikes.
+Elves: living timber halls, leaf roofs and crystal spires.
+Dwarves: heavy basalt halls, copper roofs and stone towers.
+Gnomes: round workshops, domed roofs and brass gears.
+Pandaren: jade pagodas, curved roofs, lanterns and bamboo.
+Necropolis: crypts, bone-colored gates and green crystals.
+Demons: obsidian fortresses, horned towers and molten-red trim.
+Human — Roman: marble forums, terracotta roofs and imperial standards.
+Human — Spartan: stone temples, red banners and bronze shields.
+Human — Persian: turquoise domes, sandstone minarets and courtyards.
+Human — Egyptian: pyramids, pylons, obelisks and lapis trim.
+
+HOW TO USE
+In City, select a building. The sidebar contains CITY FACTION: choose a culture or click Next faction to switch immediately. The choice persists in solo saves and shared worlds. City architecture, walls, landscape, walking villagers and world-map city miniatures follow the faction. Existing building levels, resources and spell research are retained when changing faction.
+
+Expand Debug tools in the sidebar:
+- +1,000 resources adds 1,000 of each resource, up to the appropriate storage limit.
+- Fill storage instantly fills materials and food to their separate capacities.
+- Finish construction instantly completes the current building order.
+- Instant level sets the selected building's level: 0–5, or 0–10 for the mage tower.
+- Demolish clears a selected plot, or resets a fixed building to level zero. Its pending upgrade is cancelled. Demolition gives no refund.
+
+Lowering the main building removes plots beyond its new limit and their pending orders. The external river fishery remains available. Destroying a mage tower also clears that city's spell research. Resources clamp to the remaining storage capacity. Debug mutations are unavailable during an active battle; faction switching remains available.
+
+Shared-world debug tools operate only on the signed-in player's own city. To hide/disable instant debug tools later, run:
+update public.peris_debug_config set enabled=false where id=true;
+To restore them, set enabled=true. Faction selection remains available either way.
 
 VALIDATION
-Production build and 61 unit tests passed. Fresh-install, city-slot, and magic database integration checks passed. The previous released city database upgraded successfully, including a repeated migration. Desktop and mobile checks covered tower placement, research, battle casting, and layout. All ten tower models and plot footprints were checked.
-
-Previews/ contains screenshots of the tower, spell research, and combat spellbook.
+Production build passed; 67 unit and integration tests passed, including all faction models, save persistence, model bounds, selector rendering, instant controls and demolition. Fresh-install, city-slot, mage-spell, faction and baseline database integration checks passed. Upgrade from the previous mage-tower release passed twice without modifying existing resources, troops, plots or research. SQL bundles match the modular sources.
+Live browser preview was unavailable for this update. Previews/Faction_building_styles.png is an offline geometry render of the actual level-five main hall models; game lighting and shadows differ.

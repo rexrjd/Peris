@@ -26,6 +26,7 @@
   "campaign/peris_claim.sql",
   "city/peris_rename.sql",
   "accounts/create_player.sql",
+  "factions/city-factions.sql",
   "snapshot/peris_snapshot.sql",
   "snapshot/peris_map_snapshot.sql",
   "security/permissions.sql"

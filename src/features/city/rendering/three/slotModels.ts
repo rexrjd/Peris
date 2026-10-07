@@ -1,13 +1,14 @@
+import type {Faction} from '../../../factions/domain/factions';
 import type { SlotType } from '../../domain/slots';
 import { createBuildingModel } from './buildingModels';
 import {createMageTower} from './mageTower';
 import { cityKit } from './modelKit';
-export function createSlotModel(type:SlotType|null,level:number) {
- if(!type || !level)return createBuildingModel('barracks',0);
- if(type==='mage_tower')return createMageTower(level);
- if(type==='barracks'||type==='stables')return createBuildingModel(type,level);
- if(type==='warehouse')return createBuildingModel('storehouse',level);
- const k=cityKit(),{m,box,cylinder,cone,house}=k;
+export function createSlotModel(type:SlotType|null,level:number,faction:Faction='roman') {
+ if(!type || !level)return createBuildingModel('barracks',0,faction);
+ if(type==='mage_tower')return createMageTower(level,faction);
+ if(type==='barracks'||type==='stables')return createBuildingModel(type,level,faction);
+ if(type==='warehouse')return createBuildingModel('storehouse',level,faction);
+ const k=cityKit(faction),{m,box,cylinder,cone,house}=k;
  if(type==='smithy') {
   house(-.2,0,1.2,.9,.7+level*.06,level>=3,m.slate);
   box(.28,1.35+level*.12,.28,.4,0,-.25,m.darkStone);
@@ -32,5 +33,5 @@ export function createSlotModel(type:SlotType|null,level:number) {
   if(level>=4)k.fence(.7,.85,width);
   if(level>=5)k.flag(-.4,1,-.3);
  }
- return k.finish();
+ k.heraldry(level);return k.finish();
 }

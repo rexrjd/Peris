@@ -1,3 +1,4 @@
+import {isFaction} from '../../features/factions/domain/factions';
 import { citySlots, refreshCityEconomy, SLOT_BUILDINGS, mainLevel, slotCount, slotMaxLevel } from '../../features/city/domain/slots';
 import {spellById} from '../../features/magic/domain/spells';
 import { SAVE_KEY, readSolo } from './solo';
@@ -29,7 +30,9 @@ export function validateSave(data: unknown): World {
             invalid();
     if (w.settlements.length !== 1 || w.armies.length !== 1 || w.buildings.length !== 8 || w.camps.length !== 6)
         invalid();
+    if(w.debug_enabled!==undefined&&typeof w.debug_enabled!=='boolean')invalid();
     const town = w.settlements[0], army = w.armies[0], player = w.players[0];
+    if(town.faction!==undefined&&!isFaction(town.faction))invalid();
     if (town.owner_id !== 'solo-ruler' || army.owner_id !== 'solo-ruler' || typeof player.display_name !== 'string' || !player.display_name.trim() || typeof town.name !== 'string')
         invalid();
     for (const n of [town.wood, town.stone, town.food, town.gold, town.capacity, town.wood_rate, town.stone_rate, town.food_rate, town.gold_rate, army.infantry, army.archers, army.cavalry, player.prestige, player.victories, player.recruits, player.upgrades])

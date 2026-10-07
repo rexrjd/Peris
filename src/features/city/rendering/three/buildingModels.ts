@@ -1,11 +1,13 @@
 import { type BuildingType } from '../../domain/types';
+import type {Faction} from '../../../factions/domain/factions';
+import {createFactionHall} from './factionHall';
 import { cityKit } from './modelKit';
 
 export const visualLevel = (level: number) => Number.isFinite(level) ? Math.max(0, Math.min(5, Math.floor(level))) : 0;
 
 /** Zero is an empty plot; levels 1–5 change the actual geometry, not an image tint. */
-export function createBuildingModel(type: BuildingType, value: number) {
-    const level = visualLevel(value), k = cityKit();
+export function createBuildingModel(type: BuildingType, value: number, faction:Faction='roman') {
+    const level = visualLevel(value), k = cityKit(faction);
     const { group, m, box, cylinder, cone, rock, roof, house, tower, flag, fence } = k;
     group.name = `${type} level ${level}`;
     if (!level) {
@@ -20,6 +22,7 @@ export function createBuildingModel(type: BuildingType, value: number) {
         }
         return k.finish();
     }
+    if(type==='market'&&faction!=='roman')return createFactionHall(level,faction);
     const stone = level >= 3;
     if (type === 'lumber') {
         house(-.25, -.15, 1.05 + level * .06, .9, .65 + level * .06, stone);
@@ -135,5 +138,6 @@ export function createBuildingModel(type: BuildingType, value: number) {
         if (level >= 4) house(0, -1, 1.3, .7, 1.25, true);
         if (level >= 5) { cylinder(.33, 1.9, .98, 0, -.28, m.light); cone(.43, .43, .98, 1.9, -.28, m.slate); flag(.98, 2.25, -.28); }
     }
+    if(type!=='wall')k.heraldry(level);
     return k.finish();
 }

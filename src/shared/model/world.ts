@@ -15,6 +15,7 @@ export type Order = {
     finish_at: string;
 };
 export type World = {
+    debug_enabled?: boolean;
     version: number;
     server_now: string;
     players: Player[];

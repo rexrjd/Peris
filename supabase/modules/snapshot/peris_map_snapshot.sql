@@ -10,9 +10,9 @@ begin
  max_x:=least(12800,p_max_x);max_y:=least(12800,p_max_y);
  if min_x>=max_x or min_y>=max_y then raise exception 'Choose valid map bounds';end if;
  with visible_settlements as (
-   select s.id,s.owner_id,s.name,s.x,s.y from public.settlements s where s.owner_id=u
+   select s.id,s.owner_id,s.name,s.x,s.y,s.faction from public.settlements s where s.owner_id=u
    union all
-   select * from (select s.id,s.owner_id,s.name,s.x,s.y from public.settlements s
+   select * from (select s.id,s.owner_id,s.name,s.x,s.y,s.faction from public.settlements s
      where s.owner_id<>u and s.x>=min_x and s.x<max_x and s.y>=min_y and s.y<max_y order by s.id limit 600) nearby
  ), army_positions as (
    select a.*,

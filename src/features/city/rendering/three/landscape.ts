@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import {FACTIONS,type Faction} from '../../../factions/domain/factions';
 import { cityKit } from './modelKit';
 import { CITY_PLOTS, cityFootprint, cityLayout, riverX } from './layout';
 import { cityGrowth } from '../../domain/slots';
@@ -7,10 +8,11 @@ const random = (n: number) => { const value = Math.sin(n * 127.1 + 19.7) * 43758
 const streamX = riverX;
 
 /** A small, fixed settlement landscape, independent of the campaign simulation. */
-export function createCityLandscape(mainLevel = 0) {
+export function createCityLandscape(mainLevel = 0,faction:Faction='roman') {
     const footprint=cityFootprint(mainLevel),growth=cityGrowth(mainLevel);
-    const group = new THREE.Group(), k = cityKit();
+    const group = new THREE.Group(), k = cityKit(faction);
     const { m, box, cylinder, cone, rock } = k;
+    const palette=FACTIONS[faction];
     const points: number[] = [], colors: number[] = [];
     const grid = (x: number, z: number): [number, number, number] => {
         const px = -24 + x * 2, pz = -23 + z * 2;
@@ -23,7 +25,7 @@ export function createCityLandscape(mainLevel = 0) {
         const a = grid(x, z), b = grid(x + 1, z), c = grid(x, z + 1), d = grid(x + 1, z + 1);
         const triangles = (x + z) % 2 ? [[a, c, b], [b, c, d]] : [[a, d, b], [a, c, d]];
         for (const triangle of triangles) {
-            const color = new THREE.Color(triangle[0][2] < -9 ? '#71884c' : '#90a75c').multiplyScalar(.94 + random(x * 39 + z * 271 + triangle[0][0]) * .1);
+            const color = new THREE.Color(triangle[0][2] < -9 ? palette.hill : palette.ground).multiplyScalar(.94 + random(x * 39 + z * 271 + triangle[0][0]) * .1);
             for (const point of triangle) { points.push(...point); colors.push(color.r, color.g, color.b); }
         }
     }
@@ -50,7 +52,7 @@ export function createCityLandscape(mainLevel = 0) {
         const a = streamX(z), b = streamX(z + 1);
         for (const [target, width, y] of [[waterPoints, .43, .025], [bankPoints, .67, .006]] as const) target.push(a-width,y,z, a+width,y,z, b+width,y,z+1, a-width,y,z, b+width,y,z+1, b-width,y,z+1);
     }
-    const waterMaterial = new THREE.MeshStandardMaterial({ color: 0x4c9299, roughness: 1, flatShading: true });
+    const waterMaterial = new THREE.MeshStandardMaterial({ color: palette.water, roughness: 1, flatShading: true });
     for (const [positions, surface] of [[bankPoints, m.road], [waterPoints, waterMaterial]] as const) {
         const shape = new THREE.BufferGeometry(); shape.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3)); shape.computeVertexNormals();
         const mesh = new THREE.Mesh(shape, surface); mesh.material.side = THREE.DoubleSide; group.add(mesh);
@@ -66,9 +68,16 @@ export function createCityLandscape(mainLevel = 0) {
         const z = -8 + random(i * 29) * 18;
         if (Math.abs(x - streamX(z)) < 1 || CITY_PLOTS.some(p=>Math.hypot(x-p.x,z-p.z)<2.6)) continue;
         const h = .85 + random(i * 37) * 1.1;
-        cylinder(.07, h * .42, x, 0, z, m.wood);
-        cone(h * .48, h * .9, x, h * .25, z, i % 2 ? m.green : m.leaf);
-        if (i % 3 === 0) cone(h * .35, h * .7, x, h * .68, z, m.green);
+        if(faction==='pandaren'){
+            for(const dx of [-.14,.14]){cylinder(.045,h*1.6,x+dx,0,z,m.green);for(let j=1;j<4;j++)box(.3,.04,.07,x+dx,h*j*.4,z,m.leaf,j*.7);}
+        }else if(faction==='egyptian'||faction==='persian'){
+            cylinder(.07,h,x,0,z,m.timber);for(let j=0;j<5;j++){const angle=j*Math.PI*.4;box(.75,.07,.17,x+Math.cos(angle)*.22,h,z+Math.sin(angle)*.22,m.leaf,angle);}
+        }else if(faction==='undead'||faction==='demon'){
+            cylinder(.07,h,x,0,z,m.wood);for(const side of [-1,1]){const branch=box(.06,h*.5,.06,x+side*.14,h*.55,z,m.wood);branch.rotation.z=-side*.5;}
+        }else if(faction==='gnome'&&i%3===0){cylinder(.09,h*.6,x,0,z,m.light);k.rock(.42,x,h*.5,z,m.roof);}
+        else if(faction==='dwarf'&&i%2===0)rock(h*.55,x,0,z,m.darkStone);
+        else{cylinder(.07,h*.42,x,0,z,m.wood);cone(h*.48,h*.9,x,h*.25,z,i%2?m.green:m.leaf);if(i%3===0)cone(h*.35,h*.7,x,h*.68,z,m.green);}
+
     }
     for (let i = 0; i < 22; i++) {
         const x = -13 + random(i * 97) * 27, z = -11 - random(i * 31) * 3;

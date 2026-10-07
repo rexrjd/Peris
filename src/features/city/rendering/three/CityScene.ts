@@ -1,3 +1,4 @@
+import {FACTIONS,type Faction} from '../../../factions/domain/factions';
 import * as THREE from 'three';
 import { type BuildingType } from '../../domain/types';
 import { cityLayout, cityFootprint, type CityPlot } from './layout';
@@ -29,6 +30,7 @@ export class CityScene {
     private plots: CityPlot[] = [];
     private growth = 1;
     private mainLevel = 0;
+    private faction:Faction='roman';
     private landscape = createCityLandscape();
     private villagers = createVillagers();
     private lastFrame = 0;
@@ -58,18 +60,22 @@ export class CityScene {
         canvas.addEventListener('webglcontextlost', this.contextLost);
         this.resize = new ResizeObserver(() => this.setSize()); this.resize.observe(canvas.parentElement!); this.setSize();
     }
-    update(levels: Record<string, number>, selected: string, slots: CitySlot[]) {
-        const signature=JSON.stringify([levels,slots]);
+    update(levels: Record<string, number>, selected: string, slots: CitySlot[],faction:Faction='roman') {
+        const signature=JSON.stringify([levels,slots,faction]);
         if(signature===this.layoutSignature) {
             if(selected!==this.selected) {this.selected=selected;const p=this.plots.find(p=>p.key===selected);this.ring.visible=!!p;if(p){this.ring.position.set(p.x,.06,p.z);this.ring.scale.set(p.radius,p.radius,1);}this.render();}
             return;
         }
         this.layoutSignature=signature;
+        const changed=faction!==this.faction;this.faction=faction;
+        this.scene.background=new THREE.Color(FACTIONS[faction].sky);
+        if(changed){this.scene.remove(this.villagers.group);disposeCityObject(this.villagers.group);this.villagers=createVillagers(faction);this.scene.add(this.villagers.group);}
+        const valid=new Set(cityLayout(levels,slots).map(p=>p.key));for(const [key,item] of this.models)if(!valid.has(key)){this.scene.remove(item.model);disposeCityObject(item.model);this.models.delete(key);}
         this.plots = cityLayout(levels, slots);
         const growth = cityGrowth(levels.market ?? 0), resized = growth !== this.growth;
         this.mainLevel=levels.market??0;
         this.growth = growth;
-        if(resized) {this.scene.remove(this.landscape);disposeCityObject(this.landscape);this.landscape=createCityLandscape(this.mainLevel);this.scene.add(this.landscape);}
+        if(resized||changed) {this.scene.remove(this.landscape);disposeCityObject(this.landscape);this.landscape=createCityLandscape(this.mainLevel,faction);this.scene.add(this.landscape);}
         this.landscape.scale.set(growth, 1, growth);
         for (const hit of this.pickMeshes) { this.scene.remove(hit); disposeCityObject(hit); }
         this.pickMeshes.length = 0;
@@ -77,9 +83,9 @@ export class CityScene {
             const hit = new THREE.Mesh(new THREE.CylinderGeometry(plot.radius, plot.radius, .15, 12), new THREE.MeshBasicMaterial({visible:false}));
             hit.position.set(plot.x,.12,plot.z); hit.userData.building=plot.key; this.pickMeshes.push(hit); this.scene.add(hit);
             const level=plot.type==='mage_tower'?Math.max(0,Math.min(10,Math.round(plot.level))):visualLevel(plot.level), previous=this.models.get(plot.key);
-            if (!previous || previous.level!==level || previous.type!==plot.type || plot.type==='wall' && resized) {
+            if (changed || !previous || previous.level!==level || previous.type!==plot.type || plot.type==='wall' && resized) {
                 if(previous) {this.scene.remove(previous.model);disposeCityObject(previous.model);}
-                const model=plot.slot!==undefined ? createSlotModel(plot.type as SlotType|null,level) : plot.type==='wall' ? createCityWalls(level,this.mainLevel) : createBuildingModel(plot.type as BuildingType,level);
+                const model=plot.slot!==undefined ? createSlotModel(plot.type as SlotType|null,level,faction) : plot.type==='wall' ? createCityWalls(level,this.mainLevel,faction) : createBuildingModel(plot.type as BuildingType,level,faction);
                 this.scene.add(model); this.models.set(plot.key,{level,type:plot.type,model});
             }
             const model=this.models.get(plot.key)!.model;
