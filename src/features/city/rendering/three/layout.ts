@@ -8,11 +8,19 @@ export const CITY_PLOTS = [
  {type:'quarry' as const,x:13,z:-4,radius:1.9},
  {type:'farm' as const,x:-12,z:5,radius:2},
 ];
+export const riverX = (z:number) => 8.8 + Math.sin(z * .44) * .7;
+/** Bounds in landscape coordinates; reserve an open street beyond the last plot row. */
+export function cityFootprint(main:number) {
+ const level=Math.max(0,Math.min(5,main)),rows=Math.ceil(slotCount(level)/4);
+ const lastRow=-2+(rows-1)*4;
+ const front=Math.max(11,lastRow+3.8)+level*.1;
+ return {left:-8.8,right:10.6,back:-9,front,outsideRoad:front+2,fishingZ:front+3.5};
+}
 export function cityLayout(levels:Record<string,number>, slots:CitySlot[]):CityPlot[] {
- const growth=cityGrowth(levels.market??0);
+ const growth=cityGrowth(levels.market??0),footprint=cityFootprint(levels.market??0);
  const fixed:CityPlot[]=CITY_PLOTS.map(p=>({...p,key:p.type,x:p.x*growth,z:p.z*growth,level:levels[p.type]??0}));
  const fishing=slots.find(s=>s.slot_index===16);
- fixed.push({key:'fishery',type:'fishery',slot:16,level:fishing?.level??0,x:8.8*growth,z:14*growth,radius:1.6});
+ fixed.push({key:'fishery',type:'fishery',slot:16,level:fishing?.level??0,x:riverX(footprint.fishingZ)*growth,z:footprint.fishingZ*growth,radius:1.6});
  return [...fixed,...Array.from({length:slotCount(levels.market??0)},(_,index)=>{
   const slot=slots.find(s=>s.slot_index===index);
   return {key:`slot:${index}`,slot:index,type:slot?.building_type??null,level:slot?.level??0,x:[-6,-2,2,6.2][index%4]*growth,z:(-2+Math.floor(index/4)*4)*growth,radius:1.5};

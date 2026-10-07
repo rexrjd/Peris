@@ -1,18 +1,20 @@
 import * as THREE from 'three';
 import { cityKit } from './modelKit';
-import { CITY_PLOTS } from './layout';
+import { CITY_PLOTS, cityFootprint, cityLayout, riverX } from './layout';
+import { cityGrowth } from '../../domain/slots';
 
 const random = (n: number) => { const value = Math.sin(n * 127.1 + 19.7) * 43758.5453; return value - Math.floor(value); };
-const streamX = (z: number) => 8.8 + Math.sin(z * .44) * .7;
+const streamX = riverX;
 
 /** A small, fixed settlement landscape, independent of the campaign simulation. */
-export function createCityLandscape() {
+export function createCityLandscape(mainLevel = 0) {
+    const footprint=cityFootprint(mainLevel),growth=cityGrowth(mainLevel);
     const group = new THREE.Group(), k = cityKit();
     const { m, box, cylinder, cone, rock } = k;
     const points: number[] = [], colors: number[] = [];
     const grid = (x: number, z: number): [number, number, number] => {
         const px = -24 + x * 2, pz = -23 + z * 2;
-        const town = px > -15 && px < 16 && pz > -9 && pz < 16;
+        const town = px > -15 && px < 16 && pz > -9 && pz < footprint.fishingZ+1;
         const streamBank = Math.abs(px - streamX(pz)) < 2;
         const hill = Math.max(0, -pz - 8) * .13 + Math.max(0, Math.abs(px) - 10) * .07;
         return [px + (random(x * 23 + z * 71) - .5) * .45, town || streamBank ? -.035 : hill + random(x * 83 + z) * .32 - .08, pz];
@@ -34,10 +36,14 @@ export function createCityLandscape() {
     const road = (x1: number, z1: number, x2: number, z2: number, width = .48) => {
         box(Math.hypot(x2 - x1, z2 - z1), .018, width, (x1 + x2) / 2, -.006, (z1 + z2) / 2, m.road, -Math.atan2(z2 - z1, x2 - x1));
     };
-    road(.1,11,6.7,14);road(6.7,14,8.8,14);
-    for(let index=0;index<16;index++) road(0,.1,[-6,-2,2,6.2][index%4],-2+Math.floor(index/4)*4,.26);
-    for (const plot of CITY_PLOTS) { if(Math.abs(plot.x)>11) { road(0,.1,.1,11);road(.1,11,plot.x,13);road(plot.x,13,plot.x,plot.z); } else road(-.3,.1,plot.x,plot.z); }
-    road(-.3, .1, -.3, 12, .7); road(-.4, -6.8, -.4, -12, .65);
+    const front=footprint.front,outside=footprint.outsideRoad,fishingX=streamX(footprint.fishingZ);
+    road(.1,front,fishingX-1,footprint.fishingZ);road(fishingX-1,footprint.fishingZ,fishingX,footprint.fishingZ);
+    for(const plot of cityLayout({market:mainLevel},[]).filter(p=>p.slot!==undefined&&p.slot<16)) road(0,.1,plot.x/growth,plot.z/growth,.26);
+    for (const plot of CITY_PLOTS) {
+        if(Math.abs(plot.x)>11) {road(.1,front,plot.x,outside);road(plot.x,outside,plot.x,plot.z);}
+        else road(-.3,.1,plot.x,plot.z);
+    }
+    road(-.3,.1,.1,front,.7);road(-.4,-6.8,-.4,-12,.65);
     // A restrained stream and bridge at the eastern edge.
     const waterPoints: number[] = [], bankPoints: number[] = [];
     for (let z = -24; z < 26; z++) {

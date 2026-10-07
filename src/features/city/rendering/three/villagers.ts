@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import type { CityPlot } from './layout';
+import { cityFootprint, type CityPlot } from './layout';
 /** Small moving silhouettes; paths follow streets and use the southern gate. */
 export function createVillagers() {
  const group=new THREE.Group(),count=12,bodyShape=new THREE.BoxGeometry(.16,.25,.13),headShape=new THREE.IcosahedronGeometry(.09,0),legShape=new THREE.BoxGeometry(.055,.19,.055);
@@ -10,7 +10,7 @@ export function createVillagers() {
  for(let i=0;i<count;i++)body.setColorAt(i,new THREE.Color([0x547442,0x995536,0x5c7274,0xb8a477][i%4]));
  for(const mesh of [body,head,legs,parcels]) {mesh.frustumCulled=false;group.add(mesh);}
  let paths:THREE.Vector3[][]=[];const dummy=new THREE.Object3D();
- return {group,setPlots(plots:CityPlot[],growth:number){paths=plots.filter(p=>p.type!=='wall').map(p=>(Math.abs(p.x)>11*growth||p.slot===16)?[new THREE.Vector3(0,0,.1),new THREE.Vector3(.1*growth,0,11*growth),new THREE.Vector3(p.x,0,13*growth),new THREE.Vector3(p.x,0,p.z)]:[new THREE.Vector3(0,0,.1),new THREE.Vector3(p.x,0,p.z)]);},animate(time:number){
+ return {group,setPlots(plots:CityPlot[],growth:number,mainLevel:number){const footprint=cityFootprint(mainLevel);paths=plots.filter(p=>p.type!=='wall').map(p=>(Math.abs(p.x)>footprint.front*growth||p.slot===16)?[new THREE.Vector3(0,0,.1),new THREE.Vector3(.1*growth,0,footprint.front*growth),new THREE.Vector3(p.x,0,footprint.outsideRoad*growth),new THREE.Vector3(p.x,0,p.z)]:[new THREE.Vector3(0,0,.1),new THREE.Vector3(p.x,0,p.z)]);},animate(time:number){
   if(!paths.length)return;
   for(let i=0;i<count;i++){
    const path=paths[i%paths.length],lengths=path.slice(1).map((p,j)=>p.distanceTo(path[j])),total=lengths.reduce((a,b)=>a+b,0);

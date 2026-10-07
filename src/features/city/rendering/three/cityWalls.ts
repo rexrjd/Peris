@@ -1,12 +1,15 @@
 import { createBuildingModel, visualLevel } from './buildingModels';
 import { cityKit } from './modelKit';
+import { cityFootprint, riverX } from './layout';
 
 /** Enclose the city; roads and the river retain real openings through the walls. */
-export function createCityWalls(value: number) {
+export function createCityWalls(value: number, mainLevel = 0) {
     const level = visualLevel(value), k = cityKit();
     const { m, box, cone, tower } = k;
     // Coordinates are relative to the northern gate at (-.4, -9).
-    const left = -8.4, right = 11, back = 0, front = 20;
+    const footprint=cityFootprint(mainLevel);
+    const left=footprint.left+.4,right=footprint.right+.4,back=0,front=footprint.front+9;
+    const river=riverX(footprint.front)+.4;
     function section(x1: number, z1: number, x2: number, z2: number, foreground = false) {
         const length = Math.hypot(x2 - x1, z2 - z1), angle = -Math.atan2(z2 - z1, x2 - x1);
         const height = foreground ? .36 + level * .14 : .4 + level * .23;
@@ -36,8 +39,8 @@ export function createCityWalls(value: number) {
     section(left, back, left, front);
     section(right, back, right, front);
     section(left, front, -.65, front, true);
-    section(.85, front, 7.8, front, true);
-    section(9.3, front, right, front, true); // Southern water passage.
+    section(.85, front, river-.9, front, true);
+    section(river+.9, front, right, front, true); // Southern water passage.
     if (level >= 2) for (const x of [left, right]) for (const z of [back, front]) {
         const height = z === front ? .95 + level * .16 : 1.05 + level * .24;
         if (level === 2) {
