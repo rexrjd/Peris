@@ -13,16 +13,16 @@ import { terrainAt } from '../src/features/battle/domain/terrain'
 
 test('offline production changes at the actual upgrade completion time',()=>{
  const w=createSolo('Rex'),s=w.settlements[0],start=Date.parse('2026-01-01T00:00:00Z')
- s.wood=0;s.resources_updated_at=new Date(start).toISOString();s.wood_rate=22
+ s.wood=0;s.resources_updated_at=new Date(start).toISOString();s.wood_rate=14
  w.orders=[{id:1,owner_id:w.players[0].id,kind:'upgrade',item:'lumber',quantity:1,started_at:new Date(start).toISOString(),finish_at:new Date(start+60000).toISOString()}]
  settleLocal(w,w.players[0].id,start+120000)
- assert.equal(s.wood,22+30);assert.equal(s.wood_rate,30);assert.equal(w.players[0].upgrades,1)
- settleLocal(w,w.players[0].id,start+120000);assert.equal(s.wood,52);assert.equal(w.players[0].upgrades,1)
+ assert.equal(s.wood,14+22);assert.equal(s.wood_rate,22);assert.equal(w.players[0].upgrades,1)
+ settleLocal(w,w.players[0].id,start+120000);assert.equal(s.wood,36);assert.equal(w.players[0].upgrades,1)
 })
 test('frequent settlement updates do not lose fractional resource income',()=>{
  const w=createSolo('Rex'),s=w.settlements[0],start=Date.parse(s.resources_updated_at);s.gold=0
  for(let i=1;i<=600;i++)settleLocal(w,w.players[0].id,start+i*100)
- assert.ok(Math.abs(s.gold-6)<1e-8)
+ assert.ok(Math.abs(s.gold-3)<1e-8)
 })
 test('production stops at resource capacity and army travel interpolates offline',()=>{
  const w=createSolo('Rex'),s=w.settlements[0],a=w.armies[0],start=Date.parse(s.resources_updated_at)
@@ -68,6 +68,6 @@ test('rear charges shock morale, while braced infantry mitigates frontal cavalry
  assert.ok(rear.soldiers<front.soldiers);assert.ok(rear.morale<front.morale);assert.ok(brace.soldiers>=front.soldiers)
 })
 test('cost scaling agrees with the database progression curve',()=>{
- assert.deepEqual(buildingCost('lumber',1),{wood:150,stone:90,food:70,gold:10})
- assert.deepEqual(buildingCost('lumber',2),{wood:233,stone:140,food:109,gold:16})
+ assert.deepEqual(buildingCost('lumber',0),{wood:150,stone:90,food:70,gold:10})
+ assert.deepEqual(buildingCost('lumber',1),{wood:233,stone:140,food:109,gold:16})
 })

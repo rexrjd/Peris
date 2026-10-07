@@ -76,7 +76,7 @@ export function validateSave(data: unknown): World {
         if (!Number.isInteger(n))
             invalid();
     for (const b of w.buildings)
-        if (!['lumber', 'quarry', 'farm', 'market', 'barracks', 'stables', 'wall', 'storehouse'].includes(b.building_type) || !Number.isInteger(b.level) || b.level < 1 || b.level > 20)
+        if (!['lumber', 'quarry', 'farm', 'market', 'barracks', 'stables', 'wall', 'storehouse'].includes(b.building_type) || !Number.isInteger(b.level) || b.level < 0 || b.level > 20)
             invalid();
     if (new Set(w.buildings.map(b => b.building_type)).size !== 8)
         invalid();
@@ -98,7 +98,16 @@ export function validateSave(data: unknown): World {
     const active = w.battles.find(b => b.status === 'active');
     if (active && (!w.formations.some(f => f.battle_id === active.id) || !Number.isFinite(active.elapsed) || active.elapsed < 0 || !['pve', 'practice'].includes(active.mode)))
         invalid();
-    return structuredClone(w);
+    const normalized = structuredClone(w);
+    for (const building of normalized.buildings) building.level = Math.min(5, building.level);
+    const ownTown = normalized.settlements[0];
+    const levelOf = (type: string) => normalized.buildings.find(building => building.building_type === type)?.level ?? 0;
+    ownTown.wood_rate = 14 + levelOf('lumber') * 8;
+    ownTown.stone_rate = 12 + levelOf('quarry') * 7;
+    ownTown.food_rate = 18 + levelOf('farm') * 10;
+    ownTown.gold_rate = 3 + levelOf('market') * 3;
+    ownTown.capacity = 5000 + levelOf('storehouse') * 2500;
+    return normalized;
 }
 export async function importSave(file: File) { if (file.size > 12 * 1024 * 1024)
     throw new Error('Save files must be smaller than 12 MB.'); try {

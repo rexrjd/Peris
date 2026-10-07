@@ -11,7 +11,7 @@ begin
  s.food:=least(s.capacity,s.food+s.food_rate*minutes);s.gold:=least(s.capacity,s.gold+s.gold_rate*minutes);
  s.resources_updated_at:=at_time;
  if o.kind='upgrade' then
- update public.buildings set level=least(20,level+1),updated_at=o.finish_at where settlement_id=s.id and building_type=o.item returning level into l;
+ update public.buildings set level=least(5,level+1),updated_at=o.finish_at where settlement_id=s.id and building_type=o.item returning level into l;
  update public.players set upgrades=upgrades+1 where id=p_owner;
  if o.item='lumber' then s.wood_rate:=14+l*8;elsif o.item='quarry' then s.stone_rate:=12+l*7;
  elsif o.item='farm' then s.food_rate:=18+l*10;elsif o.item='market' then s.gold_rate:=3+l*3;

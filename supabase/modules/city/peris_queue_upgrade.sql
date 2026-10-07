@@ -7,9 +7,9 @@ begin
  select * into s from public.settlements where owner_id=u for update;
  select level into l from public.buildings where settlement_id=s.id and building_type=p_type;
  if l is null then raise exception 'Building not found';end if;
- if l>=20 then raise exception 'Maximum level reached';end if;
+ if l>=5 then raise exception 'Maximum level reached';end if;
  if exists(select 1 from public.peris_orders where owner_id=u and kind='upgrade') then raise exception 'Your builders are already working';end if;
- factor:=power(1.55::numeric,l-1);
+ factor:=power(1.55::numeric,greatest(0,l));
  cw:=ceil((case p_type when 'lumber' then 150 when 'quarry' then 110 when 'farm' then 100 when 'market' then 140 when 'barracks' then 180 when 'stables' then 200 when 'wall' then 100 else 200 end)*factor);
  cs:=ceil((case p_type when 'lumber' then 90 when 'quarry' then 150 when 'farm' then 80 when 'market' then 130 when 'barracks' then 160 when 'stables' then 120 when 'wall' then 240 else 150 end)*factor);
  cf:=ceil((case p_type when 'lumber' then 70 when 'quarry' then 70 when 'farm' then 150 when 'market' then 80 when 'barracks' then 100 when 'stables' then 180 when 'wall' then 80 else 90 end)*factor);

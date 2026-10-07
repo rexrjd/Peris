@@ -4,11 +4,20 @@ import type { Player } from '../../campaign/domain/types';
 import { type BuildingType } from './types';
 import { multiply } from '../../../shared/model/resources';
 import { BUILDINGS } from './buildings';
-export function buildingCost(type: BuildingType, level: number) { return multiply(BUILDINGS[type].cost, 1.55 ** (level - 1)); }
-export function upgradeSeconds(level: number) { return 15 + level * 10; }
+
+export const MAX_BUILDING_LEVEL = 5;
+
+export function buildingCost(type: BuildingType, level: number) {
+    return multiply(BUILDINGS[type].cost, 1.55 ** Math.max(0, level));
+}
+
+export function upgradeSeconds(level: number) {
+    return 15 + Math.max(0, level) * 10;
+}
+
 export function completeUpgrade(w: World, s: Settlement, p: Player, o: Order) {
     const building = w.buildings.find(b => b.settlement_id === s.id && b.building_type === o.item)!;
-    building.level++;
+    building.level = Math.min(MAX_BUILDING_LEVEL, building.level + 1);
     building.updated_at = o.finish_at;
     p.upgrades++;
     const l = building.level;

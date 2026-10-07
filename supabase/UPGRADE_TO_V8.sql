@@ -7,16 +7,32 @@ alter table public.players add column if not exists prestige integer not null de
 alter table public.players add column if not exists victories integer not null default 0;
 alter table public.players add column if not exists recruits integer not null default 0;
 alter table public.players add column if not exists upgrades integer not null default 0;
-alter table public.settlements add column if not exists capacity integer not null default 7500;
+alter table public.settlements add column if not exists capacity integer not null default 5000;
+alter table public.settlements alter column capacity set default 5000;
+alter table public.settlements alter column wood_rate set default 14;
+alter table public.settlements alter column stone_rate set default 12;
+alter table public.settlements alter column food_rate set default 18;
+alter table public.settlements alter column gold_rate set default 3;
 alter table public.settlements alter column wood type numeric(18,4);
 alter table public.settlements alter column stone type numeric(18,4);
 alter table public.settlements alter column food type numeric(18,4);
 alter table public.settlements alter column gold type numeric(18,4);
+update public.buildings set level=least(5,greatest(0,level));
+alter table public.buildings drop constraint if exists buildings_level_check;
+alter table public.buildings add constraint buildings_level_check check(level between 0 and 5);
 alter table public.buildings drop constraint if exists buildings_building_type_check;
 alter table public.buildings add constraint buildings_building_type_check check(building_type in ('lumber','quarry','farm','market','barracks','stables','wall','storehouse'));
 insert into public.buildings(settlement_id,building_type,level)
-select s.id,t,1 from public.settlements s cross join unnest(array['barracks','stables','wall','storehouse']) t
+select s.id,t,0 from public.settlements s cross join unnest(array['barracks','stables','wall','storehouse']) t
 on conflict(settlement_id,building_type) do nothing;
+
+-- Five-stage city progression: level 0 is an unbuilt/ruined plot, levels 1-5 are the visual and mechanical upgrades.
+update public.settlements s set
+ wood_rate=14+coalesce((select level from public.buildings b where b.settlement_id=s.id and b.building_type='lumber'),0)*8,
+ stone_rate=12+coalesce((select level from public.buildings b where b.settlement_id=s.id and b.building_type='quarry'),0)*7,
+ food_rate=18+coalesce((select level from public.buildings b where b.settlement_id=s.id and b.building_type='farm'),0)*10,
+ gold_rate=3+coalesce((select level from public.buildings b where b.settlement_id=s.id and b.building_type='market'),0)*3,
+ capacity=5000+coalesce((select level from public.buildings b where b.settlement_id=s.id and b.building_type='storehouse'),0)*2500;
 
 create table if not exists public.peris_camps(
  id integer primary key,name text not null,x integer not null,y integer not null,tier integer not null,
@@ -210,7 +226,7 @@ begin
  s.food:=least(s.capacity,s.food+s.food_rate*minutes);s.gold:=least(s.capacity,s.gold+s.gold_rate*minutes);
  s.resources_updated_at:=at_time;
  if o.kind='upgrade' then
- update public.buildings set level=least(20,level+1),updated_at=o.finish_at where settlement_id=s.id and building_type=o.item returning level into l;
+ update public.buildings set level=least(5,level+1),updated_at=o.finish_at where settlement_id=s.id and building_type=o.item returning level into l;
  update public.players set upgrades=upgrades+1 where id=p_owner;
  if o.item='lumber' then s.wood_rate:=14+l*8;elsif o.item='quarry' then s.stone_rate:=12+l*7;
  elsif o.item='farm' then s.food_rate:=18+l*10;elsif o.item='market' then s.gold_rate:=3+l*3;
@@ -290,9 +306,9 @@ begin
  select * into s from public.settlements where owner_id=u for update;
  select level into l from public.buildings where settlement_id=s.id and building_type=p_type;
  if l is null then raise exception 'Building not found';end if;
- if l>=20 then raise exception 'Maximum level reached';end if;
+ if l>=5 then raise exception 'Maximum level reached';end if;
  if exists(select 1 from public.peris_orders where owner_id=u and kind='upgrade') then raise exception 'Your builders are already working';end if;
- factor:=power(1.55::numeric,l-1);
+ factor:=power(1.55::numeric,greatest(0,l));
  cw:=ceil((case p_type when 'lumber' then 150 when 'quarry' then 110 when 'farm' then 100 when 'market' then 140 when 'barracks' then 180 when 'stables' then 200 when 'wall' then 100 else 200 end)*factor);
  cs:=ceil((case p_type when 'lumber' then 90 when 'quarry' then 150 when 'farm' then 80 when 'market' then 130 when 'barracks' then 160 when 'stables' then 120 when 'wall' then 240 else 150 end)*factor);
  cf:=ceil((case p_type when 'lumber' then 70 when 'quarry' then 70 when 'farm' then 150 when 'market' then 80 when 'barracks' then 100 when 'stables' then 180 when 'wall' then 80 else 90 end)*factor);
@@ -701,7 +717,7 @@ begin
  if sp.id is null then raise exception 'This world has no free settlement sites';end if;
  insert into public.players(id,display_name)values(u,n);
  insert into public.settlements(owner_id,spawn_point_id,name,x,y,wood,stone,food,gold)values(u,sp.id,n||'''s Keep',sp.x,sp.y,1250,1000,1500,500)returning id into sid;
- insert into public.buildings(settlement_id,building_type,level)select sid,t,1 from unnest(array['lumber','quarry','farm','market','barracks','stables','wall','storehouse'])t;
+ insert into public.buildings(settlement_id,building_type,level)select sid,t,0 from unnest(array['lumber','quarry','farm','market','barracks','stables','wall','storehouse'])t;
  insert into public.armies(owner_id,home_settlement_id,name,infantry,archers,cavalry,start_x,start_y,target_x,target_y)values(u,sid,'Legio I · The Dawn',120,50,16,sp.x+40,sp.y+30,sp.x+40,sp.y+30);
  return jsonb_build_object('ok',true);
 exception when unique_violation then raise exception 'That ruler name is already taken';
