@@ -3,7 +3,7 @@ import type { SlotType } from '../../features/city/domain/slots';
 import type { UnitType } from '../../features/army/domain/types';
 import type { Battle, BattleOrder } from '../../features/battle/domain/types';
 import type { World } from './world';
-export type Command = {
+export type Command = {type:'researchSpell';spell:string;} | {type:'castSpell';battleId:number;spell:string;target?:number;} | {
     type: 'buildSlot'; slot: number; item: SlotType;
 } | {
     type: 'upgradeSlot'; slot: number;

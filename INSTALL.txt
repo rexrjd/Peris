@@ -1,6 +1,29 @@
-Apply after the city building-slots update. Merge the included src and tests folders into your project, replacing matching files, then commit/push and redeploy.
-No SQL changes required.
+PERIS — MAGE TOWER & SPELLS
 
-The city wall grows with the main building, reserving an open strip beyond the last plot row. Resource sites stay outside; the fishing site and villagers follow the expanded boundary. The raised wall marker fix is included.
+INSTALL
+1. Merge the included src/, supabase/, tests/, and package.json into your existing project, replacing matching files. This update builds on the previous city-building-slots update.
+2. Existing shared worlds: run supabase/UPGRADE_MAGE_TOWER.sql in the Supabase SQL Editor BEFORE deploying the updated app. If you have not installed the city-building-slots database update yet, run the included supabase/UPGRADE_CITY_SLOTS.sql instead; it now includes the mage tower too. These upgrades preserve existing cities and progress. Do not use a FRESH_INSTALL script on an existing world.
+3. Run npm run build, then push and redeploy through your usual GitHub/Vercel flow.
+Solo campaign saves continue automatically; no database update is needed for solo play.
 
-Production build, 55 tests, largest building footprints at all six main-building levels, and desktop/mobile browser checks passed.
+PLAY
+Choose an empty city plot and build a Mage tower. The tower is optional, can occupy any unlocked regular plot, and is limited to one per city. It has ten upgrade levels with a different visual at every level. Each level unlocks two spells.
+Select the completed tower and open its spellbook. Research each spell once by paying the displayed resources. Higher-level pages can be viewed before upgrading, but their research remains locked.
+During combat, open Spellbook in the battle command panel, choose a learned spell and its target, and cast. Mana resets each battle: 20 + 10 per tower level. Casting has an eight-second battle-time cooldown. Damage, healing, morale, speed, protection, and resurrection effects work in solo and shared-world combat. Persistent buffs last that battle; attack buffs cap at +50%, protection at 40%, and speed at +75%. Healing and resurrection cannot exceed a formation's starting troop count.
+
+SPELLS
+Level 1: Spark, Mend
+Level 2: Ice Bolt, Stone Skin
+Level 3: Lightning, Haste
+Level 4: Fireball, Bless
+Level 5: Terror, Courage
+Level 6: Chain Lightning, Sanctuary
+Level 7: Frost Nova, Battle Trance
+Level 8: Meteor, Resurrection
+Level 9: Storm, Aegis
+Level 10: Inferno, Phoenix
+
+VALIDATION
+Production build and 61 unit tests passed. Fresh-install, city-slot, and magic database integration checks passed. The previous released city database upgraded successfully, including a repeated migration. Desktop and mobile checks covered tower placement, research, battle casting, and layout. All ten tower models and plot footprints were checked.
+
+Previews/ contains screenshots of the tower, spell research, and combat spellbook.

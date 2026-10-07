@@ -22,3 +22,5 @@
 @import '../../features/battle/styles/battle.css';
 @import './responsive.css';
 @import '../../features/battle/styles/commands.css';
+
+@import '../../features/magic/styles/magic.css';

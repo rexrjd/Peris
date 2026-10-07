@@ -24,6 +24,8 @@ export type Battle = {
     last_tick_at: string;
     elapsed: number;
     result: BattleResult | null;
+    mana_attacker?:number;mana_defender?:number;spell_ready_attacker?:number;spell_ready_defender?:number;
+    last_spell?:{id:string;name:string;owner_id:string;at:number;target:number|null};
     rally_attacker: boolean;
     rally_defender: boolean;
 };
@@ -51,6 +53,7 @@ export type Formation = {
     status: FormationStatus;
     damage_pool: number;
     attack_multiplier?: number;
+    magic_attack?:number;magic_defence?:number;magic_speed?:number;
     columns: number;
     stance: 'balanced' | 'guard' | 'aggressive';
     running: boolean;

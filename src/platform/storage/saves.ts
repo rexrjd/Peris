@@ -1,4 +1,5 @@
-import { citySlots, refreshCityEconomy, SLOT_BUILDINGS, mainLevel, slotCount } from '../../features/city/domain/slots';
+import { citySlots, refreshCityEconomy, SLOT_BUILDINGS, mainLevel, slotCount, slotMaxLevel } from '../../features/city/domain/slots';
+import {spellById} from '../../features/magic/domain/spells';
 import { SAVE_KEY, readSolo } from './solo';
 import { type World } from '../../shared/model/world';
 import { CELL_SIZE } from '../../features/map/domain/dimensions';
@@ -83,12 +84,19 @@ export function validateSave(data: unknown): World {
         invalid();
     if (w.city_slots !== undefined) {
         if (!Array.isArray(w.city_slots) || w.city_slots.length>17) invalid();
+        if(w.city_slots.filter(s=>s?.building_type==='mage_tower').length>1)invalid();
         const seen=new Set<number>();
         for (const slot of w.city_slots) {
-            if (slot.settlement_id!==town.id || !Number.isInteger(slot.slot_index) || slot.slot_index<0 || slot.slot_index!==16 && slot.slot_index>=slotCount(mainLevel(w,town.id)) || seen.has(slot.slot_index) || !Object.hasOwn(SLOT_BUILDINGS,slot.building_type) || !Number.isInteger(slot.level) || slot.level<0 || slot.level>5 || (slot.building_type==='fishery') !== (slot.slot_index===16)) invalid();
+            if (slot.settlement_id!==town.id || !Number.isInteger(slot.slot_index) || slot.slot_index<0 || slot.slot_index!==16 && slot.slot_index>=slotCount(mainLevel(w,town.id)) || seen.has(slot.slot_index) || !Object.hasOwn(SLOT_BUILDINGS,slot.building_type) || !Number.isInteger(slot.level) || slot.level<0 || slot.level>slotMaxLevel(slot.building_type) || (slot.building_type==='fishery') !== (slot.slot_index===16)) invalid();
             seen.add(slot.slot_index);
         }
     }
+    if(w.spell_research!==undefined){
+        if(!Array.isArray(w.spell_research)||w.spell_research.length>20)invalid();
+        const seen=new Set<string>();for(const research of w.spell_research){if(!research||research.settlement_id!==town.id||!spellById(research.spell_id)||seen.has(research.spell_id)||!Number.isFinite(Date.parse(research.researched_at)))invalid();seen.add(research.spell_id);}
+    }
+    for(const f of w.formations)for(const [key,min,max] of [['magic_attack',1,1.5],['magic_defence',0,.4],['magic_speed',1,1.75]] as const)if(f[key]!==undefined&&(!Number.isFinite(f[key])||f[key]!<min||f[key]!>max))invalid();
+    for(const b of w.battles)for(const key of ['mana_attacker','mana_defender','spell_ready_attacker','spell_ready_defender'] as const)if(b[key]!==undefined&&(!Number.isFinite(b[key])||b[key]!<0||b[key]!>1000))invalid();
     for (const date of [town.resources_updated_at, army.departure_at, army.arrival_at, player.created_at])
         if (!Number.isFinite(Date.parse(date)))
             invalid();

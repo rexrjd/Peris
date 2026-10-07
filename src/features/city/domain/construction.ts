@@ -4,7 +4,7 @@ import type { Player } from '../../campaign/domain/types';
 import { type BuildingType } from './types';
 import { multiply } from '../../../shared/model/resources';
 import { BUILDINGS } from './buildings';
-import { refreshCityEconomy } from './slots';
+import { refreshCityEconomy, slotMaxLevel } from './slots';
 
 export const MAX_BUILDING_LEVEL = 5;
 
@@ -21,7 +21,7 @@ export function completeUpgrade(w: World, s: Settlement, p: Player, o: Order) {
         const index=Number(o.item.split(':')[1]);
         const slot=w.city_slots?.find(slot=>slot.settlement_id===s.id && slot.slot_index===index);
         if (!slot) throw new Error('Queued building plot is missing.');
-        slot.level=Math.min(5,slot.level+1);p.upgrades++;refreshCityEconomy(w,s.id);return;
+        slot.level=Math.min(slotMaxLevel(slot.building_type),slot.level+1);p.upgrades++;refreshCityEconomy(w,s.id);return;
     }
     const building = w.buildings.find(b => b.settlement_id === s.id && b.building_type === o.item)!;
     building.level = Math.min(MAX_BUILDING_LEVEL, building.level + 1);

@@ -1,8 +1,10 @@
 import type { SlotType } from '../../domain/slots';
 import { createBuildingModel } from './buildingModels';
+import {createMageTower} from './mageTower';
 import { cityKit } from './modelKit';
 export function createSlotModel(type:SlotType|null,level:number) {
  if(!type || !level)return createBuildingModel('barracks',0);
+ if(type==='mage_tower')return createMageTower(level);
  if(type==='barracks'||type==='stables')return createBuildingModel(type,level);
  if(type==='warehouse')return createBuildingModel('storehouse',level);
  const k=cityKit(),{m,box,cylinder,cone,house}=k;

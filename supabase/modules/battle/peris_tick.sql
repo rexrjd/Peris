@@ -44,7 +44,7 @@ begin
  dx:=f.target_x-f.x;dy:=f.target_y-f.y;distance:=sqrt(dx*dx+dy*dy);gf:=public.peris_ground(b.terrain,f.x,f.y);
  if distance>reach+2 and not(f.target_formation_id is not null and f.stance='guard') then
  direction:=degrees(atan2(dy,dx));turn:=direction-f.facing;turn:=turn-360*floor((turn+180)/360);f.facing:=f.facing+greatest(-150*dt,least(150*dt,turn));
- speed:=(case f.unit_type when 'cavalry' then 76 when 'archers' then 34 else 40 end)*(gf->>'speed')::numeric*
+ speed:=(case f.unit_type when 'cavalry' then 76 when 'archers' then 34 else 40 end)*f.magic_speed*(gf->>'speed')::numeric*
  (case when f.unit_type='cavalry' and gf->>'kind'='Forest' then 0.65 else 1 end)*(case when f.running and f.stamina>8 then 1.45 else 1 end)*(case when f.stamina<15 then 0.75 else 1 end);
  move_step:=least(speed*dt,distance-reach);f.x:=greatest(25,least(1175,f.x+dx/distance*move_step));f.y:=greatest(30,least(670,f.y+dy/distance*move_step));f.status:='moving';
  f.stamina:=greatest(0,least(100,f.stamina-case when f.running then 1.9 else 0.12 end*dt));
@@ -76,8 +76,8 @@ begin
  melee_arc:=case when f.unit_type='archers' and distance<=65 then 0.28 else 1 end;
  difficulty_mult:=case when f.owner_id is null then case b.difficulty when 'hard' then 1.13 when 'easy' then 0.8 else 1 end else 1 end;
  rate:=case f.unit_type when 'infantry' then 0.020 when 'archers' then 0.012 else 0.031 end;
- damage:=f.damage_pool+f.soldiers*f.attack_multiplier*rate*matchup*stance_mult*defence*brace*flank*charge*cover*elevation*melee_arc*difficulty_mult*(0.55+f.stamina/220)*dt;
- if charge>1 then damage:=damage+f.soldiers*0.06*brace*flank;end if;
+ damage:=f.damage_pool+f.soldiers*f.attack_multiplier*f.magic_attack*(1-t.magic_defence)*rate*matchup*stance_mult*defence*brace*flank*charge*cover*elevation*melee_arc*difficulty_mult*(0.55+f.stamina/220)*dt;
+ if charge>1 then damage:=damage+f.soldiers*0.06*brace*flank*(1-t.magic_defence);end if;
  cas:=least(greatest(0,t.soldiers-coalesce((pending->t.id::text->>'loss')::integer,0)),floor(damage)::integer);mor_loss:=cas::numeric/greatest(1,t.initial_soldiers)*85+case when flank>1 then cas*1.2 else 0 end+case when charge>1 then 12 else 0 end;
  update public.battle_formations set damage_pool=damage-cas,kills=kills+cas,charge_ready=case when charge>1 then false else charge_ready end,
  stamina=case when charge>1 then greatest(0,stamina-12) else stamina end where id=f.id;

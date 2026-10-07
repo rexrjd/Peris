@@ -1,7 +1,7 @@
 import type { Command, LocalCommandContext } from '../../../shared/model/commands';
 import { RESOURCES } from '../../../shared/model/resources';
 import { affordable } from './economy';
-import { citySlots, mainLevel, slotCount, riversideSlot, slotCost, SLOT_BUILDINGS } from './slots';
+import { citySlots, mainLevel, slotCount, riversideSlot, slotCost, SLOT_BUILDINGS, slotMaxLevel } from './slots';
 import { upgradeSeconds } from './construction';
 
 export function queueSlot(context: LocalCommandContext, cmd: Extract<Command,{type:'buildSlot'|'upgradeSlot'}>) {
@@ -13,10 +13,11 @@ export function queueSlot(context: LocalCommandContext, cmd: Extract<Command,{ty
     if (cmd.type==='buildSlot') {
         if (slot) throw new Error('This plot is already occupied.');
         if (!Object.hasOwn(SLOT_BUILDINGS,cmd.item)) throw new Error('Unknown building.');
+        if(cmd.item==='mage_tower'&&w.city_slots.some(s=>s.settlement_id===town.id&&s.building_type==='mage_tower'))throw new Error('Only one mage tower can be built in your city.');
         if ((cmd.item==='fishery') !== riversideSlot(cmd.slot)) throw new Error('A fishery needs a riverside plot.');
         slot={settlement_id:town.id,slot_index:cmd.slot,building_type:cmd.item,level:0};
     } else if (!slot || slot.level===0) throw new Error('This building is not ready.');
-    if (slot.level>=5) throw new Error('Maximum building level reached.');
+    if (slot.level>=slotMaxLevel(slot.building_type)) throw new Error('Maximum building level reached.');
     const cost=slotCost(slot.building_type,slot.level);
     if (!affordable(town,cost)) throw new Error('Your stores cannot cover this cost.');
     for (const resource of RESOURCES) town[resource]-=cost[resource];

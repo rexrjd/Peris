@@ -23,8 +23,8 @@ test('growing walls leave clear space around every plot and keep resources outsi
   const area=(footprint.right-footprint.left)*(footprint.front-footprint.back)*growth*growth;assert.ok(area>previousArea);previousArea=area;
   for(const key of ['lumber','quarry','farm','fishery']){const p=plots.find(p=>p.key===key)!;assert.ok(p.x<footprint.left*growth||p.x>footprint.right*growth||p.z>footprint.front*growth);}
   assert.equal(plots.find(p=>p.key==='fishery')!.x,riverX(footprint.fishingZ)*growth);
-  for(const plot of plots.filter(p=>p.slot!==undefined&&p.slot<16))for(const type of ['barracks','stables','smithy','warehouse','granary'] as const){
-   const model=createSlotModel(type,5);model.scale.setScalar(.78);model.position.set(plot.x,0,plot.z);const bounds=new Box3().setFromObject(model);
+  for(const plot of plots.filter(p=>p.slot!==undefined&&p.slot<16))for(const type of ['barracks','stables','smithy','warehouse','granary','mage_tower'] as const){
+   const model=createSlotModel(type,type==='mage_tower'?10:5);model.scale.setScalar(.78);model.position.set(plot.x,0,plot.z);const bounds=new Box3().setFromObject(model);
    assert.ok(bounds.min.x>footprint.left*growth+.6&&bounds.max.x<footprint.right*growth-.6,`${type} at plot ${plot.slot} touches side wall`);
    assert.ok(bounds.min.z>footprint.back*growth+.6&&bounds.max.z<footprint.front*growth-1.5,`${type} at plot ${plot.slot} touches front wall`);
    disposeCityObject(model);

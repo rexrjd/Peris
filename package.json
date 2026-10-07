@@ -15,7 +15,8 @@
     "check:world": "node --import tsx scripts/build-world.mjs --check",
     "build:sql": "node scripts/build-sql.mjs",
     "check:sql": "node scripts/build-sql.mjs --check",
-    "test:city-db": "node tests/city-slots-database.test.mjs"
+    "test:city-db": "node tests/city-slots-database.test.mjs",
+    "test:magic-db": "node --import tsx tests/magic-database.test.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.57.4",

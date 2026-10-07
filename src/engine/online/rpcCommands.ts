@@ -1,6 +1,8 @@
 import type { Command } from '../../shared/model/commands';
 export function rpcCommand(cmd: Command) {
     let fn = '', args: Record<string, unknown> = {};
+    if(cmd.type==='researchSpell'){fn='peris_research_spell';args={p_spell:cmd.spell};}
+    if(cmd.type==='castSpell'){fn='peris_cast_spell';args={p_battle_id:cmd.battleId,p_spell:cmd.spell,p_target:cmd.target??null};}
     if (cmd.type==='buildSlot' || cmd.type==='upgradeSlot') {
         fn='peris_queue_slot';args={p_slot:cmd.slot,p_type:cmd.type==='buildSlot'?cmd.item:null};
     }

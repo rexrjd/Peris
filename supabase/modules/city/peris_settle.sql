@@ -15,7 +15,7 @@ begin
  if o.kind='upgrade' then
  if o.item like 'slot:%' then
  target_slot:=split_part(o.item,':',2)::integer;
- update public.peris_city_slots set level=least(5,level+1) where settlement_id=s.id and peris_city_slots.slot_index=target_slot;
+ update public.peris_city_slots set level=least(case when building_type='mage_tower' then 10 else 5 end,level+1) where settlement_id=s.id and peris_city_slots.slot_index=target_slot;
  s.capacity:=5000+2500*coalesce((select sum(level) from public.peris_city_slots where settlement_id=s.id and building_type='warehouse'),0);
  s.food_capacity:=5000+2500*coalesce((select sum(level) from public.peris_city_slots where settlement_id=s.id and building_type='granary'),0);
  s.food_rate:=18+10*coalesce((select level from public.buildings where settlement_id=s.id and building_type='farm'),0)+8*coalesce((select sum(level) from public.peris_city_slots where settlement_id=s.id and building_type='fishery'),0);

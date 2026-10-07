@@ -2,7 +2,7 @@ import type { World } from '../../../shared/model/world';
 import type { Resources } from '../../../shared/model/resources';
 import { multiply } from '../../../shared/model/resources';
 
-export type SlotType = 'barracks' | 'stables' | 'smithy' | 'warehouse' | 'granary' | 'fishery';
+export type SlotType = 'barracks' | 'stables' | 'smithy' | 'warehouse' | 'granary' | 'fishery' | 'mage_tower';
 export type CitySlot = { settlement_id: number; slot_index: number; building_type: SlotType; level: number };
 export const SLOT_BUILDINGS: Record<SlotType, { name: string; description: string; effect: string; cost: Resources }> = {
     barracks: { name: 'Barracks', description: 'Train infantry and archers.', effect: 'Each level improves training speed.', cost: { wood:180, stone:160, food:100, gold:30 } },
@@ -10,6 +10,7 @@ export const SLOT_BUILDINGS: Record<SlotType, { name: string; description: strin
     smithy: { name: 'Smithy', description: 'Forge stronger weapons for your soldiers.', effect: '+4% army damage per level, up to +60% across smithies.', cost: { wood:180, stone:220, food:80, gold:60 } },
     warehouse: { name: 'Warehouse', description: 'Store timber, stone and gold.', effect: '+2,500 capacity per level. Warehouses stack.', cost: { wood:200, stone:150, food:90, gold:20 } },
     granary: { name: 'Granary', description: 'Keep your food supplies safe.', effect: '+2,500 food capacity per level. Granaries stack.', cost: { wood:160, stone:120, food:100, gold:15 } },
+    mage_tower: {name:'Mage tower',description:'A unique academy of magic, placed in any empty city plot.',effect:'Ten levels unlock twenty spells. Only one mage tower per city.',cost:{wood:260,stone:340,food:100,gold:160}},
     fishery: { name: 'Fishery', description: 'A riverside dock that supplies fresh fish.', effect: '+8 food / minute per level. Built at the river site outside the wall.', cost: { wood:160, stone:80, food:100, gold:20 } },
 };
 export const mainLevel = (w: World, sid: number) => w.buildings.find(b=>b.settlement_id===sid && b.building_type==='market')?.level ?? 0;
@@ -28,7 +29,8 @@ export function citySlots(w: World, sid: number): CitySlot[] {
 }
 export const slotLevels = (w: World, sid: number, type: SlotType) => citySlots(w,sid).filter(s=>s.building_type===type).reduce((sum,s)=>sum+s.level,0);
 export const armyAttack = (w: World, sid: number) => 1 + Math.min(.6,slotLevels(w,sid,'smithy') * .04);
-export const slotCost = (type: SlotType, level: number) => multiply(SLOT_BUILDINGS[type].cost,1.55 ** level);
+export const slotMaxLevel=(type:SlotType)=>type==='mage_tower'?10:5;
+export const slotCost = (type: SlotType, level: number) => multiply(SLOT_BUILDINGS[type].cost,(type==='mage_tower'?1.38:1.55) ** level);
 export function refreshCityEconomy(w: World, sid: number) {
     const town=w.settlements.find(s=>s.id===sid)!;
     const level=(type:string)=>w.buildings.find(b=>b.settlement_id===sid && b.building_type===type)?.level ?? 0;

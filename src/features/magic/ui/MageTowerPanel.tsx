@@ -1,0 +1,14 @@
+import {useState} from 'react';
+import type {World} from '../../../shared/model/world';
+import type {Command} from '../../../shared/model/commands';
+import {Modal,Cost} from '../../../shared/ui/Shared';
+import {SPELLS,knowsSpell,researchCost} from '../domain/spells';
+import {affordable,liveResources} from '../../city/domain/economy';
+export function MageTowerPanel({world,sid,level,run,busy,now}:{world:World;sid:number;level:number;run:(c:Command,message?:string)=>void;busy:boolean;now:number}){
+ const [open,setOpen]=useState(false),[page,setPage]=useState(Math.max(1,level));
+ const town=world.settlements.find(s=>s.id===sid)!,resources=liveResources(town,now),known=world.spell_research?.filter(s=>s.settlement_id===sid).length??0;
+ return <div className="mage-tower-panel"><p><strong>{known} / 20 spells researched</strong><br/><small>Two spells per tower level. Buy each spell once; cast with mana during combat.</small></p><button className="button gold" disabled={!level} onClick={()=>{setPage(Math.max(1,level));setOpen(true);}}>✦ Open spellbook</button>
+ {open&&<Modal title="Mage tower · Spellbook" className="mage-spellbook" onClose={()=>setOpen(false)}><p className="magic-intro">Tower level {level} / 10 · {known} {known===1?'spell':'spells'} known. Combat buffs last for the battle; damage bonuses cap at +50%, protection at 40%, and speed bonuses at +75%.</p><nav className="magic-levels" aria-label="Spell levels">{Array.from({length:10},(_,i)=>i+1).map(l=><button key={l} className={`${page===l?'selected':''} ${l>level?'locked':''}`} aria-pressed={page===l} onClick={()=>setPage(l)}>{l}<small>{l>level?'Locked':'Level'}</small></button>)}</nav>
+ <div className="magic-pages">{SPELLS.filter(s=>s.level===page).map(spell=>{const learned=knowsSpell(world,sid,spell.id),locked=level<spell.level,cost=researchCost(spell);return <article key={spell.id} className={`magic-card school-${spell.school.toLowerCase()}`}><span className="magic-sigil" aria-hidden="true">{spell.school==='Fire'?'✹':spell.school==='Water'?'❄':spell.school==='Air'?'ϟ':spell.school==='Earth'?'⬡':spell.school==='Shadow'?'☾':'☀'}</span><span className="eyebrow">{spell.school} magic · Level {spell.level}</span><h3>{spell.name}</h3><p>{spell.description}</p><div className="magic-mana">✦ {spell.mana} mana · {spell.target==='ally'?'Friendly target':spell.target==='enemy'?'Enemy target':spell.target==='allies'?'All friendly formations':'All enemy formations'}</div>{!learned&&<Cost cost={cost} resources={resources}/>}<button className="button" disabled={busy||learned||locked||!affordable(resources,cost)} onClick={()=>run({type:'researchSpell',spell:spell.id},`${spell.name} researched`)}>{learned?'✓ Researched':locked?`Requires tower level ${spell.level}`:!affordable(resources,cost)?'More supplies needed':'Research spell'}</button></article>;})}</div></Modal>}
+ </div>;
+}

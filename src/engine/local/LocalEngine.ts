@@ -16,6 +16,7 @@ import { claimObjective } from '../../features/campaign/domain/commands';
 import { renameCity } from '../../features/city/domain/rename';
 import { queueSlot } from '../../features/city/domain/slotCommands';
 import { citySlots, refreshCityEconomy } from '../../features/city/domain/slots';
+import {researchSpell,castSpell} from '../../features/magic/domain/commands';
 export class LocalEngine implements GameEngine {
     readonly playerId = 'solo-ruler';
     readonly mode: 'solo' | 'practice';
@@ -103,10 +104,12 @@ export class LocalEngine implements GameEngine {
     command = async (cmd: Command) => {
         settleLocal(this.snapshot, this.playerId);
         const active = this.active();
-        if (['upgrade', 'buildSlot', 'upgradeSlot', 'recruit', 'move', 'raid'].includes(cmd.type) && active)
+        if (['researchSpell', 'upgrade', 'buildSlot', 'upgradeSlot', 'recruit', 'move', 'raid'].includes(cmd.type) && active)
             throw new Error('Finish the current battle first.');
         const context: LocalCommandContext = { world: this.snapshot, playerId: this.playerId, nextId: () => ++this.nextId, active, now: new Date().toISOString(), paused: value => { this.paused = value; }, finalize: id => this.finalize(id) };
         switch (cmd.type) {
+            case 'researchSpell':researchSpell(context,cmd);break;
+            case 'castSpell':castSpell(context,cmd);break;
             case 'buildSlot':
             case 'upgradeSlot': queueSlot(context,cmd); break;
             case 'upgrade':

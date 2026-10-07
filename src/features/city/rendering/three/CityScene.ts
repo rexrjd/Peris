@@ -76,7 +76,7 @@ export class CityScene {
         for (const plot of this.plots) {
             const hit = new THREE.Mesh(new THREE.CylinderGeometry(plot.radius, plot.radius, .15, 12), new THREE.MeshBasicMaterial({visible:false}));
             hit.position.set(plot.x,.12,plot.z); hit.userData.building=plot.key; this.pickMeshes.push(hit); this.scene.add(hit);
-            const level=visualLevel(plot.level), previous=this.models.get(plot.key);
+            const level=plot.type==='mage_tower'?Math.max(0,Math.min(10,Math.round(plot.level))):visualLevel(plot.level), previous=this.models.get(plot.key);
             if (!previous || previous.level!==level || previous.type!==plot.type || plot.type==='wall' && resized) {
                 if(previous) {this.scene.remove(previous.model);disposeCityObject(previous.model);}
                 const model=plot.slot!==undefined ? createSlotModel(plot.type as SlotType|null,level) : plot.type==='wall' ? createCityWalls(level,this.mainLevel) : createBuildingModel(plot.type as BuildingType,level);

@@ -16,6 +16,7 @@ import { GameCanvas } from '../../../engine/rendering/GameCanvas';
 import { terrainAt } from '../domain/terrain';
 import { Modal } from '../../../shared/ui/Shared';
 import { BRIEFINGS } from '../../campaign/domain/progression';
+import {BattleSpellbook} from '../../magic/ui/BattleSpellbook';
 type FieldEvent = {
     id: number;
     text: string;
@@ -31,6 +32,7 @@ export function BattleView({ world, battle, engine, run, onHelp, onSettings }: {
     onSettings: () => void;
 }) {
     const [selected, setSelected] = useState<number[]>([]), [touchOrder, setTouchOrder] = useState<'select' | 'move' | 'attack'>('select'), [paused, setPaused] = useState(false), [speed, setSpeed] = useState(1), [menu, setMenu] = useState(false), [withdraw, setWithdraw] = useState(false), [arranging, setArranging] = useState(false), [events, setEvents] = useState<FieldEvent[]>([]);
+    const lastSpell=useRef('');
     const previous = useRef(new Map<number, {
         status: string;
         charge: boolean;
@@ -72,7 +74,7 @@ export function BattleView({ world, battle, engine, run, onHelp, onSettings }: {
         engine.paused = false;
         setPaused(false);
     } };
-    useEffect(() => { select(own[0] ? [own[0].id] : []); setPaused(local && engine.paused); setSpeed(local ? engine.speed : 1); previous.current.clear(); previousPhase.current = ''; setEvents([]); }, [battle.id]);
+    useEffect(() => { select(own[0] ? [own[0].id] : []); setPaused(local && engine.paused); setSpeed(local ? engine.speed : 1); previous.current.clear(); previousPhase.current = ''; lastSpell.current=''; setEvents([]); }, [battle.id]);
     useEffect(() => {
         if (!local)
             return;
@@ -90,6 +92,10 @@ export function BattleView({ world, battle, engine, run, onHelp, onSettings }: {
         if (previousPhase.current !== battle.phase) {
             previousPhase.current = battle.phase;
             add(battle.phase === 'deployment' ? 'The host awaits your deployment.' : 'The standards are raised. Take the field.', true, 'flag');
+        }
+        if(battle.last_spell){
+            const spell=battle.last_spell,key=`${spell.owner_id}:${spell.id}:${spell.at}`;
+            if(lastSpell.current!==key){lastSpell.current=key;const ours=spell.owner_id===engine.playerId;add(`${ours?'Our mage':'Enemy mage'} casts ${spell.name}.`,ours,'flag');}
         }
         for (const f of fs) {
             const old = previous.current.get(f.id), ours = f.owner_id === engine.playerId;
@@ -140,7 +146,7 @@ export function BattleView({ world, battle, engine, run, onHelp, onSettings }: {
    <button className="button rally" disabled={rallied || battle.phase !== 'combat'} onClick={() => void run({ type: 'rally', battleId: battle.id }, 'The host regains its courage')}><Icon name="flag" size={16}/>{rallied ? 'The rally has been used' : 'Rally the host'}<kbd>R</kbd></button>
    {local && <div className="time-controls"><button onClick={pause}>{paused ? '▶ Resume' : 'Ⅱ Pause'}</button>{[1, 2, 3].map(n => <button key={n} className={speed === n ? 'selected' : ''} onClick={() => { engine.speed = n; setSpeed(n); }}>{n}×</button>)}</div>}
    <button className="withdraw-button" onClick={openWithdraw}>Withdraw from battle</button>
-  </aside></section>
+  <BattleSpellbook world={world} battle={battle} owner={engine.playerId} run={run}/></aside></section>
   <footer className="unit-tray"><div className="unit-tray-label"><Icon name="army"/><span>YOUR HOST<small>{total(own)} soldiers</small></span><div className="group-select">{(['infantry', 'archers', 'cavalry'] as const).map(t => <button key={t} title={`Select ${t}`} aria-label={`Select ${t}`} disabled={!own.some(f => f.unit_type === t && f.soldiers > 0 && f.status !== 'routed')} onClick={() => select(own.filter(f => f.unit_type === t && f.soldiers > 0 && f.status !== 'routed').map(f => f.id))}><Icon name={t === 'infantry' ? 'shield' : t === 'archers' ? 'bow' : 'horse'} size={15}/></button>)}</div></div><div className="unit-cards">{own.map((f, i) => <button key={f.id} title={`${f.label} · ${Math.round(f.morale)}% morale · ${f.kills} kills`} aria-label={`${f.label}, ${f.soldiers} soldiers`} className={`unit-card ${valid.includes(f.id) ? 'selected' : ''} ${f.status === 'routed' ? 'routed' : ''}`} disabled={f.soldiers <= 0 || f.status === 'routed'} onClick={e => select(e.shiftKey ? valid.includes(f.id) ? valid.filter(id => id !== f.id) : [...valid, f.id] : [f.id])}><span className="unit-hotkey">{i < 9 ? i + 1 : ''}</span><UnitPortrait type={f.unit_type}/><div className="unit-card-meta"><strong>{f.soldiers}</strong><span>{f.unit_type === 'infantry' ? 'Legionaries' : f.unit_type === 'archers' ? 'Archers' : 'Cavalry'}</span></div><div className="unit-morale"><i style={{ width: `${f.morale}%` }}/></div><small>{f.soldiers === 0 ? 'FALLEN' : f.status === 'routed' ? 'ROUTING' : f.charge_ready ? 'CHARGE READY' : f.stance === 'guard' ? 'GUARD' : f.status === 'engaged' ? 'IN COMBAT' : f.status === 'moving' ? 'MOVING' : 'HOLDING'}</small></button>)}</div></footer>
   {menu && <Modal title="The battle is yours to command" className="battle-menu" onClose={closeMenu}><span className="eyebrow">{local ? 'THE FIELD IS PAUSED' : 'LIVE DUEL · THE CLOCK CONTINUES'}</span><p>{battle.mode === 'pve' && battle.camp_id ? BRIEFINGS[battle.camp_id].tactic : 'Protect the bowmen. Hold your infantry line. Let cavalry find an opening.'}</p><button className="button gold" onClick={closeMenu}>Return to the field <Icon name="arrow"/></button><button className="settings-action" onClick={() => { closeMenu(); onHelp(); }}><Icon name="book"/><span>The General's Codex</span></button><button className="settings-action" onClick={() => { closeMenu(); onSettings(); }}><Icon name="settings"/><span>Settings</span></button><button className="button text" onClick={() => { setMenu(false); openWithdraw(); }}>Withdraw from battle</button></Modal>}
   {withdraw && <Modal title="Concede the field?" className="withdraw-modal" onClose={closeWithdraw}><p>{battle.mode === 'practice' ? 'This quick battle will end. Your campaign is unaffected.' : 'Your surviving soldiers will return to the keep. Troops already lost in this battle remain lost.'}</p><div className="modal-actions"><button className="button outline" onClick={closeWithdraw}>Keep fighting</button><button className="button gold" onClick={() => { setWithdraw(false); void run({ type: 'retreat', battleId: battle.id }); }}>Withdraw the host</button></div></Modal>}
