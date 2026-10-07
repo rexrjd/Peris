@@ -59,7 +59,7 @@ export function SettlementView({ world, playerId, run, busy, now }: {
 
             <div className="city-panel">
                 <SettlementScene selected={selected} onSelect={setSelected} levels={Object.fromEntries(buildings.map(item => [item.building_type, item.level]))}/>
-                <div className="city-scene-hint"><span>SELECT A BUILDING</span><b>Each landmark has five visual stages</b></div>
+                <div className="city-scene-hint"><span>SELECT A BUILDING</span><b>Upgrade it to watch your city grow</b></div>
             </div>
 
             <div className="building-grid" aria-label="Settlement buildings">

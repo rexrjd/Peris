@@ -1,0 +1,36 @@
+PERIS — LOW-POLY CITY UPDATE
+
+Based on your uploaded Peris(1).zip.
+
+INSTALL
+1. Open the project folder containing the main package.json and src folder.
+2. Copy this ZIP's src folder into that project folder, merging folders and replacing matching files.
+3. Keep all nine included source files, including the new rendering/three folder and CompatibilitySettlementScene.tsx.
+4. Commit/push your changes to your connected repository and let Vercel redeploy, or build locally with npm run build.
+
+The city now uses real low-poly 3D buildings and terrain, using the map's material palette and lighting.
+Every building has an empty level-zero plot plus five distinct upgrade stages.
+Changes appear automatically when a construction order finishes.
+Select a building by clicking its model/plot, its label, or the existing building list.
+The former SVG scene is retained as a compatibility fallback when WebGL cannot start.
+
+No new dependencies, SQL changes, database reset, or save reset are required.
+The map, battle, resource rules, and upgrade rules are unchanged.
+
+VERIFICATION
+Production TypeScript/Vite build passed.
+All 50 existing tests passed.
+Browser checks covered all eight 3D hit areas, label/keyboard selection, live upgrade completion, six visual states, and mobile/tablet sizing.
+
+Screenshots are in previews; they are examples, not runtime art assets.
+
+CHANGED FILES
+src/features/city/rendering/CompatibilitySettlementScene.tsx
+src/features/city/rendering/SettlementScene.tsx
+src/features/city/rendering/three/CityScene.ts
+src/features/city/rendering/three/buildingModels.ts
+src/features/city/rendering/three/landscape.ts
+src/features/city/rendering/three/layout.ts
+src/features/city/rendering/three/modelKit.ts
+src/features/city/styles/city.css
+src/features/city/ui/SettlementView.tsx
