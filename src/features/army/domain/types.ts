@@ -19,4 +19,6 @@ export type Army = {
     /** Optional for compatibility with old saves and pre-coastal servers. */
     march_path?: [number, number][] | null;
     march_distance?: number | null;
+    /** New toroidal routes use shortest wrapped segments; old routes remain linear. */
+    march_map_version?: number | null;
 };

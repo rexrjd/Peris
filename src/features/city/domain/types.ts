@@ -16,6 +16,8 @@ export type Settlement = Resources & {
     capacity: number;
     food_capacity?: number;
     faction?: Faction;
+    /** Public, completed map silhouette; no private stocks or building lists. */
+    map_development?: 1 | 2 | 3 | 4 | 5;
 };
 export type Building = {
     id: number;

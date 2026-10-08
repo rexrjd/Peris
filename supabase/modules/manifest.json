@@ -3,6 +3,7 @@
   "city/city-slots.sql",
   "map/world-bounds.sql",
   "map/world-terrain.sql",
+  "map/territory.sql",
   "map/peris_army_position.sql",
   "magic/mage-tower.sql",
   "city/peris_settle.sql",

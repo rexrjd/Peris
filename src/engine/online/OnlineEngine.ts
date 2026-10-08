@@ -3,7 +3,7 @@ import { type GameEngine } from '../contracts';
 import { type Command } from '../../shared/model/commands';
 import { type World } from '../../shared/model/world';
 import { armyPosition } from '../../features/map/domain/movement';
-import { CELL_SIZE, WORLD_MAP_VERSION, WORLD_COLS, WORLD_ROWS, WORLD_MIN_X, WORLD_MIN_Y, WORLD_MAX_X, WORLD_MAX_Y } from '../../features/map/domain/dimensions';
+import { CELL_SIZE, WORLD_MAP_VERSION, WORLD_MAP_SEED, WORLD_COLS, WORLD_ROWS, WORLD_MIN_X, WORLD_MIN_Y, WORLD_MAX_X, WORLD_MAX_Y, wrapWorldPoint } from '../../features/map/domain/dimensions';
 import { findMarchPath } from '../../features/map/domain/pathfinding';
 import { isWalkable } from '../../features/map/domain/worldGrid';
 import { supabase } from '../../platform/backend/supabase';
@@ -12,16 +12,18 @@ type MapBounds = { minX: number; minY: number; maxX: number; maxY: number };
 type PublicMapSnapshot = {
     server_now: string;
     players: Pick<World['players'][number], 'id' | 'display_name'>[];
-    settlements: Pick<World['settlements'][number], 'id' | 'owner_id' | 'name' | 'x' | 'y' | 'faction'>[];
+    settlements: Pick<World['settlements'][number], 'id' | 'owner_id' | 'name' | 'x' | 'y' | 'faction' | 'map_development'>[];
     armies: World['armies'];
+    map_plots: NonNullable<World['map_plots']>;
     total_players: number;
     total_settlements: number;
     settlements_truncated: boolean;
     armies_truncated: boolean;
+    plots_truncated: boolean;
 };
 const PUBLIC_DATE = '1970-01-01T00:00:00.000Z';
-const WORLD_UPGRADE = 'Install supabase/UPGRADE_TO_V8.sql for the 200 × 200 world and land routing. Existing positions are preserved; an occupied position or saved route outside the new bounds requires manual migration before upgrading.';
-function currentMap(map: World['map']) { return map?.version === WORLD_MAP_VERSION && map.cols === WORLD_COLS && map.rows === WORLD_ROWS && map.cell_size === CELL_SIZE && map.seed === 98213; }
+const WORLD_UPGRADE = 'Install supabase/UPGRADE_TO_V9.sql for the seamless world and persistent external fields. Existing cities and faction systems are preserved. The migration checks occupied positions before changing terrain.';
+function currentMap(map: World['map']) { return map?.version === WORLD_MAP_VERSION && map.cols === WORLD_COLS && map.rows === WORLD_ROWS && map.cell_size === CELL_SIZE && map.seed === WORLD_MAP_SEED; }
 
 /** Private campaign state and bounded public map pages are kept separate. */
 export class OnlineEngine implements GameEngine {
@@ -62,7 +64,7 @@ export class OnlineEngine implements GameEngine {
         this.channel = supabase.channel(`peris-world-${playerId}`);
         const own = `owner_id=eq.${playerId}`;
         // No global subscription: a distant ruler's orders do not wake this client.
-        for (const table of ['settlements', 'armies', 'battle_formations', 'peris_orders', 'peris_reports']) this.watch(table, own);
+        for (const table of ['peris_map_plots', 'settlements', 'armies', 'battle_formations', 'peris_orders', 'peris_reports']) this.watch(table, own);
         this.watch('players', `id=eq.${playerId}`);
         if (town) this.watch('buildings', `settlement_id=eq.${town.id}`);
         for (const table of ['battles', 'peris_challenges']) {
@@ -96,11 +98,14 @@ export class OnlineEngine implements GameEngine {
     }
     private message(error: unknown) { return (error as { message?: string })?.message ?? 'Connection interrupted. Your realm is safe; reconnecting…'; }
     private clampBounds(bounds: MapBounds): MapBounds {
-        const clampX = (x: number) => Math.max(WORLD_MIN_X, Math.min(WORLD_MAX_X, x));
-        const clampY = (y: number) => Math.max(WORLD_MIN_Y, Math.min(WORLD_MAX_Y, y));
-        // The RPC accepts integers. Outward rounding also retains edge markers
-        // when the live camera's viewport falls between logical coordinates.
-        return { minX: Math.floor(clampX(Math.min(bounds.minX, bounds.maxX))), minY: Math.floor(clampY(Math.min(bounds.minY, bounds.maxY))), maxX: Math.ceil(clampX(Math.max(bounds.minX, bounds.maxX))), maxY: Math.ceil(clampY(Math.max(bounds.minY, bounds.maxY))) };
+        const axis = (low: number, high: number, min: number, max: number) => {
+            if (high - low >= max - min) return [min, max];
+            const center = (low + high) / 2, shift = wrapWorldPoint({ x: center, y: center }).x - center;
+            return [Math.floor(low + shift), Math.ceil(high + shift)];
+        };
+        const [minX, maxX] = axis(Math.min(bounds.minX, bounds.maxX), Math.max(bounds.minX, bounds.maxX), WORLD_MIN_X, WORLD_MAX_X);
+        const [minY, maxY] = axis(Math.min(bounds.minY, bounds.maxY), Math.max(bounds.minY, bounds.maxY), WORLD_MIN_Y, WORLD_MAX_Y);
+        return { minX, minY, maxX, maxY };
     }
     setMapViewport = (bounds: MapBounds) => {
         if (!this.alive || !Object.values(bounds).every(Number.isFinite)) return;
@@ -126,7 +131,8 @@ export class OnlineEngine implements GameEngine {
             this.snapshot = {
                 ...this.core,
                 players: merge(players, this.core.players), settlements: merge(settlements, this.core.settlements), armies: merge(armies, this.core.armies),
-                map: { ...this.core.map!, total_players: publicMap.total_players, total_settlements: publicMap.total_settlements, settlements_truncated: publicMap.settlements_truncated, armies_truncated: publicMap.armies_truncated },
+                map_plots: [...new Map([...(publicMap.map_plots ?? []), ...(this.core.map_plots ?? [])].map(plot => [`${plot.col},${plot.row}`, plot])).values()],
+                map: { ...this.core.map!, total_players: publicMap.total_players, total_settlements: publicMap.total_settlements, settlements_truncated: publicMap.settlements_truncated, armies_truncated: publicMap.armies_truncated, plots_truncated: publicMap.plots_truncated },
             };
         }
         this.listeners.forEach(fn => fn());
@@ -204,7 +210,7 @@ export class OnlineEngine implements GameEngine {
         if (cmd.type === 'move') {
             prepared = { type: 'move', x: cmd.x, y: cmd.y };
             if (this.core.map ? !currentMap(this.core.map) : cmd.x < 45 || cmd.x > 1155 || cmd.y < 55 || cmd.y > 715) throw new Error(WORLD_UPGRADE);
-            const target = { x: Math.max(WORLD_MIN_X + CELL_SIZE / 2, Math.min(WORLD_MAX_X - CELL_SIZE / 2, Math.round(cmd.x))), y: Math.max(WORLD_MIN_Y + CELL_SIZE / 2, Math.min(WORLD_MAX_Y - CELL_SIZE / 2, Math.round(cmd.y))) };
+            const target = wrapWorldPoint({ x: Math.round(cmd.x), y: Math.round(cmd.y) });
             if (!isWalkable(Math.floor(target.x / CELL_SIZE), Math.floor(target.y / CELL_SIZE))) throw new Error('Land armies cannot march across the sea.');
             if (currentMap(this.core.map)) {
                 const army = this.core.armies.find(a => a.owner_id === this.playerId);
@@ -215,6 +221,7 @@ export class OnlineEngine implements GameEngine {
                 prepared = { ...cmd, ...target, route: route.path };
             }
         }
+        if ((cmd.type === 'claimField' || cmd.type === 'buildField') && !currentMap(this.core.map)) throw new Error(WORLD_UPGRADE);
         const { fn, args } = rpcCommand(prepared), { error } = await this.rpc(fn, args);
         if (error) throw new Error(error.message);
         await this.refresh();

@@ -6,8 +6,8 @@ import { validateSave } from '../src/platform/storage/saves';
 import { type LocalCommandContext } from '../src/shared/model/commands';
 import { findMarchPath } from '../src/features/map/domain/pathfinding';
 import { armyPosition, armyRouteRemaining, completeTravel } from '../src/features/map/domain/movement';
-import { WORLD_REGIONS, worldRegionAt, isWalkable, getCell, cellCenter } from '../src/features/map/domain/worldGrid';
-import { WORLD_COLS, WORLD_ROWS, MIN_X, MAX_X, MIN_Y, MAX_Y } from '../src/features/map/domain/dimensions';
+import { WORLD_REGIONS, worldRegionAt, isWalkable, isVersion3Walkable, getVersion3Cell, getCell, cellCenter } from '../src/features/map/domain/worldGrid';
+import { WORLD_COLS, WORLD_ROWS, MIN_X, MAX_X, MIN_Y, MAX_Y, WORLD_W, wrappedWorldDelta, wrappedCellDistance } from '../src/features/map/domain/dimensions';
 
 function fixture(now = '2030-01-01T00:00:00.000Z') {
     const world = createSolo('Navigator');
@@ -15,14 +15,18 @@ function fixture(now = '2030-01-01T00:00:00.000Z') {
     return { world, context, army: world.armies[0] };
 }
 
-test('strategic marching accepts distant mainland fields and rejects clamped sea destinations without mutation', () => {
+test('strategic marching accepts equivalent wrapped destinations and rejects actual sea without mutation', () => {
     const { context, army } = fixture();
     const prior = JSON.stringify(army);
-    assert.throws(() => marchArmy(context, { type: 'move', x: -100_000, y: 100_000 }), /sea/);
-    assert.throws(() => marchArmy(context, { type: 'move', x: 100_000, y: -100_000 }), /sea/);
+    let sea: { x: number; y: number } | undefined;
+    for (let row = -100; row < 100 && !sea; row++) for (let col = -100; col < 100; col++) if (!isWalkable(col, row)) { sea = cellCenter(col,row); break; }
+    assert.ok(sea);
+    assert.throws(() => marchArmy(context, { type: 'move', ...sea }), /sea/);
+    assert.throws(() => marchArmy(context, { type: 'move', x: sea.x + WORLD_W, y: sea.y - WORLD_W }), /sea/);
     assert.equal(JSON.stringify(army), prior);
-    marchArmy(context, { type: 'move', x: -6000, y: -5000 });
-    assert.equal(army.target_x, -6000); assert.equal(army.target_y, -5000);
+    const destination = cellCenter(-46,-39);
+    marchArmy(context, { type: 'move', x: destination.x + WORLD_W, y: destination.y - WORLD_W });
+    assert.equal(army.target_x, destination.x); assert.equal(army.target_y, destination.y);
     assert.ok(army.march_path && army.march_path.length > 2);
     assert.equal(Date.parse(army.arrival_at) - Date.parse(context.now), Math.floor(Math.max(2, army.march_distance! / 22) * 1000));
     assert.throws(() => marchArmy(context, { type: 'move', x: NaN, y: 0 }), /destination/);
@@ -73,21 +77,26 @@ test('v6 save coordinates retain legacy half-open bounds and still reject nonfin
     }
 });
 
-test('coastline passability matches terrain, map edges are sea, and region labels belong to their named regions', () => {
+test('current terrain is canonical at edges while old sea borders and named regions remain available for saves', () => {
     assert.deepEqual([WORLD_COLS, WORLD_ROWS, MIN_X, MAX_X, MIN_Y, MAX_Y], [200, 200, -12800, 12800, -12800, 12800]);
     for (let row = -100; row < 100; row++) for (let col = -100; col < 100; col++) {
         assert.equal(isWalkable(col, row), getCell(col, row).terrain !== 'water');
-        if (col === -100 || col === 99 || row === -100 || row === 99) assert.equal(isWalkable(col, row), false);
+        assert.deepEqual(getCell(col + 200,row - 200),getCell(col,row));
+        assert.equal(worldRegionAt(col,row).id,getCell(col,row).region);
+        assert.equal(isVersion3Walkable(col,row),getVersion3Cell(col,row).terrain !== 'water');
+        if (col === -100 || col === 99 || row === -100 || row === 99) assert.equal(isVersion3Walkable(col, row), false);
     }
     for (const region of WORLD_REGIONS) {
         const col = Math.floor(region.label.x / 128), row = Math.floor(region.label.y / 128);
-        assert.equal(worldRegionAt(col, row).id, region.id, `${region.name} lettering belongs to its region`);
+        assert.equal(getVersion3Cell(col, row).region, region.id, `${region.name} remains part of the old geography`);
     }
 });
 
-test('continental route goes around the southern gulf and every step respects land and diagonal corners', () => {
-    const from = cellCenter(-5, 60), to = cellCenter(35, 60), route = findMarchPath(from, to)!;
-    assert.ok(route); assert.ok(route.distance > Math.hypot(to.x - from.x, to.y - from.y));
+test('current routes respect land and diagonal corners while the old southern gulf stays unchanged', () => {
+    assert.ok(isVersion3Walkable(-5,60) && isVersion3Walkable(35,60));
+    assert.equal(isVersion3Walkable(15,70),false);
+    const from = cellCenter(1,2), to = cellCenter(-46,-39), route = findMarchPath(from, to)!;
+    assert.ok(route);
     assert.deepEqual(route.path[0], [from.x, from.y]); assert.deepEqual(route.path.at(-1), [to.x, to.y]);
     assert.ok(route.path.length <= 2000);
     let total = 0;
@@ -96,24 +105,28 @@ test('continental route goes around the southern gulf and every step respects la
         assert.ok(isWalkable(col, row));
         if (!i) return;
         const prior = route.path[i - 1], pc = Math.floor(prior[0] / 128), pr = Math.floor(prior[1] / 128);
-        assert.ok(Math.abs(pc - col) <= 1 && Math.abs(pr - row) <= 1);
+        assert.ok(wrappedCellDistance({col:pc,row:pr},{col,row}) <= 1);
         if (pc !== col && pr !== row) { assert.ok(isWalkable(pc, row)); assert.ok(isWalkable(col, pr)); }
-        total += Math.hypot(point[0] - prior[0], point[1] - prior[1]);
+        total += Math.hypot(wrappedWorldDelta(prior[0],point[0]),wrappedWorldDelta(prior[1],point[1]));
     });
     assert.equal(route.distance, total);
     assert.deepEqual(findMarchPath(from, to), route, 'Identical route requests are deterministic');
 });
 
-test('islands are disconnected from mainland and failed commands preserve existing marching intent', () => {
-    const { army, context } = fixture(); army.raid_target_id = 5;
-    const prior = JSON.stringify(army);
-    for (const [col, row] of [[-30, 87], [35, 82], [75, 40]]) {
-        const target = cellCenter(col, row); assert.ok(isWalkable(col, row));
-        assert.equal(findMarchPath({ x: army.start_x, y: army.start_y }, target), null);
-        assert.throws(() => marchArmy(context, { type: 'move', ...target }), /connected land route/);
-        assert.equal(JSON.stringify(army), prior);
+test('historical islands retain their separate bounded land components for old save validation', () => {
+    const reachable = new Set<string>(['1,2']), queue = [{col:1,row:2}];
+    for(let head=0;head<queue.length;head++) {
+        const {col,row}=queue[head];
+        for(const [x,y] of [[col-1,row],[col+1,row],[col,row-1],[col,row+1]]) {
+            const key=`${x},${y}`;
+            if(!reachable.has(key)&&isVersion3Walkable(x,y)){reachable.add(key);queue.push({col:x,row:y});}
+        }
     }
-    assert.ok(findMarchPath(cellCenter(35, 82), cellCenter(36, 84)), 'An army already on an island can move within it');
+    for (const [col, row] of [[-30, 87], [35, 82], [75, 40]]) {
+        assert.ok(isVersion3Walkable(col,row));
+        assert.equal(reachable.has(`${col},${row}`),false);
+    }
+    assert.ok(isVersion3Walkable(36,84), 'The historical island retains its neighboring land');
 });
 
 test('coastal diagonal corners cannot be crossed through an intervening sea field', () => {

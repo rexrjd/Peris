@@ -1,4 +1,4 @@
-import { CELL_SIZE, WORLD_COLS, WORLD_ROWS, MIN_X, MIN_Y, MAX_X, MAX_Y } from './dimensions';
+import { CELL_SIZE, WORLD_COLS, WORLD_ROWS, wrapWorldCell, wrapWorldPoint, wrappedWorldDelta, wrappedCellDistance } from './dimensions';
 import { isWalkable } from './worldGrid';
 
 export type MarchPoint = [number, number];
@@ -9,11 +9,11 @@ let components: Int32Array | undefined;
 const heapNodes = new Int32Array(COUNT), heapCosts = new Float64Array(COUNT), heapPositions = new Int32Array(COUNT);
 const score = new Float64Array(COUNT), parent = new Int32Array(COUNT), seen = new Uint32Array(COUNT), closed = new Uint32Array(COUNT);
 let generation = 0, heapSize = 0;
-function index(col: number, row: number) { return (row + WORLD_ROWS / 2) * WORLD_COLS + col + WORLD_COLS / 2; }
+function index(col: number, row: number) { const cell = wrapWorldCell(col, row); return (cell.row + WORLD_ROWS / 2) * WORLD_COLS + cell.col + WORLD_COLS / 2; }
 function colOf(id: number) { return id % WORLD_COLS - WORLD_COLS / 2; }
 function rowOf(id: number) { return Math.floor(id / WORLD_COLS) - WORLD_ROWS / 2; }
 function center(id: number): MarchPoint { return [(colOf(id) + .5) * CELL_SIZE, (rowOf(id) + .5) * CELL_SIZE]; }
-function distance(a: MarchPoint, b: MarchPoint) { return Math.hypot(b[0] - a[0], b[1] - a[1]); }
+function distance(a: MarchPoint, b: MarchPoint) { return Math.hypot(wrappedWorldDelta(a[0], b[0]), wrappedWorldDelta(a[1], b[1])); }
 
 /** A single compact passability/component cache avoids searching disconnected islands. */
 function ensureMap() {
@@ -26,8 +26,8 @@ function ensureMap() {
         if (!walkability[start] || components[start]) continue;
         let head = 0, tail = 1; heapNodes[0] = start; components[start] = ++component;
         while (head < tail) {
-            const id = heapNodes[head++], col = id % WORLD_COLS, row = Math.floor(id / WORLD_COLS);
-            for (const next of [col > 0 ? id - 1 : -1, col < WORLD_COLS - 1 ? id + 1 : -1, row > 0 ? id - WORLD_COLS : -1, row < WORLD_ROWS - 1 ? id + WORLD_COLS : -1]) {
+            const id = heapNodes[head++], col = colOf(id), row = rowOf(id);
+            for (const next of [index(col - 1,row),index(col + 1,row),index(col,row - 1),index(col,row + 1)]) {
                 if (next < 0 || !walkability[next] || components[next]) continue;
                 components[next] = component; heapNodes[tail++] = next;
             }
@@ -60,7 +60,7 @@ function pop() {
     return id;
 }
 function pointId(point: { x: number; y: number }) {
-    if (!Number.isFinite(point.x) || !Number.isFinite(point.y) || point.x < MIN_X || point.x >= MAX_X || point.y < MIN_Y || point.y >= MAX_Y) return -1;
+    if (!Number.isFinite(point.x) || !Number.isFinite(point.y)) return -1;
     return index(Math.floor(point.x / CELL_SIZE), Math.floor(point.y / CELL_SIZE));
 }
 
@@ -70,9 +70,10 @@ export function findMarchPath(from: { x: number; y: number }, to: { x: number; y
     if (start < 0 || end < 0) return null;
     ensureMap();
     if (!walkability![start] || !walkability![end] || components![start] !== components![end]) return null;
+    from = wrapWorldPoint(from); to = wrapWorldPoint(to);
     const first: MarchPoint = [from.x, from.y], last: MarchPoint = [to.x, to.y];
     const sx = colOf(start), sy = rowOf(start), ex = colOf(end), ey = rowOf(end);
-    if (Math.abs(sx - ex) <= 1 && Math.abs(sy - ey) <= 1 && (sx === ex || sy === ey || walkability![index(sx, ey)] && walkability![index(ex, sy)])) return { path: [first, last], distance: distance(first, last) };
+    if (wrappedCellDistance({col:sx,row:sy},{col:ex,row:ey}) <= 1 && (sx === ex || sy === ey || walkability![index(sx, ey)] && walkability![index(ex, sy)])) return { path: [first, last], distance: distance(first, last) };
     generation = (generation + 1) >>> 0;
     if (!generation) { seen.fill(0); closed.fill(0); generation = 1; }
     heapSize = 0; seen[start] = generation; parent[start] = -1; score[start] = 0;
@@ -90,16 +91,16 @@ export function findMarchPath(from: { x: number; y: number }, to: { x: number; y
         const x = colOf(current), y = rowOf(current);
         const currentX = current === start ? first[0] : (x + .5) * CELL_SIZE, currentY = current === start ? first[1] : (y + .5) * CELL_SIZE;
         for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
-            if (!dx && !dy || x + dx < -WORLD_COLS / 2 || x + dx >= WORLD_COLS / 2 || y + dy < -WORLD_ROWS / 2 || y + dy >= WORLD_ROWS / 2) continue;
+            if (!dx && !dy) continue;
             const next = index(x + dx, y + dy);
             if (!walkability![next] || closed[next] === generation) continue;
             if (dx && dy && (!walkability![index(x + dx, y)] || !walkability![index(x, y + dy)])) continue;
-            const nextX = next === end ? last[0] : (x + dx + .5) * CELL_SIZE, nextY = next === end ? last[1] : (y + dy + .5) * CELL_SIZE;
-            const tentative = score[current] + Math.hypot(nextX - currentX, nextY - currentY);
+            const nextX = next === end ? last[0] : (colOf(next) + .5) * CELL_SIZE, nextY = next === end ? last[1] : (rowOf(next) + .5) * CELL_SIZE;
+            const tentative = score[current] + distance([currentX,currentY],[nextX,nextY]);
             const fresh = seen[next] !== generation;
             if (!fresh && tentative >= score[next]) continue;
             parent[next] = current; score[next] = tentative;
-            const estimate = tentative + Math.hypot(last[0] - nextX, last[1] - nextY);
+            const estimate = tentative + distance([nextX,nextY],last);
             if (fresh) { seen[next] = generation; insert(next, estimate); }
             else { const position = heapPositions[next]; heapCosts[position] = estimate; promote(position); }
         }

@@ -1,4 +1,6 @@
-import { CELL_SIZE, WORLD_COLS, WORLD_ROWS } from './dimensions';
+import { CELL_SIZE, WORLD_COLS, WORLD_ROWS, WORLD_MAP_SEED, wrapWorldCell, wrapWorldCoordinate } from './dimensions';
+import { getPreviewCell, getPreviewHydrology, previewHeight } from '../preview/world';
+import { wrapPreviewCoordinate } from '../preview/topology';
 
 export type FieldTerrain = 'grassland' | 'forest' | 'mountain' | 'farmland' | 'desert' | 'snow' | 'marsh' | 'river' | 'water' | 'coast' | 'darkland';
 export interface WorldCell { col: number; row: number; terrain: FieldTerrain; region: string; name: string; resource: string; variant: number }
@@ -70,7 +72,7 @@ function landAt(col: number, row: number): boolean {
     return landMask[index] === 2;
 }
 /** Shallow river fields are fords; only the open sea blocks land movement. */
-export function isWalkable(col: number, row: number): boolean { return Number.isFinite(col) && Number.isFinite(row) && landAt(Math.floor(col), Math.floor(row)); }
+export function isVersion3Walkable(col: number, row: number): boolean { return Number.isFinite(col) && Number.isFinite(row) && landAt(Math.floor(col), Math.floor(row)); }
 /** Preserve v6 saved routes against their original 400-field coastline. */
 export function isLegacyWalkable(col: number, row: number): boolean {
     return Number.isFinite(col) && Number.isFinite(row) && col >= -200 && col < 200 && row >= -200 && row < 200 && generateLand(Math.floor(col), Math.floor(row), 1);
@@ -106,18 +108,15 @@ const STARTING_FIELDS: Record<string, { terrain: FieldTerrain; region: string }>
     '4,2': { terrain: 'mountain', region: 'crown' },
 };
 export function terrainName(terrain: FieldTerrain): string { return TERRAIN_NAMES[terrain]; }
-export function cellCenter(col: number, row: number): { x: number; y: number } {
-    return { x: (cellNumber(col, WORLD_COLS) + .5) * CELL_SIZE, y: (cellNumber(row, WORLD_ROWS) + .5) * CELL_SIZE };
-}
-export function worldRegionAt(col: number, row: number): WorldRegion {
+function version3WorldRegionAt(col: number, row: number): WorldRegion {
     const x = cellNumber(col, WORLD_COLS), y = cellNumber(row, WORLD_ROWS);
     const override = STARTING_FIELDS[`${x},${y}`];
     return REGIONS_BY_ID[override?.region ?? (x >= 0 && x <= 9 && y >= 0 && y <= 6 ? 'westfold' : regionId(x, y))];
 }
 /** Open water is impassable. The central province and shallow fords remain land routes. */
-export function getCell(col: number, row: number): WorldCell {
+export function getVersion3Cell(col: number, row: number): WorldCell {
     col = cellNumber(col, WORLD_COLS); row = cellNumber(row, WORLD_ROWS);
-    const override = STARTING_FIELDS[`${col},${row}`], region = worldRegionAt(col, row);
+    const override = STARTING_FIELDS[`${col},${row}`], region = version3WorldRegionAt(col, row);
     const geoCol = col * 400 / WORLD_COLS, geoRow = row * 400 / WORLD_ROWS;
     const moisture = noise(geoCol, geoRow, 17, 13), elevation = noise(geoCol, geoRow, 23, 29), patch = noise(geoCol, geoRow, 7, 71);
     let terrain: FieldTerrain = 'grassland';
@@ -147,4 +146,64 @@ export function getCell(col: number, row: number): WorldCell {
     const variant = Math.floor(hash(col, row, 17) * 12), resource = RESOURCES[terrain][variant % RESOURCES[terrain].length];
     return { col, row, terrain, region: region.id, name: `${region.name} ${TERRAIN_NAMES[terrain].toLowerCase()}`, resource, variant };
 }
-export function cellAt(x: number, y: number): WorldCell { return getCell(Math.floor(x / CELL_SIZE), Math.floor(y / CELL_SIZE)); }
+
+const canonicalIndex = (col: number, row: number) => (row + 100) * WORLD_COLS + col + 100;
+const historicFields = new Uint8Array(WORLD_COLS * WORLD_ROWS);
+const historicStarts: { col: number; row: number }[] = [];
+const historicStartKeys = new Set<string>();
+function protectHistoricStart(col: number, row: number) {
+    const center = wrapWorldCell(col, row), key = `${center.col},${center.row}`;
+    if (!historicStartKeys.has(key)) { historicStartKeys.add(key); historicStarts.push(center); }
+    for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+        const cell = wrapWorldCell(center.col + dx, center.row + dy);
+        historicFields[canonicalIndex(cell.col, cell.row)] = 1;
+    }
+}
+// These are the old installation's actual spawn positions, plus its deterministic
+// v3 land-filtered 4-field grid. No current player's private state enters geography.
+for (const [x, y] of [[150,285],[1050,280],[210,665],[1000,660],[350,205],[855,205],[390,670],[815,655],[125,420],[1080,405],[455,305],[750,305]]) protectHistoricStart(Math.floor(x / CELL_SIZE), Math.floor(y / CELL_SIZE));
+for (let row = -98; row <= 98; row += 4) for (let col = -98; col <= 98; col += 4) if (isVersion3Walkable(col, row)) protectHistoricStart(col, row);
+for (const key of Object.keys(STARTING_FIELDS)) { const [col, row] = key.split(',').map(Number); protectHistoricStart(col, row); }
+export const HISTORIC_MAP_STARTS: readonly Readonly<{ col: number; row: number }>[] = Object.freeze(historicStarts.map(start => Object.freeze(start)));
+export function isHistoricStartingField(col: number, row: number): boolean {
+    if (!Number.isInteger(col) || !Number.isInteger(row)) return false;
+    const cell = wrapWorldCell(col, row); return !!historicFields[canonicalIndex(cell.col, cell.row)];
+}
+
+/** The live renderer and authoritative fields share this periodic height source.
+ * Historic starting rings are smoothly raised rather than moving any old town.
+ */
+export function worldHeight(x: number, z: number): number {
+    x = wrapPreviewCoordinate(x); z = wrapPreviewCoordinate(z);
+    const native = previewHeight(x, z, WORLD_MAP_SEED);
+    if (native >= .24) return native;
+    let clearing = 0;
+    const col = Math.floor(x), row = Math.floor(z);
+    for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+        if (!isHistoricStartingField(col + dx, row + dy)) continue;
+        const distanceX = Math.max(0, Math.abs(x - (col + dx + .5)) - .5), distanceZ = Math.max(0, Math.abs(z - (row + dy + .5)) - .5);
+        const distance = Math.hypot(distanceX, distanceZ), t = Math.min(1, distance / .9);
+        clearing = Math.max(clearing, 1 - t * t * (3 - 2 * t));
+    }
+    return Math.max(native, -.14 + .38 * clearing);
+}
+export function getWorldHydrology() { return getPreviewHydrology(WORLD_MAP_SEED); }
+
+const liveCells = new Map<number, WorldCell>();
+const terrainRegions: Record<FieldTerrain, string> = { grassland:'westfold',forest:'oakwood',mountain:'crownspine',farmland:'westfold',desert:'desert',snow:'snow',marsh:'marsh',river:'river',water:'sea',coast:'coast',darkland:'darkland' };
+/** v4 fields are canonical aliases of one persistent periodic realm. */
+export function getCell(col: number, row: number): WorldCell {
+    const canonical = wrapWorldCell(col, row); col = canonical.col; row = canonical.row;
+    const index = canonicalIndex(col, row), known = liveCells.get(index); if (known) return known;
+    const source = getPreviewCell(col, row, WORLD_MAP_SEED), override = STARTING_FIELDS[`${col},${row}`];
+    let terrain: FieldTerrain = source.terrain === 'ruins' ? 'darkland' : source.terrain;
+    if (terrain === 'water' && worldHeight(col + .5, row + .5) >= -.04) terrain = 'grassland';
+    if (override) terrain = override.terrain;
+    const region = REGIONS_BY_ID[override?.region ?? terrainRegions[terrain]], variant = Math.floor(hash(col, row, 17) * 12);
+    const cell = { col, row, terrain, region: region.id, name: `${region.name} ${TERRAIN_NAMES[terrain].toLowerCase()}`, resource: RESOURCES[terrain][variant % RESOURCES[terrain].length], variant };
+    liveCells.set(index, cell); return cell;
+}
+export function isWalkable(col: number, row: number): boolean { return Number.isFinite(col) && Number.isFinite(row) && getCell(Math.floor(col), Math.floor(row)).terrain !== 'water'; }
+export function cellCenter(col: number, row: number): { x: number; y: number } { const cell = wrapWorldCell(col, row); return { x:(cell.col + .5) * CELL_SIZE,y:(cell.row + .5) * CELL_SIZE }; }
+export function cellAt(x: number, y: number): WorldCell { return getCell(Math.floor(wrapWorldCoordinate(x) / CELL_SIZE), Math.floor(wrapWorldCoordinate(y) / CELL_SIZE)); }
+export function worldRegionAt(col: number, row: number): WorldRegion { return REGIONS_BY_ID[getCell(col, row).region]; }
