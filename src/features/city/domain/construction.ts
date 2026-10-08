@@ -4,11 +4,27 @@ import type { Player } from '../../campaign/domain/types';
 import { type BuildingType } from './types';
 import { multiply } from '../../../shared/model/resources';
 import { BUILDINGS } from './buildings';
-export function buildingCost(type: BuildingType, level: number) { return multiply(BUILDINGS[type].cost, 1.55 ** (level - 1)); }
-export function upgradeSeconds(level: number) { return 15 + level * 10; }
+import { refreshCityEconomy, slotMaxLevel } from './slots';
+
+export const MAX_BUILDING_LEVEL = 5;
+
+export function buildingCost(type: BuildingType, level: number) {
+    return multiply(BUILDINGS[type].cost, 1.55 ** Math.max(0, level));
+}
+
+export function upgradeSeconds(level: number) {
+    return 15 + Math.max(0, level) * 10;
+}
+
 export function completeUpgrade(w: World, s: Settlement, p: Player, o: Order) {
+    if (o.item.startsWith('slot:')) {
+        const index=Number(o.item.split(':')[1]);
+        const slot=w.city_slots?.find(slot=>slot.settlement_id===s.id && slot.slot_index===index);
+        if (!slot) throw new Error('Queued building plot is missing.');
+        slot.level=Math.min(slotMaxLevel(slot.building_type),slot.level+1);p.upgrades++;refreshCityEconomy(w,s.id);return;
+    }
     const building = w.buildings.find(b => b.settlement_id === s.id && b.building_type === o.item)!;
-    building.level++;
+    building.level = Math.min(MAX_BUILDING_LEVEL, building.level + 1);
     building.updated_at = o.finish_at;
     p.upgrades++;
     const l = building.level;
@@ -22,4 +38,5 @@ export function completeUpgrade(w: World, s: Settlement, p: Player, o: Order) {
         s.gold_rate = 3 + l * 3;
     if (o.item === 'storehouse')
         s.capacity = 5000 + l * 2500;
+    if (w.city_slots) refreshCityEconomy(w,s.id);
 }

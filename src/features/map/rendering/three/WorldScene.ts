@@ -1,3 +1,5 @@
+import {factionOf,type Faction} from '../../../factions/domain/factions';
+import {createFactionSettlement} from './factionSettlement';
 import * as THREE from 'three';
 import { type RenderState, type RenderActions } from '../../../../shared/rendering/contracts';
 import { type MapSelection } from '../../domain/types';
@@ -14,7 +16,7 @@ import { createLandscape, sampleHeight } from './landscape';
 import { createArmyModel, createSettlementModel } from './models';
 
 type EntityKind = 'army' | 'settlement' | 'camp';
-type Entity = { kind: EntityKind; id: number; x: number; y: number; title: string; mine: boolean; model: THREE.Group; detail: boolean };
+type Entity = { kind: EntityKind; id: number; x: number; y: number; title: string; mine: boolean; model: THREE.Group; detail: boolean; faction?:Faction };
 type Label = { key: string; text: string; x: number; y: number; selection?: MapSelection };
 /** Strategic WebGL scene: presentation and commands only; no simulation mutations. */
 export class WorldScene {
@@ -73,8 +75,8 @@ export class WorldScene {
     private syncEntities() {
         const s = this.state(), now = this.now(), active = new Set<string>();
         this.hittable.clear();
-        const records: { kind: EntityKind; id: number; x: number; y: number; title: string; mine: boolean }[] = [
-            ...s.world.settlements.map(t => ({ kind: 'settlement' as const, id: t.id, x: t.x, y: t.y, title: t.name, mine: t.owner_id === s.playerId })),
+        const records: { kind: EntityKind; id: number; x: number; y: number; title: string; mine: boolean;faction?:Faction }[] = [
+            ...s.world.settlements.map(t => ({ kind: 'settlement' as const, id: t.id, x: t.x, y: t.y, title: t.name, mine: t.owner_id === s.playerId,faction:factionOf(t.faction) })),
             ...s.world.camps.map(t => ({ kind: 'camp' as const, id: t.id, x: t.x, y: t.y, title: siteFor(t.id).title, mine: false })),
             ...s.world.armies.map(t => ({ kind: 'army' as const, id: t.id, ...armyPosition(t, now), title: t.name, mine: t.owner_id === s.playerId })),
         ];
@@ -93,13 +95,14 @@ export class WorldScene {
                 const model = new THREE.Group();
                 e = { ...record, model, detail: false }; this.entities.set(key, e); this.scene.add(model);
             }
+            if(e.faction!==record.faction){this.disposeGroup(e.model);e.detail=false;}
             Object.assign(e, record);
             const x = e.x / CELL_SIZE, z = e.y / CELL_SIZE, height = sampleHeight(x, z);
             const p = this.view.project(e.x, e.y);
             const detailed = this.view.span < 36 && p.visible && (e.mine || detailCount++ < 48);
             if (detailed && !e.detail) {
                 const kind = e.kind === 'settlement' ? 'village' : e.id === 6 ? 'ruins' : e.id === 2 ? 'sanctuary' : e.id === 5 ? 'volcano' : e.id === 3 ? 'crossing' : e.id === 4 ? 'keep' : 'village';
-                e.model.add(e.kind === 'army' ? createArmyModel(e.mine ? 0x345e48 : 0x749cb1) : createSettlementModel(kind)); e.detail = true;
+                e.model.add(e.kind === 'army' ? createArmyModel(e.mine ? 0x345e48 : 0x749cb1) : e.kind==='settlement'?createFactionSettlement(factionOf(e.faction)):createSettlementModel(kind)); e.detail = true;
             }
             e.model.position.set(x, height, z); e.model.visible = detailed;
             if (detailed) this.hittable.add(key);

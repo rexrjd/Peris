@@ -1,8 +1,10 @@
 [
   "schema/base.sql",
+  "city/city-slots.sql",
   "map/world-bounds.sql",
   "map/world-terrain.sql",
   "map/peris_army_position.sql",
+  "magic/mage-tower.sql",
   "city/peris_settle.sql",
   "battle/peris_add_formations.sql",
   "campaign/peris_start_raid.sql",
@@ -24,6 +26,7 @@
   "campaign/peris_claim.sql",
   "city/peris_rename.sql",
   "accounts/create_player.sql",
+  "factions/city-factions.sql",
   "snapshot/peris_snapshot.sql",
   "snapshot/peris_map_snapshot.sql",
   "security/permissions.sql"

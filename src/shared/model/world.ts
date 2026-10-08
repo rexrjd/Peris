@@ -1,8 +1,10 @@
 import { type CampProgress, type Challenge, type Player, type QuestClaim, type Report } from '../../features/campaign/domain/types';
 import { type Building, type Settlement } from '../../features/city/domain/types';
+import type { CitySlot } from '../../features/city/domain/slots';
 import { type Army } from '../../features/army/domain/types';
 import { type Camp } from '../../features/map/domain/types';
 import { type Battle, type Formation } from '../../features/battle/domain/types';
+import type { SpellResearch } from '../../features/magic/domain/spells';
 export type Order = {
     id: number;
     owner_id: string;
@@ -13,11 +15,14 @@ export type Order = {
     finish_at: string;
 };
 export type World = {
+    debug_enabled?: boolean;
     version: number;
     server_now: string;
     players: Player[];
     settlements: Settlement[];
     buildings: Building[];
+    city_slots?: CitySlot[];
+    spell_research?: SpellResearch[];
     armies: Army[];
     camps: Camp[];
     orders: Order[];

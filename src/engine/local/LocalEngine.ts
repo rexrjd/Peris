@@ -1,3 +1,4 @@
+import {changeFaction,debugCity} from '../../features/factions/domain/debug';
 import { type GameEngine } from '../contracts';
 import { type Command, type LocalCommandContext } from '../../shared/model/commands';
 import { type World } from '../../shared/model/world';
@@ -14,6 +15,9 @@ import { marchArmy } from '../../features/map/domain/commands';
 import { commandBattle } from '../../features/battle/domain/commands';
 import { claimObjective } from '../../features/campaign/domain/commands';
 import { renameCity } from '../../features/city/domain/rename';
+import { queueSlot } from '../../features/city/domain/slotCommands';
+import { citySlots, refreshCityEconomy } from '../../features/city/domain/slots';
+import {researchSpell,castSpell} from '../../features/magic/domain/commands';
 export class LocalEngine implements GameEngine {
     readonly playerId = 'solo-ruler';
     readonly mode: 'solo' | 'practice';
@@ -31,6 +35,13 @@ export class LocalEngine implements GameEngine {
     saveError = false;
     constructor(world: World, persistent = true) {
         this.snapshot = world;
+        world.city_slots ??= citySlots(world,world.settlements[0].id);
+        for (const order of world.orders) if (order.kind==='upgrade' && ['barracks','stables','storehouse'].includes(order.item)) {
+            const type=order.item==='storehouse'?'warehouse':order.item;
+            const slot=world.city_slots.find(s=>s.building_type===type);
+            if (slot) order.item=`slot:${slot.slot_index}:${type}`;
+        }
+        refreshCityEconomy(world,world.settlements[0].id);
         this.mode = persistent ? 'solo' : 'practice';
         this.persistent = persistent;
         this.nextId = Math.max(100, Date.now() % 100000000);
@@ -94,10 +105,16 @@ export class LocalEngine implements GameEngine {
     command = async (cmd: Command) => {
         settleLocal(this.snapshot, this.playerId);
         const active = this.active();
-        if (['upgrade', 'recruit', 'move', 'raid'].includes(cmd.type) && active)
+        if (['researchSpell', 'upgrade', 'buildSlot', 'upgradeSlot', 'recruit', 'move', 'raid'].includes(cmd.type) && active)
             throw new Error('Finish the current battle first.');
         const context: LocalCommandContext = { world: this.snapshot, playerId: this.playerId, nextId: () => ++this.nextId, active, now: new Date().toISOString(), paused: value => { this.paused = value; }, finalize: id => this.finalize(id) };
         switch (cmd.type) {
+            case 'setFaction':changeFaction(context,cmd);break;
+            case 'debugCity':debugCity(context,cmd);break;
+            case 'researchSpell':researchSpell(context,cmd);break;
+            case 'castSpell':castSpell(context,cmd);break;
+            case 'buildSlot':
+            case 'upgradeSlot': queueSlot(context,cmd); break;
             case 'upgrade':
                 upgradeBuilding(context, cmd);
                 break;

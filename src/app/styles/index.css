@@ -1,3 +1,4 @@
+@import '../../features/factions/styles/factions.css';
 @import '../../shared/styles/base.css';
 @import '../../features/menu/styles/base.css';
 @import './shell-base.css';
@@ -22,3 +23,5 @@
 @import '../../features/battle/styles/battle.css';
 @import './responsive.css';
 @import '../../features/battle/styles/commands.css';
+
+@import '../../features/magic/styles/magic.css';

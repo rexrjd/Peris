@@ -1,0 +1,23 @@
+import {PGlite} from '@electric-sql/pglite';import {readFile} from 'node:fs/promises';import assert from 'node:assert/strict';
+const db=new PGlite(),u='11111111-1111-4111-8111-111111111111',v='22222222-2222-4222-8222-222222222222';
+const login=async(id=u)=>db.exec(`reset role;set role authenticated;select set_config('request.jwt.claim.sub','${id}',false);`);
+const rpc=async(name,args=[])=>db.query(`select public.${name}(${args.map((_,i)=>'$'+(i+1)).join(',')}) as result`,args);
+const snap=async()=> (await rpc('peris_snapshot')).rows[0].result;
+try{
+ await db.exec(`create schema auth;create table auth.users(id uuid primary key);create role anon;create role authenticated;create role service_role;create function auth.uid()returns uuid language sql as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;grant usage on schema public,auth to authenticated,anon;grant execute on function auth.uid()to authenticated,anon;create publication supabase_realtime;`);
+ await db.exec(await readFile('supabase/FRESH_INSTALL_V8.sql','utf8'));const migration=await readFile('supabase/UPGRADE_FACTIONS_AND_DEBUG.sql','utf8');await db.exec(migration);await db.exec(migration);
+ await db.exec(`insert into auth.users values('${u}'),('${v}');`);await login();await rpc('create_player',['Rex']);let w=await snap();const sid=w.settlements[0].id;assert.equal(w.debug_enabled,true);assert.equal(w.settlements[0].faction,'roman');
+ for(const faction of ['roman','spartan','persian','egyptian','orc','elf','dwarf','gnome','pandaren','undead','demon']){await rpc('peris_set_faction',[faction]);assert.equal((await snap()).settlements[0].faction,faction);}await assert.rejects(()=>rpc('peris_set_faction',['bad']),/Unknown/);
+ await rpc('peris_debug_city',['resources',null,0]);assert.equal((await snap()).settlements[0].gold,5000);
+ await rpc('peris_queue_slot',[0,'warehouse']);await rpc('peris_debug_city',['finish']);w=await snap();assert.equal(w.city_slots[0].level,1);assert.equal(w.orders.length,0);assert.equal(w.settlements[0].capacity,7500);
+ await rpc('peris_debug_city',['level','market',5]);await rpc('peris_debug_city',['resources',null,0]);await rpc('peris_queue_slot',[15,'mage_tower']);await rpc('peris_debug_city',['finish']);await rpc('peris_debug_city',['level','slot:15',10]);await rpc('peris_research_spell',['spark']);
+ await rpc('peris_queue_slot',[16,'fishery']);await rpc('peris_debug_city',['finish']);await rpc('peris_debug_city',['demolish','market']);w=await snap();assert.deepEqual(w.city_slots.map(s=>s.slot_index),[0,16]);assert.equal(w.spell_research.length,0);assert.equal(w.buildings.find(b=>b.building_type==='market').level,0);
+ await rpc('peris_queue_slot',[0,null]);await rpc('peris_debug_city',['demolish','slot:0']);w=await snap();assert.equal(w.orders.length,0);assert.equal(w.settlements[0].capacity,5000);
+ await assert.rejects(()=>rpc('peris_debug_city',['level','market',6]),/Invalid building/);await assert.rejects(()=>rpc('peris_debug_city',['resources',null,-1]),/Choose/);await assert.rejects(()=>rpc('peris_debug_city',['demolish','slot:1']),/Select/);
+ await assert.rejects(()=>db.exec(`update public.peris_debug_config set enabled=false`),/permission/);
+ const oldTown=(await snap()).settlements[0];await login(v);await rpc('create_player',['Other']);await rpc('peris_set_faction',['elf']);await rpc('peris_debug_city',['resources',null,0]);await login();assert.equal((await snap()).settlements[0].faction,oldTown.faction);
+ await rpc('peris_raid',[1]);await db.exec(`reset role;update public.armies set arrival_at=now()-interval '1 second' where owner_id='${u}';`);await login();await rpc('sync_my_state');assert.ok((await snap()).battles.some(b=>b.status==='active'));await assert.rejects(()=>rpc('peris_debug_city',['resources',null,0]),/current battle/);await assert.rejects(()=>rpc('peris_debug_city',['demolish','wall']),/current battle/);await rpc('peris_set_faction',['dwarf']);
+ await db.exec('reset role');await db.exec('update public.peris_debug_config set enabled=false');await login();assert.equal((await snap()).debug_enabled,false);await assert.rejects(()=>rpc('peris_debug_city',['resources',null,0]),/disabled/);await rpc('peris_set_faction',['spartan']);
+ await db.exec('reset role;set role anon');await assert.rejects(()=>rpc('peris_debug_city',['resources',null,0]),/permission/);await assert.rejects(()=>rpc('peris_set_faction',['elf']),/permission/);
+ console.log('PASS · 11 factions, instant resources/construction/levels, demolition, city shrink, research cleanup, owner isolation, debug disable and migration reruns');
+}catch(e){console.error(e.message,e.where??'');process.exitCode=1;}finally{await db.close();}

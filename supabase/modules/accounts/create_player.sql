@@ -10,7 +10,7 @@ begin
  if sp.id is null then raise exception 'This world has no free settlement sites';end if;
  insert into public.players(id,display_name)values(u,n);
  insert into public.settlements(owner_id,spawn_point_id,name,x,y,wood,stone,food,gold)values(u,sp.id,n||'''s Keep',sp.x,sp.y,1250,1000,1500,500)returning id into sid;
- insert into public.buildings(settlement_id,building_type,level)select sid,t,1 from unnest(array['lumber','quarry','farm','market','barracks','stables','wall','storehouse'])t;
+ insert into public.buildings(settlement_id,building_type,level)select sid,t,0 from unnest(array['lumber','quarry','farm','market','barracks','stables','wall','storehouse'])t;
  insert into public.armies(owner_id,home_settlement_id,name,infantry,archers,cavalry,start_x,start_y,target_x,target_y)values(u,sid,'Legio I · The Dawn',120,50,16,sp.x+40,sp.y+30,sp.x+40,sp.y+30);
  return jsonb_build_object('ok',true);
 exception when unique_violation then raise exception 'That ruler name is already taken';

@@ -12,7 +12,7 @@ type MapBounds = { minX: number; minY: number; maxX: number; maxY: number };
 type PublicMapSnapshot = {
     server_now: string;
     players: Pick<World['players'][number], 'id' | 'display_name'>[];
-    settlements: Pick<World['settlements'][number], 'id' | 'owner_id' | 'name' | 'x' | 'y'>[];
+    settlements: Pick<World['settlements'][number], 'id' | 'owner_id' | 'name' | 'x' | 'y' | 'faction'>[];
     armies: World['armies'];
     total_players: number;
     total_settlements: number;

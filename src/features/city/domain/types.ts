@@ -1,3 +1,4 @@
+import type {Faction} from '../../factions/domain/factions';
 import { type Resources } from '../../../shared/model/resources';
 export type BuildingType = 'lumber' | 'quarry' | 'farm' | 'market' | 'barracks' | 'stables' | 'wall' | 'storehouse';
 export type Settlement = Resources & {
@@ -13,6 +14,8 @@ export type Settlement = Resources & {
     resources_updated_at: string;
     created_at: string;
     capacity: number;
+    food_capacity?: number;
+    faction?: Faction;
 };
 export type Building = {
     id: number;

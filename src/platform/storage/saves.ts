@@ -1,3 +1,6 @@
+import {isFaction} from '../../features/factions/domain/factions';
+import { citySlots, refreshCityEconomy, SLOT_BUILDINGS, mainLevel, slotCount, slotMaxLevel } from '../../features/city/domain/slots';
+import {spellById} from '../../features/magic/domain/spells';
 import { SAVE_KEY, readSolo } from './solo';
 import { type World } from '../../shared/model/world';
 import { CELL_SIZE } from '../../features/map/domain/dimensions';
@@ -27,7 +30,9 @@ export function validateSave(data: unknown): World {
             invalid();
     if (w.settlements.length !== 1 || w.armies.length !== 1 || w.buildings.length !== 8 || w.camps.length !== 6)
         invalid();
+    if(w.debug_enabled!==undefined&&typeof w.debug_enabled!=='boolean')invalid();
     const town = w.settlements[0], army = w.armies[0], player = w.players[0];
+    if(town.faction!==undefined&&!isFaction(town.faction))invalid();
     if (town.owner_id !== 'solo-ruler' || army.owner_id !== 'solo-ruler' || typeof player.display_name !== 'string' || !player.display_name.trim() || typeof town.name !== 'string')
         invalid();
     for (const n of [town.wood, town.stone, town.food, town.gold, town.capacity, town.wood_rate, town.stone_rate, town.food_rate, town.gold_rate, army.infantry, army.archers, army.cavalry, player.prestige, player.victories, player.recruits, player.upgrades])
@@ -76,29 +81,48 @@ export function validateSave(data: unknown): World {
         if (!Number.isInteger(n))
             invalid();
     for (const b of w.buildings)
-        if (!['lumber', 'quarry', 'farm', 'market', 'barracks', 'stables', 'wall', 'storehouse'].includes(b.building_type) || !Number.isInteger(b.level) || b.level < 1 || b.level > 20)
+        if (!['lumber', 'quarry', 'farm', 'market', 'barracks', 'stables', 'wall', 'storehouse'].includes(b.building_type) || !Number.isInteger(b.level) || b.level < 0 || b.level > 20)
             invalid();
     if (new Set(w.buildings.map(b => b.building_type)).size !== 8)
         invalid();
+    if (w.city_slots !== undefined) {
+        if (!Array.isArray(w.city_slots) || w.city_slots.length>17) invalid();
+        if(w.city_slots.filter(s=>s?.building_type==='mage_tower').length>1)invalid();
+        const seen=new Set<number>();
+        for (const slot of w.city_slots) {
+            if (slot.settlement_id!==town.id || !Number.isInteger(slot.slot_index) || slot.slot_index<0 || slot.slot_index!==16 && slot.slot_index>=slotCount(mainLevel(w,town.id)) || seen.has(slot.slot_index) || !Object.hasOwn(SLOT_BUILDINGS,slot.building_type) || !Number.isInteger(slot.level) || slot.level<0 || slot.level>slotMaxLevel(slot.building_type) || (slot.building_type==='fishery') !== (slot.slot_index===16)) invalid();
+            seen.add(slot.slot_index);
+        }
+    }
+    if(w.spell_research!==undefined){
+        if(!Array.isArray(w.spell_research)||w.spell_research.length>20)invalid();
+        const seen=new Set<string>();for(const research of w.spell_research){if(!research||research.settlement_id!==town.id||!spellById(research.spell_id)||seen.has(research.spell_id)||!Number.isFinite(Date.parse(research.researched_at)))invalid();seen.add(research.spell_id);}
+    }
+    for(const f of w.formations)for(const [key,min,max] of [['magic_attack',1,1.5],['magic_defence',0,.4],['magic_speed',1,1.75]] as const)if(f[key]!==undefined&&(!Number.isFinite(f[key])||f[key]!<min||f[key]!>max))invalid();
+    for(const b of w.battles)for(const key of ['mana_attacker','mana_defender','spell_ready_attacker','spell_ready_defender'] as const)if(b[key]!==undefined&&(!Number.isFinite(b[key])||b[key]!<0||b[key]!>1000))invalid();
     for (const date of [town.resources_updated_at, army.departure_at, army.arrival_at, player.created_at])
         if (!Number.isFinite(Date.parse(date)))
             invalid();
     if (w.orders.filter(o => o.kind === 'upgrade').length > 1 || w.orders.filter(o => o.kind === 'recruit').length > 3)
         invalid();
     for (const o of w.orders)
-        if (!['upgrade', 'recruit'].includes(o.kind) || o.owner_id !== 'solo-ruler' || !(o.kind === 'upgrade' ? ['lumber', 'quarry', 'farm', 'market', 'barracks', 'stables', 'wall', 'storehouse'] : ['infantry', 'archers', 'cavalry']).includes(o.item) || !Number.isFinite(Date.parse(o.finish_at)) || !Number.isFinite(Date.parse(o.started_at)) || Date.parse(o.finish_at) < Date.parse(o.started_at) || !Number.isInteger(o.quantity) || o.quantity < 1 || o.quantity > 200)
+        if (!['upgrade', 'recruit'].includes(o.kind) || o.owner_id !== 'solo-ruler' || !(o.kind === 'upgrade' ? ['lumber', 'quarry', 'farm', 'market', 'barracks', 'stables', 'wall', 'storehouse', ...(w.city_slots??[]).map(s=>`slot:${s.slot_index}:${s.building_type}`)] : ['infantry', 'archers', 'cavalry']).includes(o.item) || !Number.isFinite(Date.parse(o.finish_at)) || !Number.isFinite(Date.parse(o.started_at)) || Date.parse(o.finish_at) < Date.parse(o.started_at) || !Number.isInteger(o.quantity) || o.quantity < 1 || o.quantity > 200)
             invalid();
     if (army.infantry + army.archers + army.cavalry + w.orders.filter(o => o.kind === 'recruit').reduce((n, o) => n + o.quantity, 0) > 1000)
         invalid();
     for (const f of w.formations)
-        if (!['infantry', 'archers', 'cavalry'].includes(f.unit_type) || !['idle', 'moving', 'engaged', 'routed'].includes(f.status) || [f.x, f.y, f.soldiers, f.morale, f.stamina, f.facing, f.columns].some(n => !Number.isFinite(n)) || f.soldiers < 0 || f.soldiers > 1000)
+        if (!['infantry', 'archers', 'cavalry'].includes(f.unit_type) || !['idle', 'moving', 'engaged', 'routed'].includes(f.status) || [f.x, f.y, f.soldiers, f.morale, f.stamina, f.facing, f.columns].some(n => !Number.isFinite(n)) || f.soldiers < 0 || f.soldiers > 1000 || f.attack_multiplier!==undefined && (!Number.isFinite(f.attack_multiplier) || f.attack_multiplier<1 || f.attack_multiplier>1.6))
             invalid();
     if (w.battles.filter(b => b.status === 'active').length > 1 || w.battles.some(b => !['active', 'resolved'].includes(b.status) || !['deployment', 'combat', 'finished'].includes(b.phase) || !['plains', 'woods', 'highlands', 'river'].includes(b.terrain)))
         invalid();
     const active = w.battles.find(b => b.status === 'active');
     if (active && (!w.formations.some(f => f.battle_id === active.id) || !Number.isFinite(active.elapsed) || active.elapsed < 0 || !['pve', 'practice'].includes(active.mode)))
         invalid();
-    return structuredClone(w);
+    const normalized = structuredClone(w);
+    for (const building of normalized.buildings) building.level = Math.min(5, building.level);
+    normalized.city_slots ??= citySlots(normalized,town.id);
+    refreshCityEconomy(normalized,town.id);
+    return normalized;
 }
 export async function importSave(file: File) { if (file.size > 12 * 1024 * 1024)
     throw new Error('Save files must be smaller than 12 MB.'); try {

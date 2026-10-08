@@ -22,6 +22,7 @@ assert.equal(w.map.version,3);assert.equal(w.map.cols,200);assert.equal(w.map.ro
 const sites=await db.query('select count(*) as total,count(distinct (x,y)) as positions from public.spawn_points');assert.ok(sites.rows[0].total>1000);assert.equal(sites.rows[0].positions,sites.rows[0].total);
 console.log('PASS · v5 preservation and idempotent upgrade');
 await rpc('peris_queue_upgrade',['farm']);await rejects(()=>rpc('peris_queue_upgrade',['market']),'Concurrent building queue accepted');
+await admin(`insert into public.peris_city_slots values(${w.settlements[0].id},0,'barracks',1) on conflict(settlement_id,slot_index) do update set level=1;`);await login(u);
 await rpc('peris_queue_recruit',['infantry',20]);await rejects(()=>rpc('move_army',[600,300]),'Army marched before training finished');await rejects(()=>rpc('peris_queue_recruit',['cavalry',-10]),'Negative recruitment accepted');
 await admin(`update public.peris_orders set finish_at=now()-interval '1 minute',started_at=now()-interval '2 minutes';`);await login(u);await rpc('sync_my_state');w=await snap();assert.equal(w.players.find(p=>p.id===u).upgrades,1);assert.equal(w.players.find(p=>p.id===u).recruits,20);await rpc('peris_claim',['builder']);await rejects(()=>rpc('peris_claim',['builder']),'Reward granted twice');
 console.log('PASS · recruitment, upgrade completion and single-use rewards');
@@ -80,7 +81,7 @@ insert into public.settlements(owner_id,spawn_point_id,name,x,y) select ('555555
 insert into public.armies(owner_id,home_settlement_id,start_x,start_y,target_x,target_y) select s.owner_id,s.id,s.x,s.y,s.x,s.y from public.settlements s where s.owner_id::text like '55555555-5555-4555-8555-%';`);
 await login(u);let view=(await rpc('peris_map_snapshot',[-12800,-12800,12800,12800])).rows[0].result;
 assert.equal(view.settlements.length,601);assert.equal(view.armies.length,601);assert.equal(view.settlements_truncated,true);assert.equal(view.armies_truncated,true);assert.equal(view.total_players,624);
-assert.ok(view.settlements.some(s=>s.owner_id===u));assert.ok(view.armies.some(a=>a.owner_id===u));assert.ok(view.settlements.every(s=>Object.keys(s).sort().join(',')==='id,name,owner_id,x,y'));assert.ok(view.players.every(p=>Object.keys(p).sort().join(',')==='display_name,id'));
+assert.ok(view.settlements.some(s=>s.owner_id===u));assert.ok(view.armies.some(a=>a.owner_id===u));assert.ok(view.settlements.every(s=>Object.keys(s).sort().join(',')==='faction,id,name,owner_id,x,y'));assert.ok(view.players.every(p=>Object.keys(p).sort().join(',')==='display_name,id'));
 view=(await rpc('peris_map_snapshot',[4900,4900,5200,5200])).rows[0].result;assert.ok(view.settlements.every(s=>s.owner_id===u||(s.x>=4900&&s.x<5200&&s.y>=4900&&s.y<5200)));assert.ok(view.armies.some(a=>a.owner_id===u));
 await admin(`update public.armies set start_x=-10000,target_x=10000,start_y=6000,target_y=6000,status='moving',departure_at=now()-interval '5 minutes',arrival_at=now()+interval '5 minutes' where owner_id='55555555-5555-4555-8555-000000000001'`);await login(u);
 view=(await rpc('peris_map_snapshot',[-1000,5900,1000,6100])).rows[0].result;assert.ok(view.armies.some(a=>a.owner_id==='55555555-5555-4555-8555-000000000001'),'Viewport omitted a moving army whose route crosses it');assert.ok(view.settlements.every(s=>s.owner_id===u));

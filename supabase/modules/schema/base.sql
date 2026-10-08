@@ -7,16 +7,32 @@ alter table public.players add column if not exists prestige integer not null de
 alter table public.players add column if not exists victories integer not null default 0;
 alter table public.players add column if not exists recruits integer not null default 0;
 alter table public.players add column if not exists upgrades integer not null default 0;
-alter table public.settlements add column if not exists capacity integer not null default 7500;
+alter table public.settlements add column if not exists capacity integer not null default 5000;
+alter table public.settlements alter column capacity set default 5000;
+alter table public.settlements alter column wood_rate set default 14;
+alter table public.settlements alter column stone_rate set default 12;
+alter table public.settlements alter column food_rate set default 18;
+alter table public.settlements alter column gold_rate set default 3;
 alter table public.settlements alter column wood type numeric(18,4);
 alter table public.settlements alter column stone type numeric(18,4);
 alter table public.settlements alter column food type numeric(18,4);
 alter table public.settlements alter column gold type numeric(18,4);
+update public.buildings set level=least(5,greatest(0,level));
+alter table public.buildings drop constraint if exists buildings_level_check;
+alter table public.buildings add constraint buildings_level_check check(level between 0 and 5);
 alter table public.buildings drop constraint if exists buildings_building_type_check;
 alter table public.buildings add constraint buildings_building_type_check check(building_type in ('lumber','quarry','farm','market','barracks','stables','wall','storehouse'));
 insert into public.buildings(settlement_id,building_type,level)
-select s.id,t,1 from public.settlements s cross join unnest(array['barracks','stables','wall','storehouse']) t
+select s.id,t,0 from public.settlements s cross join unnest(array['barracks','stables','wall','storehouse']) t
 on conflict(settlement_id,building_type) do nothing;
+
+-- Five-stage city progression: level 0 is an unbuilt/ruined plot, levels 1-5 are the visual and mechanical upgrades.
+update public.settlements s set
+ wood_rate=14+coalesce((select level from public.buildings b where b.settlement_id=s.id and b.building_type='lumber'),0)*8,
+ stone_rate=12+coalesce((select level from public.buildings b where b.settlement_id=s.id and b.building_type='quarry'),0)*7,
+ food_rate=18+coalesce((select level from public.buildings b where b.settlement_id=s.id and b.building_type='farm'),0)*10,
+ gold_rate=3+coalesce((select level from public.buildings b where b.settlement_id=s.id and b.building_type='market'),0)*3,
+ capacity=5000+coalesce((select level from public.buildings b where b.settlement_id=s.id and b.building_type='storehouse'),0)*2500;
 
 create table if not exists public.peris_camps(
  id integer primary key,name text not null,x integer not null,y integer not null,tier integer not null,

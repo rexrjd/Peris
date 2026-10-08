@@ -74,10 +74,10 @@ create table public.settlements (
   stone integer not null default 750 check (stone >= 0),
   food integer not null default 1100 check (food >= 0),
   gold integer not null default 300 check (gold >= 0),
-  wood_rate integer not null default 22,
-  stone_rate integer not null default 19,
-  food_rate integer not null default 28,
-  gold_rate integer not null default 6,
+  wood_rate integer not null default 14,
+  stone_rate integer not null default 12,
+  food_rate integer not null default 18,
+  gold_rate integer not null default 3,
   resources_updated_at timestamptz not null default now(),
   created_at timestamptz not null default now()
 );
@@ -86,7 +86,7 @@ create table public.buildings (
   id bigint generated always as identity primary key,
   settlement_id bigint not null references public.settlements(id) on delete cascade,
   building_type text not null check (building_type in ('lumber', 'quarry', 'farm', 'market')),
-  level integer not null default 1 check (level between 1 and 20),
+  level integer not null default 0 check (level between 0 and 5),
   updated_at timestamptz not null default now(),
   unique (settlement_id, building_type)
 );
@@ -330,7 +330,7 @@ begin
   select level into v_level from public.buildings
     where settlement_id = v_settlement.id and building_type = p_building_type for update;
 
-  if v_level >= 20 then raise exception 'Building is already max level'; end if;
+  if v_level >= 5 then raise exception 'Building is already max level'; end if;
   v_factor := power(1.65::numeric, v_level - 1);
 
   if p_building_type = 'lumber' then

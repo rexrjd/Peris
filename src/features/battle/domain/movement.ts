@@ -43,7 +43,7 @@ export function moveFormations(b: Battle, fs: Formation[], byId: Map<number, For
             const dx = f.target_x - f.x, dy = f.target_y - f.y;
             const desired = Math.atan2(dy, dx) * 180 / Math.PI;
             f.facing += clamp(angleDiff(desired, f.facing), -150 * dt, 150 * dt);
-            const speed = UNITS[f.unit_type].speed * ground.speed * (f.unit_type === 'cavalry' && ground.kind === 'Forest' ? .65 : 1) * (f.running && f.stamina > 8 ? 1.45 : 1) * (f.stamina < 15 ? .75 : 1);
+            const speed = UNITS[f.unit_type].speed * (f.magic_speed??1) * ground.speed * (f.unit_type === 'cavalry' && ground.kind === 'Forest' ? .65 : 1) * (f.running && f.stamina > 8 ? 1.45 : 1) * (f.stamina < 15 ? .75 : 1);
             const step = Math.min(speed * dt, distance - range);
             f.x = clamp(f.x + dx / distance * step, 25, 1175);
             f.y = clamp(f.y + dy / distance * step, 30, 670);
