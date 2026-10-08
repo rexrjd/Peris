@@ -1,0 +1,424 @@
+/* Final presentation layer. World terrain and faction artwork retain their colors. */
+:root{--ink:#14171e;--panel:#20242e;--panel-deep:#181c24;--paper:#f0f2f7;--muted:#a6adbe;--line:#ffffff14;--accent:#96adff;--gold:var(--accent);--gold-bright:#b6c6ff;--gold-dim:#7e92d0;color-scheme:dark}
+body{background:var(--ink);color:var(--paper)}
+body,button,input,select,textarea,h1,h2,h3{font-family:'Open Sans',Arial,sans-serif}
+h1,h2,h3{font-weight:700;letter-spacing:-.035em}
+button,input,select,textarea{border-radius:8px}
+button:focus-visible,a:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visible,[role=button]:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+input:not([type=checkbox]):not([type=range]),select,textarea{background:var(--panel-deep);color:var(--paper);border:1px solid #444b60;min-height:42px}
+input[type=range],input[type=checkbox],input[type=radio]{accent-color:var(--accent)}
+button:disabled{opacity:.5;cursor:not-allowed}
+.eyebrow,.field-label{font-size:11px;letter-spacing:.08em;color:var(--muted)}
+body .button{min-height:42px;font-size:13px;border:1px solid #444b60;background:var(--panel);color:var(--paper);box-shadow:none;letter-spacing:0;border-radius:8px}
+body .button:hover:not(:disabled){background:#303748;border-color:#7987ac;box-shadow:none}
+body .button.gold{background:var(--accent);border-color:var(--accent);color:#131c35;font-weight:700;box-shadow:none}
+body .button.gold:hover:not(:disabled){background:#b6c6ff;border-color:#b6c6ff}
+body .button.outline{background:transparent;border-color:#444b60;color:var(--paper)}
+body .button.text{background:transparent;border:0;color:var(--accent)}
+body .rule{border-color:var(--line)}
+body .progress-track,body .stat-meter{background:#10131b}
+body .progress-track i,body .stat-meter i{background:var(--accent)}
+body .tag{background:#ffffff05;border-color:#ffffff20;color:#c5cddd;padding:6px 10px;border-radius:6px;font-size:11px;letter-spacing:0}
+body kbd{background:var(--panel-deep);color:var(--muted);border-color:#444b60;font-size:10px;border-radius:4px}
+/* Normalize legacy text rules without recoloring terrain swatches, art, or canvas. */
+body :is(.realm-shell,.tactical-shell,.launcher,.modal) :is(p,small,.muted,.field-label,.eyebrow){color:var(--muted);font-family:'Open Sans',Arial,sans-serif}
+body :is(.realm-shell,.tactical-shell,.launcher,.modal) :is(h1,h2,h3,strong){color:var(--paper);font-family:'Open Sans',Arial,sans-serif}
+body :is(.realm-shell,.tactical-shell,.launcher,.modal) :is(.cost,.cost b){color:#d3daeb;font-size:13px}
+body :is(.realm-shell,.tactical-shell,.launcher,.modal) :is(.cost .short,.cost .short b){color:#ffb0a0}
+body .economy-positive,body .city-stat>strong.economy-positive{color:var(--accent)!important}
+body .economy-warning,body .city-stat>strong.economy-warning{color:#ffc38c!important}
+/* Compact shell: readable supplies, explicit destinations, one active state. */
+.realm-shell{grid-template-columns:88px minmax(0,1fr);grid-template-rows:68px minmax(0,1fr) 26px;background:var(--ink)}
+.realm-shell .side-rail{background:var(--panel-deep);border-right-color:var(--line);padding:0 8px}
+.realm-shell .brand-home{height:68px;width:100%;display:grid;place-items:center;padding:0;border:0}
+.brand-monogram{display:grid;place-items:center;width:36px;height:36px;border:1px solid #96adff55;background:#96adff12;border-radius:10px;color:var(--accent);font-size:23px;font-weight:700}
+.realm-shell .rail-links{padding-top:18px;display:grid;gap:7px}
+.realm-shell .rail-links button{height:66px;color:var(--muted);border-radius:10px;gap:7px}
+.realm-shell .rail-links span{font-size:11px;letter-spacing:0}
+.realm-shell .rail-links button.active{background:#96adff15;color:var(--accent)}
+.realm-shell .rail-links button.active:before{display:none}
+.realm-shell .rail-links button:hover,.realm-shell .rail-bottom button:hover{background:#ffffff08;color:var(--paper)}
+.realm-shell .rail-bottom button{color:var(--muted);border-radius:8px}
+.realm-shell .nav-dot{background:var(--accent);box-shadow:none;right:13px;top:11px}
+.realm-shell .realm-topbar{background:var(--panel-deep);border-color:var(--line);box-shadow:none;padding:0 24px;gap:24px}
+.realm-shell .realm-brand{min-width:110px}
+.realm-shell .realm-brand strong{font-size:21px;letter-spacing:3px;font-weight:700}
+.realm-shell .realm-brand span{font-size:9px;letter-spacing:.06em;color:var(--muted)}
+.realm-shell .resource-strip{gap:clamp(10px,2vw,32px);margin-left:0}
+.realm-shell .resource{gap:9px;padding:7px 9px;min-height:48px;border-radius:8px;color:var(--muted)}
+.realm-shell .resource:hover{background:#ffffff08}
+.realm-shell .resource>svg{color:#b7c1d9;width:20px}
+.realm-shell .resource strong{font-size:17px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.15;letter-spacing:-.02em}
+.realm-shell .resource.full strong{color:#ffc38c}
+.realm-shell .resource small{font-size:10px;letter-spacing:0;margin-top:4px}
+.realm-shell .resource small b{font-size:10px;color:var(--accent);margin-left:7px;font-weight:400;display:inline}
+.realm-shell .ruler small{font-size:10px;letter-spacing:0;margin-top:4px}
+.realm-shell .live-dot{background:var(--accent);box-shadow:none}
+.realm-shell .realm-footer{background:var(--panel-deep);border-color:var(--line);color:var(--muted);font-size:10px;letter-spacing:0;padding:0 24px}
+.realm-shell .realm-footer button{color:var(--muted);font-size:10px}
+.realm-tools{display:none;position:relative;flex:none;z-index:15}
+.realm-tools>summary{display:grid;place-items:center;width:36px;height:40px;list-style:none;cursor:pointer;color:var(--muted);border-radius:8px}
+.realm-tools>summary::-webkit-details-marker{display:none}
+.realm-tools[open]>summary{background:#96adff18;color:var(--accent)}
+.realm-tools>div{position:absolute;top:calc(100% + 10px);right:0;width:180px;padding:6px;border:1px solid #444b60;border-radius:10px;background:var(--panel-deep);box-shadow:0 12px 30px #0006}
+.realm-tools button{display:flex;align-items:center;gap:12px;width:100%;min-height:44px;border:0;background:transparent;padding:10px;font-size:12px;text-align:left}
+.realm-tools button:hover{background:#ffffff08}
+.realm-shell .realm-content:not(.world-content){background:var(--ink);color:var(--paper)}
+.realm-shell .view-heading{padding:24px;border-bottom:1px solid var(--line);gap:16px}
+.realm-shell .view-heading h1{font-size:28px;margin-bottom:6px;letter-spacing:-.04em}
+.realm-shell .view-heading p{font-size:13px;margin-top:6px;margin-bottom:0}
+/* City: compact header/economy, scene fills the remaining workspace. */
+.realm-shell .city-content{overflow:hidden}
+.realm-shell .settlement-layout{height:100%;min-height:0;grid-template-columns:minmax(0,1fr) 324px;gap:0}
+.realm-shell .city-column{min-width:0;min-height:0;display:flex;flex-direction:column;overflow:auto;padding:0;background:var(--ink)}
+.realm-shell .city-heading{flex:none;min-height:82px;padding:18px 24px;align-items:center}
+.realm-shell .city-heading h1{font-size:25px;margin:0 0 5px}
+.city-subtitle{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+.city-subtitle span+span{border-left:1px solid #ffffff25;padding-left:12px}
+.city-heading .button{min-width:94px}
+.city-overview{flex:none;margin:0;border:0;border-bottom:1px solid var(--line);border-radius:0;background:var(--panel-deep)}
+.city-economy-details>summary{display:flex;align-items:center;gap:28px;padding:13px 24px;list-style:none;cursor:pointer;min-height:66px}
+.city-economy-details>summary::-webkit-details-marker{display:none}
+.city-economy-details>summary>span:not(.economy-expand){display:grid;gap:4px}
+.city-economy-details>summary small{font-size:11px}
+.city-economy-details>summary strong{font-size:14px;letter-spacing:0;font-variant-numeric:tabular-nums}
+.city-economy-details>summary em{font-size:12px;color:var(--muted);font-style:normal;font-weight:400}
+.city-economy-details>summary .economy-expand{margin-left:auto;display:flex;gap:9px;align-items:center;font-size:12px;color:var(--accent)}
+.city-economy-details[open]>summary .economy-expand b{transform:rotate(180deg)}
+.city-economy-content{max-height:320px;overflow:auto;border-top:1px solid var(--line)}
+.overview-heading{border-color:var(--line)}
+.overview-heading span{font-size:11px}
+.city-stat{border-color:var(--line);padding:14px}
+.city-stat>strong{font-size:23px}
+.city-stat :is(small,span,b){font-size:12px;letter-spacing:0;line-height:1.6}
+.city-stat strong span{color:var(--muted);font-size:12px}
+.city-income{background:var(--panel);border-radius:8px;padding:12px}
+.city-income>small,.city-income b{font-size:11px}
+.economy-advice{background:#ffc38c0c;color:#ffc38c;font-size:12px;padding:12px 16px}
+.city-workforce{border-color:var(--line)}
+.city-workforce :is(summary,p,table){font-size:12px}
+.city-workforce th,.city-workforce td{border-color:var(--line)}
+.city-workspace-tabs{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 24px;flex:none;border-bottom:1px solid var(--line);background:var(--ink)}
+.city-workspace-tabs>div{display:flex;gap:5px;background:#ffffff04;padding:3px;border-radius:9px}
+.city-workspace-tabs button{min-height:36px;padding:6px 13px;border:0;background:transparent;color:var(--muted);font-size:12px;border-radius:7px}
+.city-workspace-tabs button[aria-pressed=true]{background:#96adff18;color:var(--accent)}
+.city-workspace-tabs button span{font-size:10px;margin-left:5px;opacity:.75}
+.city-workspace-tabs>span{font-size:11px;color:var(--muted)}
+.realm-shell .city-panel{position:relative;flex:1;min-height:300px;padding:0;margin:0;background:#8599a6;border:0;overflow:hidden;display:flex;flex-direction:column}
+.realm-shell .city-3d-scene{flex:1;height:100%;min-height:300px;border:0;background:#8599a6}
+.realm-shell .city-3d-scene canvas{height:100%;width:100%}
+.realm-shell .city-scene-hint{position:absolute;bottom:12px;left:12px;right:12px;background:#181c24de;border:1px solid #ffffff18;border-radius:8px;padding:9px 12px;display:flex;justify-content:space-between;gap:10px;pointer-events:none}
+.realm-shell .city-scene-hint :is(span,b){font:10px 'Open Sans',sans-serif;letter-spacing:0;color:#d0d8e7}
+.realm-shell .city-landmark-label{background:#181c24eb;border-color:#ffffff40;color:var(--paper);border-radius:7px;font-family:'Open Sans',sans-serif;box-shadow:0 2px 8px #0003}
+.realm-shell .city-landmark-label strong{color:var(--paper);font-family:'Open Sans',sans-serif;font-size:11px}
+.realm-shell .city-landmark-label span{color:#c5cddd;font-size:9px;letter-spacing:0}
+.realm-shell .city-landmark-label.selected{background:#26324f;border-color:var(--accent);color:var(--accent)}
+.realm-shell .city-landmark-label:hover,.realm-shell .city-landmark-label:focus-visible{background:#26324f;border-color:var(--accent);outline-color:var(--accent)}
+.realm-shell .city-landmark-label.selected strong{color:var(--paper)}
+.realm-shell .city-landmark-label em{color:var(--accent)}
+.realm-shell .city-graphics-loading{background:var(--panel-deep);color:var(--paper)}
+.building-browser{flex:1;min-height:0;overflow:auto;padding:20px 24px}
+.building-search{display:flex;align-items:center;gap:10px;margin-bottom:18px;color:var(--muted)}
+.building-search input{max-width:480px}
+.realm-shell .building-grid{padding:0;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.realm-shell .building-grid>button{background:var(--panel-deep);border:1px solid var(--line);border-radius:9px;min-height:76px;padding:14px;color:var(--paper);font-size:13px;text-align:left;gap:12px}
+.realm-shell .building-grid>button:hover,.realm-shell .building-grid>button.selected{background:#96adff0d;border-color:#96adff60}
+.realm-shell .building-grid>button>span{flex:1}
+.realm-shell .building-grid svg{color:var(--accent)}
+.realm-shell .building-grid small{font-size:11px;margin-top:5px;color:var(--muted)}
+.building-no-results{font-size:13px;padding:20px 0}
+/* A single inspector, with the useful action ahead of secondary settings. */
+.realm-shell .detail-panel{overflow:auto;min-height:0;padding:24px;background:var(--panel-deep);border-left:1px solid var(--line);color:var(--paper)}
+.realm-shell .detail-panel>.eyebrow{display:block;margin-bottom:18px;font-size:10px}
+.realm-shell .detail-panel h2{font-size:23px;text-align:left;margin:0 0 10px}
+.realm-shell .detail-panel>.tag{display:inline-block;margin-bottom:16px}
+.realm-shell .detail-panel>p{font-size:13px;line-height:1.65;margin:0 0 16px}
+.realm-shell .building-emblem{width:54px;height:54px;margin:0 0 18px;border:1px solid #96adff35;border-radius:12px;background:#96adff0c;box-shadow:none;transform:none}
+.realm-shell .building-emblem:before,.realm-shell .building-emblem:after{display:none}
+.realm-shell .building-emblem svg{width:29px;height:29px;color:var(--accent)}
+.realm-shell .building-emblem span{background:var(--panel);color:var(--paper);border:1px solid #96adff45;box-shadow:none;right:-8px;bottom:-6px;width:24px;height:24px;font-size:11px}
+.realm-shell .detail-panel .benefit{background:#96adff0a;color:#c4d0f6;border:1px solid #96adff20;border-radius:8px;font-size:12px;padding:12px;line-height:1.6;margin:12px 0}
+.realm-shell .city-worker-note{background:var(--panel);border-radius:8px;padding:12px}
+.realm-shell .detail-panel .level-track{margin:18px 0;gap:5px}
+.realm-shell .detail-panel .level-track i{background:#ffffff0b;border-color:#ffffff10;border-radius:3px;height:5px}
+.realm-shell .detail-panel .level-track i.filled{background:var(--accent);border-color:var(--accent)}
+.realm-shell .detail-panel .cost{margin:14px 0;gap:12px;flex-wrap:wrap}
+.realm-shell .detail-panel>.button{width:100%}
+.realm-shell .queue-card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:15px;margin-top:20px}
+.realm-shell .queue-card small{font-size:11px}
+.city-tools{border-top:1px solid var(--line);margin-top:24px;padding-top:16px}
+.city-tools>summary,.field-details>summary{cursor:pointer;font-size:12px;color:var(--muted);padding:5px 0}
+.realm-shell .city-faction-controls,.realm-shell .city-debug{background:var(--panel);border:1px solid var(--line);color:var(--muted);padding:12px;border-radius:8px;margin:12px 0}
+.realm-shell .city-faction-controls :is(select,button),.realm-shell .city-debug :is(select,button){background:var(--panel-deep);border-color:#444b60;color:var(--paper);font-size:12px;min-height:40px}
+.realm-shell .city-debug summary{color:var(--muted);font-size:12px}
+.realm-shell .storage-note{border:0;border-top:1px solid var(--line);background:none;margin-top:20px;padding:16px 0;color:var(--muted);gap:10px}
+.realm-shell .storage-note strong{font-size:11px;line-height:1.7;font-weight:400;color:var(--muted)}
+.realm-shell .storage-note small{font-size:11px;line-height:1.7}
+.building-picker fieldset{padding:0;border:0;margin:18px 0}
+.building-picker legend{font-size:11px;color:var(--muted);margin-bottom:12px}
+.building-options{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.building-options label{display:flex;align-items:center;gap:8px;padding:11px 9px;min-height:64px;border:1px solid #ffffff18;border-radius:8px;cursor:pointer;background:#ffffff03;font-size:12px}
+.building-options label.chosen{border-color:#96adff88;background:#96adff10}
+.building-options label:focus-within{outline:2px solid var(--accent);outline-offset:2px}
+.building-options input{width:14px;height:14px;min-height:0;margin:0;flex:none;padding:0;outline:none}
+.building-options small{display:block;font-size:10px;margin-top:4px;line-height:1.4}
+.building-preview h3{font-size:17px;margin-top:20px}
+.building-preview p{font-size:13px;line-height:1.65}
+.building-preview>.button{width:100%}
+/* Map controls and field actions use the same neutral surface as the city. */
+.realm-shell .scene-world{background:var(--ink)}
+.realm-shell .world-stage.atlas-stage{background:var(--ink)}
+.realm-shell .atlas-stage .scene-toolbar{min-height:54px;height:54px;background:var(--panel-deep);padding:0 20px;border-color:var(--line)}
+.realm-shell .scene-title strong{font-size:16px;font-weight:700}
+.realm-shell .scene-title>span{color:var(--muted);font-size:11px;letter-spacing:0}
+.realm-shell .atlas-stage .scene-toolbar button{min-height:36px;border:1px solid #444b60;background:transparent;color:var(--paper);font-size:12px;border-radius:7px}
+.realm-shell .atlas-stage .scene-toolbar button.selected{background:#96adff18;border-color:#96adff65;color:var(--accent)}
+.realm-shell .territory-toolbar{background:var(--ink);color:var(--muted);font-size:12px;border-color:var(--line);padding:8px 20px;gap:16px;min-height:50px}
+.realm-shell .territory-toolbar small{font-size:11px;color:var(--muted)}
+.realm-shell .territory-toolbar button{background:#ffffff05;border:1px solid #444b60;color:var(--paper);border-radius:7px;font-size:12px;min-height:34px;padding:7px 12px}
+.realm-shell .territory-toolbar button[aria-pressed=true]{background:#96adff18;border-color:var(--accent)}
+.realm-shell .atlas-stage .atlas-workspace{display:grid;grid-template-columns:minmax(0,1fr)}
+.realm-shell .atlas-stage .atlas-workspace.has-selection{grid-template-columns:minmax(0,1fr) 324px}
+.realm-shell .atlas-stage .atlas-inspector{background:var(--panel-deep);color:var(--paper);width:auto;max-height:100%;min-height:0;padding:24px;border:0;border-left:1px solid var(--line);box-shadow:none;border-radius:0}
+.realm-shell .atlas-stage .atlas-inspector :is(p,small){font-size:12px;line-height:1.65;color:var(--muted)}
+.realm-shell .atlas-stage .atlas-inspector h2{font-size:22px;letter-spacing:-.035em}
+.realm-shell .atlas-stage .atlas-inspector h3{font-size:18px}
+.realm-shell .atlas-stage .atlas-inspector>.button.gold{background:var(--accent);border-color:var(--accent);color:#131c35;box-shadow:none;font-size:13px;position:static}
+.realm-shell .atlas-stage .atlas-inspector>.button.gold:hover:not(:disabled){background:#b6c6ff}
+.realm-shell .atlas-stage .atlas-site-lore :is(h2,p){font-family:'Open Sans',sans-serif;color:var(--paper)}
+.realm-shell .atlas-stage .atlas-site-lore .atlas-site-story{color:var(--muted);font-size:12px}
+.realm-shell .atlas-site-lore{border-color:var(--line)}
+.realm-shell .campaign-lore{margin:12px 0}
+.realm-shell .campaign-lore>summary{cursor:pointer;color:var(--muted);font-size:12px;padding:4px 0}
+.realm-shell .atlas-inspector :is(.atlas-locate,.briefing-button){background:#ffffff04;border-color:var(--line);color:var(--accent);font-size:12px;min-height:38px;border-radius:7px}
+.realm-shell .inspector-close{background:var(--panel);color:var(--muted);border-color:var(--line);width:32px;height:32px;border-radius:7px;font-size:22px}
+.realm-shell .territory-inspector{border-color:var(--line)}
+.realm-shell .territory-output{color:var(--paper)}
+.realm-shell .territory-buildings article{background:var(--panel);border-color:var(--line);border-radius:9px;padding:13px}
+.realm-shell .territory-buildings button{background:var(--accent);border-color:var(--accent);color:#131c35;border-radius:7px;font-size:12px;min-height:40px}
+.realm-shell .territory-buildings .bonus{color:var(--accent)}
+.realm-shell .territory-buildings .penalty{color:#ffc38c}
+.realm-shell .field-details{margin:16px 0;border-block:1px solid var(--line);padding:8px 0}
+.realm-shell .field-details[open] summary{margin-bottom:18px}
+.realm-shell .atlas-cell-facts>div{background:var(--panel);border-color:var(--line);border-radius:8px}
+.realm-shell .atlas-cell-facts span{color:var(--muted);font-size:10px}
+.realm-shell .atlas-cell-facts strong{font-size:13px}
+.realm-shell :is(.atlas-cell-occupants button,.atlas-route-estimate,.readiness-note,.town-summary){background:var(--panel);border-color:var(--line);color:var(--paper);border-radius:8px}
+.realm-shell .readiness-note span,.realm-shell .camp-force>span{font-size:11px;color:var(--muted)}
+.realm-shell .camp-force b{color:var(--paper);font-size:16px}
+.realm-shell .scene-layers-menu{background:var(--panel-deep);border-color:#444b60;color:var(--paper);border-radius:10px;box-shadow:0 12px 30px #0005}
+.realm-shell .scene-layers-menu :is(label,button,span){color:var(--paper);font-size:12px;border-color:var(--line)}
+.realm-shell .scene-layers-menu small{font-size:11px}
+.realm-shell .scene-layers-navigation button{background:transparent;border-color:var(--line)}
+.realm-shell .scene-stage .scene-layers-menu>label>span{font-family:'Open Sans',sans-serif;color:var(--paper);font-size:13px}
+.realm-shell .scene-stage .scene-layers-menu input{accent-color:var(--accent)}
+.realm-shell .scene-stage .scene-layers-navigation>button{color:var(--accent);font-size:12px;min-height:40px}
+.realm-shell .scene-stage .scene-toolbar .scene-title>strong{font:700 16px 'Open Sans',sans-serif;letter-spacing:0;color:var(--paper)}
+.realm-shell .scene-stage .scene-toolbar .scene-title>span{font:11px 'Open Sans',sans-serif;color:var(--muted);border-color:var(--line)}
+.realm-shell .scene-stage .scene-toolbar .scene-title>svg{color:var(--accent)}
+.realm-shell .scene-stage .scene-toolbar button:hover:not(:disabled){background:#ffffff08;border-color:#7987ac}
+.realm-shell .scene-reward-dot{background:var(--accent);box-shadow:none}
+.realm-shell .atlas-navigation{background:var(--panel);border-color:var(--line);color:var(--muted)}
+.realm-shell .atlas-navigation :is(button,input){background:var(--panel-deep);border-color:#444b60;color:var(--paper)}
+.realm-shell .scene-label{background:#181c24ed;border-color:#ffffff45;color:var(--paper);font:12px 'Open Sans',sans-serif;border-radius:7px}
+.realm-shell .scene-minimap{border-color:#ffffff40;border-radius:8px;box-shadow:0 4px 16px #0003}
+.realm-shell .scene-minimap>span{background:var(--panel-deep);color:var(--muted);font-size:9px;letter-spacing:0;padding:6px}
+.realm-shell :is(.scene-hover,.scene-compatibility,.map-command-hint,.map-focus-controls button){background:#181c24ed;border-color:#ffffff30;color:var(--paper);font-family:'Open Sans',sans-serif;font-size:12px;border-radius:7px}
+.realm-shell .map-focus-controls button{min-height:36px}
+.realm-shell .march-status{background:#181c24ee;border-color:#ffffff25;color:var(--paper);border-radius:9px;box-shadow:0 4px 16px #0003}
+.realm-shell .march-status button{color:var(--accent);font-size:11px;border-color:var(--line)}
+.realm-shell .march-state{font-size:11px;color:var(--muted)}
+.realm-shell :is(.resting-dot,.marching-dot){background:var(--accent);box-shadow:none}
+.realm-shell .legion-badge strong{font-size:13px;font-weight:700}
+.realm-shell .legion-badge small{font-size:10px}
+.realm-shell .scene-stage .march-status .legion-badge strong{font:700 13px 'Open Sans',sans-serif;color:var(--paper)}
+.realm-shell .scene-stage .march-status .legion-badge small{font-size:10px;color:var(--muted)}
+.realm-shell .scene-stage .march-status .legion-badge>svg{color:var(--accent)}
+.realm-shell .scene-stage .march-status .march-state{font-size:11px;color:var(--muted)}
+.realm-shell .campaign-sidebar.atlas-sidebar{background:var(--panel-deep);border-color:var(--line);color:var(--muted);padding:24px 18px}
+.realm-shell .atlas-sidebar .province-title h1{font-size:27px;line-height:1.2;font-weight:700;letter-spacing:-.04em}
+.realm-shell .atlas-sidebar :is(.province-title>p,.atlas-journal p){font-size:12px}
+.realm-shell .atlas-sidebar .campaign-trail strong{font-size:14px;font-weight:700}
+.realm-shell .atlas-sidebar .campaign-trail :is(small,em){font-size:10px;color:var(--muted);letter-spacing:0}
+.realm-shell .atlas-sidebar .campaign-trail>button{border-radius:8px}
+.realm-shell .atlas-sidebar .campaign-trail>button.selected{background:#96adff0e;border-color:#96adff60}
+.realm-shell .atlas-sidebar :is(.trail-marker,.atlas-region-tabs button,.advisor-card){background:var(--panel);color:var(--muted);border-color:var(--line);border-radius:7px}
+.realm-shell .atlas-sidebar .atlas-journal{border-color:var(--line)}
+.realm-shell .atlas-sidebar .atlas-journal summary{font:13px 'Open Sans',sans-serif;color:var(--muted)}
+.realm-shell .atlas-sidebar .atlas-region-tabs button{font-size:11px}
+.realm-shell .objective{border-color:var(--line)}
+.realm-shell .objective p{font-size:12px}
+.realm-shell .objective-bottom button{color:var(--accent);font-size:12px;padding:5px 0}
+/* Army, reports, spells, dialogs, and battle controls share the same UI language. */
+body :is(.recruitment-card,.training-queue,.milestone-grid article,.chronicle-metrics>div,.restored-banner,.report-list>button,.magic-card,.battle-spell-list button,.magic-levels button,.result-units>div,.settings-section,.save-slot,.briefing-tactics){background:var(--panel-deep);color:var(--paper);border-color:var(--line);box-shadow:none;border-radius:10px}
+body :is(.recruitment-body,.training-order,.milestone-meta,.unit-facts,.report-list>button,.result-caption,.result-stats,.ledger-rate){color:var(--muted);border-color:var(--line);font-family:'Open Sans',sans-serif}
+body .recruitment-art{background:var(--panel);border-color:var(--line);height:150px}
+body .recruitment-art .unit-portrait{height:150px;width:145px}
+body .recruitment-art>span{font:700 34px 'Open Sans',sans-serif;top:32px;color:var(--paper);text-shadow:none}
+body .recruitment-body{padding:20px}
+body .recruitment-body h2{font-size:23px}
+body .recruitment-body>p{font-size:13px}
+body .unit-facts{font-size:11px;gap:12px}
+body .unit-facts b{font-size:12px}
+body .quantity-input :is(button,input){background:var(--panel);color:var(--paper);border-color:#444b60;font-size:14px;min-height:42px}
+body .chronicle-metrics{gap:12px;margin-top:20px}
+body .chronicle-metrics>div{padding:20px}
+body .chronicle-metrics b{font:700 28px 'Open Sans',sans-serif;color:var(--paper)}
+body .chronicle-metrics span{font-size:12px;color:var(--muted)}
+body .milestone-grid :is(p,.milestone-meta){font-size:12px}
+body .report-list strong{font-size:14px}
+body .report-list :is(small,span){font-size:12px}
+body :is(.report-seal,.victory-seal,.menu-standards i){background:#96adff0c;color:var(--accent);border-color:#96adff30;box-shadow:none}
+body :is(.win,.report-seal.won,.victory-seal.won){color:var(--accent)}
+body .loss{color:#ffc38c}
+body .modal-backdrop{background:#090b12c9;backdrop-filter:blur(5px)}
+body .modal{background:var(--panel-deep);color:var(--paper);border:1px solid #444b60;border-radius:16px;box-shadow:0 20px 70px #0007;padding:28px}
+body .modal h2{font-size:25px}
+body .modal :is(p,small){font-size:13px;line-height:1.7}
+body .modal-close{background:var(--panel);color:var(--muted);border:1px solid var(--line);border-radius:8px;width:34px;height:34px}
+body .modal :is(summary,th,td){color:var(--muted);border-color:var(--line)}
+body .modal-tabs{border-color:var(--line)}
+body .modal-tabs button{color:var(--muted);font-size:12px}
+body .modal-tabs button.active,body .modal-tabs button[aria-selected=true]{color:var(--accent);border-color:var(--accent)}
+body :is(.save-summary,.import-confirm,.codex-note,.codex-steps>div,.moment-content,.moment-steps>div){background:var(--panel);border-color:var(--line);color:var(--paper);border-radius:8px;box-shadow:none}
+body .setting-toggle{border-color:var(--line)}
+body .setting-toggle i{background:var(--ink);border-color:#444b60;box-shadow:none}
+body .setting-toggle i:after{background:var(--muted)}
+body .setting-toggle input:checked+i{background:#96adff25;border-color:var(--accent)}
+body .setting-toggle input:checked+i:after{background:var(--accent)}
+body .setting-toggle input:focus-visible+i{outline-color:var(--accent)}
+body :is(.setting-slider,.settings-version,.settings-action){color:var(--muted);border-color:var(--line);font-size:12px}
+body :is(.settings-action svg,.setting-slider b){color:var(--accent)}
+body .codex-lead{font:700 19px 'Open Sans',sans-serif!important;color:var(--paper)!important}
+body .codex-note{font-size:12px!important;color:var(--muted)!important;padding:16px}
+body .codex-terrains article{background:var(--panel);border-color:var(--line);border-radius:9px}
+body .campaign-moment{padding:0}
+body .campaign-moment .moment-art{background:linear-gradient(90deg,#14171efa,#14171ee6 45%,#14171e70),url('/art/menu/peris-dawn.png') 60% center/cover}
+body .campaign-moment .moment-content{background:none;border-radius:0}
+body .campaign-moment .moment-content h2{font-size:38px}
+body .campaign-moment .moment-content>.crest{filter:grayscale(1)}
+body .moment-steps svg,body .ending-laurel{color:var(--accent)}
+body .resource-ledger>strong{font:700 38px 'Open Sans',sans-serif;color:var(--paper)}
+body .resource-ledger svg,body .ledger-rate strong{color:var(--accent)}
+body .magic-levels button{font-size:17px;min-height:44px}
+body :is(.magic-levels button.selected,.battle-spell-list button.selected){background:#96adff15;border-color:var(--accent)}
+body .magic-card h3{font-size:24px;font-weight:700}
+body .magic-card p{min-height:0}
+body .magic-target select{background:var(--panel);border-color:#444b60;color:var(--paper)}
+body .mage-tower-panel{border-color:var(--line)}
+body :is(.toast,.connection-warning,.outgoing-challenge,.challenge-banner,.alert){background:var(--panel);border:1px solid #444b60;color:var(--paper);border-radius:10px;box-shadow:0 8px 30px #0004;font-size:13px}
+body .toast.error{border-color:#ffb0a0;color:#ffb0a0}
+body .tactical-shell{background:var(--ink)}
+body :is(.battle-header,.commander-panel,.unit-tray,.battle-field-footer){background:var(--panel-deep);border-color:var(--line);color:var(--paper)}
+body .battle-heading h1{font-size:23px}
+body .commander-panel h2{font-size:22px}
+body .commander-panel :is(p,small,.terrain-note){font-size:12px}
+body :is(.command-actions button,.stance-buttons button,.command-toggles button,.time-controls button,.rally,.withdraw-button){background:var(--panel);border-color:#444b60;color:var(--paper);border-radius:7px;font-size:12px;min-height:38px}
+body :is(.command-actions button.active,.stance-buttons button.active,.command-toggles button.active,.time-controls button.active){background:#96adff18;border-color:var(--accent);color:var(--accent)}
+body .stance-tabs button{background:var(--panel);color:var(--muted);border-color:#444b60;border-radius:7px;min-height:38px;font-size:12px}
+body :is(.command-actions button.selected,.stance-tabs button.selected,.time-controls button.selected){background:#96adff18;border-color:var(--accent);color:var(--accent)}
+body .commander-panel .command-tip{color:var(--muted)!important;font-size:12px!important}
+body :is(.command-selection,.command-empty,.deployment-presets button){background:var(--panel);border-color:#444b60;color:var(--muted);border-radius:7px;font-size:12px}
+body .deployment-presets button.selected{background:#96adff18;border-color:var(--accent);color:var(--accent)}
+body .balance-track{background:#b9766677}
+body .balance-track i{background:var(--accent)}
+body .battle-time button{background:var(--panel);border-color:#444b60;color:var(--paper);min-width:34px;min-height:34px;border-radius:7px}
+body .tactical-shell .map-zoom button{background:var(--panel);border-color:#444b60;color:var(--paper)}
+body .unit-card{background:var(--panel);border-color:#444b60;border-radius:8px;box-shadow:none}
+body .unit-card.selected{background:#96adff15;border-color:var(--accent);box-shadow:none}
+body .unit-card-meta :is(strong,span){color:var(--paper);font-family:'Open Sans',sans-serif}
+body :is(.deployment-banner,.battle-events>div){background:#181c24ed;border-color:var(--line);color:var(--paper);border-radius:8px}
+body .battle-events>div{font-size:11px}
+body .launcher-shade{background:linear-gradient(90deg,#14171efc 0%,#14171eea 32%,#14171e45 70%),linear-gradient(0deg,#14171ed9,transparent 40%)}
+body .launcher-panel .crest{filter:grayscale(1);opacity:.8}
+body .launcher-panel h1{font-size:76px;font-weight:700;letter-spacing:8px;text-shadow:none}
+body .launcher-panel .title-rule{background:#ffffff20}
+body .launcher-intro{font-family:'Open Sans',sans-serif;font-size:19px;color:var(--muted)}
+body .launcher-top,body .launcher-bottom{color:var(--muted)}
+body :is(.launcher-top button,.launcher-bottom button,.menu-secondary,.quick-battle-link){color:var(--muted);font-size:12px}
+body .mode-tabs{border-color:var(--line)}
+body .mode-tabs button{color:var(--muted)}
+body .mode-tabs button.active{color:var(--accent);border-color:var(--accent)}
+body .launcher-dust{display:none}
+/* Responsive workspace: avoid narrow inspectors and keep touch targets usable. */
+@media(max-width:1150px){
+ .realm-shell .realm-brand{display:none}
+ .realm-shell .realm-topbar{gap:12px;padding:0 16px}
+ .realm-shell .settlement-layout{grid-template-columns:minmax(0,1fr) 300px}
+ .realm-shell .detail-panel{padding:20px}
+ .realm-shell .territory-toolbar small{display:none}
+ .city-economy-details>summary{gap:20px;padding-inline:20px}
+ .city-workspace-tabs>span{display:none}
+ .city-stat-grid,.city-income-grid{grid-template-columns:1fr 1fr}
+}
+@media(max-width:900px){
+ .realm-shell .ruler{display:none}
+ .realm-shell .resource-strip{width:100%;justify-content:space-between;gap:6px}
+ .realm-shell .settlement-layout{height:auto;min-height:100%;display:block}
+ .realm-shell .city-content{overflow:auto}
+ .realm-shell .city-panel,.realm-shell .city-3d-scene{height:clamp(350px,55vw,520px);min-height:350px;flex:none}
+ .realm-shell .detail-panel{border-left:0;border-top:1px solid var(--line);overflow:visible;padding:24px}
+ .realm-shell .detail-panel>.button{max-width:420px}
+ .building-options{grid-template-columns:repeat(3,minmax(0,1fr))}
+ .building-preview{max-width:520px}
+ .building-browser{min-height:400px}
+ .city-stat-grid,.city-income-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+ .realm-shell .atlas-stage .atlas-workspace.has-selection{grid-template-columns:minmax(0,1fr) 300px}
+}
+@media(max-width:760px){
+ .realm-shell{grid-template-columns:minmax(0,1fr);grid-template-rows:62px minmax(0,1fr);height:100dvh;padding-bottom:70px}
+ .realm-shell .realm-topbar{grid-column:1;padding:0 8px;gap:0}
+ .realm-tools{display:block;margin-left:3px}
+ .realm-shell .realm-content{grid-column:1;grid-row:2}
+ .realm-shell .realm-footer,.realm-shell .brand-home,.realm-shell .rail-bottom{display:none}
+ .realm-shell .side-rail{position:fixed;bottom:0;left:0;right:0;width:auto;height:70px;padding:6px 8px calc(6px + env(safe-area-inset-bottom));border:0;border-top:1px solid #ffffff20;display:block;background:var(--panel-deep);z-index:10}
+ .realm-shell .rail-links{height:100%;padding:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px}
+ .realm-shell .rail-links button{height:54px;gap:4px}
+ .realm-shell .rail-links svg{width:21px;height:21px}
+ .realm-shell .rail-links span{font-size:10px}
+ .realm-shell .resource{gap:5px;padding:5px;min-height:44px}
+ .realm-shell .resource>svg{width:16px;height:16px}
+ .realm-shell .resource strong{font-size:14px}
+ .realm-shell .resource small{font-size:9px;letter-spacing:0}
+ .realm-shell .resource small b{display:none}
+ .realm-shell .city-heading{padding:16px;min-height:78px}
+ .realm-shell .city-heading h1{font-size:22px}
+ .city-subtitle{font-size:11px;gap:8px}
+ .city-subtitle span+span{padding-left:8px}
+ .city-economy-details>summary{gap:14px;padding:12px 16px;flex-wrap:wrap}
+ .city-economy-details>summary .economy-expand{font-size:11px;gap:4px}
+ .city-economy-details>summary small{font-size:10px}
+ .city-workspace-tabs{padding:9px 16px}
+ .city-economy-content{max-height:350px}
+ .city-stat-grid,.city-income-grid{grid-template-columns:1fr 1fr}
+ .realm-shell .city-scene-hint{display:none}
+ .realm-shell .detail-panel{padding:20px}
+ .building-browser{padding:16px}
+ .realm-shell .building-grid{grid-template-columns:1fr 1fr;gap:8px}
+ .realm-shell .building-grid>button{padding:12px;font-size:12px;gap:8px}
+ .realm-shell .building-grid>button>svg:last-child{display:none}
+ .building-options{grid-template-columns:1fr 1fr}
+ .realm-shell .atlas-stage .scene-toolbar{min-height:52px;height:auto;padding:8px 12px;gap:8px}
+ .realm-shell .scene-title>span,.realm-shell .scene-title>svg{display:none}
+ .realm-shell .scene-title strong{font-size:14px}
+ .realm-shell .scene-stage .scene-toolbar .scene-title>strong{font-size:14px}
+ .realm-shell .scene-stage .scene-toolbar .scene-title>span{display:none}
+ .realm-shell .atlas-stage .scene-toolbar button{font-size:11px;min-height:36px;padding:7px 8px;gap:5px}
+ .realm-shell .territory-toolbar{padding:7px 12px;gap:8px;min-height:44px;font-size:11px}
+ .realm-shell .territory-toolbar button{margin-left:auto;font-size:11px}
+ .realm-shell .atlas-stage .atlas-workspace.has-selection{display:flex;flex-direction:column;position:relative}
+ .realm-shell .atlas-stage .atlas-inspector{position:absolute;inset:auto 0 0;max-height:55%;width:auto;z-index:6;border:1px solid #444b60;border-bottom:0;border-radius:14px 14px 0 0;padding:20px;overflow:auto;box-shadow:0 -8px 24px #0004}
+ .realm-shell .atlas-stage .world-map-wrap{min-height:0;flex:1}
+ .realm-shell .march-status{max-width:calc(100% - 130px);padding:9px 11px;gap:6px;bottom:12px;left:12px}
+ .realm-shell .march-status .legion-badge small{display:none}
+ .realm-shell .march-state{font-size:10px}
+ .realm-shell .scene-hover{font-size:11px}
+ body .view-heading h1{font-size:24px}
+ body .modal{padding:24px 20px;border-radius:12px;max-height:calc(100dvh - 24px)}
+ body .recruitment-grid{grid-template-columns:1fr;padding:0 16px;gap:16px}
+ body .launcher-panel{width:calc(100% - 40px);max-width:398px;margin-left:20px}
+ body .launcher-panel h1{font-size:58px;letter-spacing:6px}
+ body .launcher-shade{background:#14171ed9}
+ body .launcher-top{left:20px;right:20px}
+}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;animation:none!important;transition:none!important}}

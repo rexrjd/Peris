@@ -20,6 +20,7 @@ export function FieldInspector({ world, playerId, col, row, now, busy, run }: {
     const types = (Object.keys(FIELD_BUILDINGS) as FieldBuilding[]).filter(type => !plot?.building_type || plot.building_type === type);
     return <section className="territory-inspector" aria-label="Field ownership and development">
         <span className="eyebrow">{plot ? own ? 'YOUR TERRITORY' : 'OWNED TERRITORY' : 'UNCLAIMED FIELD'}</span>
+        <h2>{cell.name}</h2><p className="field-coordinates">X {cell.col} · Y {cell.row}</p>
         {plot && <p>Ruled by {playerName(world.players, plot.owner_id)} · {plot.level > 0 ? `Level ${plot.level} ${FIELD_BUILDINGS[plot.building_type!].name}` : pending ? 'Construction underway' : 'Empty land'}.</p>}
         {plot?.building_type && <p className="territory-output"><Icon name={FIELD_BUILDINGS[plot.building_type].resource} size={17}/><strong>{fieldRate(plot).toFixed(1)} / min</strong><span>{pending ? `Completes in ${clock(Math.max(0, (Date.parse(pending.finish_at) - now) / 1000))}` : 'Completed production'}</span></p>}
         {!plot && <><button className="button gold" disabled={busy || activeBattle || !!reason} onClick={() => run({ type: 'claimField', col: cell.col, row: cell.row }, 'Field claimed · choose a building next')}>Claim this empty field</button><p>{activeBattle ? 'Finish the current battle first.' : reason ?? 'Available. Claiming gives ownership; construction creates production.'}</p></>}
