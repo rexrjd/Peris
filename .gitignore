@@ -7,3 +7,11 @@ dist/
 .DS_Store
 standalone/
 tmp/world-map/
+
+# Local graphics tooling output
+playwright-report/
+test-results/
+blob-report/
+*.blend1
+*.blend2
+__pycache__/

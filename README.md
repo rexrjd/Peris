@@ -1,5 +1,7 @@
 # Peris v0.8 · Gameplay architecture
 
+Development tools: see **docs/DEV_TOOLS.md** for Codex/Blender/Playwright setup and **docs/GRAPHICS_PIPELINE.md** for model export and the next 3D battle milestone. On Windows, `START-PERIS-TOOLS.cmd` prepares the local checkout after Node.js is installed.
+
 The map release integrates a seeded seamless world and persistent external fields with latest main's city, eleven factions and magic systems. See **MAP_RELEASE.md** for branch publication/database deployment and **MAP_WORLD.md** for current rules. Existing databases use **UPGRADE_TO_V9.sql**; empty installations use **FRESH_INSTALL_V9.sql**. The earlier map notes below describe the preceding continental release.
 
 This is a structural refactor of the latest Peris v7 game. It keeps the current campaign, artwork, tactical rules, save compatibility and online behavior while separating map, battle, city, army, campaign, UI, rendering and platform systems.

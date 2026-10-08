@@ -20,7 +20,16 @@
     "test:factions-db": "node tests/factions-database.test.mjs",
     "test:territory-db": "node tests/map-territory-database.test.mjs",
     "test:map-db": "node tests/map-snapshot-database.test.mjs",
-    "test:population-db": "node --import tsx tests/population-database.test.mjs"
+    "test:population-db": "node --import tsx tests/population-database.test.mjs",
+    "setup:dev": "node scripts/setup-dev.mjs",
+    "check:dev": "node scripts/setup-dev.mjs --check",
+    "test:tooling": "node --test tests/tooling.test.mjs",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "assets:check": "node scripts/check-assets.mjs",
+    "assets:inspect": "gltf-transform inspect",
+    "assets:optimize": "gltf-transform optimize",
+    "assets:validate": "gltf-transform validate"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.57.4",
@@ -30,6 +39,8 @@
   },
   "devDependencies": {
     "@electric-sql/pglite": "0.3.10",
+    "@gltf-transform/cli": "4.5.1",
+    "@playwright/test": "1.64.0",
     "@types/react": "19.1.13",
     "@types/react-dom": "19.1.9",
     "@types/three": "0.186.0",

@@ -1,0 +1,19 @@
+# Applies to trusted local Peris checkouts. Does not change model or permissions.
+[mcp_servers.playwright]
+command = "npx"
+args = ["-y", "@playwright/mcp@0.0.83", "--caps", "vision,devtools"]
+startup_timeout_sec = 60
+
+[mcp_servers.context7]
+command = "npx"
+args = ["-y", "@upstash/context7-mcp@4.2.0"]
+env_vars = ["CONTEXT7_API_KEY"]
+startup_timeout_sec = 60
+
+# Reuses the user's existing MCP for Blender addon. Start its server in Blender.
+[mcp_servers.blender]
+command = "uvx"
+args = ["mcp-for-blender"]
+env = { BLENDER_HOST = "localhost", BLENDER_PORT = "9876" }
+startup_timeout_sec = 60
+tool_timeout_sec = 120
