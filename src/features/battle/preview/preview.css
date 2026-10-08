@@ -13,4 +13,6 @@
 .army-inspection small{margin-left:auto;color:#e2d7b8;background:#162b22bb;padding:5px;font:10px monospace}
 .preview-message,.preview-result{position:fixed;bottom:190px;left:24px;right:350px;z-index:8;background:#203c2e;border:1px solid #c3aa6d;color:#ebd9ad;padding:15px;border-radius:4px;font-size:12px}
 .preview-message button{float:right;background:none;color:inherit;border:0;font-size:18px}.preview-result{bottom:230px}
-@media(max-width:700px){.preview-toolbar{gap:6px;padding:7px}.preview-toolbar>div{width:100%}.preview-toolbar select{max-width:95px;font-size:10px}.preview-toolbar strong{font-size:10px}.preview-toolbar small,.preview-scope{font-size:8px}.army-inspection{top:94px;left:6px;right:6px}.army-inspection button{font-size:8px;padding:5px}.army-inspection small{font-size:8px}.preview-message,.preview-result{left:10px;right:10px;bottom:170px}.preview-toolbar a{display:none}}
+@media(max-width:700px){.preview-toolbar{gap:6px;padding:7px}.preview-toolbar>div{width:100%}.preview-toolbar select{max-width:95px;font-size:10px}.preview-toolbar strong{font-size:10px}.preview-toolbar small,.preview-scope{font-size:8px}.army-inspection{top:8px;left:6px;right:6px}.army-inspection button{font-size:8px;padding:5px}.army-inspection small{font-size:8px}.preview-message,.preview-result{left:10px;right:10px;bottom:170px}.preview-toolbar a{display:none}}
+/* Match the battle shell's mobile breakpoint so its deployment banner cannot cover these controls. */
+@media(min-width:701px) and (max-width:760px){.army-inspection{top:8px}}

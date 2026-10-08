@@ -6,6 +6,7 @@ Pass -- --connect to enable MCP, start the live server, and save addon preferenc
 """
 import argparse
 import bpy
+from datetime import datetime
 from pathlib import Path
 import sys
 from mathutils import Vector
@@ -47,5 +48,7 @@ if args.connect:
         print('PERIS_LIVE_CONNECTION_UNAVAILABLE', str(error), flush=True)
 out = ROOT / 'artifacts' / 'battle-preview' / 'peris-unit-review.blend'
 out.parent.mkdir(parents=True, exist_ok=True)
+if out.exists():
+    out = out.with_name('peris-unit-review-' + datetime.now().strftime('%Y%m%d-%H%M%S-%f') + '.blend')
 bpy.ops.wm.save_as_mainfile(filepath=str(out))
 print('PERIS_REVIEW_READY', out, flush=True)

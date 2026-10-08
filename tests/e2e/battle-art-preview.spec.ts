@@ -1,4 +1,16 @@
-import { test,expect } from '@playwright/test';
+import { test,expect,type Locator } from '@playwright/test';
+
+// Read after the renderer's animation callback, before WebGL discards its back buffer.
+// A selected formation stays centered while orbiting, so its label is not an orbit signal.
+async function battlefieldPixels(field:Locator) {
+    return field.evaluate((canvas:HTMLCanvasElement)=>new Promise<number>((resolve,reject)=>requestAnimationFrame(()=>{
+        const gl=canvas.getContext('webgl2');if(!gl){reject(new Error('Missing prototype WebGL context'));return;}
+        const width=Math.min(128,canvas.width),height=Math.min(128,canvas.height),pixels=new Uint8Array(width*height*4);
+        gl.readPixels(Math.floor((canvas.width-width)/2),Math.floor((canvas.height-height)/2),width,height,gl.RGBA,gl.UNSIGNED_BYTE,pixels);
+        let hash=2166136261;for(const pixel of pixels)hash=Math.imul(hash^pixel,16777619);
+        resolve(hash>>>0);
+    })));
+}
 
 test('army preview supports mesh inspection, deployment, combat, quality changes and 2D fallback without touching a campaign',async({page},testInfo)=>{
     test.setTimeout(120000);
@@ -11,7 +23,8 @@ test('army preview supports mesh inspection, deployment, combat, quality changes
     await expect(page.locator('.unit-card')).toHaveCount(7);
     await page.getByRole('button',{name:'Inspect selected troops',exact:true}).click();
     await expect(page.locator('.army-inspection small')).toContainText('FPS',{timeout:20000});
-    await field.hover();await page.mouse.wheel(0,-300);
+    if(testInfo.project.name==='mobile-chromium')await page.getByRole('button',{name:'Zoom in',exact:true}).tap();
+    else{await field.hover();await page.mouse.wheel(0,-300);}
     await page.screenshot({path:testInfo.outputPath('orc-inspection.png')});
     await page.locator('.unit-card').last().click();
     await page.getByRole('button',{name:'Inspect selected troops',exact:true}).click();
@@ -89,9 +102,10 @@ test('licensed infantry and cavalry prototypes keep textured rigs, orders, pause
     await page.locator('.unit-card').last().click();
     await page.getByRole('button',{name:'Inspect selected troops',exact:true}).click();
     const selected=page.locator('.battle-3d-label.friendly.selected').first();
-    const beforeOrbit=await selected.getAttribute('style');
+    const beforeOrbit=await battlefieldPixels(field);
+    expect(await battlefieldPixels(field)).toBe(beforeOrbit);
     await page.getByRole('button',{name:'Rotate camera right',exact:true}).click();
-    await expect(selected).not.toHaveAttribute('style',beforeOrbit!);
+    await expect.poll(()=>battlefieldPixels(field)).not.toBe(beforeOrbit);
     await page.screenshot({path:testInfo.outputPath('licensed-roman-cavalry.png')});
 
     await page.getByRole('button',{name:'Battle overview',exact:true}).click();
