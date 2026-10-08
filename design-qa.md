@@ -1,4 +1,58 @@
-# PERIS 200 × 200 low-poly map — design QA
+# PERIS map sample — current design QA
+
+Date: 2026-10-08. Branch: `mehdi/map-overhaul`.
+
+## Current sample scope
+
+The current direction is **The Wild Crown**, combining the Wild Riverlands layout with the darker Broken Crown atmosphere. The user delegated the choice. The playable native-renderer sample opens through `?map-preview=1`, with an independent seeded 200 × 200 terrain and temporary demonstration state. It is not a replacement for the existing campaign or an authoritative multiplayer implementation.
+
+The latest user revision requests actual architectural upgrades and a seamless world. Resource walls, roofs and machinery now advance through level 20, while central village halls mature with population. The sample realm now wraps east/west and north/south, with periodic geography, shared native tile assets and wrapped ownership/navigation. These changes build on the larger Civilization-inspired silhouettes and richer scenery. City responsibilities remain separate.
+
+Village and external resource-building visuals are exclusively map assets in `src/features/map/preview/`. No files under the city, army, battle, platform or Supabase systems were modified for this sample. The city team's four internal resource fields and city architecture are outside this implementation. Existing game entry points only gain a query switch and a launcher link.
+
+## Visual target and evidence
+
+- Selected combined direction: `C:/Users/alipo/.codex/generated_images/01a118be-cfda-7901-a9df-65db482f0964/exec-38bb84a1-2583-4466-9b7b-7cce732e5219.png`, 1672 × 941 pixels. Generated and displayed before implementation.
+- Earlier supporting Peri-desert concept: `C:/Users/alipo/.codex/generated_images/01a10d68-67f6-7492-ae34-a02cac3d2e2c/exec-78185382-51e1-410d-b4bc-0ff6d6edfc1c.png`.
+- The images establish atmosphere and scale. The user's interactive-game requirement calls for original native terrain and models. No concept image is used as the playable map background. The illustration's rectangular minimap and some oversized structures are deliberately corrected in code with square navigation and compact cell-bounded models.
+- Current sample browser screenshots: **none**. The older campaign-map captures below do not show this sample and cannot establish its fidelity or functionality.
+
+## Findings and gate
+
+- **[P1] Rendered visual verification is blocked.** Opening `http://127.0.0.1:5173/?map-preview=1` was rejected by an active saved browser permission. A further retry after the user's “enable” reply returned the same explicit denial. No alternate browser, address, port, raw browser protocol or indirect capture was used.
+- **Impact:** actual village readability, landscape composition, shader compilation, browser console status, desktop/mobile overflow, and primary interactions remain unverified in the browser. Build and native-geometry tests do not replace these checks. No percentage-fidelity or exact-look claim is supported.
+- **Required next verification:** once effective browser access is restored, capture the 1672 × 941 world, regional and close views and a 390 × 844 mobile view. Compare matching views against the source. Inspect all five race compounds, particularly the Peri desert. Claim an empty mountain field, inspect its −25% farm rate, construct it, and compare walls/roofs/equipment at levels 1/2/3/5/8/10/15/20. Fill four starter slots and test population-driven expansion. Pan through both edges and a corner at several rotations, select repeated settlements, and inspect the minimap's split viewport. Search for coordinates 100 and −101 and verify canonical field ownership. Test close field focus, minimap navigation, zoom/rotation and error recovery; check the browser console. Change realm seed, verify inspector/minimap/terrain agreement and repeat the same seed to check reproducibility. Check invalid seeds preserve the current sample and a same-seed restart resets developments.
+
+## Implemented surfaces with code evidence
+
+| Surface | Current evidence | Browser acceptance |
+| --- | --- | --- |
+| Continuous realm and five homelands | Periodic seeded 40,000-cell geography, branching rivers and lake basins; five tested seeds satisfy 85–94% land. Heights, gradients and water beds join across both seams and corners. | Pending |
+| Viable but varied resources | All generated starts have eight dry choices and reachable resource viability after other starting rings are protected. Richer bonuses vary. Spacing, protection and reachability use wrapped distances; settlement names are unique. | Pending |
+| Race villages and scale | Five distinct native compounds bounded to 0.72 cell width/depth (1.8× earlier horizontal size) with five population stages; resource models at most 0.56 cell width/depth (2× earlier horizontal size). Models remain within their own cells. | Pending |
+| Empty starting plots | No external plots preclaimed; four chosen among eight immediate neighbors, no building or income before completion. | Pending |
+| Development potential | All four resource choices available on land; modifier and level-one potential visible before a claim. Grassland farms +10%, mountain farms −25%. | Pending |
+| Population expansion | Connected claims across seams and corners, configurable milestones/radius, protected neighbors and canonical ownership aliases. Immutable construction and income transitions. | Pending |
+| Visible improvements | Completed models only. Actual wall/roof geometry changes at every level through 20, with eight architecture milestones from hut to master works. Original race-specific barns/granaries/windmills, enclosed mills/waterwheels/saws, mine headframes/hoists/processing halls and masonry kilns/chimneys. Central village halls mature with population. Mature structures remain intact above 20. | Pending |
+| Richer scenery and shadows | Layered pine/clustered oak, shrubs/scrub, dry oasis palms, rare broken arches and rune stones. Ten shared chunk-instanced geometry families; near detail hides at span 70, forest detail at 110. Larger clearings prevent neighboring crowns covering villages. Cached close-view shadow map increased to 2,048 × 2,048. | Pending |
+| Restrained overlays | Selected village labels, close-view grid, claim highlighting, sparse distant markers. Ownership edges suppress internal seams and use at most seven material batches. | Pending |
+| Minimap | Same cell geography, square projection, client-size/DPR backing, matching hit navigation and gutter guards. Seam-crossing viewports draw clipped translated footprints on opposite edges, including four corner pieces. | Pending |
+| Responsive inspector and controls | Scoped subdued styles, mobile dock, keyboard/touch controls, seed modal, close field focus, modal focus, graphics-loss callback/restoration. | Pending |
+| Enlarged model selection | Visible native meshes select their own field where roofs/flags project over a neighbor. Hidden and marker-only models cannot steal clicks; foreground terrain depth still occludes buildings. | Pending |
+| Seamless native exploration | Independent wrapped camera; shared 3 × 3 terrain/scenery geometry, materials and instance buffers, periodic shaders, clipped water faces. Visible village/building copies share assets and select canonical cells. Overview shows one primary realm. | Pending |
+
+## Automated validation and limits
+
+- All **98** repository TypeScript/architecture/gameplay/native-renderer tests pass, including **23** sample-domain, **21** native-renderer and **4** architectural-evolution tests. Tests compare actual walls/roofs independently of crops and stockpiles, verify periodic heights/slopes, canonical ownership and duplicate-alias rejection, wrapped pan/zoom/focus, seam picking, split minimap footprints, bounded shared geometry, construction clearings, culling and exactly-once disposal. The local test runner required execution outside the filesystem sandbox because its Windows user-information lookup failed before imports inside the sandbox.
+- Application and Node TypeScript checks pass. Production Vite build succeeds (194 transformed modules). The single JavaScript bundle is 1,242.84 kB before gzip and 360.03 kB gzipped; Vite emits its large-chunk advisory. This retains the existing single-bundle architecture. The bundler also required execution outside the filesystem sandbox because it could not read the project configuration through the restricted directory tree.
+- Diff whitespace checks pass. Dependencies are unchanged. No city-view changes, shared-state writes, database migrations, deployment, commit or push were performed.
+- Browser WebGL rendering, real touch hardware, GPU frame times, server persistence and thousands-of-player concurrency were not verified. Repeated native tiles, richer scenery and the larger shadow map specifically need close/regional/overview GPU checks before acceptance; no numeric “100% more graphics” or quality increase is claimed. The sample contains 190 settlements, not a thousands-of-player simulation. The six-second queues, initial supplies and population increments are sample balance. Economic levels are uncapped; each race/resource building uses at most 24 templates, with mature architecture fixed above 20 and five secondary detail phases. Resource models use at most nine material batches and 1,400 triangles. Shared tile/copy assets bound memory growth, but they do not establish GPU frame rates.
+
+final result: blocked
+
+---
+
+# Previous campaign-map QA record — 2026-10-06
 
 Date: 2026-10-06. Branch: `mehdi/map-overhaul`.
 
