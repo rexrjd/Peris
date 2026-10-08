@@ -56,6 +56,7 @@
     footer { border-top:1px solid var(--line); padding:32px 0 48px; font-size:13px; color:var(--muted); }
     code { font-size:12px; overflow-wrap:anywhere; }
     pre { white-space:pre-wrap; overflow-wrap:anywhere; padding:20px; background:var(--panel); border:1px solid var(--line); }
+    .game-capture { width:100%; height:auto; border:1px solid var(--line); display:block; }
     @media(max-width:800px) { .grid { grid-template-columns:repeat(2,minmax(0,1fr)); } .lead,.source { grid-template-columns:1fr; } }
     @media(max-width:540px) { .wrap { padding:0 20px; } nav .wrap { align-items:flex-start; flex-direction:column; padding-top:18px; padding-bottom:18px; gap:12px; } .navlinks { gap:18px; } header { padding-top:40px; } .grid,.steps,.criteria { grid-template-columns:1fr; } .lead { padding:22px; } section { padding:36px 0; } }
   </style>
@@ -74,6 +75,8 @@
       <p class="eyebrow">Ready to inspect</p><h2>The first infantry and seated cavalry</h2>
       <p class="section-intro">The Roman line infantry and heavy cavalry now use textured, rigged source models with idle, movement, and attack clips. Horse and rider retain their own skeletons with a shared animation clock.</p>
       <p><a href="/?battle-preview=1&amp;unit-prototypes=1">Open the playable prototype battle ↗</a> · <a href="/licenses/peris-unit-prototypes.txt">Credits and rebuild prerequisites</a></p>
+      <figure><img class="game-capture" src="previews/roman-cavalry.png" alt="Actual Three.js game capture showing twenty seated Roman cavalry prototypes during deployment"><figcaption class="note">Actual playable Three.js preview, captured during deployment with the cavalry inspection camera. The battlefield units are rendered 3D models; the portrait cards are concept illustrations.</figcaption></figure>
+      <p class="note"><strong>Measured on Intel Iris Xe:</strong> Ultra at 1600 × 1000 averaged 56.7 FPS with twenty cavalry visible, and 19.5 FPS in the full 540-soldier overview, including long stalls. Full-army performance still needs optimization. <a href="previews/performance.json">Raw measurement record</a> · <a href="previews/army-overview.png">Actual army overview capture</a></p>
       <div class="lead"><p><strong>Inspect in the game</strong><br>Select the first infantry card or the last cavalry card, then choose <em>Inspect selected troops</em>. Move the cavalry to check the seated pose in motion; use <em>Battle overview</em> to return to all formations.</p><p><strong>Inspect in Blender</strong><br>Open <code>assets/source/battle/reference-v2/peris-reference-prototypes.blend</code>. Run <code>scripts/blender/open_unit_review.py</code> for a separate side-by-side review scene. Middle mouse rotates; the wheel zooms; Space plays the idle loop.</p></div>
       <p class="note">Only these two Roman roles use the licensed source pack so far. Other factions retain their procedural prototypes. Rams and catapults are inspection models; Academy and Workshop progression remain planned.</p>
       <details><summary>Rebuild the prototypes</summary><p class="note">Install the project npm dependencies, Blender 4.5 with COLLADA import, and Python 3 with Pillow. Run these from the repository root. Replace <code>blender</code> and <code>python</code> with their installed executable paths if needed.</p><pre><code>node scripts/fetch-unit-references.mjs

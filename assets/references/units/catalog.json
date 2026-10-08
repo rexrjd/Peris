@@ -188,7 +188,9 @@
       "Set PERIS_REFERENCE_EDITION=reference-v3, then node scripts/prepare-reference-prototypes.mjs"
     ],
     "preservation": "Use an unused edition name for a new assembly. The builder refuses to overwrite existing editable sources. The review script saves a separate side-by-side scene under artifacts.",
-    "limitations": "The remaining faction roles retain the procedural prototype art. Siege studies are visual only; Academy research and Workshop recruitment are still design work. Full-army performance requires a separate warm benchmark."
+    "performanceRecord": "previews/performance.json",
+    "actualGameCapture": "previews/roman-cavalry.png",
+    "limitations": "The remaining faction roles retain the procedural prototype art. Siege studies are visual only; Academy research and Workshop recruitment are still design work. On Intel Iris Xe, Ultra at 1600x1000 averaged 56.7 FPS for twenty cavalry visible and 19.5 FPS for the full 540-soldier overview, with long stalls. Full-army performance still needs optimization."
   },
   "status": "First two licensed prototypes integrated; continuing visual review and faction art development."
 }

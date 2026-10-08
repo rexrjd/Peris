@@ -1,0 +1,106 @@
+{
+  "measuredAtUTC": "2026-10-08T23:08:16.728Z",
+  "cpu": "11th Gen Intel(R) Core(TM) i5-11300H @ 3.10GHz",
+  "memoryGiB": 15.8,
+  "gpu": "ANGLE (Intel, Intel(R) Iris(R) Xe Graphics, OpenGL 4.5.0)",
+  "viewport": {
+    "width": 1600,
+    "height": 1000
+  },
+  "deviceScaleFactor": 1,
+  "quality": "ultra",
+  "battlePhase": "deployment",
+  "animationsEnabled": true,
+  "totalBattleSoldiers": 540,
+  "prototypeRoles": [
+    "Roman line infantry",
+    "Roman heavy cavalry"
+  ],
+  "enemy": "Orcs",
+  "errors": [],
+  "overview": {
+    "view": "overview",
+    "warmupSeconds": 10,
+    "sampleCount": 5,
+    "sampleSeconds": 1,
+    "renderedSoldiers": 540,
+    "samples": [
+      {
+        "elapsedMs": 1760.2000000001863,
+        "frames": 11,
+        "fps": 6.249289853425085,
+        "rendererStats": "3 FPS · 291 draws · 4.30M triangles"
+      },
+      {
+        "elapsedMs": 1016.5999999999985,
+        "frames": 51,
+        "fps": 50.16722408026763,
+        "rendererStats": "9 FPS · 291 draws · 4.30M triangles"
+      },
+      {
+        "elapsedMs": 1483.300000000003,
+        "frames": 8,
+        "fps": 5.39337962650845,
+        "rendererStats": "9 FPS · 291 draws · 4.30M triangles"
+      },
+      {
+        "elapsedMs": 1016.5999999999985,
+        "frames": 55,
+        "fps": 54.10190832185725,
+        "rendererStats": "5 FPS · 291 draws · 4.30M triangles"
+      },
+      {
+        "elapsedMs": 1483.2999999999993,
+        "frames": 7,
+        "fps": 4.7192071731949055,
+        "rendererStats": "54 FPS · 291 draws · 4.30M triangles"
+      }
+    ],
+    "averageFPS": 19.526627218934376,
+    "minimumWindowFPS": 4.7192071731949055,
+    "maximumWindowFPS": 54.10190832185725
+  },
+  "inspection": {
+    "view": "cavalry-inspection",
+    "warmupSeconds": 10,
+    "sampleCount": 5,
+    "sampleSeconds": 1,
+    "renderedSoldiers": 20,
+    "samples": [
+      {
+        "elapsedMs": 1009.5,
+        "frames": 44,
+        "fps": 43.585933630510155,
+        "rendererStats": "60 FPS · 37 draws · 0.24M triangles"
+      },
+      {
+        "elapsedMs": 1016.5999999999985,
+        "frames": 61,
+        "fps": 60.00393468424168,
+        "rendererStats": "43 FPS · 37 draws · 0.24M triangles"
+      },
+      {
+        "elapsedMs": 1016.7000000000044,
+        "frames": 61,
+        "fps": 59.998032851381666,
+        "rendererStats": "60 FPS · 37 draws · 0.24M triangles"
+      },
+      {
+        "elapsedMs": 1016.5,
+        "frames": 61,
+        "fps": 60.00983767830792,
+        "rendererStats": "60 FPS · 37 draws · 0.24M triangles"
+      },
+      {
+        "elapsedMs": 1000,
+        "frames": 60,
+        "fps": 60,
+        "rendererStats": "60 FPS · 37 draws · 0.24M triangles"
+      }
+    ],
+    "averageFPS": 56.727215227402965,
+    "minimumWindowFPS": 43.585933630510155,
+    "maximumWindowFPS": 60.00983767830792
+  },
+  "limitations": "Five one-second RAF windows after ten-second warmup per view. Deployment scene with idle animations, not sustained combat or mobile performance. Inspection hides other formations."
+}
