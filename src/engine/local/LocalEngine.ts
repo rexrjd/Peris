@@ -42,6 +42,7 @@ export class LocalEngine implements GameEngine {
             const slot=world.city_slots.find(s=>s.building_type===type);
             if (slot) order.item=`slot:${slot.slot_index}:${type}`;
         }
+        if(world.settlements[0].population===undefined)settleLocal(world,this.playerId,Date.now());
         refreshCityEconomy(world,world.settlements[0].id);
         this.mode = persistent ? 'solo' : 'practice';
         this.persistent = persistent;

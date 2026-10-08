@@ -9,7 +9,13 @@ export function createSlotModel(type:SlotType|null,level:number,faction:Faction=
  if(type==='barracks'||type==='stables')return createBuildingModel(type,level,faction);
  if(type==='warehouse')return createBuildingModel('storehouse',level,faction);
  const k=cityKit(faction),{m,box,cylinder,cone,house}=k;
- if(type==='smithy') {
+ if(type==='housing'){
+  house(0,-.1,1.15,.9,.55+level*.13,level>=3);
+  if(level>=2)house(-.85,.15,.55,.65,.55+level*.08,level>=3,m.roofLight);
+  if(level>=3)house(.85,.15,.55,.65,.55+level*.08,true,m.slate);
+  if(level>=4){k.fence(0,.85,2.35);box(.22,.7,.22,-.3,0,-.3,m.darkStone);}
+  if(level>=5){house(0,-.8,1,.55,1.25,true);k.flag(0,1.8,-.8,.6);}
+ }else if(type==='smithy') {
   house(-.2,0,1.2,.9,.7+level*.06,level>=3,m.slate);
   box(.28,1.35+level*.12,.28,.4,0,-.25,m.darkStone);
   box(.45,.4,.45,.85,0,.6,m.darkStone);box(.26,.15,.03,.85,.15,.85,m.gold);

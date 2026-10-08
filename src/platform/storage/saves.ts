@@ -1,3 +1,4 @@
+import {settleLocal} from '../../features/campaign/domain/settlement';
 import {isFaction} from '../../features/factions/domain/factions';
 import { citySlots, refreshCityEconomy, SLOT_BUILDINGS, mainLevel, slotCount, slotMaxLevel } from '../../features/city/domain/slots';
 import {spellById} from '../../features/magic/domain/spells';
@@ -36,9 +37,12 @@ export function validateSave(data: unknown): World {
     if(town.faction!==undefined&&!isFaction(town.faction))invalid();
     if (town.owner_id !== 'solo-ruler' || army.owner_id !== 'solo-ruler' || typeof player.display_name !== 'string' || !player.display_name.trim() || typeof town.name !== 'string')
         invalid();
-    for (const n of [town.wood, town.stone, town.food, town.gold, town.capacity, town.wood_rate, town.stone_rate, town.food_rate, town.gold_rate, army.infantry, army.archers, army.cavalry, player.prestige, player.victories, player.recruits, player.upgrades])
+    for (const n of [town.wood, town.stone, town.food, town.gold, town.capacity, town.wood_rate, town.stone_rate, town.gold_rate, army.infantry, army.archers, army.cavalry, player.prestige, player.victories, player.recruits, player.upgrades])
         if (!Number.isFinite(n) || n < 0 || n > 1e12)
             invalid();
+    if(!Number.isFinite(town.food_rate)||town.food_rate< -1e6||town.food_rate>1e12)invalid();
+    for(const key of ['population','population_capacity','workers_required','wood_bonus','stone_bonus','food_bonus','gold_bonus','food_gross_rate','food_upkeep'] as const)if(town[key]!==undefined&&(!Number.isFinite(town[key])||town[key]!<0||town[key]!>100000))invalid();
+    if(town.population!==undefined&&(town.population<10||town.population>2500))invalid();
     if (army.infantry + army.archers + army.cavalry > 1000 || !['idle', 'moving'].includes(army.status))
         invalid();
     for (const n of [town.x, army.start_x, army.target_x])
@@ -152,6 +156,11 @@ export function validateSave(data: unknown): World {
     const normalized = structuredClone(w);
     for (const building of normalized.buildings) building.level = Math.min(5, building.level);
     normalized.city_slots ??= citySlots(normalized,town.id);
+    for(const order of normalized.orders)if(order.kind==='upgrade'&&['barracks','stables','storehouse'].includes(order.item)){
+        const type=order.item==='storehouse'?'warehouse':order.item,slot=normalized.city_slots.find(s=>s.settlement_id===town.id&&s.building_type===type);
+        if(slot)order.item=`slot:${slot.slot_index}:${type}`;
+    }
+    if(normalized.settlements[0].population===undefined)settleLocal(normalized,'solo-ruler',Date.now(),false);
     refreshCityEconomy(normalized,town.id);
     return normalized;
 }

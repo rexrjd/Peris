@@ -3,9 +3,13 @@ import { completeUpgrade } from '../../city/domain/construction';
 import { completeRecruit } from '../../army/domain/recruitment';
 import { completeTravel } from '../../map/domain/movement';
 import { type World } from '../../../shared/model/world';
+<<<<<<< Updated upstream
 import { completeMapField } from '../../map/domain/territory';
 import { refreshCityEconomy } from '../../city/domain/slots';
 export function settleLocal(w: World, owner: string, now = Date.now()) {
+=======
+export function settleLocal(w: World, owner: string, now = Date.now(), travel=true) {
+>>>>>>> Stashed changes
     const s = w.settlements.find(s => s.owner_id === owner), p = w.players.find(p => p.id === owner), a = w.armies.find(a => a.owner_id === owner);
     if (!s || !p || !a)
         return;
@@ -21,5 +25,5 @@ export function settleLocal(w: World, owner: string, now = Date.now()) {
         w.orders = w.orders.filter(q => q.id !== o.id);
     }
     accrueResources(s, now);
-    completeTravel(a, now);
+    if(travel)completeTravel(a, now);
 }

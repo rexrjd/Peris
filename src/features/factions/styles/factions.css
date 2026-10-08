@@ -3,3 +3,5 @@
 .city-faction-controls small{display:block;line-height:1.5;color:#b9bba9}.city-debug{margin-top:12px;border-top:1px solid #49564e;padding-top:12px}.city-debug summary{cursor:pointer;font-weight:700;color:#e7c581}.city-debug p{font-size:12px;margin:10px 0}.debug-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}.debug-actions button{font-size:11px;padding:9px 6px;min-width:0}.debug-actions button:last-child{grid-column:1/-1}.city-debug .debug-demolish{width:100%;margin:6px 0 10px;border-color:#925e4f;color:#efbaa3;font-size:12px}.city-heading .faction-tag{margin-top:8px;display:inline-block}.city-debug .field-label{font-size:10px}
 
 .debug-next-faction{width:100%;margin-top:10px;font-size:12px}
+
+.debug-population{width:100%;font-size:11px;margin:0 0 12px}

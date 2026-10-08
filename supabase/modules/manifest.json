@@ -6,6 +6,7 @@
   "map/territory.sql",
   "map/peris_army_position.sql",
   "magic/mage-tower.sql",
+  "city/population.sql",
   "city/peris_settle.sql",
   "battle/peris_add_formations.sql",
   "campaign/peris_start_raid.sql",

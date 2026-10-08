@@ -17,6 +17,7 @@ export function debugCity(ctx:LocalCommandContext,cmd:Extract<Command,{type:'deb
   if(cmd.value!==0&&cmd.value!==1000)throw new Error('Choose fill storage or +1,000 supplies.');
   for(const key of RESOURCES){const cap=key==='food'?town.food_capacity??town.capacity:town.capacity;town[key]=cmd.value===0?cap:Math.min(cap,town[key]+1000);}town.resources_updated_at=ctx.now;return;
  }
+ if(cmd.action==='population'){if(cmd.value!==0&&cmd.value!==10)throw new Error('Choose fill housing or +10 residents.');town.population=cmd.value===0?town.population_capacity??40:Math.min(town.population_capacity??40,(town.population??30)+10);refreshCityEconomy(w,town.id);return;}
  if(cmd.action==='finish'){
   for(const o of w.orders.filter(o=>o.owner_id===ctx.playerId&&o.kind==='upgrade')){o.finish_at=ctx.now;completeUpgrade(w,town,player,o);}
   w.orders=w.orders.filter(o=>o.owner_id!==ctx.playerId||o.kind!=='upgrade');return;
