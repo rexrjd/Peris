@@ -41,7 +41,7 @@ export function validateSave(data: unknown): World {
         if (!Number.isFinite(n) || n < 0 || n > 1e12)
             invalid();
     if(!Number.isFinite(town.food_rate)||town.food_rate< -1e6||town.food_rate>1e12)invalid();
-    for(const key of ['population','population_capacity','workers_required','wood_bonus','stone_bonus','food_bonus','gold_bonus','food_gross_rate','food_upkeep'] as const)if(town[key]!==undefined&&(!Number.isFinite(town[key])||town[key]!<0||town[key]!>100000))invalid();
+    for(const key of ['population','population_capacity','workers_required','wood_bonus','stone_bonus','food_bonus','gold_bonus','food_gross_rate','food_upkeep','field_wood_rate','field_stone_rate','field_food_rate','field_gold_rate'] as const)if(town[key]!==undefined&&(!Number.isFinite(town[key])||town[key]!<0||town[key]!>100000))invalid();
     if(town.population!==undefined&&(town.population<10||town.population>2500))invalid();
     if (army.infantry + army.archers + army.cavalry > 1000 || !['idle', 'moving'].includes(army.status))
         invalid();

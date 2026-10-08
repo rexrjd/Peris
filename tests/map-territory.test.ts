@@ -139,7 +139,7 @@ test('parallel field and city completions accrue chronologically while fisheries
     const f=fixture();claimFour(f);
     f.world.city_slots=[{settlement_id:f.town.id,slot_index:0,building_type:'warehouse',level:2},{settlement_id:f.town.id,slot_index:1,building_type:'granary',level:3},{settlement_id:f.town.id,slot_index:16,building_type:'fishery',level:1}];
     refreshCityEconomy(f.world,f.town.id);
-    assert.equal(f.town.capacity,10000);assert.equal(f.town.food_capacity,12500);assert.equal(f.town.food_rate,26);
+    assert.equal(f.town.capacity,10000);assert.equal(f.town.food_capacity,12500);assert.equal(f.town.food_gross_rate,26);near(f.town.food_rate,26-.12*f.town.population!);
     queueMapField(f.context,0,1,'lumber');
     clock(f,5);queueMapField(f.context,0,2,'farm');
     clock(f,10);queueSlot(f.context,{type:'upgradeSlot',slot:16});queueMapField(f.context,0,3,'quarry');
@@ -149,9 +149,10 @@ test('parallel field and city completions accrue chronologically while fisheries
     const [lumber,farm,quarry]=f.world.map_plots!;
     near(f.town.wood,atTen.wood+14*50/60+fieldRate(lumber)*45/60);
     near(f.town.stone,atTen.stone+12*50/60+fieldRate(quarry)*35/60);
-    near(f.town.food,atTen.food+26*50/60+fieldRate(farm)*40/60+8*25/60);
+    const upkeep=.12*(30+10/60+31)/2*(50/60);
+    near(f.town.food,atTen.food+26*50/60+fieldRate(farm)*40/60+8*25/60-upkeep);
     near(f.town.gold,atTen.gold+3*50/60);
-    assert.equal(f.town.food_rate,34+fieldRate(farm));
+    near(f.town.food_gross_rate!,34+fieldRate(farm));near(f.town.food_rate,34+fieldRate(farm)-.12*f.town.population!);
     assert.equal(f.town.capacity,10000);assert.equal(f.town.food_capacity,12500);
     assert.equal(f.world.players[0].upgrades,4);assert.deepEqual(f.world.orders,[]);
     const expected=resources(f);refreshCityEconomy(f.world,f.town.id);refreshCityEconomy(f.world,f.town.id);

@@ -65,7 +65,7 @@ try {
     for (const [col, row, type] of plots) await rpc('peris_queue_field', [col, row, type]);
     assert.equal((await query(`select count(*) as n from public.peris_orders where owner_id='${u}' and kind='field'`))[0].n, 4, 'different fields build in parallel');
     assert.ok((await fields()).every(p => p.building_type && p.level === 0));
-    assert.deepEqual(numeric((await query(`select wood_rate,stone_rate,food_rate,gold_rate from public.settlements where id=${sid}`))[0]), { wood_rate: 14, stone_rate: 12, food_rate: 18, gold_rate: 3 });
+    assert.deepEqual(numeric((await query(`select wood_rate,stone_rate,food_gross_rate,gold_rate from public.settlements where id=${sid}`))[0]), { wood_rate: 14, stone_rate: 12, food_gross_rate: 18, gold_rate: 3 });
     await assert.rejects(() => rpc('peris_queue_field', [-100, 99, 'lumber']), /already underway/);
     await assert.rejects(() => rpc('peris_queue_field', [-100, 99, 'farm']), /existing resource/);
     await assert.rejects(() => rpc('peris_queue_field', [-100, 99, 'iron-mine']), /valid resource/);
@@ -73,21 +73,21 @@ try {
 
     // A late sync must account for every old/new rate segment at actual completion.
     const start = '2026-01-01T00:00:00Z';
-    await admin(`update public.settlements set wood=0,stone=0,food=0,gold=0,resources_updated_at='${start}' where id=${sid}`);
+    await admin(`update public.settlements set wood=0,stone=0,food=0,gold=0,population=30,resources_updated_at='${start}' where id=${sid}`);
     for (let i = 0; i < plots.length; i++) {
         const [col, row, type] = plots[i];
         await db.query(`update public.peris_orders set started_at=$1::timestamptz,finish_at=$1::timestamptz+make_interval(secs=>$2) where owner_id=$3 and item=$4`, [start, (i + 1) * 60, u, `field:${col}:${row}:${type}`]);
     }
     await rpc('peris_settle', [u, '2026-01-01T00:00:30Z']);
-    let s = await town(); for (const [key, expected] of Object.entries({ wood: 7, stone: 6, food: 9, gold: 1.5 })) close(s[key], expected);
+    let s = await town(); for (const [key, expected] of Object.entries({ wood: 7, stone: 6, food: 9-1.815, gold: 1.5 })) close(s[key], expected);
     assert.ok((await fields()).every(p => p.level === 0));
     await rpc('peris_settle', [u, '2026-01-01T00:05:00Z']); s = await town();
-    for (const [key, expected] of Object.entries({ wood: 100, stone: 79.5, food: 107.6, gold: 17.2, wood_rate: 21.5, stone_rate: 18.5, food_rate: 26.8, gold_rate: 5.2 })) close(s[key], expected);
+    for (const [key, expected] of Object.entries({ wood: 100, stone: 79.5, food: 107.6-19.5, gold: 17.2, wood_rate: 21.5, stone_rate: 18.5, food_rate: 26.8-.12*35, gold_rate: 5.2 })) close(s[key], expected);
     assert.ok((await fields()).every(p => p.level === 1)); assert.equal((await query(`select upgrades from public.players where id='${u}'`))[0].upgrades, 4);
     assert.equal((await query(`select count(*) as n from public.peris_orders where owner_id='${u}'`))[0].n, 0);
     await rpc('peris_settle', [u, '2026-01-01T00:05:00Z']); assert.deepEqual(await town(), s, 'completion is consumed once');
     await rpc('peris_settle', [u, '2026-01-01T00:06:00Z']);
-    for (const [key, expected] of Object.entries({ wood: 121.5, stone: 98, food: 134.4, gold: 22.4 })) close((await town())[key], expected);
+    for (const [key, expected] of Object.entries({ wood: 121.5, stone: 98, food: 134.4-23.76, gold: 22.4 })) close((await town())[key], expected);
 
     await login(); await rpc('peris_claim_field', [-99, 99]);
     await assert.rejects(() => rpc('peris_claim_field', [-99, -100]), /population/);
@@ -153,7 +153,7 @@ try {
     assert.deepEqual([(await town()).x, (await town()).y], positionBefore); assert.equal((await town()).faction, 'elf');
     assert.equal((await query(`select count(*) as n from public.peris_spell_research where settlement_id=${sid}`))[0].n, 1);
     s = await town(); const rates = (await query('select * from public.peris_field_rates($1)', [sid]))[0];
-    close(s.wood_rate, 14 + Number(rates.wood)); close(s.stone_rate, 12 + Number(rates.stone)); close(s.food_rate, 46 + Number(rates.food)); close(s.gold_rate, 3 + Number(rates.gold));
+    close(s.wood_rate, 14 + Number(rates.wood)); close(s.stone_rate, 12 + Number(rates.stone)); close(s.food_gross_rate, 46 + Number(rates.food)); close(s.food_rate, 46 + Number(rates.food) - .12*Number(s.population)); close(s.gold_rate, 3 + Number(rates.gold));
     assert.equal(s.capacity, 10000); assert.equal(s.food_capacity, 7500);
     await login(); await rpc('create_player', ['Ignored Existing Name']); assert.deepEqual([(await town()).x, (await town()).y], positionBefore);
 

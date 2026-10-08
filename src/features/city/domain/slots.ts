@@ -2,7 +2,7 @@ import {populationPlan,populationRates,POPULATION_START} from './population';
 import type { World } from '../../../shared/model/world';
 import type { Resources } from '../../../shared/model/resources';
 import { multiply } from '../../../shared/model/resources';
-import { externalFieldRates } from '../../map/domain/territory';
+import { externalFieldRates } from '../../map/domain/fieldProduction';
 
 export type SlotType = 'barracks' | 'stables' | 'smithy' | 'warehouse' | 'granary' | 'fishery' | 'mage_tower' | 'housing';
 export type CitySlot = { settlement_id: number; slot_index: number; building_type: SlotType; level: number };
@@ -42,12 +42,9 @@ export function refreshCityEconomy(w: World, sid: number, population = true) {
     town.gold_rate=3+level('market')*3;
     town.capacity=5000+slotLevels(w,sid,'warehouse')*2500;
     town.food_capacity=5000+slotLevels(w,sid,'granary')*2500;
-<<<<<<< Updated upstream
     const fields = externalFieldRates(w.map_plots ?? [], sid);
     town.wood_rate += fields.wood; town.stone_rate += fields.stone;
     town.food_rate += fields.food; town.gold_rate += fields.gold;
-=======
     if(!population)return;
     Object.assign(town,populationPlan(w,sid));town.population=Math.max(10,Math.min(town.population_capacity!,town.population??POPULATION_START));Object.assign(town,populationRates(town));
->>>>>>> Stashed changes
 }

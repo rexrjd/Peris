@@ -15,6 +15,7 @@ create policy "own city slots" on public.peris_city_slots for select to authenti
 revoke all on public.peris_city_slots from public,anon,authenticated;
 grant select on public.peris_city_slots to authenticated;
 create or replace function public.peris_city_economy(p_sid bigint) returns void language plpgsql security definer set search_path='' as $$
+declare fw numeric;fs numeric;ff numeric;fg numeric;
 begin
  update public.settlements s set
  wood_rate=14+8*coalesce((select level from public.buildings where settlement_id=s.id and building_type='lumber'),0),
@@ -24,6 +25,10 @@ begin
  capacity=5000+2500*coalesce((select sum(level) from public.peris_city_slots where settlement_id=s.id and building_type='warehouse'),0),
  food_capacity=5000+2500*coalesce((select sum(level) from public.peris_city_slots where settlement_id=s.id and building_type='granary'),0)
  where s.id=p_sid;
+ if to_regprocedure('public.peris_field_rates(bigint)')is not null then
+  execute 'select wood,stone,food,gold from public.peris_field_rates($1)' into fw,fs,ff,fg using p_sid;
+  update public.settlements set wood_rate=wood_rate+fw,stone_rate=stone_rate+fs,food_rate=food_rate+ff,gold_rate=gold_rate+fg where id=p_sid;
+ end if;
 end $$;
 create or replace function public.peris_city_migrate(p_sid bigint) returns void language plpgsql security definer set search_path='' as $$
 begin

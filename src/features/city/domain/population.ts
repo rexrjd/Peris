@@ -1,16 +1,18 @@
 import type {World} from '../../../shared/model/world';
 import type {Settlement} from './types';
+import {externalFieldRates} from '../../map/domain/fieldProduction';
 export const POPULATION_START=30,POPULATION_FLOOR=10,FOOD_PER_PERSON=.12;
 export const WORKERS_PER_LEVEL={market:4,lumber:6,quarry:6,farm:5,fishery:4} as const;
 export function populationPlan(w:World,sid:number){
  const level=(type:string)=>w.buildings.find(b=>b.settlement_id===sid&&b.building_type===type)?.level??0;
- const slots=w.city_slots?.filter(s=>s.settlement_id===sid)??[],sum=(type:string)=>slots.filter(s=>s.building_type===type).reduce((n,s)=>n+s.level,0);
+ const slots=w.city_slots?.filter(s=>s.settlement_id===sid)??[],sum=(type:string)=>slots.filter(s=>s.building_type===type).reduce((n,s)=>n+s.level,0),fields=externalFieldRates(w.map_plots??[],sid);
  return {population_capacity:40+level('market')*10+sum('housing')*30,workers_required:level('market')*4+level('lumber')*6+level('quarry')*6+level('farm')*5+sum('fishery')*4,
- wood_bonus:level('lumber')*8,stone_bonus:level('quarry')*7,food_bonus:level('farm')*10+sum('fishery')*8,gold_bonus:level('market')*3};
+ wood_bonus:level('lumber')*8,stone_bonus:level('quarry')*7,food_bonus:level('farm')*10+sum('fishery')*8,gold_bonus:level('market')*3,
+ field_wood_rate:fields.wood,field_stone_rate:fields.stone,field_food_rate:fields.food,field_gold_rate:fields.gold};
 }
 export function populationRates(s:Settlement,p=s.population??POPULATION_START){
- const staffing=Math.min(1,p/Math.max(1,s.workers_required??0)),gross=18+(s.food_bonus??0)*staffing,upkeep=p*FOOD_PER_PERSON;
- return {wood_rate:14+(s.wood_bonus??0)*staffing,stone_rate:12+(s.stone_bonus??0)*staffing,food_rate:gross-upkeep,gold_rate:3+(s.gold_bonus??0)*staffing,food_gross_rate:gross,food_upkeep:upkeep};
+ const staffing=Math.min(1,p/Math.max(1,s.workers_required??0)),gross=18+(s.field_food_rate??0)+(s.food_bonus??0)*staffing,upkeep=p*FOOD_PER_PERSON;
+ return {wood_rate:14+(s.field_wood_rate??0)+(s.wood_bonus??0)*staffing,stone_rate:12+(s.field_stone_rate??0)+(s.stone_bonus??0)*staffing,food_rate:gross-upkeep,gold_rate:3+(s.field_gold_rate??0)+(s.gold_bonus??0)*staffing,food_gross_rate:gross,food_upkeep:upkeep};
 }
 const EPS=1e-9;
 /** Earliest positive crossing of a resource boundary under a linear changing rate. */

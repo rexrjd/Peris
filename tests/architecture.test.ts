@@ -8,6 +8,12 @@ const walk=(dir:string):string[]=>readdirSync(dir,{withFileTypes:true}).flatMap(
 const modules=walk(root)
 const imports=(file:string)=>ts.createSourceFile(file,readFileSync(file,'utf8'),ts.ScriptTarget.Latest,true).statements.filter(ts.isImportDeclaration)
 const isType=(n:ts.ImportDeclaration)=>n.importClause?.isTypeOnly||!!n.importClause?.namedBindings&&ts.isNamedImports(n.importClause.namedBindings)&&!n.importClause.name&&n.importClause.namedBindings.elements.every(e=>e.isTypeOnly)
+test('deployment inputs contain no unresolved merge conflicts',()=>{
+ const sql=(dir:string):string[]=>readdirSync(dir,{withFileTypes:true}).flatMap(d=>d.isDirectory()?sql(path.join(dir,d.name)):d.name.endsWith('.sql')?[path.join(dir,d.name)]:[])
+ for(const file of [path.resolve('package.json'),...modules,...sql(path.resolve('supabase'))]){
+  assert.ok(!/^(?:<{7}(?: |$)|={7}$|>{7}(?: |$))/m.test(readFileSync(file,'utf8')),`Unresolved merge conflict: ${path.relative(process.cwd(),file)}`)
+ }
+})
 test('gameplay domains cannot depend on rendering, UI, adapters or browser APIs',()=>{
  const domains=modules.filter(f=>f.split(path.sep).includes('domain'))
  assert.ok(domains.length>0,'No gameplay domains found; the architecture check must inspect domain modules')

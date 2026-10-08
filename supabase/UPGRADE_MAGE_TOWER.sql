@@ -17,6 +17,7 @@ create policy "own city slots" on public.peris_city_slots for select to authenti
 revoke all on public.peris_city_slots from public,anon,authenticated;
 grant select on public.peris_city_slots to authenticated;
 create or replace function public.peris_city_economy(p_sid bigint) returns void language plpgsql security definer set search_path='' as $$
+declare fw numeric;fs numeric;ff numeric;fg numeric;
 begin
  update public.settlements s set
  wood_rate=14+8*coalesce((select level from public.buildings where settlement_id=s.id and building_type='lumber'),0),
@@ -26,6 +27,10 @@ begin
  capacity=5000+2500*coalesce((select sum(level) from public.peris_city_slots where settlement_id=s.id and building_type='warehouse'),0),
  food_capacity=5000+2500*coalesce((select sum(level) from public.peris_city_slots where settlement_id=s.id and building_type='granary'),0)
  where s.id=p_sid;
+ if to_regprocedure('public.peris_field_rates(bigint)')is not null then
+  execute 'select wood,stone,food,gold from public.peris_field_rates($1)' into fw,fs,ff,fg using p_sid;
+  update public.settlements set wood_rate=wood_rate+fw,stone_rate=stone_rate+fs,food_rate=food_rate+ff,gold_rate=gold_rate+fg where id=p_sid;
+ end if;
 end $$;
 create or replace function public.peris_city_migrate(p_sid bigint) returns void language plpgsql security definer set search_path='' as $$
 begin
@@ -201,6 +206,7 @@ do $$declare city record;begin
  end if;
 end $$;
 -- Civilian population, housing and production-worker economy.
+-- External fields keep their terrain-adjusted income independently of city staffing.
 alter table public.settlements add column if not exists population numeric(18,6) not null default 30 check(population between 10 and 2500);
 alter table public.settlements add column if not exists population_capacity integer not null default 40;
 alter table public.settlements add column if not exists workers_required integer not null default 0;
@@ -211,6 +217,10 @@ alter table public.settlements add column if not exists gold_bonus numeric not n
 alter table public.settlements add column if not exists food_gross_rate numeric not null default 18;
 alter table public.settlements add column if not exists food_upkeep numeric not null default 3.6;
 alter table public.settlements add column if not exists population_ready boolean not null default false;
+alter table public.settlements add column if not exists field_wood_rate numeric not null default 0;
+alter table public.settlements add column if not exists field_stone_rate numeric not null default 0;
+alter table public.settlements add column if not exists field_food_rate numeric not null default 0;
+alter table public.settlements add column if not exists field_gold_rate numeric not null default 0;
 alter table public.settlements alter column wood_rate type numeric(18,8);
 alter table public.settlements alter column stone_rate type numeric(18,8);
 alter table public.settlements alter column food_rate type numeric(18,8);
@@ -237,7 +247,7 @@ begin
  end if;
  p:=greatest(10,least(s.population_capacity,s.population));cap:=s.population_capacity;jobs:=s.workers_required;
  for i in 1..64 loop
-  exit when remaining<=1e-9;staff:=least(1,p/greatest(1,jobs));gross:=18+s.food_bonus*staff;net:=gross-.12*p;
+  exit when remaining<=1e-9;staff:=least(1,p/greatest(1,jobs));gross:=18+s.field_food_rate+s.food_bonus*staff;net:=gross-.12*p;
   growth:=case when s.food>1e-9 or net>1e-9 then case when p<cap-1e-9 then 1 else 0 end when net< -1e-9 and p>10+1e-9 then -1 else 0 end;
   factor:=case when jobs>0 and (p<jobs-1e-9 or abs(p-jobs)<1e-9 and growth<0)then growth/jobs else 0 end;food_slope:=s.food_bonus*factor-.12*growth;
   dt:=remaining;if growth>0 then dt:=least(dt,cap-p);elsif growth<0 then dt:=least(dt,p-10);end if;
@@ -245,38 +255,40 @@ begin
   food_full:=s.food>=s.food_capacity-1e-9 and (net>1e-9 or abs(net)<=1e-9 and food_slope>=0);
   if not food_full then dt:=public.peris_population_event(s.food::double precision,net,food_slope,0,dt);dt:=public.peris_population_event(s.food::double precision,net,food_slope,s.food_capacity,dt);end if;
   if abs(food_slope)>1e-9 then zero_at:=-net/food_slope;if zero_at>1e-9 then dt:=least(dt,zero_at);end if;end if;exit when dt<=1e-9;
-  s.wood:=least(s.capacity,greatest(0,s.wood+(14+s.wood_bonus*staff)*dt+s.wood_bonus*factor*dt*dt/2));
-  s.stone:=least(s.capacity,greatest(0,s.stone+(12+s.stone_bonus*staff)*dt+s.stone_bonus*factor*dt*dt/2));
-  s.gold:=least(s.capacity,greatest(0,s.gold+(3+s.gold_bonus*staff)*dt+s.gold_bonus*factor*dt*dt/2));
+  s.wood:=least(s.capacity,greatest(0,s.wood+(14+s.field_wood_rate+s.wood_bonus*staff)*dt+s.wood_bonus*factor*dt*dt/2));
+  s.stone:=least(s.capacity,greatest(0,s.stone+(12+s.field_stone_rate+s.stone_bonus*staff)*dt+s.stone_bonus*factor*dt*dt/2));
+  s.gold:=least(s.capacity,greatest(0,s.gold+(3+s.field_gold_rate+s.gold_bonus*staff)*dt+s.gold_bonus*factor*dt*dt/2));
   s.food:=greatest(0,least(s.food_capacity,case when food_full then s.food_capacity else s.food+net*dt+food_slope*dt*dt/2 end));
   p:=greatest(10,least(cap,p+growth*dt));remaining:=remaining-dt;
  end loop;
- staff:=least(1,p/greatest(1,jobs));gross:=18+s.food_bonus*staff;
+ staff:=least(1,p/greatest(1,jobs));gross:=18+s.field_food_rate+s.food_bonus*staff;
  update public.settlements set population=p,wood=s.wood,stone=s.stone,food=s.food,gold=s.gold,
-  wood_rate=14+s.wood_bonus*staff,stone_rate=12+s.stone_bonus*staff,gold_rate=3+s.gold_bonus*staff,food_rate=gross-.12*p,food_gross_rate=gross,food_upkeep=.12*p,
+  wood_rate=14+s.field_wood_rate+s.wood_bonus*staff,stone_rate=12+s.field_stone_rate+s.stone_bonus*staff,gold_rate=3+s.field_gold_rate+s.gold_bonus*staff,food_rate=gross-.12*p,food_gross_rate=gross,food_upkeep=.12*p,
   resources_updated_at=greatest(resources_updated_at,p_until)where id=s.id;
 end $$;
 create or replace function public.peris_city_economy(p_sid bigint)returns void language plpgsql security definer set search_path='' as $$
-declare main integer;lumber integer;quarry integer;farm integer;fish integer;homes integer;s public.settlements%rowtype;staff numeric;
+declare main integer;lumber integer;quarry integer;farm integer;fish integer;homes integer;s public.settlements%rowtype;staff numeric;fw numeric:=0;fs numeric:=0;ff numeric:=0;fg numeric:=0;
 begin
  select * into s from public.settlements where id=p_sid for update;if s.id is null then return;end if;
  if not s.population_ready then perform public.peris_population_accrue(p_sid,now());select * into s from public.settlements where id=p_sid;end if;
  select coalesce(max(level)filter(where building_type='market'),0),coalesce(max(level)filter(where building_type='lumber'),0),coalesce(max(level)filter(where building_type='quarry'),0),coalesce(max(level)filter(where building_type='farm'),0) into main,lumber,quarry,farm from public.buildings where settlement_id=p_sid;
  select coalesce(sum(level)filter(where building_type='fishery'),0),coalesce(sum(level)filter(where building_type='housing'),0) into fish,homes from public.peris_city_slots where settlement_id=p_sid;
  s.population_capacity:=40+10*main+30*homes;s.population:=greatest(10,least(s.population_capacity,s.population));s.workers_required:=4*main+6*lumber+6*quarry+5*farm+4*fish;
+ if to_regprocedure('public.peris_field_rates(bigint)')is not null then execute 'select wood,stone,food,gold from public.peris_field_rates($1)' into fw,fs,ff,fg using p_sid;end if;
  staff:=least(1,s.population/greatest(1,s.workers_required));
  update public.settlements set population=s.population,population_capacity=s.population_capacity,workers_required=s.workers_required,population_ready=true,
+  field_wood_rate=fw,field_stone_rate=fs,field_food_rate=ff,field_gold_rate=fg,
   wood_bonus=8*lumber,stone_bonus=7*quarry,food_bonus=10*farm+8*fish,gold_bonus=3*main,
-  wood_rate=14+8*lumber*staff,stone_rate=12+7*quarry*staff,food_gross_rate=18+(10*farm+8*fish)*staff,food_upkeep=.12*s.population,food_rate=18+(10*farm+8*fish)*staff-.12*s.population,gold_rate=3+3*main*staff,
+  wood_rate=14+fw+8*lumber*staff,stone_rate=12+fs+7*quarry*staff,food_gross_rate=18+ff+(10*farm+8*fish)*staff,food_upkeep=.12*s.population,food_rate=18+ff+(10*farm+8*fish)*staff-.12*s.population,gold_rate=3+fg+3*main*staff,
   capacity=5000+2500*coalesce((select sum(level) from public.peris_city_slots where settlement_id=p_sid and building_type='warehouse'),0),
   food_capacity=5000+2500*coalesce((select sum(level) from public.peris_city_slots where settlement_id=p_sid and building_type='granary'),0)where id=p_sid;
 end $$;
 -- Settle legacy income before initializing population; repeated upgrades preserve it.
-do $$declare city record;begin for city in select id from public.settlements where not population_ready loop perform public.peris_city_migrate(city.id);perform public.peris_city_economy(city.id);end loop;end $$;
+do $$declare city record;begin for city in select id from public.settlements loop perform public.peris_city_migrate(city.id);perform public.peris_city_economy(city.id);end loop;end $$;
 revoke all on function public.peris_population_event(double precision,double precision,double precision,double precision,double precision),public.peris_population_accrue(bigint,timestamptz),public.peris_city_economy(bigint) from public,anon,authenticated;
 create or replace function public.peris_settle(p_owner uuid,p_until timestamptz default now()) returns void
 language plpgsql security definer set search_path='' as $$
-declare s public.settlements%rowtype;o public.peris_orders%rowtype;target_slot integer;
+declare s public.settlements%rowtype;o public.peris_orders%rowtype;target_slot integer;field_col integer;field_row integer;
 begin
  perform 1 from public.players where id=p_owner for update;
  select * into s from public.settlements where owner_id=p_owner for update;if s.id is null then return;end if;
@@ -289,7 +301,12 @@ begin
     update public.peris_city_slots set level=least(case when building_type='mage_tower' then 10 else 5 end,level+1)where settlement_id=s.id and slot_index=target_slot;
    else update public.buildings set level=least(5,level+1),updated_at=o.finish_at where settlement_id=s.id and building_type=o.item;end if;
    update public.players set upgrades=upgrades+1 where id=p_owner;perform public.peris_city_economy(s.id);
-  else
+  elsif o.kind='field' then
+   field_col:=split_part(o.item,':',2)::integer;field_row:=split_part(o.item,':',3)::integer;
+   update public.peris_map_plots set level=level+1 where col=field_col and row=field_row and owner_id=p_owner and settlement_id=s.id and building_type=split_part(o.item,':',4) and level<5;
+   if not found then raise exception 'Queued external field no longer matches its owner or building';end if;
+   update public.players set upgrades=upgrades+1 where id=p_owner;perform public.peris_city_economy(s.id);
+  elsif o.kind='recruit' then
    update public.armies set infantry=infantry+case when o.item='infantry' then o.quantity else 0 end,
     archers=archers+case when o.item='archers' then o.quantity else 0 end,cavalry=cavalry+case when o.item='cavalry' then o.quantity else 0 end,updated_at=o.finish_at where owner_id=p_owner;
    update public.players set recruits=recruits+o.quantity where id=p_owner;
