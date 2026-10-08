@@ -1,4 +1,4 @@
--- Current factions, city debug tools and housing/population upgrade.
+-- Run after the faction/mage release. Preserves existing cities and progress.
 begin;
 -- Repeatable city plots; legacy buildings are retained for save compatibility.
 alter table public.settlements add column if not exists food_capacity integer not null default 5000;
@@ -260,76 +260,5 @@ begin
 end $$;
 revoke all on function public.peris_set_faction(text),public.peris_debug_city(text,text,integer) from public,anon;
 grant execute on function public.peris_set_faction(text),public.peris_debug_city(text,text,integer) to authenticated;
-create or replace function public.peris_snapshot()returns jsonb language plpgsql security definer set search_path='' as $$
-declare u uuid:=auth.uid();result jsonb;
-begin
- if u is null then raise exception 'Authentication required';end if;
- perform public.peris_city_migrate(s.id) from public.settlements s where s.owner_id=u;
- select jsonb_build_object('version',6,'server_now',now(),
- 'debug_enabled',coalesce((select enabled from public.peris_debug_config where id),false),
- 'map',jsonb_build_object('version',3,'cols',200,'rows',200,'cell_size',128,'seed',98213,
-   'total_players',(select count(*) from public.players),'total_settlements',(select count(*) from public.settlements)),
- 'players',coalesce((select jsonb_agg(p order by created_at)from public.players p where p.id=u
-   or exists(select 1 from public.battles b where (b.attacker_owner_id=u or b.defender_owner_id=u) and (b.attacker_owner_id=p.id or b.defender_owner_id=p.id))
-   or exists(select 1 from public.peris_challenges c where c.status='pending' and c.expires_at>now() and (c.attacker_owner_id=u or c.defender_owner_id=u) and (c.attacker_owner_id=p.id or c.defender_owner_id=p.id))),'[]'::jsonb),
- 'settlements',coalesce((select jsonb_agg(s order by id)from public.settlements s where s.owner_id=u),'[]'::jsonb),
- 'buildings',coalesce((select jsonb_agg(b order by b.id)from public.buildings b join public.settlements s on s.id=b.settlement_id where s.owner_id=u),'[]'::jsonb),
- 'spell_research',coalesce((select jsonb_agg(r order by r.spell_id)from public.peris_spell_research r join public.settlements s on s.id=r.settlement_id where s.owner_id=u),'[]'::jsonb),
- 'city_slots',coalesce((select jsonb_agg(c order by c.slot_index)from public.peris_city_slots c join public.settlements s on s.id=c.settlement_id where s.owner_id=u),'[]'::jsonb),
- 'armies',coalesce((select jsonb_agg(a order by id)from public.armies a where a.owner_id=u),'[]'::jsonb),
- 'camps',coalesce((select jsonb_agg(c order by id)from public.peris_camps c),'[]'::jsonb),
- 'orders',coalesce((select jsonb_agg(o order by finish_at)from public.peris_orders o where owner_id=u),'[]'::jsonb),
- 'battles',coalesce((select jsonb_agg(b order by id)from public.battles b where attacker_owner_id=u or defender_owner_id=u),'[]'::jsonb),
- 'formations',coalesce((select jsonb_agg(f order by f.id)from public.battle_formations f join public.battles b on b.id=f.battle_id where b.status='active'and (b.attacker_owner_id=u or b.defender_owner_id=u)),'[]'::jsonb),
- 'reports',coalesce((select jsonb_agg(r order by id desc)from (select * from public.peris_reports where owner_id=u order by id desc limit 50)r),'[]'::jsonb),
- 'progress',coalesce((select jsonb_agg(p)from public.peris_progress p where owner_id=u),'[]'::jsonb),
- 'claims',coalesce((select jsonb_agg(c)from public.peris_claims c where owner_id=u),'[]'::jsonb),
- 'challenges',coalesce((select jsonb_agg(c)from public.peris_challenges c where (attacker_owner_id=u or defender_owner_id=u)and status='pending'and expires_at>now()),'[]'::jsonb))into result;
- return result;
-end $$;
-
--- Public strategic visibility is bounded independently of the private campaign
--- snapshot. The caller's own markers remain available outside the viewport.
-create or replace function public.peris_map_snapshot(p_min_x integer,p_min_y integer,p_max_x integer,p_max_y integer)
-returns jsonb language plpgsql security definer set search_path='' as $$
-declare u uuid:=auth.uid();min_x integer;min_y integer;max_x integer;max_y integer;result jsonb;
-begin
- if u is null then raise exception 'Authentication required';end if;
- if p_min_x is null or p_min_y is null or p_max_x is null or p_max_y is null then raise exception 'Choose map bounds';end if;
- min_x:=greatest(-12800,p_min_x);min_y:=greatest(-12800,p_min_y);
- max_x:=least(12800,p_max_x);max_y:=least(12800,p_max_y);
- if min_x>=max_x or min_y>=max_y then raise exception 'Choose valid map bounds';end if;
- with visible_settlements as (
-   select s.id,s.owner_id,s.name,s.x,s.y,s.faction from public.settlements s where s.owner_id=u
-   union all
-   select * from (select s.id,s.owner_id,s.name,s.x,s.y,s.faction from public.settlements s
-     where s.owner_id<>u and s.x>=min_x and s.x<max_x and s.y>=min_y and s.y<max_y order by s.id limit 600) nearby
- ), army_positions as (
-   select a.*,
-     (travel.position->>'x')::numeric as map_x,
-     (travel.position->>'y')::numeric as map_y
-   from public.armies a cross join lateral (
-     select public.peris_army_position(a) as position
-   ) travel
-   where a.owner_id=u or a.status='moving'
-     or (a.target_x>=min_x and a.target_x<max_x and a.target_y>=min_y and a.target_y<max_y)
- ), visible_armies as (
-   select a.* from army_positions a where a.owner_id=u
-   union all
-   select * from (select a.* from army_positions a where a.owner_id<>u
-     and a.map_x>=min_x and a.map_x<max_x and a.map_y>=min_y and a.map_y<max_y order by a.id limit 600) nearby
- ), visible_owners as (
-   select owner_id from visible_settlements union select owner_id from visible_armies union select u
- )
- select jsonb_build_object('server_now',now(),
-   'players',coalesce((select jsonb_agg(jsonb_build_object('id',p.id,'display_name',p.display_name) order by p.id)
-     from public.players p join visible_owners o on o.owner_id=p.id),'[]'::jsonb),
-   'settlements',coalesce((select jsonb_agg(s order by s.id) from visible_settlements s),'[]'::jsonb),
-   'armies',coalesce((select jsonb_agg(to_jsonb(a)-'map_x'-'map_y' order by a.id) from visible_armies a),'[]'::jsonb),
-   'total_players',(select count(*) from public.players),'total_settlements',(select count(*) from public.settlements),
-   'settlements_truncated',(select count(*)>600 from public.settlements s where s.owner_id<>u and s.x>=min_x and s.x<max_x and s.y>=min_y and s.y<max_y),
-   'armies_truncated',(select count(*)>600 from army_positions a where a.owner_id<>u and a.map_x>=min_x and a.map_x<max_x and a.map_y>=min_y and a.map_y<max_y)) into result;
- return result;
-end $$;
 do $$declare r record;begin for r in select p.oid from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and p.proname in ('peris_city_migrate','peris_settle','peris_city_economy','peris_add_formations')loop execute 'revoke all on function '||r.oid::regprocedure::text||' from public,anon,authenticated';end loop;end $$;
 commit;

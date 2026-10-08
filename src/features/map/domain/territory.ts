@@ -1,43 +1,22 @@
 import type { World, Order } from '../../../shared/model/world';
-import { RESOURCES, type Resources } from '../../../shared/model/resources';
+import { RESOURCES } from '../../../shared/model/resources';
 import type { LocalCommandContext } from '../../../shared/model/commands';
 import { accrueResources, affordable } from '../../city/domain/economy';
 import { CELL_SIZE, wrapWorldCell, wrappedCellDistance } from './dimensions';
-import { getCell, type FieldTerrain } from './worldGrid';
+import { getCell } from './worldGrid';
 import type { Faction } from '../../factions/domain/factions';
+import {FIELD_BUILDINGS,FIELD_MAX_LEVEL,fieldCost} from './fieldProduction';
+export {FIELD_BUILDINGS,fieldModifier,fieldRate,externalFieldRates,fieldCost} from './fieldProduction';
 
 export type FieldBuilding = 'lumber' | 'quarry' | 'farm' | 'market';
 export type MapPlot = { col: number; row: number; settlement_id: number; owner_id: string; building_type: FieldBuilding | null; level: number; faction?: Faction };
-export const TERRITORY_RULES = { startingClaims: 4, startingPopulation: 80, populationPerUpgrade: 10, firstUnlock: 120, unlockStep: 40, radius: 6, maxLevel: 5 } as const;
-export const FIELD_BUILDINGS: Record<FieldBuilding, { name: string; resource: keyof Resources; baseRate: number; cost: Resources }> = {
-    lumber: { name: 'Lumber mill', resource: 'wood', baseRate: 6, cost: { wood: 80, stone: 50, food: 30, gold: 10 } },
-    quarry: { name: 'Quarry', resource: 'stone', baseRate: 5, cost: { wood: 70, stone: 60, food: 30, gold: 10 } },
-    farm: { name: 'Farm', resource: 'food', baseRate: 8, cost: { wood: 60, stone: 40, food: 50, gold: 10 } },
-    market: { name: 'Trading post', resource: 'gold', baseRate: 2, cost: { wood: 90, stone: 70, food: 40, gold: 20 } },
-};
+export const TERRITORY_RULES = { startingClaims: 4, startingPopulation: 80, populationPerUpgrade: 10, firstUnlock: 120, unlockStep: 40, radius: 6, maxLevel: FIELD_MAX_LEVEL } as const;
 export const mapPlotKey = (col: number, row: number) => { const cell = wrapWorldCell(col, row); return `${cell.col},${cell.row}`; };
 export function territoryPopulation(world: World, owner: string) {
     return TERRITORY_RULES.startingPopulation + TERRITORY_RULES.populationPerUpgrade * Math.max(0, world.players.find(p => p.id === owner)?.upgrades ?? 0);
 }
 export function territoryAllowance(population: number) {
     return TERRITORY_RULES.startingClaims + (population < TERRITORY_RULES.firstUnlock ? 0 : 1 + Math.floor((population - TERRITORY_RULES.firstUnlock) / TERRITORY_RULES.unlockStep));
-}
-export function fieldModifier(terrain: FieldTerrain, building: FieldBuilding) {
-    if (building === 'farm') return terrain === 'mountain' ? .75 : terrain === 'grassland' || terrain === 'farmland' ? 1.1 : terrain === 'desert' || terrain === 'snow' ? .85 : 1;
-    if (building === 'lumber') return terrain === 'forest' ? 1.25 : terrain === 'desert' || terrain === 'snow' ? .85 : 1;
-    if (building === 'quarry') return terrain === 'mountain' ? 1.3 : terrain === 'marsh' ? .9 : 1;
-    return terrain === 'coast' || terrain === 'river' ? 1.1 : terrain === 'snow' ? .9 : 1;
-}
-export function fieldRate(plot: MapPlot) {
-    return plot.building_type && plot.level > 0 ? FIELD_BUILDINGS[plot.building_type].baseRate * Math.min(TERRITORY_RULES.maxLevel, plot.level) * fieldModifier(getCell(plot.col, plot.row).terrain, plot.building_type) : 0;
-}
-export function externalFieldRates(plots: readonly MapPlot[], settlement: number): Resources {
-    const rates: Resources = { wood: 0, stone: 0, food: 0, gold: 0 };
-    for (const plot of plots) if (plot.settlement_id === settlement && plot.building_type) rates[FIELD_BUILDINGS[plot.building_type].resource] += fieldRate(plot);
-    return rates;
-}
-export function fieldCost(building: FieldBuilding, completedLevel: number): Resources {
-    return Object.fromEntries(RESOURCES.map(key => [key, Math.ceil(FIELD_BUILDINGS[building].cost[key] * 1.55 ** completedLevel)])) as Resources;
 }
 export function fieldSeconds(level: number) { return 15 + level * 10; }
 export function mapClaimReason(world: World, owner: string, col: number, row: number): string | null {

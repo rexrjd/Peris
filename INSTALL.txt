@@ -1,41 +1,35 @@
-PERIS — FACTIONS & CITY DEBUG TOOLS
+PERIS — HOUSING, POPULATION & CITY OVERVIEW
 
 INSTALL
-Merge src/, supabase/, tests/, and package.json into your existing project, replacing matching files. Apply after the previous city-building-slots update. This ZIP includes the latest mage-tower/spell files too.
+Merge src/, supabase/, tests/, and package.json into your existing project, replacing matching files. This package includes the latest mage-tower and faction updates and applies to the existing city-building-slots project.
 
-Shared worlds: run supabase/UPGRADE_FACTIONS_AND_DEBUG.sql BEFORE deploying if the mage-tower database update is already installed. If the city-slots update is installed but the mage update is not, run the included UPGRADE_MAGE_TOWER.sql instead; it includes factions and debug tools. If neither update is installed, use UPGRADE_CITY_SLOTS.sql; it includes all three features. Run one applicable upgrade. Existing cities, resources, armies and progress are preserved. Do not run a FRESH_INSTALL script on an existing world.
+Shared worlds — apply ONE appropriate database upgrade BEFORE deploying:
+- Previous faction/mage updates installed: supabase/UPGRADE_HOUSING_AND_POPULATION.sql
+- City slots installed, mage update missing: supabase/UPGRADE_MAGE_TOWER.sql (includes factions and population)
+- City slots missing: supabase/UPGRADE_CITY_SLOTS.sql (includes all these features)
 
-Then run npm run build and push/redeploy through your usual GitHub/Vercel flow. Solo saves work automatically with no SQL step.
+Do not run FRESH_INSTALL scripts on an existing world. The upgrade preserves existing progress, faction, troops, spells and plots. It catches up legacy income and completed construction before starting population. Re-running the population migration preserves current population progress.
 
-FACTIONS
-Orcs: timber strongholds, hide roofs, tusks and spikes.
-Elves: living timber halls, leaf roofs and crystal spires.
-Dwarves: heavy basalt halls, copper roofs and stone towers.
-Gnomes: round workshops, domed roofs and brass gears.
-Pandaren: jade pagodas, curved roofs, lanterns and bamboo.
-Necropolis: crypts, bone-colored gates and green crystals.
-Demons: obsidian fortresses, horned towers and molten-red trim.
-Human — Roman: marble forums, terracotta roofs and imperial standards.
-Human — Spartan: stone temples, red banners and bronze shields.
-Human — Persian: turquoise domes, sandstone minarets and courtyards.
-Human — Egyptian: pyramids, pylons, obelisks and lapis trim.
+Then run npm run build and deploy through your usual GitHub/Vercel workflow. Solo games migrate automatically; SQL is only needed for shared worlds.
 
-HOW TO USE
-In City, select a building. The sidebar contains CITY FACTION: choose a culture or click Next faction to switch immediately. The choice persists in solo saves and shared worlds. City architecture, walls, landscape, walking villagers and world-map city miniatures follow the faction. Existing building levels, resources and spell research are retained when changing faction.
+GAMEPLAY
+- Cities begin with 30 residents and room for 40. Each main-building level adds 10 places.
+- Housing is optional and repeatable. Each of its five levels adds 30 places, with five visual stages styled for all 11 factions.
+- Residents grow by one per minute when housing and food allow it.
+- Each resident consumes 0.12 food per minute. The top resource bar now shows net food after consumption.
+- An exhausted food supply pauses growth. With a continuing food deficit, residents leave at one per minute until food balances or the city reaches 10 residents.
+- Demolishing housing immediately reduces residents to the remaining capacity.
+- Production workers are assigned automatically. Staffing shortages proportionally reduce building production bonuses. Base gathering remains 14 wood, 12 stone, 18 food and 3 gold per minute.
+- Workers per building level: main building 4; lumberyard 6; quarry 6; farm 5; fishery 4.
+- Production bonuses per fully staffed level: main +3 gold; lumberyard +8 wood; quarry +7 stone; farm +10 food; fishery +8 food.
+- Growth, consumption and production continue consistently while offline.
 
-Expand Debug tools in the sidebar:
-- +1,000 resources adds 1,000 of each resource, up to the appropriate storage limit.
-- Fill storage instantly fills materials and food to their separate capacities.
-- Finish construction instantly completes the current building order.
-- Instant level sets the selected building's level: 0–5, or 0–10 for the mage tower.
-- Demolish clears a selected plot, or resets a fixed building to level zero. Its pending upgrade is cancelled. Demolition gives no refund.
+INTERFACE
+The city overview shows residents and capacity, growth, assigned/missing workers, staffing, gross/net food and consumption, resource storage and production. Expand its production details for worker demand by building. Its housing shortcut selects an available plot, or the main building when more plots are needed.
 
-Lowering the main building removes plots beyond its new limit and their pending orders. The external river fishery remains available. Destroying a mage tower also clears that city's spell research. Resources clamp to the remaining storage capacity. Debug mutations are unavailable during an active battle; faction switching remains available.
-
-Shared-world debug tools operate only on the signed-in player's own city. To hide/disable instant debug tools later, run:
-update public.peris_debug_config set enabled=false where id=true;
-To restore them, set enabled=true. Faction selection remains available either way.
+The building menu includes Housing. Building details show housing capacity and production worker demand. Warehouse and granary capacities are shown separately. The debug panel includes Fill housing with residents for instant population testing, subject to the existing shared-world debug setting.
 
 VALIDATION
-Production build passed; 67 unit and integration tests passed, including all faction models, save persistence, model bounds, selector rendering, instant controls and demolition. Fresh-install, city-slot, mage-spell, faction and baseline database integration checks passed. Upgrade from the previous mage-tower release passed twice without modifying existing resources, troops, plots or research. SQL bundles match the modular sources.
-Live browser preview was unavailable for this update. Previews/Faction_building_styles.png is an offline geometry render of the actual level-five main hall models; game lighting and shadows differ.
+Production build and all 75 unit tests passed. Database checks passed for population, city slots, magic, factions, fresh installations and baseline gameplay. Checks include 40 client/server population cases, 200 frequent-tick/offline comparisons, food starvation and storage boundaries, five housing stages across all 11 factions, and upgrading the actual previous faction release twice while retaining progress and completing legacy queues.
+
+Live browser preview was unavailable. Overview markup and model geometry were checked; visual browser layout has not been verified in this session.

@@ -5,7 +5,7 @@ alter table public.battle_formations add column if not exists attack_multiplier 
 create table if not exists public.peris_city_slots (
  settlement_id bigint not null references public.settlements(id) on delete cascade,
  slot_index integer not null check(slot_index between 0 and 16),
- building_type text not null check(building_type in ('barracks','stables','smithy','warehouse','granary','fishery','mage_tower')),
+ building_type text not null check(building_type in ('barracks','stables','smithy','warehouse','granary','fishery','mage_tower','housing')),
  level integer not null default 0 check(level between 0 and 5),
  primary key(settlement_id,slot_index),check((building_type='fishery')=(slot_index=16))
 );
@@ -15,6 +15,7 @@ create policy "own city slots" on public.peris_city_slots for select to authenti
 revoke all on public.peris_city_slots from public,anon,authenticated;
 grant select on public.peris_city_slots to authenticated;
 create or replace function public.peris_city_economy(p_sid bigint) returns void language plpgsql security definer set search_path='' as $$
+declare fw numeric;fs numeric;ff numeric;fg numeric;
 begin
  update public.settlements s set
  wood_rate=14+8*coalesce((select level from public.buildings where settlement_id=s.id and building_type='lumber'),0),
@@ -24,6 +25,10 @@ begin
  capacity=5000+2500*coalesce((select sum(level) from public.peris_city_slots where settlement_id=s.id and building_type='warehouse'),0),
  food_capacity=5000+2500*coalesce((select sum(level) from public.peris_city_slots where settlement_id=s.id and building_type='granary'),0)
  where s.id=p_sid;
+ if to_regprocedure('public.peris_field_rates(bigint)')is not null then
+  execute 'select wood,stone,food,gold from public.peris_field_rates($1)' into fw,fs,ff,fg using p_sid;
+  update public.settlements set wood_rate=wood_rate+fw,stone_rate=stone_rate+fs,food_rate=food_rate+ff,gold_rate=gold_rate+fg where id=p_sid;
+ end if;
 end $$;
 create or replace function public.peris_city_migrate(p_sid bigint) returns void language plpgsql security definer set search_path='' as $$
 begin
@@ -55,16 +60,16 @@ begin
  select level,building_type into l,t from public.peris_city_slots where settlement_id=s.id and slot_index=p_slot;
  if p_type is not null then
   if l is not null then raise exception 'This plot is already occupied';end if;
-  if p_type not in ('barracks','stables','smithy','warehouse','granary','fishery','mage_tower') then raise exception 'Unknown building';end if;
+  if p_type not in ('barracks','stables','smithy','warehouse','granary','fishery','mage_tower','housing') then raise exception 'Unknown building';end if;
   if p_type='mage_tower' and exists(select 1 from public.peris_city_slots where settlement_id=s.id and building_type='mage_tower') then raise exception 'Only one mage tower can be built in your city';end if;
   if (p_type='fishery')<>(p_slot=16) then raise exception 'A fishery needs a riverside plot';end if;
   t:=p_type;l:=0;
  elsif l is null or l=0 then raise exception 'This building is not ready';end if;
  if l>=(case when t='mage_tower' then 10 else 5 end) then raise exception 'Maximum building level reached';end if;
  factor:=power(case when t='mage_tower' then 1.38::numeric else 1.55::numeric end,l);
- cw:=ceil((case t when 'mage_tower' then 260 when 'barracks' then 180 when 'stables' then 200 when 'smithy' then 180 when 'warehouse' then 200 else 160 end)*factor);
- cs:=ceil((case t when 'mage_tower' then 340 when 'barracks' then 160 when 'stables' then 120 when 'smithy' then 220 when 'warehouse' then 150 when 'granary' then 120 else 80 end)*factor);
- cf:=ceil((case t when 'barracks' then 100 when 'stables' then 180 when 'smithy' then 80 when 'warehouse' then 90 else 100 end)*factor);
+ cw:=ceil((case t when 'housing' then 140 when 'mage_tower' then 260 when 'barracks' then 180 when 'stables' then 200 when 'smithy' then 180 when 'warehouse' then 200 else 160 end)*factor);
+ cs:=ceil((case t when 'housing' then 110 when 'mage_tower' then 340 when 'barracks' then 160 when 'stables' then 120 when 'smithy' then 220 when 'warehouse' then 150 when 'granary' then 120 else 80 end)*factor);
+ cf:=ceil((case t when 'housing' then 60 when 'barracks' then 100 when 'stables' then 180 when 'smithy' then 80 when 'warehouse' then 90 else 100 end)*factor);
  cg:=ceil((case t when 'mage_tower' then 160 when 'barracks' then 30 when 'stables' then 45 when 'smithy' then 60 when 'granary' then 15 else 20 end)*factor);
  if s.wood<cw or s.stone<cs or s.food<cf or s.gold<cg then raise exception 'Your stores cannot cover this cost';end if;
  update public.settlements set wood=wood-cw,stone=stone-cs,food=food-cf,gold=gold-cg where id=s.id;
