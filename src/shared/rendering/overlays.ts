@@ -38,7 +38,7 @@ export class CanvasOverlays {
         const scale = this.ctx.zoomBase * this.ctx.camera.zoom, viewW = this.ctx.w / scale, viewH = this.ctx.h / scale;
         c.strokeStyle = '#f0e0bdaa';
         c.save(); c.beginPath(); c.rect(x, y, w, h); c.clip();
-        c.strokeRect(x + (this.ctx.camera.x - viewW / 2 - (s.mode === 'world' ? WORLD_MIN_X : 0)) / worldW * w, y + (this.ctx.camera.y - viewH / 2 - (s.mode === 'world' ? WORLD_MIN_Y : 0)) / worldH * h, viewW / worldW * w, viewH / worldH * h);
+        for(const dx of s.mode==='world'?[-WORLD_W,0,WORLD_W]:[0])for(const dy of s.mode==='world'?[-WORLD_H,0,WORLD_H]:[0])c.strokeRect(x + (this.ctx.camera.x+dx - viewW / 2 - (s.mode === 'world' ? WORLD_MIN_X : 0)) / worldW * w, y + (this.ctx.camera.y+dy - viewH / 2 - (s.mode === 'world' ? WORLD_MIN_Y : 0)) / worldH * h, viewW / worldW * w, viewH / worldH * h);
         c.restore();
         c.font = '8px Open Sans,Arial';
         c.fillStyle = '#d6ccaa';

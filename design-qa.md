@@ -1,5 +1,11 @@
 # PERIS map sample — current design QA
 
+## Release integration update — 2026-10-08
+
+Native terrain and seamless navigation now power the actual game with persistent external fields, main's eleven faction builders and wood/stone/food/gold economy. Earlier sample findings below are historical records; see MAP_WORLD.md and MAP_RELEASE.md for current scope. City rendering and troop atlases are unchanged. No current rendered screenshots are available: saved local browser permission denies access. Visual fidelity, mobile presentation and GPU performance remain unverified. Automated geometry, interaction, save, route and database checks are separate evidence.
+
+Final automated verification: 147/147 TypeScript test cases passed; app and tooling TypeScript checks passed; production build passed (217 modules, 1,313.07 kB JS / 382.68 kB gzip, existing large-chunk advisory). All seven database suites passed: upgrade/core game, fresh install, city slots, magic, factions, territory and periodic snapshots. Generated world bytes and SQL bundles match source. Dense-world regression verifies only 96 detailed field images, selected/owned priority, marker selection and offscreen release. The fetched main still equals a26e5e7 and is an ancestor of this feature branch. City rendering/UI, tactical battle files and troop-rendering files have no feature diff from that main.
+
 Date: 2026-10-08. Branch: `mehdi/map-overhaul`.
 
 ## Current sample scope

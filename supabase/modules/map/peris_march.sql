@@ -1,7 +1,7 @@
 create or replace function public.peris_march(p_target_x integer,p_target_y integer,p_path jsonb)returns jsonb
 language plpgsql security definer set search_path='' as $$
 declare u uuid:=auth.uid();a public.armies%rowtype;position jsonb;point jsonb;route jsonb;
- tx integer:=greatest(-12736,least(12736,p_target_x));ty integer:=greatest(-12736,least(12736,p_target_y));
+ tx integer:=public.peris_wrap_world(p_target_x);ty integer:=public.peris_wrap_world(p_target_y);
  x numeric;y numeric;px numeric;py numeric;cx integer;cy integer;pcx integer;pcy integer;
  distance numeric:=0;segment numeric;seconds numeric;count_points integer;ordinal integer:=0;
 begin
@@ -28,15 +28,15 @@ begin
   if x<-12800 or x>=12800 or y<-12800 or y>=12800 then raise exception 'Route leaves the world';end if;
   cx:=floor(x/128)::integer;cy:=floor(y/128)::integer;
   if ordinal=1 then
-   if abs(cx-pcx)>1 or abs(cy-pcy)>1 then raise exception 'Route does not start at your army';end if;
+   if abs(public.peris_wrap_cell(cx-pcx))>1 or abs(public.peris_wrap_cell(cy-pcy))>1 then raise exception 'Route does not start at your army';end if;
    continue;
   end if;
-  if abs(cx-pcx)>1 or abs(cy-pcy)>1 then raise exception 'Route points must pass through neighboring fields';end if;
+  if abs(public.peris_wrap_cell(cx-pcx))>1 or abs(public.peris_wrap_cell(cy-pcy))>1 then raise exception 'Route points must pass through neighboring fields';end if;
   if not public.peris_world_walkable(x,y) then raise exception 'Armies cannot march across the sea';end if;
   if cx<>pcx and cy<>pcy and (not public.peris_world_walkable((cx+.5)*128,(pcy+.5)*128) or not public.peris_world_walkable((pcx+.5)*128,(cy+.5)*128)) then
    raise exception 'A route cannot cut a sea corner';
   end if;
-  segment:=sqrt(power(x-px,2)+power(y-py,2));
+  segment:=sqrt(power(public.peris_wrapped_delta(px,x),2)+power(public.peris_wrapped_delta(py,y),2));
   if segment=0 and count_points>2 then raise exception 'A route must advance through its fields';end if;
   distance:=distance+segment;route:=route||jsonb_build_array(jsonb_build_array(x,y));
   px:=x;py:=y;pcx:=cx;pcy:=cy;
@@ -44,7 +44,7 @@ begin
  if px<>tx or py<>ty then raise exception 'Route must end at the chosen destination';end if;
  seconds:=greatest(2,distance/22);
  update public.armies set start_x=round((position->>'x')::numeric),start_y=round((position->>'y')::numeric),target_x=tx,target_y=ty,
-  march_path=route,march_distance=distance,departure_at=now(),arrival_at=now()+make_interval(secs=>seconds::double precision),
+  march_path=route,march_distance=distance,march_map_version=4,departure_at=now(),arrival_at=now()+make_interval(secs=>seconds::double precision),
   status='moving',raid_target_id=null,updated_at=now() where id=a.id;
  return jsonb_build_object('ok',true);
 end $$;

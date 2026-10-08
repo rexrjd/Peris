@@ -1,5 +1,7 @@
 # The Wild Crown — native world-map sample
 
+Release note: the actual campaign/online map now shares this terrain factory and periodic geography, using main's eleven factions, wood/stone/food/gold and authoritative external fields. This five-race accelerated sample stays temporary; its demo-specific resources and levels below do not describe the actual game. See root MAP_WORLD.md and MAP_RELEASE.md.
+
 Open the existing Vite game at `/?map-preview=1`, or choose **Explore the world map sample** on the launcher. This is an isolated, accelerated sample for evaluating the new map direction. Its state lives in memory and resets on reload. It does not read or write campaign saves or Supabase data.
 
 ## Map-only ownership

@@ -2,6 +2,13 @@
 -- before changing constraints, terrain or positions when migration is needed.
 alter table public.armies add column if not exists march_path jsonb;
 alter table public.armies add column if not exists march_distance numeric;
+alter table public.armies add column if not exists march_map_version integer;
+create or replace function public.peris_wrap_world(p_value numeric) returns numeric
+language sql immutable set search_path='' as $$ select mod(mod(p_value+12800,25600)+25600,25600)-12800 $$;
+create or replace function public.peris_wrapped_delta(p_from numeric,p_to numeric) returns numeric
+language sql immutable set search_path='' as $$ select public.peris_wrap_world(p_to-p_from) $$;
+create or replace function public.peris_wrap_cell(p_value integer) returns integer
+language sql immutable set search_path='' as $$ select mod(mod(p_value+100,200)+200,200)-100 $$;
 do $$
 declare outside_settlements integer;outside_armies integer;outside_routes integer;
 begin

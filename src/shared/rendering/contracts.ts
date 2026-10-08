@@ -9,6 +9,7 @@ export type RenderState = {
     selection?: MapSelection;
     selectedIds: number[];
     moveMode?: boolean;
+    mapClaimMode?: boolean;
     mapLayers?: { grid: boolean; regions: boolean; resources: boolean };
     clockOffset?: number;
     mapFocus?: { x: number; y: number; key: number; zoom?: number };

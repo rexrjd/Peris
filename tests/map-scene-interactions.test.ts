@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { Group, OrthographicCamera } from 'three';
 import { WorldScene } from '../src/features/map/rendering/three/WorldScene';
-import { CELL_SIZE, WORLD_MIN_X, WORLD_MIN_Y, WORLD_MAX_X, WORLD_MAX_Y } from '../src/features/map/domain/dimensions';
+import { CELL_SIZE, WORLD_MIN_X, WORLD_MIN_Y, WORLD_W } from '../src/features/map/domain/dimensions';
 import { cellAt, cellCenter, isWalkable } from '../src/features/map/domain/worldGrid';
 
 type Entity = { kind: 'settlement'; id: number; x: number; y: number; title: string; mine: boolean; model: Group; detail: boolean };
@@ -65,21 +65,22 @@ test('foreground terrain hides an entity and clicking falls back to the terrain 
     assert.deepEqual(fixture.scene.hit(click.x, click.y), { kind: 'cell', col: field.col, row: field.row });
 });
 
-test('marching rejects invalid bounds, non-finite points, sea and inspection mode', () => {
+test('marching rejects non-finite points, sea and inspection mode while accepting wrapped land', () => {
     const fixture = sceneFixture(); fixture.setMoveMode(true);
     for (const point of [
         { x: NaN, y: 400 }, { x: Infinity, y: 400 }, { x: 300, y: -Infinity },
-        { x: WORLD_MIN_X - 1, y: 400 }, { x: WORLD_MAX_X, y: 400 },
-        { x: 300, y: WORLD_MIN_Y - 1 }, { x: 300, y: WORLD_MAX_Y },
     ]) fixture.scene.marchAt(point.x, point.y);
-    const sea = cellAt(WORLD_MIN_X + CELL_SIZE / 2, WORLD_MIN_Y + CELL_SIZE / 2);
-    assert.equal(isWalkable(sea.col, sea.row), false, 'The outer corner is open sea');
+    let sea = cellAt(WORLD_MIN_X + CELL_SIZE / 2, WORLD_MIN_Y + CELL_SIZE / 2);
+    outer: for(let row=-100;row<100;row++)for(let col=-100;col<100;col++)if(!isWalkable(col,row)){sea=cellAt((col+.5)*CELL_SIZE,(row+.5)*CELL_SIZE);break outer;}
+    assert.equal(isWalkable(sea.col, sea.row), false, 'The authoritative geography must expose an open sea field');
     const seaCenter = cellCenter(sea.col, sea.row); fixture.scene.marchAt(seaCenter.x, seaCenter.y);
     assert.deepEqual(fixture.moved, []);
     fixture.setMoveMode(false); fixture.scene.marchAt(300, 400);
     assert.deepEqual(fixture.moved, []);
     fixture.setMoveMode(true); fixture.scene.marchAt(300, 400);
     assert.deepEqual(fixture.moved, [cellCenter(2, 3)]);
+    fixture.scene.marchAt(300+WORLD_W,400);
+    assert.deepEqual(fixture.moved, [cellCenter(2,3),cellCenter(2,3)]);
 });
 
 test('activating a visible village label in March mode issues moveArmy, not selectMap', () => {

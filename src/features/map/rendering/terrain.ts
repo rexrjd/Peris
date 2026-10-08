@@ -1,6 +1,6 @@
 import { ellipse, path } from '../../../shared/rendering/primitives';
 import { seeded } from '../../../shared/math/random';
-import { WORLD_COLS, WORLD_ROWS } from '../domain/dimensions';
+import { WORLD_COLS, WORLD_ROWS, WORLD_MAP_VERSION } from '../domain/dimensions';
 import { FIELD_COLORS, getCell, type WorldCell } from '../domain/worldGrid';
 import { continentalArt, drawMapSprite, mapArtReady, mapOverviewReady } from './mapArt';
 
@@ -177,7 +177,7 @@ export function makeWorldOverview(): HTMLCanvasElement {
     }
     const base = document.createElement('canvas'); base.width = WORLD_COLS; base.height = WORLD_ROWS; base.getContext('2d')!.putImageData(pixels, 0, 0);
     c.imageSmoothingEnabled = true; c.drawImage(base, 0, 0, canvas.width, canvas.height);
-    if (mapOverviewReady()) {
+    if (WORLD_MAP_VERSION < 4 && mapOverviewReady()) {
         // Exact domain shoreline clips the illustrative relief. Art never decides walkability.
         const ocean = c.createLinearGradient(0, 0, canvas.width, canvas.height);
         ocean.addColorStop(0, '#153e4b'); ocean.addColorStop(.5, '#275e69'); ocean.addColorStop(1, '#0c3444');

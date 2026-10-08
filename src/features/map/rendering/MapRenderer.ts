@@ -1,16 +1,16 @@
 import { RenderContext } from '../../../shared/rendering/RenderContext';
 import { type MapSelection } from '../domain/types';
-import { dist } from '../../../shared/math/geometry';
 import { armyPosition, armyRouteRemaining } from '../domain/movement';
 import { siteFor, regionFor } from '../domain/geography';
 import { cellAt, cellCenter, getCell, FIELD_COLORS, WORLD_REGIONS, worldRegionAt } from '../domain/worldGrid';
-import { CELL_SIZE, WORLD_MIN_X, WORLD_MIN_Y, WORLD_MAX_X, WORLD_MAX_Y, WORLD_W, WORLD_H } from '../domain/dimensions';
+import { CELL_SIZE, WORLD_MIN_X, WORLD_MIN_Y, WORLD_W, WORLD_H, wrappedWorldDelta } from '../domain/dimensions';
 import { drawCell } from './terrain';
 import { mapArtReady, drawMapSprite } from './mapArt';
 import { drawLandmark } from './landmarks';
 import { clock } from '../../../shared/time/clock';
 import { findMarchPath, type MarchPath } from '../domain/pathfinding';
 import { isWalkable } from '../domain/worldGrid';
+import { FACTIONS, factionOf } from '../../factions/domain/factions';
 
 /** Strategic presentation only: orders still use the existing command pipeline. */
 export class MapRenderer {
@@ -22,13 +22,15 @@ export class MapRenderer {
     constructor(private ctx: RenderContext) { }
     private now() { return Date.now() + (this.ctx.state().clockOffset ?? 0); }
     private get scale() { return this.ctx.zoomBase * this.ctx.camera.zoom; }
+    private imagePoint(x:number,y:number){return{x:this.ctx.camera.x+wrappedWorldDelta(this.ctx.camera.x,x),y:this.ctx.camera.y+wrappedWorldDelta(this.ctx.camera.y,y)};}
+    private routeImages(points:readonly [number,number][]){let previous:{x:number;y:number}|undefined;return points.map(([x,y])=>{const point=previous?{x:previous.x+wrappedWorldDelta(previous.x,x),y:previous.y+wrappedWorldDelta(previous.y,y)}:this.imagePoint(x,y);previous=point;return point;});}
     hit(x: number, y: number): MapSelection {
-        if (x < WORLD_MIN_X || x >= WORLD_MAX_X || y < WORLD_MIN_Y || y >= WORLD_MAX_Y) return null;
+        if(!Number.isFinite(x)||!Number.isFinite(y))return null;
         const s = this.ctx.state(), now = this.now();
         type EntitySelection = Exclude<NonNullable<MapSelection>, { kind: 'cell' }>;
         const candidates: { selection: EntitySelection; distance: number }[] = [];
         const add = (selection: EntitySelection, px: number, py: number, radius: number) => {
-            const distance = dist({ x, y }, { x: px, y: py });
+            const distance = Math.hypot(wrappedWorldDelta(x,px),wrappedWorldDelta(y,py));
             if (distance < Math.max(radius, 16 / this.scale)) candidates.push({ selection, distance });
         };
         for (const army of s.world.armies) {
@@ -64,22 +66,24 @@ export class MapRenderer {
             this.chunks.clear();
         }
         const c = this.ctx.c, scale = this.scale, camera = this.ctx.camera;
-        const left = Math.max(WORLD_MIN_X, camera.x - this.ctx.w / scale / 2), right = Math.min(WORLD_MAX_X, camera.x + this.ctx.w / scale / 2);
-        const top = Math.max(WORLD_MIN_Y, camera.y - this.ctx.h / scale / 2), bottom = Math.min(WORLD_MAX_Y, camera.y + this.ctx.h / scale / 2);
+        const left = camera.x - this.ctx.w / scale / 2, right = camera.x + this.ctx.w / scale / 2;
+        const top = camera.y - this.ctx.h / scale / 2, bottom = camera.y + this.ctx.h / scale / 2;
+        const overview=camera.zoom<=this.ctx.mapMinZoom*1.05&&camera.x===0&&camera.y===0;
+        const drawOverview=()=>{for(const dx of overview?[0]:[-WORLD_W,0,WORLD_W])for(const dy of overview?[0]:[-WORLD_H,0,WORLD_H])if(WORLD_MIN_X+dx<right&&WORLD_MIN_X+WORLD_W+dx>left&&WORLD_MIN_Y+dy<bottom&&WORLD_MIN_Y+WORLD_H+dy>top)c.drawImage(this.ctx.terrain!,WORLD_MIN_X+dx,WORLD_MIN_Y+dy,WORLD_W,WORLD_H);};
         if (CELL_SIZE * scale < 8) {
             c.imageSmoothingEnabled = false;
-            c.drawImage(this.ctx.terrain!, WORLD_MIN_X, WORLD_MIN_Y, WORLD_W, WORLD_H);
+            drawOverview();
             c.imageSmoothingEnabled = true;
         } else if (CELL_SIZE * scale < 34) {
-            c.drawImage(this.ctx.terrain!, WORLD_MIN_X, WORLD_MIN_Y, WORLD_W, WORLD_H);
+            drawOverview();
             c.save(); c.globalAlpha = .3;
-            for (let row = Math.floor(top / CELL_SIZE); row <= Math.min(WORLD_MAX_Y / CELL_SIZE - 1, Math.floor(bottom / CELL_SIZE)); row++) for (let col = Math.floor(left / CELL_SIZE); col <= Math.min(WORLD_MAX_X / CELL_SIZE - 1, Math.floor(right / CELL_SIZE)); col++) {
+            for (let row = Math.floor(top / CELL_SIZE); row <= Math.floor(bottom / CELL_SIZE); row++) for (let col = Math.floor(left / CELL_SIZE); col <= Math.floor(right / CELL_SIZE); col++) {
                 const cell = getCell(col, row); c.fillStyle = FIELD_COLORS[cell.terrain]; c.fillRect(col * CELL_SIZE, row * CELL_SIZE, CELL_SIZE, CELL_SIZE);
             }
             c.restore();
         } else {
             const size = this.chunkCells * CELL_SIZE;
-            for (let row = Math.floor(top / size); row <= Math.min(Math.floor((WORLD_MAX_Y - 1) / size), Math.floor((bottom - 1) / size)); row++) for (let col = Math.floor(left / size); col <= Math.min(Math.floor((WORLD_MAX_X - 1) / size), Math.floor((right - 1) / size)); col++) c.drawImage(this.chunk(col, row), col * size, row * size);
+            for (let row = Math.floor(top / size); row <= Math.floor((bottom - 1) / size); row++) for (let col = Math.floor(left / size); col <= Math.floor((right - 1) / size); col++) c.drawImage(this.chunk(col, row), col * size, row * size);
         }
         if (CELL_SIZE * scale >= 9) {
             c.save(); c.strokeStyle = '#213b2c38'; c.lineWidth = 1 / scale; c.beginPath();
@@ -90,13 +94,14 @@ export class MapRenderer {
         if (scale < .14) {
             const placed: { x: number; y: number; half: number }[] = [];
             for (const region of WORLD_REGIONS) {
-                const x = (region.label.x - camera.x) * scale + this.ctx.w / 2;
-                const y = (region.label.y - camera.y) * scale + this.ctx.h / 2;
+                const point=this.imagePoint(region.label.x,region.label.y);
+                const x = (point.x - camera.x) * scale + this.ctx.w / 2;
+                const y = (point.y - camera.y) * scale + this.ctx.h / 2;
                 const half = region.name.length * 3.4 + 6;
                 if (x - half < 8 || x + half > this.ctx.w - 8 || y < 20 || y > this.ctx.h - 26) continue;
                 if (placed.some(p => Math.abs(p.y - y) < 23 && Math.abs(p.x - x) < p.half + half + 8)) continue;
                 placed.push({ x, y, half });
-                this.label(region.label.x, region.label.y, region.name.toUpperCase(), '#f2dfb8');
+                this.label(point.x, point.y, region.name.toUpperCase(), '#f2dfb8');
             }
         }
     }
@@ -136,10 +141,18 @@ export class MapRenderer {
         this.ctx.canvas.style.cursor = s.moveMode ? 'crosshair' : this.ctx.down ? 'grabbing' : hovered ? 'pointer' : 'grab';
         for (const cell of [s.selection?.kind === 'cell' ? s.selection : null, hovered?.kind === 'cell' && !s.moveMode && this.scale > .06 ? hovered : null]) {
             if (!cell) continue;
+            const point=this.imagePoint((cell.col+.5)*CELL_SIZE,(cell.row+.5)*CELL_SIZE);
             c.save(); c.strokeStyle = cell === s.selection ? '#ffe8a5' : '#fff2caa0'; c.fillStyle = '#fff0b325'; c.lineWidth = (cell === s.selection ? 2 : 1) * unit;
-            c.fillRect(cell.col * CELL_SIZE, cell.row * CELL_SIZE, CELL_SIZE, CELL_SIZE); c.strokeRect(cell.col * CELL_SIZE, cell.row * CELL_SIZE, CELL_SIZE, CELL_SIZE); c.restore();
+            c.fillRect(point.x-CELL_SIZE/2,point.y-CELL_SIZE/2,CELL_SIZE,CELL_SIZE);c.strokeRect(point.x-CELL_SIZE/2,point.y-CELL_SIZE/2,CELL_SIZE,CELL_SIZE); c.restore();
         }
-        for (const town of s.world.settlements) {
+        for(const plot of s.world.map_plots??[]){if(!plot.building_type||plot.level<1)continue;const point=this.imagePoint((plot.col+.5)*CELL_SIZE,(plot.row+.5)*CELL_SIZE);if(!this.visible(point.x,point.y))continue;
+            const color=plot.building_type==='farm'?'#cab573':plot.building_type==='lumber'?'#759061':plot.building_type==='quarry'?'#a5afa6':'#bc9472';
+            if(this.scale<.15){this.dot(point.x,point.y,color,2);continue;}
+            const faction=factionOf(s.world.settlements.find(town=>town.id===plot.settlement_id)?.faction??plot.faction);
+            c.save();c.translate(point.x,point.y);c.fillStyle='#253128';c.fillRect(-25,-16,50,35);c.fillStyle=color;c.fillRect(-23,-15,46,28);c.strokeStyle=`#${FACTIONS[faction].roofLight.toString(16).padStart(6,'0')}`;c.lineWidth=unit;c.strokeRect(-23,-15,46,28);c.restore();
+        }
+        for (const rawTown of s.world.settlements) {
+            const town={...rawTown,...this.imagePoint(rawTown.x,rawTown.y)};
             if (!this.visible(town.x, town.y)) continue;
             const mine = town.owner_id === s.playerId, active = selected('settlement', town.id);
             if (this.scale < .15) { this.dot(town.x, town.y, mine ? '#ffe3a1' : '#a3c7da', 3); continue; }
@@ -148,7 +161,8 @@ export class MapRenderer {
             if (active || this.scale > .3) this.label(town.x, town.y + 32 * unit, town.name, mine ? '#f4dfab' : '#d3e2ea');
             if (active || this.ctx.camera.zoom > 1.5) this.label(town.x, town.y + 49 * unit, mine ? 'YOUR SETTLEMENT' : 'RIVAL SETTLEMENT', '#bfbfa1', true);
         }
-        for (const camp of s.world.camps) {
+        for (const rawCamp of s.world.camps) {
+            const camp={...rawCamp,...this.imagePoint(rawCamp.x,rawCamp.y)};
             if (!this.visible(camp.x, camp.y)) continue;
             const site = siteFor(camp.id), region = regionFor(camp.id);
             const cleared = s.world.progress.some(p => p.owner_id === s.playerId && p.camp_id === camp.id && p.defeated > 0), active = selected('camp', camp.id);
@@ -160,15 +174,15 @@ export class MapRenderer {
             if (active || this.ctx.camera.zoom > 1.5) this.label(camp.x, camp.y + 46 * unit, `TIER ${camp.tier}${cleared ? ' · STANDARD RECOVERED' : ' · HOSTILE HOLD'}`, '#c4c6ad', true);
         }
         for (const army of s.world.armies) {
-            const pos = armyPosition(army, now), mine = army.owner_id === s.playerId, active = selected('army', army.id);
+            const actual=armyPosition(army,now),pos=this.imagePoint(actual.x,actual.y), mine = army.owner_id === s.playerId, active = selected('army', army.id);
             const moving = army.status === 'moving' && Date.parse(army.arrival_at) > now;
             // Full routes stay useful for our legion or the inspected army;
             // drawing hundreds of rival waypoint lists every frame obscures the atlas.
             if (moving && (mine || active)) {
                 c.save(); c.strokeStyle = mine ? '#f7d88fbd' : '#9bbac575'; c.lineWidth = 1.5 * unit;
                 c.setLineDash([5 * unit, 5 * unit]); c.lineDashOffset = -t / 100 * unit;
-                c.beginPath(); const route = armyRouteRemaining(army, now); route.forEach(([x, y], i) => i ? c.lineTo(x, y) : c.moveTo(x, y)); c.stroke(); c.setLineDash([]);
-                c.beginPath(); c.arc(army.target_x, army.target_y, 9 * unit, 0, Math.PI * 2); c.stroke();
+                c.beginPath(); const route = this.routeImages(armyRouteRemaining(army, now)); route.forEach(({x,y}, i) => i ? c.lineTo(x, y) : c.moveTo(x, y)); c.stroke(); c.setLineDash([]);
+                const destination=this.imagePoint(army.target_x,army.target_y);c.beginPath(); c.arc(destination.x,destination.y, 9 * unit, 0, Math.PI * 2); c.stroke();
                 c.restore();
             }
             if (!this.visible(pos.x, pos.y)) continue;
@@ -186,15 +200,15 @@ export class MapRenderer {
         }
         if (s.moveMode) {
             const army = s.world.armies.find(a => a.owner_id === s.playerId);
-            const cell = cellAt(wp.x, wp.y), destination = cellCenter(cell.col, cell.row);
+            const cell = cellAt(wp.x, wp.y), destination = this.imagePoint((cell.col+.5)*CELL_SIZE,(cell.row+.5)*CELL_SIZE);
             c.save(); c.lineWidth = 1.5 * unit;
             if (army) {
                 const pos = armyPosition(army, now);
                 const key = `${cell.col}:${cell.row}:${army.departure_at}:${army.target_x}:${army.target_y}:${army.status === 'moving' ? Math.floor(now / 1000) : 'idle'}`;
-                if (key !== this.previewKey) { this.previewKey = key; this.preview = isWalkable(cell.col, cell.row) ? findMarchPath(pos, destination) : null; }
+                if (key !== this.previewKey) { this.previewKey = key; this.preview = isWalkable(cell.col, cell.row) ? findMarchPath(pos,cellCenter(cell.col,cell.row)) : null; }
                 c.strokeStyle = this.preview ? '#ffe6a1' : '#e39b79';
                 if (this.preview) {
-                    c.setLineDash([6 * unit, 5 * unit]); c.beginPath(); this.preview.path.forEach(([x, y], i) => i ? c.lineTo(x, y) : c.moveTo(x, y)); c.stroke(); c.setLineDash([]);
+                    c.setLineDash([6 * unit, 5 * unit]); c.beginPath(); this.routeImages(this.preview.path).forEach(({x,y}, i) => i ? c.lineTo(x, y) : c.moveTo(x, y)); c.stroke(); c.setLineDash([]);
                 }
                 this.label(destination.x, destination.y - 28 * unit, this.preview ? `MARCH · ${clock(Math.max(2, this.preview.distance / 22))}` : cell.terrain === 'water' ? 'SEA · SHIPS REQUIRED' : 'NO CONNECTED LAND ROUTE', this.preview ? '#ffe8ab' : '#f4bda4', true);
             }
@@ -214,4 +228,5 @@ export class MapRenderer {
         c.fillStyle = '#183228e8'; c.fillRect(14, 14, width, 27); c.strokeStyle = '#c8b37c66'; c.strokeRect(14, 14, width, 27);
         c.fillStyle = '#ead9b1'; c.fillText(label, 24, 28); c.restore();
     }
+    dispose(){for(const canvas of this.chunks.values()){canvas.width=0;canvas.height=0;}this.chunks.clear();this.preview=null;}
 }

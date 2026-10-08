@@ -8,7 +8,7 @@ import { gameImage } from '../../shared/rendering/assets';
 import { makeTerrain } from './terrain';
 import { clamp } from '../../shared/math/geometry';
 import { preferences } from '../../platform/preferences/preferences';
-import { CELL_SIZE, WORLD_MIN_X, WORLD_MIN_Y, WORLD_MAX_X, WORLD_MAX_Y } from '../../features/map/domain/dimensions';
+import { CELL_SIZE } from '../../features/map/domain/dimensions';
 import { mapArtReady, mapOverviewReady } from '../../features/map/rendering/mapArt';
 /** Canvas lifecycle adapter. Scenes own drawing; InputController owns gestures. */
 export class GameRenderer {
@@ -86,10 +86,10 @@ export class GameRenderer {
         if (s.mode === 'world') {
             const margin = CELL_SIZE * 4;
             const bounds = {
-                minX: Math.max(WORLD_MIN_X, Math.floor((this.ctx.camera.x - this.ctx.w / scale / 2 - margin) / CELL_SIZE) * CELL_SIZE),
-                minY: Math.max(WORLD_MIN_Y, Math.floor((this.ctx.camera.y - this.ctx.h / scale / 2 - margin) / CELL_SIZE) * CELL_SIZE),
-                maxX: Math.min(WORLD_MAX_X, Math.ceil((this.ctx.camera.x + this.ctx.w / scale / 2 + margin) / CELL_SIZE) * CELL_SIZE),
-                maxY: Math.min(WORLD_MAX_Y, Math.ceil((this.ctx.camera.y + this.ctx.h / scale / 2 + margin) / CELL_SIZE) * CELL_SIZE),
+                minX: Math.floor((this.ctx.camera.x - this.ctx.w / scale / 2 - margin) / CELL_SIZE) * CELL_SIZE,
+                minY: Math.floor((this.ctx.camera.y - this.ctx.h / scale / 2 - margin) / CELL_SIZE) * CELL_SIZE,
+                maxX: Math.ceil((this.ctx.camera.x + this.ctx.w / scale / 2 + margin) / CELL_SIZE) * CELL_SIZE,
+                maxY: Math.ceil((this.ctx.camera.y + this.ctx.h / scale / 2 + margin) / CELL_SIZE) * CELL_SIZE,
             };
             const viewport = `${bounds.minX}:${bounds.minY}:${bounds.maxX}:${bounds.maxY}`;
             if (viewport !== this.lastViewport) { this.lastViewport = viewport; this.ctx.actions().mapViewport?.(bounds); }
@@ -134,5 +134,5 @@ export class GameRenderer {
     focus(side: 'own' | 'enemy') { this.ctx.focus(side); }
     focusMap(target: 'home' | 'army') { this.ctx.focusMap(target); }
     center(x?: number, y?: number) { this.ctx.center(x, y); }
-    destroy() { this.running = false; cancelAnimationFrame(this.frame); this.resize.disconnect(); this.input.destroy(); }
+    destroy() { this.running = false; cancelAnimationFrame(this.frame); this.resize.disconnect(); this.input.destroy(); this.map.dispose(); }
 }

@@ -17,7 +17,9 @@
     "check:sql": "node scripts/build-sql.mjs --check",
     "test:city-db": "node tests/city-slots-database.test.mjs",
     "test:magic-db": "node --import tsx tests/magic-database.test.mjs",
-    "test:factions-db": "node tests/factions-database.test.mjs"
+    "test:factions-db": "node tests/factions-database.test.mjs",
+    "test:territory-db": "node tests/map-territory-database.test.mjs",
+    "test:map-db": "node tests/map-snapshot-database.test.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.57.4",

@@ -1,6 +1,6 @@
 create or replace function public.peris_settle(p_owner uuid,p_until timestamptz default now()) returns void
 language plpgsql security definer set search_path='' as $$
-declare s public.settlements%rowtype;o public.peris_orders%rowtype;minutes numeric;l integer;at_time timestamptz;target_slot integer;
+declare s public.settlements%rowtype;o public.peris_orders%rowtype;minutes numeric;l integer;at_time timestamptz;target_slot integer;field_col integer;field_row integer;
 begin
  perform 1 from public.players where id=p_owner for update;
  select * into s from public.settlements where owner_id=p_owner for update;
@@ -27,12 +27,25 @@ begin
  elsif o.item='farm' then s.food_rate:=18+l*10+8*coalesce((select sum(level) from public.peris_city_slots where settlement_id=s.id and building_type='fishery'),0);elsif o.item='market' then s.gold_rate:=3+l*3;
  elsif o.item='storehouse' then s.capacity:=5000+l*2500;end if;
  end if;
- else
+ elsif o.kind='field' then
+ field_col:=split_part(o.item,':',2)::integer;field_row:=split_part(o.item,':',3)::integer;
+ update public.peris_map_plots set level=level+1
+ where col=field_col and row=field_row and owner_id=p_owner and settlement_id=s.id
+ and building_type=split_part(o.item,':',4) and level<5;
+ if not found then raise exception 'Queued external field no longer matches its owner or building';end if;
+ update public.players set upgrades=upgrades+1 where id=p_owner;
+ elsif o.kind='recruit' then
  update public.armies set infantry=infantry+case when o.item='infantry' then o.quantity else 0 end,
  archers=archers+case when o.item='archers' then o.quantity else 0 end,cavalry=cavalry+case when o.item='cavalry' then o.quantity else 0 end,
  updated_at=o.finish_at where owner_id=p_owner;
  update public.players set recruits=recruits+o.quantity where id=p_owner;
  end if;
+ -- Keep each pre-completion segment at its old rate, then use the completed
+ -- city and field totals for the next segment without overwriting stored supplies.
+ perform public.peris_city_economy(s.id);
+ select wood_rate,stone_rate,food_rate,gold_rate,capacity,food_capacity
+ into s.wood_rate,s.stone_rate,s.food_rate,s.gold_rate,s.capacity,s.food_capacity
+ from public.settlements where id=s.id;
  delete from public.peris_orders where id=o.id;
  end loop;
  minutes:=greatest(0,extract(epoch from(p_until-s.resources_updated_at)))/60;

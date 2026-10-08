@@ -4,7 +4,7 @@ import { createSolo } from '../src/features/campaign/domain/newRealm';
 import { RenderContext } from '../src/shared/rendering/RenderContext';
 import { type RenderState, type RenderActions } from '../src/shared/rendering/contracts';
 import { MapRenderer } from '../src/features/map/rendering/MapRenderer';
-import { WORLD_MIN_X, WORLD_MAX_Y } from '../src/features/map/domain/dimensions';
+import { WORLD_MIN_X, WORLD_MAX_X, WORLD_MIN_Y, WORLD_MAX_Y, WORLD_W, WORLD_H } from '../src/features/map/domain/dimensions';
 
 function fixture() {
     const world = createSolo('Navigator');
@@ -31,15 +31,18 @@ test('nearby city and army selection chooses the nearest marker', () => {
     assert.deepEqual(renderer.hit(180, 285), { kind: 'army', id: 1 });
 });
 
-test('world camera keeps zoomed map edges within the viewport and centers an overview', () => {
+test('world camera wraps across both edges and preserves a canonical whole-world overview', () => {
     const { ctx } = fixture();
-    ctx.camera = { x: -99999, y: 99999, zoom: 3 };
+    ctx.camera = { x: WORLD_MIN_X-64, y: WORLD_MAX_Y+96, zoom: 3 };
     ctx.constrainMapCamera();
-    assert.equal(ctx.worldPoint(0, 250).x, WORLD_MIN_X);
-    assert.equal(ctx.worldPoint(195, 500).y, WORLD_MAX_Y);
+    assert.equal(ctx.camera.x,WORLD_MAX_X-64);assert.equal(ctx.camera.y,WORLD_MIN_Y+96);
+    assert.ok(ctx.worldPoint(ctx.w,ctx.h/2).x>WORLD_MAX_X,'the viewport continues across the opposite edge');
+    assert.ok(ctx.worldPoint(ctx.w/2,0).y<WORLD_MIN_Y,'north and south join too');
+    ctx.camera.x+=WORLD_W*3;ctx.camera.y-=WORLD_H*2;ctx.constrainMapCamera();
+    assert.equal(ctx.camera.x,WORLD_MAX_X-64);assert.equal(ctx.camera.y,WORLD_MIN_Y+96);
     ctx.center(); ctx.camera.x = 0; ctx.camera.y = 0; ctx.constrainMapCamera();
     assert.deepEqual(ctx.camera, { x: 0, y: 0, zoom: ctx.mapMinZoom });
-    ctx.zoom(.1); assert.equal(ctx.camera.zoom, ctx.mapMinZoom);
+    ctx.zoom(.1); assert.equal(ctx.camera.zoom, ctx.mapExploreMinZoom,'scrolling from overview enters bounded repeated exploration');
 });
 
 test('army focus selects the current player even when a rival is listed first', t => {

@@ -18,6 +18,7 @@ import { renameCity } from '../../features/city/domain/rename';
 import { queueSlot } from '../../features/city/domain/slotCommands';
 import { citySlots, refreshCityEconomy } from '../../features/city/domain/slots';
 import {researchSpell,castSpell} from '../../features/magic/domain/commands';
+import { claimMapField, queueMapField } from '../../features/map/domain/territory';
 export class LocalEngine implements GameEngine {
     readonly playerId = 'solo-ruler';
     readonly mode: 'solo' | 'practice';
@@ -105,10 +106,12 @@ export class LocalEngine implements GameEngine {
     command = async (cmd: Command) => {
         settleLocal(this.snapshot, this.playerId);
         const active = this.active();
-        if (['researchSpell', 'upgrade', 'buildSlot', 'upgradeSlot', 'recruit', 'move', 'raid'].includes(cmd.type) && active)
+        if (['claimField', 'buildField', 'researchSpell', 'upgrade', 'buildSlot', 'upgradeSlot', 'recruit', 'move', 'raid'].includes(cmd.type) && active)
             throw new Error('Finish the current battle first.');
         const context: LocalCommandContext = { world: this.snapshot, playerId: this.playerId, nextId: () => ++this.nextId, active, now: new Date().toISOString(), paused: value => { this.paused = value; }, finalize: id => this.finalize(id) };
         switch (cmd.type) {
+            case 'claimField': claimMapField(context, cmd.col, cmd.row); break;
+            case 'buildField': queueMapField(context, cmd.col, cmd.row, cmd.item); break;
             case 'setFaction':changeFaction(context,cmd);break;
             case 'debugCity':debugCity(context,cmd);break;
             case 'researchSpell':researchSpell(context,cmd);break;

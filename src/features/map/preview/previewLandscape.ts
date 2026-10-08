@@ -10,6 +10,12 @@ export const PREVIEW_PALETTE: Record<PreviewTerrain, string> = {
     marsh: '#506b55', snow: '#c3cdc7', water: '#2c5960', ruins: '#7d806d',
 };
 const colors = Object.fromEntries(Object.entries(PREVIEW_PALETTE).map(([key, color]) => [key, new THREE.Color(color)])) as Record<PreviewTerrain, THREE.Color>;
+/** Presentation can sample the live world's authoritative geography instead of the map sample. */
+export interface LandscapeWorldSource {
+    height: (x: number, z: number) => number;
+    terrain: (col: number, row: number) => PreviewTerrain;
+    hydrology: ReturnType<typeof getPreviewHydrology>;
+}
 export function previewRandom(x: number, z: number, salt = 0) {
     let n = Math.imul(x | 0, 374761393) ^ Math.imul(z | 0, 668265263) ^ Math.imul(salt + 98213, 1442695041);
     n = Math.imul(n ^ n >>> 13, 1274126177); return ((n ^ n >>> 16) >>> 0) / 4294967296;
@@ -35,20 +41,22 @@ function earthMaterial() {
 }
 
 /** Continuous heightfield sampled from the same authoritative cells as selection and minimap. */
-export function createPreviewTerrainGeometry(segments = 400, seed = PREVIEW_DEFAULT_SEED) {
+export function createPreviewTerrainGeometry(segments = 400, seed = PREVIEW_DEFAULT_SEED, source?: LandscapeWorldSource) {
+    const height = source?.height ?? ((x: number, z: number) => previewHeight(x, z, seed));
+    const terrainAt = source?.terrain ?? ((col: number, row: number) => getPreviewCell(col, row, seed).terrain);
     const geometry = new THREE.PlaneGeometry(200, 200, segments, segments); geometry.rotateX(-Math.PI / 2);
     const p = geometry.getAttribute('position'), tint = new Float32Array(p.count * 3), c = new THREE.Color();
     for (let i = 0; i < p.count; i++) {
-        const x = p.getX(i), z = p.getZ(i), wx = wrapPreviewCoordinate(x), wz = wrapPreviewCoordinate(z); p.setY(i, previewHeight(x, z, seed));
+        const x = p.getX(i), z = p.getZ(i), wx = wrapPreviewCoordinate(x), wz = wrapPreviewCoordinate(z); p.setY(i, height(x, z));
         const cx = Math.floor(x - .5), cz = Math.floor(z - .5), tx = x - .5 - cx, tz = z - .5 - cz;
         c.setRGB(0, 0, 0);
         for (let j = 0; j < 4; j++) {
             const { col, row } = wrapPreviewCell(cx + j % 2, cz + Math.floor(j / 2));
-            const terrain = getPreviewCell(col, row, seed).terrain, weight = (j % 2 ? tx : 1 - tx) * (j >= 2 ? tz : 1 - tz);
+            const terrain = terrainAt(col, row), weight = (j % 2 ? tx : 1 - tx) * (j >= 2 ? tz : 1 - tz);
             c.r += colors[terrain].r * weight; c.g += colors[terrain].g * weight; c.b += colors[terrain].b * weight;
         }
         // The basalt tint has a periodic falloff rather than a color cut at the world's edge.
-        if (getPreviewCell(Math.floor(wx), Math.floor(wz), seed).terrain === 'mountain') {
+        if (terrainAt(Math.floor(wx), Math.floor(wz)) === 'mountain') {
             const basalt = Math.exp(-((wrappedPreviewDelta(53, wx) / 35) ** 2 + (wrappedPreviewDelta(-48, wz) / 28) ** 2));
             c.multiplyScalar(1 - basalt * .24);
         }
@@ -126,10 +134,11 @@ function palmCrown() {
 }
 
 /** Scenery has a small number of instanced batches per regional chunk; never a mesh per field. */
-export function createPreviewLandscape(villages: readonly PreviewVillage[], seed = PREVIEW_DEFAULT_SEED) {
-    const hydrology = getPreviewHydrology(seed), random = (x: number, z: number, salt: number) => previewRandom(x, z, salt ^ seed);
-    const height = (x: number, z: number) => previewHeight(x, z, seed);
-    const group = new THREE.Group(), terrainMaterial = earthMaterial(), terrain = new THREE.Mesh(createPreviewTerrainGeometry(400, seed), terrainMaterial);
+export function createPreviewLandscape(villages: readonly PreviewVillage[], seed = PREVIEW_DEFAULT_SEED, source?: LandscapeWorldSource) {
+    const hydrology = source?.hydrology ?? getPreviewHydrology(seed), random = (x: number, z: number, salt: number) => previewRandom(x, z, salt ^ seed);
+    const height = source?.height ?? ((x: number, z: number) => previewHeight(x, z, seed));
+    const terrainAt = source?.terrain ?? ((col: number, row: number) => getPreviewCell(col, row, seed).terrain);
+    const group = new THREE.Group(), terrainMaterial = earthMaterial(), terrain = new THREE.Mesh(createPreviewTerrainGeometry(400, seed, source), terrainMaterial);
     terrain.receiveShadow = true; group.add(terrain);
     const materials = new Set<THREE.Material>([terrainMaterial]), geometries = new Set<THREE.BufferGeometry>([terrain.geometry]);
     const waterMaterial = new THREE.MeshStandardMaterial({ color: 0x366d76, roughness: .32, metalness: .22, transparent: true, opacity: .95 });
@@ -203,7 +212,7 @@ export function createPreviewLandscape(villages: readonly PreviewVillage[], seed
     };
     const batches: Batch[] = [], matrix = new THREE.Matrix4(), rotation = new THREE.Quaternion(), axis = new THREE.Vector3(0, 1, 0), position = new THREE.Vector3(), scale = new THREE.Vector3();
     for (let row = -100; row < 100; row++) for (let col = -100; col < 100; col++) {
-        const cell = getPreviewCell(col, row, seed), key = previewCellKey(col, row);
+        const cell = { terrain: terrainAt(col, row) }, key = previewCellKey(col, row);
         if (cell.terrain === 'water') continue;
         const chunkKey = `${Math.floor((col + 100) / 20)}:${Math.floor((row + 100) / 20)}`;
         let chunk = chunks.get(chunkKey);
@@ -256,9 +265,11 @@ export function createPreviewLandscape(villages: readonly PreviewVillage[], seed
             if (!entries.length) continue;
             const mesh = new THREE.InstancedMesh(geometry, material, entries.length); mesh.castShadow = geometry !== glowGeo; mesh.receiveShadow = true;
             entries.forEach((entry, i) => { mesh.setMatrixAt(i, compose(entry, false)); mesh.setColorAt(i, entry.color); }); mesh.computeBoundingSphere();
+            mesh.name = geometry === coniferGeo ? 'Pine canopy 1' : geometry === oakGeo ? 'Oak crowns' : geometry === trunkGeo ? 'Tree trunks' : geometry === rockGeo ? 'Scattered boulders' : 'Native landscape detail';
             mesh.userData.isForest = geometry === trunkGeo || geometry === coniferGeo || geometry === oakGeo || geometry === palmGeo;
             mesh.userData.detail = geometry === shrubGeo ? 'shrub' : geometry === grassGeo ? 'scrub' : geometry === palmGeo ? 'palm' : geometry === archGeo ? 'ruin' : geometry === glowGeo ? 'rune' : 'landscape';
             mesh.userData.near = geometry === shrubGeo || geometry === grassGeo || geometry === glowGeo;
+            mesh.userData.maxSpan = mesh.userData.near ? 70 : mesh.userData.isForest ? 110 : Infinity;
             chunk.group.add(mesh); batches.push({ mesh, entries });
         }
         group.add(chunk.group);
@@ -282,29 +293,49 @@ export function createPreviewLandscape(villages: readonly PreviewVillage[], seed
         for (const source of sourceChildren) tile.add(cloneShared(source));
         wrapGroups.push(tile); group.add(tile);
     }
-    let constructed = new Set<string>();
+    let constructed = new Set<string>(), settlementKey = '', disposed = false;
+    let settlementBuckets = new Map<string, { x: number; z: number }[]>();
+    const cleared = (entry: Decoration) => {
+        const resource = constructed.has(entry.cell) && Math.abs(entry.x - Math.floor(entry.x) - .5) < resourceHalfExtent + entry.clearance && Math.abs(entry.z - Math.floor(entry.z) - .5) < resourceHalfExtent + entry.clearance;
+        const cx = Math.floor(entry.x / 2), cz = Math.floor(entry.z / 2), extent = .56 + entry.clearance;
+        let town = false;
+        for (let dz = -1; dz <= 1 && !town; dz++) for (let dx = -1; dx <= 1 && !town; dx++) {
+            const x = Math.floor(wrapPreviewCoordinate((cx + dx) * 2) / 2), z = Math.floor(wrapPreviewCoordinate((cz + dz) * 2) / 2);
+            town = settlementBuckets.get(`${x}:${z}`)?.some(center => Math.abs(wrappedPreviewDelta(entry.x, center.x)) < extent && Math.abs(wrappedPreviewDelta(entry.z, center.z)) < extent) ?? false;
+        }
+        return resource || town;
+    };
+    const updateClearings = () => {
+        for (const batch of batches) {
+            let changed = false;
+            batch.entries.forEach((entry, index) => {
+                compose(entry, cleared(entry)); const offset = index * 16;
+                if (matrix.elements.some((value, component) => Math.abs(value - batch.mesh.instanceMatrix.array[offset + component]) > 1e-7)) { batch.mesh.setMatrixAt(index, matrix); changed = true; }
+            });
+            if (changed) batch.mesh.instanceMatrix.needsUpdate = true;
+        }
+    };
     return {
-        group,
+        group, terrain,
         setWrapVisible(enabled: boolean) { wrapGroups.forEach(tile => { tile.visible = enabled; }); },
         animate(time: number) { waterUniform.value = time; },
         setConstructionCells(next: Set<string>) {
             if (next.size === constructed.size && [...next].every(k => constructed.has(k))) return;
-            for (const batch of batches) {
-                let changed = false;
-                batch.entries.forEach((entry, i) => {
-                    if (constructed.has(entry.cell) === next.has(entry.cell)) return;
-                    // Clear the larger compound plus its canopy margin; retain scenery beyond its bounds.
-                    const intersects = Math.abs(entry.x - Math.floor(entry.x) - .5) < resourceHalfExtent + entry.clearance && Math.abs(entry.z - Math.floor(entry.z) - .5) < resourceHalfExtent + entry.clearance;
-                    const before = constructed.has(entry.cell) && intersects, after = next.has(entry.cell) && intersects;
-                    if (before !== after) { batch.mesh.setMatrixAt(i, compose(entry, after)); changed = true; }
-                });
-                if (changed) batch.mesh.instanceMatrix.needsUpdate = true;
+            constructed = new Set(next); updateClearings();
+        },
+        setSettlementCells(centers: readonly { x: number; z: number }[]) {
+            const valid = centers.filter(center => Number.isFinite(center.x) && Number.isFinite(center.z));
+            const key = valid.map(center => `${center.x}:${center.z}`).sort().join('|'); if (key === settlementKey) return;
+            settlementKey = key; settlementBuckets = new Map();
+            for (const center of valid) {
+                const key = `${Math.floor(wrapPreviewCoordinate(center.x) / 2)}:${Math.floor(wrapPreviewCoordinate(center.z) / 2)}`;
+                let entries = settlementBuckets.get(key); if (!entries) settlementBuckets.set(key, entries = []); entries.push(center);
             }
-            constructed = next;
+            updateClearings();
         },
         setView(span: number) {
             for (const mesh of allInstances) mesh.visible = mesh.userData.near ? span < 70 : mesh.userData.isForest ? span < 110 : true;
         },
-        dispose() { repeatedInstances.forEach(mesh => mesh.dispose()); batches.forEach(b => b.mesh.dispose()); geometries.forEach(g => g.dispose()); materials.forEach(m => m.dispose()); wrapGroups.forEach(tile => tile.clear()); group.clear(); },
+        dispose() { if (disposed) return; disposed = true; repeatedInstances.forEach(mesh => mesh.dispose()); batches.forEach(b => b.mesh.dispose()); geometries.forEach(g => g.dispose()); materials.forEach(m => m.dispose()); wrapGroups.forEach(tile => tile.clear()); group.clear(); },
     };
 }

@@ -1,6 +1,6 @@
 import { type RenderActions, type RenderState } from './contracts';
 import { FIELD_H, FIELD_W } from '../../features/battle/domain/dimensions';
-import { WORLD_H, WORLD_W, WORLD_MIN_X, WORLD_MIN_Y, WORLD_MAX_X, WORLD_MAX_Y } from '../../features/map/domain/dimensions';
+import { WORLD_H, WORLD_W, WORLD_MIN_X, WORLD_MIN_Y, CELL_SIZE, wrapWorldCoordinate } from '../../features/map/domain/dimensions';
 import { clamp } from '../math/geometry';
 import { armyPosition } from '../../features/map/domain/movement';
 export class RenderContext {
@@ -66,13 +66,12 @@ export class RenderContext {
         c.fillText(text, x, y);
     }
     get mapMinZoom() { return Math.min(this.w / WORLD_W, this.h / WORLD_H) / this.zoomBase; }
-    zoom(delta: number) { this.camera.zoom = clamp(this.camera.zoom * delta, this.state().mode === 'world' ? this.mapMinZoom : .3, this.state().mode === 'world' ? 5 : 3.2); }
+    get mapExploreMinZoom() { return Math.max(this.w / (350 * CELL_SIZE), this.h / (180 * CELL_SIZE)) / this.zoomBase; }
+    zoom(delta: number) { this.camera.zoom = clamp(this.camera.zoom * delta, this.state().mode === 'world' ? this.mapExploreMinZoom : .3, this.state().mode === 'world' ? 5 : 3.2); }
     constrainMapCamera() {
         if (this.state().mode !== 'world') return;
-        const scale = this.zoomBase * this.camera.zoom;
-        const halfW = Math.min(WORLD_W / 2, this.w / scale / 2), halfH = Math.min(WORLD_H / 2, this.h / scale / 2);
-        this.camera.x = clamp(this.camera.x, WORLD_MIN_X + halfW, WORLD_MAX_X - halfW);
-        this.camera.y = clamp(this.camera.y, WORLD_MIN_Y + halfH, WORLD_MAX_Y - halfH);
+        this.camera.x = wrapWorldCoordinate(this.camera.x);
+        this.camera.y = wrapWorldCoordinate(this.camera.y);
     }
     focusMap(target: 'home' | 'army') {
         const s = this.state();

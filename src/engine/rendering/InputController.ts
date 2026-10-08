@@ -4,7 +4,7 @@ import { BattleRenderer } from '../../features/battle/rendering/BattleRenderer';
 import { clamp } from '../../shared/math/geometry';
 import { tone } from '../../platform/audio/audio';
 import { preferences } from '../../platform/preferences/preferences';
-import { cellAt, cellCenter } from '../../features/map/domain/worldGrid';
+import { cellAt, cellCenter, isWalkable } from '../../features/map/domain/worldGrid';
 export class InputController {
     private cleanup: (() => void)[] = [];
     private touches = new Map<number, { x: number; y: number }>();
@@ -42,7 +42,7 @@ export class InputController {
             if (this.touches.has(e.pointerId)) this.touches.set(e.pointerId, p);
             if (s.mode === 'world' && this.pinch && this.touches.size >= 2) {
                 const [a, b] = [...this.touches.values()], mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
-                this.ctx.camera.zoom = clamp(this.pinch.zoom * Math.hypot(a.x - b.x, a.y - b.y) / this.pinch.distance, this.ctx.mapMinZoom, 5);
+                this.ctx.camera.zoom = clamp(this.pinch.zoom * Math.hypot(a.x - b.x, a.y - b.y) / this.pinch.distance, this.ctx.mapExploreMinZoom, 5);
                 const scale = this.ctx.zoomBase * this.ctx.camera.zoom;
                 this.ctx.camera.x = this.pinch.anchor.x - (mid.x - this.ctx.w / 2) / scale;
                 this.ctx.camera.y = this.pinch.anchor.y - (mid.y - this.ctx.h / 2) / scale;
@@ -79,6 +79,7 @@ export class InputController {
             if (s.mode === 'world') {
                 if (s.moveMode && (e.button === 0 || e.button === 2)) {
                     const cell = cellAt(wp.x, wp.y), destination = cellCenter(cell.col, cell.row);
+                    if(!isWalkable(cell.col,cell.row))return;
                     a.moveArmy(destination.x, destination.y);
                     return;
                 }

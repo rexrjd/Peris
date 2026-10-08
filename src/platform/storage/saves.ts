@@ -3,10 +3,11 @@ import { citySlots, refreshCityEconomy, SLOT_BUILDINGS, mainLevel, slotCount, sl
 import {spellById} from '../../features/magic/domain/spells';
 import { SAVE_KEY, readSolo } from './solo';
 import { type World } from '../../shared/model/world';
-import { CELL_SIZE } from '../../features/map/domain/dimensions';
-import { isWalkable, isLegacyWalkable } from '../../features/map/domain/worldGrid';
+import { CELL_SIZE, WORLD_COLS, WORLD_ROWS, WORLD_MAP_VERSION, WORLD_MIN_X, WORLD_MAX_X, wrappedWorldDelta, wrappedCellDistance, wrapWorldCell } from '../../features/map/domain/dimensions';
+import { isWalkable, isVersion3Walkable, isLegacyWalkable } from '../../features/map/domain/worldGrid';
+import { FIELD_BUILDINGS, TERRITORY_RULES, territoryAllowance, territoryPopulation } from '../../features/map/domain/territory';
 // v6 campaigns predate the 200-field map. Keep every legacy position and route
-// unchanged on import/export; new movement remains bounded by current geography.
+// unchanged on import/export; new movement uses the canonical periodic geography.
 const SAVE_MIN = -25600, SAVE_MAX = 25600;
 const backupKey = 'peris-campaign-backup';
 export function backupSolo() { try {
@@ -48,26 +49,31 @@ export function validateSave(data: unknown): World {
             invalid();
     if (army.march_distance != null && (!Number.isFinite(army.march_distance) || army.march_distance < 0))
         invalid();
+    if (army.march_map_version != null && ![3, WORLD_MAP_VERSION].includes(army.march_map_version)) invalid();
+    if (army.march_map_version === WORLD_MAP_VERSION && [army.start_x, army.start_y, army.target_x, army.target_y].some(value => value < WORLD_MIN_X || value >= WORLD_MAX_X)) invalid();
     if (army.march_path != null) {
         const route = army.march_path;
         if (!Array.isArray(route) || route.length < 2 || route.length > 2000)
             invalid();
+        const wrappedRoute = army.march_map_version === WORLD_MAP_VERSION;
         let distance = 0, currentLand = true, legacyLand = true;
         for (let i = 0; i < route.length; i++) {
             const point = route[i];
             if (!Array.isArray(point) || point.length !== 2 || !Number.isFinite(point[0]) || !Number.isFinite(point[1]) || point[0] < SAVE_MIN || point[0] >= SAVE_MAX || point[1] < SAVE_MIN || point[1] >= SAVE_MAX)
                 invalid();
+            if (wrappedRoute && point.some(value => value < WORLD_MIN_X || value >= WORLD_MAX_X)) invalid();
             const col = Math.floor(point[0] / CELL_SIZE), row = Math.floor(point[1] / CELL_SIZE);
-            currentLand = currentLand && isWalkable(col, row);
-            legacyLand = legacyLand && isLegacyWalkable(col, row);
+            currentLand = currentLand && (wrappedRoute ? isWalkable(col, row) : isVersion3Walkable(col, row));
+            legacyLand = legacyLand && !wrappedRoute && isLegacyWalkable(col, row);
             if (i) {
                 const previous = route[i - 1], oldCol = Math.floor(previous[0] / CELL_SIZE), oldRow = Math.floor(previous[1] / CELL_SIZE);
-                const segment = Math.hypot(point[0] - previous[0], point[1] - previous[1]);
-                if (Math.abs(col - oldCol) > 1 || Math.abs(row - oldRow) > 1 || segment === 0 && route.length > 2)
+                const segment = Math.hypot(wrappedRoute ? wrappedWorldDelta(previous[0],point[0]) : point[0] - previous[0], wrappedRoute ? wrappedWorldDelta(previous[1],point[1]) : point[1] - previous[1]);
+                const neighboring = wrappedRoute ? wrappedCellDistance({col,row},{col:oldCol,row:oldRow}) <= 1 : Math.abs(col - oldCol) <= 1 && Math.abs(row - oldRow) <= 1;
+                if (!neighboring || segment === 0 && route.length > 2)
                     invalid();
                 if (col !== oldCol && row !== oldRow) {
-                    currentLand = currentLand && isWalkable(col, oldRow) && isWalkable(oldCol, row);
-                    legacyLand = legacyLand && isLegacyWalkable(col, oldRow) && isLegacyWalkable(oldCol, row);
+                    currentLand = currentLand && (wrappedRoute ? isWalkable(col, oldRow) && isWalkable(oldCol, row) : isVersion3Walkable(col, oldRow) && isVersion3Walkable(oldCol, row));
+                    legacyLand = legacyLand && !wrappedRoute && isLegacyWalkable(col, oldRow) && isLegacyWalkable(oldCol, row);
                 }
                 distance += segment;
             }
@@ -103,11 +109,36 @@ export function validateSave(data: unknown): World {
     for (const date of [town.resources_updated_at, army.departure_at, army.arrival_at, player.created_at])
         if (!Number.isFinite(Date.parse(date)))
             invalid();
+    if (w.map_plots !== undefined && !Array.isArray(w.map_plots)) invalid();
+    const plots = w.map_plots ?? [], plotKeys = new Set<string>();
+    if (!Array.isArray(plots) || plots.length > (TERRITORY_RULES.radius * 2 + 1) ** 2 - 1 || plots.length > territoryAllowance(territoryPopulation(w, 'solo-ruler'))) invalid();
+    const home = wrapWorldCell(Math.floor(town.x / CELL_SIZE), Math.floor(town.y / CELL_SIZE));
+    for (const plot of plots) {
+        if (!plot || typeof plot !== 'object' || !Number.isInteger(plot.col) || !Number.isInteger(plot.row) || plot.col < -WORLD_COLS / 2 || plot.col >= WORLD_COLS / 2 || plot.row < -WORLD_ROWS / 2 || plot.row >= WORLD_ROWS / 2 || plot.owner_id !== 'solo-ruler' || plot.settlement_id !== town.id || !Number.isInteger(plot.level) || plot.level < 0 || plot.level > TERRITORY_RULES.maxLevel || plot.building_type !== null && !Object.hasOwn(FIELD_BUILDINGS, plot.building_type) || plot.building_type === null && plot.level !== 0) invalid();
+        const key = `${plot.col},${plot.row}`, distance = wrappedCellDistance(home, plot);
+        if (plotKeys.has(key) || distance === 0 || distance > TERRITORY_RULES.radius || !isWalkable(plot.col, plot.row) || w.camps.some(c => wrappedCellDistance(plot, wrapWorldCell(Math.floor(c.x / CELL_SIZE), Math.floor(c.y / CELL_SIZE))) === 0)) invalid();
+        plotKeys.add(key);
+    }
+    if (plots.filter(plot => wrappedCellDistance(home, plot) === 1).length < Math.min(TERRITORY_RULES.startingClaims, plots.length)) invalid();
+    // A save may reorder records, so check the completed territory as a graph.
+    // Canonical neighbors also connect legitimate claims on opposite map edges.
+    const connected = new Set<string>(), queue = [home];
+    for (let head = 0; head < queue.length; head++) for (const plot of plots) {
+        const key = `${plot.col},${plot.row}`;
+        if (!connected.has(key) && wrappedCellDistance(queue[head], plot) === 1) { connected.add(key); queue.push(plot); }
+    }
+    if (connected.size !== plots.length) invalid();
     if (w.orders.filter(o => o.kind === 'upgrade').length > 1 || w.orders.filter(o => o.kind === 'recruit').length > 3)
         invalid();
-    for (const o of w.orders)
-        if (!['upgrade', 'recruit'].includes(o.kind) || o.owner_id !== 'solo-ruler' || !(o.kind === 'upgrade' ? ['lumber', 'quarry', 'farm', 'market', 'barracks', 'stables', 'wall', 'storehouse', ...(w.city_slots??[]).map(s=>`slot:${s.slot_index}:${s.building_type}`)] : ['infantry', 'archers', 'cavalry']).includes(o.item) || !Number.isFinite(Date.parse(o.finish_at)) || !Number.isFinite(Date.parse(o.started_at)) || Date.parse(o.finish_at) < Date.parse(o.started_at) || !Number.isInteger(o.quantity) || o.quantity < 1 || o.quantity > 200)
-            invalid();
+    const fieldQueues = new Set<string>();
+    for (const o of w.orders) {
+        if (!['upgrade', 'recruit', 'field'].includes(o.kind) || o.owner_id !== 'solo-ruler' || typeof o.item !== 'string' || !Number.isFinite(Date.parse(o.finish_at)) || !Number.isFinite(Date.parse(o.started_at)) || Date.parse(o.finish_at) < Date.parse(o.started_at) || !Number.isInteger(o.quantity) || o.quantity < 1 || o.quantity > 200) invalid();
+        if (o.kind === 'field') {
+            const plot = plots.find(plot => o.item === `field:${plot.col}:${plot.row}:${plot.building_type}`), key = plot && `${plot.col},${plot.row}`;
+            if (!plot || !plot.building_type || plot.level >= TERRITORY_RULES.maxLevel || o.quantity !== 1 || fieldQueues.has(key!)) invalid();
+            fieldQueues.add(key!);
+        } else if (!(o.kind === 'upgrade' ? ['lumber', 'quarry', 'farm', 'market', 'barracks', 'stables', 'wall', 'storehouse', ...(w.city_slots??[]).map(s=>`slot:${s.slot_index}:${s.building_type}`)] : ['infantry', 'archers', 'cavalry']).includes(o.item)) invalid();
+    }
     if (army.infantry + army.archers + army.cavalry + w.orders.filter(o => o.kind === 'recruit').reduce((n, o) => n + o.quantity, 0) > 1000)
         invalid();
     for (const f of w.formations)

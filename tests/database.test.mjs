@@ -18,15 +18,21 @@ await admin(await readFile('supabase/UPGRADE_TO_V8.sql','utf8'));await db.exec(a
 await login(u);let w=await snap();assert.equal(w.armies[0].infantry,before.infantry);assert.equal(w.buildings.length,8);
 assert.deepEqual([w.settlements[0].x,w.settlements[0].y],[beforeTown.x,beforeTown.y]);
 assert.deepEqual([w.armies[0].start_x,w.armies[0].start_y,w.armies[0].target_x,w.armies[0].target_y],[before.start_x,before.start_y,before.target_x,before.target_y]);
-assert.equal(w.map.version,3);assert.equal(w.map.cols,200);assert.equal(w.map.rows,200);assert.equal(w.map.cell_size,128);assert.equal(w.map.seed,98213);
+assert.equal(w.map.version,4);assert.equal(w.map.cols,200);assert.equal(w.map.rows,200);assert.equal(w.map.cell_size,128);assert.equal(w.map.seed,1346720329);
 const sites=await db.query('select count(*) as total,count(distinct (x,y)) as positions from public.spawn_points');assert.ok(sites.rows[0].total>1000);assert.equal(sites.rows[0].positions,sites.rows[0].total);
+await db.exec('reset role;');
+const mapBytes=(await db.query('select version,seed,octet_length(walkable) as mask_bytes,octet_length(terrain) as terrain_bytes from public.peris_world_map')).rows[0];
+assert.deepEqual(mapBytes,{version:4,seed:1346720329,mask_bytes:5000,terrain_bytes:40000});
+assert.equal((await db.query(`select count(*) as unsafe from public.spawn_points sp where sp.x>=-12800 and sp.x<12800 and sp.y>=-12800 and sp.y<12800 and exists(select 1 from generate_series(-1,1) dx cross join generate_series(-1,1) dy where not public.peris_world_walkable(sp.x+dx*128,sp.y+dy*128))`)).rows[0].unsafe,0,'Every retained current-world starting ring is dry');
+const sea=(await db.query(`select (col+.5)*128 as x,(row_index+.5)*128 as y from generate_series(-99,98) as columns(col) cross join generate_series(-99,98) as rows(row_index) where not public.peris_world_walkable((col+.5)*128,(row_index+.5)*128) limit 1`)).rows[0];assert.ok(sea,'The live map contains a real sea destination');
+await login(u);
 console.log('PASS · v5 preservation and idempotent upgrade');
 await rpc('peris_queue_upgrade',['farm']);await rejects(()=>rpc('peris_queue_upgrade',['market']),'Concurrent building queue accepted');
 await admin(`insert into public.peris_city_slots values(${w.settlements[0].id},0,'barracks',1) on conflict(settlement_id,slot_index) do update set level=1;`);await login(u);
 await rpc('peris_queue_recruit',['infantry',20]);await rejects(()=>rpc('move_army',[600,300]),'Army marched before training finished');await rejects(()=>rpc('peris_queue_recruit',['cavalry',-10]),'Negative recruitment accepted');
 await admin(`update public.peris_orders set finish_at=now()-interval '1 minute',started_at=now()-interval '2 minutes';`);await login(u);await rpc('sync_my_state');w=await snap();assert.equal(w.players.find(p=>p.id===u).upgrades,1);assert.equal(w.players.find(p=>p.id===u).recruits,20);await rpc('peris_claim',['builder']);await rejects(()=>rpc('peris_claim',['builder']),'Reward granted twice');
 console.log('PASS · recruitment, upgrade completion and single-use rewards');
-await rejects(()=>rpc('move_army',[-100000,100000]),'Legacy move RPC crossed the sea');await rejects(()=>rpc('move_army',[100000,-100000]),'Legacy move RPC crossed the sea in the opposite direction');
+await rejects(()=>rpc('move_army',[sea.x,sea.y]),'Compatibility move RPC crossed actual sea');
 await rpc('move_army',[-64,320]);w=await snap();assert.deepEqual([w.armies[0].target_x,w.armies[0].target_y],[-64,320]);
 let a=w.armies[0],seconds=(Date.parse(a.arrival_at)-Date.parse(a.departure_at))/1000;assert.ok(Math.abs(seconds-Math.hypot(a.target_x-a.start_x,a.target_y-a.start_y)/22)<.002);
 await rejects(()=>rpc('move_army',[null,0]),'Null march destination accepted');
@@ -52,6 +58,12 @@ for(let row=-99;row<99;row++)for(let col=-99;col<99;col++)if(land(col,row)){
 }
 assert.ok(coastal);assert.ok(corner);
 for(const [cell,dx,dy]of [[coastal,1,0],[corner,1,1]]){const [col,row]=cell,x=(col+.5)*128,y=(row+.5)*128,tx=x+dx*128,ty=y+dy*128;await admin(`update public.armies set status='idle',start_x=${x},start_y=${y},target_x=${x},target_y=${y},march_path=null,march_distance=null where owner_id='${u}'`);await login(u);await rejects(()=>rpc('peris_march',[tx,ty,JSON.stringify([[x,y],[tx,ty]])]),'Route entered water or cut a sea corner');await rejects(()=>rpc('move_army',[tx,ty]),'Legacy RPC bypassed sea route validation');}
+await admin(`update public.armies set status='moving',start_x=12736,start_y=12736,target_x=-12736,target_y=-12736,march_path=null,march_distance=null,march_map_version=4,departure_at='2030-01-01T00:00:00Z',arrival_at='2030-01-01T00:00:20Z' where owner_id='${u}'`);
+let fallback=(await db.query(`select public.peris_army_position(a,'2030-01-01T00:00:10Z') as point from public.armies a where owner_id='${u}'`)).rows[0].point;
+assert.deepEqual(fallback,{x:-12800,y:-12800},'Version4 fallback follows the short corner crossing even without stored route points');
+await admin(`update public.armies set march_map_version=null where owner_id='${u}'`);
+fallback=(await db.query(`select public.peris_army_position(a,'2030-01-01T00:00:10Z') as point from public.armies a where owner_id='${u}'`)).rows[0].point;
+assert.deepEqual(fallback,{x:0,y:0},'Unmarked historical fallback preserves its original linear geometry');
 await admin(`update public.armies set status='idle',start_x=195,start_y=315,target_x=195,target_y=315,march_path=null,march_distance=null where owner_id='${u}'`);await login(u);
 console.log('PASS · authoritative routed distance, midpoint interpolation, spoof/jump rejection and sea-corner protection');
 await login(out);await rejects(()=>rpc('peris_march',[320,320,JSON.stringify([[195,315],[320,320]])]),'Account without an army used the new march RPC');await login(u);
@@ -81,7 +93,7 @@ insert into public.settlements(owner_id,spawn_point_id,name,x,y) select ('555555
 insert into public.armies(owner_id,home_settlement_id,start_x,start_y,target_x,target_y) select s.owner_id,s.id,s.x,s.y,s.x,s.y from public.settlements s where s.owner_id::text like '55555555-5555-4555-8555-%';`);
 await login(u);let view=(await rpc('peris_map_snapshot',[-12800,-12800,12800,12800])).rows[0].result;
 assert.equal(view.settlements.length,601);assert.equal(view.armies.length,601);assert.equal(view.settlements_truncated,true);assert.equal(view.armies_truncated,true);assert.equal(view.total_players,624);
-assert.ok(view.settlements.some(s=>s.owner_id===u));assert.ok(view.armies.some(a=>a.owner_id===u));assert.ok(view.settlements.every(s=>Object.keys(s).sort().join(',')==='faction,id,name,owner_id,x,y'));assert.ok(view.players.every(p=>Object.keys(p).sort().join(',')==='display_name,id'));
+assert.ok(view.settlements.some(s=>s.owner_id===u));assert.ok(view.armies.some(a=>a.owner_id===u));assert.ok(view.settlements.every(s=>Object.keys(s).sort().join(',')==='faction,id,map_development,name,owner_id,x,y'),'Public settlements expose only map identity and completed visual development');assert.ok(view.settlements.every(s=>Number.isInteger(s.map_development)&&s.map_development>=1&&s.map_development<=5));assert.ok(view.settlements.filter(s=>s.owner_id.startsWith('55555555-5555-4555-8555-')).every(s=>s.map_development===1),'Rivals without completed building records have a neutral development stage');assert.ok(view.players.every(p=>Object.keys(p).sort().join(',')==='display_name,id'));
 view=(await rpc('peris_map_snapshot',[4900,4900,5200,5200])).rows[0].result;assert.ok(view.settlements.every(s=>s.owner_id===u||(s.x>=4900&&s.x<5200&&s.y>=4900&&s.y<5200)));assert.ok(view.armies.some(a=>a.owner_id===u));
 await admin(`update public.armies set start_x=-10000,target_x=10000,start_y=6000,target_y=6000,status='moving',departure_at=now()-interval '5 minutes',arrival_at=now()+interval '5 minutes' where owner_id='55555555-5555-4555-8555-000000000001'`);await login(u);
 view=(await rpc('peris_map_snapshot',[-1000,5900,1000,6100])).rows[0].result;assert.ok(view.armies.some(a=>a.owner_id==='55555555-5555-4555-8555-000000000001'),'Viewport omitted a moving army whose route crosses it');assert.ok(view.settlements.every(s=>s.owner_id===u));

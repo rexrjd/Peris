@@ -5,10 +5,11 @@ import { type Army } from '../../features/army/domain/types';
 import { type Camp } from '../../features/map/domain/types';
 import { type Battle, type Formation } from '../../features/battle/domain/types';
 import type { SpellResearch } from '../../features/magic/domain/spells';
+import type { MapPlot } from '../../features/map/domain/territory';
 export type Order = {
     id: number;
     owner_id: string;
-    kind: 'upgrade' | 'recruit';
+    kind: 'upgrade' | 'recruit' | 'field';
     item: string;
     quantity: number;
     started_at: string;
@@ -22,6 +23,7 @@ export type World = {
     settlements: Settlement[];
     buildings: Building[];
     city_slots?: CitySlot[];
+    map_plots?: MapPlot[];
     spell_research?: SpellResearch[];
     armies: Army[];
     camps: Camp[];
@@ -43,5 +45,6 @@ export type World = {
         total_settlements: number;
         settlements_truncated?: boolean;
         armies_truncated?: boolean;
+        plots_truncated?: boolean;
     };
 };
