@@ -24,6 +24,8 @@ The 200 × 200 seamless map requires `supabase/UPGRADE_TO_V9.sql` for existing d
 
 ## Game
 
+Battles now include an optional **3D prototype** view in the command panel. It uses the existing tactical rules and orders, with procedural soldiers and automatic 2D fallback. See [BATTLE_3D.md](BATTLE_3D.md) for controls, validation, limitations and the future GLB character interface.
+
 Campaign: develop eight buildings, collect four resources, recruit infantry/archers/cavalry, march to six camps, deploy, fight and rebuild. Strategic income/queues/travel use timestamps and continue while away. Troop casualties persist. Quick battle supports four terrains, three difficulties and three army doctrines. Settings include sound/music, display/order options and campaign export/import/backup.
 
 Select formations by click, Shift-click or selection drag. Right-click moves/attacks; right-drag sets frontage/facing. Simple left-click orders and touch Move/Attack modes are also available. A selects all; H halts, G guards, R rallies, F focuses, Escape opens the battle menu and Space pauses local combat. The minimap and camera controls navigate the field.
