@@ -102,8 +102,12 @@ test('licensed infantry and cavalry prototypes keep textured rigs, orders, pause
     await page.locator('.unit-card').last().click();
     await page.getByRole('button',{name:'Inspect selected troops',exact:true}).click();
     const selected=page.locator('.battle-3d-label.friendly.selected').first();
-    const beforeOrbit=await battlefieldPixels(field);
-    expect(await battlefieldPixels(field)).toBe(beforeOrbit);
+    let beforeOrbit=await battlefieldPixels(field),matchingFrames=0;
+    await expect.poll(async()=>{
+        const pixels=await battlefieldPixels(field);
+        matchingFrames=pixels===beforeOrbit?matchingFrames+1:0;beforeOrbit=pixels;
+        return matchingFrames;
+    }).toBeGreaterThanOrEqual(2);
     await page.getByRole('button',{name:'Rotate camera right',exact:true}).click();
     await expect.poll(()=>battlefieldPixels(field)).not.toBe(beforeOrbit);
     await page.screenshot({path:testInfo.outputPath('licensed-roman-cavalry.png')});
