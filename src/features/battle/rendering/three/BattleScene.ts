@@ -1,4 +1,5 @@
-import { BoxGeometry, BufferGeometry, Color, DirectionalLight, Float32BufferAttribute, Group, HemisphereLight, Line, LineBasicMaterial, LineLoop, Mesh, MeshBasicMaterial, PlaneGeometry, Raycaster, RingGeometry, Scene, Vector2, WebGLRenderer, PCFSoftShadowMap } from 'three';
+import { ACESFilmicToneMapping, BoxGeometry, BufferGeometry, Color, DirectionalLight, Float32BufferAttribute, Group, HemisphereLight, Line, LineBasicMaterial, LineLoop, Mesh, MeshBasicMaterial, PlaneGeometry, Raycaster, RingGeometry, Scene, Vector2, WebGLRenderer, PCFShadowMap, PMREMGenerator, type WebGLRenderTarget } from 'three';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { type RenderActions, type RenderState } from '../../../../shared/rendering/contracts';
 import { type Formation } from '../../domain/types';
 import { formationSize } from '../../domain/formations';
@@ -24,6 +25,11 @@ export class BattleScene {
     private frame = 0;
     private last = 0;
     private visualTime = 0;
+    private metricStart = 0;
+    private metricFrames = 0;
+    private shadowSpan = 0;
+    private environment: WebGLRenderTarget | null = null;
+    private inspectedId: number | null = null;
     private alive = true;
     private readonly formations = new Map<number, FormationView>();
     private readonly ray = new Raycaster();
@@ -33,19 +39,26 @@ export class BattleScene {
     private readonly contextLost = (e: Event) => { e.preventDefault(); this.fail(); };
     constructor(private readonly canvas: HTMLCanvasElement, private readonly labels: HTMLDivElement, private readonly selectionBox: HTMLDivElement,
         private readonly state: () => RenderState, private readonly actions: () => RenderActions,
-        private readonly unavailable: () => void, private readonly soldiers: SoldierVisualFactory = createLowPolySoldiers) {
+        private readonly unavailable: () => void, private readonly soldiers: SoldierVisualFactory = createLowPolySoldiers,
+        private readonly quality: 'balanced' | 'ultra' = 'balanced', private readonly diagnostics?: (fps: number, calls: number, triangles: number) => void) {
         const terrain = state().battle!.terrain;
         this.view = new BattleCamera((x, y) => battlefieldHeight(terrain, x, y));
         try {
             this.renderer = new WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
-            this.renderer.setPixelRatio(Math.min(1.5, window.devicePixelRatio || 1));
-            this.renderer.shadowMap.enabled = true; this.renderer.shadowMap.type = PCFSoftShadowMap;
-            this.scene.background = new Color('#344b42');
-            this.scene.add(new HemisphereLight('#d9e7e6', '#49513a', 2), this.sun);
+            this.renderer.setPixelRatio(Math.min(quality === 'ultra' ? 2 : 1.25, window.devicePixelRatio || 1));
+            this.renderer.toneMapping = ACESFilmicToneMapping; this.renderer.toneMappingExposure = 1.15;
+            if (soldiers !== createLowPolySoldiers) {
+                const room=new RoomEnvironment(),pmrem=new PMREMGenerator(this.renderer);
+                this.environment=pmrem.fromScene(room,.04);this.scene.environment=this.environment.texture;this.scene.environmentIntensity=.45;
+                room.dispose();pmrem.dispose();
+            }
+            this.renderer.shadowMap.enabled = true; this.renderer.shadowMap.type = PCFShadowMap;
+            this.scene.background = new Color('#526351');
+            this.scene.add(new HemisphereLight('#d4e0ef', '#66533c', 1.6), this.sun);
             this.sun.position.set(250, 900, 450); this.sun.target.position.set(600, 0, 350); this.sun.castShadow = true;
-            this.sun.shadow.mapSize.set(2048, 2048);
+            this.sun.shadow.mapSize.set(quality === 'ultra' ? 4096 : 2048, quality === 'ultra' ? 4096 : 2048);
             Object.assign(this.sun.shadow.camera, { left: -850, right: 850, top: 650, bottom: -650, far: 2200 });
-            this.sun.shadow.bias = -.001; this.scene.add(this.sun.target, createBattlefield(terrain));
+            this.sun.shadow.bias = -.0002; this.sun.shadow.normalBias=.03; this.scene.add(this.sun.target, createBattlefield(terrain));
             for (const [x, color] of [[195, '#d5a661'], [1005, '#7099b8']] as const) {
                 const zone = new Mesh(new PlaneGeometry(340, 640), new MeshBasicMaterial({ color, opacity: .16, transparent: true, depthWrite: false }));
                 zone.rotation.x = -Math.PI / 2; zone.position.set(x, .6, 350); this.zones.add(zone);
@@ -84,7 +97,8 @@ export class BattleScene {
         const state = this.state(), battle = state.battle!, pose = record.pose, height = (x: number, y: number) => battlefieldHeight(battle.terrain, x, y);
         const amount = battle.phase === 'deployment' || preferences().reducedMotion ? 1 : 1 - Math.exp(-dt * 10);
         pose.x += (f.x - pose.x) * amount; pose.y += (f.y - pose.y) * amount; pose.facing += angleDiff(f.facing, pose.facing) * amount;
-        record.soldiers.update({ formation: f, pose, dt: state.paused ? 0 : dt, time: this.visualTime, height, animate: !state.paused && !preferences().reducedMotion && preferences().effects });
+        record.group.visible=!this.view.inspecting || state.selectedIds.includes(f.id);
+        if(record.group.visible) record.soldiers.update({ formation: f, pose, dt: state.paused ? 0 : dt, time: this.visualTime, height, detail:this.view.span>180?'far':'near', animate: !state.paused && !preferences().reducedMotion && preferences().effects });
         const size = formationSize(f), angle = pose.facing * Math.PI / 180, selected = state.selectedIds.includes(f.id), own = f.owner_id === state.playerId;
         record.pick.position.set(pose.x, height(pose.x, pose.y) + 13, pose.y); record.pick.rotation.y = -angle; record.pick.scale.set(size.depth + 8, 26, size.width + 8);
         const attr = record.outline.geometry.getAttribute('position');
@@ -101,7 +115,7 @@ export class BattleScene {
         record.path.visible = record.destination.visible = own && selected && (f.status === 'moving' || !!target);
         (record.path.material as LineBasicMaterial).color.set(target ? '#ee896b' : '#ebc481');
         (record.destination.material as MeshBasicMaterial).color.set(target ? '#ee896b' : '#ebc481'); record.destination.position.set(tx, height(tx, ty) + 2, ty);
-        const p = this.view.project(pose.x, pose.y, 29); record.label.hidden = !p.visible;
+        const p = this.view.project(pose.x, pose.y, 29); record.label.hidden = !p.visible || !record.group.visible;
         record.label.className = `battle-3d-label ${own ? 'friendly' : 'hostile'} ${selected ? 'selected' : ''}`;
         record.label.style.transform = `translate(${p.x}px, ${p.y}px) translate(-50%, -100%)`;
         const text = `${f.label} · ${f.soldiers}\n${Math.round(f.morale)}% morale · ${f.status}`;
@@ -120,7 +134,26 @@ export class BattleScene {
                 if (!record) { record = this.create(f); this.formations.set(f.id, record); }
                 this.updateFormation(f, record, dt);
             }
-            this.zones.visible = this.state().battle!.phase === 'deployment'; this.renderer!.render(this.scene, this.view.camera);
+            if(this.view.inspecting && this.inspectedId!==null) {
+                this.inspectedId=this.state().selectedIds[0] ?? this.inspectedId;
+                const p=this.formations.get(this.inspectedId)?.pose;
+                if(p){this.view.target.x=p.x;this.view.target.z=p.y;this.view.update();}
+            }
+            if (this.view.inspecting && this.quality === 'ultra') {
+                const span=Math.max(40,this.view.span*1.8);
+                this.sun.position.set(this.view.target.x-250,900,this.view.target.z+450); this.sun.target.position.copy(this.view.target);
+                Object.assign(this.sun.shadow.camera,{left:-span,right:span,top:span,bottom:-span});
+                if(this.shadowSpan!==span){this.sun.shadow.camera.updateProjectionMatrix();this.shadowSpan=span;}
+            } else if(this.shadowSpan!==0) {
+                this.sun.position.set(250,900,450);this.sun.target.position.set(600,0,350);
+                Object.assign(this.sun.shadow.camera,{left:-850,right:850,top:650,bottom:-650});this.sun.shadow.camera.updateProjectionMatrix();this.shadowSpan=0;
+            }
+            this.zones.visible = this.state().battle!.phase === 'deployment' && !this.view.inspecting; this.renderer!.render(this.scene, this.view.camera);
+            if (this.diagnostics) {
+                this.metricFrames++;
+                if (!this.metricStart) this.metricStart=time;
+                if (time-this.metricStart >= 1000) { this.diagnostics(this.metricFrames*1000/(time-this.metricStart),this.renderer!.info.render.calls,this.renderer!.info.render.triangles); this.metricFrames=0; this.metricStart=time; }
+            }
             this.frame = requestAnimationFrame(next => this.draw(next));
         } catch (error) { console.warn('3D battlefield stopped', error); this.fail(); }
     }
@@ -146,7 +179,13 @@ export class BattleScene {
     }
     zoom(factor: number) { this.view.zoom(factor); }
     rotate(angle: number) { this.view.rotate(angle); }
-    center() { this.view.center(); }
+    center() { this.inspectedId=null;this.view.center(); }
+    inspect() {
+        const state = this.state(), f = state.world.formations.find(f => state.selectedIds.includes(f.id) && f.battle_id === state.battle?.id);
+        if (f) { this.inspectedId=f.id;this.view.inspect(f.x,f.y); }
+    }
+    inspectProp(x: number, y: number) { this.inspectedId=null;this.view.inspect(x,y); this.view.span = 24; this.view.update(); }
+    addShowcase(group: Group) { this.scene.add(group); }
     focus(side: 'own' | 'enemy') {
         const state = this.state(), fs = state.world.formations.filter(f => f.battle_id === state.battle?.id && f.soldiers > 0 && (side === 'own' ? f.owner_id === state.playerId : f.owner_id !== state.playerId));
         const selected = side === 'own' ? fs.filter(f => state.selectedIds.includes(f.id)) : [], targets = selected.length ? selected : fs;
@@ -157,7 +196,9 @@ export class BattleScene {
         if (!this.alive) return; this.alive = false;
         cancelAnimationFrame(this.frame); this.observer?.disconnect(); this.input?.destroy(); this.canvas.removeEventListener('webglcontextlost', this.contextLost);
         for (const record of this.formations.values()) this.remove(record);
-        this.formations.clear(); disposeObject(this.scene); this.sun.shadow.dispose(); this.renderer?.dispose(); this.renderer?.forceContextLoss(); this.renderer = null;
+        // Quality changes rebuild on the same canvas. Keep its context usable;
+        // forcibly losing it here also invalidates the replacement renderer.
+        this.formations.clear(); disposeObject(this.scene); this.environment?.dispose(); this.sun.shadow.dispose(); this.renderer?.dispose(); this.renderer = null;
         this.labels.replaceChildren();
     }
 }

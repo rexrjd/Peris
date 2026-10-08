@@ -4,7 +4,7 @@ import { type Formation } from '../../domain/types';
 import { disposeObject } from './dispose';
 
 export type FormationPose = { x: number; y: number; facing: number };
-export type SoldierFrame = { formation: Formation; pose: FormationPose; time: number; dt: number; animate: boolean; height: (x: number, y: number) => number };
+export type SoldierFrame = { formation: Formation; pose: FormationPose; time: number; dt: number; animate: boolean; detail?: 'near' | 'far'; height: (x: number, y: number) => number };
 /** A GLB-backed implementation can own cloned skeletons and AnimationMixers here. */
 export interface SoldierVisual {
     readonly object: Object3D;

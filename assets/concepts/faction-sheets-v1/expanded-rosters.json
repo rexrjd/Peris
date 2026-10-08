@@ -1,0 +1,1104 @@
+{
+  "status": "Design only; no new game rules or implemented models",
+  "footTroops": 4,
+  "cavalryTroops": 3,
+  "siegeRoles": [
+    "ram",
+    "catapult"
+  ],
+  "livingSiege": "Fantasy stonehurlers occupy the catapult role, not an extra type",
+  "roster": [
+    {
+      "id": "roman",
+      "name": "Roman",
+      "look": "human soldiers, weathered iron segmented armor, bronze details, crimson cloth and modest red crests, rectangular red shields, grounded Roman-inspired craft",
+      "infantry": "short straight sword and rectangular shield",
+      "archer": "wooden recurved bow, olive leather and crimson shoulder cloth, iron cap, quiver",
+      "cavalry": "brown horse with restrained crimson saddle cloth, chain-armored human rider with spear and oval shield",
+      "troops": [
+        {
+          "id": "line_infantry",
+          "role": "Line infantry",
+          "level": 0,
+          "research": "Basic arms",
+          "recruit": "Barracks",
+          "purpose": "Hold the line",
+          "equipment": "Faction's standard sword or axe and shield; economical armor",
+          "name": "Legionary"
+        },
+        {
+          "id": "spear_guard",
+          "role": "Spear guard",
+          "level": 1,
+          "research": "Spear drill",
+          "recruit": "Barracks",
+          "purpose": "Brace against cavalry",
+          "equipment": "Long pike or spear and small shield, longer polearm silhouette",
+          "name": "Spear Guard"
+        },
+        {
+          "id": "archer",
+          "role": "Archer",
+          "level": 0,
+          "research": "Basic arms",
+          "recruit": "Barracks",
+          "purpose": "Ranged support",
+          "equipment": "Faction's standard bow or crossbow and quiver; lighter armor",
+          "name": "Sagittarius"
+        },
+        {
+          "id": "elite",
+          "role": "Elite guard",
+          "level": 4,
+          "research": "Elite doctrine",
+          "recruit": "Barracks",
+          "purpose": "Faction signature specialist",
+          "equipment": "Most distinctive faction ceremonial-but-functional armor and polearm or two-handed weapon; no new giant creatures; stronger faction helmet motif and battle standard",
+          "name": "Eagle Guard"
+        },
+        {
+          "id": "scout",
+          "name": "Speculator",
+          "role": "Mounted scout",
+          "level": 1,
+          "research": "Scouting",
+          "recruit": "Stables",
+          "purpose": "Reconnaissance; avoid direct combat",
+          "equipment": "Very lightly armored mounted scout with small cloak, leather map pouch, short sidearm, simple saddle cloth; no lance, heavy shield or barding"
+        },
+        {
+          "id": "light_cavalry",
+          "role": "Light cavalry",
+          "level": 2,
+          "research": "Mounted warfare",
+          "recruit": "Stables",
+          "purpose": "Scout and flank",
+          "equipment": "Light spear, small shield, light faction saddle cloth with little mount armor",
+          "name": "Equites"
+        },
+        {
+          "id": "heavy_cavalry",
+          "role": "Heavy cavalry",
+          "level": 3,
+          "research": "Armored riding",
+          "recruit": "Stables",
+          "purpose": "Committed charges",
+          "equipment": "Heavily armored mounted lancer, substantial faction-specific horse/pony barding; visually distinct from light cavalry",
+          "name": "Armored Lancer"
+        }
+      ],
+      "siege": [
+        {
+          "id": "ram",
+          "name": "Covered Ram",
+          "workshopLevel": 1,
+          "academyLevel": 0,
+          "research": "Carpentry",
+          "role": "Contact siege against gates"
+        },
+        {
+          "id": "catapult",
+          "name": "Onager",
+          "workshopLevel": 2,
+          "academyLevel": 2,
+          "research": "Siege engineering",
+          "role": "Arcing stone bombardment"
+        }
+      ]
+    },
+    {
+      "id": "spartan",
+      "name": "Spartan",
+      "look": "athletic human soldiers, bronze cuirasses and face-covering helmets, wine-red cloaks, large plain round bronze shields, strong triangular silhouettes",
+      "infantry": "long spear and round bronze shield",
+      "archer": "wooden bow, light bronze helmet, wine-red tunic, leather bracers and quiver",
+      "cavalry": "dark bay horse with wine-red saddle cloth, bronze-armored rider with spear and round shield",
+      "troops": [
+        {
+          "id": "line_infantry",
+          "role": "Line infantry",
+          "level": 0,
+          "research": "Basic arms",
+          "recruit": "Barracks",
+          "purpose": "Hold the line",
+          "equipment": "Faction's standard sword or axe and shield; economical armor",
+          "name": "Hoplite"
+        },
+        {
+          "id": "spear_guard",
+          "role": "Spear guard",
+          "level": 1,
+          "research": "Spear drill",
+          "recruit": "Barracks",
+          "purpose": "Brace against cavalry",
+          "equipment": "Long pike or spear and small shield, longer polearm silhouette",
+          "name": "Long-Spear Guard"
+        },
+        {
+          "id": "archer",
+          "role": "Archer",
+          "level": 0,
+          "research": "Basic arms",
+          "recruit": "Barracks",
+          "purpose": "Ranged support",
+          "equipment": "Faction's standard bow or crossbow and quiver; lighter armor",
+          "name": "Bowman"
+        },
+        {
+          "id": "elite",
+          "role": "Elite guard",
+          "level": 4,
+          "research": "Elite doctrine",
+          "recruit": "Barracks",
+          "purpose": "Faction signature specialist",
+          "equipment": "Most distinctive faction ceremonial-but-functional armor and polearm or two-handed weapon; no new giant creatures; stronger faction helmet motif and battle standard",
+          "name": "Crimson Guard"
+        },
+        {
+          "id": "scout",
+          "name": "Trail Scout",
+          "role": "Mounted scout",
+          "level": 1,
+          "research": "Scouting",
+          "recruit": "Stables",
+          "purpose": "Reconnaissance; avoid direct combat",
+          "equipment": "Very lightly armored mounted scout with small cloak, leather map pouch, short sidearm, simple saddle cloth; no lance, heavy shield or barding"
+        },
+        {
+          "id": "light_cavalry",
+          "role": "Light cavalry",
+          "level": 2,
+          "research": "Mounted warfare",
+          "recruit": "Stables",
+          "purpose": "Scout and flank",
+          "equipment": "Light spear, small shield, light faction saddle cloth with little mount armor",
+          "name": "Mounted Skirmisher"
+        },
+        {
+          "id": "heavy_cavalry",
+          "role": "Heavy cavalry",
+          "level": 3,
+          "research": "Armored riding",
+          "recruit": "Stables",
+          "purpose": "Committed charges",
+          "equipment": "Heavily armored mounted lancer, substantial faction-specific horse/pony barding; visually distinct from light cavalry",
+          "name": "Armored Horseman"
+        }
+      ],
+      "siege": [
+        {
+          "id": "ram",
+          "name": "Bronze Ram",
+          "workshopLevel": 1,
+          "academyLevel": 0,
+          "research": "Carpentry",
+          "role": "Contact siege against gates"
+        },
+        {
+          "id": "catapult",
+          "name": "Stone Catapult",
+          "workshopLevel": 2,
+          "academyLevel": 2,
+          "research": "Siege engineering",
+          "role": "Arcing stone bombardment"
+        }
+      ]
+    },
+    {
+      "id": "persian",
+      "name": "Persian",
+      "look": "Shahnameh-inspired human fantasy soldiers, turquoise and warm gold layered scale armor, ivory linen, geometric Persian textiles, sculpted lion-motif helmets with visible faces, deep teal mantle, grounded heroic anatomy",
+      "infantry": "curved saber and round teal geometric shield",
+      "archer": "composite recurved bow, quiver, lighter teal-and-gold scale vest over ivory tunic, cloth headwrap with small armored cap",
+      "cavalry": "slender chestnut horse with teal-and-ivory saddle textiles and modest scale barding, lion-helmet rider with lance and round shield",
+      "troops": [
+        {
+          "id": "line_infantry",
+          "role": "Line infantry",
+          "level": 0,
+          "research": "Basic arms",
+          "recruit": "Barracks",
+          "purpose": "Hold the line",
+          "equipment": "Faction's standard sword or axe and shield; economical armor",
+          "name": "Shield Bearer"
+        },
+        {
+          "id": "spear_guard",
+          "role": "Spear guard",
+          "level": 1,
+          "research": "Spear drill",
+          "recruit": "Barracks",
+          "purpose": "Brace against cavalry",
+          "equipment": "Long pike or spear and small shield, longer polearm silhouette",
+          "name": "Spear Sentinel"
+        },
+        {
+          "id": "archer",
+          "role": "Archer",
+          "level": 0,
+          "research": "Basic arms",
+          "recruit": "Barracks",
+          "purpose": "Ranged support",
+          "equipment": "Faction's standard bow or crossbow and quiver; lighter armor",
+          "name": "Composite Bowman"
+        },
+        {
+          "id": "elite",
+          "role": "Elite guard",
+          "level": 4,
+          "research": "Elite doctrine",
+          "recruit": "Barracks",
+          "purpose": "Faction signature specialist",
+          "equipment": "Most distinctive faction ceremonial-but-functional armor and polearm or two-handed weapon; no new giant creatures; human elite champion with Simurgh feather motif in the helmet crest and teal mantle; no giant bird",
+          "name": "Simurgh Guard"
+        },
+        {
+          "id": "scout",
+          "name": "Border Scout",
+          "role": "Mounted scout",
+          "level": 1,
+          "research": "Scouting",
+          "recruit": "Stables",
+          "purpose": "Reconnaissance; avoid direct combat",
+          "equipment": "Very lightly armored mounted scout with small cloak, leather map pouch, short sidearm, simple saddle cloth; no lance, heavy shield or barding"
+        },
+        {
+          "id": "light_cavalry",
+          "role": "Light cavalry",
+          "level": 2,
+          "research": "Mounted warfare",
+          "recruit": "Stables",
+          "purpose": "Scout and flank",
+          "equipment": "Light spear, small shield, light faction saddle cloth with little mount armor",
+          "name": "Steppe Rider"
+        },
+        {
+          "id": "heavy_cavalry",
+          "role": "Heavy cavalry",
+          "level": 3,
+          "research": "Armored riding",
+          "recruit": "Stables",
+          "purpose": "Committed charges",
+          "equipment": "Heavily armored mounted lancer, substantial faction-specific horse/pony barding; visually distinct from light cavalry",
+          "name": "Cataphract"
+        }
+      ],
+      "siege": [
+        {
+          "id": "ram",
+          "name": "Lion Ram",
+          "workshopLevel": 1,
+          "academyLevel": 0,
+          "research": "Carpentry",
+          "role": "Contact siege against gates"
+        },
+        {
+          "id": "catapult",
+          "name": "Sandstone Catapult",
+          "workshopLevel": 2,
+          "academyLevel": 2,
+          "research": "Siege engineering",
+          "role": "Arcing stone bombardment"
+        }
+      ]
+    },
+    {
+      "id": "egyptian",
+      "name": "Egyptian",
+      "look": "human desert soldiers with dark bronze skin, ivory linen, lapis-blue and gold trim, bronze lamellar collars, restrained falcon-themed headpieces, weathered natural material surfaces",
+      "infantry": "bronze sickle-shaped sword and tall oval shield",
+      "archer": "long recurved bow, ivory linen tunic, lapis sash, leather bracers, light bronze cap",
+      "cavalry": "sandy brown horse, ivory saddle fabric with lapis-and-bronze trim, human rider with spear and oval shield; a mounted cavalry unit, no chariot",
+      "troops": [
+        {
+          "id": "line_infantry",
+          "role": "Line infantry",
+          "level": 0,
+          "research": "Basic arms",
+          "recruit": "Barracks",
+          "purpose": "Hold the line",
+          "equipment": "Faction's standard sword or axe and shield; economical armor",
+          "name": "Khopesh Guard"
+        },
+        {
+          "id": "spear_guard",
+          "role": "Spear guard",
+          "level": 1,
+          "research": "Spear drill",
+          "recruit": "Barracks",
+          "purpose": "Brace against cavalry",
+          "equipment": "Long pike or spear and small shield, longer polearm silhouette",
+          "name": "Pylon Spearman"
+        },
+        {
+          "id": "archer",
+          "role": "Archer",
+          "level": 0,
+          "research": "Basic arms",
+          "recruit": "Barracks",
+          "purpose": "Ranged support",
+          "equipment": "Faction's standard bow or crossbow and quiver; lighter armor",
+          "name": "Nile Bowman"
+        },
+        {
+          "id": "elite",
+          "role": "Elite guard",
+          "level": 4,
+          "research": "Elite doctrine",
+          "recruit": "Barracks",
+          "purpose": "Faction signature specialist",
+          "equipment": "Most distinctive faction ceremonial-but-functional armor and polearm or two-handed weapon; no new giant creatures; stronger faction helmet motif and battle standard",
+          "name": "Falcon Guard"
+        },
+        {
+          "id": "scout",
+          "name": "Dune Scout",
+          "role": "Mounted scout",
+          "level": 1,
+          "research": "Scouting",
+          "recruit": "Stables",
+          "purpose": "Reconnaissance; avoid direct combat",
+          "equipment": "Very lightly armored mounted scout with small cloak, leather map pouch, short sidearm, simple saddle cloth; no lance, heavy shield or barding"
+        },
+        {
+          "id": "light_cavalry",
+          "role": "Light cavalry",
+          "level": 2,
+          "research": "Mounted warfare",
+          "recruit": "Stables",
+          "purpose": "Scout and flank",
+          "equipment": "Light spear, small shield, light faction saddle cloth with little mount armor",
+          "name": "Desert Rider"
+        },
+        {
+          "id": "heavy_cavalry",
+          "role": "Heavy cavalry",
+          "level": 3,
+          "research": "Armored riding",
+          "recruit": "Stables",
+          "purpose": "Committed charges",
+          "equipment": "Heavily armored mounted lancer, substantial faction-specific horse/pony barding; visually distinct from light cavalry",
+          "name": "Royal Lancer"
+        }
+      ],
+      "siege": [
+        {
+          "id": "ram",
+          "name": "Falcon Ram",
+          "workshopLevel": 1,
+          "academyLevel": 0,
+          "research": "Carpentry",
+          "role": "Contact siege against gates"
+        },
+        {
+          "id": "catapult",
+          "name": "Nile Catapult",
+          "workshopLevel": 2,
+          "academyLevel": 2,
+          "research": "Siege engineering",
+          "role": "Arcing stone bombardment"
+        }
+      ]
+    },
+    {
+      "id": "orc",
+      "name": "Orc",
+      "look": "tall powerful olive-green tusked warriors, long muscular arms, broad shoulders, dark iron and thick leather, amber cloth, disciplined armored soldiers with crafted functional gear",
+      "infantry": "heavy cleaver axe and battered iron shield",
+      "archer": "massive wooden longbow, robust green body, dark leather shoulder armor, amber sash, heavy quiver",
+      "cavalry": "large dark brown horse with heavy leather and dark iron tack, green tusked rider with heavy spear and iron shield",
+      "troops": [
+        {
+          "id": "line_infantry",
+          "role": "Line infantry",
+          "level": 0,
+          "research": "Basic arms",
+          "recruit": "Barracks",
+          "purpose": "Hold the line",
+          "equipment": "Faction's standard sword or axe and shield; economical armor",
+          "name": "Axe Warrior"
+        },
+        {
+          "id": "spear_guard",
+          "role": "Spear guard",
+          "level": 1,
+          "research": "Spear drill",
+          "recruit": "Barracks",
+          "purpose": "Brace against cavalry",
+          "equipment": "Long pike or spear and small shield, longer polearm silhouette",
+          "name": "Pike Brute"
+        },
+        {
+          "id": "archer",
+          "role": "Archer",
+          "level": 0,
+          "research": "Basic arms",
+          "recruit": "Barracks",
+          "purpose": "Ranged support",
+          "equipment": "Faction's standard bow or crossbow and quiver; lighter armor",
+          "name": "War Bowman"
+        },
+        {
+          "id": "elite",
+          "role": "Elite guard",
+          "level": 4,
+          "research": "Elite doctrine",
+          "recruit": "Barracks",
+          "purpose": "Faction signature specialist",
+          "equipment": "Most distinctive faction ceremonial-but-functional armor and polearm or two-handed weapon; no new giant creatures; stronger faction helmet motif and battle standard",
+          "name": "Tusk Guard"
+        },
+        {
+          "id": "scout",
+          "name": "Wolfpath Scout",
+          "role": "Mounted scout",
+          "level": 1,
+          "research": "Scouting",
+          "recruit": "Stables",
+          "purpose": "Reconnaissance; avoid direct combat",
+          "equipment": "Mounted scout: large muscular wolf with leather saddle, green rider in light leather; short sidearm, map pouch, minimal armor; avoid direct combat."
+        },
+        {
+          "id": "light_cavalry",
+          "role": "Light cavalry",
+          "level": 2,
+          "research": "Mounted warfare",
+          "recruit": "Stables",
+          "purpose": "Scout and flank",
+          "equipment": "Light spear, small shield, light faction saddle cloth with little mount armor",
+          "name": "Outrider"
+        },
+        {
+          "id": "heavy_cavalry",
+          "role": "Heavy cavalry",
+          "level": 3,
+          "research": "Armored riding",
+          "recruit": "Stables",
+          "purpose": "Committed charges",
+          "equipment": "Heavy mounted charge unit: massive woolly war mammoth with tusks, dark iron forehead armor, amber saddle platform, one orc lancer rider; grounded original design, no enormous fortress on its back; silhouette distinct from standard horse cavalry.",
+          "name": "Iron Rider"
+        }
+      ],
+      "siege": [
+        {
+          "id": "ram",
+          "name": "Tusk Ram",
+          "workshopLevel": 1,
+          "academyLevel": 0,
+          "research": "Carpentry",
+          "role": "Contact siege against gates"
+        },
+        {
+          "id": "catapult",
+          "name": "Boulder Giant",
+          "workshopLevel": 2,
+          "academyLevel": 2,
+          "research": "Siege engineering",
+          "role": "Arcing stone bombardment (catapult role)",
+          "visual": "stone-throwing giant, muscular gray-green humanoid with iron bracers and rope stone pouch, holds a round boulder overhead, articulated hands and feet; a living siege unit in the catapult role"
+        }
+      ],
+      "fantasyNotes": "Epic fantasy film inspiration, including scale contrast and believable creature mounts, with original designs and no named movie characters, symbols or costumes."
+    },
+    {
+      "id": "elf",
+      "name": "Elf",
+      "look": "tall slender woodland elves with pointed ears, emerald leaf-shaped fitted armor, pale silver trim, cream skin tones, restrained Peri-inspired elegance without wings, coherent functional military gear",
+      "infantry": "long narrow blade and leaf-shaped silver-green shield",
+      "archer": "elegant carved wooden bow and quiver, emerald cloth cloak and light silver leaf armor",
+      "cavalry": "slender gray horse with light emerald tack, pointed-ear rider in silver-green armor carrying spear and slim leaf-shaped shield",
+      "troops": [
+        {
+          "id": "line_infantry",
+          "role": "Line infantry",
+          "level": 0,
+          "research": "Basic arms",
+          "recruit": "Barracks",
+          "purpose": "Hold the line",
+          "equipment": "Faction's standard sword or axe and shield; economical armor",
+          "name": "Leaf Guard"
+        },
+        {
+          "id": "spear_guard",
+          "role": "Spear guard",
+          "level": 1,
+          "research": "Spear drill",
+          "recruit": "Barracks",
+          "purpose": "Brace against cavalry",
+          "equipment": "Long pike or spear and small shield, longer polearm silhouette",
+          "name": "Thorn Spearman"
+        },
+        {
+          "id": "archer",
+          "role": "Archer",
+          "level": 0,
+          "research": "Basic arms",
+          "recruit": "Barracks",
+          "purpose": "Ranged support",
+          "equipment": "Faction's standard bow or crossbow and quiver; lighter armor",
+          "name": "Woodland Archer"
+        },
+        {
+          "id": "elite",
+          "role": "Elite guard",
+          "level": 4,
+          "research": "Elite doctrine",
+          "recruit": "Barracks",
+          "purpose": "Faction signature specialist",
+          "equipment": "Most distinctive faction ceremonial-but-functional armor and polearm or two-handed weapon; no new giant creatures; slender pointed-ear guardian with restrained pale silver and emerald Peri motifs, no wings",
+          "name": "Peri Warden"
+        },
+        {
+          "id": "scout",
+          "name": "Grove Scout",
+          "role": "Mounted scout",
+          "level": 1,
+          "research": "Scouting",
+          "recruit": "Stables",
+          "purpose": "Reconnaissance; avoid direct combat",
+          "equipment": "Mounted scout: slender forest stag with small leather saddle and pointed-ear scout rider; short sidearm, map pouch, minimal armor; avoid direct combat."
+        },
+        {
+          "id": "light_cavalry",
+          "role": "Light cavalry",
+          "level": 2,
+          "research": "Mounted warfare",
+          "recruit": "Stables",
+          "purpose": "Scout and flank",
+          "equipment": "Light spear, small shield, light faction saddle cloth with little mount armor",
+          "name": "Glade Rider"
+        },
+        {
+          "id": "heavy_cavalry",
+          "role": "Heavy cavalry",
+          "level": 3,
+          "research": "Armored riding",
+          "recruit": "Stables",
+          "purpose": "Committed charges",
+          "equipment": "Heavy mounted charge unit: large powerful armored elk with leaf-shaped silver-and-emerald barding and an elf lancer; silhouette distinct from standard horse cavalry.",
+          "name": "Moon Lancer"
+        }
+      ],
+      "siege": [
+        {
+          "id": "ram",
+          "name": "Livingwood Ram",
+          "workshopLevel": 1,
+          "academyLevel": 0,
+          "research": "Carpentry",
+          "role": "Contact siege against gates"
+        },
+        {
+          "id": "catapult",
+          "name": "Rootstone Golem",
+          "workshopLevel": 2,
+          "academyLevel": 2,
+          "research": "Siege engineering",
+          "role": "Arcing stone bombardment (catapult role)",
+          "visual": "ancient stone-and-root golem carrying and throwing boulders, faceted granite anatomy bound by subtle living roots, not a walking tree character or a film copy; living siege unit in the catapult role"
+        }
+      ],
+      "fantasyNotes": "Epic fantasy film inspiration, including scale contrast and believable creature mounts, with original designs and no named movie characters, symbols or costumes."
+    },
+    {
+      "id": "dwarf",
+      "name": "Dwarf",
+      "look": "short broad dwarves with barrel chests, thick limbs and braided russet beards, slate-and-copper angular heavy armor, geometric shields, visibly 0.78 human height, serious sturdy warriors",
+      "infantry": "substantial war hammer and angular copper-edged shield",
+      "archer": "stout mechanically simple crossbow, short broad bearded body, slate padded armor and copper helmet, bolt quiver",
+      "cavalry": "stocky dark pony with copper-and-slate barding, short broad dwarf rider with compact spear and angular shield",
+      "troops": [
+        {
+          "id": "line_infantry",
+          "role": "Line infantry",
+          "level": 0,
+          "research": "Basic arms",
+          "recruit": "Barracks",
+          "purpose": "Hold the line",
+          "equipment": "Faction's standard sword or axe and shield; economical armor",
+          "name": "Hammer Warrior"
+        },
+        {
+          "id": "spear_guard",
+          "role": "Spear guard",
+          "level": 1,
+          "research": "Spear drill",
+          "recruit": "Barracks",
+          "purpose": "Brace against cavalry",
+          "equipment": "Long pike or spear and small shield, longer polearm silhouette",
+          "name": "Pike Keeper"
+        },
+        {
+          "id": "archer",
+          "role": "Archer",
+          "level": 0,
+          "research": "Basic arms",
+          "recruit": "Barracks",
+          "purpose": "Ranged support",
+          "equipment": "Faction's standard bow or crossbow and quiver; lighter armor",
+          "name": "Crossbowman"
+        },
+        {
+          "id": "elite",
+          "role": "Elite guard",
+          "level": 4,
+          "research": "Elite doctrine",
+          "recruit": "Barracks",
+          "purpose": "Faction signature specialist",
+          "equipment": "Most distinctive faction ceremonial-but-functional armor and polearm or two-handed weapon; no new giant creatures; stronger faction helmet motif and battle standard",
+          "name": "Rune Guard"
+        },
+        {
+          "id": "scout",
+          "name": "Pass Scout",
+          "role": "Mounted scout",
+          "level": 1,
+          "research": "Scouting",
+          "recruit": "Stables",
+          "purpose": "Reconnaissance; avoid direct combat",
+          "equipment": "Mounted scout: sturdy mountain goat with modest copper-and-leather saddle and a short dwarf scout; short sidearm, map pouch, minimal armor; avoid direct combat."
+        },
+        {
+          "id": "light_cavalry",
+          "role": "Light cavalry",
+          "level": 2,
+          "research": "Mounted warfare",
+          "recruit": "Stables",
+          "purpose": "Scout and flank",
+          "equipment": "Light spear, small shield, light faction saddle cloth with little mount armor",
+          "name": "Pony Scout"
+        },
+        {
+          "id": "heavy_cavalry",
+          "role": "Heavy cavalry",
+          "level": 3,
+          "research": "Armored riding",
+          "recruit": "Stables",
+          "purpose": "Committed charges",
+          "equipment": "Heavy mounted charge unit: large armored boar with copper-and-slate barding and a short broad dwarf lancer; silhouette distinct from standard horse cavalry.",
+          "name": "Boar Lancer"
+        }
+      ],
+      "siege": [
+        {
+          "id": "ram",
+          "name": "Iron Ram",
+          "workshopLevel": 1,
+          "academyLevel": 0,
+          "research": "Carpentry",
+          "role": "Contact siege against gates"
+        },
+        {
+          "id": "catapult",
+          "name": "Runestone Golem",
+          "workshopLevel": 2,
+          "academyLevel": 2,
+          "research": "Siege engineering",
+          "role": "Arcing stone bombardment (catapult role)",
+          "visual": "compact powerful runic stone golem with clearly articulated basalt limbs and copper joint bands, throws granite boulders; living siege unit in the catapult role"
+        }
+      ],
+      "fantasyNotes": "Epic fantasy film inspiration, including scale contrast and believable creature mounts, with original designs and no named movie characters, symbols or costumes."
+    },
+    {
+      "id": "gnome",
+      "name": "Gnome",
+      "look": "small compact gnome engineer-soldiers, visibly 0.67 human height, serious clever expressions, oxblood cloth, brass-trimmed leather and padded armor, goggles above brow, modest tool belts, no modern guns",
+      "infantry": "compact short sword and small round brass-edged shield",
+      "archer": "simple mechanical crossbow, oxblood cap, brass goggles on forehead, leather quiver",
+      "cavalry": "small sturdy chestnut pony with oxblood saddle fabric and brass fittings, small gnome rider with compact spear and round shield",
+      "troops": [
+        {
+          "id": "line_infantry",
+          "role": "Line infantry",
+          "level": 0,
+          "research": "Basic arms",
+          "recruit": "Barracks",
+          "purpose": "Hold the line",
+          "equipment": "Faction's standard sword or axe and shield; economical armor",
+          "name": "Brass Guard"
+        },
+        {
+          "id": "spear_guard",
+          "role": "Spear guard",
+          "level": 1,
+          "research": "Spear drill",
+          "recruit": "Barracks",
+          "purpose": "Brace against cavalry",
+          "equipment": "Long pike or spear and small shield, longer polearm silhouette",
+          "name": "Pike Tinkerer"
+        },
+        {
+          "id": "archer",
+          "role": "Archer",
+          "level": 0,
+          "research": "Basic arms",
+          "recruit": "Barracks",
+          "purpose": "Ranged support",
+          "equipment": "Faction's standard bow or crossbow and quiver; lighter armor",
+          "name": "Crossbow Scout"
+        },
+        {
+          "id": "elite",
+          "role": "Elite guard",
+          "level": 4,
+          "research": "Elite doctrine",
+          "recruit": "Barracks",
+          "purpose": "Faction signature specialist",
+          "equipment": "Most distinctive faction ceremonial-but-functional armor and polearm or two-handed weapon; no new giant creatures; small crafted brass-and-oxblood humanoid clockwork guard, plainly mechanical face, modest exposed joints, no sci-fi guns",
+          "name": "Clockwork Sentinel"
+        },
+        {
+          "id": "scout",
+          "name": "Courier Scout",
+          "role": "Mounted scout",
+          "level": 1,
+          "research": "Scouting",
+          "recruit": "Stables",
+          "purpose": "Reconnaissance; avoid direct combat",
+          "equipment": "Mounted scout: small pony with minimal oxblood tack and a gnome courier; short sidearm, map pouch, minimal armor; avoid direct combat."
+        },
+        {
+          "id": "light_cavalry",
+          "role": "Light cavalry",
+          "level": 2,
+          "research": "Mounted warfare",
+          "recruit": "Stables",
+          "purpose": "Scout and flank",
+          "equipment": "Light spear, small shield, light faction saddle cloth with little mount armor",
+          "name": "Pony Courier"
+        },
+        {
+          "id": "heavy_cavalry",
+          "role": "Heavy cavalry",
+          "level": 3,
+          "research": "Armored riding",
+          "recruit": "Stables",
+          "purpose": "Committed charges",
+          "equipment": "Heavy mounted charge unit: large mechanical brass boar mount with visible simple hinged legs and small gnome lance rider, original grounded fantasy craftsmanship, no science fiction weaponry; silhouette distinct from standard horse cavalry.",
+          "name": "Brass Lancer"
+        }
+      ],
+      "siege": [
+        {
+          "id": "ram",
+          "name": "Gear Ram",
+          "workshopLevel": 1,
+          "academyLevel": 0,
+          "research": "Carpentry",
+          "role": "Contact siege against gates"
+        },
+        {
+          "id": "catapult",
+          "name": "Gear Catapult",
+          "workshopLevel": 2,
+          "academyLevel": 2,
+          "research": "Siege engineering",
+          "role": "Arcing stone bombardment (catapult role)",
+          "visual": "wood-and-brass mechanical stone catapult with one throwing arm, useful crank and gear details; a mechanical siege machine"
+        }
+      ],
+      "fantasyNotes": "Epic fantasy film inspiration, including scale contrast and believable creature mounts, with original designs and no named movie characters, symbols or costumes."
+    },
+    {
+      "id": "pandaren",
+      "name": "Pandaren",
+      "look": "original black-and-white anthropomorphic panda soldiers, broad rounded bodies with sturdy legs, jade-and-bronze lamellar armor, muted red sashes, stern faces, no existing franchise costumes or symbols",
+      "infantry": "bamboo-inspired long polearm and jade-edged round shield",
+      "archer": "broad wooden composite bow and bamboo arrow quiver, lighter jade lamellar armor and muted red fabric",
+      "cavalry": "sturdy large dark horse with jade-and-bronze tack, broad panda rider with spear and round jade-edged shield",
+      "troops": [
+        {
+          "id": "line_infantry",
+          "role": "Line infantry",
+          "level": 0,
+          "research": "Basic arms",
+          "recruit": "Barracks",
+          "purpose": "Hold the line",
+          "equipment": "Faction's standard sword or axe and shield; economical armor",
+          "name": "Jade Guard"
+        },
+        {
+          "id": "spear_guard",
+          "role": "Spear guard",
+          "level": 1,
+          "research": "Spear drill",
+          "recruit": "Barracks",
+          "purpose": "Brace against cavalry",
+          "equipment": "Long pike or spear and small shield, longer polearm silhouette",
+          "name": "Polearm Keeper"
+        },
+        {
+          "id": "archer",
+          "role": "Archer",
+          "level": 0,
+          "research": "Basic arms",
+          "recruit": "Barracks",
+          "purpose": "Ranged support",
+          "equipment": "Faction's standard bow or crossbow and quiver; lighter armor",
+          "name": "Bamboo Archer"
+        },
+        {
+          "id": "elite",
+          "role": "Elite guard",
+          "level": 4,
+          "research": "Elite doctrine",
+          "recruit": "Barracks",
+          "purpose": "Faction signature specialist",
+          "equipment": "Most distinctive faction ceremonial-but-functional armor and polearm or two-handed weapon; no new giant creatures; stronger faction helmet motif and battle standard",
+          "name": "Mountain Sentinel"
+        },
+        {
+          "id": "scout",
+          "name": "Valley Scout",
+          "role": "Mounted scout",
+          "level": 1,
+          "research": "Scouting",
+          "recruit": "Stables",
+          "purpose": "Reconnaissance; avoid direct combat",
+          "equipment": "Mounted scout: sturdy small mountain pony with jade-and-leather saddle and panda scout; short sidearm, map pouch, minimal armor; avoid direct combat."
+        },
+        {
+          "id": "light_cavalry",
+          "role": "Light cavalry",
+          "level": 2,
+          "research": "Mounted warfare",
+          "recruit": "Stables",
+          "purpose": "Scout and flank",
+          "equipment": "Light spear, small shield, light faction saddle cloth with little mount armor",
+          "name": "Valley Rider"
+        },
+        {
+          "id": "heavy_cavalry",
+          "role": "Heavy cavalry",
+          "level": 3,
+          "research": "Armored riding",
+          "recruit": "Stables",
+          "purpose": "Committed charges",
+          "equipment": "Heavy mounted charge unit: woolly war mammoth with jade-and-bronze forehead armor, muted red saddle platform and panda lancer rider, no giant war fortress; silhouette distinct from standard horse cavalry.",
+          "name": "Jade Lancer"
+        }
+      ],
+      "siege": [
+        {
+          "id": "ram",
+          "name": "Jade Ram",
+          "workshopLevel": 1,
+          "academyLevel": 0,
+          "research": "Carpentry",
+          "role": "Contact siege against gates"
+        },
+        {
+          "id": "catapult",
+          "name": "Mountain Giant",
+          "workshopLevel": 2,
+          "academyLevel": 2,
+          "research": "Siege engineering",
+          "role": "Arcing stone bombardment (catapult role)",
+          "visual": "large mountain giant with stone-gray skin and jade-bronze wrist armor, throwing a round rock, fur-and-cloth waist wrap, visible limbs and hands; living siege unit in the catapult role"
+        }
+      ],
+      "fantasyNotes": "Epic fantasy film inspiration, including scale contrast and believable creature mounts, with original designs and no named movie characters, symbols or costumes."
+    },
+    {
+      "id": "undead",
+      "name": "Undead",
+      "look": "gaunt armored skeletal soldiers, visible skulls and articulated bone hands, weathered charcoal-and-violet armor, tattered narrow cloth, tiny muted green eye light, no gore, clear anatomical joints",
+      "infantry": "chipped spear and aged round iron shield",
+      "archer": "weathered longbow, ribcage partly covered by torn violet mail and cloth, skull and bone hands, arrow quiver",
+      "cavalry": "skeletal horse with readable complete anatomy and aged violet saddle fabric, skeletal armored rider with spear and aged shield",
+      "troops": [
+        {
+          "id": "line_infantry",
+          "role": "Line infantry",
+          "level": 0,
+          "research": "Basic arms",
+          "recruit": "Barracks",
+          "purpose": "Hold the line",
+          "equipment": "Faction's standard sword or axe and shield; economical armor",
+          "name": "Crypt Spearman"
+        },
+        {
+          "id": "spear_guard",
+          "role": "Spear guard",
+          "level": 1,
+          "research": "Spear drill",
+          "recruit": "Barracks",
+          "purpose": "Brace against cavalry",
+          "equipment": "Long pike or spear and small shield, longer polearm silhouette",
+          "name": "Tomb Pikeman"
+        },
+        {
+          "id": "archer",
+          "role": "Archer",
+          "level": 0,
+          "research": "Basic arms",
+          "recruit": "Barracks",
+          "purpose": "Ranged support",
+          "equipment": "Faction's standard bow or crossbow and quiver; lighter armor",
+          "name": "Bone Archer"
+        },
+        {
+          "id": "elite",
+          "role": "Elite guard",
+          "level": 4,
+          "research": "Elite doctrine",
+          "recruit": "Barracks",
+          "purpose": "Faction signature specialist",
+          "equipment": "Most distinctive faction ceremonial-but-functional armor and polearm or two-handed weapon; no new giant creatures; gaunt bone-armored revenant with dark violet mantle and faint green eyes, legs remain visible, no floating fog",
+          "name": "Wraith Guard"
+        },
+        {
+          "id": "scout",
+          "name": "Grave Scout",
+          "role": "Mounted scout",
+          "level": 1,
+          "research": "Scouting",
+          "recruit": "Stables",
+          "purpose": "Reconnaissance; avoid direct combat",
+          "equipment": "Mounted scout: skeletal horse with little armor, bone scout rider, restrained violet saddle cloth; short sidearm, map pouch, minimal armor; avoid direct combat."
+        },
+        {
+          "id": "light_cavalry",
+          "role": "Light cavalry",
+          "level": 2,
+          "research": "Mounted warfare",
+          "recruit": "Stables",
+          "purpose": "Scout and flank",
+          "equipment": "Light spear, small shield, light faction saddle cloth with little mount armor",
+          "name": "Grave Rider"
+        },
+        {
+          "id": "heavy_cavalry",
+          "role": "Heavy cavalry",
+          "level": 3,
+          "research": "Armored riding",
+          "recruit": "Stables",
+          "purpose": "Committed charges",
+          "equipment": "Heavy mounted charge unit: skeletal mammoth with large tusks, aged violet-and-iron armor and skeletal lance rider; readable bone structure, no gore; silhouette distinct from standard horse cavalry.",
+          "name": "Dread Lancer"
+        }
+      ],
+      "siege": [
+        {
+          "id": "ram",
+          "name": "Crypt Ram",
+          "workshopLevel": 1,
+          "academyLevel": 0,
+          "research": "Carpentry",
+          "role": "Contact siege against gates"
+        },
+        {
+          "id": "catapult",
+          "name": "Tombstone Colossus",
+          "workshopLevel": 2,
+          "academyLevel": 2,
+          "research": "Siege engineering",
+          "role": "Arcing stone bombardment (catapult role)",
+          "visual": "ancient tomb-stone golem assembled from dark carved stone slabs, restrained violet cloth and tiny green eye light, carrying and throwing a stone; living siege unit in the catapult role"
+        }
+      ],
+      "fantasyNotes": "Epic fantasy film inspiration, including scale contrast and believable creature mounts, with original designs and no named movie characters, symbols or costumes."
+    },
+    {
+      "id": "demon",
+      "name": "Demon",
+      "look": "towering Shahnameh Div-inspired demon warriors, charcoal-red skin, broad curved horns, dark obsidian armor with restrained ember-copper seams, clawed hands and feet, disciplined soldiers, no flames obscuring bodies",
+      "infantry": "heavy hooked glaive and angular obsidian shield",
+      "archer": "heavy recurved bow shaped from dark wood and horn, visible horns and red hands, dark lighter armor, ember-copper arrow quiver",
+      "cavalry": "large charcoal horse with modest horn-like armored brow plate and ember-copper dark barding, horned red demon rider with heavy lance",
+      "troops": [
+        {
+          "id": "line_infantry",
+          "role": "Line infantry",
+          "level": 0,
+          "research": "Basic arms",
+          "recruit": "Barracks",
+          "purpose": "Hold the line",
+          "equipment": "Faction's standard sword or axe and shield; economical armor",
+          "name": "Ash Guard"
+        },
+        {
+          "id": "spear_guard",
+          "role": "Spear guard",
+          "level": 1,
+          "research": "Spear drill",
+          "recruit": "Barracks",
+          "purpose": "Brace against cavalry",
+          "equipment": "Long pike or spear and small shield, longer polearm silhouette",
+          "name": "Obsidian Spearman"
+        },
+        {
+          "id": "archer",
+          "role": "Archer",
+          "level": 0,
+          "research": "Basic arms",
+          "recruit": "Barracks",
+          "purpose": "Ranged support",
+          "equipment": "Faction's standard bow or crossbow and quiver; lighter armor",
+          "name": "Horn Bowman"
+        },
+        {
+          "id": "elite",
+          "role": "Elite guard",
+          "level": 4,
+          "research": "Elite doctrine",
+          "recruit": "Barracks",
+          "purpose": "Faction signature specialist",
+          "equipment": "Most distinctive faction ceremonial-but-functional armor and polearm or two-handed weapon; no new giant creatures; broad-horned red Div champion in obsidian-copper heavy armor, no screen-filling fire",
+          "name": "Div Champion"
+        },
+        {
+          "id": "scout",
+          "name": "Ash Scout",
+          "role": "Mounted scout",
+          "level": 1,
+          "research": "Scouting",
+          "recruit": "Stables",
+          "purpose": "Reconnaissance; avoid direct combat",
+          "equipment": "Mounted scout: lean dark horned wolf mount with light leather tack and a red demon scout; short sidearm, map pouch, minimal armor; avoid direct combat."
+        },
+        {
+          "id": "light_cavalry",
+          "role": "Light cavalry",
+          "level": 2,
+          "research": "Mounted warfare",
+          "recruit": "Stables",
+          "purpose": "Scout and flank",
+          "equipment": "Light spear, small shield, light faction saddle cloth with little mount armor",
+          "name": "Ember Rider"
+        },
+        {
+          "id": "heavy_cavalry",
+          "role": "Heavy cavalry",
+          "level": 3,
+          "research": "Armored riding",
+          "recruit": "Stables",
+          "purpose": "Committed charges",
+          "equipment": "Heavy mounted charge unit: large charcoal-red armored rhinoceros-like horned beast with obsidian-copper barding and horned demon lance rider; silhouette distinct from standard horse cavalry.",
+          "name": "Dread Lancer"
+        }
+      ],
+      "siege": [
+        {
+          "id": "ram",
+          "name": "Obsidian Ram",
+          "workshopLevel": 1,
+          "academyLevel": 0,
+          "research": "Carpentry",
+          "role": "Contact siege against gates"
+        },
+        {
+          "id": "catapult",
+          "name": "Div Stonehurler",
+          "workshopLevel": 2,
+          "academyLevel": 2,
+          "research": "Siege engineering",
+          "role": "Arcing stone bombardment (catapult role)",
+          "visual": "towering horned charcoal-red Div giant with dark wrist bands and restrained ember seams, hurling a large boulder, anatomy visible without flames; living siege unit in the catapult role"
+        }
+      ],
+      "fantasyNotes": "Epic fantasy film inspiration, including scale contrast and believable creature mounts, with original designs and no named movie characters, symbols or costumes."
+    }
+  ]
+}

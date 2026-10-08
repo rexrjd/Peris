@@ -12,6 +12,7 @@ def main():
     parser.add_argument("--collection", required=True)
     parser.add_argument("--output", required=True)
     parser.add_argument("--overwrite", action="store_true")
+    parser.add_argument("--animation-mode", choices=["ACTIONS", "NLA_TRACKS"], default="ACTIONS")
     args = parser.parse_args(sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else [])
     output = pathlib.Path(args.output).resolve()
     if output.suffix.lower() != ".glb":
@@ -40,7 +41,8 @@ def main():
         result = bpy.ops.export_scene.gltf(
             filepath=str(output), export_format="GLB", use_selection=True,
             export_yup=True, export_apply=False, export_animations=True,
-            export_skins=True, export_materials="EXPORT",
+            export_skins=True, export_materials="EXPORT", export_extras=True,
+            export_animation_mode=args.animation_mode, export_merge_animation="NLA_TRACK",
         )
         if "FINISHED" not in result:
             raise RuntimeError("Blender did not complete the export.")

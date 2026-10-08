@@ -1,4 +1,201 @@
 {
   "version": 1,
-  "assets": []
+  "assets": [
+    {
+      "id": "battle-reference-prototypes",
+      "file": "public/models/battle/reference-prototypes.glb",
+      "license": "CC-BY-SA-3.0",
+      "source": "https://github.com/0ad/0ad/tree/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art",
+      "editableSource": "assets/source/battle/reference-v2/peris-reference-prototypes.blend",
+      "attribution": "Wildfire Games (https://wildfiregames.com/). Original meshes, textures and animation; adapted assembly, faction tint, materials and GLB conversion for Peris. Assets and adaptations: CC BY-SA 3.0 (https://creativecommons.org/licenses/by-sa/3.0/).",
+      "maxBytes": 6291456,
+      "description": "Roman infantry and seated cavalry source study; opt-in battle prototypes. Separate horse and rider rigs, shared sockets, six combined clips. Uncompressed glTF."
+    },
+    {
+      "id": "battle-reference-prototypes-lod",
+      "file": "public/models/battle/reference-prototypes-lod.glb",
+      "license": "CC-BY-SA-3.0",
+      "source": "https://github.com/0ad/0ad/tree/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art",
+      "editableSource": "assets/source/battle/reference-v2/peris-reference-prototypes.blend",
+      "attribution": "Wildfire Games (https://wildfiregames.com/). Original meshes, textures and animation; adapted assembly, faction tint, materials and GLB conversion for Peris. Assets and adaptations: CC BY-SA 3.0 (https://creativecommons.org/licenses/by-sa/3.0/).",
+      "maxBytes": 6291456,
+      "description": "Roman infantry and seated cavalry source study; opt-in battle prototypes. Separate horse and rider rigs, shared sockets, six combined clips. Uncompressed glTF."
+    },
+    {
+      "id": "battle-roman-army",
+      "file": "public/models/battle/roman-army.glb",
+      "license": "original",
+      "source": "assets/source/battle/seated-v2/peris-roman-army.blend",
+      "maxBytes": 5242880,
+      "description": "Original Peris prototype: seven rigged troops and two siege studies. 27 idle/walk/attack clips. No mesh compression decoder required."
+    },
+    {
+      "id": "battle-spartan-army",
+      "file": "public/models/battle/spartan-army.glb",
+      "license": "original",
+      "source": "assets/source/battle/seated-v2/peris-spartan-army.blend",
+      "maxBytes": 5242880,
+      "description": "Original Peris prototype: seven rigged troops and two siege studies. 27 idle/walk/attack clips. No mesh compression decoder required."
+    },
+    {
+      "id": "battle-persian-army",
+      "file": "public/models/battle/persian-army.glb",
+      "license": "original",
+      "source": "assets/source/battle/seated-v2/peris-persian-army.blend",
+      "maxBytes": 5242880,
+      "description": "Original Peris prototype: seven rigged troops and two siege studies. 27 idle/walk/attack clips. No mesh compression decoder required."
+    },
+    {
+      "id": "battle-egyptian-army",
+      "file": "public/models/battle/egyptian-army.glb",
+      "license": "original",
+      "source": "assets/source/battle/seated-v2/peris-egyptian-army.blend",
+      "maxBytes": 5242880,
+      "description": "Original Peris prototype: seven rigged troops and two siege studies. 27 idle/walk/attack clips. No mesh compression decoder required."
+    },
+    {
+      "id": "battle-orc-army",
+      "file": "public/models/battle/orc-army.glb",
+      "license": "original",
+      "source": "assets/source/battle/seated-v2/peris-orc-army.blend",
+      "maxBytes": 5242880,
+      "description": "Original Peris prototype: seven rigged troops and two siege studies. 27 idle/walk/attack clips. No mesh compression decoder required."
+    },
+    {
+      "id": "battle-elf-army",
+      "file": "public/models/battle/elf-army.glb",
+      "license": "original",
+      "source": "assets/source/battle/seated-v2/peris-elf-army.blend",
+      "maxBytes": 5242880,
+      "description": "Original Peris prototype: seven rigged troops and two siege studies. 27 idle/walk/attack clips. No mesh compression decoder required."
+    },
+    {
+      "id": "battle-dwarf-army",
+      "file": "public/models/battle/dwarf-army.glb",
+      "license": "original",
+      "source": "assets/source/battle/seated-v2/peris-dwarf-army.blend",
+      "maxBytes": 5242880,
+      "description": "Original Peris prototype: seven rigged troops and two siege studies. 27 idle/walk/attack clips. No mesh compression decoder required."
+    },
+    {
+      "id": "battle-gnome-army",
+      "file": "public/models/battle/gnome-army.glb",
+      "license": "original",
+      "source": "assets/source/battle/seated-v2/peris-gnome-army.blend",
+      "maxBytes": 5242880,
+      "description": "Original Peris prototype: seven rigged troops and two siege studies. 27 idle/walk/attack clips. No mesh compression decoder required."
+    },
+    {
+      "id": "battle-pandaren-army",
+      "file": "public/models/battle/pandaren-army.glb",
+      "license": "original",
+      "source": "assets/source/battle/seated-v2/peris-pandaren-army.blend",
+      "maxBytes": 5242880,
+      "description": "Original Peris prototype: seven rigged troops and two siege studies. 27 idle/walk/attack clips. No mesh compression decoder required."
+    },
+    {
+      "id": "battle-undead-army",
+      "file": "public/models/battle/undead-army.glb",
+      "license": "original",
+      "source": "assets/source/battle/seated-v2/peris-undead-army.blend",
+      "maxBytes": 5242880,
+      "description": "Original Peris prototype: seven rigged troops and two siege studies. 27 idle/walk/attack clips. No mesh compression decoder required."
+    },
+    {
+      "id": "battle-demon-army",
+      "file": "public/models/battle/demon-army.glb",
+      "license": "original",
+      "source": "assets/source/battle/seated-v2/peris-demon-army.blend",
+      "maxBytes": 5242880,
+      "description": "Original Peris prototype: seven rigged troops and two siege studies. 27 idle/walk/attack clips. No mesh compression decoder required."
+    },
+    {
+      "id": "battle-roman-army-lod",
+      "file": "public/models/battle/roman-army-lod.glb",
+      "license": "original",
+      "source": "assets/source/battle/seated-v2/peris-roman-army.blend",
+      "maxBytes": 3145728,
+      "description": "Distance detail mesh. Same rigs and 27 clips, uncompressed glTF. Inspect at tactical distance."
+    },
+    {
+      "id": "battle-spartan-army-lod",
+      "file": "public/models/battle/spartan-army-lod.glb",
+      "license": "original",
+      "source": "assets/source/battle/seated-v2/peris-spartan-army.blend",
+      "maxBytes": 3145728,
+      "description": "Distance detail mesh. Same rigs and 27 clips, uncompressed glTF. Inspect at tactical distance."
+    },
+    {
+      "id": "battle-persian-army-lod",
+      "file": "public/models/battle/persian-army-lod.glb",
+      "license": "original",
+      "source": "assets/source/battle/seated-v2/peris-persian-army.blend",
+      "maxBytes": 3145728,
+      "description": "Distance detail mesh. Same rigs and 27 clips, uncompressed glTF. Inspect at tactical distance."
+    },
+    {
+      "id": "battle-egyptian-army-lod",
+      "file": "public/models/battle/egyptian-army-lod.glb",
+      "license": "original",
+      "source": "assets/source/battle/seated-v2/peris-egyptian-army.blend",
+      "maxBytes": 3145728,
+      "description": "Distance detail mesh. Same rigs and 27 clips, uncompressed glTF. Inspect at tactical distance."
+    },
+    {
+      "id": "battle-orc-army-lod",
+      "file": "public/models/battle/orc-army-lod.glb",
+      "license": "original",
+      "source": "assets/source/battle/seated-v2/peris-orc-army.blend",
+      "maxBytes": 3145728,
+      "description": "Distance detail mesh. Same rigs and 27 clips, uncompressed glTF. Inspect at tactical distance."
+    },
+    {
+      "id": "battle-elf-army-lod",
+      "file": "public/models/battle/elf-army-lod.glb",
+      "license": "original",
+      "source": "assets/source/battle/seated-v2/peris-elf-army.blend",
+      "maxBytes": 3145728,
+      "description": "Distance detail mesh. Same rigs and 27 clips, uncompressed glTF. Inspect at tactical distance."
+    },
+    {
+      "id": "battle-dwarf-army-lod",
+      "file": "public/models/battle/dwarf-army-lod.glb",
+      "license": "original",
+      "source": "assets/source/battle/seated-v2/peris-dwarf-army.blend",
+      "maxBytes": 3145728,
+      "description": "Distance detail mesh. Same rigs and 27 clips, uncompressed glTF. Inspect at tactical distance."
+    },
+    {
+      "id": "battle-gnome-army-lod",
+      "file": "public/models/battle/gnome-army-lod.glb",
+      "license": "original",
+      "source": "assets/source/battle/seated-v2/peris-gnome-army.blend",
+      "maxBytes": 3145728,
+      "description": "Distance detail mesh. Same rigs and 27 clips, uncompressed glTF. Inspect at tactical distance."
+    },
+    {
+      "id": "battle-pandaren-army-lod",
+      "file": "public/models/battle/pandaren-army-lod.glb",
+      "license": "original",
+      "source": "assets/source/battle/seated-v2/peris-pandaren-army.blend",
+      "maxBytes": 3145728,
+      "description": "Distance detail mesh. Same rigs and 27 clips, uncompressed glTF. Inspect at tactical distance."
+    },
+    {
+      "id": "battle-undead-army-lod",
+      "file": "public/models/battle/undead-army-lod.glb",
+      "license": "original",
+      "source": "assets/source/battle/seated-v2/peris-undead-army.blend",
+      "maxBytes": 3145728,
+      "description": "Distance detail mesh. Same rigs and 27 clips, uncompressed glTF. Inspect at tactical distance."
+    },
+    {
+      "id": "battle-demon-army-lod",
+      "file": "public/models/battle/demon-army-lod.glb",
+      "license": "original",
+      "source": "assets/source/battle/seated-v2/peris-demon-army.blend",
+      "maxBytes": 3145728,
+      "description": "Distance detail mesh. Same rigs and 27 clips, uncompressed glTF. Inspect at tactical distance."
+    }
+  ]
 }

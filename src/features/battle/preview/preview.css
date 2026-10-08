@@ -1,0 +1,16 @@
+.battle-art-preview{height:100dvh;display:flex;flex-direction:column;background:#16271f;color:#e5dcc0}
+.battle-art-preview .tactical-shell{flex:1;min-height:0;height:auto}
+.preview-toolbar{display:flex;align-items:center;gap:12px;padding:10px 18px;border-bottom:1px solid #716c4a;background:#1b3027;z-index:4;flex-wrap:wrap}
+.preview-toolbar>div{margin-right:auto}.preview-toolbar strong{font-size:12px;letter-spacing:2px}.preview-toolbar small{display:block;font-size:10px;color:#b6bc9d;margin-top:3px}
+.preview-toolbar label{font-size:9px;display:flex;flex-direction:column;gap:3px;color:#b6bc9d;text-transform:uppercase;letter-spacing:1px}
+.preview-toolbar select{max-width:145px;background:#263c30;color:#e5dcc0;border:1px solid #738164;padding:5px;border-radius:3px;font-size:11px}
+.preview-toolbar button,.preview-toolbar a{color:#e7d4a2;background:#3d4b32;border:1px solid #a29260;border-radius:3px;padding:8px;font-size:10px;text-decoration:none;white-space:nowrap}
+.preview-scope{font-size:9px;padding:5px 18px;color:#a4b196;border-top:1px solid #4b6044}
+.battle-art-preview .unit-card-meta span{font-size:9px;max-width:78px;white-space:normal;text-align:right}.faction-portrait{background-repeat:no-repeat}
+.army-loading{position:absolute;inset:0;display:grid;place-content:center;color:#f1d89d;background:#17291ee0;z-index:4;font-size:18px}
+.army-inspection{position:absolute;top:105px;left:14px;right:14px;display:flex;flex-wrap:wrap;gap:5px;align-items:center;pointer-events:none}
+.army-inspection button{pointer-events:auto;background:#1c3025df;color:#ebd7a6;padding:7px 10px;border:1px solid #9b9c6c88;border-radius:3px;font-size:10px}
+.army-inspection small{margin-left:auto;color:#e2d7b8;background:#162b22bb;padding:5px;font:10px monospace}
+.preview-message,.preview-result{position:fixed;bottom:190px;left:24px;right:350px;z-index:8;background:#203c2e;border:1px solid #c3aa6d;color:#ebd9ad;padding:15px;border-radius:4px;font-size:12px}
+.preview-message button{float:right;background:none;color:inherit;border:0;font-size:18px}.preview-result{bottom:230px}
+@media(max-width:700px){.preview-toolbar{gap:6px;padding:7px}.preview-toolbar>div{width:100%}.preview-toolbar select{max-width:95px;font-size:10px}.preview-toolbar strong{font-size:10px}.preview-toolbar small,.preview-scope{font-size:8px}.army-inspection{top:94px;left:6px;right:6px}.army-inspection button{font-size:8px;padding:5px}.army-inspection small{font-size:8px}.preview-message,.preview-result{left:10px;right:10px;bottom:170px}.preview-toolbar a{display:none}}

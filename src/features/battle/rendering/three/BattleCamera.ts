@@ -6,7 +6,7 @@ import { clamp } from '../../../../shared/math/geometry';
 export class BattleCamera {
     readonly camera = new OrthographicCamera(-600, 600, 400, -400, .1, 5000);
     readonly target = new Vector3(FIELD_W / 2, 0, FIELD_H / 2);
-    width = 1; height = 1; span = 900; yaw = 0;
+    width = 1; height = 1; span = 900; yaw = 0; inspecting = false;
     private readonly ray = new Raycaster();
     private readonly plane = new Plane(new Vector3(0, 1, 0), 0);
     constructor(private readonly elevation: (x: number, y: number) => number) { this.update(); }
@@ -22,12 +22,12 @@ export class BattleCamera {
         this.update();
     }
     update() {
-        this.span = clamp(this.span, 120, Math.max(1600, this.overviewSpan));
+        this.span = clamp(this.span, this.inspecting ? 18 : 120, Math.max(1600, this.overviewSpan));
         this.target.x = clamp(this.target.x, 0, FIELD_W); this.target.z = clamp(this.target.z, 0, FIELD_H);
         const aspect = this.width / this.height;
         this.camera.left = -this.span * aspect / 2; this.camera.right = this.span * aspect / 2;
         this.camera.top = this.span / 2; this.camera.bottom = -this.span / 2;
-        this.camera.position.set(this.target.x + Math.sin(this.yaw) * 1000, 1732, this.target.z + Math.cos(this.yaw) * 1000);
+        this.camera.position.set(this.target.x + Math.sin(this.yaw) * 1000, this.target.y + (this.inspecting ? 600 : 1732), this.target.z + Math.cos(this.yaw) * 1000);
         this.camera.lookAt(this.target); this.camera.updateProjectionMatrix(); this.camera.updateMatrixWorld();
     }
     ground(x: number, y: number) {
@@ -70,5 +70,6 @@ export class BattleCamera {
     }
     rotate(angle: number) { const overview = Math.abs(this.span - this.overviewSpan) < .01; this.yaw += angle; if (overview) this.span = this.overviewSpan; this.update(); }
     focus(x: number, y: number) { this.target.x = x; this.target.z = y; this.span = Math.min(this.span, 450); this.update(); }
-    center() { this.target.set(FIELD_W / 2, 0, FIELD_H / 2); this.yaw = 0; this.span = this.overviewSpan; this.update(); }
+    inspect(x: number, y: number) { this.inspecting = true; this.target.set(x, this.elevation(x,y) + 6, y); this.span = 55; this.yaw = Math.PI / 3; this.update(); }
+    center() { this.inspecting = false; this.target.set(FIELD_W / 2, 0, FIELD_H / 2); this.yaw = 0; this.span = this.overviewSpan; this.update(); }
 }

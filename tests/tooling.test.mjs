@@ -33,3 +33,10 @@ test('rejects oversized and corrupt exports', t => {
   writeFileSync(join(root, 'public/models/unit.glb'), 'broken');
   assert.ok(validateManifest({ version: 1, assets: [asset] }, root).errors.some(e => e.includes('invalid GLB')));
 });
+
+test('share-alike models require source provenance and attribution', t => {
+  const root = fixture(t);
+  const shared = { ...asset, license: 'CC-BY-SA-3.0', source: 'https://github.com/0ad/0ad' };
+  assert.ok(validateManifest({ version: 1, assets: [shared] }, root).errors.some(e => e.includes('attribution')));
+  assert.deepEqual(validateManifest({ version: 1, assets: [{ ...shared, attribution: 'Wildfire Games; https://wildfiregames.com/; CC BY-SA 3.0 https://creativecommons.org/licenses/by-sa/3.0/; adapted for Peris.' }] }, root).errors, []);
+});

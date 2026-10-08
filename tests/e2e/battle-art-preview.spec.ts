@@ -1,0 +1,119 @@
+import { test,expect } from '@playwright/test';
+
+test('army preview supports mesh inspection, deployment, combat, quality changes and 2D fallback without touching a campaign',async({page},testInfo)=>{
+    test.setTimeout(120000);
+    const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
+    await page.addInitScript(()=>{localStorage.setItem('peris-settings',JSON.stringify({sound:false,music:false,reducedMotion:true}));localStorage.setItem('peris-solo-v6','preserve-this-campaign');});
+    await page.goto('/?battle-preview=1');
+    const field=page.locator('.battle-3d-canvas canvas');
+    await expect(page.locator('.army-loading')).toHaveCount(0,{timeout:60000});
+    await expect(page.locator('.battle-3d-label.friendly')).toHaveCount(7);
+    await expect(page.locator('.unit-card')).toHaveCount(7);
+    await page.getByRole('button',{name:'Inspect selected troops',exact:true}).click();
+    await expect(page.locator('.army-inspection small')).toContainText('FPS',{timeout:20000});
+    await field.hover();await page.mouse.wheel(0,-300);
+    await page.screenshot({path:testInfo.outputPath('orc-inspection.png')});
+    await page.locator('.unit-card').last().click();
+    await page.getByRole('button',{name:'Inspect selected troops',exact:true}).click();
+    await page.screenshot({path:testInfo.outputPath('mammoth-inspection.png')});
+    await page.getByRole('button',{name:'Inspect stonehurler',exact:true}).click();
+    await page.screenshot({path:testInfo.outputPath('stonehurler.png')});
+    await page.getByRole('button',{name:'Battle overview',exact:true}).click();
+    await page.locator('.unit-card').first().click();
+    const label=page.locator('.battle-3d-label.friendly.selected').first(),before=await label.getAttribute('style');
+    await page.getByRole('button',{name:'Move',exact:true}).click();
+    const box=await field.boundingBox();if(!box)throw new Error('Missing battlefield');
+    await field.click({position:{x:box.width*.24,y:box.height*.7}});
+    await expect(label).not.toHaveAttribute('style',before!);
+    await page.getByRole('button',{name:'Begin battle',exact:true}).click();
+    await expect(page.locator('.deployment-banner')).toHaveCount(0);
+    await page.getByRole('button',{name:/Ⅱ Pause/}).click();
+    await expect(page.locator('.pause-banner')).toBeVisible();
+    const selection=await page.locator('.command-selection').innerText();
+    await page.getByLabel('Graphics quality').selectOption('balanced');
+    await expect(page.locator('.army-loading')).toHaveCount(0,{timeout:60000});
+    await expect(page.locator('.command-selection')).toHaveText(selection);
+    await expect(page.locator('.pause-banner')).toBeVisible();
+    await field.evaluate((canvas:HTMLCanvasElement)=>canvas.getContext('webgl2')?.getExtension('WEBGL_lose_context')?.loseContext());
+    await expect(page.getByRole('status').filter({hasText:'3D graphics unavailable'})).toBeVisible();
+    await expect(page.locator('canvas[aria-label^="Tactical battlefield"]')).toBeVisible();
+    await expect(page.locator('.pause-banner')).toBeVisible();
+    expect(await page.evaluate(()=>localStorage.getItem('peris-solo-v6'))).toBe('preserve-this-campaign');
+    expect(errors).toEqual([]);
+});
+
+test('all eleven factions load their own meshes and portraits',async({page},testInfo)=>{
+    test.setTimeout(240000);
+    if(testInfo.project.name==='mobile-chromium')test.skip();
+    const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
+    await page.goto('/?battle-preview=1');
+    for(const faction of ['roman','spartan','persian','egyptian','orc','elf','dwarf','gnome','pandaren','undead','demon']){
+        await page.getByLabel('Your faction').selectOption(faction);
+        await expect(page.locator('.army-loading')).toHaveCount(0,{timeout:60000});
+        await expect(page.locator('.battle-3d-label.friendly')).toHaveCount(7);
+        await expect(page.locator('.unit-card .faction-portrait').first()).toHaveAttribute('style',new RegExp(`/roster/${faction}.png`));
+    }
+    expect(errors).toEqual([]);
+});
+
+test('licensed infantry and cavalry prototypes keep textured rigs, orders, pause state and campaign isolation in the battle renderer',async({page},testInfo)=>{
+    test.setTimeout(150000);
+    const errors:string[]=[],assets=new Map<string,number>();
+    page.on('pageerror',error=>errors.push(error.message));
+    page.on('response',response=>{
+        const path=new URL(response.url()).pathname;
+        if(path.includes('/models/battle/reference-prototypes'))assets.set(path,response.status());
+    });
+    await page.addInitScript(()=>{
+        localStorage.setItem('peris-settings',JSON.stringify({sound:false,music:false,reducedMotion:true}));
+        localStorage.setItem('peris-solo-v6','preserve-prototype-campaign');
+    });
+    await page.goto('/?battle-preview=1&unit-prototypes=1');
+    const field=page.locator('.battle-3d-canvas canvas');
+    await expect(page.locator('.army-loading')).toHaveCount(0,{timeout:90000});
+    await expect(field).toBeVisible();
+    await expect(page.getByLabel('Your faction')).toHaveValue('roman');
+    await expect(page.getByLabel('Enemy faction')).toHaveValue('orc');
+    await expect(page.locator('.battle-3d-label.friendly')).toHaveCount(7);
+    expect(assets.get('/models/battle/reference-prototypes.glb')).toBe(200);
+    expect(assets.get('/models/battle/reference-prototypes-lod.glb')).toBe(200);
+    await expect(page.getByRole('link',{name:'Unit asset credits',exact:true})).toHaveAttribute('href','/licenses/peris-unit-prototypes.txt');
+    const credits=await page.request.get('/licenses/peris-unit-prototypes.txt');
+    expect(credits.ok()).toBe(true);
+    expect(await credits.text()).toMatch(/Wildfire Games[\s\S]+CC BY-SA 3\.0/);
+
+    await page.locator('.unit-card').first().click();
+    await page.getByRole('button',{name:'Inspect selected troops',exact:true}).click();
+    await expect(page.locator('.army-inspection small')).toContainText('FPS',{timeout:20000});
+    await page.screenshot({path:testInfo.outputPath('licensed-roman-infantry.png')});
+    await page.locator('.unit-card').last().click();
+    await page.getByRole('button',{name:'Inspect selected troops',exact:true}).click();
+    const selected=page.locator('.battle-3d-label.friendly.selected').first();
+    const beforeOrbit=await selected.getAttribute('style');
+    await page.getByRole('button',{name:'Rotate camera right',exact:true}).click();
+    await expect(selected).not.toHaveAttribute('style',beforeOrbit!);
+    await page.screenshot({path:testInfo.outputPath('licensed-roman-cavalry.png')});
+
+    await page.getByRole('button',{name:'Battle overview',exact:true}).click();
+    await page.locator('.unit-card').first().click();
+    const beforeMove=await selected.getAttribute('style');
+    await page.getByRole('button',{name:'Move',exact:true}).click();
+    const box=await field.boundingBox();if(!box)throw new Error('Missing prototype battlefield');
+    await field.click({position:{x:box.width*.24,y:box.height*.7}});
+    await expect(selected).not.toHaveAttribute('style',beforeMove!);
+    await page.getByRole('button',{name:'Begin battle',exact:true}).click();
+    await expect(page.locator('.deployment-banner')).toHaveCount(0);
+    await page.getByRole('button',{name:/Ⅱ Pause/}).click();
+    await expect(page.locator('.pause-banner')).toBeVisible();
+    const selection=await page.locator('.command-selection').innerText();
+    await page.getByLabel('Graphics quality').selectOption('balanced');
+    await expect(page.locator('.army-loading')).toHaveCount(0,{timeout:90000});
+    await expect(page.locator('.command-selection')).toHaveText(selection);
+    await expect(page.locator('.pause-banner')).toBeVisible();
+    await field.evaluate((canvas:HTMLCanvasElement)=>canvas.getContext('webgl2')?.getExtension('WEBGL_lose_context')?.loseContext());
+    await expect(page.getByRole('status').filter({hasText:'3D graphics unavailable'})).toBeVisible();
+    await expect(page.locator('canvas[aria-label^="Tactical battlefield"]')).toBeVisible();
+    await expect(page.locator('.pause-banner')).toBeVisible();
+    expect(await page.evaluate(()=>localStorage.getItem('peris-solo-v6'))).toBe('preserve-prototype-campaign');
+    expect(errors).toEqual([]);
+});

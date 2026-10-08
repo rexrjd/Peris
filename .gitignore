@@ -15,3 +15,19 @@ blob-report/
 *.blend1
 *.blend2
 __pycache__/
+
+# Reproducible downloaded sources and intermediate imports remain local.
+assets/references/units/0ad/actors/
+assets/references/units/0ad/animation/
+assets/references/units/0ad/meshes/
+assets/references/units/0ad/textures/
+assets/references/units/0ad/variants/
+assets/source/battle/reference-import-cache*/
+assets/source/battle/reference-textures/
+assets/source/battle/reference-v1/
+assets/source/battle/reference-v2/exports/
+assets/source/battle/reference-v2/textures/
+assets/source/battle/seated-v2/exports/
+assets/source/battle/exports/
+assets/source/battle/peris-*-army.blend
+artifacts/

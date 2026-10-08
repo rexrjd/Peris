@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const licenses = new Set(['original', 'CC0', 'CC-BY-4.0', 'licensed']);
+const licenses = new Set(['original', 'CC0', 'CC-BY-4.0', 'CC-BY-SA-3.0', 'licensed']);
 const within = (base, file) => {
   const rel = relative(base, file);
   return rel !== '..' && !rel.startsWith(`..${process.platform === 'win32' ? '\\' : '/'}`) && !isAbsolute(rel);
@@ -28,7 +28,7 @@ export function validateManifest(manifest, projectRoot) {
     if (asset?.license !== 'original' && (typeof asset?.source !== 'string' || !/^https:\/\//.test(asset.source))) {
       errors.push(`${label}: third-party assets need an HTTPS source URL.`);
     }
-    if (['CC-BY-4.0', 'licensed'].includes(asset?.license) && !asset?.attribution?.trim()) {
+    if (['CC-BY-4.0', 'CC-BY-SA-3.0', 'licensed'].includes(asset?.license) && !asset?.attribution?.trim()) {
       errors.push(`${label}: record attribution/license terms.`);
     }
     if (typeof asset?.file !== 'string' || !/^public\/models\/.+\.glb$/.test(asset.file) || asset.file.includes('\\')) {
