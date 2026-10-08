@@ -1,0 +1,96 @@
+/* Resource HUD and the single toolbar above the city. */
+.realm-shell{grid-template-rows:80px minmax(0,1fr) 26px}
+.realm-shell .brand-home{height:80px}
+.realm-shell .realm-topbar{display:grid;grid-template-columns:minmax(100px,1fr) minmax(520px,840px) minmax(100px,1fr);gap:20px;padding:0 24px;background:#181c24}
+.realm-shell .realm-brand{display:block;min-width:0}
+.realm-shell .realm-brand strong{font-size:20px;letter-spacing:3px}
+.realm-shell .ruler{justify-self:end;margin:0}
+.realm-shell .resource-strip.resource-hud{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;width:100%;margin:0}
+.realm-shell .resource-hud .resource{display:flex;gap:12px;min-width:0;min-height:64px;width:100%;padding:9px 12px;border:1px solid #ffffff10;border-radius:9px;background:#ffffff03;text-align:left;color:#e5e9f2}
+.realm-shell .resource-hud .resource:hover{background:#ffffff08;border-color:#ffffff28}
+.realm-shell .resource-symbol{width:32px;height:36px;display:grid;place-items:center;flex:none;color:#d4b48a}
+.realm-shell .resource-stone .resource-symbol{color:#b5bdce}
+.realm-shell .resource-food .resource-symbol{color:#e8c37a}
+.realm-shell .resource-gold .resource-symbol{color:#f0d490}
+.realm-shell .resource-readout{display:flex;flex-direction:column;flex:1;gap:5px;min-width:0}
+.realm-shell .resource-caption{display:flex;justify-content:space-between;align-items:center;gap:7px;color:#bcc5d5;font-size:11px;line-height:1.1;white-space:nowrap}
+.realm-shell .resource-income{font-size:10px;color:#9faac0;font-variant-numeric:tabular-nums}
+.realm-shell .resource-amount{display:flex;align-items:baseline;gap:5px;white-space:nowrap}
+.realm-shell .resource-amount strong{font:700 17px/1 'Open Sans',Arial,sans-serif;letter-spacing:-.02em;color:#f0f2f7;font-variant-numeric:tabular-nums}
+.realm-shell .resource-amount>span{font-size:10px;color:#9faac0;letter-spacing:0;font-variant-numeric:tabular-nums}
+.realm-shell .resource-capacity{display:block;height:4px;border:0;border-radius:4px;overflow:hidden;background:#ffffff10;width:100%;margin:1px 0 0}
+.realm-shell .resource-capacity i{display:block;height:100%;border-radius:4px;background:#8da5db}
+.realm-shell .resource.full .resource-capacity i{background:#d9b578}
+.realm-shell .resource.full .resource-amount strong{color:#f0f2f7}
+.realm-shell .resource.shortage .resource-income{color:#ffb0a0}
+.realm-shell .resource.shortage:not(.full) .resource-capacity i{background:#dba091}
+.realm-shell .city-column{container-type:inline-size}
+.realm-shell .city-toolbar{position:relative;display:flex;align-items:center;gap:24px;flex:none;min-height:66px;padding:12px 24px;background:#181c24;border-bottom:1px solid #ffffff16;z-index:7}
+.realm-shell .city-identity{min-width:0;max-width:300px;flex:1}
+.realm-shell .city-identity h1{font:700 19px/1.2 'Open Sans',Arial,sans-serif;letter-spacing:-.025em;margin:0 0 5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#f0f2f7}
+.realm-shell .city-identity>span{font-size:11px;color:#a6adbe;white-space:nowrap}
+.realm-shell .city-identity i{font-style:normal;margin:0 8px;color:#666f81}
+.realm-shell .city-view-switch{display:flex;gap:4px;flex:none;padding:0;align-items:center}
+.realm-shell .city-view-switch button{display:flex;align-items:center;gap:7px;min-height:38px;padding:8px 13px;border:1px solid transparent;border-radius:7px;background:transparent;color:#a6adbe;font-size:12px}
+.realm-shell .city-view-switch button[aria-pressed=true]{background:#96adff13;border-color:#96adff35;color:#c4d0f6}
+.realm-shell .city-view-switch button:hover{background:#ffffff07;color:#f0f2f7}
+.realm-shell .city-build-button{display:flex;align-items:center;justify-content:center;gap:8px;min-height:38px;min-width:76px;padding:7px 12px;border:1px solid #96adff40;border-radius:7px;background:#96adff14;color:#c4d0f6;font-size:12px;white-space:nowrap;flex:none}
+.realm-shell .city-build-button>span{font-size:21px;line-height:1}
+.realm-shell .city-build-button:disabled{border-color:#ffffff10;background:transparent;color:#9faac0;opacity:1}
+.realm-shell .city-build-button:hover:not(:disabled){background:#96adff24;border-color:#96adff80}
+.realm-shell .city-overview-compact{border:0;background:transparent;margin:0 0 0 auto;flex:none;overflow:visible}
+.realm-shell .city-overview-compact .city-economy-details>summary{min-height:38px;padding:0;gap:18px;flex-wrap:nowrap}
+.realm-shell .city-overview-compact .city-economy-details>summary>span:not(.economy-expand){display:flex;flex-direction:column;gap:4px}
+.realm-shell .city-overview-compact .city-economy-details>summary small{font-size:10px;color:#a6adbe}
+.realm-shell .city-overview-compact .city-economy-details>summary strong{font-size:12px;color:#f0f2f7;white-space:nowrap}
+.realm-shell .city-overview-compact .city-economy-details>summary em{font-size:11px}
+.realm-shell .city-overview-compact .economy-expand{color:#a6adbe;font-size:12px;margin:0;padding:10px 0;white-space:nowrap}
+.realm-shell .city-overview-compact .city-economy-content{position:absolute;top:100%;right:12px;left:12px;max-height:min(400px,65dvh);background:#181c24;border:1px solid #444b60;border-radius:0 0 10px 10px;box-shadow:0 12px 30px #0005;z-index:8}
+.realm-shell .city-overview-compact .city-economy-details[open] .economy-expand{color:#c4d0f6}
+@container(max-width:760px){
+ .realm-shell .city-toolbar{flex-wrap:wrap;gap:10px 16px;padding:12px 16px}
+ .realm-shell .city-identity{max-width:none;flex:1}
+ .realm-shell .city-view-switch{margin-left:auto}
+ .realm-shell .city-overview-compact{flex:1;flex-basis:calc(100% - 96px);margin-left:0}
+ .realm-shell .city-overview-compact .city-economy-details>summary{justify-content:flex-start}
+ .realm-shell .city-overview-compact .economy-expand{margin-left:0}
+}
+@media(max-width:1200px){
+ .realm-shell .realm-topbar{grid-template-columns:85px minmax(0,1fr) 100px;padding:0 16px;gap:12px}
+ .realm-shell .resource-strip.resource-hud{gap:7px}
+ .realm-shell .resource-hud .resource{gap:8px;padding:8px}
+ .realm-shell .resource-symbol{width:24px}
+ .realm-shell .resource-symbol svg{width:23px;height:23px}
+}
+@media(max-width:1000px){
+ .realm-shell .realm-topbar{grid-template-columns:75px minmax(0,1fr)}
+ .realm-shell .ruler{display:none}
+ .realm-shell .resource-hud .resource{gap:6px;padding:8px}
+ .realm-shell .resource-symbol{width:20px}
+}
+@media(max-width:760px){
+ .realm-shell{grid-template-rows:80px minmax(0,1fr)}
+ .realm-shell .realm-topbar{grid-template-columns:minmax(0,1fr) 34px;padding:0 8px;gap:4px}
+ .realm-shell .realm-brand{display:none}
+ .realm-shell .resource-strip.resource-hud{gap:5px}
+ .realm-shell .resource-hud .resource{min-height:64px;gap:7px;padding:8px}
+ .realm-shell .resource-symbol{width:20px}
+ .realm-shell .resource-income{font-size:10px}
+ .realm-shell .resource-amount strong{font-size:15px}
+ .realm-shell .city-toolbar{min-height:66px}
+ .realm-shell .city-identity h1{font-size:17px}
+ .realm-shell .city-view-switch button{font-size:11px;padding:8px 10px;gap:5px}
+}
+@media(max-width:560px){
+ .realm-shell .resource-hud .resource{position:relative;min-height:65px;padding:8px 7px;gap:0}
+ .realm-shell .resource-symbol{display:none}
+ .realm-shell .resource-caption{font-size:10px}
+ .realm-shell .resource-income{display:none}
+ .realm-shell .resource-amount{display:flex;flex-wrap:wrap;gap:3px 4px}
+ .realm-shell .resource-amount strong{font-size:14px}
+ .realm-shell .resource-amount>span{font-size:9px}
+ .realm-shell .resource-readout{gap:5px}
+ .realm-shell .city-toolbar{padding:10px 12px;gap:8px 12px}
+ .realm-shell .city-view-switch button{padding:7px 9px}
+ .realm-shell .city-view-switch svg{display:none}
+}

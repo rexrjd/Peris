@@ -8,18 +8,18 @@ import {Icon} from '../../../shared/ui/Icons';
 const format=(n:number)=>n.toLocaleString(undefined,{maximumFractionDigits:1});
 const signed=(n:number)=>(n>=0?'+':'')+format(n);
 const duration=(minutes:number)=>minutes<1?'under 1 min':minutes<60?`${Math.ceil(minutes)} min`:`${format(minutes/60)} hr`;
-export function CityOverview({world,sid,now,onSelect}:{world:World;sid:number;now:number;onSelect:(key:string)=>void}){
+export function CityOverview({world,sid,now,onSelect,compact=false}:{world:World;sid:number;now:number;onSelect:(key:string)=>void;compact?:boolean}){
  const source=world.settlements.find(s=>s.id===sid)!,town=projectSettlement(source,now),population=town.population??30,cap=town.population_capacity??40,jobs=town.workers_required??0,staff=Math.min(1,population/Math.max(1,jobs)),growth=populationGrowth(town),slots=citySlots(world,sid);
  const empty=Array.from({length:slotCount(mainLevel(world,sid))},(_,i)=>i).find(i=>!slots.some(s=>s.slot_index===i));
  const sources=Object.entries(WORKERS_PER_LEVEL).flatMap(([type,workers])=>{
   const level=type==='fishery'?slots.filter(s=>s.building_type==='fishery').reduce((n,s)=>n+s.level,0):world.buildings.find(b=>b.settlement_id===sid&&b.building_type===type)?.level??0;
   return level?[{type,name:type==='fishery'?'Fishery':BUILDINGS[type as keyof typeof BUILDINGS].name,workers:workers*level}]:[];
  });
- return <section className="city-overview" aria-label="City economy overview"><details className="city-economy-details"><summary>
- <span><small>Residents</small><strong>{Math.floor(population)} <em>/ {cap}</em></strong></span>
- <span><small>Staffing</small><strong className={staff<1?'economy-warning':''}>{Math.round(staff*100)}%</strong></span>
- <span><small>Food / min</small><strong className={town.food_rate<0?'economy-warning':''}>{signed(town.food_rate)}</strong></span>
- <span className="economy-expand">Economy details <b aria-hidden="true">⌄</b></span>
+ return <section className={`city-overview ${compact?'city-overview-compact':''}`} aria-label="City economy overview"><details className="city-economy-details"><summary>
+ <span className="economy-residents"><small>Residents</small><strong>{Math.floor(population)} <em>/ {cap}</em></strong></span>
+ <span className="economy-staffing"><small>Staffing</small><strong className={staff<1?'economy-warning':''}>{Math.round(staff*100)}%</strong></span>
+ {!compact&&<span><small>Food / min</small><strong className={town.food_rate<0?'economy-warning':''}>{signed(town.food_rate)}</strong></span>}
+ <span className="economy-expand">{compact?'Economy':'Economy details'} <b aria-hidden="true">⌄</b></span>
  </summary><div className="city-economy-content"><div className="overview-heading"><strong>City overview</strong><span>Income and food consumption per minute</span></div>
  <div className="city-stat-grid"><div className="city-stat"><small>RESIDENTS / ROOM</small><strong>{Math.floor(population)} <span>/ {cap}</span></strong><div className="stat-meter"><i style={{width:`${population/cap*100}%`}}/></div><span className={growth<0?'economy-warning':''}>{growth>0?'+1 resident / min':growth<0?'−1 resident / min · food shortage':population>=cap-.001?'Housing is full':town.food<=.001?'Growth paused · no food':'Population stable'}</span></div>
  <div className="city-stat"><small>PRODUCTION WORKERS</small><strong>{Math.min(Math.floor(population),jobs)} <span>/ {jobs} needed</span></strong><span>{jobs>population?`${Math.ceil(jobs-population)} workers missing`:`${Math.max(0,Math.floor(population)-jobs)} available workers`}</span><b className={staff<1?'economy-warning':'economy-positive'}>{Math.round(staff*100)}% staffing</b></div>
