@@ -23,15 +23,16 @@ Pending local verification:
 - Local Codex project trust, PATH/executable discovery, and MCP connections must be checked on Windows. Context7 service access/authentication and Blender localhost:9876 are not established by the launcher checks.
 - GPU frame rates, large animated armies, real mobile rendering and production deployment are not measured or changed by this toolkit.
 
-GitHub publishing was blocked: the connected integration returned HTTP 403 "Resource not accessible by integration" for tree and branch creation, despite the user account's repository push permission. No remote branch, commit or PR was created. A transfer patch is supplied so local Codex can apply these changes and push a draft PR from the user's authenticated checkout.
+The initial cloud GitHub integration returned HTTP 403 "Resource not accessible by integration" for tree and branch creation. The toolkit was subsequently committed as `a8565f6` in the `hjhjhj` checkout and recovered into the intended local checkout for verification and publication.
 
 Keep that PR a draft until local browser and Blender checks complete. No production SQL, hosting deployment, history migration, or finished 3D battlefield is part of this change.
 
 ## Local Windows verification — 2026-10-08
 
-- Applied cleanly to a new branch from `main`; the checkout had no uncommitted edits.
-- Installed locked npm dependencies using a temporary Node.js 22.21.1 runtime. `setup:dev` installed local Git LFS hooks and downloaded Playwright Chromium. Node.js LTS 24.20.0 was then installed for this Windows user via WinGet, which updated the user PATH; a new shell or VS Code restart is needed to pick it up.
-- Passed: 158 gameplay tests (one worker), three tooling tests, asset inventory, TypeScript/Vite production build, world and SQL consistency, upgrade database integration, and fresh-install database integration.
-- Chromium smoke run: desktop Canvas compatibility map passed. Desktop quick battle timed out after its deployment capture; the failure screenshot was blank. Desktop WebGL map timed out during browser context teardown. The run was stopped before mobile cases. Browser rendering is not yet verified on this machine.
-- Blender MCP `get_addon_status` could not connect, and TCP localhost:9876 was closed. Start the add-on server in Blender and retry. `uvx` was found by the elevated setup process, but not by the initial sandboxed PATH check.
-- Context7 launcher was invoked, but no service response or tool call was verified in this session.
+- Recovered the exact `a8565f6` commit onto `codex/peris-development-toolkit` in the intended checkout. Its original `mehdi/map-overhaul` branch was clean and preserved.
+- Installed locked dependencies with Node.js 24.20.0. `setup:dev` installed local Git LFS hooks and confirmed Chromium, `uvx`, and Git LFS. This shell needed the installed Node/uv directories added to PATH explicitly; restart VS Code if the commands are not discovered.
+- Passed: 158 gameplay tests, three tooling tests, asset inventory, world and SQL consistency, upgrade and fresh-install database suites, and the TypeScript/Vite production build.
+- Passed all six desktop/mobile Chromium smoke cases after scoping the battle-result button to its dialog, checking the mobile battle transition through the visible Pause control, and allowing the slow desktop WebGL case 120 seconds. Captured desktop/mobile deployment, paused battle, WebGL map, and Canvas compatibility screenshots were inspected. These checks do not measure a physical phone or GPU frame rate.
+- The Playwright MCP launcher completed initialization and exposed browser tools. Context7 completed an actual React library lookup. Project trust/restart is still needed for these project MCP definitions to appear in Codex itself.
+- Blender's add-on server was not listening at `localhost:9876`; a live MCP connection and export in the user's Blender version remain pending. Start its server in Blender before relying on the character pipeline.
+- `npm ci` reported four high-severity dependency advisories. Dependency remediation was not part of this toolkit verification.

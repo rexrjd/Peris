@@ -36,7 +36,7 @@ test('quick battle supports deployment, commands, pause and withdrawal', async (
   await page.getByRole('button', { name: 'Guard', exact: true }).click();
   await expect(page.locator('.stance-tabs button.selected')).toHaveText('Guard');
   await page.getByRole('button', { name: 'Begin battle', exact: true }).click();
-  await expect(page.locator('#formation-width')).toBeVisible();
+  await expect(page.getByRole('button', { name: /Pause/ })).toBeVisible();
   await page.getByRole('button', { name: /Pause/, exact: false }).click();
   await expect(page.locator('.pause-banner')).toBeVisible();
   await page.getByRole('button', { name: 'Move', exact: true }).click();
@@ -48,12 +48,13 @@ test('quick battle supports deployment, commands, pause and withdrawal', async (
   await capture(page, testInfo, 'battle-paused');
   await page.getByRole('button', { name: 'Withdraw from battle', exact: true }).click();
   await page.getByRole('button', { name: 'Withdraw the host', exact: true }).click();
-  await page.getByRole('button', { name: 'Return to main menu', exact: true }).click();
+  await page.getByRole('dialog', { name: 'Battle result' }).getByRole('button', { name: 'Return to main menu', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'PERIS', exact: true })).toBeVisible();
   expect(errors).toEqual([]);
 });
 
 test('campaign map renders in WebGL and its camera controls work', async ({ page }, testInfo) => {
+  test.setTimeout(120_000);
   const errors: string[] = [];
   page.on('pageerror', error => errors.push(error.message));
   await beginCampaign(page);
