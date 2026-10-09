@@ -47,12 +47,13 @@ test('economy details start collapsed while live population and food remain visi
   assert.ok(html.includes('Workers and production details'));
 });
 
-test('city opens on the scene, with secondary tools collapsed and upgrade action available', () => {
+test('city opens on the scene with a construction dock and no permanent inspector', () => {
   const world = createSolo('Builder');
   const html = renderToStaticMarkup(React.createElement(SettlementView, { world, playerId: world.players[0].id, now: Date.parse(world.server_now), busy: false, run: () => {} }));
   assert.ok(html.includes('Low-poly city with selectable plots'));
   assert.ok(!html.includes('class="building-browser"'));
-  assert.ok(html.includes('Construct building'));
-  assert.ok(/<details class="city-tools">/.test(html));
-  assert.ok(html.includes('City settings &amp; debug'));
+  assert.ok(html.includes('city-action-dock'));
+  assert.ok(html.includes('city-build-button'));
+  assert.ok(!html.includes('city-inspector'));
+  assert.ok(!html.includes('class="detail-panel'));
 });

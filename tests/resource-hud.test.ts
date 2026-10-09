@@ -45,16 +45,19 @@ test('compact city summary avoids repeating food income while retaining its deta
   assert.ok(html.includes('FOOD BALANCE'));
 });
 
-test('city identity, view switch and economy live in one toolbar before the scene', () => {
+test('city keeps identity and economy above the scene, with view/build controls in the dock', () => {
   const world = createSolo('Builder');
   const html = renderToStaticMarkup(React.createElement(SettlementView, {
     world, playerId: world.players[0].id, now: Date.parse(world.server_now), busy: false, run: () => {},
   }));
   const toolbar = html.slice(html.indexOf('<header class="city-toolbar">'), html.indexOf('</header>'));
   assert.ok(toolbar.includes('city-identity'));
-  assert.ok(toolbar.includes('city-view-switch'));
+  assert.ok(!toolbar.includes('city-view-switch'));
+  assert.ok(html.includes('city-action-dock'));
+  assert.ok(html.includes('city-view-switch'));
   assert.ok(toolbar.includes('city-overview-compact'));
-  assert.ok(toolbar.includes('city-build-button'));
+  assert.ok(!toolbar.includes('city-build-button'));
+  assert.ok(html.includes('city-build-button'));
   assert.ok(!html.includes('city-workspace-tabs'));
   assert.ok(!html.includes('view-heading city-heading'));
   assert.ok(html.indexOf('</header>') < html.indexOf('city-3d-scene'));
