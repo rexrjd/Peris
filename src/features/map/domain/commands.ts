@@ -1,3 +1,5 @@
+import { commandArmy } from '../../empire/domain/context';
+import { heroBonuses } from '../../heroes/domain/heroes';
 import { type Command, type LocalCommandContext } from '../../../shared/model/commands';
 import { soldierTotal } from '../../army/domain/units';
 import { armyPosition } from './movement';
@@ -7,8 +9,8 @@ import { isWalkable } from './worldGrid';
 export function marchArmy(context: LocalCommandContext, cmd: Extract<Command, {
     type: 'move' | 'raid';
 }>) {
-    const w = context.world, a = w.armies[0], now = context.now, clock = Date.parse(now);
-    if (w.orders.some(o => o.kind === 'recruit'))
+    const w = context.world, a = commandArmy(context), now = context.now, clock = Date.parse(now);
+    if (w.orders.some(o => o.kind === 'recruit' && (o.army_id ?? w.armies[0].id) === a.id))
         throw new Error('Let the training queue finish before marching.');
     let x: number, y: number, raidTargetId: number | null = null;
     if (cmd.type === 'raid') {
@@ -31,7 +33,7 @@ export function marchArmy(context: LocalCommandContext, cmd: Extract<Command, {
     if (!isWalkable(Math.floor(x / CELL_SIZE), Math.floor(y / CELL_SIZE))) throw new Error('Land armies cannot march across the sea.');
     const pos = wrapWorldPoint(armyPosition(a, clock)), route = findMarchPath(pos, { x, y });
     if (!route) throw new Error('No connected land route reaches this destination.');
-    const seconds = Math.max(2, route.distance / 22);
+    const seconds = Math.max(2, route.distance / (22 * heroBonuses(w, a).speed));
     // Every guard and route calculation succeeds before the existing army changes.
     a.raid_target_id = raidTargetId;
     a.march_path = route.path;

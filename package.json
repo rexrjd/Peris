@@ -20,6 +20,7 @@
     "test:factions-db": "node tests/factions-database.test.mjs",
     "test:territory-db": "node tests/map-territory-database.test.mjs",
     "test:map-db": "node tests/map-snapshot-database.test.mjs",
+    "test:empire-db": "node --import tsx tests/empire-heroes-database.test.mjs",
     "test:population-db": "node --import tsx tests/population-database.test.mjs"
   },
   "dependencies": {

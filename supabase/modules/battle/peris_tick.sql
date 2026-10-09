@@ -76,8 +76,8 @@ begin
  melee_arc:=case when f.unit_type='archers' and distance<=65 then 0.28 else 1 end;
  difficulty_mult:=case when f.owner_id is null then case b.difficulty when 'hard' then 1.13 when 'easy' then 0.8 else 1 end else 1 end;
  rate:=case f.unit_type when 'infantry' then 0.020 when 'archers' then 0.012 else 0.031 end;
- damage:=f.damage_pool+f.soldiers*f.attack_multiplier*f.magic_attack*(1-t.magic_defence)*rate*matchup*stance_mult*defence*brace*flank*charge*cover*elevation*melee_arc*difficulty_mult*(0.55+f.stamina/220)*dt;
- if charge>1 then damage:=damage+f.soldiers*0.06*brace*flank*(1-t.magic_defence);end if;
+ damage:=f.damage_pool+f.soldiers*f.attack_multiplier*f.magic_attack*(1-t.magic_defence)*rate*matchup*stance_mult*defence*brace*flank*charge*cover*elevation*melee_arc*difficulty_mult*(0.55+f.stamina/220)*dt/t.defence_multiplier;
+ if charge>1 then damage:=damage+f.soldiers*0.06*brace*flank*(1-t.magic_defence)/t.defence_multiplier;end if;
  cas:=least(greatest(0,t.soldiers-coalesce((pending->t.id::text->>'loss')::integer,0)),floor(damage)::integer);mor_loss:=cas::numeric/greatest(1,t.initial_soldiers)*85+case when flank>1 then cas*1.2 else 0 end+case when charge>1 then 12 else 0 end;
  update public.battle_formations set damage_pool=damage-cas,kills=kills+cas,charge_ready=case when charge>1 then false else charge_ready end,
  stamina=case when charge>1 then greatest(0,stamina-12) else stamina end where id=f.id;

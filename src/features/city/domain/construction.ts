@@ -17,6 +17,7 @@ export function upgradeSeconds(level: number) {
 }
 
 export function completeUpgrade(w: World, s: Settlement, p: Player, o: Order) {
+    s.development_points=(s.development_points??0)+1;
     if (o.item.startsWith('slot:')) {
         const index=Number(o.item.split(':')[1]);
         const slot=w.city_slots?.find(slot=>slot.settlement_id===s.id && slot.slot_index===index);

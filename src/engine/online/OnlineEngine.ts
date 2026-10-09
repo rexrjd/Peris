@@ -64,7 +64,7 @@ export class OnlineEngine implements GameEngine {
         this.channel = supabase.channel(`peris-world-${playerId}`);
         const own = `owner_id=eq.${playerId}`;
         // No global subscription: a distant ruler's orders do not wake this client.
-        for (const table of ['peris_map_plots', 'settlements', 'armies', 'battle_formations', 'peris_orders', 'peris_reports']) this.watch(table, own);
+        for (const table of ['peris_map_plots', 'settlements', 'armies', 'battle_formations', 'peris_orders', 'peris_reports', 'peris_heroes', 'peris_hero_artifacts', 'peris_settler_expeditions']) this.watch(table, own);
         this.watch('players', `id=eq.${playerId}`);
         if (town) this.watch('buildings', `settlement_id=eq.${town.id}`);
         for (const table of ['battles', 'peris_challenges']) {
@@ -208,12 +208,12 @@ export class OnlineEngine implements GameEngine {
         // sending the RPC, so installing this client cannot misdirect an army.
         let prepared = cmd;
         if (cmd.type === 'move') {
-            prepared = { type: 'move', x: cmd.x, y: cmd.y };
+            prepared = { ...cmd };
             if (this.core.map ? !currentMap(this.core.map) : cmd.x < 45 || cmd.x > 1155 || cmd.y < 55 || cmd.y > 715) throw new Error(WORLD_UPGRADE);
             const target = wrapWorldPoint({ x: Math.round(cmd.x), y: Math.round(cmd.y) });
             if (!isWalkable(Math.floor(target.x / CELL_SIZE), Math.floor(target.y / CELL_SIZE))) throw new Error('Land armies cannot march across the sea.');
             if (currentMap(this.core.map)) {
-                const army = this.core.armies.find(a => a.owner_id === this.playerId);
+                const army = this.core.armies.find(a => a.owner_id === this.playerId && (cmd.armyId===undefined||a.id===cmd.armyId));
                 if (!army) throw new Error('Army not found.');
                 const offset = Date.parse(this.core.server_now) - this.lastCoreSnapshotAt;
                 const route = findMarchPath(armyPosition(army, Date.now() + offset), target);
@@ -221,9 +221,19 @@ export class OnlineEngine implements GameEngine {
                 prepared = { ...cmd, ...target, route: route.path };
             }
         }
+        if (cmd.type === 'raid' && currentMap(this.core.map)) {
+            const army = this.core.armies.find(a => a.owner_id === this.playerId && (cmd.armyId === undefined || a.id === cmd.armyId));
+            const camp = this.core.camps.find(c => c.id === cmd.campId);
+            if (!army || !camp) throw new Error('Choose your army and a campaign camp.');
+            const offset = Date.parse(this.core.server_now) - this.lastCoreSnapshotAt;
+            const route = findMarchPath(armyPosition(army, Date.now() + offset), camp);
+            if (!route) throw new Error('No connected land route reaches this camp.');
+            prepared = { ...cmd, armyId: army.id, route: route.path };
+        }
         if ((cmd.type === 'claimField' || cmd.type === 'buildField') && !currentMap(this.core.map)) throw new Error(WORLD_UPGRADE);
+        if(cmd.type==='foundCity'){const city=this.core.settlements.find(s=>s.owner_id===this.playerId&&(cmd.settlementId===undefined||s.id===cmd.settlementId));if(!city)throw new Error('Choose your city.');const route=findMarchPath(city,{x:((cmd.col+100)%200+200)%200*128-12800+64,y:((cmd.row+100)%200+200)%200*128-12800+64});if(!route)throw new Error('No connected land route reaches this site.');prepared={...cmd,route:route.path};}
         const { fn, args } = rpcCommand(prepared), { error } = await this.rpc(fn, args);
-        if (error) throw new Error(error.message);
+        if (error) throw new Error(error.code==='PGRST202'&&fn==='peris_empire_command'?'Install supabase/UPGRADE_TO_V10.sql to enable cities, settlers and hero-led armies.':error.message);
         await this.refresh();
     };
     destroy = () => {

@@ -1,3 +1,4 @@
+import { EmpirePanel } from '../features/empire/ui/EmpirePanel';
 import { useEffect } from 'react';
 import { useMemo } from 'react';
 import { useRef } from 'react';
@@ -107,7 +108,13 @@ function Realm({ engine, onExit, onLoad, onRetry }: {
         window.addEventListener('pointerdown',outside); window.addEventListener('keydown',escape);
         return () => { window.removeEventListener('pointerdown',outside); window.removeEventListener('keydown',escape); };
     }, []);
-    const player = world.players.find(p => p.id === engine.playerId)!, town = world.settlements.find(s => s.owner_id === engine.playerId)!, done = conquered(world, engine.playerId), active = world.battles.find(b => b.status === 'active');
+    const [cityId,setCityId]=useState<number>(),[armyId,setArmyId]=useState<number>(),[empireOpen,setEmpireOpen]=useState(false);
+    const ownedCities=world.settlements.filter(s=>s.owner_id===engine.playerId), ownedArmies=world.armies.filter(a=>a.owner_id===engine.playerId);
+    const town=ownedCities.find(s=>s.id===cityId)??ownedCities[0], selectedArmy=ownedArmies.find(a=>a.id===armyId)??ownedArmies[0];
+    const chooseCity=(id:number)=>{if(ownedCities.some(s=>s.id===id)){setCityId(id);setMoveMode(false);}};
+    const chooseArmy=(id:number)=>{if(ownedArmies.some(a=>a.id===id)){setArmyId(id);setMoveMode(false);}};
+    const selectMap=(next:MapSelection)=>{setSelection(next);if(next?.kind==='army')chooseArmy(next.id);if(next?.kind==='settlement')chooseCity(next.id);};
+    const player = world.players.find(p => p.id === engine.playerId)!, done = conquered(world, engine.playerId), active = world.battles.find(b => b.status === 'active');
     const identity = `${player.id}:${player.created_at}`, welcomeKey = `peris-welcome:${identity}`, endingKey = `peris-ending:${identity}`;
     const [welcome, setWelcome] = useState(() => engine.mode === 'solo' && !readFlag(welcomeKey) && player.victories === 0 && player.upgrades === 0 && player.recruits === 0), [endingSeen, setEndingSeen] = useState(() => readFlag(endingKey)), [seenReports] = useState(() => new Set(world.battles.filter(b => b.status === 'resolved').map(b => b.id)));
     const offset = useMemo(() => Date.parse(world.server_now) - Date.now(), [world.server_now]), now = time + offset, resources = liveResources(town, now), projectedTown=projectSettlement(town,now), storage=(key:string)=>key==='food'?town.food_capacity??town.capacity:town.capacity, rate=(key:typeof RESOURCES[number])=>{const value=projectedTown[`${key}_rate`];return `${value>=0?'+':''}${value.toLocaleString(undefined,{maximumFractionDigits:1})}`;};
@@ -132,7 +139,7 @@ function Realm({ engine, onExit, onLoad, onRetry }: {
             return;
         for (const [id, old] of knownOrders.current) {
             if (!world.orders.some(o => o.id === id) && Date.parse(old.finish_at) <= Date.now() + offset) {
-                setNotice({ text: old.kind === 'upgrade' ? 'Construction complete. Your city has grown.' : `${old.quantity} new soldiers have joined the legion.`, error: false });
+                setNotice({ text: old.kind === 'upgrade' ? 'Construction complete. Your city has grown.' : old.kind==='settler' ? `${old.quantity} settlers are ready.` : old.kind==='field' ? 'Field construction complete.' : `${old.quantity} new soldiers have joined their army.`, error: false });
                 tone('success');
             }
         }
@@ -144,7 +151,7 @@ function Realm({ engine, onExit, onLoad, onRetry }: {
         if (cmd.type !== 'order')
             setBusy(true);
         try {
-            await engine.command(cmd);
+            await engine.command({...cmd,settlementId:cmd.settlementId??town.id,armyId:cmd.armyId??selectedArmy.id});
             if (message)
                 setNotice({ text: message, error: false });
             tone('order');
@@ -175,9 +182,9 @@ function Realm({ engine, onExit, onLoad, onRetry }: {
    <header className="realm-topbar game-header"><button className="game-brand" aria-label="Peris world map" onClick={()=>navigate('world')}>PERIS</button>
    <GameNavigation view={view} rewards={QUESTS.some(q=>player[q.stat]>=q.target&&!world.claims.some(c=>c.quest_id===q.id&&c.owner_id===engine.playerId))} onNavigate={navigate}/>
    <ResourceHud resources={resources} capacity={storage} rate={rate} onSelect={setResource}/>
-   <details ref={menuRef} className="realm-tools game-menu"><summary aria-label="Game menu"><Icon name="settings" size={19}/><span>Menu</span></summary><div><div className="game-menu-player"><strong>{player.display_name}</strong><small>{campaignRank(done.size)}</small></div><button onClick={event=>{event.currentTarget.closest('details')?.removeAttribute('open');setHelp(true);}}><Icon name="book" size={17}/>Codex</button><button onClick={event=>{event.currentTarget.closest('details')?.removeAttribute('open');setSettings(true);}}><Icon name="settings" size={17}/>Settings</button><button onClick={onExit}><Icon name="exit" size={17}/>Main menu</button><small className="game-save-status">{engine.mode==='online'?'Shared world':'Campaign saved automatically'}</small></div></details></header>
+   <details ref={menuRef} className="realm-tools game-menu"><summary aria-label="Game menu"><Icon name="settings" size={19}/><span>Menu</span></summary><div><div className="game-menu-player"><strong>{player.display_name}</strong><small>{campaignRank(done.size)}</small></div><button onClick={event=>{event.currentTarget.closest('details')?.removeAttribute('open');setEmpireOpen(true);}}><Icon name="town" size={17}/>Cities &amp; expansion</button><button onClick={event=>{event.currentTarget.closest('details')?.removeAttribute('open');setHelp(true);}}><Icon name="book" size={17}/>Codex</button><button onClick={event=>{event.currentTarget.closest('details')?.removeAttribute('open');setSettings(true);}}><Icon name="settings" size={17}/>Settings</button><button onClick={onExit}><Icon name="exit" size={17}/>Main menu</button><small className="game-save-status">{engine.mode==='online'?'Shared world':'Campaign saved automatically'}</small></div></details></header>
    <main className={`realm-content ${view === 'world' ? 'world-content' : view === 'settlement' ? 'city-content' : ''}`}>
-    {view === 'world' ? <WorldView world={world} playerId={engine.playerId} selection={selection} setSelection={setSelection} moveMode={moveMode} setMoveMode={setMoveMode} run={dispatch} busy={busy} now={now} clockOffset={offset} navigate={navigate} mapViewport={engine.setMapViewport?.bind(engine)}/> : view === 'settlement' ? <SettlementView world={world} playerId={engine.playerId} run={dispatch} busy={busy} now={now}/> : view === 'army' ? <ArmyView world={world} playerId={engine.playerId} run={dispatch} busy={busy} now={now}/> : <Chronicle world={world} playerId={engine.playerId} onReport={setReport} run={dispatch} onEnding={() => setEnding(true)}/>}
+    {view === 'world' ? <WorldView world={world} playerId={engine.playerId} selection={selection} setSelection={selectMap} cityId={town.id} armyId={selectedArmy.id} onCity={chooseCity} onArmy={chooseArmy} onEmpire={()=>setEmpireOpen(true)} moveMode={moveMode} setMoveMode={setMoveMode} run={dispatch} busy={busy} now={now} clockOffset={offset} navigate={navigate} mapViewport={engine.setMapViewport?.bind(engine)}/> : view === 'settlement' ? <SettlementView key={town.id} world={world} playerId={engine.playerId} cityId={town.id} onCity={chooseCity} onEmpire={()=>setEmpireOpen(true)} run={dispatch} busy={busy} now={now}/> : view === 'army' ? <ArmyView world={world} playerId={engine.playerId} cityId={town.id} armyId={selectedArmy.id} onCity={chooseCity} onArmy={chooseArmy} run={dispatch} busy={busy} now={now}/> : <Chronicle world={world} playerId={engine.playerId} onReport={setReport} run={dispatch} onEnding={() => setEnding(true)}/>}
    </main><footer className="realm-footer"><span>{engine.mode === 'online' ? 'THE SHARED WORLD' : 'THE SIX STANDARDS'}</span><span>{engine.mode === 'online' ? `${world.map?.total_players ?? world.players.length} rulers in the shared world` : 'Campaign saved automatically'}<button onClick={() => setHelp(true)}>The General's Codex</button></span></footer>
   </div>}
   {notice && <div className={`toast ${notice.error ? 'error' : ''}`} role="status"><Icon name={notice.error ? 'shield' : 'check'}/>{notice.text}<button aria-label="Dismiss notification" onClick={() => setNotice(null)}>×</button></div>}
@@ -188,8 +195,9 @@ function Realm({ engine, onExit, onLoad, onRetry }: {
   {report?.result && <Modal title="Battle result" className="result-modal" heading={false} onClose={() => closeReport('world')}><ResultBody result={report.result} won={report.winner_owner_id === engine.playerId} draw={report.winner_side === 'draw'} side={mySide(report, engine.playerId)} enemyName={report.enemy_name} formations={world.formations.filter(f => f.battle_id === report.id && f.owner_id === engine.playerId)} practice={engine.mode === 'practice'}/><div className="result-actions"><button className="button gold" onClick={() => closeReport('world')}>{engine.mode === 'practice' ? 'Return to main menu' : 'Continue the campaign'}<Icon name="arrow"/></button>{engine.mode === 'practice' ? <button className="button outline" onClick={onRetry}>Fight again</button> : <button className="button outline" onClick={() => closeReport('army')}>Reinforce the legion</button>}</div></Modal>}
   {welcome && <Welcome name={player.display_name} onClose={() => { writeFlag(welcomeKey); setWelcome(false); }}/>}
   {ending && !report && <CampaignEnding world={world} playerId={engine.playerId} onClose={closeEnding}/>}
+  {empireOpen && <EmpirePanel world={world} owner={engine.playerId} cityId={town.id} onCity={chooseCity} onClose={()=>setEmpireOpen(false)} run={dispatch} now={now} busy={busy} target={selection?.kind==='cell'?selection:undefined}/>}
   {help && <Codex onClose={() => setHelp(false)}/>}
-  {settings && <Settings world={world} playerId={engine.playerId} onClose={() => setSettings(false)} onLoad={engine.mode === 'solo' ? onLoad : undefined} run={dispatch}/>}
+  {settings && <Settings world={world} playerId={engine.playerId} cityId={town.id} onClose={() => setSettings(false)} onLoad={engine.mode === 'solo' ? onLoad : undefined} run={dispatch}/>}
   {resource && <Modal title={`${resource === 'wood' ? 'Timber' : resource[0].toUpperCase() + resource.slice(1)} supplies`} onClose={() => setResource(null)}><div className="resource-ledger"><Icon name={resource} size={48}/><strong>{resources[resource].toLocaleString()}<small>of {storage(resource).toLocaleString()} stored</small></strong></div><div className="progress-track"><i style={{ width: `${resources[resource] / storage(resource) * 100}%` }}/></div><div className="ledger-rate"><span>{resource==='food'?'Net food balance':'Production'}</span><strong>{rate(resource)} per minute</strong></div>{resource==='food'&&<p>{projectedTown.food_gross_rate?.toFixed(1)} food produced − {projectedTown.food_upkeep?.toFixed(1)} consumed by residents per minute.</p>}<p>Production continues while you are away. Improve {resource === 'wood' ? 'the timber yard' : resource === 'stone' ? 'the quarry' : resource === 'food' ? 'your wheat fields' : 'the forum'} for more income, build housing for more workers, or upgrade {resource==='food'?'granaries':'warehouses'} to store more supplies.</p><button className="button gold" onClick={() => { setResource(null); navigate('settlement'); }}>Develop the city <Icon name="arrow"/></button></Modal>}
  </>;
 }

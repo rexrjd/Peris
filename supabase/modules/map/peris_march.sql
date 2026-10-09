@@ -12,8 +12,8 @@ begin
  if count_points<2 or count_points>2000 then raise exception 'A march needs 2-2000 route points';end if;
  perform public.peris_settle(u);
  if exists(select 1 from public.battles where status='active' and (attacker_owner_id=u or defender_owner_id=u)) then raise exception 'Finish the current battle first';end if;
- if exists(select 1 from public.peris_orders where owner_id=u and kind='recruit') then raise exception 'Let training finish before marching';end if;
- select * into a from public.armies where owner_id=u for update;
+ if exists(select 1 from public.peris_orders where owner_id=u and army_id=public.peris_army_id(u) and kind='recruit') then raise exception 'Let training finish before marching';end if;
+ select * into a from public.armies where id=public.peris_army_id(u) for update;
  if a.id is null then raise exception 'Army not found';end if;
  position:=public.peris_army_position(a);
  px:=(position->>'x')::numeric;py:=(position->>'y')::numeric;
@@ -42,7 +42,7 @@ begin
   px:=x;py:=y;pcx:=cx;pcy:=cy;
  end loop;
  if px<>tx or py<>ty then raise exception 'Route must end at the chosen destination';end if;
- seconds:=greatest(2,distance/22);
+ seconds:=greatest(2,distance/(22*(public.peris_hero_bonuses(a.id)->>'speed')::numeric));
  update public.armies set start_x=round((position->>'x')::numeric),start_y=round((position->>'y')::numeric),target_x=tx,target_y=ty,
   march_path=route,march_distance=distance,march_map_version=4,departure_at=now(),arrival_at=now()+make_interval(secs=>seconds::double precision),
   status='moving',raid_target_id=null,updated_at=now() where id=a.id;

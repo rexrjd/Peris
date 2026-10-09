@@ -1,0 +1,72 @@
+.gameplay-card{padding:22px;background:#1b2029;border:1px solid #ffffff18;border-radius:12px;min-width:0}
+.gameplay-card h2,.gameplay-card h3{margin:8px 0 12px;font-size:19px}
+.gameplay-card p,.empire-intro{color:#aeb7c7;font-size:12px;line-height:1.7}
+.gameplay-card label{display:grid;gap:7px;margin:12px 0;color:#b9c1d0;font-size:11px}
+.gameplay-card :is(input,select){width:100%;min-width:0;min-height:38px;padding:8px 10px;font-size:12px;background:#151921;color:#edf0f5;border:1px solid #ffffff25;border-radius:7px}
+.gameplay-card>.button,.gameplay-card form>.button{width:100%;margin-top:14px}
+.gameplay-card .cost{margin:15px 0;font-size:12px}
+.gameplay-card>small,.gameplay-requirement{display:block;font-size:11px;line-height:1.6;color:#aeb7c7}
+.gameplay-card .eyebrow{font-size:10px;line-height:1.6}
+.realm-shell .army-view{max-width:1320px;margin-inline:auto}
+.army-context-switch{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}
+.army-context-switch label{display:flex;align-items:center;gap:8px;color:#aeb7c7;font-size:11px}
+.army-context-switch select{max-width:260px;padding:8px 12px;min-height:36px;font-size:12px}
+.hero-workspace{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(280px,1fr);gap:18px;margin:20px 0 28px}
+.hero-heading{display:flex;gap:14px;align-items:center}
+.hero-heading h2{margin:5px 0;font-size:20px}
+.hero-heading small{font-size:11px;color:#aeb7c7}
+.hero-crest{display:grid;place-items:center;flex:none;width:50px;height:56px;border:1px solid #d7c19b55;border-radius:12px;background:#d7c19b0b;color:#d7c19b;font-size:31px}
+.hero-experience{margin:18px 0}
+.hero-experience small{display:block;margin-top:8px;font-size:10px;color:#aeb7c7}
+.hero-attributes{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+.hero-attributes>div{display:grid;grid-template-columns:1fr auto;gap:6px;padding:10px;background:#ffffff03;border:1px solid #ffffff12;border-radius:8px}
+.hero-attributes span{grid-column:1/3;font-size:10px;color:#aeb7c7}
+.hero-attributes strong{font-size:21px}
+.hero-attributes button{width:25px;height:25px;min-height:0;padding:0;border:1px solid #d7c19b40;background:#d7c19b12;color:#e8d4b1;border-radius:5px;font-size:18px}
+.hero-equipment{display:grid;grid-template-columns:1fr 1fr;gap:0 12px;margin:18px 0}
+.hero-equipment label{margin:5px 0}
+.hero-equipment label:last-child{grid-column:1/3}
+.hero-class-picker{margin:20px 0;padding:0;border:0}
+.hero-class-picker legend{font-size:11px;color:#aeb7c7}
+.hero-class-picker label{display:flex;gap:9px;padding:10px;border:1px solid #ffffff18;border-radius:8px;margin:7px 0;cursor:pointer}
+.hero-class-picker label:has(input:checked){border-color:#d7c19b70;background:#d7c19b08}
+.hero-class-picker input{width:15px;height:15px;min-height:0;accent-color:#d7c19b;flex:none}
+.hero-class-picker small{display:block;margin-top:4px;font-size:10px;color:#aeb7c7;line-height:1.5}
+.hero-army-list{display:grid;gap:5px;margin-top:22px}
+.hero-army-list button{padding:10px 12px;text-align:left;background:transparent;border:1px solid #ffffff12;border-radius:7px;color:#edf0f5}
+.hero-army-list button[aria-pressed=true]{border-color:#d7c19b50;background:#d7c19b08}
+.hero-army-list small{display:block;margin-top:4px;font-size:10px;color:#aeb7c7}
+.gameplay-disclosure,.gameplay-debug{padding-top:16px;margin-top:18px;border-top:1px solid #ffffff16}
+.gameplay-disclosure summary,.gameplay-debug summary{font-size:12px;color:#c9cfdc;cursor:pointer}
+.gameplay-disclosure>.button{margin-top:12px;width:100%}
+.troop-transfer-inputs,.gameplay-coordinates{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.gameplay-coordinates{grid-template-columns:repeat(2,minmax(0,1fr))}
+.empire-modal{max-width:820px}
+.empire-summary{display:grid;grid-template-columns:1fr 1.5fr 1.2fr;gap:12px;margin-bottom:20px}
+.empire-summary strong{display:block;font-size:24px;margin-top:8px}
+.empire-summary small{font-size:11px;font-weight:400;color:#aeb7c7}
+.empire-cities{display:grid;gap:6px;margin:20px 0}
+.empire-cities button{display:flex;align-items:center;gap:12px;padding:12px;background:#ffffff03;border:1px solid #ffffff14;border-radius:8px;color:#edf0f5;text-align:left}
+.empire-cities button[aria-pressed=true]{background:#d7c19b08;border-color:#d7c19b60}
+.empire-cities button>span{flex:1;min-width:0}
+.empire-cities strong{font-size:12px}
+.empire-cities small{display:block;margin-top:5px;font-size:10px;color:#aeb7c7}
+.empire-expansion-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.empire-expeditions{margin-top:24px}
+.empire-expeditions>div{display:flex;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid #ffffff12}
+.empire-expeditions span{flex:1}
+.empire-expeditions small{display:block;font-size:10px;margin-top:5px;color:#aeb7c7}
+.empire-expeditions strong,.empire-expeditions b{font-size:12px}
+.gameplay-debug>.button{margin-top:14px}
+.gameplay-debug small{display:block;font-size:11px;margin-top:12px;color:#aeb7c7}
+.game-shell .city-stage .city-identity select{display:block;width:100%;max-width:240px;min-height:0;padding:0 16px 0 0;margin:0 0 5px;border:0;background:transparent;color:#edf0f5;font-size:15px;font-weight:700}
+.game-shell .city-action-dock .city-empire-button{min-height:40px;padding:8px 12px;border:1px solid #ffffff12;border-radius:7px;background:transparent;color:#d8c7a8;font-size:12px}
+.map-city-select{position:absolute;left:16px;top:68px;z-index:5;max-width:220px;padding:7px 11px;min-height:34px;border:1px solid #ffffff25;border-radius:8px;background:#1b2029f5;color:#c9cfdc;font-size:11px}
+.game-shell .scene-stage .march-status .army-map-select{width:100%;min-height:0;padding:0;border:0;background:transparent;color:#edf0f5;font-size:12px;font-weight:700;cursor:pointer}
+.game-shell .scene-stage .march-status:has(.army-map-select) .scene-legion-open{width:24px;flex:none}
+.game-shell .scene-stage .march-status .march-army-identity{display:flex;align-items:center;gap:8px;min-width:0}
+.game-shell .scene-stage .march-status .march-army-identity>div{min-width:0;flex:1}
+.army-map-select+small{font-size:9px;color:#aeb7c7;display:block;margin-top:5px}
+.game-shell .scene-stage:has(.map-city-select) .map-command-hint{top:112px}
+@container world-map (max-width:1050px){.map-city-select{top:118px}.game-shell .scene-stage:has(.map-city-select) .map-command-hint{top:162px}}
+@media(max-width:760px){.hero-workspace,.empire-expansion-grid{grid-template-columns:minmax(0,1fr)}.gameplay-card{padding:17px}.empire-summary strong{font-size:20px}.hero-attributes{grid-template-columns:repeat(2,1fr)}.hero-equipment{grid-template-columns:minmax(0,1fr)}.hero-equipment label:last-child{grid-column:auto}.game-shell .city-action-dock .city-empire-button{font-size:11px;padding-inline:8px}.map-city-select{left:12px;max-width:190px}.empire-summary .eyebrow{font-size:9px}}

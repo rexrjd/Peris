@@ -30,3 +30,5 @@
 @import './city-hud.css';
 @import './command-hud.css';
 @import '../../features/map/styles/hud.css';
+
+@import '../../features/empire/styles/gameplay.css';

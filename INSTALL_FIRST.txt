@@ -1,30 +1,20 @@
-PERIS v8 — FEATURE AND SYSTEM REFACTOR
+EMPIRE AND HEROES UPDATE — START HERE
 
-Apply the ZIP at your existing Peris repository root; replace files.
-Keep your Git repository and environment configuration.
+Replace the included files at matching repository paths.
+For an existing Supabase world, run supabase/UPGRADE_TO_V10.sql once in the SQL editor.
+For an empty Supabase database only, use supabase/FRESH_INSTALL_V10.sql.
+Do not use fresh installation on an existing world. Do not run older feature-only
+upgrade scripts after V10; use the complete V10 upgrade for current gameplay.
 
-IMPORTANT: files moved, so extracting a ZIP alone leaves obsolete modules.
-From the repository root run:
+Existing cities, armies, troops, accounts, queues and solo saves are retained.
+Menu > Cities & expansion opens culture, settlers and founding.
+Army opens commanders, artifacts, army selection and troop transfers.
+Read docs/empire-and-heroes.md for the rules and a fast local test flow.
 
-  node scripts/clean-legacy-paths.mjs
-  npm install
-  npm test
-  npm run build
+Run npm install and npm run build. npm run test:empire-db verifies the database
+rules in an isolated local PostgreSQL instance without contacting your server.
 
-On Windows use npm.cmd if needed. The cleanup only deletes known unchanged
-v5/v6/v7 source/art files. Personal edits are preserved and reported; move those
-old files outside src, then merge their edits into the new feature modules.
-The full-project ZIP is a clean tree and does not need cleanup if used fresh.
-
-The 200 x 200 continental map requires the updated database migration, including
-when upgrading v7/v8. Run the entire supabase/UPGRADE_TO_V8.sql in Supabase SQL
-Editor after reviewing it. It preserves accounts, world data, save keys and the
-v6 save format. An occupied position or saved route outside [-12800, 12800)
-aborts the upgrade with a manual migration error. It does not relocate or delete
-world entities or historical spawn sites. Review and plan that migration before
-retrying. Do not reset your world. Fresh install is for an empty DB only.
-See MAP_WORLD.md for the shared terrain mask, routed marches and upgrade details.
-No live database migration was executed during map development.
-
-Commit and push in GitHub Desktop; your existing Vercel project deploys it.
-ARCHITECTURE.md maps each gameplay system to its source files.
+If upgrading from an older pre-refactor source tree, run
+node scripts/clean-legacy-paths.mjs from the repository root first. It removes
+only recognized unchanged legacy files and preserves personal edits.
+Use npm.cmd on Windows if PowerShell blocks npm scripts.

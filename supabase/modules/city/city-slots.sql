@@ -38,11 +38,11 @@ begin
  select b.settlement_id,case b.building_type when 'barracks' then 0 when 'stables' then 1 else 2 end,
  case b.building_type when 'storehouse' then 'warehouse' else b.building_type end,b.level
  from public.buildings b join public.settlements s on s.id=b.settlement_id
- where b.settlement_id=p_sid and b.building_type in ('barracks','stables','storehouse') and (b.level>0 or exists(select 1 from public.peris_orders o where o.owner_id=s.owner_id and o.kind='upgrade' and o.item=b.building_type)) on conflict do nothing;
+ where b.settlement_id=p_sid and b.building_type in ('barracks','stables','storehouse') and (b.level>0 or exists(select 1 from public.peris_orders o where o.owner_id=s.owner_id and o.settlement_id=p_sid and o.kind='upgrade' and o.item=b.building_type)) on conflict do nothing;
  -- Preserve the food capacity of old combined storehouses as well.
  insert into public.peris_city_slots select p_sid,3,'granary',level from public.buildings where settlement_id=p_sid and building_type='storehouse' and level>0 on conflict do nothing;
  update public.peris_orders o set item='slot:'||(case item when 'barracks' then '0:barracks' when 'stables' then '1:stables' else '2:warehouse' end)
- where o.owner_id=(select owner_id from public.settlements where id=p_sid) and kind='upgrade' and item in ('barracks','stables','storehouse');
+ where o.settlement_id=p_sid and kind='upgrade' and item in ('barracks','stables','storehouse');
  update public.settlements set city_slots_ready=true where id=p_sid;
  perform public.peris_city_economy(p_sid);
 end $$;
@@ -52,11 +52,11 @@ begin
  if u is null then raise exception 'Authentication required';end if;
  perform public.peris_settle(u);
  if exists(select 1 from public.battles where status='active' and (attacker_owner_id=u or defender_owner_id=u)) then raise exception 'Finish the current battle first';end if;
- select * into s from public.settlements where owner_id=u for update;
+ select * into s from public.settlements where id=public.peris_city_id(u) for update;
  if s.id is null then raise exception 'Realm not found';end if;
  select level into main from public.buildings where settlement_id=s.id and building_type='market';
  if p_slot is null or p_slot<0 or p_slot<>16 and p_slot>=6+2*coalesce(main,0) then raise exception 'Upgrade the main building to unlock this plot';end if;
- if exists(select 1 from public.peris_orders where owner_id=u and kind='upgrade') then raise exception 'Your builders are already working';end if;
+ if exists(select 1 from public.peris_orders where owner_id=u and settlement_id=s.id and kind='upgrade') then raise exception 'Your builders are already working';end if;
  select level,building_type into l,t from public.peris_city_slots where settlement_id=s.id and slot_index=p_slot;
  if p_type is not null then
   if l is not null then raise exception 'This plot is already occupied';end if;

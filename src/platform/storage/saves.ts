@@ -1,3 +1,5 @@
+import { normalizeRealm } from '../../features/empire/domain/normalization';
+import { ARTIFACTS, HERO_CLASSES, HERO_STATS, heroPoints, heroThreshold, MAX_HERO_LEVEL } from '../../features/heroes/domain/heroes';
 import {settleLocal} from '../../features/campaign/domain/settlement';
 import {isFaction} from '../../features/factions/domain/factions';
 import { citySlots, refreshCityEconomy, SLOT_BUILDINGS, mainLevel, slotCount, slotMaxLevel } from '../../features/city/domain/slots';
@@ -23,7 +25,7 @@ export function readBackup(): World | null { try {
 catch {
     return null;
 } }
-export function validateSave(data: unknown): World {
+function validateLegacySave(data: unknown): World {
     const w = data as World, invalid = () => { throw new Error('This file is not a valid Peris campaign save.'); };
     if (!w || w.version !== 6 || !Array.isArray(w.players) || w.players.length !== 1 || w.players[0].id !== 'solo-ruler')
         invalid();
@@ -110,6 +112,7 @@ export function validateSave(data: unknown): World {
     }
     for(const f of w.formations)for(const [key,min,max] of [['magic_attack',1,1.5],['magic_defence',0,.4],['magic_speed',1,1.75]] as const)if(f[key]!==undefined&&(!Number.isFinite(f[key])||f[key]!<min||f[key]!>max))invalid();
     for(const b of w.battles)for(const key of ['mana_attacker','mana_defender','spell_ready_attacker','spell_ready_defender'] as const)if(b[key]!==undefined&&(!Number.isFinite(b[key])||b[key]!<0||b[key]!>1000))invalid();
+    for(const f of w.formations)if(f.defence_multiplier!==undefined&&(!Number.isFinite(f.defence_multiplier)||f.defence_multiplier<1||f.defence_multiplier>3))invalid();
     for (const date of [town.resources_updated_at, army.departure_at, army.arrival_at, player.created_at])
         if (!Number.isFinite(Date.parse(date)))
             invalid();
@@ -146,7 +149,7 @@ export function validateSave(data: unknown): World {
     if (army.infantry + army.archers + army.cavalry + w.orders.filter(o => o.kind === 'recruit').reduce((n, o) => n + o.quantity, 0) > 1000)
         invalid();
     for (const f of w.formations)
-        if (!['infantry', 'archers', 'cavalry'].includes(f.unit_type) || !['idle', 'moving', 'engaged', 'routed'].includes(f.status) || [f.x, f.y, f.soldiers, f.morale, f.stamina, f.facing, f.columns].some(n => !Number.isFinite(n)) || f.soldiers < 0 || f.soldiers > 1000 || f.attack_multiplier!==undefined && (!Number.isFinite(f.attack_multiplier) || f.attack_multiplier<1 || f.attack_multiplier>1.6))
+        if (!['infantry', 'archers', 'cavalry'].includes(f.unit_type) || !['idle', 'moving', 'engaged', 'routed'].includes(f.status) || [f.x, f.y, f.soldiers, f.morale, f.stamina, f.facing, f.columns].some(n => !Number.isFinite(n)) || f.soldiers < 0 || f.soldiers > 1000 || f.attack_multiplier!==undefined && (!Number.isFinite(f.attack_multiplier) || f.attack_multiplier<1 || f.attack_multiplier>4))
             invalid();
     if (w.battles.filter(b => b.status === 'active').length > 1 || w.battles.some(b => !['active', 'resolved'].includes(b.status) || !['deployment', 'combat', 'finished'].includes(b.phase) || !['plains', 'woods', 'highlands', 'river'].includes(b.terrain)))
         invalid();
@@ -163,6 +166,85 @@ export function validateSave(data: unknown): World {
     if(normalized.settlements[0].population===undefined)settleLocal(normalized,'solo-ruler',Date.now(),false);
     refreshCityEconomy(normalized,town.id);
     return normalized;
+}
+/** Reuse the route/terrain validator for each independent city and army. */
+export function validateSave(data: unknown): World {
+    const w=data as World, invalid=()=>{throw new Error('This file is not a valid Peris campaign save.');};
+    if(!w||w.version!==6||!Array.isArray(w.players)||w.players.length!==1||w.players[0]?.id!=='solo-ruler')invalid();
+    for(const key of ['settlements','armies','buildings','camps','orders','battles','formations','reports','progress','claims','challenges'] as const)
+        if(!Array.isArray(w[key])||w[key].length>15000||w[key].some(r=>!r||typeof r!=='object'))invalid();
+    if(w.settlements.length<1||w.settlements.length>10||w.armies.length<1||w.armies.length>20)invalid();
+    const cities=new Map(w.settlements.map(s=>[s.id,s])), armies=new Map(w.armies.map(a=>[a.id,a]));
+    if(cities.size!==w.settlements.length||armies.size!==w.armies.length||new Set(w.buildings.map(b=>b.id)).size!==w.buildings.length||new Set(w.orders.map(o=>o.id)).size!==w.orders.length)invalid();
+    for(const city of w.settlements){
+        if(!Number.isSafeInteger(city.id)||city.id<1||city.owner_id!=='solo-ruler'||typeof city.name!=='string'||city.name.length>32)invalid();
+        if(city.settlers!==undefined&&(!Number.isInteger(city.settlers)||city.settlers<0||city.settlers>6))invalid();
+        if(city.development_points!==undefined&&(!Number.isInteger(city.development_points)||city.development_points<0||city.development_points>1e9))invalid();
+    }
+    for(const army of w.armies)if(!Number.isSafeInteger(army.id)||army.id<1||army.owner_id!=='solo-ruler'||!cities.has(army.home_settlement_id)||typeof army.name!=='string'||army.name.length>80)invalid();
+    for(const building of w.buildings)if(!cities.has(building.settlement_id))invalid();
+    for(const key of ['city_slots','spell_research','map_plots','heroes','hero_artifacts','settler_expeditions'] as const)if(w[key]!==undefined&&!Array.isArray(w[key]))invalid();
+    for(const slot of w.city_slots??[])if(!cities.has(slot.settlement_id))invalid();
+    for(const research of w.spell_research??[])if(!cities.has(research.settlement_id))invalid();
+    const plotCells=new Set<string>();
+    for(const plot of w.map_plots??[]){const key=`${plot.col},${plot.row}`;if(!cities.has(plot.settlement_id)||plotCells.has(key))invalid();plotCells.add(key);}
+    const firstCity=w.settlements[0].id, firstArmy=w.armies[0].id;
+    for(const order of w.orders){
+        if(!cities.has(order.settlement_id??firstCity))invalid();
+        if(order.kind==='recruit'&&!armies.has(order.army_id??firstArmy))invalid();
+        if(order.kind==='settler'&&(order.owner_id!=='solo-ruler'||order.item!=='settlers'||!Number.isInteger(order.quantity)||order.quantity<1||order.quantity>3||!Number.isFinite(Date.parse(order.started_at))||!Number.isFinite(Date.parse(order.finish_at))||Date.parse(order.finish_at)<Date.parse(order.started_at)))invalid();
+    }
+    const normalized=structuredClone(w), migratedSlots=[] as NonNullable<World['city_slots']>;
+    for(const city of w.settlements){
+        const army=w.armies.find(a=>a.home_settlement_id===city.id)??{...w.armies[0],home_settlement_id:city.id};
+        const cultureUpgrades=w.settlements.length===1?w.players[0].upgrades:city.development_points??0;
+        const projected:World={...w,players:[{...w.players[0],upgrades:cultureUpgrades}],settlements:[city],armies:[army],buildings:w.buildings.filter(b=>b.settlement_id===city.id),city_slots:w.city_slots?.filter(s=>s.settlement_id===city.id),spell_research:w.spell_research?.filter(r=>r.settlement_id===city.id),map_plots:w.map_plots?.filter(p=>p.settlement_id===city.id),orders:w.orders.filter(o=>(o.settlement_id??firstCity)===city.id&&o.kind!=='settler'&&o.kind!=='recruit'),settler_expeditions:[]};
+        if(w.orders.filter(o=>(o.settlement_id??firstCity)===city.id&&o.kind==='settler').length>1)invalid();
+        if((city.settlers??0)+w.orders.filter(o=>(o.settlement_id??firstCity)===city.id&&o.kind==='settler').reduce((n,o)=>n+o.quantity,0)+3*(w.settler_expeditions??[]).filter(e=>e.origin_settlement_id===city.id&&e.status==='travelling').length>6)invalid();
+        const result=validateLegacySave(projected);
+        normalized.settlements[normalized.settlements.findIndex(s=>s.id===city.id)]=result.settlements[0];
+        migratedSlots.push(...result.city_slots??[]);
+    }
+    normalized.city_slots??=migratedSlots;
+    for(const army of w.armies){
+        const city=cities.get(army.home_settlement_id)!;
+        const orders=w.orders.filter(o=>o.kind==='recruit'&&(o.army_id??firstArmy)===army.id);
+        const projected:World={...w,settlements:[city],armies:[army],buildings:w.buildings.filter(b=>b.settlement_id===city.id),city_slots:[],spell_research:[],map_plots:[],orders,settler_expeditions:[]};
+        validateLegacySave(projected);
+    }
+    const player=w.players[0];
+    if(player.culture_points!==undefined&&(!Number.isFinite(player.culture_points)||player.culture_points<0||player.culture_points>1e9))invalid();
+    if(player.culture_updated_at!==undefined&&!Number.isFinite(Date.parse(player.culture_updated_at)))invalid();
+    if(w.heroes!==undefined&&!Array.isArray(w.heroes)||w.hero_artifacts!==undefined&&!Array.isArray(w.hero_artifacts)||w.settler_expeditions!==undefined&&!Array.isArray(w.settler_expeditions))invalid();
+    if((w.heroes?.length??0)>20||(w.hero_artifacts?.length??0)>200||(w.settler_expeditions?.length??0)>1000)invalid();
+    const heroIds=new Set<number>(),heroArmies=new Set<number>(),artifactIds=new Set<number>(),equipment=new Set<string>();
+    for(const hero of w.heroes??[]){
+        if(!hero||!Number.isSafeInteger(hero.id)||hero.id<1||hero.owner_id!=='solo-ruler'||!armies.has(hero.army_id)||heroIds.has(hero.id)||heroArmies.has(hero.army_id)||typeof hero.name!=='string'||hero.name.length<2||hero.name.length>80||!Object.hasOwn(HERO_CLASSES,hero.class)||!Number.isInteger(hero.experience)||hero.experience<0||hero.experience>heroThreshold(MAX_HERO_LEVEL)||HERO_STATS.some(k=>!Number.isInteger(hero[k])||hero[k]<0||hero[k]>19)||heroPoints(hero)<0)invalid();
+        heroIds.add(hero.id);heroArmies.add(hero.army_id);
+    }
+    for(const item of w.hero_artifacts??[]){
+        if(!item||!Number.isSafeInteger(item.id)||item.id<1||artifactIds.has(item.id)||item.owner_id!=='solo-ruler'||!ARTIFACTS[item.artifact_id]||item.hero_id!==null&&!heroIds.has(item.hero_id))invalid();
+        artifactIds.add(item.id);
+        if(item.hero_id!==null){const key=`${item.hero_id}:${ARTIFACTS[item.artifact_id].slot}`;if(equipment.has(key))invalid();equipment.add(key);}
+    }
+    const expeditionIds=new Set<number>(), reservations=new Set<string>();
+    for(const expedition of w.settler_expeditions??[]){
+        if(!expedition||!Number.isSafeInteger(expedition.id)||expedition.id<1||expeditionIds.has(expedition.id)||expedition.owner_id!=='solo-ruler'||!cities.has(expedition.origin_settlement_id)||!Number.isInteger(expedition.col)||!Number.isInteger(expedition.row)||expedition.col< -100||expedition.col>=100||expedition.row< -100||expedition.row>=100||typeof expedition.name!=='string'||expedition.name.length<2||expedition.name.length>32||!['travelling','founded','returned'].includes(expedition.status)||!Number.isFinite(Date.parse(expedition.departure_at))||!Number.isFinite(Date.parse(expedition.arrival_at))||Date.parse(expedition.arrival_at)<Date.parse(expedition.departure_at)||!Number.isInteger(expedition.culture_cost)||expedition.culture_cost<300||expedition.culture_cost>30000)invalid();
+        expeditionIds.add(expedition.id);
+        if(expedition.status==='founded'&&!cities.has(expedition.settlement_id!))invalid();
+        if(expedition.status==='travelling'){const key=`${expedition.col},${expedition.row}`;if(reservations.has(key))invalid();reservations.add(key);}
+        const origin=cities.get(expedition.origin_settlement_id)!, end=expedition.march_path?.at(-1);
+        if(!end||end[0]!==expedition.col*128+64||end[1]!==expedition.row*128+64)invalid();
+        const routeArmy={...w.armies[0],home_settlement_id:origin.id,start_x:origin.x,start_y:origin.y,target_x:end![0],target_y:end![1],status:'moving' as const,departure_at:expedition.departure_at,arrival_at:expedition.arrival_at,march_path:expedition.march_path,march_map_version:WORLD_MAP_VERSION,march_distance:expedition.march_path.slice(1).reduce((n,p,i)=>n+Math.hypot(wrappedWorldDelta(expedition.march_path[i][0],p[0]),wrappedWorldDelta(expedition.march_path[i][1],p[1])),0)};
+        validateLegacySave({...w,settlements:[origin],armies:[routeArmy],buildings:w.buildings.filter(b=>b.settlement_id===origin.id),city_slots:[],spell_research:[],map_plots:[],orders:[],settler_expeditions:[]});
+    }
+    for(const battle of w.battles)if(!armies.has(battle.attacker_army_id)||battle.defender_army_id!==null)invalid();
+    if(w.settlements.length===1&&w.armies.length===1){
+        const legacy=validateLegacySave({...w,orders:w.orders.filter(o=>o.kind!=='settler'),settler_expeditions:[]});
+        normalized.settlements=legacy.settlements;normalized.buildings=legacy.buildings;normalized.city_slots=legacy.city_slots;if(legacy.map_plots!==undefined)normalized.map_plots=legacy.map_plots;normalized.players=legacy.players;normalized.armies=legacy.armies;
+        normalized.orders=[...legacy.orders,...w.orders.filter(o=>o.kind==='settler')];
+    }
+    return normalizeRealm(normalized,normalized.server_now,false);
 }
 export async function importSave(file: File) { if (file.size > 12 * 1024 * 1024)
     throw new Error('Save files must be smaller than 12 MB.'); try {

@@ -1,5 +1,6 @@
 [
   "schema/base.sql",
+  "empire/schema.sql",
   "city/city-slots.sql",
   "map/world-bounds.sql",
   "map/world-terrain.sql",
@@ -7,6 +8,7 @@
   "map/peris_army_position.sql",
   "magic/mage-tower.sql",
   "city/population.sql",
+  "empire/gameplay.sql",
   "city/peris_settle.sql",
   "battle/peris_add_formations.sql",
   "campaign/peris_start_raid.sql",

@@ -6,10 +6,14 @@ import { type Camp } from '../../features/map/domain/types';
 import { type Battle, type Formation } from '../../features/battle/domain/types';
 import type { SpellResearch } from '../../features/magic/domain/spells';
 import type { MapPlot } from '../../features/map/domain/territory';
+import type { Hero, HeroArtifact } from '../../features/heroes/domain/heroes';
+import type { SettlerExpedition } from '../../features/empire/domain/expansion';
 export type Order = {
     id: number;
     owner_id: string;
-    kind: 'upgrade' | 'recruit' | 'field';
+    kind: 'upgrade' | 'recruit' | 'field' | 'settler';
+    settlement_id?: number;
+    army_id?: number;
     item: string;
     quantity: number;
     started_at: string;
@@ -26,6 +30,10 @@ export type World = {
     map_plots?: MapPlot[];
     spell_research?: SpellResearch[];
     armies: Army[];
+    heroes?: Hero[];
+    hero_artifacts?: HeroArtifact[];
+    settler_expeditions?: SettlerExpedition[];
+    gameplay_version?: number;
     camps: Camp[];
     orders: Order[];
     battles: Battle[];

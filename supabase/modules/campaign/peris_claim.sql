@@ -9,6 +9,6 @@ begin
  elsif p_quest_id='conqueror' and p.victories>=5 then cw:=1000;cs:=800;cf:=1000;cg:=500;
  else raise exception 'Complete the objective first';end if;
  insert into public.peris_claims(owner_id,quest_id)values(u,p_quest_id);
- update public.settlements set wood=least(capacity,wood+cw),stone=least(capacity,stone+cs),food=least(food_capacity,food+cf),gold=least(capacity,gold+cg)where owner_id=u;
+ update public.settlements set wood=least(capacity,wood+cw),stone=least(capacity,stone+cs),food=least(food_capacity,food+cf),gold=least(capacity,gold+cg)where id=public.peris_city_id(u);
  return jsonb_build_object('ok',true);
 end $$;

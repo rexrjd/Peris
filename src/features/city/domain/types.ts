@@ -3,6 +3,8 @@ import { type Resources } from '../../../shared/model/resources';
 export type BuildingType = 'lumber' | 'quarry' | 'farm' | 'market' | 'barracks' | 'stables' | 'wall' | 'storehouse';
 export type Settlement = Resources & {
     id: number;
+    settlers?: number;
+    development_points?: number;
     owner_id: string;
     name: string;
     x: number;

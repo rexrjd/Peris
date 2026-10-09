@@ -10,15 +10,16 @@ import { unlockAudio } from '../../../platform/audio/audio';
 import { Modal } from '../../../shared/ui/Shared';
 import { Icon } from '../../../shared/ui/Icons';
 import { conquered } from '../../campaign/domain/progression';
-export function Settings({ onClose, world, playerId, onLoad, run }: {
+export function Settings({ onClose, world, playerId, cityId, onLoad, run }: {
     onClose: () => void;
     world?: World;
     playerId?: string;
+    cityId?: number;
     onLoad?: (world: World) => void;
     run?: (cmd: Command, message?: string) => void;
 }) {
     const prefs = useSyncExternalStore(subscribePreferences, preferences), [tab, setTab] = useState<'sound' | 'play' | 'saves'>('sound'), [message, setMessage] = useState(''), [pending, setPending] = useState<World | null>(null);
-    const town = world?.settlements.find(s => s.owner_id === playerId), [name, setName] = useState(town?.name ?? ''), input = useRef<HTMLInputElement>(null);
+    const town = world?.settlements.find(s => s.owner_id === playerId && (cityId===undefined||s.id===cityId)), [name, setName] = useState(town?.name ?? ''), input = useRef<HTMLInputElement>(null);
     const save = world?.players[0]?.id === 'solo-ruler' ? world : !world ? readSolo() : null, backup = readBackup();
     const toggle = (key: 'sound' | 'music' | 'effects' | 'reducedMotion' | 'simpleOrders', label: string, description: string) => <label className="setting-toggle"><span><strong>{label}</strong><small>{description}</small></span><input type="checkbox" checked={prefs[key]} onChange={e => { setPreferences({ [key]: e.target.checked }); unlockAudio(); }}/><i aria-hidden="true"/></label>;
     return <Modal title="Settings" className="settings-modal" onClose={onClose}>

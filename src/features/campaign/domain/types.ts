@@ -7,6 +7,8 @@ export type Player = {
     victories: number;
     recruits: number;
     upgrades: number;
+    culture_points?: number;
+    culture_updated_at?: string;
 };
 export type Report = {
     id: number;

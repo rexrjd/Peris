@@ -8,7 +8,7 @@ begin
  if u is null then raise exception 'Authentication required';end if;
  if p_target_x is null or p_target_y is null then raise exception 'Choose a destination';end if;
  perform public.peris_settle(u);
- select * into a from public.armies where owner_id=u for update;
+ select * into a from public.armies where id=public.peris_army_id(u) for update;
  if a.id is null then raise exception 'Army not found';end if;
  position:=public.peris_army_position(a);x:=(position->>'x')::numeric;y:=(position->>'y')::numeric;
  steps:=greatest(1,ceil(greatest(abs(tx-x),abs(ty-y))/64)::integer);

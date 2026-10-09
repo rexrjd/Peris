@@ -10,6 +10,8 @@ This release organizes the existing game by feature and responsibility. It prese
 | `src/features/map` | Strategic map, camps, army travel, marching commands, map rendering and UI |
 | `src/features/battle` | Formations, orders, movement, AI, combat, morale, outcome, battlefield rendering and UI |
 | `src/features/city` | Buildings, production, capacity, construction, rename command, city layout and UI |
+| `src/features/empire` | Culture, city founding, settlers, ownership context and save normalization |
+| `src/features/heroes` | Commander classes, XP/attributes, artifacts, troop transfer and home-city changes |
 | `src/features/army` | Unit definitions, troop counts, recruitment, training completion and UI |
 | `src/features/campaign` | New realm, quests, rewards, progression, raid creation, strategic queue orchestration and battle settlement |
 | `src/features/menu`, `settings`, `codex` | Their own screen components and styles |
@@ -28,6 +30,8 @@ Features contain `domain`, `ui`, `rendering` and `styles` only where needed. Dom
 
 | Change | Primary source |
 |---|---|
+| Culture, founding and settlers | `src/features/empire/domain/expansion.ts` |
+| Hero levels, equipment and combat bonuses | `src/features/heroes/domain/heroes.ts`, `commands.ts` |
 | Strategic travel interpolation and arrival | `src/features/map/domain/movement.ts` |
 | Marching/raid destination and travel duration | `src/features/map/domain/commands.ts` |
 | Formation creation and display footprint | `src/features/battle/domain/formations.ts` |
@@ -71,7 +75,7 @@ Feature-specific rules live in each feature's `styles` folder. Shared controls/t
 
 Edit the relevant function under `supabase/modules`. The ordered `manifest.json` composes schema, gameplay functions and final permissions into the deployment scripts. These fragments are source files, not individually runnable migrations.
 
-Run `npm run build:sql` after editing server source. Then `npm run check:sql`, `npm run test:db` and `npm run test:fresh`. Generated `UPGRADE_TO_V8.sql` and `FRESH_INSTALL_V8.sql` are complete files for Supabase SQL Editor. Historical v6/v7 bundle names remain generated compatibility aliases. Never manually edit those bundles or the existing-world protection in the fresh installer.
+Run `npm run build:sql` after editing server source. Then `npm run check:sql`, `npm run test:db` and `npm run test:fresh`. Generated `UPGRADE_TO_V10.sql` and `FRESH_INSTALL_V10.sql` are complete files for Supabase SQL Editor. Historical v6/v7/v8/v9 bundle names remain generated compatibility aliases. Never manually edit those bundles or the existing-world protection in the fresh installer.
 
 ## Updating an existing repository
 

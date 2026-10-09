@@ -199,7 +199,7 @@ export class MapRenderer {
             if (active || (mine && moving)) this.label(pos.x, pos.y - 27 * unit, moving ? `ARRIVES IN ${clock((Date.parse(army.arrival_at) - now) / 1000)}` : army.name, '#f4dfb0', true);
         }
         if (s.moveMode) {
-            const army = s.world.armies.find(a => a.owner_id === s.playerId);
+            const army = s.world.armies.find(a => a.owner_id === s.playerId && (s.selectedArmyId===undefined||a.id===s.selectedArmyId));
             const cell = cellAt(wp.x, wp.y), destination = this.imagePoint((cell.col+.5)*CELL_SIZE,(cell.row+.5)*CELL_SIZE);
             c.save(); c.lineWidth = 1.5 * unit;
             if (army) {

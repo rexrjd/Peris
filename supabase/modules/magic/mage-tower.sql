@@ -56,7 +56,7 @@ begin
  if u is null then raise exception 'Authentication required';end if;
  perform public.peris_settle(u);
  if exists(select 1 from public.battles where status='active' and (attacker_owner_id=u or defender_owner_id=u)) then raise exception 'Finish the current battle first';end if;
- select * into s from public.settlements where owner_id=u for update;
+ select * into s from public.settlements where id=public.peris_city_id(u) for update;
  select * into sp from public.peris_spell_catalog where id=p_spell;
  if s.id is null or sp.id is null then raise exception 'Unknown spell or realm';end if;
  select level into l from public.peris_city_slots where settlement_id=s.id and building_type='mage_tower';
@@ -69,13 +69,14 @@ begin
 end $$;
 create or replace function public.peris_cast_spell(p_battle_id bigint,p_spell text,p_target bigint default null) returns jsonb language plpgsql security definer set search_path='' as $$
 declare u uuid:=auth.uid();b public.battles%rowtype;s public.settlements%rowtype;sp public.peris_spell_catalog%rowtype;f public.battle_formations%rowtype;t public.battle_formations%rowtype;
- own_side text;friend boolean;single_target boolean;l integer;mana integer;ready numeric;idx integer:=0;cas integer;troops integer;mor numeric;alive_a boolean;alive_d boolean;
+ own_side text;friend boolean;single_target boolean;l integer;mana integer;ready numeric;idx integer:=0;cas integer;troops integer;mor numeric;alive_a boolean;alive_d boolean;hero_bonus jsonb;
 begin
  select * into b from public.battles where id=p_battle_id for update;
  if u is null or b.id is null or (u is distinct from b.attacker_owner_id and u is distinct from b.defender_owner_id) then raise exception 'Not your battle';end if;
  if b.status<>'active' or b.phase<>'combat' then raise exception 'Spells can only be cast during combat';end if;
- select * into s from public.settlements where owner_id=u;
  select * into sp from public.peris_spell_catalog where id=p_spell;
+ select city.* into s from public.settlements city join public.peris_spell_research research on research.settlement_id=city.id join public.peris_city_slots tower on tower.settlement_id=city.id and tower.building_type='mage_tower'and tower.level>=sp.level where city.owner_id=u and research.spell_id=sp.id order by city.id limit 1;
+ hero_bonus:=public.peris_hero_bonuses(case when b.attacker_owner_id=u then b.attacker_army_id else b.defender_army_id end);
  select level into l from public.peris_city_slots where settlement_id=s.id and building_type='mage_tower';
  if sp.id is null or coalesce(l,0)<sp.level or not exists(select 1 from public.peris_spell_research where settlement_id=s.id and spell_id=sp.id) then raise exception 'Research this spell in your mage tower first';end if;
  perform public.peris_tick(b.id);
@@ -95,8 +96,8 @@ begin
  and (not single_target or id=t.id or sp.chain>0 or sp.radius>0 and power(x-t.x,2)+power(y-t.y,2)<=sp.radius*sp.radius)
  order by case when sp.chain>0 then case when id=t.id then -1 else power(x-t.x,2)+power(y-t.y,2) end else id end,id
  limit case when sp.chain>0 then sp.chain else 10000 end for update loop
- cas:=ceil(greatest(0,sp.damage-case when sp.chain>0 then idx*6 else 0 end)*(1-f.magic_defence));idx:=idx+1;
- troops:=greatest(0,least(f.initial_soldiers,f.soldiers-cas+sp.heal));
+ cas:=ceil(greatest(0,sp.damage-case when sp.chain>0 then idx*6 else 0 end)*(hero_bonus->>'spell')::numeric*(1-f.magic_defence));idx:=idx+1;
+ troops:=greatest(0,least(f.initial_soldiers,f.soldiers-cas+ceil(sp.heal*(hero_bonus->>'spell')::numeric)::integer));
  mor:=case when sp.revive then greatest(f.morale,sp.morale) else greatest(0,least(100,f.morale+sp.morale)) end;
  update public.battle_formations set soldiers=troops,morale=mor,stamina=greatest(0,least(100,f.stamina+sp.stamina)),
  magic_attack=least(1.5,f.magic_attack+sp.attack),magic_defence=least(.4,f.magic_defence+sp.defence),magic_speed=least(1.75,f.magic_speed+sp.speed),

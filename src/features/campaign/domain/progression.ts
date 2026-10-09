@@ -17,8 +17,8 @@ export const BRIEFINGS: Record<number, {
 export function conquered(world: World, playerId: string) { return new Set(world.progress.filter(p => p.owner_id === playerId && p.defeated > 0).map(p => p.camp_id)); }
 export function nextCampaign(world: World, playerId: string) { const done = conquered(world, playerId); return world.camps.find(c => !done.has(c.id)); }
 export function campaignRank(count: number) { return ['Frontier governor', 'Bearer of the standard', 'Warden of Oakwood', 'Keeper of the crossing', 'Lord of the high country', 'Commander of the province', 'Restorer of Peris'][Math.min(6, count)]; }
-export function readiness(world: World, playerId: string, camp: Camp) {
-    const army = world.armies.find(a => a.owner_id === playerId)!, ratio = soldierTotal(army) / BRIEFINGS[camp.id].recommended;
+export function readiness(world: World, playerId: string, camp: Camp, armyId?: number) {
+    const army = world.armies.find(a => a.owner_id === playerId && (armyId===undefined||a.id===armyId))!, ratio = soldierTotal(army) / BRIEFINGS[camp.id].recommended;
     return { ratio, label: ratio >= 1 ? 'Ready for the field' : ratio >= .78 ? 'A hard-fought battle' : 'Reinforcements advised', className: ratio >= 1 ? 'ready' : ratio >= .78 ? 'challenging' : 'danger' };
 }
 export function campaignKey(world: World) { return `${world.players[0]?.id}:${world.players[0]?.created_at}`; }

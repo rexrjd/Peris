@@ -53,6 +53,7 @@ export type Formation = {
     status: FormationStatus;
     damage_pool: number;
     attack_multiplier?: number;
+    defence_multiplier?: number;
     magic_attack?:number;magic_defence?:number;magic_speed?:number;
     columns: number;
     stance: 'balanced' | 'guard' | 'aggressive';

@@ -1,3 +1,4 @@
+import { commandCity } from '../../empire/domain/context';
 import type { Command, LocalCommandContext } from '../../../shared/model/commands';
 import { RESOURCES } from '../../../shared/model/resources';
 import { affordable } from './economy';
@@ -5,9 +6,9 @@ import { citySlots, mainLevel, slotCount, riversideSlot, slotCost, SLOT_BUILDING
 import { upgradeSeconds } from './construction';
 
 export function queueSlot(context: LocalCommandContext, cmd: Extract<Command,{type:'buildSlot'|'upgradeSlot'}>) {
-    const w=context.world, town=w.settlements.find(s=>s.owner_id===context.playerId)!;
+    const w=context.world, town=commandCity(context);
     if (!Number.isInteger(cmd.slot) || cmd.slot<0 || cmd.slot!==16 && cmd.slot>=slotCount(mainLevel(w,town.id))) throw new Error('Upgrade the main building to unlock this plot.');
-    if (w.orders.some(o=>o.owner_id===context.playerId && o.kind==='upgrade')) throw new Error('Your builders are already working.');
+    if (w.orders.some(o=>o.owner_id===context.playerId && (o.settlement_id??w.settlements[0].id)===town.id && o.kind==='upgrade')) throw new Error('Your builders are already working.');
     w.city_slots ??= citySlots(w,town.id);
     let slot=w.city_slots.find(s=>s.settlement_id===town.id && s.slot_index===cmd.slot);
     if (cmd.type==='buildSlot') {
@@ -22,5 +23,5 @@ export function queueSlot(context: LocalCommandContext, cmd: Extract<Command,{ty
     if (!affordable(town,cost)) throw new Error('Your stores cannot cover this cost.');
     for (const resource of RESOURCES) town[resource]-=cost[resource];
     if (cmd.type==='buildSlot') w.city_slots.push(slot);
-    w.orders.push({id:context.nextId(),owner_id:context.playerId,kind:'upgrade',item:`slot:${cmd.slot}:${slot.building_type}`,quantity:1,started_at:context.now,finish_at:new Date(Date.parse(context.now)+upgradeSeconds(slot.level)*1000).toISOString()});
+    w.orders.push({id:context.nextId(),owner_id:context.playerId,settlement_id:town.id,kind:'upgrade',item:`slot:${cmd.slot}:${slot.building_type}`,quantity:1,started_at:context.now,finish_at:new Date(Date.parse(context.now)+upgradeSeconds(slot.level)*1000).toISOString()});
 }

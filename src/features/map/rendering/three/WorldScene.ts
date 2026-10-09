@@ -80,8 +80,8 @@ export class WorldScene {
         this.sun.shadow.mapSize.set(1024, 1024); this.sun.shadow.camera.near = .1; this.sun.shadow.camera.far = 100;
         this.sun.shadow.bias = -.0004; this.sun.shadow.normalBias = .025;
         this.scene.add(this.sun, this.sun.target, this.landscape.group, this.selection, this.routes, this.grid);
-        const army = state().world.armies.find(a => a.owner_id === state().playerId);
-        const town = state().world.settlements.find(a => a.owner_id === state().playerId);
+        const army = state().world.armies.find(a => a.owner_id === state().playerId && (state().selectedArmyId===undefined||a.id===state().selectedArmyId));
+        const town = state().world.settlements.find(a => a.owner_id === state().playerId&&(state().selectedSettlementId===undefined||a.id===state().selectedSettlementId));
         const pos = army ? armyPosition(army, this.now()) : town ?? { x: 320, y: 320 };
         this.view.focus(pos.x + CELL_SIZE * 2, pos.y, 1);
         this.resize = new ResizeObserver(() => this.setSize()); this.resize.observe(canvas.parentElement!); this.setSize(); this.bind();
@@ -276,8 +276,8 @@ export class WorldScene {
             for(const[dx,dz,ax,az,bx,bz]of[[0,-1,0,0,1,0],[1,0,1,0,1,1],[0,1,1,1,0,1],[-1,0,0,1,0,0]]){if(owners.get(mapPlotKey(col+dx,row+dz))===owner)continue;for(let i=0;i<4;i++)for(const t of[i/4,(i+1)/4]){const px=x+ax+(bx-ax)*t,pz=z+az+(bz-az)*t;points.push(new THREE.Vector3(px,Math.max(0,sampleHeight(px,pz))+.027,pz));}}
         }
         for(const[batch,points]of batches){const player=batch==='player';const lines=new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(points),new THREE.LineBasicMaterial({color:player?'#d2b06c':FACTIONS[factionOf(batch)].roofLight,transparent:true,opacity:player?.72:.3,depthWrite:false}));lines.renderOrder=3;this.selection.add(lines);}
-        const home=s.world.settlements.find(town=>town.owner_id===s.playerId);
-        if(s.mapClaimMode&&home){const col=Math.floor(home.x/CELL_SIZE),row=Math.floor(home.y/CELL_SIZE);for(let dz=-TERRITORY_RULES.radius;dz<=TERRITORY_RULES.radius;dz++)for(let dx=-TERRITORY_RULES.radius;dx<=TERRITORY_RULES.radius;dx++)if(mapClaimReason(s.world,s.playerId,col+dx,row+dz)===null)this.selection.add(this.box(col+dx,row+dz,'#aaca86'));}
+        const home=s.world.settlements.find(town=>town.owner_id===s.playerId&&(s.selectedSettlementId===undefined||town.id===s.selectedSettlementId));
+        if(s.mapClaimMode&&home){const col=Math.floor(home.x/CELL_SIZE),row=Math.floor(home.y/CELL_SIZE);for(let dz=-TERRITORY_RULES.radius;dz<=TERRITORY_RULES.radius;dz++)for(let dx=-TERRITORY_RULES.radius;dx<=TERRITORY_RULES.radius;dx++)if(mapClaimReason(s.world,s.playerId,col+dx,row+dz,s.selectedSettlementId)===null)this.selection.add(this.box(col+dx,row+dz,'#aaca86'));}
     }
     private line(points: [number, number][], color: string, dashed = false, opacity = 1) {
         let previous: { x: number; y: number } | undefined;
@@ -327,7 +327,7 @@ export class WorldScene {
         }
     }
     private updateRoutes() {
-        const s = this.state(), now = this.now(), army = s.world.armies.find(a => a.owner_id === s.playerId);
+        const s = this.state(), now = this.now(), army = s.world.armies.find(a => a.owner_id === s.playerId && (s.selectedArmyId===undefined||a.id===s.selectedArmyId));
         const hover = this.hover?.kind === 'cell' ? this.hover : null;
         const key = `${army?.departure_at}:${army?.arrival_at}:${army?.target_x}:${army?.target_y}:${Math.floor(now / 1000)}:${s.moveMode}:${hover?.col}:${hover?.row}:${this.view.wrapRevision}`;
         if (key === this.routeKey) return; this.routeKey = key; this.disposeGroup(this.routes);
@@ -462,7 +462,7 @@ export class WorldScene {
     rotate(angle: number) { if(!Number.isFinite(angle))return;this.view.azimuth += angle; this.view.update(); }
     center() { this.view.overview(); }
     focusMap(target: 'home' | 'army') {
-        const s = this.state(), item = target === 'home' ? s.world.settlements.find(t => t.owner_id === s.playerId) : s.world.armies.find(t => t.owner_id === s.playerId);
+        const s = this.state(), item = target === 'home' ? s.world.settlements.find(t => t.owner_id === s.playerId && (s.selectedSettlementId===undefined||t.id===s.selectedSettlementId)) : s.world.armies.find(t => t.owner_id === s.playerId && (s.selectedArmyId===undefined||t.id===s.selectedArmyId));
         if (item) { const p = 'target_x' in item ? armyPosition(item, this.now()) : item; this.view.focus(p.x, p.y); }
     }
     destroy() {

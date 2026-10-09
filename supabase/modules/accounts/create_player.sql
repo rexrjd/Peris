@@ -15,6 +15,7 @@ begin
   where public.peris_cell_distance(floor(sp0.x/128::numeric)::integer,floor(sp0.y/128::numeric)::integer,floor(existing.x/128::numeric)::integer,floor(existing.y/128::numeric)::integer)<3)
  and not exists(select 1 from public.peris_camps camp
   where public.peris_cell_distance(floor(sp0.x/128::numeric)::integer,floor(sp0.y/128::numeric)::integer,floor(camp.x/128::numeric)::integer,floor(camp.y/128::numeric)::integer)<=1)
+ and not exists(select 1 from public.peris_settler_expeditions e where e.status='travelling'and public.peris_cell_distance(floor(sp0.x/128::numeric)::integer,floor(sp0.y/128::numeric)::integer,e.col,e.row)<4)
  order by sp0.id limit 1 for update of sp0 skip locked;
  if sp.id is null then raise exception 'This world has no free settlement sites';end if;
  insert into public.players(id,display_name)values(u,n);

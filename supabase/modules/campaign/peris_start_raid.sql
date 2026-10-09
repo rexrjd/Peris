@@ -2,7 +2,7 @@ create or replace function public.peris_start_raid(p_owner uuid,p_camp integer) 
 language plpgsql security definer set search_path='' as $$
 declare a public.armies%rowtype;c public.peris_camps%rowtype;bid bigint;mor numeric;
 begin
- select * into a from public.armies where owner_id=p_owner for update;
+ select * into a from public.armies where id=public.peris_army_id(p_owner) for update;
  select * into c from public.peris_camps where id=p_camp;
  if c.id is null or a.id is null then raise exception 'Army or camp not found';end if;
  if a.infantry+a.archers+a.cavalry=0 then raise exception 'Your army has no soldiers';end if;

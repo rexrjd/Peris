@@ -1,3 +1,5 @@
+import { commandCity } from '../../empire/domain/context';
+import { heroBonuses } from '../../heroes/domain/heroes';
 import type { Command, LocalCommandContext } from '../../../shared/model/commands';
 import { affordable } from '../../city/domain/economy';
 import { RESOURCES } from '../../../shared/model/resources';
@@ -6,7 +8,7 @@ import type { Formation } from '../../battle/domain/types';
 import { checkBattleOutcome } from '../../battle/domain/resolution';
 import { clamp, dist } from '../../../shared/math/geometry';
 export function researchSpell(context:LocalCommandContext,cmd:Extract<Command,{type:'researchSpell'}>) {
- const {world:w,playerId:owner}=context,town=w.settlements.find(s=>s.owner_id===owner)!;
+ const {world:w,playerId:owner}=context,town=commandCity(context);
  const spell=spellById(cmd.spell);if(!spell)throw new Error('Unknown spell.');
  if(context.active)throw new Error('Finish the current battle first.');
  if(towerLevel(w,town.id)<spell.level)throw new Error(`Upgrade the mage tower to level ${spell.level}.`);
@@ -19,10 +21,11 @@ export function castSpell(context:LocalCommandContext,cmd:Extract<Command,{type:
  const {world:w,playerId:owner}=context,b=context.active;
  if(!b||b.id!==cmd.battleId||b.phase!=='combat'||b.status!=='active')throw new Error('Spells can only be cast during combat.');
  if(owner!==b.attacker_owner_id&&owner!==b.defender_owner_id)throw new Error('Not your battle.');
- const town=w.settlements.find(s=>s.owner_id===owner)!,spell=spellById(cmd.spell);
- if(!spell||!knowsSpell(w,town.id,spell.id)||towerLevel(w,town.id)<spell.level)throw new Error('Research this spell in your mage tower first.');
+ const spell=spellById(cmd.spell),town=w.settlements.find(s=>s.owner_id===owner&&spell&&knowsSpell(w,s.id,spell.id)&&towerLevel(w,s.id)>=spell.level);
+ const army=w.armies.find(a=>a.id===(b.attacker_owner_id===owner?b.attacker_army_id:b.defender_army_id))!,bonuses=army?heroBonuses(w,army):{mana:0,spell:1};
+ if(!town||!spell||!knowsSpell(w,town.id,spell.id)||towerLevel(w,town.id)<spell.level)throw new Error('Research this spell in your mage tower first.');
  const side=owner===b.attacker_owner_id?'attacker':'defender',manaKey=side==='attacker'?'mana_attacker':'mana_defender',readyKey=side==='attacker'?'spell_ready_attacker':'spell_ready_defender';
- const mana=b[manaKey]??maximumMana(towerLevel(w,town.id));
+ const mana=b[manaKey]??maximumMana(towerLevel(w,town.id))+bonuses.mana;
  if(b.elapsed<(b[readyKey]??0))throw new Error('Your mage is recovering.');
  if(mana<spell.mana)throw new Error('Not enough mana.');
  const friendly=spell.target==='ally'||spell.target==='allies';
@@ -35,8 +38,8 @@ export function castSpell(context:LocalCommandContext,cmd:Extract<Command,{type:
  if(!affected.length)throw new Error('No eligible formations.');
  b[manaKey]=mana-spell.mana;b[readyKey]=b.elapsed+SPELL_COOLDOWN;
  affected.forEach((f,index)=>{
-  const damage=Math.ceil((spell.chain?Math.max(0,spell.damage-index*6):spell.damage)*(1-(f.magic_defence??0)));
-  f.soldiers=Math.max(0,Math.min(f.initial_soldiers,f.soldiers-damage+spell.heal));
+  const damage=Math.ceil((spell.chain?Math.max(0,spell.damage-index*6):spell.damage)*bonuses.spell*(1-(f.magic_defence??0)));
+  f.soldiers=Math.max(0,Math.min(f.initial_soldiers,f.soldiers-damage+Math.ceil(spell.heal*bonuses.spell)));
   f.morale=spell.revive?Math.max(f.morale,spell.morale):clamp(f.morale+spell.morale,0,100);
   f.stamina=clamp(f.stamina+spell.stamina,0,100);
   if(spell.attack)f.magic_attack=Math.min(1.5,(f.magic_attack??1)+spell.attack);

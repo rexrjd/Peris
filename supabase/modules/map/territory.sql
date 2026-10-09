@@ -36,7 +36,7 @@ create policy "own map plots" on public.peris_map_plots for select to authentica
 revoke all on public.peris_map_plots from public,anon,authenticated;
 grant select on public.peris_map_plots to authenticated;
 alter table public.peris_orders drop constraint if exists peris_orders_kind_check;
-alter table public.peris_orders add constraint peris_orders_kind_check check(kind in ('upgrade','recruit','field'));
+alter table public.peris_orders add constraint peris_orders_kind_check check(kind in ('upgrade','recruit','field','settler'));
 create unique index if not exists peris_orders_field_pending_key
  on public.peris_orders(owner_id,(split_part(item,':',2)),(split_part(item,':',3))) where kind='field';
 -- Terrain modifiers produce fractional income; city base rates remain unchanged.
@@ -86,10 +86,11 @@ begin
  perform pg_advisory_xact_lock(204200);
  perform public.peris_settle(u);
  if exists(select 1 from public.battles where status='active' and (attacker_owner_id=u or defender_owner_id=u)) then raise exception 'Finish the current battle first';end if;
- select * into s from public.settlements where owner_id=u for update;
+ select * into s from public.settlements where id=public.peris_city_id(u) for update;
  if s.id is null then raise exception 'Settlement not found';end if;
  c:=public.peris_wrap_cell(p_col);r:=public.peris_wrap_cell(p_row);
  home_col:=floor(s.x/128::numeric)::integer;home_row:=floor(s.y/128::numeric)::integer;
+ if exists(select 1 from public.peris_settler_expeditions where status='travelling'and public.peris_cell_distance(c,r,col,row)<=1)then raise exception 'Settlers have reserved this land';end if;
  if exists(select 1 from public.peris_map_plots where col=c and row=r) then raise exception 'This field is already owned';end if;
  if exists(select 1 from public.settlements where public.peris_cell_distance(c,r,floor(x/128::numeric)::integer,floor(y/128::numeric)::integer)=0) then raise exception 'This field contains a settlement';end if;
  if exists(select 1 from public.peris_camps where public.peris_cell_distance(c,r,floor(x/128::numeric)::integer,floor(y/128::numeric)::integer)=0) then raise exception 'An ancient campaign site protects this field';end if;
@@ -99,7 +100,7 @@ begin
  if distance>6 then raise exception 'Stay within 6 fields of your village';end if;
  select count(*) into owned from public.peris_map_plots where settlement_id=s.id;
  if owned<4 and distance<>1 then raise exception 'Choose your first four fields from the eight village neighbours';end if;
- select 80+10*greatest(0,upgrades) into population from public.players where id=u;
+ select 80+10*greatest(0,case when(select count(*)from public.settlements where owner_id=u)=1 then upgrades else s.development_points end)into population from public.players where id=u;
  allowance:=4+case when population>=120 then 1+(population-120)/40 else 0 end;
  if owned>=allowance then raise exception 'More population is needed to claim another field';end if;
  if distance<>1 and not exists(select 1 from public.peris_map_plots where settlement_id=s.id and public.peris_cell_distance(c,r,col,row)=1) then raise exception 'Connect this field directly to your existing territory';end if;
@@ -116,7 +117,7 @@ begin
  if p_col is null or p_row is null or p_type is null or p_type not in ('lumber','quarry','farm','market') then raise exception 'Choose a valid resource building and field';end if;
  perform public.peris_settle(u);
  if exists(select 1 from public.battles where status='active' and (attacker_owner_id=u or defender_owner_id=u)) then raise exception 'Finish the current battle first';end if;
- select * into s from public.settlements where owner_id=u for update;
+ select * into s from public.settlements where id=public.peris_city_id(u) for update;
  if s.id is null then raise exception 'Settlement not found';end if;
  c:=public.peris_wrap_cell(p_col);r:=public.peris_wrap_cell(p_row);
  select * into p from public.peris_map_plots where col=c and row=r and owner_id=u and settlement_id=s.id for update;

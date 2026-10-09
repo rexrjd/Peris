@@ -36,7 +36,7 @@ export class RenderContext {
         const s = this.state();
         this.zoomBase = s.mode === 'world' ? Math.min(this.w / 1200, this.h / 770) : (this.w < 600 ? Math.max : Math.min)(this.w / FIELD_W, this.h / FIELD_H);
         if (s.mode === 'world' && initial) {
-            const army = s.world.armies.find(a => a.owner_id === s.playerId);
+            const army = s.world.armies.find(a => a.owner_id === s.playerId && (s.selectedArmyId === undefined || a.id === s.selectedArmyId));
             const pos = army ? armyPosition(army, Date.now() + (s.clockOffset ?? 0)) : { x: 600, y: 385 };
             this.camera.x = pos.x; this.camera.y = pos.y;
             this.camera.zoom = this.w < 600 ? 2 : 1;
@@ -76,7 +76,7 @@ export class RenderContext {
     focusMap(target: 'home' | 'army') {
         const s = this.state();
         if (s.mode !== 'world') return;
-        const item = target === 'home' ? s.world.settlements.find(t => t.owner_id === s.playerId) : s.world.armies.find(a => a.owner_id === s.playerId);
+        const item = target === 'home' ? s.world.settlements.find(t => t.owner_id === s.playerId && (s.selectedSettlementId === undefined || t.id === s.selectedSettlementId)) : s.world.armies.find(a => a.owner_id === s.playerId && (s.selectedArmyId === undefined || a.id === s.selectedArmyId));
         if (!item) return;
         const pos = 'target_x' in item ? armyPosition(item, Date.now() + (s.clockOffset ?? 0)) : item;
         this.camera.x = pos.x;

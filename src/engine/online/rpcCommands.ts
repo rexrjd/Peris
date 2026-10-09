@@ -1,5 +1,7 @@
 import type { Command } from '../../shared/model/commands';
 export function rpcCommand(cmd: Command) {
+    const scoped=['trainSettlers','foundCity','recruitHero','heroSkill','equipArtifact','transferTroops','rebaseArmy','upgrade','buildSlot','upgradeSlot','recruit','move','raid','claimField','buildField','researchSpell','rename','claim','setFaction','debugCity','challenge','respond'];
+    if(scoped.includes(cmd.type)&&(cmd.settlementId!==undefined||cmd.armyId!==undefined||['trainSettlers','foundCity','recruitHero','heroSkill','equipArtifact','transferTroops','rebaseArmy'].includes(cmd.type)))return {fn:'peris_empire_command',args:{p_command:cmd}};
     let fn = '', args: Record<string, unknown> = {};
     if (cmd.type === 'claimField') { fn = 'peris_claim_field'; args = { p_col: cmd.col, p_row: cmd.row }; }
     if (cmd.type === 'buildField') { fn = 'peris_queue_field'; args = { p_col: cmd.col, p_row: cmd.row, p_type: cmd.item }; }
