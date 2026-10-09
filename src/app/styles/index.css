@@ -29,3 +29,4 @@
 @import './modern.css';
 @import './city-hud.css';
 @import './command-hud.css';
+@import '../../features/map/styles/hud.css';
