@@ -1,0 +1,136 @@
+/* Scene-first game HUD. No navigation rail or reserved inspector column. */
+.realm-shell.game-shell{grid-template-columns:minmax(0,1fr);grid-template-rows:52px minmax(0,1fr);padding:0;background:#15181f}
+.game-shell .realm-content{grid-column:1;grid-row:2;min-height:0}
+.game-shell .realm-footer{display:none}
+.game-shell .realm-topbar.game-header{grid-column:1;grid-row:1;display:flex;gap:24px;padding:0 20px;min-width:0;background:#181c24;border-bottom:1px solid #ffffff13;box-shadow:0 1px 8px #0002;z-index:20}
+.game-brand{background:transparent;border:0;color:#e5dac6;font:700 16px 'Open Sans',Arial,sans-serif;letter-spacing:2.5px;padding:8px 0;margin:0 4px 0 0;flex:none;min-height:40px}
+.game-navigation{display:flex;align-self:stretch;gap:3px;flex:none;align-items:stretch}
+.game-navigation button{position:relative;display:flex;align-items:center;justify-content:center;gap:7px;min-width:75px;padding:0 10px;min-height:44px;background:transparent;color:#9fa8b9;font-size:12px;border:0;border-radius:0;white-space:nowrap}
+.game-navigation button:hover{color:#f0f2f7;background:#ffffff04}
+.game-navigation button[aria-current=page]{color:#ead7b6;background:transparent}
+.game-navigation button[aria-current=page]:after{content:'';position:absolute;bottom:0;left:13px;right:13px;height:2px;background:#d7bd90;border-radius:2px}
+.game-shell .game-navigation .nav-dot{right:4px;top:12px;width:4px;height:4px;background:#d7bd90;box-shadow:none}
+.game-shell .game-header .resource-strip.resource-hud{display:flex;width:auto;gap:16px;margin-left:auto;flex:none}
+.game-shell .game-header .resource-hud .resource{position:relative;display:flex;gap:8px;width:auto;min-width:100px;min-height:38px;padding:5px 0;border:0;border-radius:5px;background:transparent}
+.game-shell .game-header .resource-hud .resource:hover{background:#ffffff05}
+.game-shell .game-header .resource-symbol{display:grid;width:22px;height:28px;flex:none}
+.game-shell .game-header .resource-symbol svg{width:20px;height:20px}
+.game-shell .game-header .resource-readout{position:relative;display:grid;grid-template-columns:auto auto;gap:3px 7px;align-items:center;flex:none}
+.game-shell .game-header .resource-caption{display:contents}
+.game-shell .game-header .resource-caption>span:first-child{display:none}
+.game-shell .game-header .resource-caption .resource-income{display:block;grid-column:2;grid-row:1;font-size:10px;color:#a4aec0}
+.game-shell .game-header .resource-amount{grid-column:1;grid-row:1;display:block}
+.game-shell .game-header .resource-amount strong{font-size:13px;font-weight:700;color:#edf0f5;line-height:1.25}
+.game-shell .game-header .resource-amount>span{display:none}
+.game-shell .game-header .resource-capacity{grid-column:1/3;height:2px;margin:0;background:#ffffff08;opacity:.65;max-width:95px}
+.game-shell .game-header .resource.full .resource-capacity i{background:#c5a971}
+.game-shell .game-header .resource.shortage .resource-income{color:#efaa99}
+.game-shell .game-menu{display:block;flex:none;margin:0 0 0 2px}
+.game-shell .game-menu>summary{display:flex;gap:7px;align-items:center;justify-content:center;width:auto;min-width:36px;height:38px;padding:7px;color:#a6adbe;font-size:11px;list-style:none;border-radius:6px}
+.game-shell .game-menu>summary::-webkit-details-marker{display:none}
+.game-shell .game-menu[open]>summary{background:#ffffff06;color:#ead7b6}
+.game-shell .game-menu>div{right:0;top:calc(100% + 8px);width:230px;border-color:#ffffff20;background:#1b2029;border-radius:10px;padding:8px;box-shadow:0 10px 30px #0005}
+.game-menu-player{display:grid;gap:5px;padding:12px;border-bottom:1px solid #ffffff12;margin-bottom:5px}
+.game-menu-player strong{font-size:13px}
+.game-menu-player small,.game-shell .game-save-status{font-size:11px;color:#9fa8b9}
+.game-shell .game-save-status{display:block;padding:11px 12px;border-top:1px solid #ffffff12;margin-top:5px;line-height:1.5}
+/* The town fills the workspace; small opaque plates carry local information. */
+.game-shell .settlement-layout.city-stage{display:block;position:relative;height:100%;min-height:0;overflow:hidden}
+.game-shell .city-stage .city-column{position:relative;display:flex;width:100%;height:100%;min-height:0;overflow:hidden;container-type:normal}
+.game-shell .city-stage .city-panel,.game-shell .city-stage .city-3d-scene{height:100%;min-height:0;flex:1;padding:0;margin:0;border:0}
+.game-shell .city-stage .city-toolbar{position:absolute;top:16px;left:16px;right:auto;z-index:8;display:flex;align-items:center;gap:10px;flex-wrap:nowrap;min-height:0;max-width:calc(100% - 32px);padding:0;margin:0;background:transparent;border:0;pointer-events:none}
+.game-shell .city-stage .city-toolbar>*{pointer-events:auto}
+.game-shell .city-stage.inspector-open .city-toolbar{max-width:calc(100% - 360px)}
+.game-shell .city-stage .city-identity{flex:0 1 auto;min-width:150px;max-width:260px;padding:12px 16px;background:#1b2029f5;border:1px solid #ffffff20;border-radius:10px;box-shadow:0 3px 14px #0002}
+.game-shell .city-stage .city-identity h1{font-size:17px;margin-bottom:5px;letter-spacing:-.02em}
+.game-shell .city-stage .city-identity>span{font-size:11px;color:#afb6c4}
+.game-shell .city-overview-compact{flex:none;align-self:flex-start;background:#1b2029f5;border:1px solid #ffffff20;border-radius:9px;padding:0 12px;margin:0;box-shadow:0 3px 14px #0002}
+.game-shell .city-overview-compact .city-economy-details>summary{display:flex;justify-content:flex-start;align-items:center;min-height:42px;gap:10px;padding:0;flex-wrap:nowrap}
+.game-shell .city-overview-compact .city-economy-details>summary>.economy-staffing{display:none}
+.game-shell .city-overview-compact .city-economy-details>summary>.economy-residents{display:flex;flex-direction:row;gap:6px;align-items:baseline}
+.game-shell .city-overview-compact .economy-residents small{font-size:10px}
+.game-shell .city-overview-compact .economy-residents strong{font-size:11px}
+.game-shell .city-overview-compact .economy-expand{font-size:11px;margin:0;padding:9px 0;color:#d8c7a8}
+.game-shell .city-overview-compact .city-economy-content{left:0;right:auto;top:calc(100% + 8px);width:min(720px,calc(100vw - 48px));max-height:min(450px,65dvh);border-radius:10px;background:#1b2029;border-color:#ffffff25}
+.game-shell .city-stage.inspector-open .city-economy-content{width:min(680px,calc(100vw - 370px))}
+.game-shell .city-action-dock{position:absolute;left:50%;bottom:20px;transform:translateX(-50%);z-index:8;display:flex;align-items:center;gap:8px;padding:7px;background:#1b2029f5;border:1px solid #ffffff25;border-radius:12px;box-shadow:0 6px 22px #0004}
+.game-shell .city-stage.inspector-open .city-action-dock{left:calc(50% - 164px)}
+.game-shell .city-action-dock .city-view-switch{margin:0;gap:4px;flex:none}
+.game-shell .city-action-dock .city-view-switch button{min-height:40px;padding:8px 14px;font-size:12px;border-radius:7px}
+.game-shell .city-action-dock .city-view-switch button[aria-pressed=true]{background:#ffffff08;border-color:#ffffff13;color:#e8d4b1}
+.game-shell .city-action-dock .city-build-button{min-height:40px;padding:8px 15px;font-size:12px;background:#d7c19b;border-color:#d7c19b;color:#232631;border-radius:7px}
+.game-shell .city-action-dock .city-build-button:hover:not(:disabled){background:#ecdbbc;border-color:#ecdbbc}
+.game-shell .city-action-dock .city-build-button:disabled{background:transparent;border-color:#ffffff12;color:#9fa8b9}
+.game-shell .city-dock-queue{position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:7px;background:#1b2029f5;border:1px solid #ffffff20;border-radius:7px;padding:8px 12px;color:#c9cfdc;font-size:11px;white-space:nowrap;max-width:calc(100vw - 40px)}
+.game-shell .city-dock-queue span{overflow:hidden;text-overflow:ellipsis}
+.game-shell .city-stage .city-inspector{position:absolute;top:16px;right:16px;bottom:16px;width:308px;min-height:0;max-height:calc(100% - 32px);overflow:auto;overscroll-behavior:contain;background:#1b2029fa;border:1px solid #ffffff20;border-radius:12px;padding:22px;box-shadow:0 8px 30px #0003;z-index:9}
+.city-inspector-close{position:absolute;top:12px;right:12px;width:30px;height:30px;display:grid;place-items:center;background:#ffffff06;border:1px solid #ffffff10;color:#b1b9c8;font-size:22px;line-height:1;border-radius:7px}
+.city-inspector-close:hover{background:#ffffff12;color:#f0f2f7}
+.game-shell .city-stage .city-inspector>.eyebrow{padding-right:25px;font-size:10px;letter-spacing:.08em;margin-bottom:18px}
+.game-shell .city-stage .city-inspector h2{font-size:21px;margin-bottom:10px}
+.game-shell .city-inspector .building-emblem{width:42px;height:42px;margin-bottom:16px;background:#ffffff03;border-color:#ffffff14;border-radius:9px}
+.game-shell .city-inspector .building-emblem svg{width:23px;height:23px;color:#cfbb99}
+.game-shell .city-inspector .benefit{background:#ffffff04;border-color:#ffffff0c;color:#c4cad6;font-size:12px}
+.game-shell .city-inspector .level-track i.filled{background:#cbb58e;border-color:#cbb58e}
+.game-shell .city-inspector>.button.gold{background:#d7c19b;border-color:#d7c19b;color:#232631}
+.game-shell .city-inspector .city-tools{margin-top:20px}
+.game-shell .city-stage .building-browser{padding:102px 28px 100px;min-height:0;background:#171b23;overflow:auto;height:100%}
+.game-shell .city-stage.inspector-open .building-browser{padding-right:352px}
+.game-shell .city-landmark-label.selected{background:#3a352ded;border-color:#d7c19b;box-shadow:0 3px 12px #0003}
+.game-shell .city-landmark-label:hover,.game-shell .city-landmark-label:focus-visible{background:#3a352d;border-color:#d7c19b;outline-color:#d7c19b}
+.game-shell .city-landmark-label em{color:#ead7b6}
+.game-shell .city-stage .building-grid>button:hover,.game-shell .city-stage .building-grid>button.selected{background:#ffffff04;border-color:#d7c19b55}
+@media(max-width:1150px){
+ .game-shell .realm-topbar.game-header{gap:12px;padding:0 14px}
+ .game-navigation button{min-width:64px;padding:0 8px;font-size:11px;gap:5px}
+ .game-shell .game-header .resource-strip.resource-hud{gap:10px}
+ .game-shell .game-header .resource-hud .resource{min-width:86px;gap:6px}
+ .game-shell .game-header .resource-caption .resource-income{font-size:9px}
+ .game-shell .game-menu>summary>span{display:none}
+}
+@media(max-width:960px){
+ .game-shell .realm-topbar.game-header{gap:10px;padding:0 12px}
+ .game-brand{font-size:14px;letter-spacing:1.5px}
+ .game-navigation button{min-width:55px;padding:0 7px}
+ .game-navigation button>svg{display:none}
+ .game-shell .game-header .resource-hud .resource{min-width:73px}
+ .game-shell .game-header .resource-caption .resource-income{display:none}
+ .game-shell .game-header .resource-amount strong{font-size:12px}
+ .game-shell .city-stage.inspector-open .city-toolbar{max-width:calc(100% - 355px)}
+ .game-shell .city-stage.inspector-open .city-overview-compact .economy-residents{display:none}
+}
+@media(max-width:760px){
+ .realm-shell.game-shell{grid-template-rows:48px minmax(0,1fr);padding-bottom:62px}
+ .game-shell .realm-topbar.game-header{gap:7px;padding:0 10px}
+ .game-brand{display:none}
+ .game-shell .game-header .resource-strip.resource-hud{display:flex;gap:10px;justify-content:space-between;flex:1;margin:0}
+ .game-shell .game-header .resource-hud .resource{min-width:0;min-height:36px;gap:6px;padding:4px 0;flex:none}
+ .game-shell .game-header .resource-readout{display:grid;gap:3px}
+ .game-shell .game-header .resource-caption .resource-income{display:none}
+ .game-shell .game-header .resource-symbol{display:grid;width:17px;height:25px}
+ .game-shell .game-header .resource-symbol svg{width:17px;height:17px}
+ .game-shell .game-header .resource-amount{display:block}
+ .game-shell .game-header .resource-amount strong{font-size:12px}
+ .game-shell .game-header .resource-capacity{display:block;height:2px;width:100%}
+ .game-shell .game-menu>summary{min-width:30px;width:30px;padding:5px}
+ .game-navigation{position:fixed;bottom:0;left:0;right:0;z-index:20;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));height:62px;background:#181c24;border-top:1px solid #ffffff17;padding:3px 8px calc(3px + env(safe-area-inset-bottom));gap:4px}
+ .game-navigation button{min-width:0;min-height:50px;display:flex;flex-direction:column;gap:4px;font-size:10px;padding:6px;border-radius:7px}
+ .game-navigation button>svg{display:block;width:18px;height:18px}
+ .game-navigation button[aria-current=page]{background:#ffffff06}
+ .game-navigation button[aria-current=page]:after{display:none}
+ .game-shell .city-stage .city-toolbar,.game-shell .city-stage.inspector-open .city-toolbar{top:10px;left:10px;max-width:calc(100% - 20px);gap:7px}
+ .game-shell .city-stage .city-identity{min-width:0;max-width:220px;padding:9px 12px;border-radius:8px}
+ .game-shell .city-stage .city-identity h1{font-size:14px}
+ .game-shell .city-stage .city-identity>span{font-size:10px}
+ .game-shell .city-overview-compact{padding:0 10px}
+ .game-shell .city-overview-compact .city-economy-details>summary>.economy-residents{display:none}
+ .game-shell .city-overview-compact .city-economy-details>summary{min-height:36px}
+ .game-shell .city-stage .city-economy-content,.game-shell .city-stage.inspector-open .city-economy-content{width:calc(100vw - 20px);max-height:65dvh;left:0;right:auto}
+ .game-shell .city-stage .city-action-dock,.game-shell .city-stage.inspector-open .city-action-dock{left:50%;bottom:12px;padding:5px;gap:6px;border-radius:10px}
+ .game-shell .city-action-dock .city-view-switch button{min-height:38px;padding:7px 11px;font-size:11px;gap:6px}
+ .game-shell .city-action-dock .city-view-switch svg{display:block;width:15px;height:15px}
+ .game-shell .city-action-dock .city-build-button{min-height:38px;padding:7px 12px;font-size:11px;min-width:66px}
+ .game-shell .city-stage .city-inspector{top:auto;right:10px;left:10px;bottom:72px;width:auto;max-height:52%;min-height:120px;padding:18px;border-radius:12px;z-index:10}
+ .game-shell .city-stage .building-browser,.game-shell .city-stage.inspector-open .building-browser{padding:90px 16px 92px}
+}
+@media(prefers-reduced-motion:no-preference){.game-menu[open]>div,.city-inspector{animation:hud-appear .16s ease-out}@keyframes hud-appear{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}}
