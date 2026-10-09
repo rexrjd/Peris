@@ -15,6 +15,8 @@ export type RenderState = {
     mapLayers?: { grid: boolean; regions: boolean; resources: boolean };
     clockOffset?: number;
     mapFocus?: { x: number; y: number; key: number; zoom?: number };
+    mapPurpose?: 'colonies';
+    expansionRoute?: { path: [number, number][]; key: string };
     touchOrder?: 'select' | 'move' | 'attack';
     paused?: boolean;
 };

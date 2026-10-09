@@ -142,7 +142,9 @@ export class InputController {
         this.on(window, 'keydown', ((e: KeyboardEvent) => {
             if ((e.target as HTMLElement)?.closest('input,select,textarea') || e.ctrlKey || e.metaKey)
                 return;
-            if (document.querySelector('[role="dialog"]'))
+            const dialog = Array.from(document.querySelectorAll('[role="dialog"]')).at(-1);
+            const atlasCanvasFocused = this.ctx.state().mapPurpose === 'colonies' && dialog?.classList.contains('empire-atlas') && e.target === this.ctx.canvas;
+            if (dialog && !atlasCanvasFocused)
                 return;
             const k = e.key.toLowerCase();
             this.ctx.keys.add(k);

@@ -329,8 +329,10 @@ export class WorldScene {
     private updateRoutes() {
         const s = this.state(), now = this.now(), army = s.world.armies.find(a => a.owner_id === s.playerId && (s.selectedArmyId===undefined||a.id===s.selectedArmyId));
         const hover = this.hover?.kind === 'cell' ? this.hover : null;
-        const key = `${army?.departure_at}:${army?.arrival_at}:${army?.target_x}:${army?.target_y}:${Math.floor(now / 1000)}:${s.moveMode}:${hover?.col}:${hover?.row}:${this.view.wrapRevision}`;
+        const key = `${army?.departure_at}:${army?.arrival_at}:${army?.target_x}:${army?.target_y}:${Math.floor(now / 1000)}:${s.moveMode}:${hover?.col}:${hover?.row}:${this.view.wrapRevision}:${s.mapPurpose}:${s.expansionRoute?.key}`;
         if (key === this.routeKey) return; this.routeKey = key; this.disposeGroup(this.routes);
+        if (s.expansionRoute) this.routes.add(this.line(s.expansionRoute.path, '#ffe0a5', true));
+        if (s.mapPurpose === 'colonies') return;
         if (army?.status === 'moving' && Date.parse(army.arrival_at) > now) this.routes.add(this.line(armyRouteRemaining(army, now), '#ffe5a0', true));
         if (s.moveMode && hover && army && isWalkable(hover.col, hover.row)) {
             const path = findMarchPath(armyPosition(army, now), cellCenter(hover.col, hover.row));
@@ -449,7 +451,10 @@ export class WorldScene {
         this.on(this.canvas, 'wheel', ((e: WheelEvent) => { e.preventDefault(); this.view.zoom(Math.exp(-e.deltaY * .0015), this.coordinates(e)); }) as EventListener, { passive: false });
         this.on(this.mini, 'pointerdown', ((e: PointerEvent) => { e.preventDefault(); this.mini.setPointerCapture(e.pointerId); this.miniPan(e); }) as EventListener);
         this.on(this.mini, 'pointermove', ((e: PointerEvent) => { if (e.buttons) this.miniPan(e); }) as EventListener);
-        this.on(window, 'keydown', ((e: KeyboardEvent) => { if ((e.target as HTMLElement)?.closest('input,select,textarea') || e.ctrlKey || e.metaKey || e.altKey || document.querySelector('[role="dialog"]')) return;
+        this.on(window, 'keydown', ((e: KeyboardEvent) => {
+            const dialog = Array.from(document.querySelectorAll('[role="dialog"]')).at(-1);
+            const atlasCanvasFocused = this.state().mapPurpose === 'colonies' && dialog?.classList.contains('empire-atlas') && e.target === this.canvas;
+            if ((e.target as HTMLElement)?.closest('input,select,textarea') || e.ctrlKey || e.metaKey || e.altKey || (dialog && !atlasCanvasFocused)) return;
             const k = e.key.toLowerCase(); this.keys.add(k); if (k === 'h') this.focusMap('home'); if (k === 'f') this.focusMap('army'); if (k === '0') this.center(); if (k === '+' || k === '=') this.zoom(1.25); if (k === '-') this.zoom(.8); if (k === 'escape') { this.actions().cancelMove?.(); this.actions().selectMap(null); }
             if (document.activeElement === this.canvas && ['arrowleft', 'arrowright', 'arrowup', 'arrowdown', '0', '+', '-', '='].includes(k)) e.preventDefault(); }) as EventListener);
         this.on(window, 'keyup', ((e: KeyboardEvent) => { this.keys.delete(e.key.toLowerCase()); }) as EventListener);

@@ -20,15 +20,16 @@ export function Modal({ title, children, onClose, className = '', heading = true
     close.current = onClose;
     useEffect(() => {
         const previous = document.activeElement as HTMLElement | null;
-        const focusable = () => Array.from(panel.current?.querySelectorAll<HTMLElement>('button:not([disabled]),input:not([disabled]),select:not([disabled]),a[href],[tabindex="0"]') ?? []).filter(e => e.offsetParent !== null);
+        const focusable = () => Array.from(panel.current?.querySelectorAll<HTMLElement>('button:not([disabled]),input:not([disabled]),select:not([disabled]),summary,a[href],[tabindex="0"]') ?? []).filter(e => e.offsetParent !== null);
         focusable()[0]?.focus();
         const key = (e: KeyboardEvent) => {
-            e.stopPropagation();
             if (e.key === 'Escape') {
+                e.stopPropagation();
                 e.preventDefault();
                 close.current();
             }
             if (e.key === 'Tab') {
+                e.stopPropagation();
                 const all = focusable(), first = all[0], last = all[all.length - 1];
                 if (e.shiftKey && document.activeElement === first) {
                     e.preventDefault();

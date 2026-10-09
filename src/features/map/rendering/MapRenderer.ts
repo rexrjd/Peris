@@ -173,12 +173,18 @@ export class MapRenderer {
             if (active || this.scale > .3) this.label(camp.x, camp.y + 29 * unit, site.title, active ? '#ffe5a6' : cleared ? '#c9dfb5' : '#eddfbd');
             if (active || this.ctx.camera.zoom > 1.5) this.label(camp.x, camp.y + 46 * unit, `TIER ${camp.tier}${cleared ? ' · STANDARD RECOVERED' : ' · HOSTILE HOLD'}`, '#c4c6ad', true);
         }
+        if (s.expansionRoute) {
+            c.save(); c.strokeStyle = '#f9d79e'; c.lineWidth = 2 * unit;
+            c.setLineDash([6 * unit, 4 * unit]);
+            c.beginPath(); this.routeImages(s.expansionRoute.path).forEach(({ x, y }, i) => i ? c.lineTo(x, y) : c.moveTo(x, y)); c.stroke();
+            c.restore();
+        }
         for (const army of s.world.armies) {
             const actual=armyPosition(army,now),pos=this.imagePoint(actual.x,actual.y), mine = army.owner_id === s.playerId, active = selected('army', army.id);
             const moving = army.status === 'moving' && Date.parse(army.arrival_at) > now;
             // Full routes stay useful for our legion or the inspected army;
             // drawing hundreds of rival waypoint lists every frame obscures the atlas.
-            if (moving && (mine || active)) {
+            if (moving && (mine || active) && s.mapPurpose !== 'colonies') {
                 c.save(); c.strokeStyle = mine ? '#f7d88fbd' : '#9bbac575'; c.lineWidth = 1.5 * unit;
                 c.setLineDash([5 * unit, 5 * unit]); c.lineDashOffset = -t / 100 * unit;
                 c.beginPath(); const route = this.routeImages(armyRouteRemaining(army, now)); route.forEach(({x,y}, i) => i ? c.lineTo(x, y) : c.moveTo(x, y)); c.stroke(); c.setLineDash([]);
