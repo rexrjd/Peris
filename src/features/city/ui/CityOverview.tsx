@@ -1,3 +1,5 @@
+import {useState} from 'react';
+import {CityReport,type CityReportTab} from './CityReport';
 import type {World} from '../../../shared/model/world';
 import {projectSettlement} from '../domain/economy';
 import {populationGrowth,WORKERS_PER_LEVEL} from '../domain/population';
@@ -9,12 +11,18 @@ const format=(n:number)=>n.toLocaleString(undefined,{maximumFractionDigits:1});
 const signed=(n:number)=>(n>=0?'+':'')+format(n);
 const duration=(minutes:number)=>minutes<1?'under 1 min':minutes<60?`${Math.ceil(minutes)} min`:`${format(minutes/60)} hr`;
 export function CityOverview({world,sid,now,onSelect,compact=false}:{world:World;sid:number;now:number;onSelect:(key:string)=>void;compact?:boolean}){
+ const [reportTab,setReportTab]=useState<CityReportTab|null>(null);
  const source=world.settlements.find(s=>s.id===sid)!,town=projectSettlement(source,now),population=town.population??30,cap=town.population_capacity??40,jobs=town.workers_required??0,staff=Math.min(1,population/Math.max(1,jobs)),growth=populationGrowth(town),slots=citySlots(world,sid);
  const empty=Array.from({length:slotCount(mainLevel(world,sid))},(_,i)=>i).find(i=>!slots.some(s=>s.slot_index===i));
  const sources=Object.entries(WORKERS_PER_LEVEL).flatMap(([type,workers])=>{
   const level=type==='fishery'?slots.filter(s=>s.building_type==='fishery').reduce((n,s)=>n+s.level,0):world.buildings.find(b=>b.settlement_id===sid&&b.building_type===type)?.level??0;
   return level?[{type,name:type==='fishery'?'Fishery':BUILDINGS[type as keyof typeof BUILDINGS].name,workers:workers*level}]:[];
  });
+ if(compact)return <section className="city-overview city-overview-compact" aria-label="City economy overview"><div className="city-status-controls">
+ <button className="city-status-metric city-residents-control" title={`Residents: ${Math.floor(population)} of ${cap}. ${population>=cap-.001?'Housing is full.':'Open residents and housing details.'}`} aria-label={`Residents: ${Math.floor(population)} of ${cap}. Open residents and housing details.`} onClick={()=>setReportTab('residents')}><Icon name="people" size={17}/><span><small>Residents</small><strong>{Math.floor(population).toLocaleString()}<em> / {cap.toLocaleString()}</em></strong></span></button>
+ <button className={`city-status-metric city-staffing-control ${staff<1?'has-shortage':''}`} title={`${Math.min(Math.floor(population),jobs)} of ${jobs} production workers assigned. Open production details.`} aria-label={`Staffing: ${Math.round(staff*100)}%. Open production and worker details.`} onClick={()=>setReportTab('production')}><Icon name="workers" size={17}/><span><small>Staffing</small><strong>{Math.round(staff*100)}%</strong></span></button>
+ <button className={`city-report-trigger ${town.food_rate<0?'has-shortage':''}`} aria-label={town.food_rate<0?'Food declining. Open city economy report.':'Open city economy report.'} onClick={()=>setReportTab('overview')}><Icon name={town.food_rate<0?'food':'report'} size={16}/><span>{town.food_rate<0?'Food declining':'City report'}</span><Icon name="arrow" size={12}/></button>
+ </div>{reportTab&&<CityReport world={world} sid={sid} now={now} initialTab={reportTab} onSelect={onSelect} onClose={()=>setReportTab(null)}/>}</section>;
  return <section className={`city-overview ${compact?'city-overview-compact':''}`} aria-label="City economy overview"><details className="city-economy-details"><summary>
  <span className="economy-residents"><small>Residents</small><strong>{Math.floor(population)} <em>/ {cap}</em></strong></span>
  <span className="economy-staffing"><small>Staffing</small><strong className={staff<1?'economy-warning':''}>{Math.round(staff*100)}%</strong></span>

@@ -29,9 +29,8 @@ test('compact economy signals a negative food balance without opening its detail
   const world = createSolo('Builder'), town = world.settlements[0];
   town.population = town.population_capacity = 1000;
   const html = renderToStaticMarkup(React.createElement(CityOverview, { world, sid: town.id, now: Date.parse(world.server_now), compact: true, onSelect: () => {} }));
-  const summary = html.slice(html.indexOf('<summary>'), html.indexOf('</summary>'));
-  assert.ok(summary.includes('Food declining'));
-  assert.ok(summary.includes('economy-warning'));
+  assert.ok(html.includes('Food declining'));
+  assert.ok(html.includes('has-shortage'));
 });
 
 test('city construction remains visible in the dock with its inspector closed', () => {

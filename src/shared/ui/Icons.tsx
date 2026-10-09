@@ -30,6 +30,10 @@ export function Icon({ name, size = 20 }: {
         flag: <><path d="M5 22V3m0 0h14l-3 5 3 5H5"/></>,
         shield: <><path d="M12 2 3 6v7c0 5 9 9 9 9s9-4 9-9V6zM12 7v9M8 11h8"/></>,
         arrow: <path d="M4 12h16m-6-6 6 6-6 6"/>,
+        chevron: <path d="m6 9 6 6 6-6"/>,
+        plus: <path d="M12 5v14M5 12h14"/>,
+        people: <><circle cx="9" cy="7" r="3"/><path d="M3 21v-3c0-7 12-7 12 0v3M16 4a3 3 0 0 1 0 6M18 13c3 1 3 4 3 8"/></>,
+        workers: <><path d="M4 11V9a8 8 0 0 1 16 0v2M2 11h20M9 2v5M15 2v5M6 14v3c0 6 12 6 12 0v-3"/></>,
         download: <><path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5"/></>,
     };
     return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{shapes[name] ?? shapes.town}</svg>;

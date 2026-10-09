@@ -1,9 +1,9 @@
-import {CityOverview} from './CityOverview';
+import {CityHeader} from './CityHeader';
 import {BuildingPicker} from './BuildingPicker';
 import {WORKERS_PER_LEVEL} from '../domain/population';
-import {FACTIONS,factionOf} from '../../factions/domain/factions';
+import {factionOf} from '../../factions/domain/factions';
 import {CityDebugPanel} from '../../factions/ui/CityDebugPanel';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { BuildingType } from '../domain/types';
 import { BUILDINGS } from '../domain/buildings';
 import type { World } from '../../../shared/model/world';
@@ -19,9 +19,12 @@ import { cityLayout } from '../rendering/three/layout';
 import {MageTowerPanel} from '../../magic/ui/MageTowerPanel';
 export function SettlementView({world,playerId,run,busy,now,cityId,onCity,onEmpire}:{world:World;playerId:string;cityId?:number;onCity?:(id:number)=>void;onEmpire?:()=>void;run:(c:Command,message?:string)=>void;busy:boolean;now:number}) {
  const [selected,setSelected]=useState('market'),[inspectorOpen,setInspectorOpen]=useState(false);
+ const inspectorClose=useRef<HTMLButtonElement>(null),inspectorTrigger=useRef<HTMLElement|null>(null);
+ const closeInspector=()=>{setInspectorOpen(false);requestAnimationFrame(()=>{const trigger=inspectorTrigger.current;if(trigger?.isConnected)trigger.focus();else document.querySelector<HTMLButtonElement>('.city-command-ui .city-plot-shortcut')?.focus();});};
+ useEffect(()=>{if(!inspectorOpen)return;const frame=requestAnimationFrame(()=>inspectorClose.current?.focus());return()=>cancelAnimationFrame(frame);},[inspectorOpen,selected]);
  useEffect(()=>{
   if(!inspectorOpen)return;
-  const escape=(event:KeyboardEvent)=>{if(event.key==='Escape'&&!document.querySelector('[role="dialog"]'))setInspectorOpen(false);};
+  const escape=(event:KeyboardEvent)=>{if(event.key==='Escape'&&!document.querySelector('[role="dialog"]'))closeInspector();};
   window.addEventListener('keydown',escape);return()=>window.removeEventListener('keydown',escape);
  },[inspectorOpen]);
  const [mode,setMode]=useState<'city'|'buildings'>('city'),[query,setQuery]=useState('');
@@ -35,16 +38,15 @@ export function SettlementView({world,playerId,run,busy,now,cityId,onCity,onEmpi
  const icon=(type:string|null)=>(type==='market'||type==='mage_tower'||type==='housing')?'town':buildingIcon((type==='warehouse'||type==='granary'?'storehouse':type==='smithy'?'barracks':type==='fishery'?'farm':type??'storehouse') as BuildingType);
  const orderName=order?.item.startsWith('slot:')?SLOT_BUILDINGS[order.item.split(':')[2] as SlotType]?.name:order?BUILDINGS[order.item as BuildingType]?.name:null;
  const plotName=(p:typeof plots[number])=>p.type?(p.slot===undefined?BUILDINGS[p.type as BuildingType].name:SLOT_BUILDINGS[p.type as SlotType].name):`Empty plot ${p.slot!+1}`;
- const choose=(key:string)=>{setSelected(key);setInspectorOpen(true);setMode('city');};
+ const choose=(key:string)=>{if(!inspectorOpen)inspectorTrigger.current=document.activeElement instanceof HTMLElement?document.activeElement:null;setSelected(key);setInspectorOpen(true);setMode('city');};
  const emptyPlot=plots.find(p=>p.slot!==undefined&&p.slot<16&&!p.type);
  const visiblePlots=plots.filter(p=>`${plotName(p)} ${p.slot!==undefined?`plot ${p.slot+1}`:''}`.toLowerCase().includes(query.trim().toLowerCase()));
- return <div className={`settlement-layout city-stage ${inspectorOpen?'inspector-open':''}`}><section className="city-column" aria-label="City workspace">
- <header className="city-toolbar"><div className="city-identity"><h1 title={town.name}>{world.settlements.filter(s=>s.owner_id===playerId).length>1?<select aria-label="Current city" value={town.id} onChange={event=>onCity?.(Number(event.target.value))}>{world.settlements.filter(s=>s.owner_id===playerId).map(s=><option key={s.id} value={s.id}>{s.name}</option>)}</select>:town.name}</h1><span>{FACTIONS[factionOf(town.faction)].name}<i aria-hidden="true">·</i>{plots.filter(p=>p.slot!==undefined&&p.slot<16&&p.type).length} / {slotCount(mainLevel(world,town.id))} plots</span></div>
- <CityOverview compact world={world} sid={town.id} now={now} onSelect={choose}/></header>
+ return <div className={`settlement-layout city-stage city-command-ui ${inspectorOpen?'inspector-open':''}`}><section className="city-column" aria-label="City workspace">
+ <CityHeader world={world} owner={playerId} sid={town.id} now={now} onCity={onCity} onSelect={choose}/>
  <div className="city-action-dock">{onEmpire&&<button className="city-empire-button" onClick={onEmpire}><Icon name="world" size={14}/>Empire atlas</button>}{order&&<div className="city-dock-queue" role="status"><Icon name="time" size={14}/><span>{orderName??'Building'} · {clock(Math.max(0,(Date.parse(order.finish_at)-now)/1000))}</span></div>}<div className="city-view-switch" aria-label="City views"><button aria-pressed={mode==='city'} onClick={()=>setMode('city')}><Icon name="town" size={17}/>City</button><button aria-pressed={mode==='buildings'} onClick={()=>setMode('buildings')}><Icon name="storehouse" size={17}/>Buildings</button></div><button className="city-build-button" disabled={!emptyPlot} title={emptyPlot?'Choose an empty building plot':'All city plots are occupied'} onClick={()=>emptyPlot&&choose(emptyPlot.key)}>{emptyPlot?<><span aria-hidden="true">+</span>Build</>:'City full'}</button></div>
  {mode==='city'?<div className="city-panel"><SettlementScene selected={selected} onSelect={choose} levels={levels} slots={slots} faction={factionOf(town.faction)}/></div>:<div className="building-browser"><label className="building-search"><Icon name="focus" size={17}/><input type="search" aria-label="Search city buildings" placeholder="Find a building or plot…" value={query} onChange={event=>setQuery(event.target.value)}/></label>
  <div className="building-grid" aria-label="Settlement buildings">{visiblePlots.map(p=><button key={p.key} className={plot.key===p.key?'selected':''} aria-pressed={plot.key===p.key} onClick={()=>choose(p.key)}><Icon name={icon(p.type)}/><span>{plotName(p)}<small>{p.slot!==undefined&&p.slot<16?`Plot ${p.slot+1} · `:''}{p.level?`Level ${p.level} / ${p.slot!==undefined?slotMaxLevel(p.type as SlotType):5}`:p.type?'Unbuilt':'Choose building'}</small></span><Icon name="arrow" size={14}/></button>)}</div>{!visiblePlots.length&&<p className="building-no-results">No buildings match “{query}”.</p>}</div>}</section>
- {inspectorOpen&&<aside className="detail-panel city-inspector" aria-label="Selected building"><button className="city-inspector-close" aria-label="Close building details" onClick={()=>setInspectorOpen(false)}>×</button><span className="eyebrow">{empty?'CHOOSE A BUILDING':plot.slot!==undefined&&!fishingSite?`BUILDING PLOT ${plot.slot+1}`:'SETTLEMENT DEVELOPMENT'}</span>
+ {inspectorOpen&&<aside className="detail-panel city-inspector" aria-label="Selected building"><button ref={inspectorClose} className="city-inspector-close" aria-label="Close building details" onClick={closeInspector}>×</button><span className="eyebrow">{empty?'CHOOSE A BUILDING':plot.slot!==undefined&&!fishingSite?`BUILDING PLOT ${plot.slot+1}`:'SETTLEMENT DEVELOPMENT'}</span>
  {empty?<><h2>Empty plot {plot.slot!+1}</h2><p>Choose a building for this plot. You can build multiples of every option except the mage tower.</p><BuildingPicker key={plot.key} slot={plot.slot!} resources={res} hasTower={slots.some(s=>s.building_type==='mage_tower')} busy={busy} building={!!order} run={run}/></>:<><div className={`building-emblem level-emblem level-${level}`}><Icon name={icon(type)} size={54}/><span>{level}</span></div><h2>{meta!.name}</h2><span className="tag">{level?`LEVEL ${level}`:'UNBUILT'} → {maxed?'MASTERED':`LEVEL ${level+1}`}</span><p>{meta!.description}</p><div className="benefit"><Icon name="arrow" size={16}/>{meta!.effect}</div>
  {type==='housing'&&<p className="city-worker-note">This building provides {level*30} places for residents{!maxed?`; next level provides ${(level+1)*30}`:''}. New residents arrive while housing and food are available.</p>}
  {type&&type in WORKERS_PER_LEVEL&&<p className="city-worker-note">{level*(WORKERS_PER_LEVEL[type as keyof typeof WORKERS_PER_LEVEL])} production workers needed · {Math.round(Math.min(1,(town.population??30)/Math.max(1,town.workers_required??0))*100)}% staffed{!maxed?` · +${WORKERS_PER_LEVEL[type as keyof typeof WORKERS_PER_LEVEL]} workers at the next level`:''}</p>}

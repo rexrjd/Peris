@@ -4,6 +4,7 @@ import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { ResourceHud } from '../src/shared/ui/ResourceHud';
 import { CityOverview } from '../src/features/city/ui/CityOverview';
+import { CityReport } from '../src/features/city/ui/CityReport';
 import { SettlementView } from '../src/features/city/ui/SettlementView';
 import { createSolo } from '../src/features/campaign/domain/newRealm';
 
@@ -37,12 +38,13 @@ test('compact city summary avoids repeating food income while retaining its deta
   const html = renderToStaticMarkup(React.createElement(CityOverview, {
     world, sid: world.settlements[0].id, now: Date.parse(world.server_now), compact: true, onSelect: () => {},
   }));
-  const summary = html.slice(html.indexOf('<summary>'), html.indexOf('</summary>'));
-  assert.ok(summary.includes('Residents'));
-  assert.ok(summary.includes('Staffing'));
-  assert.ok(summary.includes('Economy'));
-  assert.ok(!summary.includes('Food / min'));
-  assert.ok(html.includes('FOOD BALANCE'));
+  assert.ok(html.includes('Residents'));
+  assert.ok(html.includes('Staffing'));
+  assert.ok(html.includes('City report'));
+  assert.ok(!html.includes('Food / min'));
+  assert.ok(!html.includes('city-economy-details'));
+  const report = renderToStaticMarkup(React.createElement(CityReport, { world, sid: world.settlements[0].id, now: Date.parse(world.server_now), initialTab: 'production', onSelect: () => {}, onClose: () => {} }));
+  assert.ok(report.includes('FOOD BALANCE'));
 });
 
 test('city keeps identity and economy above the scene, with view/build controls in the dock', () => {
