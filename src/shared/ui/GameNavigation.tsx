@@ -4,7 +4,7 @@ export type GameView = 'world' | 'settlement' | 'army' | 'chronicle';
 const views = [
   { id: 'world', icon: 'world', label: 'Map' },
   { id: 'settlement', icon: 'town', label: 'City' },
-  { id: 'army', icon: 'army', label: 'Army' },
+  { id: 'army', icon: 'army', label: 'Armies' },
   { id: 'chronicle', icon: 'report', label: 'Reports' },
 ] as const;
 

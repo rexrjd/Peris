@@ -1,33 +1,62 @@
+import { useEffect, useRef, useState } from 'react';
+import type { World } from '../../../shared/model/world';
+import type { Command } from '../../../shared/model/commands';
+import { armyLimit, HERO_CLASSES, heroForArmy, heroLevel, heroPoints } from '../../heroes/domain/heroes';
+import { HeroPortrait } from '../../heroes/ui/HeroPortrait';
 import { HeroPanel } from '../../heroes/ui/HeroPanel';
-import { useState } from 'react';
-import { type World } from '../../../shared/model/world';
-import { type Command } from '../../../shared/model/commands';
-import { type UnitType } from '../domain/types';
-import { affordable, liveResources } from '../../city/domain/economy';
-import { dist } from '../../../shared/math/geometry';
+import { EquipmentPanel } from '../../heroes/ui/EquipmentPanel';
+import { HireArmyDialog } from '../../heroes/ui/HireArmyDialog';
+import { RecruitmentPanel } from './RecruitmentPanel';
+import { ArmyLogistics } from './ArmyLogistics';
+import { armyOverview, count, percent } from '../domain/commandRoom';
+import { soldierTotal } from '../domain/units';
 import { armyPosition } from '../../map/domain/movement';
-import { UNITS, UNIT_TYPES, soldierTotal } from '../domain/units';
-import { Icon, UnitPortrait } from '../../../shared/ui/Icons';
-import { multiply } from '../../../shared/model/resources';
-import { Cost } from '../../../shared/ui/Shared';
+import { CELL_SIZE, wrapWorldCell } from '../../map/domain/dimensions';
+import { Icon } from '../../../shared/ui/Icons';
 import { clock } from '../../../shared/time/clock';
-import { recruitSeconds } from '../domain/recruitment';
-import { slotLevels, armyAttack } from '../../city/domain/slots';
-export function ArmyView({ world, playerId, run, busy, now, cityId, armyId, onCity, onArmy }: {
-    world: World;
-    cityId?: number; armyId?: number; onCity?: (id:number)=>void; onArmy?: (id:number)=>void;
-    playerId: string;
-    run: (c: Command, message?: string) => void;
-    busy: boolean;
-    now: number;
+
+export type CommandTab = 'army' | 'commander' | 'equipment' | 'logistics';
+const tabs = [
+    { id: 'army', label: 'Army', icon: 'army' },
+    { id: 'commander', label: 'Commander', icon: 'crown' },
+    { id: 'equipment', label: 'Equipment', icon: 'shield' },
+    { id: 'logistics', label: 'Logistics', icon: 'transfer' },
+] as const;
+
+export function ArmyView({ world, playerId, run, busy, now, cityId, armyId, onCity, onArmy, onMap, onOpenCity, initialTab = 'army' }: {
+    world: World; playerId: string; run: (c: Command, message?: string) => void; busy: boolean; now: number;
+    cityId?: number; armyId?: number; onCity?: (id: number) => void; onArmy?: (id: number) => void;
+    onMap?: (id: number, orders?: boolean) => void; onOpenCity?: (id: number) => void; initialTab?: CommandTab;
 }) {
-    const [quantity, setQuantity] = useState<Record<UnitType, number>>({ infantry: 20, archers: 10, cavalry: 4 });
-    const a = world.armies.find(a => a.owner_id === playerId && (armyId===undefined||a.id===armyId))!, s = world.settlements.find(s => s.owner_id === playerId && (cityId===undefined||s.id===cityId))!, res = liveResources(s, now), orders = world.orders.filter(o => o.kind === 'recruit' && o.owner_id === playerId && (o.army_id??world.armies[0].id)===a.id), home = a.status !== 'moving' && dist(armyPosition(a, now), { x: s.x + 40, y: s.y + 30 }) <= 90;
-    return <section className="army-view"><div className="army-context-switch"><label>Army<select aria-label="Selected army" value={a.id} onChange={event=>onArmy?.(Number(event.target.value))}>{world.armies.filter(a=>a.owner_id===playerId).map(a=><option key={a.id} value={a.id}>{a.name}</option>)}</select></label><label>Training city<select aria-label="Training city" value={s.id} onChange={event=>onCity?.(Number(event.target.value))}>{world.settlements.filter(s=>s.owner_id===playerId).map(s=><option key={s.id} value={s.id}>{s.name}</option>)}</select></label></div><div className="view-heading"><div><span className="eyebrow">THE MILITARY</span><h1>{a.name}</h1><p>A disciplined line. Smithy bonus: +{Math.round((armyAttack(world,a.home_settlement_id)-1)*100)}% damage.</p></div><span className="tag">{soldierTotal(a)} / 1,000 soldiers</span></div>
- <HeroPanel world={world} owner={playerId} army={a} cityId={s.id} onArmy={onArmy} run={run} busy={busy} now={now}/>
- {!home && <div className="alert"><Icon name="flag"/>Bring this army to {s.name} to recruit using that city’s buildings and supplies.<button onClick={() => run({ type: 'move', x: s.x + 40, y: s.y + 30 }, 'The legion is returning home')}>March to city →</button></div>}
- <div className="recruitment-grid">{UNIT_TYPES.map(type => {
-            const meta = UNITS[type], cost = multiply(meta.cost, quantity[type]), level = slotLevels(world,s.id,type === 'cavalry' ? 'stables' : 'barracks');
-            return <article className="recruitment-card" key={type}><div className="recruitment-art"><UnitPortrait type={type}/><span>{a[type]}<small>IN YOUR HOST</small></span></div><div className="recruitment-body"><span className="eyebrow">{type === 'infantry' ? 'HEAVY INFANTRY' : type === 'archers' ? 'MISSILE INFANTRY' : 'SHOCK CAVALRY'}</span><h2>{meta.name}</h2><p>{meta.role}</p><div className="unit-facts"><span>Mobility <b>{type === 'cavalry' ? 'Fast' : type === 'infantry' ? 'Steady' : 'Moderate'}</b></span><span>Best used for <b>{type === 'archers' ? 'Covering fire' : type === 'cavalry' ? 'Flank charges' : 'Holding a line'}</b></span><span>Training <b>Lv. {level}</b></span></div><label className="field-label" htmlFor={`quantity-${type}`}>SOLDIERS TO TRAIN</label><div className="quantity-input"><button aria-label={`Fewer ${meta.name}`} onClick={() => setQuantity(q => ({ ...q, [type]: Math.max(1, q[type] - (type === 'cavalry' ? 2 : 5)) }))}>−</button><input id={`quantity-${type}`} type="number" min="1" max="200" value={quantity[type]} onChange={e => setQuantity(q => ({ ...q, [type]: Math.max(1, Math.min(200, Math.floor(Number(e.target.value) || 1))) }))}/><button aria-label={`More ${meta.name}`} onClick={() => setQuantity(q => ({ ...q, [type]: Math.min(200, q[type] + (type === 'cavalry' ? 2 : 5)) }))}>+</button></div><Cost cost={cost} resources={res}/><button className="button gold" disabled={busy || !level || !home || orders.length >= 3 || !affordable(res, cost) || soldierTotal(a) + orders.reduce((n, o) => n + o.quantity, 0) + quantity[type] > 1000} onClick={() => run({ type: 'recruit', item: type, quantity: quantity[type] }, `${quantity[type]} ${meta.name} added to training`)}>{!level ? `Build ${type==='cavalry'?'stables':'barracks'} first` : !home ? 'Return to the keep' : orders.length >= 3 ? 'Training queue full' : !affordable(res, cost) ? 'More supplies needed' : `Train ${quantity[type]}`} <small>{clock(recruitSeconds(type, quantity[type], level))}</small></button></div></article>;
-        })}</div><div className="training-queue"><div><span className="eyebrow">TRAINING QUEUE</span><h3>{orders.length} of 3 slots occupied</h3></div>{orders.length === 0 ? <p className="muted">Your training grounds are ready. Raise more troops before challenging the eastern hosts.</p> : orders.map(o => <div className="training-order" key={o.id}><Icon name="army"/><div><strong>{o.quantity} {UNITS[o.item as UnitType].name}</strong><small>{now < Date.parse(o.started_at) ? 'Waiting for the previous batch' : `Training · ${clock((Date.parse(o.finish_at) - now) / 1000)} remaining`}</small></div><div className="progress-track"><i style={{ width: `${Math.min(100, Math.max(0, (now - Date.parse(o.started_at)) / (Date.parse(o.finish_at) - Date.parse(o.started_at)) * 100))}%` }}/></div></div>)}</div></section>;
+    const [tab, setTab] = useState<CommandTab>(initialTab), [hireOpen, setHire] = useState(false);
+    const roster = useRef<HTMLDivElement>(null);
+    const armies = world.armies.filter(a => a.owner_id === playerId), cities = world.settlements.filter(s => s.owner_id === playerId);
+    const army = armies.find(a => a.id === armyId) ?? armies[0], info = army ? armyOverview(world, army, now) : undefined;
+    const city = cities.find(s => s.id === cityId) ?? info?.local ?? info?.home ?? cities[0];
+    useEffect(() => {
+        const recommended = info?.local ?? info?.home;
+        if (recommended && cities.some(s => s.id === recommended.id)) onCity?.(recommended.id);
+        roster.current?.querySelector<HTMLButtonElement>('[aria-pressed="true"]')?.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'auto' });
+    }, [army?.id]);
+    const hero = army ? heroForArmy(world, army.id) : undefined, points = hero ? Math.max(0, heroPoints(hero)) : 0;
+    const armyCount = armies.length, total = armies.reduce((n, a) => n + soldierTotal(a), 0), moving = armies.filter(a => a.status === 'moving').length;
+    const pos = army ? armyPosition(army, now) : { x: 0, y: 0 }, field = wrapWorldCell(Math.floor(pos.x / CELL_SIZE), Math.floor(pos.y / CELL_SIZE));
+    const title = hero?.name ?? army?.name ?? 'Your armies';
+    const changeTab = (next: CommandTab) => setTab(next);
+    return <section className="army-command">
+        <header className="army-command-heading"><div><span className="command-kicker">Military command</span><h1>Your armies<span>{armyCount} / {armyLimit(world, playerId)}</span></h1><p>{count(total)} soldiers under your banners{moving ? ` · ${moving} ${moving === 1 ? 'army' : 'armies'} marching` : ' · Your commanders await orders'}</p></div><button className="command-button primary" disabled={busy || !cities.length} onClick={() => setHire(true)}><Icon name="plus" size={17}/>Raise army</button></header>
+        <div ref={roster} className="command-army-roster" role="group" aria-label="Your armies">{armies.map(a => {
+            const h = heroForArmy(world, a.id), details = armyOverview(world, a, now), unspent = h ? Math.max(0, heroPoints(h)) : 0;
+            return <button key={a.id} aria-pressed={a.id === army?.id} onClick={() => onArmy?.(a.id)}><HeroPortrait compact heroClass={h?.class} faction={details.home?.faction}/><span className="roster-identity"><strong>{h?.name ?? a.name}</strong><small>{h ? `${HERO_CLASSES[h.class].name} · Lv. ${heroLevel(h)}` : 'Uncommanded army'}{unspent > 0 && <em title="Unspent hero skill points">+{unspent}</em>}</small><span><b>{count(details.total)}</b> soldiers<span className={`roster-status status-${details.state.toLowerCase().replace(' ', '-')}`}>{details.state}{a.status === 'moving' ? ` · ${clock(details.arrival)}` : ''}</span></span></span><Icon name="chevron" size={16}/></button>;
+        })}</div>
+        {army && city && info ? <><div className="army-selected-banner"><HeroPortrait heroClass={hero?.class} faction={info.home?.faction}/><div className="selected-army-identity"><span className="command-kicker">{hero ? `${HERO_CLASSES[hero.class].name} · Level ${heroLevel(hero)}` : 'Army command'}</span><h2>{title}</h2><p>{hero ? army.name : 'Independent army'}<span>Home · {info.home?.name ?? 'Unassigned'}</span></p><div className="army-banner-status"><span className={`command-pill ${army.status === 'moving' ? 'marching' : ''}`}><Icon name={army.status === 'moving' ? 'horse' : info.orders.length ? 'time' : 'flag'} size={14}/>{info.state}{army.status === 'moving' ? ` · ${clock(info.arrival)} to arrive` : info.local ? ` at ${info.local.name}` : ''}</span><span>Field {field.col}, {field.row}</span></div></div>
+            <div className="army-banner-effects"><div><strong>{count(info.total)}</strong><small>Soldiers</small></div><div title="Hero damage multiplied by home city smithies"><strong>+{percent(info.damage - 1)}</strong><small>Troop damage</small></div><div><strong>+{percent(info.bonuses.speed - 1)}</strong><small>March speed</small></div></div>
+            <div className="army-banner-actions">{onMap && <><button className="command-button primary" disabled={busy || !!info.orders.length} onClick={() => onMap(army.id, true)}>{info.orders.length ? 'Finish training to march' : 'Give orders'}<Icon name="arrow" size={16}/></button><button className="command-text-button" onClick={() => onMap(army.id)}><Icon name="focus" size={15}/>Locate on map</button></>}{points > 0 && <button className="command-text-button skill-points-link" onClick={() => changeTab('commander')}><Icon name="sparkles" size={15}/>{points} skill {points === 1 ? 'point' : 'points'} available</button>}</div>
+        </div>
+        <nav className="army-command-tabs" aria-label="Army management">{tabs.map(item => <button key={item.id} aria-current={tab === item.id ? 'page' : undefined} onClick={() => changeTab(item.id)}><Icon name={item.icon} size={17}/>{item.label}{item.id === 'commander' && points > 0 && <b>{points}</b>}{item.id === 'army' && info.orders.length > 0 && <b>{info.orders.length}</b>}</button>)}</nav>
+        <div className="army-command-body" key={army.id} role="region" aria-label={tabs.find(item => item.id === tab)?.label + ' management'}>
+            {tab === 'army' ? <RecruitmentPanel world={world} army={army} city={city} run={run} busy={busy} now={now} onCity={onCity} onOpenCity={onOpenCity} onLogistics={() => changeTab('logistics')}/> : tab === 'commander' ? <HeroPanel world={world} army={army} run={run} busy={busy} now={now} onCity={onOpenCity}/> : tab === 'equipment' ? <EquipmentPanel world={world} army={army} run={run} busy={busy} onArmy={onArmy}/> : <ArmyLogistics world={world} army={army} cityId={city.id} now={now} run={run} busy={busy} onMap={onMap}/>}
+        </div></> : <div className="command-empty"><Icon name="army" size={42}/><h2>Your first banner awaits.</h2><p>Raise an army to choose a commander and start recruiting soldiers.</p></div>}
+        {hireOpen && city && <HireArmyDialog world={world} owner={playerId} cityId={city.id} now={now} run={run} busy={busy} onClose={() => setHire(false)} onCreated={id => { setHire(false); onArmy?.(id); changeTab('army'); }}/>}
+    </section>;
 }

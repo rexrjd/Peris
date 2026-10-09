@@ -14,7 +14,7 @@ test('horizontal navigation exposes all destinations and exactly one current pag
     const html = renderToStaticMarkup(React.createElement(GameNavigation, { view, rewards: false, onNavigate: () => {} }));
     assert.equal((html.match(/<button/g) ?? []).length, 4);
     assert.equal((html.match(/aria-current="page"/g) ?? []).length, 1);
-    for (const label of ['Map', 'City', 'Army', 'Reports']) assert.ok(html.includes(label));
+    for (const label of ['Map', 'City', 'Armies', 'Reports']) assert.ok(html.includes(label));
     assert.ok(!html.includes('side-rail'));
   }
 });
