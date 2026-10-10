@@ -90,7 +90,7 @@ do $$declare t text;begin
  execute format('revoke all on public.%I from public,anon,authenticated',t);
  execute format('grant select on public.%I to authenticated',t);
  execute format('drop policy if exists "own gameplay data" on public.%I',t);
- execute format('create policy "own gameplay data" on public.%I for select to authenticated using(owner_id=auth.uid())',t);
+ execute format('create policy "own gameplay data" on public.%I for select to authenticated using(owner_id=public.peris_player_id())',t);
  end loop;
 end $$;
 alter table public.peris_artifact_catalog enable row level security;

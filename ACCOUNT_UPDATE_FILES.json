@@ -1,0 +1,354 @@
+{
+  "baseline_commit": "3a598fde295c6dd3d62db81de430b5aac29ef388",
+  "original_account_baseline": "6fcc0df4ceeccacbb051dc51e697d785d6ea4158",
+  "archive_type": "changed-files update, merged with Frontier Wars",
+  "database_upgrade": "supabase/UPGRADE_TO_V14.sql",
+  "account_sql_changed_since_original_delivery": false,
+  "files": [
+    {
+      "path": "README.md",
+      "size": 9045,
+      "sha256": "a27ec86fb9121916d61c05ea53a7691f3497615ad636d2e81f97becfe3e3c38d"
+    },
+    {
+      "path": "docs/name-only-accounts.md",
+      "size": 7235,
+      "sha256": "239efe835f9d3c6de1a0e7a62850d87b361824b06462377bdc59fea1e281547b"
+    },
+    {
+      "path": "package.json",
+      "size": 3355,
+      "sha256": "601678542447572c3c20f6e573781b0edfb1a13e39e02ac56196f028561cf1bc"
+    },
+    {
+      "path": "scripts/build-sql.mjs",
+      "size": 2612,
+      "sha256": "e22ac2eeea36b93320e6d4e740556dd206a09eab7d4fdfc458e0116aefca85e5"
+    },
+    {
+      "path": "src/app/App.tsx",
+      "size": 23713,
+      "sha256": "05a69a2bbac024bc6f2e771da993d44e6f7ef92b6da400812b3bc57eb62b2bbc"
+    },
+    {
+      "path": "src/engine/online/OnlineEngine.ts",
+      "size": 20677,
+      "sha256": "0f5e9ea67d53c8fdb0f4fc22c2f1342e5462939bc678ee54f6d7bdc09cfd6a64"
+    },
+    {
+      "path": "src/features/menu/ui/Login.tsx",
+      "size": 10488,
+      "sha256": "c255d40919410ee9945f7cc56bd9b621b66edc5ec371c34263590d0491fabab0"
+    },
+    {
+      "path": "src/platform/backend/accountLogin.ts",
+      "size": 2444,
+      "sha256": "025f228643b08361b6eed27ffe271a2237b8093b406d6fc298e7ffe4d08f4359"
+    },
+    {
+      "path": "src/platform/backend/accountStorage.ts",
+      "size": 1973,
+      "sha256": "c089e221b87da9f40ab262ab3122e7b63f8e2c9cd559f7facb8a329f0f1f3f4e"
+    },
+    {
+      "path": "src/platform/backend/accounts.ts",
+      "size": 2208,
+      "sha256": "7013b4e3f96b33198a938ecd1a4b54b3cceb99a43826654c4aefd8c506e4e689"
+    },
+    {
+      "path": "src/platform/backend/supabase.ts",
+      "size": 1212,
+      "sha256": "1c99b92a2f89e5e78dff2f2d0707aacc5979f0e0078e66658e20a72f07fb518f"
+    },
+    {
+      "path": "supabase/FIX_MULTIPLAYER_SIGNUP.sql",
+      "size": 4730,
+      "sha256": "199c0f766aea5315c2bf1a6cf4adeb1008ebba0ec56004c6b4de57fdfcfb95b7"
+    },
+    {
+      "path": "supabase/FRESH_INSTALL_V10.sql",
+      "size": 456606,
+      "sha256": "e0f6a65acb4c0a00761b578b8fb371a2ce094ffda0ef1249088f09c82bd5b298"
+    },
+    {
+      "path": "supabase/FRESH_INSTALL_V11.sql",
+      "size": 456606,
+      "sha256": "e0f6a65acb4c0a00761b578b8fb371a2ce094ffda0ef1249088f09c82bd5b298"
+    },
+    {
+      "path": "supabase/FRESH_INSTALL_V12.sql",
+      "size": 456606,
+      "sha256": "e0f6a65acb4c0a00761b578b8fb371a2ce094ffda0ef1249088f09c82bd5b298"
+    },
+    {
+      "path": "supabase/FRESH_INSTALL_V13.sql",
+      "size": 456606,
+      "sha256": "e0f6a65acb4c0a00761b578b8fb371a2ce094ffda0ef1249088f09c82bd5b298"
+    },
+    {
+      "path": "supabase/FRESH_INSTALL_V14.sql",
+      "size": 456606,
+      "sha256": "e0f6a65acb4c0a00761b578b8fb371a2ce094ffda0ef1249088f09c82bd5b298"
+    },
+    {
+      "path": "supabase/FRESH_INSTALL_V6.sql",
+      "size": 456606,
+      "sha256": "e0f6a65acb4c0a00761b578b8fb371a2ce094ffda0ef1249088f09c82bd5b298"
+    },
+    {
+      "path": "supabase/FRESH_INSTALL_V7.sql",
+      "size": 456606,
+      "sha256": "e0f6a65acb4c0a00761b578b8fb371a2ce094ffda0ef1249088f09c82bd5b298"
+    },
+    {
+      "path": "supabase/FRESH_INSTALL_V8.sql",
+      "size": 456606,
+      "sha256": "e0f6a65acb4c0a00761b578b8fb371a2ce094ffda0ef1249088f09c82bd5b298"
+    },
+    {
+      "path": "supabase/FRESH_INSTALL_V9.sql",
+      "size": 456606,
+      "sha256": "e0f6a65acb4c0a00761b578b8fb371a2ce094ffda0ef1249088f09c82bd5b298"
+    },
+    {
+      "path": "supabase/UPGRADE_TO_V10.sql",
+      "size": 416558,
+      "sha256": "e217620d79220e8e6641d40f951af0f8063d18f8d3db082c5beed930540d01cf"
+    },
+    {
+      "path": "supabase/UPGRADE_TO_V11.sql",
+      "size": 416558,
+      "sha256": "e217620d79220e8e6641d40f951af0f8063d18f8d3db082c5beed930540d01cf"
+    },
+    {
+      "path": "supabase/UPGRADE_TO_V12.sql",
+      "size": 416558,
+      "sha256": "e217620d79220e8e6641d40f951af0f8063d18f8d3db082c5beed930540d01cf"
+    },
+    {
+      "path": "supabase/UPGRADE_TO_V13.sql",
+      "size": 416558,
+      "sha256": "e217620d79220e8e6641d40f951af0f8063d18f8d3db082c5beed930540d01cf"
+    },
+    {
+      "path": "supabase/UPGRADE_TO_V14.sql",
+      "size": 416558,
+      "sha256": "e217620d79220e8e6641d40f951af0f8063d18f8d3db082c5beed930540d01cf"
+    },
+    {
+      "path": "supabase/UPGRADE_TO_V7.sql",
+      "size": 416558,
+      "sha256": "e217620d79220e8e6641d40f951af0f8063d18f8d3db082c5beed930540d01cf"
+    },
+    {
+      "path": "supabase/UPGRADE_TO_V8.sql",
+      "size": 416558,
+      "sha256": "e217620d79220e8e6641d40f951af0f8063d18f8d3db082c5beed930540d01cf"
+    },
+    {
+      "path": "supabase/UPGRADE_TO_V9.sql",
+      "size": 416558,
+      "sha256": "e217620d79220e8e6641d40f951af0f8063d18f8d3db082c5beed930540d01cf"
+    },
+    {
+      "path": "supabase/UPGRADE_V5_TO_V6.sql",
+      "size": 416558,
+      "sha256": "e217620d79220e8e6641d40f951af0f8063d18f8d3db082c5beed930540d01cf"
+    },
+    {
+      "path": "supabase/modules/accounts/create_player.sql",
+      "size": 4312,
+      "sha256": "d8e4f5e49537f7ac75307806d1e9c39f3ea3d1bd38a019915d378561b9d39096"
+    },
+    {
+      "path": "supabase/modules/accounts/login.sql",
+      "size": 1783,
+      "sha256": "eeb7707c3fabb6047b185a2db838024f010312508031de054de2ab2c3b679d8d"
+    },
+    {
+      "path": "supabase/modules/accounts/policies.sql",
+      "size": 1328,
+      "sha256": "e0e73397aa1b6b94ecdfecfe37e4f2fd03d63ff5176c80d06a0f278102f9e39b"
+    },
+    {
+      "path": "supabase/modules/accounts/sessions.sql",
+      "size": 1340,
+      "sha256": "7fc0f4b35958d2f34476c2a1d3d841070255448422b2fd943af66f4de7558c3f"
+    },
+    {
+      "path": "supabase/modules/army/peris_queue_recruit.sql",
+      "size": 2939,
+      "sha256": "c3a7d8c41d78ebd7a44ca5611d45098a29dee5c808499827a8761768a50a1899"
+    },
+    {
+      "path": "supabase/modules/battle/peris_order.sql",
+      "size": 4518,
+      "sha256": "1fbb650b1bb2c4d8d5c26a6c7138bdfd540576bc4eb3bd429cc5049805ee6632"
+    },
+    {
+      "path": "supabase/modules/battle/peris_rally.sql",
+      "size": 1311,
+      "sha256": "5fdaa2b908f4ecf85eb2bfc48750e45b159941244372bafe62a43db2a67a58ce"
+    },
+    {
+      "path": "supabase/modules/battle/peris_ready.sql",
+      "size": 664,
+      "sha256": "49ec1c3cdeaddc3924d330790b78741b161c8c9adda7823f8cf3f7b0088b6a68"
+    },
+    {
+      "path": "supabase/modules/battle/peris_tick.sql",
+      "size": 13194,
+      "sha256": "87cd363dff0d1208a1cf1992086739fe95d4b9bfa0d23b35fe49b7bb77cccdc8"
+    },
+    {
+      "path": "supabase/modules/battle/retreat_from_battle.sql",
+      "size": 617,
+      "sha256": "ee9e7a0c406d2565165748db3b2c6197996c4583a083a2e11ba4c13461434d12"
+    },
+    {
+      "path": "supabase/modules/campaign/peris_claim.sql",
+      "size": 1257,
+      "sha256": "66dc81ccc7cd2f31fdc3eaa7211738b71cacea0c5d0bddc67ee8e3cec037c4d8"
+    },
+    {
+      "path": "supabase/modules/campaign/peris_raid.sql",
+      "size": 978,
+      "sha256": "3409e12160350f1c93a73603d4abd19928c54cc3e814ef0cf950db7e98412a65"
+    },
+    {
+      "path": "supabase/modules/campaign/sync_my_state.sql",
+      "size": 969,
+      "sha256": "e9f56d197e518d7d6b20dcb2a53921fd39b79470230bdad2b3bcdb14c63f8fe7"
+    },
+    {
+      "path": "supabase/modules/city/city-slots.sql",
+      "size": 8019,
+      "sha256": "c0419ed5e630da3e85d5e8570e99105c71491af927d6d1f415fe8ef5b912569c"
+    },
+    {
+      "path": "supabase/modules/city/peris_queue_upgrade.sql",
+      "size": 2464,
+      "sha256": "ad1ba8a686268bc67b3d7029e1f6be8adcaff66c0e9e94b9346dbf5bc5ef5bc5"
+    },
+    {
+      "path": "supabase/modules/city/peris_rename.sql",
+      "size": 607,
+      "sha256": "cd251d9bcfd485513b8c4886018cf2eed85a09053bfc7b798625e180df0e4be9"
+    },
+    {
+      "path": "supabase/modules/empire/gameplay.sql",
+      "size": 23066,
+      "sha256": "09787517831706814d1a4c24599f077977b962514815ef6f36fc535ae3542710"
+    },
+    {
+      "path": "supabase/modules/empire/schema.sql",
+      "size": 9215,
+      "sha256": "633c913b5f0950f0ec01bd02e5882f003f4812fd1642fa03599be4178378bf83"
+    },
+    {
+      "path": "supabase/modules/factions/city-factions.sql",
+      "size": 6302,
+      "sha256": "0b4da20c268ee270b51e84ed742b63d1f09f43cc4c091f0bf933fd0d4d8f430c"
+    },
+    {
+      "path": "supabase/modules/install/fresh-base.sql",
+      "size": 40054,
+      "sha256": "912886d44e48c98051405df01b959d4dc35b5c2a1f7c3acef75347e4494cefa4"
+    },
+    {
+      "path": "supabase/modules/magic/mage-tower.sql",
+      "size": 12158,
+      "sha256": "ceda521adcc9e2b27cdc11234efbba84fdbf92c2a30790230f3d3109d69b05de"
+    },
+    {
+      "path": "supabase/modules/manifest.json",
+      "size": 1217,
+      "sha256": "d021cb8bc40f0c30466d460b88abc6aa3ed682bbcc0565a470e76d04c2675ca5"
+    },
+    {
+      "path": "supabase/modules/map/move_army.sql",
+      "size": 1359,
+      "sha256": "bbd3fe5b6c75e7e1b99ddd57ad5193d561e12a3c023cbfbbaa8586ad47cb4aed"
+    },
+    {
+      "path": "supabase/modules/map/peris_march.sql",
+      "size": 4070,
+      "sha256": "7f0222637f28d0843902718bcf068d4cda75a15b1a2d7492651f1abc50107bb1"
+    },
+    {
+      "path": "supabase/modules/map/territory.sql",
+      "size": 12881,
+      "sha256": "179da42b2b312af87eb5cc90c23dc6c8814e35f79fbd1c823ddd8b686dbda702"
+    },
+    {
+      "path": "supabase/modules/multiplayer/peris_challenge.sql",
+      "size": 1073,
+      "sha256": "9fea918017856b5c829da232a514a8d2c8690f26dc63472ce1354caeec82f451"
+    },
+    {
+      "path": "supabase/modules/multiplayer/peris_respond.sql",
+      "size": 3021,
+      "sha256": "028c6436752007edb60181904131f8327f693a07140c856914777af0e97d564c"
+    },
+    {
+      "path": "supabase/modules/schema/base.sql",
+      "size": 9968,
+      "sha256": "b3b8758ffcff1813f711bd27809356b2eb698a0d3b3606bfce03d6fd46cc9249"
+    },
+    {
+      "path": "supabase/modules/security/permissions.sql",
+      "size": 2879,
+      "sha256": "aa5147e2cb1929f6926f5f6c27b2be6a09f8f15f69b2c786792e5d47e5c1f530"
+    },
+    {
+      "path": "supabase/modules/snapshot/peris_map_snapshot.sql",
+      "size": 4651,
+      "sha256": "d100d5760f8e67437a449e08e15bc95cf03108907436bc872409d705885669a5"
+    },
+    {
+      "path": "supabase/modules/snapshot/peris_snapshot.sql",
+      "size": 3606,
+      "sha256": "f4fda2b65482afa9f7c9311a1c6a82360f96e512719096714f864029d00781b2"
+    },
+    {
+      "path": "supabase/schema.sql",
+      "size": 416558,
+      "sha256": "e217620d79220e8e6641d40f951af0f8063d18f8d3db082c5beed930540d01cf"
+    },
+    {
+      "path": "tests/account-login.test.ts",
+      "size": 4178,
+      "sha256": "ffae55449fc98190b281acd9f33b344c9ca7340c382f94bfe075dd1aeb385521"
+    },
+    {
+      "path": "tests/accounts-database.test.mjs",
+      "size": 9868,
+      "sha256": "8eaaa8f71006d805ee444f5387d25d158ddacc7e91dbb4433eb051a183385322"
+    },
+    {
+      "path": "tests/e2e/accounts.spec.ts",
+      "size": 5652,
+      "sha256": "e4a44ad9c8d55f8066ce102a270611b1cdb41e5b45a4610e404cfb0b51a21e29"
+    },
+    {
+      "path": "tests/e2e/frontier.spec.ts",
+      "size": 3861,
+      "sha256": "6dedc916ba08099dd9a056b81625a5722a432ab74e15ac47ade084a738f5c1be"
+    },
+    {
+      "path": "tests/fixtures/accounts-v13.sql",
+      "size": 451092,
+      "sha256": "bf5d67e9de804f4d6e6411fcb3617e1e626233c37a2c03655071679ba61e2a81"
+    },
+    {
+      "path": "tests/fresh-database.test.mjs",
+      "size": 5445,
+      "sha256": "0e53d6ee75a24c5d1fc74e35496db0bc3716167c07b5a81de6cafdc350bdbc49"
+    },
+    {
+      "path": "tests/helpers/account-server.mjs",
+      "size": 4553,
+      "sha256": "3d1b5c0ec33e30d102de5fb0ad178fcef454d17fc8f74bf2494f3433c4ccfadd"
+    }
+  ]
+}

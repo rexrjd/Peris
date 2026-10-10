@@ -1,5 +1,5 @@
 create or replace function public.sync_my_state()returns jsonb language plpgsql security definer set search_path='' as $$
-declare u uuid:=auth.uid();a public.armies%rowtype;
+declare u uuid:=public.peris_player_id();a public.armies%rowtype;
 begin
  if u is null then raise exception 'Authentication required';end if;
  perform public.peris_settle(u);

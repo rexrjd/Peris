@@ -49,11 +49,11 @@ alter table public.peris_spell_research enable row level security;
 drop policy if exists "spell catalog" on public.peris_spell_catalog;
 create policy "spell catalog" on public.peris_spell_catalog for select to authenticated using(true);
 drop policy if exists "own researched spells" on public.peris_spell_research;
-create policy "own researched spells" on public.peris_spell_research for select to authenticated using(exists(select 1 from public.settlements s where s.id=settlement_id and s.owner_id=auth.uid()));
+create policy "own researched spells" on public.peris_spell_research for select to authenticated using(exists(select 1 from public.settlements s where s.id=settlement_id and s.owner_id=public.peris_player_id()));
 revoke all on public.peris_spell_catalog,public.peris_spell_research from public,anon,authenticated;
 grant select on public.peris_spell_catalog,public.peris_spell_research to authenticated;
 create or replace function public.peris_research_spell(p_spell text) returns jsonb language plpgsql security definer set search_path='' as $$
-declare u uuid:=auth.uid();s public.settlements%rowtype;sp public.peris_spell_catalog%rowtype;l integer;
+declare u uuid:=public.peris_player_id();s public.settlements%rowtype;sp public.peris_spell_catalog%rowtype;l integer;
 begin
  if u is null then raise exception 'Authentication required';end if;
  perform public.peris_settle(u);
@@ -70,7 +70,7 @@ begin
  return jsonb_build_object('ok',true);
 end $$;
 create or replace function public.peris_cast_spell(p_battle_id bigint,p_spell text,p_target bigint default null) returns jsonb language plpgsql security definer set search_path='' as $$
-declare u uuid:=auth.uid();b public.battles%rowtype;s public.settlements%rowtype;sp public.peris_spell_catalog%rowtype;f public.battle_formations%rowtype;t public.battle_formations%rowtype;
+declare u uuid:=public.peris_player_id();b public.battles%rowtype;s public.settlements%rowtype;sp public.peris_spell_catalog%rowtype;f public.battle_formations%rowtype;t public.battle_formations%rowtype;
  own_side text;friend boolean;single_target boolean;l integer;mana integer;ready numeric;idx integer:=0;cas integer;troops integer;mor numeric;alive_a boolean;alive_d boolean;hero_bonus jsonb;
 begin
  select * into b from public.battles where id=p_battle_id for update;

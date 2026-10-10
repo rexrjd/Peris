@@ -10,7 +10,8 @@ test('frontier village recruits, raids, returns, saves farm presets, and survive
     const health = await request.get('/api/frontier/health');
     expect(health.ok()).toBeTruthy();
 
-    await page.goto('/?frontier=1');
+    await page.goto('/');
+    await page.getByRole('link', { name: 'Frontier Wars · Mercenary camps', exact: true }).click();
     await page.getByLabel('Village name').fill(`Frontier ${testInfo.project.name.slice(0, 8)}`);
     await page.getByRole('combobox', { name: 'Faction', exact: true }).selectOption('persian');
     await page.getByRole('button', { name: 'Raise your standard' }).click();

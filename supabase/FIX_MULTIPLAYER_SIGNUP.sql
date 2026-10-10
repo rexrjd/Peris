@@ -13,6 +13,11 @@ create or replace function public.create_player(p_display_name text)returns json
 declare u uuid:=auth.uid();n text:=btrim(p_display_name);sp public.spawn_points%rowtype;candidate public.spawn_points%rowtype;sid bigint;land bytea;cx integer;cy integer;
 begin
  if u is null then raise exception 'Authentication required';end if;
+ -- Older clients may retry allocation after a name-based account recovery.
+ -- The guard also keeps the standalone V10-V13 signup hotfix compatible.
+ if to_regprocedure('public.peris_player_id()') is not null then
+  execute 'select public.peris_player_id()'into u;
+ end if;
  if exists(select 1 from public.players where id=u)then return jsonb_build_object('ok',true);end if;
  if n is null or n!~'^[A-Za-z0-9 _-]{2,20}$'then raise exception 'Use 2-20 letters, numbers, spaces, _ or -';end if;
  -- Try sites in ID order before running proximity checks. A single sorted

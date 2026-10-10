@@ -6,6 +6,8 @@ try{
  await db.exec(`create schema auth;create table auth.users(id uuid primary key);create role anon;create role authenticated;create role service_role;create function auth.uid()returns uuid language sql as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;grant usage on schema public,auth to authenticated,anon;grant execute on function auth.uid()to authenticated,anon;create publication supabase_realtime;`);
  const sql=await readFile('supabase/FRESH_INSTALL_V8.sql','utf8');
  await db.exec(sql);
+ await db.exec(sql); // Reinitializing an empty world retains account-binding constraints.
+ assert.equal((await db.query("select count(*) n from pg_constraint where conrelid='public.peris_account_sessions'::regclass and confrelid='public.players'::regclass and contype='f'")).rows[0].n,1);
  const sites=(await db.query('select count(*) as n,count(distinct (x,y)) as positions from public.spawn_points')).rows[0];
  assert.ok(sites.n>1000,'A persistent realm provides thousands of settlement candidates');assert.equal(sites.positions,sites.n);
  assert.equal((await db.query('select count(*) as n from public.spawn_points where not public.peris_world_walkable(x,y)')).rows[0].n,0);

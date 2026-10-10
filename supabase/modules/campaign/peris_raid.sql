@@ -1,5 +1,5 @@
 create or replace function public.peris_raid(p_camp_id integer) returns jsonb language plpgsql security definer set search_path='' as $$
-declare u uuid:=auth.uid();c public.peris_camps%rowtype;a public.armies%rowtype;
+declare u uuid:=public.peris_player_id();c public.peris_camps%rowtype;a public.armies%rowtype;
 begin
  if u is null then raise exception 'Authentication required';end if;
  select * into c from public.peris_camps where id=p_camp_id;if c.id is null then raise exception 'Camp not found';end if;

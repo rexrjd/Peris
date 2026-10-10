@@ -28,6 +28,7 @@ Requires Node 20.19 or later. Run `npm install`, then `npm run dev`. Use `npm.cm
 - `npm run test:db`: isolated upgrade/permissions/economy/tactical/PvP integration checks.
 - `npm run test:fresh`: isolated empty installation and existing-world protection.
 - `npm run test:signup-db`: existing-world signup hotfix, realistic planner/camp load, spacing, retries and data preservation.
+- `npm run test:accounts-db`: name-based recovery, independent sessions, migration preservation, RLS and recovered-ruler gameplay/PvP.
 - `npm run build:sql` / `npm run check:sql`: generate/verify complete SQL bundles from modular source.
 - `npm run test:territory-db` / `npm run test:map-db`: persistent land/construction, wrapped visibility, faction metadata and privacy checks.
 - `npm run build:standalone`: generate `standalone/Peris-v8-playable.html` for solo play.
@@ -69,3 +70,9 @@ Each faction has 20 original painted hero portraits (220 total). Every NPC victo
 ### Multiplayer signup timeout fix
 
 If creating a ruler reports **canceling statement due to statement timeout**, run the complete `supabase/FIX_MULTIPLAYER_SIGNUP.sql` in Supabase SQL Editor, then retry the same ruler name. This targeted V10–V13 hotfix preserves existing accounts, cities, armies, equipment and world data. Updated full installers include it too. See [signup fix](docs/multiplayer-signup-fix.md) for the cause and verification.
+
+### V14: name-only accounts
+
+Enter a ruler name to control that account. Names are case-insensitive and ignore surrounding spaces. Existing names reopen their original realm from any browser; new names create one starter city, army and commander. Page refreshes resume the current realm, expired sessions reconnect by name, and **Menu → Switch ruler** returns to name entry. Each tab has an independent connection. Knowing a name is intentionally sufficient to control its account.
+
+Apply **`supabase/UPGRADE_TO_V14.sql`** to the existing database before deploying this frontend. Player IDs and progress remain intact, and anonymous Auth-user cleanup no longer deletes a ruler. Use `FRESH_INSTALL_V14.sql` only for an empty database. See [account stability](docs/name-only-accounts.md).

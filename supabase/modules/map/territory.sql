@@ -32,7 +32,7 @@ create index if not exists peris_map_plots_settlement_idx on public.peris_map_pl
 create index if not exists peris_map_plots_bounds_idx on public.peris_map_plots(row,col);
 alter table public.peris_map_plots enable row level security;
 drop policy if exists "own map plots" on public.peris_map_plots;
-create policy "own map plots" on public.peris_map_plots for select to authenticated using(owner_id=auth.uid());
+create policy "own map plots" on public.peris_map_plots for select to authenticated using(owner_id=public.peris_player_id());
 revoke all on public.peris_map_plots from public,anon,authenticated;
 grant select on public.peris_map_plots to authenticated;
 alter table public.peris_orders drop constraint if exists peris_orders_kind_check;
@@ -78,7 +78,7 @@ end $$;
 
 create or replace function public.peris_claim_field(p_col integer,p_row integer) returns jsonb
 language plpgsql security definer set search_path='' as $$
-declare u uuid:=auth.uid();s public.settlements%rowtype;c integer;r integer;home_col integer;home_row integer;distance integer;owned integer;population integer;allowance integer;
+declare u uuid:=public.peris_player_id();s public.settlements%rowtype;c integer;r integer;home_col integer;home_row integer;distance integer;owned integer;population integer;allowance integer;
 begin
  if u is null then raise exception 'Authentication required';end if;
  if p_col is null or p_row is null then raise exception 'Choose whole field coordinates';end if;
@@ -111,7 +111,7 @@ end $$;
 
 create or replace function public.peris_queue_field(p_col integer,p_row integer,p_type text) returns jsonb
 language plpgsql security definer set search_path='' as $$
-declare u uuid:=auth.uid();s public.settlements%rowtype;p public.peris_map_plots%rowtype;c integer;r integer;factor numeric;cw numeric;cs numeric;cf numeric;cg numeric;
+declare u uuid:=public.peris_player_id();s public.settlements%rowtype;p public.peris_map_plots%rowtype;c integer;r integer;factor numeric;cw numeric;cs numeric;cf numeric;cg numeric;
 begin
  if u is null then raise exception 'Authentication required';end if;
  if p_col is null or p_row is null or p_type is null or p_type not in ('lumber','quarry','farm','market') then raise exception 'Choose a valid resource building and field';end if;
