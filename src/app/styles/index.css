@@ -36,3 +36,5 @@
 @import '../../features/city/styles/command-bar.css';
 @import '../../features/army/styles/command-room.css';
 @import '../../features/map/styles/march.css';
+@import '../../features/city/rendering/paintedSettlement.css';
+@import '../../features/city/styles/village-screen.css';

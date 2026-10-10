@@ -59,13 +59,14 @@ test('quick access opens campaign buildings and links to Frontier farm lists', a
   for (const building of ['Barracks', 'Stables', 'Warehouse', 'Granary']) {
     await quick.click();
     await shortcuts.getByRole('button', { name: new RegExp(`^${building}`) }).click();
-    await expect(page.getByRole('complementary', { name: 'Selected building' })).toBeVisible();
+    await expect(page.getByRole('dialog', { name: 'Selected building' })).toBeVisible();
     await expect(page.getByRole('radio', { name: new RegExp(`^${building}`) })).toBeChecked();
     await expect(page.getByRole('button', { name: `Build ${building}`, exact: true })).toBeVisible();
+    await page.keyboard.press('Escape');
   }
   await quick.click();
   await shortcuts.getByRole('button', { name: /^Main building/ }).click();
-  await expect(page.getByRole('complementary', { name: 'Selected building' }).getByRole('heading', { name: 'Main building', exact: true })).toBeVisible();
+  await expect(page.getByRole('dialog', { name: 'Selected building' }).getByRole('heading', { name: 'Main building', exact: true })).toBeVisible();
   await capture(page, testInfo, 'campaign-building-shortcut');
   await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   expect(errors).toEqual([]);

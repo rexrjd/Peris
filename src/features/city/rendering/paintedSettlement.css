@@ -1,0 +1,51 @@
+.painted-settlement-scene{position:relative;width:100%;aspect-ratio:1000/680;isolation:isolate;overflow:hidden;border-radius:8px;background:#95a578;box-shadow:inset 0 0 50px #233b2438}
+.painted-city-ground,.painted-city-plots{position:absolute;inset:0;width:100%;height:100%}
+.painted-city-plots{pointer-events:none}
+.painted-city-plot{position:absolute;aspect-ratio:1;transform:translate(-50%,-79%);border:0;padding:0;background:transparent;cursor:pointer;pointer-events:auto;isolation:isolate;-webkit-tap-highlight-color:transparent;outline:none;color:#f7e8bc}
+.painted-city-plot:focus-visible,.painted-city-plot:hover{z-index:1000!important}
+.painted-city-plot .city-building-artwork,.painted-city-gate{position:absolute;inset:0;width:100%;height:100%;display:block;background-repeat:no-repeat;pointer-events:none}
+.painted-city-plot .city-building-artwork{top:auto;bottom:0;height:auto}
+.painted-city-footprint{position:absolute;left:12%;right:12%;bottom:9%;height:30%;border-radius:50%;border:1px solid transparent;transition:background-color .15s,border-color .15s;z-index:-1}
+.painted-city-plot:hover .painted-city-footprint,.painted-city-plot.selected .painted-city-footprint,.painted-city-plot:focus-visible .painted-city-footprint{border-color:#fff1a5;background:#ffe9a523;box-shadow:0 0 0 2px #62533150}
+.painted-city-plot:focus-visible .painted-city-footprint{box-shadow:0 0 0 3px #fff2ad}
+.painted-city-foundation{position:absolute;left:19%;right:19%;bottom:12%;height:31%;background:#b7a07791;border:1px dashed #574e3370;transform:rotate(-6deg);border-radius:25%;box-shadow:inset 0 0 15px #a5885b55;pointer-events:none}
+.painted-city-foundation i{position:absolute;width:3%;height:24%;background:#776043;box-shadow:1px 1px 0 #dbc796}
+.painted-city-foundation i:nth-child(1){left:6%;top:4%}.painted-city-foundation i:nth-child(2){right:6%;top:4%}.painted-city-foundation i:nth-child(3){left:6%;bottom:4%}.painted-city-foundation i:nth-child(4){right:6%;bottom:4%}
+.painted-city-plot .city-level-badge{position:absolute;left:50%;bottom:3%;transform:translateX(-50%);display:grid;place-items:center;min-width:23px;height:23px;padding:0 4px;border-radius:50%;border:1px solid #c3ae72;background:#e9deb9;color:#423f29;font:600 11px/1 Georgia,serif;box-shadow:0 1px 4px #263b2d88;pointer-events:none}
+.painted-city-plot.unbuilt .city-level-badge{background:#eef0cc;border-color:#9faa74;color:#4b623d}
+.painted-city-plot.selected .city-level-badge{border-color:#ffdf90;background:#fff0c7;box-shadow:0 0 0 2px #6b603577}
+.painted-city-plot .city-level-badge:after{content:"";position:absolute;inset:-11px}
+.painted-city-plot .city-landmark-tooltip{position:absolute;left:50%;top:98%;transform:translateX(-50%);width:max-content;max-width:210px;text-align:center;display:none;pointer-events:none;background:#f7efd8f5;color:#3c422f;border:1px solid #aca074;border-radius:5px;padding:6px 9px;box-shadow:0 3px 10px #27322642;font:12px/1.4 'Open Sans',sans-serif;z-index:2}
+.painted-city-plot .city-landmark-tooltip strong,.painted-city-plot .city-landmark-tooltip small{display:block}
+.painted-city-plot .city-landmark-tooltip strong{font-family:Georgia,serif;font-size:13px}
+.painted-city-plot:hover .city-landmark-tooltip,.painted-city-plot:focus-visible .city-landmark-tooltip{display:block}
+.painted-city-plot.tooltip-left .city-landmark-tooltip{left:0;transform:none}
+.painted-city-plot.tooltip-right .city-landmark-tooltip{left:auto;right:0;transform:none}
+.painted-city-plot.tooltip-above .city-landmark-tooltip{top:auto;bottom:100%}
+.city-artwork-placeholder{position:absolute;left:24%;right:24%;bottom:18%;height:48%;display:grid;place-items:center;border-radius:8px;background:#e0d4accc;color:#666442;border:1px solid #82795e7d;box-shadow:0 3px 3px #34412d30;pointer-events:none}
+.painted-city-water{animation:city-water 18s linear infinite}
+.painted-city-smoke{position:absolute;left:62%;top:5%;width:13%;height:34%;pointer-events:none}
+.painted-city-smoke i{position:absolute;width:75%;aspect-ratio:1;border-radius:50%;background:#e0ddca66;filter:blur(3px);animation:city-smoke 7s ease-out infinite;bottom:0}
+.painted-city-smoke i:nth-child(2){animation-delay:-3.5s;left:8%}
+.painted-city-banner{transform-origin:89px 25px;animation:city-banner 7s ease-in-out infinite}
+.painted-city-magic{position:absolute;left:44%;top:14%;width:11%;height:11%;border-radius:50%;background:#c6e6bc70;box-shadow:0 0 10px #d4f3a378;animation:city-magic 6s ease-in-out infinite;pointer-events:none}
+.city-building-model-preview{height:190px;width:100%;overflow:hidden;position:relative}
+.city-building-model-fallback{height:100%;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px;color:#808567}
+.city-building-model-fallback small{font-size:11px}
+.city-building-artwork{display:block;width:100%;aspect-ratio:1;background-repeat:no-repeat}
+.game-shell .city-stage.village-screen .city-landmark-label,.game-shell .city-stage.village-screen .city-landmark-label.slot-label:not(.selected),.game-shell .city-stage.village-screen .city-landmark-label.selected{width:44px;min-width:44px;height:44px;min-height:44px;padding:0;display:grid;place-items:center;background:transparent;border:0;box-shadow:none;border-radius:50%;outline:none;white-space:normal}
+.game-shell .city-stage.village-screen .city-landmark-label:hover,.game-shell .city-stage.village-screen .city-landmark-label:focus-visible{background:transparent;z-index:1000}
+.game-shell .city-stage.village-screen .city-landmark-label em.city-level-badge,.game-shell .city-stage.village-screen .city-landmark-label.selected em.city-level-badge{display:grid;place-items:center;width:25px;height:25px;min-width:25px;background:#ebe2c3;color:#3b462e;border:1px solid #a8a67b;border-radius:50%;font:600 12px/1 Georgia,serif;box-shadow:0 2px 5px #23322188}
+.game-shell .city-stage.village-screen .city-landmark-label.unbuilt em.city-level-badge{background:#edf0d0;border-color:#b4be8e;color:#4d653c}
+.game-shell .city-stage.village-screen .city-landmark-label.selected em.city-level-badge,.game-shell .city-stage.village-screen .city-landmark-label:hover em.city-level-badge{background:#fff0bc;border-color:#e4c36d}
+.game-shell .city-stage.village-screen .city-landmark-label:focus-visible em.city-level-badge{outline:2px solid #fff1be;outline-offset:3px}
+.game-shell .city-stage.village-screen .city-landmark-label .city-landmark-tooltip{position:absolute;left:50%;top:90%;transform:translateX(-50%);display:none;width:max-content;max-width:210px;background:#f7efd8f5;border:1px solid #aca074;border-radius:5px;padding:7px 10px;text-align:center;box-shadow:0 3px 10px #27322642;color:#3c422f;font:12px/1.4 'Open Sans',sans-serif;letter-spacing:normal;pointer-events:none}
+.game-shell .city-stage.village-screen .city-landmark-label:hover .city-landmark-tooltip,.game-shell .city-stage.village-screen .city-landmark-label:focus-visible .city-landmark-tooltip{display:block}
+.game-shell .city-stage.village-screen .city-landmark-label .city-landmark-tooltip strong,.game-shell .city-stage.village-screen .city-landmark-label .city-landmark-tooltip small{display:block;color:#3c422f}
+.game-shell .city-stage.village-screen .city-landmark-label .city-landmark-tooltip strong{font:13px/1.4 Georgia,serif}
+@keyframes city-water{to{stroke-dashoffset:-180}}
+@keyframes city-smoke{0%{transform:translate(0,0) scale(.4);opacity:0}20%{opacity:.55}100%{transform:translate(15px,-26px) scale(1.7);opacity:0}}
+@keyframes city-banner{0%,100%{transform:skewY(0deg)}50%{transform:skewY(2deg)}}
+@keyframes city-magic{0%,100%{opacity:.35}50%{opacity:.8}}
+@media(max-width:600px){.painted-city-plot{min-width:44px;min-height:44px}.painted-city-plot .city-level-badge{min-width:20px;height:20px;font-size:10px}.painted-city-plot .city-landmark-tooltip{max-width:150px;font-size:11px}.city-building-model-preview{height:155px}}
+@media(prefers-reduced-motion:reduce){.painted-city-water,.painted-city-smoke i,.painted-city-banner,.painted-city-magic{animation:none}.painted-city-smoke{display:none}}
