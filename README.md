@@ -49,3 +49,7 @@ All campaign, quick and accepted multiplayer battles use AI on both sides, inclu
 ### V12: world encounters
 
 Battles now cover five times the area and use the target world's biome. Stable seeded bandit camps provide faction-varied PvE raids, resources and hero XP. Ten original painted portraits identify commanders in the roster and on the map. See [world encounters](docs/world-battles-bandits-and-heroes.md). Existing Supabase worlds use `supabase/UPGRADE_TO_V12.sql`; empty databases use `supabase/FRESH_INSTALL_V12.sql`.
+
+### V13: commander portraits and victory rewards
+
+Each faction has 20 original painted hero portraits (220 total). Every NPC victory with a commander awards equipment, including repeat raids, with actual XP and gear recorded once in a compact battle receipt. Open equipment selects the rewarded commander and the new item directly. See [hero portraits and loot](docs/hero-portraits-and-loot.md). Existing Supabase worlds use `supabase/UPGRADE_TO_V13.sql`; empty databases use `supabase/FRESH_INSTALL_V13.sql`.

@@ -1,0 +1,18 @@
+PERIS V13 — HERO PORTRAITS, NPC LOOT & VICTORY UI
+
+Based on latest main 7a805622eab4c704e7a161d81a0de5cd962d5901.
+This is an update containing changed/new files, not a full repository.
+
+1. Copy the root files and directories into the Peris repository, preserving paths.
+   Alternatively use CHANGES.patch for the text changes, and copy the two portrait
+   asset directories. Merge overlapping later edits if your checkout is newer.
+2. Run npm ci, then npm run build.
+3. Online only: run supabase/UPGRADE_TO_V13.sql in the Supabase SQL editor.
+   It preserves existing cities, armies, equipment, XP and reports; it is safe to rerun.
+   FRESH_INSTALL_V13.sql is only for a new, empty database.
+
+Includes 220 runtime portraits, eleven editable source sheets/full prompts,
+repeatable NPC equipment rewards, actual XP/level receipts, and a compact popup.
+Open equipment selects the awarded item and the participating hero.
+Preview screenshots and validation details are included below.
+See docs/hero-portraits-and-loot.md for rules and commands.

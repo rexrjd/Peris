@@ -8,6 +8,11 @@ import { type Command } from '../../../shared/model/commands';
 import { campaignRank, conquered } from '../domain/progression';
 import { QUESTS } from '../domain/quests';
 import { mySide } from '../../battle/domain/ownership';
+import { ARTIFACTS, HERO_CLASSES, heroThreshold, MAX_HERO_LEVEL } from '../../heroes/domain/heroes';
+import { ARTIFACT_RARITY } from '../../heroes/domain/battleRewards';
+import { HeroPortrait, ArtifactGlyph } from '../../heroes/ui/HeroPortrait';
+import { count } from '../../army/domain/commandRoom';
+import '../styles/results.css';
 export function ResultBody({ result, won, draw = false, side = 'attacker', enemyName, formations = [], practice = false }: {
     result: BattleResult;
     won: boolean;
@@ -17,11 +22,31 @@ export function ResultBody({ result, won, draw = false, side = 'attacker', enemy
     formations?: Formation[];
     practice?: boolean;
 }) {
-    const loss = side === 'attacker' ? result.attacker_losses : result.defender_losses, enemyLoss = side === 'attacker' ? result.defender_losses : result.attacker_losses, survivors = side === 'attacker' ? result.attacker_survivors : result.defender_survivors, starting = survivors + loss;
-    const title = draw ? 'The field remains contested' : won ? loss / Math.max(1, starting) < .2 ? 'A decisive victory' : loss / Math.max(1, starting) > .5 ? 'A hard-won victory' : 'Victory' : result.reason === 'Withdrawal' ? 'The field is conceded' : 'The host must regroup';
-    return <><div className={`victory-seal ${won ? 'won' : ''}`}><Icon name={won ? 'crown' : 'shield'} size={42}/></div><span className="eyebrow">{won ? 'YOUR STANDARD STILL FLIES' : draw ? 'A STALEMATE' : 'THE SURVIVORS RETURN HOME'}</span><h2>{title}</h2><p className="result-enemy">{enemyName}</p><div className="result-caption"><span><Icon name="time" size={14}/>{clock(result.duration)}</span><span>{result.reason === 'Army routed' ? 'The opposing line broke' : result.reason === 'Withdrawal' ? 'Orderly withdrawal' : result.reason}</span></div><div className="result-stats"><div><b>{survivors}</b><small>Your survivors</small></div><div><b>{loss}</b><small>Your losses</small></div><div><b>{enemyLoss}</b><small>Enemy losses</small></div></div>
- {formations.length > 0 && <div className="result-units">{(['infantry', 'archers', 'cavalry'] as const).filter(t => formations.some(f => f.unit_type === t)).map(t => { const list = formations.filter(f => f.unit_type === t); return <div key={t}><Icon name={t === 'infantry' ? 'shield' : t === 'archers' ? 'bow' : 'horse'} size={21}/><span><strong>{UNITS[t].name}</strong><small>{list.reduce((n, f) => n + f.soldiers, 0)} returned · {list.reduce((n, f) => n + f.kills, 0)} enemy kills</small></span><b>{list.reduce((n, f) => n + f.initial_soldiers - f.soldiers, 0)}<small>lost</small></b></div>; })}</div>}
- {won && Object.values(result.loot ?? {}).some(n => n > 0) && <div className="result-loot"><span className="eyebrow">SUPPLIES BROUGHT HOME</span><Cost cost={result.loot}/></div>}<p className="result-advice">{practice ? 'Your campaign is unaffected. Try another formation or battlefield to refine your command.' : won ? 'The standard is yours. Replace your losses, strengthen the city, and prepare for the next field.' : 'A legion can be rebuilt. Train replacements at the keep; a stronger position can turn the next battle.'}</p></>;
+    const loss = side === 'attacker' ? result.attacker_losses : result.defender_losses, enemyLoss = side === 'attacker' ? result.defender_losses : result.attacker_losses, survivors = side === 'attacker' ? result.attacker_survivors : result.defender_survivors;
+    const title = draw ? 'Stalemate' : won ? 'Victory' : 'Defeat';
+    const reward = !practice ? result.hero_reward : undefined;
+    const levelled = reward && reward.level_after > reward.level_before;
+    const atMax = reward && reward.level_after >= MAX_HERO_LEVEL;
+    const floor = reward ? heroThreshold(reward.level_after) : 0, ceiling = reward ? heroThreshold(Math.min(MAX_HERO_LEVEL, reward.level_after + 1)) : 1;
+    const progress = reward ? atMax ? 100 : Math.max(0, Math.min(100, (reward.experience_after - floor) / Math.max(1, ceiling - floor) * 100)) : 0;
+    return <>
+        <header className="battle-result-heading"><span className={`result-outcome ${won ? 'won' : ''}`}><Icon name={won ? 'check' : 'shield'} size={23}/></span><div><span className="result-kicker">BATTLE COMPLETE</span><h2>{title}</h2><p>{enemyName}</p></div></header>
+        <div className="result-caption"><span><Icon name="time" size={13}/>{clock(result.duration)}</span><span>{result.reason === 'Army routed' ? won ? 'Enemy army routed' : 'Your army routed' : result.reason}</span></div>
+        {reward && <section className="result-hero-reward" aria-label="Hero experience">
+            <div className="result-hero-line"><HeroPortrait compact heroId={reward.hero_id} heroClass={reward.hero_class} faction={reward.faction}/><div><strong>{reward.hero_name}</strong><small>{HERO_CLASSES[reward.hero_class]?.name ?? 'Commander'} · Level {reward.level_after}</small>{levelled && <span className="result-level-up">Level {reward.level_before} → {reward.level_after}</span>}</div><span className="result-xp-gain"><b>+{count(reward.experience)}</b><small>Hero XP</small></span></div>
+            <div className="result-xp-progress" role="progressbar" aria-label="Hero level progress" aria-valuenow={Math.round(progress)} aria-valuemin={0} aria-valuemax={100}><i style={{width:`${progress}%`}}/></div>
+            <small className="result-xp-next">{atMax ? 'Maximum hero level reached' : `${count(reward.experience_after - floor)} / ${count(ceiling - floor)} XP to level ${reward.level_after + 1}`}{levelled ? ` · ${reward.level_after - reward.level_before} new skill ${reward.level_after - reward.level_before === 1 ? 'point' : 'points'}` : ''}</small>
+        </section>}
+        {won && reward && <section className="result-equipment" aria-label="Equipment received"><div className="result-section-heading"><h3>Equipment</h3><span>{reward.artifacts.length} {reward.artifacts.length === 1 ? 'item' : 'items'}</span></div>
+            {reward.artifacts.map(item => {const artifact = ARTIFACTS[item.artifact_id];if (!artifact) return null;const rarity = ARTIFACT_RARITY[item.artifact_id as keyof typeof ARTIFACT_RARITY] ?? 'Common';return <article key={item.id} className={`result-artifact rarity-${rarity.toLowerCase()}`}><span className="result-artifact-icon"><ArtifactGlyph slot={artifact.slot} magic={!!artifact.power}/></span><div><strong>{artifact.name}</strong><small>{artifact.description}</small></div><span className="result-artifact-rarity">{rarity}</span></article>;})}
+            <p>{reward.inventory_full ? 'Backpack full (200 items). No equipment was added.' : reward.artifacts.length ? 'Added to your shared backpack. Equip it from the army screen.' : 'No equipment received.'}</p>
+        </section>}
+        {won && Object.values(result.loot ?? {}).some(n => n > 0) && <section className="result-supplies" aria-label="Resource spoils"><h3>Resource spoils</h3><Cost cost={result.loot} compact/></section>}
+        <dl className="result-battle-totals"><div><dt>Survived</dt><dd>{count(survivors)}</dd></div><div className="result-losses"><dt>Your losses</dt><dd>{count(loss)}</dd></div><div><dt>Enemy losses</dt><dd>{count(enemyLoss)}</dd></div></dl>
+        {formations.length > 0 && <details className="result-breakdown"><summary>Troop breakdown<Icon name="chevron" size={14}/></summary><div className="result-units">{(['infantry', 'archers', 'cavalry'] as const).filter(t => formations.some(f => f.unit_type === t)).map(t => {const list = formations.filter(f => f.unit_type === t);return <div key={t}><Icon name={t === 'infantry' ? 'shield' : t === 'archers' ? 'bow' : 'horse'} size={17}/><span><strong>{UNITS[t].name}</strong><small>{count(list.reduce((n,f)=>n+f.soldiers,0))} returned</small></span><b>{count(list.reduce((n,f)=>n+f.initial_soldiers-f.soldiers,0))}<small>lost</small></b></div>;})}</div></details>}
+        {practice && <p className="result-practice-note">Practice battle · Your campaign is unaffected.</p>}
+    </>;
+
 }
 export function Chronicle({ world, playerId, onReport, run, onEnding }: {
     world: World;

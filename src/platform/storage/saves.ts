@@ -242,6 +242,17 @@ export function validateSave(data: unknown): World {
         validateLegacySave({...w,settlements:[origin],armies:[routeArmy],buildings:w.buildings.filter(b=>b.settlement_id===origin.id),city_slots:[],spell_research:[],map_plots:[],orders:[],settler_expeditions:[]});
     }
     for(const battle of w.battles)if(!armies.has(battle.attacker_army_id)||battle.defender_army_id!==null)invalid();
+    // Historical receipts remain valid even when equipment is moved to another hero.
+    for(const entry of [...w.battles,...w.reports]){
+        const reward=entry.result?.hero_reward;
+        if(reward==null)continue;
+        if(typeof reward!=='object'||!Number.isSafeInteger(reward.hero_id)||reward.hero_id<1||typeof reward.hero_name!=='string'||reward.hero_name.length<2||reward.hero_name.length>80||!Object.hasOwn(HERO_CLASSES,reward.hero_class)||reward.faction!=null&&!isFaction(reward.faction)||typeof reward.inventory_full!=='boolean'||!Array.isArray(reward.artifacts)||reward.artifacts.length>20)invalid();
+        for(const key of ['experience','experience_before','experience_after'] as const)if(!Number.isInteger(reward[key])||reward[key]<0||reward[key]>heroThreshold(MAX_HERO_LEVEL))invalid();
+        if(reward.experience_after-reward.experience_before!==reward.experience)invalid();
+        for(const when of ['before','after'] as const){const level=reward[`level_${when}`],xp=reward[`experience_${when}`];if(!Number.isInteger(level)||level<1||level>MAX_HERO_LEVEL||xp<heroThreshold(level)||level<MAX_HERO_LEVEL&&xp>=heroThreshold(level+1))invalid();}
+        const receiptIds=new Set<number>();
+        for(const item of reward.artifacts){if(!item||!Number.isSafeInteger(item.id)||item.id<1||receiptIds.has(item.id)||!Object.hasOwn(ARTIFACTS,item.artifact_id))invalid();receiptIds.add(item.id);}
+    }
     if(w.settlements.length===1&&w.armies.length===1){
         const legacy=validateLegacySave({...w,orders:w.orders.filter(o=>o.kind!=='settler'),settler_expeditions:[]});
         normalized.settlements=legacy.settlements;normalized.buildings=legacy.buildings;normalized.city_slots=legacy.city_slots;if(legacy.map_plots!==undefined)normalized.map_plots=legacy.map_plots;normalized.players=legacy.players;normalized.armies=legacy.armies;

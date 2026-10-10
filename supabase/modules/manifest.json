@@ -11,6 +11,7 @@
   "city/population.sql",
   "empire/gameplay.sql",
   "map/bandits.sql",
+  "heroes/battle-rewards.sql",
   "city/peris_settle.sql",
   "battle/peris_add_formations.sql",
   "campaign/peris_start_raid.sql",

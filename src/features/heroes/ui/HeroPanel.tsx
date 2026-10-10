@@ -19,7 +19,7 @@ export function HeroPanel({ world, army, run, busy, now, onCity }: { world: Worl
     const mana = maximumMana(towerCity ? towerLevel(world, towerCity.id) : 0) + bonuses.mana;
     const effects = { attack: 'Each point adds 2% troop damage.', defence: 'Each point adds 2.5% to damage protection.', power: 'Each point adds 8% to spell damage and healing.', knowledge: 'Each point adds 10 battle mana.' };
     return <div className="commander-layout">
-        <aside className="commander-dossier command-panel"><HeroPortrait heroClass={hero.class} faction={overview.home?.faction}/><span className="command-kicker">{base.name} · Level {level}</span><h2>{hero.name}</h2><p>{base.description}</p>
+        <aside className="commander-dossier command-panel"><HeroPortrait heroId={hero.id} heroClass={hero.class} faction={overview.home?.faction}/><span className="command-kicker">{base.name} · Level {level}</span><h2>{hero.name}</h2><p>{base.description}</p>
             <div className="command-xp"><div><span>{level === MAX_HERO_LEVEL ? 'Maximum level' : `Next rank · Level ${level + 1}`}</span><b>{level === MAX_HERO_LEVEL ? count(hero.experience) + ' XP' : `${count(earned)} / ${count(needed)} XP`}</b></div><div className="command-meter"><i style={{ width: `${progress}%` }}/></div><small>{count(hero.experience)} lifetime XP · Battles and victories earn experience.</small></div>
             <div className={`command-point-notice ${points > 0 ? 'available' : ''}`}><Icon name="sparkles"/><span>{points > 0 ? `${points} skill ${points === 1 ? 'point' : 'points'} to spend` : level === MAX_HERO_LEVEL ? 'All skill points spent' : 'Win battles to earn skill points'}</span></div>
         </aside>

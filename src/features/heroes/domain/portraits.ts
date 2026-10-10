@@ -1,6 +1,13 @@
 import { factionOf, type Faction } from '../../factions/domain/factions';
 import type { HeroClass } from './heroes';
-const PORTRAITS:Partial<Record<Faction,string>>={roman:'roman-knight',spartan:'spartan-captain',persian:'persian-mage',egyptian:'egyptian-seer',elf:'elf-ranger',dwarf:'dwarf-thane',gnome:'gnome-alchemist',pandaren:'panda-monk',undead:'undead-necromancer',demon:'demon-warlock'};
-/** Native original Orc artwork remains available alongside the ten painted portraits. */
-const orcFace=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 220"><rect width="200" height="220" fill="#202735"/><path d="M18 220 40 163 80 144H125L166 167 184 220" fill="#875d58"/><path d="M60 68 98 42 136 67 140 114 121 145 101 156 75 143 58 110" fill="#7c9668"/><path d="M100 44 136 67 140 114 121 145 101 156" fill="#5d7954"/><path d="M54 82 61 51 100 27 139 52 146 86 125 70H78" fill="#89939e"/><path d="M78 55 100 39 126 55M100 35V66" stroke="#c9a865" stroke-width="5" fill="none"/><path d="M73 97 90 95M112 95 130 98" stroke="#242631" stroke-width="5"/><path d="M80 130 74 111 91 133M110 133 129 111 124 134" fill="#eee0c1"/><path d="M88 133H113" stroke="#383438" stroke-width="4"/><path d="M23 173 57 152 80 169 68 192H25M120 167 144 152 177 177 168 197 129 192" fill="#697789"/></svg>`;
-export function heroPortraitUrl(faction?:Faction,_heroClass?:HeroClass){const id=PORTRAITS[factionOf(faction)];return id?`art/heroes/${id}.png`:`data:image/svg+xml,${encodeURIComponent(orcFace)}`;}
+
+export const PORTRAITS_PER_FACTION = 20;
+/** Identity follows the saved hero ID; renaming, levelling and reloading keep the same face. */
+export function heroPortraitIndex(heroId?: number, heroClass: HeroClass = 'knight') {
+    const preview = heroClass === 'ranger' ? 6 : heroClass === 'mage' ? 12 : 0;
+    return heroId === undefined || !Number.isSafeInteger(heroId) ? preview : Math.abs(heroId) % PORTRAITS_PER_FACTION;
+}
+export function heroPortraitUrl(faction?: Faction, heroClass?: HeroClass, heroId?: number) {
+    const index = String(heroPortraitIndex(heroId, heroClass) + 1).padStart(2, '0');
+    return `art/heroes/portraits/${factionOf(faction)}/${index}.webp`;
+}

@@ -201,7 +201,7 @@ export class MapRenderer {
             c.save(); c.translate(pos.x, pos.y - 5);
             // Markers stay legible in the full-realm mobile overview.
             const size = Math.max(.85, unit * .8); c.scale(size, size);
-            const source=heroPortraitUrl(armyFaction(s.world,army),heroForArmy(s.world,army.id)?.class);
+            const hero=heroForArmy(s.world,army.id), source=heroPortraitUrl(armyFaction(s.world,army),hero?.class,hero?.id);
             let face=this.portraits.get(source);if(!face){face=new Image();face.src=source;this.portraits.set(source,face);}
             c.beginPath();c.arc(0,0,17,0,Math.PI*2);c.fillStyle='#232b38';c.fill();
             c.save();c.clip();if(face.complete&&face.naturalWidth)c.drawImage(face,-17,-17,34,34);c.restore();

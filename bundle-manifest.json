@@ -1,0 +1,1409 @@
+{
+  "base_repository": "https://github.com/rexrjd/Peris",
+  "base_commit": "7a805622eab4c704e7a161d81a0de5cd962d5901",
+  "portrait_count": 220,
+  "factions": 11,
+  "portraits_per_faction": 20,
+  "files": [
+    {
+      "path": "ARTWORK.md",
+      "bytes": 11352,
+      "sha256": "3b2fd9279e681212449b9b61fbe40d5edbcaa4a74fbd93d527ecf666ac6c92b1"
+    },
+    {
+      "path": "README.md",
+      "bytes": 6931,
+      "sha256": "52812b77fc2da9c3636d838edcd306a1fa6a2ceeafe451aa5bca10f9336a43f9"
+    },
+    {
+      "path": "assets/hero-portrait-roster.json",
+      "bytes": 19033,
+      "sha256": "a12899cc62018b375a27f985b6cd9e3dceffc97ec9468275e00006ce6c5b0c20"
+    },
+    {
+      "path": "assets/source/heroes/demon-roster.png",
+      "bytes": 2860005,
+      "sha256": "cc43a77dbfb298eb9556c9d7ef90b32035c41e629d0820b584ed53334c8f9a27"
+    },
+    {
+      "path": "assets/source/heroes/dwarf-roster.png",
+      "bytes": 3223726,
+      "sha256": "f720332b5cdee7d170adbbe63f353bffdd1f2b1d4d4be4ec37dc9bbf74e82175"
+    },
+    {
+      "path": "assets/source/heroes/egyptian-roster.png",
+      "bytes": 2977520,
+      "sha256": "1fd9d6f208561a6ff1f677cfefe9d879d5ff1302d048ff4b7073ac35465e1736"
+    },
+    {
+      "path": "assets/source/heroes/elf-roster.png",
+      "bytes": 3196060,
+      "sha256": "ed3f2683066b8492410a23981d4fd07eb9499576c939472a387d84c4f750f1a2"
+    },
+    {
+      "path": "assets/source/heroes/gnome-roster.png",
+      "bytes": 3252498,
+      "sha256": "24b8b8197b907536bcf18b01390f73c4f73993decc84a74009172d4d6cb0a9d3"
+    },
+    {
+      "path": "assets/source/heroes/orc-roster.png",
+      "bytes": 3119891,
+      "sha256": "adc18fd4be41a8bcb5eb8e6ad82d8ac7be416a4c5e6196f0f4a74c0bbae760ac"
+    },
+    {
+      "path": "assets/source/heroes/pandaren-roster.png",
+      "bytes": 3107939,
+      "sha256": "0bd3c936635e72e15caaa452c02d2fa6153ec5c7acf5ff2b80c01370cb632279"
+    },
+    {
+      "path": "assets/source/heroes/persian-roster.png",
+      "bytes": 3014218,
+      "sha256": "e1d32d732b4a6e0de0eba2cad7a871ed8e92fb8707dd6d933a6b280a1e283963"
+    },
+    {
+      "path": "assets/source/heroes/roman-roster.png",
+      "bytes": 2942103,
+      "sha256": "62c35abf53d5061192394b4d725da31e5de55540aa50f044adf6efc198a62585"
+    },
+    {
+      "path": "assets/source/heroes/spartan-roster.png",
+      "bytes": 2940323,
+      "sha256": "c588265e395821611429b76ba7ce7641cd92c961592e0005c2a3be5af2f51212"
+    },
+    {
+      "path": "assets/source/heroes/undead-roster.png",
+      "bytes": 3245090,
+      "sha256": "d8acaa3e230c03704eed2dacc044b85757ddeedeedcfd2f748d85227e7363aab"
+    },
+    {
+      "path": "docs/hero-portraits-and-loot.md",
+      "bytes": 2801,
+      "sha256": "38b8128ae57fe619e1d0c27a55e6c1b89be5e3c331343cb0891099277877b9e9"
+    },
+    {
+      "path": "package-lock.json",
+      "bytes": 165658,
+      "sha256": "3c5ad5dc2f603db416ff00ec1b8de26a5e2903bae974f9ea1ee7448834b431eb"
+    },
+    {
+      "path": "package.json",
+      "bytes": 2831,
+      "sha256": "724d9e349cd72454c14a22818c082bed39f442f330338333518874ad0ee147c3"
+    },
+    {
+      "path": "public/art/heroes/portraits/demon/01.webp",
+      "bytes": 17814,
+      "sha256": "bd8a1b627ae935e5994df7b27c07fefa99e764e2267c340c4e1e8bc510414bf6"
+    },
+    {
+      "path": "public/art/heroes/portraits/demon/02.webp",
+      "bytes": 18670,
+      "sha256": "a751b88d505245a37c15c5836d9700bd9097d3c450532e45c611d554255a2d51"
+    },
+    {
+      "path": "public/art/heroes/portraits/demon/03.webp",
+      "bytes": 16704,
+      "sha256": "fb52403098f7576fae69797a765349a585db1372fde321aa242204b330a7e52f"
+    },
+    {
+      "path": "public/art/heroes/portraits/demon/04.webp",
+      "bytes": 14658,
+      "sha256": "44f7cb3169778e35ad882df7e1ac3380fa33038ac4ec071bfa04b06e32df8a3b"
+    },
+    {
+      "path": "public/art/heroes/portraits/demon/05.webp",
+      "bytes": 13780,
+      "sha256": "3c8be57cde9a25698659948c08129572521606c34d577ce6dfa50b5b683db849"
+    },
+    {
+      "path": "public/art/heroes/portraits/demon/06.webp",
+      "bytes": 19006,
+      "sha256": "880487071b780aeda0c26d566cda1b260694f32d6b0755e498c97bd750b450cf"
+    },
+    {
+      "path": "public/art/heroes/portraits/demon/07.webp",
+      "bytes": 20602,
+      "sha256": "0576f8aa6f7587d2dd0f0da9af512c10ee6e4fb502fc5dadc401140ebdea72ea"
+    },
+    {
+      "path": "public/art/heroes/portraits/demon/08.webp",
+      "bytes": 17474,
+      "sha256": "34f132ffef2c2cc987ddf2570904d440d5b7693bc4755569ac9f8678ca7f8fff"
+    },
+    {
+      "path": "public/art/heroes/portraits/demon/09.webp",
+      "bytes": 17050,
+      "sha256": "895ffd986b93244576e7a42cd378028257416dbb6ef66ab7a8cd6ac2d46b115c"
+    },
+    {
+      "path": "public/art/heroes/portraits/demon/10.webp",
+      "bytes": 16756,
+      "sha256": "cb2bc3bf6e67aeb2352961d48f62ca7acf0dd955df7e019969cd0a39805e4cb0"
+    },
+    {
+      "path": "public/art/heroes/portraits/demon/11.webp",
+      "bytes": 16080,
+      "sha256": "639383a11b023485d204bf4fe8129cc3ee09961ae3ed4fbe2747cbb17fbae975"
+    },
+    {
+      "path": "public/art/heroes/portraits/demon/12.webp",
+      "bytes": 19786,
+      "sha256": "c93fdf7b46c990b7c44f8883b60e7e2dbf58a0183714b0a0d10a685438f0cf86"
+    },
+    {
+      "path": "public/art/heroes/portraits/demon/13.webp",
+      "bytes": 12802,
+      "sha256": "2ed7662ca8d81a1ae9442d30f068c532f7a4ad04b5e3e2fc3a67ff9f19b85370"
+    },
+    {
+      "path": "public/art/heroes/portraits/demon/14.webp",
+      "bytes": 21334,
+      "sha256": "7c2276a9ab5cc2371621e7fd7c6c4b551f4148a3d105b647abc4a3372232b5bf"
+    },
+    {
+      "path": "public/art/heroes/portraits/demon/15.webp",
+      "bytes": 15136,
+      "sha256": "cf9f7d3b3a6b4be947bc7eeebc97f5af455350073d5d9782c7bb039d0dce66d1"
+    },
+    {
+      "path": "public/art/heroes/portraits/demon/16.webp",
+      "bytes": 17570,
+      "sha256": "dfa64fb19d793d0d52207baaec80d8b7c0d7eafe99719cf8b5e62ab029d18a57"
+    },
+    {
+      "path": "public/art/heroes/portraits/demon/17.webp",
+      "bytes": 15964,
+      "sha256": "4f27730ecf386faf60279596433e9cbfed08804e5c3ad582965dd3435c4efdd1"
+    },
+    {
+      "path": "public/art/heroes/portraits/demon/18.webp",
+      "bytes": 18156,
+      "sha256": "1e3173cd94b2fcf40b2134c1f6c04dd9f91a6b73772d075a606d373939fac73a"
+    },
+    {
+      "path": "public/art/heroes/portraits/demon/19.webp",
+      "bytes": 20294,
+      "sha256": "f4f4a3e15e220d2bf34ccd37eb541bb95786a844d68c8674a6f60beb02ff2422"
+    },
+    {
+      "path": "public/art/heroes/portraits/demon/20.webp",
+      "bytes": 17666,
+      "sha256": "a3799580141e51c89f6a2a66654672e33e0ec9afbd3ed9ce75e5ac92f800fa4d"
+    },
+    {
+      "path": "public/art/heroes/portraits/dwarf/01.webp",
+      "bytes": 26524,
+      "sha256": "b7e35fcdf74741a5be2597cc6a0ce9d84778c7404bbb804cd65d1161d7462486"
+    },
+    {
+      "path": "public/art/heroes/portraits/dwarf/02.webp",
+      "bytes": 20916,
+      "sha256": "ac18f106829e0d3869e51814d5e8612c08bcf3803e538db36e2e7d09d36b9a23"
+    },
+    {
+      "path": "public/art/heroes/portraits/dwarf/03.webp",
+      "bytes": 19142,
+      "sha256": "68cc55f9f38765b570558bcfe472306427e9541ef4655fe002d6fb79ef13b5b6"
+    },
+    {
+      "path": "public/art/heroes/portraits/dwarf/04.webp",
+      "bytes": 19676,
+      "sha256": "0a162080db37089266931b8bce8ff2f5468be3bdcc4fda05414b5b27a676f9a3"
+    },
+    {
+      "path": "public/art/heroes/portraits/dwarf/05.webp",
+      "bytes": 22984,
+      "sha256": "d3e3141a3e6266d37e50e98ad0b75a922d76d4779d949f2d98ca0132c906b3d1"
+    },
+    {
+      "path": "public/art/heroes/portraits/dwarf/06.webp",
+      "bytes": 20704,
+      "sha256": "0d47ea5463f5d988ef71d440d9835da7aaac42c3bca826acf4a6b831e39e6427"
+    },
+    {
+      "path": "public/art/heroes/portraits/dwarf/07.webp",
+      "bytes": 22972,
+      "sha256": "12bc57f2cc203437686b7228c185d83cbcb6499a8727ec708b63a1b07f921fbf"
+    },
+    {
+      "path": "public/art/heroes/portraits/dwarf/08.webp",
+      "bytes": 19986,
+      "sha256": "96668c38767bc44ddc8b14f08532499d8a131fa6d198b48f59d009d6bdd0a757"
+    },
+    {
+      "path": "public/art/heroes/portraits/dwarf/09.webp",
+      "bytes": 24830,
+      "sha256": "419c3dbe47223a6d3b158eb77866c303564651a6af9ecddcd9b2336d92eb2200"
+    },
+    {
+      "path": "public/art/heroes/portraits/dwarf/10.webp",
+      "bytes": 18756,
+      "sha256": "ec0ece9f967361caa666f677b1efe333452888adc56ffa3a4357de0f30fc19e1"
+    },
+    {
+      "path": "public/art/heroes/portraits/dwarf/11.webp",
+      "bytes": 22542,
+      "sha256": "dba594a3abc32036a4b6789d53db723198e2f4621dce2972a12ef67eada5d34d"
+    },
+    {
+      "path": "public/art/heroes/portraits/dwarf/12.webp",
+      "bytes": 20320,
+      "sha256": "dc6e38d662f6675304492634470ce88035862715b5811efb0b55f1d3077395a2"
+    },
+    {
+      "path": "public/art/heroes/portraits/dwarf/13.webp",
+      "bytes": 22406,
+      "sha256": "774506651fda7653b0f4b6f3aba9d07f4df1ca1ca65e54cc8fef5b99b35faac4"
+    },
+    {
+      "path": "public/art/heroes/portraits/dwarf/14.webp",
+      "bytes": 20724,
+      "sha256": "10778a8b00e14379d8d869558dffdfaa1ac2360ae9841f2388b81dadd12eb4f3"
+    },
+    {
+      "path": "public/art/heroes/portraits/dwarf/15.webp",
+      "bytes": 22374,
+      "sha256": "bdbfb642f8bb1e85e01bef47981fad05f49149f7f82c178adca5f20da3154343"
+    },
+    {
+      "path": "public/art/heroes/portraits/dwarf/16.webp",
+      "bytes": 19872,
+      "sha256": "fc192e48a2fe281db52b79ad95724de6b9b9175e1fd58a3f4206bf7e749c8f12"
+    },
+    {
+      "path": "public/art/heroes/portraits/dwarf/17.webp",
+      "bytes": 24358,
+      "sha256": "83a0923bac3f4b7aff6060d316a069b63741cfe3e767218423ffec1b23b6a9b1"
+    },
+    {
+      "path": "public/art/heroes/portraits/dwarf/18.webp",
+      "bytes": 21860,
+      "sha256": "f1bdb2f160159e73c02ac53a4716f82bc905923f33af523d91331eafa09fe7a3"
+    },
+    {
+      "path": "public/art/heroes/portraits/dwarf/19.webp",
+      "bytes": 22174,
+      "sha256": "6b2a7213e76ffaf75564110c24e4fcd38a92e2bbe1766e1e38ea58f8701bb444"
+    },
+    {
+      "path": "public/art/heroes/portraits/dwarf/20.webp",
+      "bytes": 21122,
+      "sha256": "a8888f30ce8cadfdc595a7f79e3369e431970cf4dc3bea90562388dc46d25792"
+    },
+    {
+      "path": "public/art/heroes/portraits/egyptian/01.webp",
+      "bytes": 23888,
+      "sha256": "f5cc0a8c2b7627a4b27c974cb04e27b4632263242315d1c34bf71da46c35954c"
+    },
+    {
+      "path": "public/art/heroes/portraits/egyptian/02.webp",
+      "bytes": 20418,
+      "sha256": "2f6aa05020621dfda6afa8fe2d7757b76c94b20c0a5790d8dfdb11c686ab894e"
+    },
+    {
+      "path": "public/art/heroes/portraits/egyptian/03.webp",
+      "bytes": 17866,
+      "sha256": "6850cfb10aa4aa12738afa09bb20c38889de6d17f0702612e66370c8566affdd"
+    },
+    {
+      "path": "public/art/heroes/portraits/egyptian/04.webp",
+      "bytes": 19596,
+      "sha256": "0d0ae9b72f881a258a7718bcae88bbf42a18f986b54bb9b3670bb1f29620bd13"
+    },
+    {
+      "path": "public/art/heroes/portraits/egyptian/05.webp",
+      "bytes": 20206,
+      "sha256": "96b7ceb4f4f3870aeda81dafbb4967f637256b711e4ae89760d64ffb81f35188"
+    },
+    {
+      "path": "public/art/heroes/portraits/egyptian/06.webp",
+      "bytes": 20802,
+      "sha256": "0f0a870b76d6bb530e654361021dea9e26b7b060c2ff25dfc24f23b7b76aacd5"
+    },
+    {
+      "path": "public/art/heroes/portraits/egyptian/07.webp",
+      "bytes": 17368,
+      "sha256": "ef2b5f8dd1012aeb6f044b64b68f6e2c27ca1077508e711a3ec2d0deb75fefed"
+    },
+    {
+      "path": "public/art/heroes/portraits/egyptian/08.webp",
+      "bytes": 18886,
+      "sha256": "f6974842f5bacb14a2381575dbba80b65ea1b1773fee7b509db70b9735e21477"
+    },
+    {
+      "path": "public/art/heroes/portraits/egyptian/09.webp",
+      "bytes": 19138,
+      "sha256": "57d0780db4e96b2c29755a5a34f11767303f3888e91975e43dde2324f2c23397"
+    },
+    {
+      "path": "public/art/heroes/portraits/egyptian/10.webp",
+      "bytes": 19046,
+      "sha256": "08d0d84590ad9cc8f1c7844537e1bcd951ab94b981fafc0eb50156cd59fc47d1"
+    },
+    {
+      "path": "public/art/heroes/portraits/egyptian/11.webp",
+      "bytes": 20646,
+      "sha256": "018ae27ae5a7dc246131d70c586ace00061d2e3d01bbc0fb909de76e63fd498a"
+    },
+    {
+      "path": "public/art/heroes/portraits/egyptian/12.webp",
+      "bytes": 23128,
+      "sha256": "dcc5bc5f256884a56e82c25fdb7ac561074624b7d1d845b068293a907362fc73"
+    },
+    {
+      "path": "public/art/heroes/portraits/egyptian/13.webp",
+      "bytes": 18356,
+      "sha256": "839a40166c763687c118cad006125d735cc56414db72f05ca44d969713fdcc6c"
+    },
+    {
+      "path": "public/art/heroes/portraits/egyptian/14.webp",
+      "bytes": 15526,
+      "sha256": "c741df723ea91eadebe6c9203d3a96fb0bd48ba1ec7d6f9ef9bf8f68f3ae3002"
+    },
+    {
+      "path": "public/art/heroes/portraits/egyptian/15.webp",
+      "bytes": 18240,
+      "sha256": "5b0f93367f7f42a77047ff0c3e96c06de7ace8dd4087f7b9695962820372d246"
+    },
+    {
+      "path": "public/art/heroes/portraits/egyptian/16.webp",
+      "bytes": 21640,
+      "sha256": "0f9679069590a9ab964cf8826a099eec1a4fe56be15dd61c66d07445e05afaf0"
+    },
+    {
+      "path": "public/art/heroes/portraits/egyptian/17.webp",
+      "bytes": 21776,
+      "sha256": "df6aa0d69d6d0eaa90cc21e93c7e3b4d948921165830368ad20734a0020d7a03"
+    },
+    {
+      "path": "public/art/heroes/portraits/egyptian/18.webp",
+      "bytes": 15904,
+      "sha256": "abb68970b5ebed66cbe2919edd3f0137f5309ff4839b596f25e116dd9ecce2b9"
+    },
+    {
+      "path": "public/art/heroes/portraits/egyptian/19.webp",
+      "bytes": 19942,
+      "sha256": "96b5c369762faa230d66fd840ebc83a36c1a24c34695b898156fe84340eaa4d3"
+    },
+    {
+      "path": "public/art/heroes/portraits/egyptian/20.webp",
+      "bytes": 20228,
+      "sha256": "7d8ef9c647cc57f051817c015d0dcc856b4953e96bc8fd377f85e04ce8085dc7"
+    },
+    {
+      "path": "public/art/heroes/portraits/elf/01.webp",
+      "bytes": 22668,
+      "sha256": "57e39ea547d9d29dc60ad13a8a57a7774debbdd620d3e6fc5601608d4d3730df"
+    },
+    {
+      "path": "public/art/heroes/portraits/elf/02.webp",
+      "bytes": 19928,
+      "sha256": "3232a179483bd14d663e4265eb16fbf9e73bf9975ee91f3ad11060dcb341633c"
+    },
+    {
+      "path": "public/art/heroes/portraits/elf/03.webp",
+      "bytes": 22464,
+      "sha256": "c64b53ec03a34a33bd767547d56c0b3fa0095e10e1907192295674894830608b"
+    },
+    {
+      "path": "public/art/heroes/portraits/elf/04.webp",
+      "bytes": 22132,
+      "sha256": "ab6cd3273906ca0048b74b39b68868873d27b7ab39e5fb5fe4d58efb2e943d3c"
+    },
+    {
+      "path": "public/art/heroes/portraits/elf/05.webp",
+      "bytes": 22118,
+      "sha256": "f9a2c058b4faa8a02e5ce2a72bcac58cef51d437961c869c6008429f361a1e7a"
+    },
+    {
+      "path": "public/art/heroes/portraits/elf/06.webp",
+      "bytes": 15660,
+      "sha256": "51d13d093c6810690fadcca7182a6960727766793b6ba3725b57c8e4c0850095"
+    },
+    {
+      "path": "public/art/heroes/portraits/elf/07.webp",
+      "bytes": 19094,
+      "sha256": "2c4873210ca72402218b3d685b649397d53ec3ce0934ae243c101d1cab318b76"
+    },
+    {
+      "path": "public/art/heroes/portraits/elf/08.webp",
+      "bytes": 20990,
+      "sha256": "746eccd96d0c6f086b11fdfa72593bcf9140d31031311673ea8863f7ad470439"
+    },
+    {
+      "path": "public/art/heroes/portraits/elf/09.webp",
+      "bytes": 17532,
+      "sha256": "81a0416b1afea9c5efa129dd063bbb73d5b6103ef3c210a9ee8d20fd6a62d823"
+    },
+    {
+      "path": "public/art/heroes/portraits/elf/10.webp",
+      "bytes": 19660,
+      "sha256": "bedccc1cb891e5b7d9099c75f2a05c7d5dab55f3b658594b3067b9b7347d5d00"
+    },
+    {
+      "path": "public/art/heroes/portraits/elf/11.webp",
+      "bytes": 22112,
+      "sha256": "765ad6c81636f53ae9605544ff51a349cebcf3bdcdc78b6534de00dd51b42ea6"
+    },
+    {
+      "path": "public/art/heroes/portraits/elf/12.webp",
+      "bytes": 16740,
+      "sha256": "27953ea11c5b34d398a0c0f0573d080aa606ec4f447407028f3f755e4a978365"
+    },
+    {
+      "path": "public/art/heroes/portraits/elf/13.webp",
+      "bytes": 23874,
+      "sha256": "118228892284c3b66a7d765760d112654ec8cf43bdbf311b2f89614490ee297c"
+    },
+    {
+      "path": "public/art/heroes/portraits/elf/14.webp",
+      "bytes": 19922,
+      "sha256": "4b06cb02ca5b9c84f931a2fc3f972f1e647a0b28cff74ab044de568cf74f3c18"
+    },
+    {
+      "path": "public/art/heroes/portraits/elf/15.webp",
+      "bytes": 20964,
+      "sha256": "043490fc9ab6f202c83218b4981cdc57f9fc1c584237f0db68b4af6c86528375"
+    },
+    {
+      "path": "public/art/heroes/portraits/elf/16.webp",
+      "bytes": 20158,
+      "sha256": "18104825aed68f56787fde053f0e254e73040f241e888bccde0ee8ba75169ea2"
+    },
+    {
+      "path": "public/art/heroes/portraits/elf/17.webp",
+      "bytes": 19932,
+      "sha256": "732db7056bf75d60093170796f4afce0a731953fa0edb49599986a972f6b2774"
+    },
+    {
+      "path": "public/art/heroes/portraits/elf/18.webp",
+      "bytes": 18352,
+      "sha256": "db8ac152fbe33021a0c411465072483e426cafe82c8c44801353ffcce9dab630"
+    },
+    {
+      "path": "public/art/heroes/portraits/elf/19.webp",
+      "bytes": 21256,
+      "sha256": "40b5e20dd1e731e60f5c022e81ba8423981f11df7de6ce8cc11213e3a61c1e92"
+    },
+    {
+      "path": "public/art/heroes/portraits/elf/20.webp",
+      "bytes": 22266,
+      "sha256": "616ce066ff558d924ed39c3476af4117b15e955963b2b804c2953f5b860abc71"
+    },
+    {
+      "path": "public/art/heroes/portraits/gnome/01.webp",
+      "bytes": 24626,
+      "sha256": "5f206ef13e8ddb06b2f29084d2b34a54b177f9cb0e98e2f4b0733e7a83a9ac38"
+    },
+    {
+      "path": "public/art/heroes/portraits/gnome/02.webp",
+      "bytes": 22258,
+      "sha256": "027dc42443e1922392991dcce5ec17fa03c937c26f810beafbb407f29921d713"
+    },
+    {
+      "path": "public/art/heroes/portraits/gnome/03.webp",
+      "bytes": 24384,
+      "sha256": "0fb349d8b4de59f7e574531d076f9bf4b2ee2dd3633ba4ec9f4d32fe3a193b5c"
+    },
+    {
+      "path": "public/art/heroes/portraits/gnome/04.webp",
+      "bytes": 22178,
+      "sha256": "9cc785dfdeaddb305993898bebeb0f99b350fdc6d202e9a4891d3e4e22c0961a"
+    },
+    {
+      "path": "public/art/heroes/portraits/gnome/05.webp",
+      "bytes": 22228,
+      "sha256": "96693884bb7ef2e2b5782dd31f90c07170d35bfb297ae31e2c1c6228cbb5fef9"
+    },
+    {
+      "path": "public/art/heroes/portraits/gnome/06.webp",
+      "bytes": 23856,
+      "sha256": "5dcfe8784119b4701a62692033b07f67f0dc9ac1009252287c2dfe0a08183b4d"
+    },
+    {
+      "path": "public/art/heroes/portraits/gnome/07.webp",
+      "bytes": 23936,
+      "sha256": "56776a11d9d73e536e77a16d7a95c13cc21170e749ab117b755d7b3b75b2fc39"
+    },
+    {
+      "path": "public/art/heroes/portraits/gnome/08.webp",
+      "bytes": 23268,
+      "sha256": "dcce881c596890651d25598dbddd4c1a3bf94478495e897c8e81cd5e28aa1ea5"
+    },
+    {
+      "path": "public/art/heroes/portraits/gnome/09.webp",
+      "bytes": 22864,
+      "sha256": "3d5b13d1846f3a2211da1a305f1dfb951b1bfb8f5192e108307bcf1905e35f88"
+    },
+    {
+      "path": "public/art/heroes/portraits/gnome/10.webp",
+      "bytes": 18218,
+      "sha256": "e8cad310bf44ecad3225b4b486714755c67423ec968a89dfb684800b950e4cb0"
+    },
+    {
+      "path": "public/art/heroes/portraits/gnome/11.webp",
+      "bytes": 23528,
+      "sha256": "13fbd3acfb61e08c02a838236a505bcff2dd0edcbb305a1b0a0c317187d62a24"
+    },
+    {
+      "path": "public/art/heroes/portraits/gnome/12.webp",
+      "bytes": 22568,
+      "sha256": "11114eabde5cfb52974e08b572667789ece09239c21d88e0cff33fcdc1408daa"
+    },
+    {
+      "path": "public/art/heroes/portraits/gnome/13.webp",
+      "bytes": 20428,
+      "sha256": "5b1f31063e979ca1e162c96e9ee85f6f35fcee5e3d7a0af2524d63a7b6bf5c0e"
+    },
+    {
+      "path": "public/art/heroes/portraits/gnome/14.webp",
+      "bytes": 24212,
+      "sha256": "d6c1cdf53b86864bbcad7db7abcfcd7f71875d5033197ecb3698c1eabba1d546"
+    },
+    {
+      "path": "public/art/heroes/portraits/gnome/15.webp",
+      "bytes": 23610,
+      "sha256": "19db3797824762da8c690072be3c08fb1b58b768ee34ec25223d814dd6b316b7"
+    },
+    {
+      "path": "public/art/heroes/portraits/gnome/16.webp",
+      "bytes": 23912,
+      "sha256": "7fc7c07da2c35adb836825fc4487435df349ae63d6e09792f65e7db65b291237"
+    },
+    {
+      "path": "public/art/heroes/portraits/gnome/17.webp",
+      "bytes": 22722,
+      "sha256": "369f75b8ede5143f0e3c8789fb4d01b3a7b40d8e0f2211ebed309572a9d60d13"
+    },
+    {
+      "path": "public/art/heroes/portraits/gnome/18.webp",
+      "bytes": 23134,
+      "sha256": "e526b60c858b1ff71eef5194ad224649805a93814faf340f7f9b63bbc74bc0d8"
+    },
+    {
+      "path": "public/art/heroes/portraits/gnome/19.webp",
+      "bytes": 22020,
+      "sha256": "caa52941fceb8d65d48147e61db9ed3477958318e83a56f3f3cb7e6d4dc3d259"
+    },
+    {
+      "path": "public/art/heroes/portraits/gnome/20.webp",
+      "bytes": 24484,
+      "sha256": "4991ce961319d28abd536e6e04d3d12ef90f49bf56e51be0f3121c66df2dead2"
+    },
+    {
+      "path": "public/art/heroes/portraits/orc/01.webp",
+      "bytes": 21858,
+      "sha256": "972b79b617f9e9ded54d46f6ea67a872c76f025112ffd83cb670518c999c2bcb"
+    },
+    {
+      "path": "public/art/heroes/portraits/orc/02.webp",
+      "bytes": 18422,
+      "sha256": "ee063988bc5b7d6983a598471a50a54da2dc4f8f417e10390097d0fe2c01b22c"
+    },
+    {
+      "path": "public/art/heroes/portraits/orc/03.webp",
+      "bytes": 25104,
+      "sha256": "152b064f5500d5a63a2bc9bff41ec8da095afafbc7b5b35cfe8844676fcbd867"
+    },
+    {
+      "path": "public/art/heroes/portraits/orc/04.webp",
+      "bytes": 17908,
+      "sha256": "3e796ef7de7b20482982bb2551725619ebda4da03ccba72d83798e6aa13d02c7"
+    },
+    {
+      "path": "public/art/heroes/portraits/orc/05.webp",
+      "bytes": 20196,
+      "sha256": "c828e981c6406d8be486fb619d267f0252a21f67834ce8f8cc629c32b082e0fc"
+    },
+    {
+      "path": "public/art/heroes/portraits/orc/06.webp",
+      "bytes": 19370,
+      "sha256": "91b46dbe9758b76d29690ad0c57a8876e87482bb6401e2a45b237412a05b4fb9"
+    },
+    {
+      "path": "public/art/heroes/portraits/orc/07.webp",
+      "bytes": 19264,
+      "sha256": "61b4f97df07ec471a3d592e8c94aeb847f13e1a073c37223dc1e0c350973df13"
+    },
+    {
+      "path": "public/art/heroes/portraits/orc/08.webp",
+      "bytes": 19114,
+      "sha256": "cb52417e2ac065190529c855e93b366dcd9a8bcd41f25b87351b7e779d4088eb"
+    },
+    {
+      "path": "public/art/heroes/portraits/orc/09.webp",
+      "bytes": 18316,
+      "sha256": "bdbe0cad939483cf18984488fc71da973aff15136e890b7ec4a07b23f518d7b4"
+    },
+    {
+      "path": "public/art/heroes/portraits/orc/10.webp",
+      "bytes": 20714,
+      "sha256": "72ff1583063f0536d82dee289dbcfc90fea31f08d7127c1818c2988022e64f76"
+    },
+    {
+      "path": "public/art/heroes/portraits/orc/11.webp",
+      "bytes": 19344,
+      "sha256": "f9811e50a29dcffb953ccf58f21610018bbf93486b6e1c569c876887162f9e51"
+    },
+    {
+      "path": "public/art/heroes/portraits/orc/12.webp",
+      "bytes": 20854,
+      "sha256": "c2b9cbe33b643f4b11c987e09f7f52baf140ffc7831c138e709c73b2e9215105"
+    },
+    {
+      "path": "public/art/heroes/portraits/orc/13.webp",
+      "bytes": 21672,
+      "sha256": "6b4cb9cd130788121e9fb9a030744ff42c0d34215ab059d94719a7d643d70dcf"
+    },
+    {
+      "path": "public/art/heroes/portraits/orc/14.webp",
+      "bytes": 19572,
+      "sha256": "16f12e83300f2406bec519a508b2a988e99bb5a6a4a7e2c2e982da3d08a21e2b"
+    },
+    {
+      "path": "public/art/heroes/portraits/orc/15.webp",
+      "bytes": 17674,
+      "sha256": "1859eda37b1c8e2980f17ed782d82261d582c310fa6a591a1d3e53943e7c4221"
+    },
+    {
+      "path": "public/art/heroes/portraits/orc/16.webp",
+      "bytes": 22542,
+      "sha256": "87ab875a1f38aa198c52807db6b1379e0353f14687e07908dc3f84a39b2f207f"
+    },
+    {
+      "path": "public/art/heroes/portraits/orc/17.webp",
+      "bytes": 19914,
+      "sha256": "a2bb5ddcedd5fbbb2966a439643b7be30f57e74476c886747fc251eba476ed4a"
+    },
+    {
+      "path": "public/art/heroes/portraits/orc/18.webp",
+      "bytes": 21650,
+      "sha256": "c0382aa58b96c3327053081743792b844e7aaf5944159f41ad454c0a2aa7fe76"
+    },
+    {
+      "path": "public/art/heroes/portraits/orc/19.webp",
+      "bytes": 18502,
+      "sha256": "5371c590afdd252be32251cce5816434bbc93af87b17da324973b1cd29b07969"
+    },
+    {
+      "path": "public/art/heroes/portraits/orc/20.webp",
+      "bytes": 22620,
+      "sha256": "ee4c1a16634fec2d7ef7c73d332d4901865b8fd3bb611229fe098adc13795926"
+    },
+    {
+      "path": "public/art/heroes/portraits/pandaren/01.webp",
+      "bytes": 19666,
+      "sha256": "cd41801dc370a4dbeda110b59411d6bbb409b974f8b4fe56faac6fb17f506ba2"
+    },
+    {
+      "path": "public/art/heroes/portraits/pandaren/02.webp",
+      "bytes": 18872,
+      "sha256": "bc0fcf14819a6bd278e5ad85739255b4c8acfd2411733c6c0a41f750fa2397e5"
+    },
+    {
+      "path": "public/art/heroes/portraits/pandaren/03.webp",
+      "bytes": 18648,
+      "sha256": "676defb489dc7c11fb5872acc2989a836b7d185d659e6f58b3d66bfb0af0d161"
+    },
+    {
+      "path": "public/art/heroes/portraits/pandaren/04.webp",
+      "bytes": 19656,
+      "sha256": "14c8944c970e54c8fe38e1b3a4a239fe99ee0ee4164305804700173cf9eea63c"
+    },
+    {
+      "path": "public/art/heroes/portraits/pandaren/05.webp",
+      "bytes": 19718,
+      "sha256": "a6117a9b615e8880a068cc1af1b9b16a43fd08d4d8249f2171d728eaa81d0c18"
+    },
+    {
+      "path": "public/art/heroes/portraits/pandaren/06.webp",
+      "bytes": 20006,
+      "sha256": "382a7f66b12f5e4222b5167ef6203b84e62c007369c0c2610214be0e215517fc"
+    },
+    {
+      "path": "public/art/heroes/portraits/pandaren/07.webp",
+      "bytes": 17950,
+      "sha256": "39b9100f5bf56f4d8f1ef8bb907a9380e7c017d95ffc4d829846ef8856df349d"
+    },
+    {
+      "path": "public/art/heroes/portraits/pandaren/08.webp",
+      "bytes": 20684,
+      "sha256": "287242ff2771ec7198d3ab91ea765ade9dd90be7bc67f294ff7ce5dd5dceeb32"
+    },
+    {
+      "path": "public/art/heroes/portraits/pandaren/09.webp",
+      "bytes": 18358,
+      "sha256": "83cb73f22e0b8ca8c41382e273b9b1000520187f60941ae007cc763317dba432"
+    },
+    {
+      "path": "public/art/heroes/portraits/pandaren/10.webp",
+      "bytes": 20414,
+      "sha256": "11542b0d83bf72a57d000259fb533100ce63306cca8602c41135f6a5fb63a7f6"
+    },
+    {
+      "path": "public/art/heroes/portraits/pandaren/11.webp",
+      "bytes": 16728,
+      "sha256": "204cb6572825239de960996e6529d7720dfb76a5fe29ddef4e1cafb2073b3285"
+    },
+    {
+      "path": "public/art/heroes/portraits/pandaren/12.webp",
+      "bytes": 20692,
+      "sha256": "ccc6c8d3ba1682c5eb7a320f485938658fd2ad9da5b05bb40f1944f64e7219cd"
+    },
+    {
+      "path": "public/art/heroes/portraits/pandaren/13.webp",
+      "bytes": 20126,
+      "sha256": "2db1aeb1e6a80603c3976153ced1c07de9618f93d267fab0ee0cffbc01b765f6"
+    },
+    {
+      "path": "public/art/heroes/portraits/pandaren/14.webp",
+      "bytes": 16254,
+      "sha256": "d51fe3dea63fef8b2339b2019bbdacad330f6eb8441de19172214b6ffd70da3f"
+    },
+    {
+      "path": "public/art/heroes/portraits/pandaren/15.webp",
+      "bytes": 20502,
+      "sha256": "34a556d97a050101daf3081db2946d3d1fd9aeb5352fc53e3eeb2eb7d86b65b0"
+    },
+    {
+      "path": "public/art/heroes/portraits/pandaren/16.webp",
+      "bytes": 22732,
+      "sha256": "ba3f1366d20dcac80aebd3ffc731b5c934954801e30c330ef273003f628990a9"
+    },
+    {
+      "path": "public/art/heroes/portraits/pandaren/17.webp",
+      "bytes": 20438,
+      "sha256": "077e9cfaa7c647f416aeabb4c6f7a7b6c5a08b50b04cc6aff7ce12e2c7e086e9"
+    },
+    {
+      "path": "public/art/heroes/portraits/pandaren/18.webp",
+      "bytes": 21340,
+      "sha256": "9a7bce3c9cdba8b65eca44c9258603812c487be411ca81fa2cf33800a521c4bf"
+    },
+    {
+      "path": "public/art/heroes/portraits/pandaren/19.webp",
+      "bytes": 23342,
+      "sha256": "0d2587903101bbc03d0d50e962709ff51d1a401b61564e808d9e85cdef1f4cc1"
+    },
+    {
+      "path": "public/art/heroes/portraits/pandaren/20.webp",
+      "bytes": 18474,
+      "sha256": "f2df2958a7003f8f39bcc2a6647df602911e033f971eb2bfe0c3c464c3703a03"
+    },
+    {
+      "path": "public/art/heroes/portraits/persian/01.webp",
+      "bytes": 21990,
+      "sha256": "271cb3f39fca53b30da5f7a8ff4399ff5b02fe3fc7acc2b9659c10b4d3397ad4"
+    },
+    {
+      "path": "public/art/heroes/portraits/persian/02.webp",
+      "bytes": 21362,
+      "sha256": "1233a0ee26fc6e180621e58c0e39ea086f90ca67f8137efb34e94630ed3fcfd8"
+    },
+    {
+      "path": "public/art/heroes/portraits/persian/03.webp",
+      "bytes": 18878,
+      "sha256": "c3edde6400365c898f13a7f3a17b1b7e90f117ecbd1e7cc36b393975e60164e2"
+    },
+    {
+      "path": "public/art/heroes/portraits/persian/04.webp",
+      "bytes": 19336,
+      "sha256": "784aafb680d10839e28f09c40f5c222610371cd73142991cf73ac3d2e97f099b"
+    },
+    {
+      "path": "public/art/heroes/portraits/persian/05.webp",
+      "bytes": 18288,
+      "sha256": "4dc2644bf115f444b984a079f4309e4c5c1d874b545c91b24b274e7d2228cf10"
+    },
+    {
+      "path": "public/art/heroes/portraits/persian/06.webp",
+      "bytes": 18754,
+      "sha256": "213f5ea5638634c2981f6a1eea6cb5fd75a7c544ba9fd059bf4b370f75b313f4"
+    },
+    {
+      "path": "public/art/heroes/portraits/persian/07.webp",
+      "bytes": 20604,
+      "sha256": "b0a290da621414e2fc7056259252f090007cd78e181368fc850d782ae5f60922"
+    },
+    {
+      "path": "public/art/heroes/portraits/persian/08.webp",
+      "bytes": 20904,
+      "sha256": "2fa8cac73f9d4262c3bc3aaa3611d463d9937f64f0d9e0341661f961302b49a3"
+    },
+    {
+      "path": "public/art/heroes/portraits/persian/09.webp",
+      "bytes": 18492,
+      "sha256": "d8564c416a8c7c40f124bc6bfc3aa46ea0fa278f142ee9577cdd9f8f9feb81cf"
+    },
+    {
+      "path": "public/art/heroes/portraits/persian/10.webp",
+      "bytes": 21508,
+      "sha256": "0a40fe4103d3cfc46d417a5cb91237e54037fce3b7483e218c91efe1347d84d4"
+    },
+    {
+      "path": "public/art/heroes/portraits/persian/11.webp",
+      "bytes": 18698,
+      "sha256": "7e6639135cfe3f6b10882f8dbd79f1ef9989403979b2da745defecb5e995cdc2"
+    },
+    {
+      "path": "public/art/heroes/portraits/persian/12.webp",
+      "bytes": 18936,
+      "sha256": "8543089d5bbd0f1a4b1284021345912a8da3d546e63bf2b329cede785bd57639"
+    },
+    {
+      "path": "public/art/heroes/portraits/persian/13.webp",
+      "bytes": 20020,
+      "sha256": "a95b893955a920691838ad8c58b24b16fc178b77d0efd9c7997d91af82bd570b"
+    },
+    {
+      "path": "public/art/heroes/portraits/persian/14.webp",
+      "bytes": 18138,
+      "sha256": "50d817b1417cd508b2e6bf21e76fc7b74e2a0bc14dcbc8b95308736b12c5c6ac"
+    },
+    {
+      "path": "public/art/heroes/portraits/persian/15.webp",
+      "bytes": 17014,
+      "sha256": "46328b5ea3c33d0305cf82091e5cb59966edb6004d14bad2b03db07a03a9bae0"
+    },
+    {
+      "path": "public/art/heroes/portraits/persian/16.webp",
+      "bytes": 20970,
+      "sha256": "381984144b3fbeeb34928a855cb4f2d4fc11202f37c4d299c352d413cebf66cd"
+    },
+    {
+      "path": "public/art/heroes/portraits/persian/17.webp",
+      "bytes": 21242,
+      "sha256": "e22835d562d092a935825c9f58c1538efa869ae4eb0cfca11eac987087ebe9c0"
+    },
+    {
+      "path": "public/art/heroes/portraits/persian/18.webp",
+      "bytes": 22362,
+      "sha256": "1e393cb1b8847403a39c4fa72bc5ac9ddc3945551e95d3258bd5889752313abc"
+    },
+    {
+      "path": "public/art/heroes/portraits/persian/19.webp",
+      "bytes": 17582,
+      "sha256": "df28b13309eb546005cfe78ba462daee515a3b329dc85ac61694549d2e09c281"
+    },
+    {
+      "path": "public/art/heroes/portraits/persian/20.webp",
+      "bytes": 17878,
+      "sha256": "ef54a8430742c0a8cc8b2172779902cc171ac5675e57bcc8739c79b1877d4686"
+    },
+    {
+      "path": "public/art/heroes/portraits/roman/01.webp",
+      "bytes": 17946,
+      "sha256": "72a9a2b8a282a113b878c580ebd1da599bfa3e0b5ed3f35a1d0a5bdf32749ed6"
+    },
+    {
+      "path": "public/art/heroes/portraits/roman/02.webp",
+      "bytes": 17694,
+      "sha256": "7f11f9b27aef419d7b244c25fa7de3b8762df5994e01d64b65448a1f054140ae"
+    },
+    {
+      "path": "public/art/heroes/portraits/roman/03.webp",
+      "bytes": 17312,
+      "sha256": "01a4728fb9682b77facfbd967337e51d34cbf5d090bb55c727607682e5fe5d71"
+    },
+    {
+      "path": "public/art/heroes/portraits/roman/04.webp",
+      "bytes": 17186,
+      "sha256": "73dbff2e2918d62263204ffc8390911dc0bc85131764c0d32f2b227f0292f0a5"
+    },
+    {
+      "path": "public/art/heroes/portraits/roman/05.webp",
+      "bytes": 19022,
+      "sha256": "e7a865e42083838d4baf3afe03d8d62a85e5ef60c4585cb2a67287b8767589ac"
+    },
+    {
+      "path": "public/art/heroes/portraits/roman/06.webp",
+      "bytes": 21050,
+      "sha256": "7fcecf56754b2afae92b1236fab63af1303fe33eafaf1d26b680317b3b9b0063"
+    },
+    {
+      "path": "public/art/heroes/portraits/roman/07.webp",
+      "bytes": 17614,
+      "sha256": "07fe320a6a3fc34e400d88728d267e00634b13464e5dfe1871ed683d095c03ca"
+    },
+    {
+      "path": "public/art/heroes/portraits/roman/08.webp",
+      "bytes": 16316,
+      "sha256": "8ca61f9e0156756a208db87ee7723b5e12581dbb1db099da909ea2b1891193a1"
+    },
+    {
+      "path": "public/art/heroes/portraits/roman/09.webp",
+      "bytes": 15490,
+      "sha256": "fc4607f7741a03f3b592d641f061b061eb8fdb0c7d83bdc15d27bd8da5cc82a7"
+    },
+    {
+      "path": "public/art/heroes/portraits/roman/10.webp",
+      "bytes": 17420,
+      "sha256": "ac3c7b094491946f37c92ea3f61b17100bd33eb4a7eae680ca1b205b2e9857b3"
+    },
+    {
+      "path": "public/art/heroes/portraits/roman/11.webp",
+      "bytes": 17792,
+      "sha256": "96e023ee92a18f71cb4eb23c4840f2bcf9eb94f07c51e27a0f7ddca13eb23b83"
+    },
+    {
+      "path": "public/art/heroes/portraits/roman/12.webp",
+      "bytes": 18356,
+      "sha256": "337f4a808fc6cfcf875d77b354da48b477236bd09a2ef17c51892f469cbcbe19"
+    },
+    {
+      "path": "public/art/heroes/portraits/roman/13.webp",
+      "bytes": 17876,
+      "sha256": "6d17524b05d71fdc7000c378696cdb8c89e7278b4eace525c21398123de2e937"
+    },
+    {
+      "path": "public/art/heroes/portraits/roman/14.webp",
+      "bytes": 15298,
+      "sha256": "e8865d84a98b356d66958b9518cc222331dd78c0e0e44272a767fc7a9da98c9b"
+    },
+    {
+      "path": "public/art/heroes/portraits/roman/15.webp",
+      "bytes": 17406,
+      "sha256": "e852cfb3e43ec23ddbba1cb82bf451fb4225c2a3b4f7b6e644044b4e7dbd18dd"
+    },
+    {
+      "path": "public/art/heroes/portraits/roman/16.webp",
+      "bytes": 16488,
+      "sha256": "5354c9c4840b70d938139eeee6ff7c9d945e864ff84bbe3d82502b96417708d5"
+    },
+    {
+      "path": "public/art/heroes/portraits/roman/17.webp",
+      "bytes": 17962,
+      "sha256": "b0473ad1d763a2582faa67bf40bdebd7095b0c696ecb9d2b0c963ca3253054b1"
+    },
+    {
+      "path": "public/art/heroes/portraits/roman/18.webp",
+      "bytes": 18650,
+      "sha256": "2d3469786f5d15e9c6562029d3c72c410f18c252ae8abe80b89b1efc6920b4db"
+    },
+    {
+      "path": "public/art/heroes/portraits/roman/19.webp",
+      "bytes": 15938,
+      "sha256": "01c8c7915bd35d4e0a9f245ddd648ea090d96737b3f1e68790e2b8d4950bdc7c"
+    },
+    {
+      "path": "public/art/heroes/portraits/roman/20.webp",
+      "bytes": 20730,
+      "sha256": "1db47f016ca8c54706ab0f1fd1837888aaba2c85959443b5aae8e64ccb83d5a5"
+    },
+    {
+      "path": "public/art/heroes/portraits/spartan/01.webp",
+      "bytes": 17604,
+      "sha256": "0f4cc98ae10079c6ee5f38da276b39cfe0e08e052a443842d605dad76e78fc81"
+    },
+    {
+      "path": "public/art/heroes/portraits/spartan/02.webp",
+      "bytes": 15438,
+      "sha256": "3450dd145107f36fef37795380e717f2382c89b93619e77629e44f35fba4f2a0"
+    },
+    {
+      "path": "public/art/heroes/portraits/spartan/03.webp",
+      "bytes": 17878,
+      "sha256": "3e81bbd135fa7e872c8a011fe8c2a67e9119d274161076bc86b11aedc7fbdcbe"
+    },
+    {
+      "path": "public/art/heroes/portraits/spartan/04.webp",
+      "bytes": 16186,
+      "sha256": "75e3588048d5796fdea6763460b887e30df741e58d45fee88cb5558fda6c401d"
+    },
+    {
+      "path": "public/art/heroes/portraits/spartan/05.webp",
+      "bytes": 20588,
+      "sha256": "818cf6ee557ef4ccf291b223d6e8d7d5e6084794e8858150a0ec7acd45d63986"
+    },
+    {
+      "path": "public/art/heroes/portraits/spartan/06.webp",
+      "bytes": 17394,
+      "sha256": "ef5e6480d337150fc52502da672d57f45bbd92acc3e18a96ed750041d6394478"
+    },
+    {
+      "path": "public/art/heroes/portraits/spartan/07.webp",
+      "bytes": 19138,
+      "sha256": "5d5b1c96a6e3ada544cdb1fea226bb5d10400c3a6a1899ee45d8e665d949e87f"
+    },
+    {
+      "path": "public/art/heroes/portraits/spartan/08.webp",
+      "bytes": 17674,
+      "sha256": "126349616c698dd4d9ce18815b2e71f07a107abec2d8182301558c40c14df5c1"
+    },
+    {
+      "path": "public/art/heroes/portraits/spartan/09.webp",
+      "bytes": 15300,
+      "sha256": "822601eb1e998828286341cd09f8c6b2026d2f8b3766e219bf7b4dd20d586807"
+    },
+    {
+      "path": "public/art/heroes/portraits/spartan/10.webp",
+      "bytes": 15544,
+      "sha256": "e52689236cbdc092731b5a69162198e703f99f2691fcdc10824a295af42f2b49"
+    },
+    {
+      "path": "public/art/heroes/portraits/spartan/11.webp",
+      "bytes": 17582,
+      "sha256": "3c4867c009e648bc6f8934ba33e03bb3bb6c891a16bf2b3f8ebd406cead933a5"
+    },
+    {
+      "path": "public/art/heroes/portraits/spartan/12.webp",
+      "bytes": 17132,
+      "sha256": "29d75acf3dc9fff431b63da76173f8e3cbd38e69f830c5ed9f0b7943390b0941"
+    },
+    {
+      "path": "public/art/heroes/portraits/spartan/13.webp",
+      "bytes": 17306,
+      "sha256": "ffc14b00721bd27b9ee78ce4a30ffad2ade0b719d9aad3d213e02d734b419862"
+    },
+    {
+      "path": "public/art/heroes/portraits/spartan/14.webp",
+      "bytes": 18152,
+      "sha256": "01aff13f2bd618b4457e68819ea78dfe7fc3ab18eff0bd3dfb3f780b61906b2f"
+    },
+    {
+      "path": "public/art/heroes/portraits/spartan/15.webp",
+      "bytes": 18034,
+      "sha256": "2615f6571dda210e3aba25884fe7f7c085eda4c3538a709857fdc68b4714fa5e"
+    },
+    {
+      "path": "public/art/heroes/portraits/spartan/16.webp",
+      "bytes": 18224,
+      "sha256": "0f01964a0c26ea26e45cf7a3d1f7884528d90633a27955e7fa2f8561ca5f9df3"
+    },
+    {
+      "path": "public/art/heroes/portraits/spartan/17.webp",
+      "bytes": 19324,
+      "sha256": "a5c44052fc48c794ab72a862ec33f0d72f2274b82e04d7a6c49e2951a5b98b66"
+    },
+    {
+      "path": "public/art/heroes/portraits/spartan/18.webp",
+      "bytes": 19614,
+      "sha256": "9bbb12a231b171eabec5c269fb3c43d90837c3c35b7de9bc1991de997ec0541e"
+    },
+    {
+      "path": "public/art/heroes/portraits/spartan/19.webp",
+      "bytes": 16688,
+      "sha256": "68212132461f7a0b772d4a54ee81f9a307f04c1bd734f90e904003ccd07701de"
+    },
+    {
+      "path": "public/art/heroes/portraits/spartan/20.webp",
+      "bytes": 16596,
+      "sha256": "01fe09fdc3010e3c1e9f684a6470d21ea5994868a94ba39050b4cdb48cba519d"
+    },
+    {
+      "path": "public/art/heroes/portraits/undead/01.webp",
+      "bytes": 22526,
+      "sha256": "852678edf1a595785297ebc9b13ac029fa250c1b04cfef96f4513cb4fa25d05f"
+    },
+    {
+      "path": "public/art/heroes/portraits/undead/02.webp",
+      "bytes": 20748,
+      "sha256": "93e7144346261b25c1a381603ae526a30cf7c0484fd4cdab0c4874a72b125dca"
+    },
+    {
+      "path": "public/art/heroes/portraits/undead/03.webp",
+      "bytes": 19528,
+      "sha256": "ad9a07d6647b729f42eeff3814ac7c09fe0bd8963dec51e3767195526759d256"
+    },
+    {
+      "path": "public/art/heroes/portraits/undead/04.webp",
+      "bytes": 23350,
+      "sha256": "908e1bd0adeefbe54ba85702960a984dbcdcff743b10e12c4c82dcef39403a80"
+    },
+    {
+      "path": "public/art/heroes/portraits/undead/05.webp",
+      "bytes": 20842,
+      "sha256": "8fe5bab8b9963680174cc7b7d6a0710f2740f06730f05b7f2cedc504a1db06ce"
+    },
+    {
+      "path": "public/art/heroes/portraits/undead/06.webp",
+      "bytes": 19048,
+      "sha256": "c2e75334834c63e2d7e01c08fdf8eec434b2907cc35cd930a3a699058fec31ea"
+    },
+    {
+      "path": "public/art/heroes/portraits/undead/07.webp",
+      "bytes": 21228,
+      "sha256": "c4d9ea5168f1cf8316beb78d628c26f3c51b1240b5b925f8c867cfbf0e0f4f2b"
+    },
+    {
+      "path": "public/art/heroes/portraits/undead/08.webp",
+      "bytes": 18820,
+      "sha256": "76684823e83284a429e8577af25742fcf75bd38f254303f4ca278895c24e18cd"
+    },
+    {
+      "path": "public/art/heroes/portraits/undead/09.webp",
+      "bytes": 21912,
+      "sha256": "b1c50a31ed43d08bb4b3e391c25a86da400a742151afd2b71bf438fb6bda926b"
+    },
+    {
+      "path": "public/art/heroes/portraits/undead/10.webp",
+      "bytes": 18342,
+      "sha256": "841274c2d2c10053d5956b07c2a08057e92e5f87f9031842e0788c2d2fc9a887"
+    },
+    {
+      "path": "public/art/heroes/portraits/undead/11.webp",
+      "bytes": 21410,
+      "sha256": "70834a5a450a9e504aff889575abb02e24d2b79d2dba032fb05ec7a282b88474"
+    },
+    {
+      "path": "public/art/heroes/portraits/undead/12.webp",
+      "bytes": 20252,
+      "sha256": "7d337f90479e576ec13dee6fc12b531085d300e909b128ee57d33579b0a5af75"
+    },
+    {
+      "path": "public/art/heroes/portraits/undead/13.webp",
+      "bytes": 20212,
+      "sha256": "db627a3eb4d9310643c7639884c95f5037f814f01057b67bcddfe252eb0fb931"
+    },
+    {
+      "path": "public/art/heroes/portraits/undead/14.webp",
+      "bytes": 23340,
+      "sha256": "32d3581764b42f28be99cdb1bad38783f279b9bba24b12371c89f92cf8085fb8"
+    },
+    {
+      "path": "public/art/heroes/portraits/undead/15.webp",
+      "bytes": 16864,
+      "sha256": "d9a3808aca77a76b5b59d966fededb8eccf263290a7879b6f7c430754b0729b3"
+    },
+    {
+      "path": "public/art/heroes/portraits/undead/16.webp",
+      "bytes": 18828,
+      "sha256": "85f3f518db860721f1dc2e8ed1f61637eb52a9d05712df4181d8a26b6077d3f8"
+    },
+    {
+      "path": "public/art/heroes/portraits/undead/17.webp",
+      "bytes": 24354,
+      "sha256": "cbd237805c34e166e821350a402c0bde959ac6948bf820e42ace9aa86b29e546"
+    },
+    {
+      "path": "public/art/heroes/portraits/undead/18.webp",
+      "bytes": 23308,
+      "sha256": "bb071ea2040c56b63f978989e5b485de8a2ec7c531a82b30007b96f47b6441fb"
+    },
+    {
+      "path": "public/art/heroes/portraits/undead/19.webp",
+      "bytes": 19706,
+      "sha256": "d0056b0340d2fe1a5167afc3fa30e5c1a20deaacdc17b9f789a42fbbb2b35155"
+    },
+    {
+      "path": "public/art/heroes/portraits/undead/20.webp",
+      "bytes": 22864,
+      "sha256": "8935d2d0194239dbf7fad33e5a6a5a2a299bf8f4c226e541bc19f35564aa87ad"
+    },
+    {
+      "path": "scripts/build-hero-portraits.mjs",
+      "bytes": 1204,
+      "sha256": "28f799d5f73e98cb9c651d103575081dd48a053cae5c1db817f9ff244a1b03e4"
+    },
+    {
+      "path": "scripts/build-sql.mjs",
+      "bytes": 1656,
+      "sha256": "b979d6d9d677ebdbed85def8177b5da7a313d9d72da5229b5961070e3d7afaf1"
+    },
+    {
+      "path": "src/app/App.tsx",
+      "bytes": 22536,
+      "sha256": "65c973ed03d6fa283cab669ea971a285c5619ff5e91616e705a872bdf87f8a02"
+    },
+    {
+      "path": "src/features/army/ui/ArmyLogistics.tsx",
+      "bytes": 7670,
+      "sha256": "04fcc3fec76096e7d91e5397c174699ec0322fe4bd007826565a494c021dd55d"
+    },
+    {
+      "path": "src/features/army/ui/ArmyMapPicker.tsx",
+      "bytes": 5290,
+      "sha256": "a13f5fe95c827fa0bc99b793c9c0ad9c01f698f676f86d5b6c686c401962042c"
+    },
+    {
+      "path": "src/features/army/ui/ArmyView.tsx",
+      "bytes": 8138,
+      "sha256": "8dc7f7be106fd7c30619368654ec30077051d54cbbd298cc8661fd0a9943d73d"
+    },
+    {
+      "path": "src/features/battle/domain/types.ts",
+      "bytes": 3309,
+      "sha256": "7294ff0d40f9a88dc336ab2b74cbaa1a7334f534b0a729871f8004fdaa5349ac"
+    },
+    {
+      "path": "src/features/campaign/domain/battleSettlement.ts",
+      "bytes": 2511,
+      "sha256": "d5f26a236e542253ea376d1a0de1c722c7bee34af82efd1789761c6ed831a513"
+    },
+    {
+      "path": "src/features/campaign/styles/results.css",
+      "bytes": 7059,
+      "sha256": "6b2d82b23e98e3b5473e2a0d4d1eedfb6e5f99eaaeae6805ef58cab6d1741344"
+    },
+    {
+      "path": "src/features/campaign/ui/Chronicle.tsx",
+      "bytes": 9585,
+      "sha256": "faa736535fb017899af591cf7b5d76fae75d883d42ff5bd8974b9d2a83fee3fe"
+    },
+    {
+      "path": "src/features/heroes/domain/battleRewards.ts",
+      "bytes": 2874,
+      "sha256": "28a1a4250318052c99382b93703f778302a89ea87e8cbf1ed29a3627e71b2ce1"
+    },
+    {
+      "path": "src/features/heroes/domain/portraits.ts",
+      "bytes": 794,
+      "sha256": "0037945b1a30c2db298d4aa8e87e8f930ef3a84362e18172ac09112fdcc2dfe0"
+    },
+    {
+      "path": "src/features/heroes/ui/EquipmentPanel.tsx",
+      "bytes": 6224,
+      "sha256": "e268870f1ea0d08ca7d51a02a0e25e5316202dd1a9484414f47c19f5d273e321"
+    },
+    {
+      "path": "src/features/heroes/ui/HeroPanel.tsx",
+      "bytes": 6333,
+      "sha256": "5531d92992fd99f3c278becedfdcbe176ddc2528b9f04a80cba13509580c791a"
+    },
+    {
+      "path": "src/features/heroes/ui/HeroPortrait.tsx",
+      "bytes": 1767,
+      "sha256": "5799d59dd33a436362396dd4632fb45e9b6b433d2ebae10636a827cb55386506"
+    },
+    {
+      "path": "src/features/map/rendering/MapRenderer.ts",
+      "bytes": 18725,
+      "sha256": "bf08f1b76dc4fbaed4401d1a500ae923571d85d9a547e9fa6b0cc10e1c727f25"
+    },
+    {
+      "path": "src/features/map/rendering/three/WorldScene.ts",
+      "bytes": 49229,
+      "sha256": "bc6c6dd9a58650e93a10be641f6ac81176030ac7885b02f122b8b8a6d9a27f1c"
+    },
+    {
+      "path": "src/platform/storage/saves.ts",
+      "bytes": 27027,
+      "sha256": "d1cfcbfa7e450d0fe4e1e634786ec8404ae0738f2b51c3e46e9cea618597387b"
+    },
+    {
+      "path": "supabase/FRESH_INSTALL_V10.sql",
+      "bytes": 449761,
+      "sha256": "2e0bcdf39b9848b28c8aadee2d00f6b648d2e31a8cf905c10737ba8a6a8fe3c3"
+    },
+    {
+      "path": "supabase/FRESH_INSTALL_V11.sql",
+      "bytes": 449761,
+      "sha256": "2e0bcdf39b9848b28c8aadee2d00f6b648d2e31a8cf905c10737ba8a6a8fe3c3"
+    },
+    {
+      "path": "supabase/FRESH_INSTALL_V12.sql",
+      "bytes": 449761,
+      "sha256": "2e0bcdf39b9848b28c8aadee2d00f6b648d2e31a8cf905c10737ba8a6a8fe3c3"
+    },
+    {
+      "path": "supabase/FRESH_INSTALL_V13.sql",
+      "bytes": 449761,
+      "sha256": "2e0bcdf39b9848b28c8aadee2d00f6b648d2e31a8cf905c10737ba8a6a8fe3c3"
+    },
+    {
+      "path": "supabase/FRESH_INSTALL_V6.sql",
+      "bytes": 449761,
+      "sha256": "2e0bcdf39b9848b28c8aadee2d00f6b648d2e31a8cf905c10737ba8a6a8fe3c3"
+    },
+    {
+      "path": "supabase/FRESH_INSTALL_V7.sql",
+      "bytes": 449761,
+      "sha256": "2e0bcdf39b9848b28c8aadee2d00f6b648d2e31a8cf905c10737ba8a6a8fe3c3"
+    },
+    {
+      "path": "supabase/FRESH_INSTALL_V8.sql",
+      "bytes": 449761,
+      "sha256": "2e0bcdf39b9848b28c8aadee2d00f6b648d2e31a8cf905c10737ba8a6a8fe3c3"
+    },
+    {
+      "path": "supabase/FRESH_INSTALL_V9.sql",
+      "bytes": 449761,
+      "sha256": "2e0bcdf39b9848b28c8aadee2d00f6b648d2e31a8cf905c10737ba8a6a8fe3c3"
+    },
+    {
+      "path": "supabase/UPGRADE_TO_V10.sql",
+      "bytes": 409773,
+      "sha256": "6199fbff11b5471a141ac5281a433f36a2653f1f53b014bf38ff012057d5620f"
+    },
+    {
+      "path": "supabase/UPGRADE_TO_V11.sql",
+      "bytes": 409773,
+      "sha256": "6199fbff11b5471a141ac5281a433f36a2653f1f53b014bf38ff012057d5620f"
+    },
+    {
+      "path": "supabase/UPGRADE_TO_V12.sql",
+      "bytes": 409773,
+      "sha256": "6199fbff11b5471a141ac5281a433f36a2653f1f53b014bf38ff012057d5620f"
+    },
+    {
+      "path": "supabase/UPGRADE_TO_V13.sql",
+      "bytes": 409773,
+      "sha256": "6199fbff11b5471a141ac5281a433f36a2653f1f53b014bf38ff012057d5620f"
+    },
+    {
+      "path": "supabase/UPGRADE_TO_V7.sql",
+      "bytes": 409773,
+      "sha256": "6199fbff11b5471a141ac5281a433f36a2653f1f53b014bf38ff012057d5620f"
+    },
+    {
+      "path": "supabase/UPGRADE_TO_V8.sql",
+      "bytes": 409773,
+      "sha256": "6199fbff11b5471a141ac5281a433f36a2653f1f53b014bf38ff012057d5620f"
+    },
+    {
+      "path": "supabase/UPGRADE_TO_V9.sql",
+      "bytes": 409773,
+      "sha256": "6199fbff11b5471a141ac5281a433f36a2653f1f53b014bf38ff012057d5620f"
+    },
+    {
+      "path": "supabase/UPGRADE_V5_TO_V6.sql",
+      "bytes": 409773,
+      "sha256": "6199fbff11b5471a141ac5281a433f36a2653f1f53b014bf38ff012057d5620f"
+    },
+    {
+      "path": "supabase/modules/battle/peris_finish.sql",
+      "bytes": 4697,
+      "sha256": "aaed0f8493d704f28db3fae9425ad49e27fd894f72699e8a0895131612744ab1"
+    },
+    {
+      "path": "supabase/modules/heroes/battle-rewards.sql",
+      "bytes": 2869,
+      "sha256": "fa7405bca697256e27f50f1f65f4da05fa480672a6b1990a585935a94356e6d3"
+    },
+    {
+      "path": "supabase/modules/manifest.json",
+      "bytes": 1139,
+      "sha256": "ea406cb775f5908a1b355f8b3355c47e15ad8fd992faca6c20a276a6be50f107"
+    },
+    {
+      "path": "supabase/schema.sql",
+      "bytes": 409773,
+      "sha256": "6199fbff11b5471a141ac5281a433f36a2653f1f53b014bf38ff012057d5620f"
+    },
+    {
+      "path": "tests/e2e/hero-loot.spec.ts",
+      "bytes": 6971,
+      "sha256": "67b81e3f3b803d3015c5449bb2bd1b0a1824c2d717c9296f47a02962654e2b51"
+    },
+    {
+      "path": "tests/e2e/world-battles.spec.ts",
+      "bytes": 2031,
+      "sha256": "7889e6a69fb3e603b727239908d84c6e7fe2df96a41437416966ab86e42b6354"
+    },
+    {
+      "path": "tests/hero-loot-database.test.mjs",
+      "bytes": 5162,
+      "sha256": "02d5ae241e027bc512f126f62d8d94a35c0a8efe8cffaeadf5c6c487d9ca3a07"
+    },
+    {
+      "path": "tests/hero-loot-ui-render.test.mjs",
+      "bytes": 2267,
+      "sha256": "17e834d6c9abb14dde25090eb889f30a6eb92682e1d0b1725d5c0a91dbd3f2fc"
+    },
+    {
+      "path": "tests/hero-loot.test.ts",
+      "bytes": 5254,
+      "sha256": "ca97bf5b7de84ea38e69f1dbc0b6031e0311072dde5fb363e105b62cbcd3b7ac"
+    }
+  ]
+}

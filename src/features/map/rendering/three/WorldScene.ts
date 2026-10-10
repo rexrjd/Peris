@@ -352,7 +352,7 @@ export class WorldScene {
         for (const [key, e] of this.entities) {
             const selected = s.selection && s.selection.kind !== 'cell' && s.selection.kind === e.kind && s.selection.id === e.id;
             if(e.kind==='army'&&(e.mine||selected||this.view.span<70)) {
-                const hero=heroForArmy(s.world,e.id);labels.push({key,text:hero?.name??e.title,x:e.x,y:e.y,selection:{kind:'army',id:e.id},portrait:heroPortraitUrl(e.faction,hero?.class),mine:e.mine});
+                const hero=heroForArmy(s.world,e.id);labels.push({key,text:hero?.name??e.title,x:e.x,y:e.y,selection:{kind:'army',id:e.id},portrait:heroPortraitUrl(e.faction,hero?.class,hero?.id),mine:e.mine});
             } else if (selected || e.mine && e.kind === 'settlement' && this.view.span < 25) labels.push({ key, text: e.title, x: e.x, y: e.y, selection: { kind: e.kind, id: e.id } });
         }
         if (s.mapLayers?.regions) for (const r of WORLD_REGIONS) labels.push({ key: `region:${r.id}`, text: r.name, ...r.label });

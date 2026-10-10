@@ -29,7 +29,7 @@ export function ArmyMapPicker({ world, army, now, onChoose, onInspect, onReturnH
     return <div className="map-army-command">
         <details ref={panel} className="map-army-picker">
             <summary ref={trigger} aria-controls={optionsId} aria-label={`Choose army. Active commander: ${hero?.name ?? army.name}`}>
-                <span className="map-commander-face"><HeroPortrait compact heroClass={hero?.class} faction={active.home?.faction}/>{hero && <b>Lv. {heroLevel(hero)}</b>}</span>
+                <span className="map-commander-face"><HeroPortrait compact heroId={hero?.id} heroClass={hero?.class} faction={active.home?.faction}/>{hero && <b>Lv. {heroLevel(hero)}</b>}</span>
                 <span className="map-commander-identity"><small>ACTIVE ARMY</small><strong>{hero?.name ?? army.name}</strong><span>{hero ? army.name : 'No commander assigned'}</span></span>
                 <span className="map-army-switch"><span>Switch <b>{owned.length}</b></span><Icon name="chevron" size={15}/></span>
             </summary>
@@ -41,7 +41,7 @@ export function ArmyMapPicker({ world, army, now, onChoose, onInspect, onReturnH
                         if (panel.current) panel.current.open = false;
                         onChoose(a.id); trigger.current?.focus();
                     }}>
-                        <HeroPortrait compact heroClass={h?.class} faction={info.home?.faction}/>
+                        <HeroPortrait compact heroId={h?.id} heroClass={h?.class} faction={info.home?.faction}/>
                         <span className="map-roster-identity"><span className="map-roster-title"><strong>{h?.name ?? a.name}</strong>{h && <small>Lv. {heroLevel(h)}</small>}</span>
                             <small>{h ? `${HERO_CLASSES[h.class].name} · ` : ''}{a.name}</small>
                             <span className="map-roster-meta"><span className={stateClass(info.state)}>{info.state}{a.status === 'moving' ? ` · ${clock(info.arrival)}` : ''}</span><span>{count(info.total)} soldiers</span></span>

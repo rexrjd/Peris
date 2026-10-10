@@ -3,8 +3,8 @@ import { type Faction } from '../../factions/domain/factions';
 import type { EquipmentSlot, HeroClass } from '../domain/heroes';
 
 /** Shared identity artwork for the roster, commander dossier and strategic army marker. */
-export function HeroPortrait({heroClass='knight',faction,compact=false}:{heroClass?:HeroClass;faction?:Faction;compact?:boolean}) {
-    return <img className={`command-portrait painted ${compact?'compact':''}`} src={heroPortraitUrl(faction,heroClass)} alt="" loading="lazy" decoding="async"/>;
+export function HeroPortrait({heroClass='knight',heroId,faction,compact=false}:{heroClass?:HeroClass;heroId?:number;faction?:Faction;compact?:boolean}) {
+    return <img className={`command-portrait painted ${compact?'compact':''}`} src={heroPortraitUrl(faction,heroClass,heroId)} alt="" loading="lazy" decoding="async"/>;
 }
 
 export function ArtifactGlyph({ slot, magic = false }: { slot: EquipmentSlot; magic?: boolean }) {

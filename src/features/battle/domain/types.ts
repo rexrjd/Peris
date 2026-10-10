@@ -69,6 +69,8 @@ export type Formation = {
     updated_at: string;
 };
 export type BattleResult = {
+    /** Actual settled NPC rewards; absent in old reports and practice battles. */
+    hero_reward?: import('../../heroes/domain/battleRewards').HeroBattleReward;
     attacker_initial: number;
     defender_initial: number;
     attacker_survivors: number;
