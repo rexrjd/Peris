@@ -1,0 +1,17 @@
+.automatic-battle{background:#15191f;color:#e7e8eb}
+.automatic-battle .battle-header,.automatic-battle .unit-tray{background:#1a1f27;border-color:#343b46}
+.automatic-battle .commander-panel{background:#1c222b;border-color:#343b46}
+.automatic-battle .battle-heading h1,.automatic-battle .commander-panel h2{color:#f0eae0}
+.automatic-battle .eyebrow,.automatic-battle .field-label,.automatic-battle .command-selection{color:#c5a174}
+.automatic-battle .commander-panel p,.automatic-battle .command-tip,.automatic-battle .battle-field-footer,.automatic-battle .battle-header small{color:#a4adbc}
+.automatic-battle .terrain-note{background:#242c37;border-color:#374252;color:#c4ccd6}
+.automatic-battle .time-controls button{background:#252d38;border-color:#3a4655;color:#c1c9d4}
+.automatic-battle .time-controls button.selected{background:#46382d;color:#ebc590;border-color:#967a56}
+.automatic-battle .unit-card{background:#252d38;border-color:#424d5c}
+.automatic-battle .unit-card.selected{border-color:#cca573;box-shadow:0 0 0 1px #cca57355}
+.automatic-battle .unit-card small,.automatic-battle .unit-tray-label{color:#aeb7c5}
+.automatic-battle .unit-morale,.automatic-battle .progress-track{background:#333d4a}
+.automatic-battle .unit-morale i,.automatic-battle .progress-track i{background:#c0a275}
+.automatic-battle .withdraw-button{color:#c1a68a;border-color:#50473e}
+
+.automatic-battle .command-tip{color:#a4adbc!important}

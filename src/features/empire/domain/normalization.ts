@@ -1,8 +1,16 @@
+import { wrappedCellDistance,wrapWorldCell } from '../../map/domain/dimensions';
+import { BANDIT_CAMPS } from '../../map/domain/bandits';
+import { battleTerrainAtWorld } from '../../battle/domain/terrain';
 import type { World } from '../../../shared/model/world';
 import { citySlots } from '../../city/domain/slots';
 
 /** Add new data without replacing existing cities, armies, orders, or saves. */
 export function normalizeRealm(world: World, now = world.server_now, associateOrders = true) {
+    if(world.version===6){
+        const ids=new Set(world.camps.map(c=>c.id));
+        for(const camp of BANDIT_CAMPS)if(!ids.has(camp.id)&&!world.settlements.some(s=>wrappedCellDistance(wrapWorldCell(Math.floor(s.x/128),Math.floor(s.y/128)),wrapWorldCell(Math.floor(camp.x/128),Math.floor(camp.y/128)))<=1)&&!world.map_plots?.some(p=>p.col===Math.floor(camp.x/128)&&p.row===Math.floor(camp.y/128)))world.camps.push({...camp});
+        for(const camp of world.camps)camp.terrain=battleTerrainAtWorld(camp.x,camp.y);
+    }
     world.heroes ??= []; world.hero_artifacts ??= []; world.settler_expeditions ??= [];
     const migratedSlots = world.city_slots === undefined ? world.settlements.flatMap(s => citySlots(world, s.id)) : world.city_slots;
     world.city_slots = migratedSlots;

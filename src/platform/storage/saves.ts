@@ -1,3 +1,4 @@
+import { BATTLE_TERRAINS } from '../../features/battle/domain/terrain';
 import { normalizeRealm } from '../../features/empire/domain/normalization';
 import { ARTIFACTS, HERO_CLASSES, HERO_STATS, heroPoints, heroThreshold, MAX_HERO_LEVEL } from '../../features/heroes/domain/heroes';
 import {settleLocal} from '../../features/campaign/domain/settlement';
@@ -32,8 +33,9 @@ function validateLegacySave(data: unknown): World {
     for (const key of ['settlements', 'armies', 'buildings', 'camps', 'orders', 'battles', 'formations', 'reports', 'progress', 'claims', 'challenges'] as const)
         if (!Array.isArray(w[key]) || w[key].length > 15000 || w[key].some(row => !row || typeof row !== 'object'))
             invalid();
-    if (w.settlements.length !== 1 || w.armies.length !== 1 || w.buildings.length !== 8 || w.camps.length !== 6)
+    if (w.settlements.length !== 1 || w.armies.length !== 1 || w.buildings.length !== 8 || w.camps.length < 6 || w.camps.length > 2000)
         invalid();
+    if(new Set(w.camps.map(c=>c.id)).size!==w.camps.length||w.camps.some(c=>!Number.isSafeInteger(c.id)||c.id<1||typeof c.name!=='string'||c.name.length>100||!Number.isFinite(c.x)||!Number.isFinite(c.y)||!BATTLE_TERRAINS.includes(c.terrain)||c.faction!==undefined&&!isFaction(c.faction)||c.bandit!==undefined&&typeof c.bandit!=='boolean'||[c.infantry,c.archers,c.cavalry].some(n=>!Number.isInteger(n)||n<0||n>1000)||!Number.isInteger(c.tier)||c.tier<1||c.tier>5))invalid();
     if(w.debug_enabled!==undefined&&typeof w.debug_enabled!=='boolean')invalid();
     const town = w.settlements[0], army = w.armies[0], player = w.players[0];
     if(town.faction!==undefined&&!isFaction(town.faction))invalid();
@@ -148,10 +150,11 @@ function validateLegacySave(data: unknown): World {
     }
     if (army.infantry + army.archers + army.cavalry + w.orders.filter(o => o.kind === 'recruit').reduce((n, o) => n + o.quantity, 0) > 1000)
         invalid();
+    for(const f of w.formations)if([f.attack_ready_at,f.charge_distance].some(n=>n!==undefined&&(!Number.isFinite(n)||n<0))||f.damage_target_id!==undefined&&!Number.isSafeInteger(f.damage_target_id))invalid();
     for (const f of w.formations)
         if (!['infantry', 'archers', 'cavalry'].includes(f.unit_type) || !['idle', 'moving', 'engaged', 'routed'].includes(f.status) || [f.x, f.y, f.soldiers, f.morale, f.stamina, f.facing, f.columns].some(n => !Number.isFinite(n)) || f.soldiers < 0 || f.soldiers > 1000 || f.attack_multiplier!==undefined && (!Number.isFinite(f.attack_multiplier) || f.attack_multiplier<1 || f.attack_multiplier>4))
             invalid();
-    if (w.battles.filter(b => b.status === 'active').length > 1 || w.battles.some(b => !['active', 'resolved'].includes(b.status) || !['deployment', 'combat', 'finished'].includes(b.phase) || !['plains', 'woods', 'highlands', 'river'].includes(b.terrain)))
+    if (w.battles.filter(b => b.status === 'active').length > 1 || w.battles.some(b => !['active', 'resolved'].includes(b.status) || !['deployment', 'combat', 'finished'].includes(b.phase) || !BATTLE_TERRAINS.includes(b.terrain)))
         invalid();
     const active = w.battles.find(b => b.status === 'active');
     if (active && (!w.formations.some(f => f.battle_id === active.id) || !Number.isFinite(active.elapsed) || active.elapsed < 0 || !['pve', 'practice'].includes(active.mode)))

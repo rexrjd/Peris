@@ -54,7 +54,7 @@ test('every historic spawn and campaign starter ring stays dry without relocatin
     assert.ok(worldHeight(center.col+dx+.5,center.row+dy+.5)>0)
   }
   const original=createSolo('Preserved')
-  assert.deepEqual(original.camps.map(c=>[c.x,c.y]),[[305,405],[460,155],[655,485],[790,160],[910,550],[605,280]])
+  assert.deepEqual(original.camps.filter(c=>!c.bandit).map(c=>[c.x,c.y]),[[305,405],[460,155],[655,485],[790,160],[910,550],[605,280]])
   assert.deepEqual([original.settlements[0].x,original.settlements[0].y],[155,285])
 })
 

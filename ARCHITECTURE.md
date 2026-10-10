@@ -39,7 +39,7 @@ Features contain `domain`, `ui`, `rendering` and `styles` only where needed. Dom
 | Formation movement, speed, facing, stamina | `src/features/battle/domain/movement.ts` |
 | Damage, range, charges, flanks, cover | `src/features/battle/domain/combat.ts` |
 | Morale losses, routing and rally | `src/features/battle/domain/morale.ts` |
-| Enemy targeting and maneuver decisions | `src/features/battle/domain/ai.ts` |
+| Both armies targeting and maneuver decisions | `src/features/battle/domain/ai.ts` |
 | Terrain effects | `src/features/battle/domain/terrain.ts` |
 | Tick sequence | `src/features/battle/domain/simulation.ts` |
 | Winner, timeout and tactical result | `src/features/battle/domain/resolution.ts` |
@@ -75,7 +75,7 @@ Feature-specific rules live in each feature's `styles` folder. Shared controls/t
 
 Edit the relevant function under `supabase/modules`. The ordered `manifest.json` composes schema, gameplay functions and final permissions into the deployment scripts. These fragments are source files, not individually runnable migrations.
 
-Run `npm run build:sql` after editing server source. Then `npm run check:sql`, `npm run test:db` and `npm run test:fresh`. Generated `UPGRADE_TO_V10.sql` and `FRESH_INSTALL_V10.sql` are complete files for Supabase SQL Editor. Historical v6/v7/v8/v9 bundle names remain generated compatibility aliases. Never manually edit those bundles or the existing-world protection in the fresh installer.
+Run `npm run build:sql` after editing server source. Then `npm run check:sql`, `npm run test:db` and `npm run test:fresh`. Generated `UPGRADE_TO_V11.sql` and `FRESH_INSTALL_V11.sql` are complete files for Supabase SQL Editor. Historical v6/v7/v8/v9 bundle names remain generated compatibility aliases. Never manually edit those bundles or the existing-world protection in the fresh installer.
 
 ## Updating an existing repository
 

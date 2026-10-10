@@ -1,3 +1,6 @@
+import { createBanditCampModel } from './banditModel';
+import { heroPortraitUrl } from '../../../heroes/domain/portraits';
+import { heroForArmy } from '../../../heroes/domain/heroes';
 import { MapArmyModels } from './armyModels';
 import { armyFaction } from '../../../army/domain/faction';
 import {FACTIONS,factionOf,type Faction} from '../../../factions/domain/factions';
@@ -18,8 +21,8 @@ import { createLandscape, sampleHeight } from './landscape';
 import { createArmyModel, createSettlementModel } from './models';
 
 type EntityKind = 'army' | 'settlement' | 'camp';
-type Entity = { kind: EntityKind; id: number; x: number; y: number; title: string; mine: boolean; model: THREE.Group; detail: boolean; faction?:Faction; development?:number; composition?:string };
-type Label = { key: string; text: string; x: number; y: number; selection?: MapSelection };
+type Entity = { kind: EntityKind; id: number; x: number; y: number; title: string; mine: boolean; model: THREE.Group; detail: boolean; faction?:Faction; development?:number; composition?:string;bandit?:boolean };
+type Label = { key: string; text: string; x: number; y: number; selection?: MapSelection; portrait?:string; mine?:boolean };
 export const FIELD_DETAIL_BUDGET = 96;
 export const FIELD_MARKER_BUDGET = 2048;
 export function worldMinimapFootprints(points: readonly { x: number; y: number }[], overview = false) {
@@ -111,9 +114,9 @@ export class WorldScene {
         if(this.settlementRecords!==s.world.settlements){this.settlementRecords=s.world.settlements;this.landscape.setSettlementCells(s.world.settlements.map(town => ({ x: town.x / CELL_SIZE, z: town.y / CELL_SIZE })));this.shadowKey='';}
         this.hittable.clear();
         this.hittableImages.clear();
-        const records: { kind: EntityKind; id: number; x: number; y: number; title: string; mine: boolean;faction?:Faction;development?:number; composition?:string }[] = [
+        const records: { kind: EntityKind; id: number; x: number; y: number; title: string; mine: boolean;faction?:Faction;development?:number; composition?:string;bandit?:boolean }[] = [
             ...s.world.settlements.map(t => ({ kind: 'settlement' as const, id: t.id, x: t.x, y: t.y, title: t.name, mine: t.owner_id === s.playerId,faction:factionOf(t.faction), development:mapSettlementDevelopment(t.map_development??settlementMapDevelopment(s.world.buildings,t.id,s.world.city_slots)) })),
-            ...s.world.camps.map(t => ({ kind: 'camp' as const, id: t.id, x: t.x, y: t.y, title: siteFor(t.id).title, mine: false })),
+            ...s.world.camps.map(t => ({ kind: 'camp' as const, id: t.id, x: t.x, y: t.y, title: t.bandit?t.name:siteFor(t.id).title, mine: false,bandit:t.bandit,faction:t.faction })),
             ...s.world.armies.map(t => ({ kind: 'army' as const, id: t.id, ...armyPosition(t, now), title: t.name, mine: t.owner_id === s.playerId, faction: armyFaction(s.world, t), composition: `${t.infantry > 0 ? 'i' : ''}${t.archers > 0 ? 'a' : ''}${t.cavalry > 0 ? 'c' : ''}` })),
         ];
         const priority = (record: typeof records[number]) => record.mine || s.selection?.kind !== 'cell' && s.selection?.kind === record.kind && s.selection?.id === record.id ? 0 : 1;
@@ -137,7 +140,7 @@ export class WorldScene {
             const detailed = this.view.span < 36 && images.length > 0 && (priority(e) === 0 || detailCount++ < 48);
             if (detailed && !e.detail) {
                 const kind = e.kind === 'settlement' ? 'village' : e.id === 6 ? 'ruins' : e.id === 2 ? 'sanctuary' : e.id === 5 ? 'volcano' : e.id === 3 ? 'crossing' : e.id === 4 ? 'keep' : 'village';
-                e.model.add(e.kind === 'army' ? this.armyModels.create(factionOf(e.faction), e.composition ?? 'i', e.mine ? 0x345e48 : 0x749cb1) ?? createArmyModel(e.mine ? 0x345e48 : 0x749cb1) : e.kind==='settlement'?this.settlementModels.get(factionOf(e.faction),e.development):createSettlementModel(kind)); e.detail = true;
+                e.model.add(e.kind === 'army' ? this.armyModels.create(factionOf(e.faction), e.composition ?? 'i', e.mine ? 0x345e48 : 0x749cb1) ?? createArmyModel(e.mine ? 0x345e48 : 0x749cb1) : e.kind==='settlement'?this.settlementModels.get(factionOf(e.faction),e.development):e.bandit?createBanditCampModel(factionOf(e.faction)):createSettlementModel(kind)); e.detail = true;
                 e.model.userData.publishedArmy = e.kind === 'army' && !!e.model.children[0]?.userData.publishedArmy;
                 this.shadowKey='';
             }
@@ -348,7 +351,9 @@ export class WorldScene {
         const s = this.state(), labels: Label[] = [];
         for (const [key, e] of this.entities) {
             const selected = s.selection && s.selection.kind !== 'cell' && s.selection.kind === e.kind && s.selection.id === e.id;
-            if (selected || e.mine && e.kind === 'settlement' && this.view.span < 25) labels.push({ key, text: e.title, x: e.x, y: e.y, selection: { kind: e.kind, id: e.id } });
+            if(e.kind==='army'&&(e.mine||selected||this.view.span<70)) {
+                const hero=heroForArmy(s.world,e.id);labels.push({key,text:hero?.name??e.title,x:e.x,y:e.y,selection:{kind:'army',id:e.id},portrait:heroPortraitUrl(e.faction,hero?.class),mine:e.mine});
+            } else if (selected || e.mine && e.kind === 'settlement' && this.view.span < 25) labels.push({ key, text: e.title, x: e.x, y: e.y, selection: { kind: e.kind, id: e.id } });
         }
         if (s.mapLayers?.regions) for (const r of WORLD_REGIONS) labels.push({ key: `region:${r.id}`, text: r.name, ...r.label });
         if (s.mapLayers?.resources && this.view.span < 24) {
@@ -358,10 +363,11 @@ export class WorldScene {
                 if (['forest', 'mountain', 'farmland', 'desert'].includes(cell.terrain)) labels.push({ key: `resource:${col}:${row}`, text: cell.resource, ...p, selection: { kind: 'cell', col, row } });
             }
         }
+        labels.sort((a,b)=>(a.portrait?-1:0)-(b.portrait?-1:0));
         const active = new Set<string>(), placed: { x: number; y: number; width: number }[] = [];
         for (const label of labels) {
             const image = this.imagePoint(label.x, label.y); label.x = image.x; label.y = image.y;
-            const p = this.view.project(label.x, label.y, .7); const width = label.text.length * 6 + 18;
+            const p = this.view.project(label.x, label.y, .7); const width = label.portrait?44:label.text.length * 6 + 18;
             if (!p.visible || p.x < width / 2 || p.x > this.view.width - width / 2 || p.y < 12 || p.y > this.view.height - 80) continue;
             if (placed.some(a => Math.abs(a.y - p.y) < 26 && Math.abs(a.x - p.x) < (a.width + width) / 2)) continue;
             const entity = this.entities.get(label.key);
@@ -370,7 +376,11 @@ export class WorldScene {
             placed.push({ x: p.x, y: p.y, width }); active.add(label.key);
             let element = this.labels.get(label.key);
             if (!element) { element = document.createElement('button'); element.className = 'scene-label'; element.type = 'button'; this.labelRoot.append(element); this.labels.set(label.key, element); }
-            element.textContent = label.text; element.style.left = `${p.x}px`; element.style.top = `${p.y + 15}px`;
+            if(label.portrait){
+                element.className=`scene-label scene-hero-marker ${label.mine?'mine':''}`;element.title=label.text;element.setAttribute('aria-label',`Select army led by ${label.text}`);
+                let face=element.querySelector('img');if(!face){face=document.createElement('img');face.alt='';face.decoding='async';element.replaceChildren(face);}if(face.getAttribute('src')!==label.portrait)face.src=label.portrait;
+            }else{element.className='scene-label';element.textContent=label.text;}
+            element.style.left = `${p.x}px`; element.style.top = `${p.y + (label.portrait?-12:15)}px`;
             element.onclick = () => {
                 if (label.selection && this.state().moveMode) this.marchAt(label.x, label.y);
                 else if (label.selection) this.actions().selectMap(label.selection);

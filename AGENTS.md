@@ -4,13 +4,13 @@ Read `ARCHITECTURE.md`, `MAP_WORLD.md`, and `ARTWORK.md` before changing gamepla
 
 ## Product direction
 
-Peris combines persistent, field-based strategy with player-controlled formation battles. Develop an original fantasy identity, including Shahnameh-inspired creatures and Persian architecture. Preserve the existing eleven factions and working flows while introducing that direction incrementally. Use reference artwork for art direction, not as a substitute for interactive terrain or game-ready models.
+Peris combines persistent, field-based strategy with automatic AI-controlled formation battles. Develop an original fantasy identity, including Shahnameh-inspired creatures and Persian architecture. Preserve the existing eleven factions and working flows while introducing that direction incrementally. Use reference artwork for art direction, not as a substitute for interactive terrain or game-ready models.
 
 ## Architecture and compatibility
 
 - Keep the existing React/TypeScript/Three.js stack. Domain logic must remain independent of React, Three.js, browser APIs, and rendering frame rate.
 - Renderers read state and emit existing commands. Damage, morale, costs, travel, and results belong to domain systems and authoritative server functions.
-- The strategic world already uses Three.js. Tactical battles currently use Canvas 2D. A future 3D battle renderer must preserve orders, formation geometry, selection, facing, deployment, and simulation rules.
+- The strategic world already uses Three.js. Tactical battles currently use Canvas 2D. Both 3D and Canvas battle renderers preserve faction visuals, formation geometry, inspection, facing and automatic simulation rules. Players prepare armies before marching; AI controls both sides during combat.
 - The map is 200 x 200 wrapped fields, canonical coordinates -100..99, 128 logical units per field. Preserve wrapped pathfinding, seam selection, save compatibility, and server agreement. Decorative elevation must not silently change movement or ownership.
 - Preserve all factions, campaign saves, online privacy boundaries, and the Canvas compatibility map. Never deploy SQL as part of a graphics change.
 - Edit database source in `supabase/modules`, then regenerate bundles. Edit geography source, then regenerate world and SQL files. Do not hand-edit generated outputs.

@@ -170,10 +170,10 @@ test('stale selections and old saves without heroes still open safely', () => {
     assert.ok(f.render().includes('Your first banner awaits.'));
 });
 
-test('native hero portraits cover every faction and all three commander classes', () => {
+test('painted and native hero portraits cover every faction and all three commander classes', () => {
     for (const faction of Object.keys(FACTIONS) as Faction[]) for (const heroClass of ['knight', 'ranger', 'mage'] as const) {
         const html = renderToStaticMarkup(React.createElement(HeroPortrait, { faction, heroClass }));
-        assert.ok(html.includes('command-portrait')); assert.ok(html.includes('linearGradient'));
+        assert.ok(html.includes('command-portrait')); assert.ok(html.includes('<img')); assert.ok(html.includes('art/heroes/')||html.includes('data:image/svg+xml'));
         assert.ok(!html.includes('NaN'));
     }
 });

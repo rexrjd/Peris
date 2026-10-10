@@ -1,3 +1,4 @@
+import { FIELD_W,FIELD_H } from '../../domain/dimensions';
 import { ACESFilmicToneMapping, Box3, BoxGeometry, BufferGeometry, Color, DirectionalLight, Float32BufferAttribute, Group, HemisphereLight, Line, LineBasicMaterial, LineLoop, Mesh, MeshBasicMaterial, PlaneGeometry, Raycaster, RingGeometry, Scene, Vector2, WebGLRenderer, PCFShadowMap, PMREMGenerator, type WebGLRenderTarget } from 'three';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { type RenderActions, type RenderState } from '../../../../shared/rendering/contracts';
@@ -15,7 +16,7 @@ import { type BattleGesture, type Point } from './interaction';
 type FormationView = { group: Group; soldiers: SoldierVisual; pose: FormationPose; pick: Mesh; outline: LineLoop; path: Line; destination: Mesh; label: HTMLDivElement };
 const geometry = (points: number[]) => new BufferGeometry().setAttribute('position', new Float32BufferAttribute(points, 3));
 
-/** Read-only presentation: emits existing commands, never applies simulation or persistence. */
+/** Read-only presentation: inspection and camera controls never alter combat. */
 export class BattleScene {
     readonly scene = new Scene();
     readonly view: BattleCamera;
@@ -56,16 +57,16 @@ export class BattleScene {
                 // A shadowless sky fill keeps faces and dark metal readable on the
                 // side facing away from the sun, without changing authored surfaces.
                 const skyFill = new DirectionalLight('#dfe8db', 1.1);
-                skyFill.position.set(950, 650, -100); skyFill.target.position.set(600, 0, 350);
+                skyFill.position.set(FIELD_W/2+350,650,FIELD_H/2-450);skyFill.target.position.set(FIELD_W/2,0,FIELD_H/2);
                 this.scene.add(skyFill, skyFill.target);
             }
             this.renderer.shadowMap.enabled = true; this.renderer.shadowMap.type = PCFShadowMap;
             this.scene.background = new Color('#526351');
             this.scene.add(new HemisphereLight('#d4e0ef', '#66533c', 1.6), this.sun);
 
-            this.sun.position.set(250, 900, 450); this.sun.target.position.set(600, 0, 350); this.sun.castShadow = true;
+            this.sun.position.set(FIELD_W/2-350,900,FIELD_H/2+100);this.sun.target.position.set(FIELD_W/2,0,FIELD_H/2); this.sun.castShadow = true;
             this.sun.shadow.mapSize.set(quality === 'ultra' ? 4096 : 2048, quality === 'ultra' ? 4096 : 2048);
-            Object.assign(this.sun.shadow.camera, { left: -850, right: 850, top: 650, bottom: -650, far: 2200 });
+            Object.assign(this.sun.shadow.camera, { left:-FIELD_W/2,right:FIELD_W/2,top:FIELD_H/2+100,bottom:-FIELD_H/2-100,far:3200 });
             this.sun.shadow.bias = -.0002; this.sun.shadow.normalBias=.03; this.scene.add(this.sun.target, createBattlefield(terrain));
             for (const [x, color] of [[195, '#d5a661'], [1005, '#7099b8']] as const) {
                 const zone = new Mesh(new PlaneGeometry(340, 640), new MeshBasicMaterial({ color, opacity: .16, transparent: true, depthWrite: false }));
@@ -75,7 +76,7 @@ export class BattleScene {
             this.previewLine.visible = false; this.scene.add(this.zones, this.previewLine);
             this.observer = new ResizeObserver(() => this.resize()); this.observer.observe(canvas.parentElement!);
             this.resize(); this.view.center();
-            this.input = new BattleInput(canvas, this.view, state, actions, p => this.hit(p), f => this.project(f), gesture => this.preview(gesture));
+            this.input = new BattleInput(canvas, this.view, state, actions, p => this.hit(p), gesture => this.preview(gesture));
             canvas.addEventListener('webglcontextlost', this.contextLost);
             this.frame = requestAnimationFrame(time => this.draw(time));
         } catch (error) { this.destroy(); throw error; }
@@ -106,8 +107,8 @@ export class BattleScene {
         const amount = battle.phase === 'deployment' || preferences().reducedMotion ? 1 : 1 - Math.exp(-dt * 10);
         pose.x += (f.x - pose.x) * amount; pose.y += (f.y - pose.y) * amount; pose.facing += angleDiff(f.facing, pose.facing) * amount;
         record.group.visible=!this.view.inspecting || state.selectedIds.includes(f.id);
-        if(record.group.visible) record.soldiers.update({ formation: f, pose, dt: state.paused ? 0 : dt, time: this.visualTime, height, detail:this.view.span>180?'far':'near', animate: !state.paused && !preferences().reducedMotion && preferences().effects });
-        const logicalSize = formationSize(f), footprint=record.soldiers.object.userData.renderFootprint as {depthScale:number;widthScale:number}|undefined;
+        if(record.group.visible) record.soldiers.update({ formation: f, pose, dt: state.paused ? 0 : dt, time: this.visualTime, battleTime: battle.elapsed, height, detail:this.view.span>180?'far':'near', animate: !state.paused && !preferences().reducedMotion && preferences().effects });
+        const logicalSize = formationSize({ ...f, soldiers: Math.max(f.soldiers, f.initial_soldiers) }), footprint=record.soldiers.object.userData.renderFootprint as {depthScale:number;widthScale:number}|undefined;
         const size=footprint?{depth:(logicalSize.depth-12)*footprint.depthScale+12,width:(logicalSize.width-12)*footprint.widthScale+12}:logicalSize;
         const bounds=record.soldiers.object.userData.inspectionBounds as Box3|undefined;
         const angle = pose.facing * Math.PI / 180, selected = state.selectedIds.includes(f.id), own = f.owner_id === state.playerId;

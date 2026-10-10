@@ -1,3 +1,4 @@
+import { FIELD_SCALE } from '../../features/battle/domain/dimensions';
 import { RenderContext } from './RenderContext';
 import { FIELD_H, FIELD_W } from '../../features/battle/domain/dimensions';
 import { WORLD_H, WORLD_W, WORLD_MIN_X, WORLD_MIN_Y } from '../../features/map/domain/dimensions';
@@ -52,13 +53,14 @@ export class CanvasOverlays {
         c.strokeStyle = '#d8e2cc50';
         c.lineWidth = .7;
         for (let i = 0; i < 26; i++) {
+            const scale=s.mode==='battle'?FIELD_SCALE:1;
             const y = (i * 33 + time / 90) % (s.mode === 'world' ? 770 : 700);
             if (s.mode === 'battle' && y > 300 && y < 400 || s.mode === 'world' && (Math.abs(y - 250) < 17 || Math.abs(y - 485) < 17))
                 continue;
             const x = s.mode === 'world' ? silverrunX(y) : 600 + Math.sin(y / 110) * 32;
             c.beginPath();
-            c.moveTo(x - 12, y);
-            c.quadraticCurveTo(x, y + 2, x + 12, y);
+            c.moveTo((x - 12)*scale, y*scale);
+            c.quadraticCurveTo(x*scale, (y + 2)*scale, (x + 12)*scale, y*scale);
             c.stroke();
         }
     }

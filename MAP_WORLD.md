@@ -1,4 +1,4 @@
-# PERIS seamless world — map v4 / database v10
+# PERIS seamless world — map v4 / database v11
 
 The actual game uses the seeded low-poly map alongside main's city, faction, magic, Empire and Heroes systems. There are 200 × 200 fields of 128 logical units, canonical field coordinates −100 through 99. Both axes wrap. Shared seed: 1346720329. About 93.26% is dry land, with rivers, lakes, forests, mountains, desert and ruins. Historic starting sites and campaign positions retain their coordinates and dry surroundings.
 
@@ -37,6 +37,14 @@ Thousands of candidate spawn sites exist. New accounts require a dry 3 × 3 ring
 
 Change geography, run `npm run build:world`, then `npm run build:sql`. Server geography contains a 5 kB walkability mask plus a 40 kB terrain byte map. Run their check commands, TypeScript/build, gameplay tests and database suites. See MAP_RELEASE.md for publication commands.
 
-Apply `supabase/UPGRADE_TO_V10.sql` to an existing database after backup/review; use `FRESH_INSTALL_V10.sql` only for an empty one. Generating source does not deploy SQL. The transaction aborts instead of moving/deleting unsafe occupied positions or turning a town into sea. Existing routes and historic spawn IDs remain. Online commands require matching world metadata and the V10 Empire functions. Local saves keep their v6 format/key; larger-world legacy imports do not silently relocate armies.
+Apply `supabase/UPGRADE_TO_V11.sql` to an existing database after backup/review; use `FRESH_INSTALL_V11.sql` only for an empty one. Generating source does not deploy SQL. The transaction aborts instead of moving/deleting unsafe occupied positions or turning a town into sea. Existing routes and historic spawn IDs remain. Online commands require matching world metadata and the V10 Empire functions. Local saves keep their v6 format/key; larger-world legacy imports do not silently relocate armies.
 
 Desktop/mobile browser checks cover map drawing, camera controls and the Canvas compatibility view. Automated geometry, interaction, save, route and isolated migration tests do not establish visual fidelity or GPU frame rates.
+
+## V12 encounters
+
+The shared world seed now places 605 bandit camps across the 200×200 realm, one candidate per 8×8 sector with jitter, minimum separation and protected historic/future starting rings. IDs remain stable; races and troop mixes differ between camps. Original campaign sites 1–6 retain their positions and objectives. Bandit raids grant hero experience, permanent battle losses and resource spoils, with a ten-minute per-player regrouping timer. Bandit victories do not count toward campaign standards.
+
+Campaign battles and PvP duels derive tactical terrain from the actual destination field. Arena area is multiplied by five, using `sqrt(5)` on each axis. Initial deployments remain near the centre so armies can meet promptly; troop sizes and movement speeds are unchanged. All ten land biomes have distinct ground palettes, with shared combat effects for forests, elevation, river fords, marsh, snow and sand.
+
+Use `npm run build:bandits` after changing camp generation, then `npm run build:sql`. Check both generated sources with `npm run check:bandits` and `npm run check:sql`. Existing databases use the complete V12 upgrade; no SQL is automatically deployed.

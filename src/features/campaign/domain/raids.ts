@@ -1,3 +1,4 @@
+import { battleTerrainAtWorld } from '../../battle/domain/terrain';
 import { ownedArmy } from '../../empire/domain/context';
 import { heroBonuses } from '../../heroes/domain/heroes';
 import { maximumMana, towerLevel } from '../../magic/domain/spells';
@@ -6,7 +7,8 @@ import { newBattle } from '../../battle/domain/creation';
 import { armyAttack } from '../../city/domain/slots';
 export function beginRaid(world: World, owner: string, campId: number, nextId: () => number, armyId?: number) {
     const camp = world.camps.find(c => c.id === campId)!, a = ownedArmy(world, owner, armyId);
-    const instance = newBattle(nextId(), owner, a, camp, camp.terrain, camp.tier >= 4 ? 'hard' : camp.tier === 1 ? 'easy' : 'normal', camp.name, 'pve', camp.id);
+    const instance = newBattle(nextId(), owner, a, camp, battleTerrainAtWorld(camp.x,camp.y), camp.tier >= 4 ? 'hard' : camp.tier === 1 ? 'easy' : 'normal', camp.name, 'pve', camp.id);
+    instance.battle.defender_faction=camp.faction;
     const wall = world.buildings.find(b => b.settlement_id === a.home_settlement_id && b.building_type === 'wall')?.level ?? 1;
     instance.formations.filter(f => f.owner_id === owner).forEach(f => f.morale = Math.min(100, 90 + wall * 2));
     instance.formations.filter(f => f.owner_id === owner).forEach(f => f.attack_multiplier=armyAttack(world,a.home_settlement_id));

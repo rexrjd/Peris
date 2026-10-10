@@ -1,3 +1,4 @@
+import { recommendedHost } from '../../map/domain/bandits';
 import { type World } from '../../../shared/model/world';
 import { type Camp } from '../../map/domain/types';
 import { soldierTotal } from '../../army/domain/units';
@@ -14,11 +15,11 @@ export const BRIEFINGS: Record<number, {
     5: { chapter: 'The ash road', story: 'The Ashen Legion stands between your realm and the lost capital. This will be a battle of armies. Replace your losses, then march east.', tactic: 'Build a larger host with a protected archer line. Use Guard when their cavalry approaches; counter-charge after it commits.', recommended: 580 },
     6: { chapter: 'The last standard', story: 'The fallen capital has watched five banners return to your keeping. Its gates will open only when the last great rebel host is beaten. Finish what you began.', tactic: 'Bring a rested, reinforced legion. High ground, a steady infantry centre, and patient cavalry flanks decide this final field.', recommended: 820 },
 };
-export function conquered(world: World, playerId: string) { return new Set(world.progress.filter(p => p.owner_id === playerId && p.defeated > 0).map(p => p.camp_id)); }
-export function nextCampaign(world: World, playerId: string) { const done = conquered(world, playerId); return world.camps.find(c => !done.has(c.id)); }
+export function conquered(world: World, playerId: string) { return new Set(world.progress.filter(p => p.owner_id === playerId && p.defeated > 0 && p.camp_id<=6).map(p => p.camp_id)); }
+export function nextCampaign(world: World, playerId: string) { const done = conquered(world, playerId); return world.camps.find(c => !c.bandit && c.id<=6 && !done.has(c.id)); }
 export function campaignRank(count: number) { return ['Frontier governor', 'Bearer of the standard', 'Warden of Oakwood', 'Keeper of the crossing', 'Lord of the high country', 'Commander of the province', 'Restorer of Peris'][Math.min(6, count)]; }
 export function readiness(world: World, playerId: string, camp: Camp, armyId?: number) {
-    const army = world.armies.find(a => a.owner_id === playerId && (armyId===undefined||a.id===armyId))!, ratio = soldierTotal(army) / BRIEFINGS[camp.id].recommended;
+    const army = world.armies.find(a => a.owner_id === playerId && (armyId===undefined||a.id===armyId))!, ratio = soldierTotal(army) / (BRIEFINGS[camp.id]?.recommended??recommendedHost(camp));
     return { ratio, label: ratio >= 1 ? 'Ready for the field' : ratio >= .78 ? 'A hard-fought battle' : 'Reinforcements advised', className: ratio >= 1 ? 'ready' : ratio >= .78 ? 'challenging' : 'danger' };
 }
 export function campaignKey(world: World) { return `${world.players[0]?.id}:${world.players[0]?.created_at}`; }

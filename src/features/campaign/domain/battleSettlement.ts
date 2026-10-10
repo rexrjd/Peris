@@ -1,3 +1,4 @@
+import { campCooldown } from '../../map/domain/bandits';
 import { awardHeroExperience } from '../../heroes/domain/heroes';
 import { type World } from '../../../shared/model/world';
 import { settleLocal } from './settlement';
@@ -21,13 +22,13 @@ export function settleBattle(w: World, id: number, owner: string, nextId: () => 
         for (const key of RESOURCES)
             s[key] = Math.min(key==='food' ? s.food_capacity ?? s.capacity : s.capacity, s[key] + loot[key]);
         const old = w.progress.find(c => c.camp_id === camp.id && c.owner_id===owner);
-        if(!old){const drops=['iron_sword','chainmail','boots','circlet','runestaff','crown_seal'];(w.hero_artifacts??=[]).push({id:nextId(),owner_id:owner,artifact_id:drops[Math.min(5,Math.max(0,camp.id-1))],hero_id:null});}
+        if(!old&&(!camp.bandit||camp.id%7===0)&&(w.hero_artifacts?.length??0)<200){const drops=['iron_sword','chainmail','boots','circlet','runestaff','crown_seal'];(w.hero_artifacts??=[]).push({id:nextId(),owner_id:owner,artifact_id:drops[Math.min(5,Math.max(0,(camp.bandit?camp.tier:camp.id)-1))],hero_id:null});}
         if (old) {
             old.defeated++;
-            old.available_at = new Date(Date.now() + 120000).toISOString();
+            old.available_at = new Date(Date.now() + campCooldown(camp)).toISOString();
         }
         else
-            w.progress.push({ camp_id: camp.id, owner_id: owner, defeated: 1, available_at: new Date(Date.now() + 120000).toISOString() });
+            w.progress.push({ camp_id: camp.id, owner_id: owner, defeated: 1, available_at: new Date(Date.now() + campCooldown(camp)).toISOString() });
     }
     w.reports.unshift({ id: nextId(), owner_id: owner, battle_id: id, title: b.enemy_name, won, result: { ...result }, created_at: new Date().toISOString() });
     // The field army regroups at home. No troop restoration is hidden in this return.

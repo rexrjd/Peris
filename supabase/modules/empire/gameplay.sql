@@ -45,8 +45,8 @@ declare h public.peris_heroes%rowtype;artifact text;
 begin
  select * into h from public.peris_heroes where army_id=p_army for update;if h.id is null then return;end if;
  update public.peris_heroes set experience=least(19000,experience+greatest(0,p_experience))where id=h.id;
- if p_camp is not null then
- artifact:=(array['iron_sword','chainmail','boots','circlet','runestaff','crown_seal'])[least(6,greatest(1,p_camp))];
+ if p_camp is not null and (p_camp<=6 or p_camp%7=0)and(select count(*)from public.peris_hero_artifacts where owner_id=h.owner_id)<200 then
+ artifact:=(array['iron_sword','chainmail','boots','circlet','runestaff','crown_seal'])[least(6,greatest(1,case when p_camp>6 then (select tier from public.peris_camps where id=p_camp)else p_camp end))];
  insert into public.peris_hero_artifacts(owner_id,artifact_id,slot,source_camp_id)select h.owner_id,c.id,c.slot,p_camp from public.peris_artifact_catalog c where c.id=artifact on conflict(owner_id,source_camp_id)do nothing;
  end if;
 end $$;

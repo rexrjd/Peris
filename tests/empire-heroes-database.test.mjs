@@ -118,9 +118,10 @@ try {
     await command({type:'raid',armyId:second.id,campId:nextCamp.id,route:mageRoute.path});
     await admin(`update public.armies set arrival_at=now()-interval '1 second' where id=${second.id}`);await login();await rpc('sync_my_state');
     w=await snapshot();const magicBattle=w.battles.find(b=>b.status==='active');assert.equal(magicBattle.mana_attacker,50);
-    await rpc('peris_ready',[magicBattle.id]);await admin(`update public.battles set last_tick_at=now() where id=${magicBattle.id}`);await login();
+    await rpc('peris_ready',[magicBattle.id]);await admin(`update public.battles set last_tick_at=now()+interval '1 hour' where id=${magicBattle.id}`);await login();
     const enemy=(await snapshot()).formations.find(f=>f.side==='defender'),soldiers=enemy.soldiers;
-    await rpc('peris_cast_spell',[magicBattle.id,'spark',enemy.id]);w=await snapshot();
+    await assert.rejects(()=>rpc('peris_cast_spell',[magicBattle.id,'spark',enemy.id]),/automatically/);
+    await admin(`select public.peris_cast_spell_for('${u}',${magicBattle.id},'spark',${enemy.id})`);await login();w=await snapshot();
     assert.equal(w.formations.find(f=>f.id===enemy.id).soldiers,soldiers-10);assert.equal(w.battles.find(b=>b.id===magicBattle.id).mana_attacker,45);
     await admin(`select public.peris_finish(${magicBattle.id},'draw','spell test complete')`);await login();
     // The invitation stores the initiating army; the defender chooses their own army.

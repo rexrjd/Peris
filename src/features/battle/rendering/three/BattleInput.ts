@@ -1,8 +1,7 @@
 import { type RenderActions, type RenderState } from '../../../../shared/rendering/contracts';
 import { type Formation } from '../../domain/types';
 import { BattleCamera } from './BattleCamera';
-import { battleInteraction, commandable, type BattleGesture, type Point } from './interaction';
-import { preferences } from '../../../../platform/preferences/preferences';
+import { battleInteraction, type BattleGesture, type Point } from './interaction';
 
 export class BattleInput {
     private readonly cleanup: (() => void)[] = [];
@@ -13,7 +12,6 @@ export class BattleInput {
     constructor(private readonly canvas: HTMLCanvasElement, private readonly view: BattleCamera,
         private readonly state: () => RenderState, private readonly actions: () => RenderActions,
         private readonly hit: (p: Point) => Formation | undefined,
-        private readonly project: (f: Formation) => Point & { visible: boolean },
         private readonly preview: (gesture: BattleGesture | null) => void) { this.bind(); }
     private on(target: EventTarget, name: string, fn: EventListener, options?: AddEventListenerOptions) {
         target.addEventListener(name, fn, options); this.cleanup.push(() => target.removeEventListener(name, fn, options));
@@ -35,7 +33,7 @@ export class BattleInput {
                 if (this.pinch) return;
             }
             if (this.gesture) return;
-            const pan = e.button === 1 || (e.button === 0 && e.altKey);
+            const pan = e.button !== 0 || e.altKey;
             this.gesture = { start: p, end: p, ground: this.view.ground(p.x, p.y), startGround: this.view.ground(p.x, p.y),
                 button: e.button, shift: e.shiftKey, pointerId: e.pointerId, pan, last: p };
         }) as EventListener);
@@ -51,9 +49,10 @@ export class BattleInput {
             }
             const gesture = this.gesture;
             if (!gesture || gesture.pointerId !== e.pointerId) return;
+            if (!gesture.pan && Math.hypot(p.x - gesture.start.x, p.y - gesture.start.y) > 8) gesture.pan = true;
             if (gesture.pan) this.view.pan(p.x - gesture.last.x, p.y - gesture.last.y);
             gesture.last = p; gesture.end = p; gesture.ground = this.view.ground(p.x, p.y);
-            if (!gesture.pan) this.preview(gesture);
+            this.preview(null);
         }) as EventListener);
         this.on(this.canvas, 'pointerup', ((e: PointerEvent) => {
             this.touches.delete(e.pointerId);
@@ -62,9 +61,8 @@ export class BattleInput {
             if (this.pinch) { if (!this.touches.size) this.pinch = null; return; }
             if (!gesture || gesture.pointerId !== e.pointerId || gesture.pan) return;
             const p = this.coords(e);
-            const result = battleInteraction(this.state(), { ...gesture, end: p, ground: this.view.ground(p.x, p.y) }, this.hit(p), this.project, preferences().simpleOrders);
+            const result = battleInteraction(this.state(), { ...gesture, end: p, ground: this.view.ground(p.x, p.y) }, this.hit(p));
             if (result && 'select' in result) this.actions().selectUnits(result.select);
-            if (result && 'order' in result) this.actions().order(result.order);
         }) as EventListener);
         this.on(this.canvas, 'pointercancel', () => this.reset());
         this.on(this.canvas, 'lostpointercapture', ((e: PointerEvent) => { if (this.gesture?.pointerId === e.pointerId) { this.gesture = null; this.preview(null); } }) as EventListener);
@@ -77,18 +75,15 @@ export class BattleInput {
             const k = e.key.toLowerCase(), target = e.target as HTMLElement;
             if (target?.closest('input,select,textarea') || (target?.closest('button') && (k === ' ' || k === 'enter')) || e.ctrlKey || e.metaKey || e.altKey || document.querySelector('[role="dialog"]')) return;
             const state = this.state(), actions = this.actions();
-            if (!['arrowleft', 'arrowright', 'arrowup', 'arrowdown', 'q', 'e', '+', '=', '-', '0', 'f', 'a', 'h', 'g', 'r', ' ', 'escape'].includes(k) && !/^[1-9]$/.test(k)) return;
+            if (!['arrowleft', 'arrowright', 'arrowup', 'arrowdown', 'q', 'e', '+', '=', '-', '0', 'f', 'a', ' ', 'escape'].includes(k) && !/^[1-9]$/.test(k)) return;
             e.preventDefault(); this.keys.add(k);
             if (e.repeat) return;
-            const own = state.world.formations.filter(f => f.battle_id === state.battle?.id && commandable(f, state.playerId));
+            const own = state.world.formations.filter(f => f.battle_id === state.battle?.id && f.owner_id === state.playerId && f.soldiers > 0);
             if (k === 'a') actions.selectUnits(own.map(f => f.id));
-            if (k === 'h' && state.selectedIds.length) actions.order({ kind: 'halt', ids: state.selectedIds });
-            if (k === 'g' && state.selectedIds.length) actions.order({ kind: 'stance', ids: state.selectedIds, stance: 'guard' });
-            if (k === 'r') actions.rally();
             if (k === ' ') actions.pause();
             if (k === 'escape') { actions.menu?.(); actions.selectUnits([]); this.reset(); }
             if (/^[1-9]$/.test(k) && own[Number(k) - 1]) actions.selectUnits([own[Number(k) - 1].id]);
-            if (k === 'f') { const f = own.find(f => state.selectedIds.includes(f.id)); if (f) this.view.focus(f.x, f.y); }
+            if (k === 'f') { const f = state.world.formations.find(f => f.battle_id === state.battle?.id && state.selectedIds.includes(f.id)); if (f) this.view.focus(f.x, f.y); }
             if (k === '+' || k === '=') this.view.zoom(1.25);
             if (k === '-') this.view.zoom(.8);
             if (k === '0') this.view.center();

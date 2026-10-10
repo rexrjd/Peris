@@ -2,7 +2,7 @@ import { AnimationMixer, Box3, DataTexture, FloatType, Group, InstancedBufferAtt
 import { publishedArmyUrl } from './publication';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { type Faction } from '../../../factions/domain/factions';
-import { soldierSlots, type SoldierFrame, type SoldierVisualFactory } from './soldiers';
+import { soldierSlots, strikeAnimation, type SoldierFrame, type SoldierVisualFactory } from './soldiers';
 import type { Formation } from '../../domain/types';
 
 export const ARMY_ROLES = ['line_infantry', 'spear_guard', 'archer', 'elite', 'scout', 'light_cavalry', 'heavy_cavalry', 'ram', 'catapult'] as const;
@@ -280,7 +280,7 @@ function createArmyVisual(parts: Part[], bounds?: Box3) {
         const { formation: f, pose } = frame, angle = pose.facing * Math.PI / 180, cos = Math.cos(angle), sin = Math.sin(angle);
         clock.value = frame.animate ? frame.time : clock.value;
         const moved = !placement || placement.id !== f.id || placement.soldiers !== f.soldiers || placement.columns !== f.columns || placement.x !== pose.x || placement.y !== pose.y || placement.facing !== pose.facing;
-        const animation = frame.animate ? f.status === 'moving' || f.status === 'routed' ? 1 : f.status === 'engaged' ? 2 : 0 : 0;
+        const animation = frame.animate ? f.status === 'moving' || f.status === 'routed' ? 1 : strikeAnimation(f, frame.battleTime) ? 2 : 0 : 0;
         if (moved) {
             // Battlefield height is fixed for this scene. Animation is in the
             // bone palette, so a stationary formation needs no matrix uploads.

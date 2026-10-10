@@ -1,0 +1,59 @@
+{
+  "version": 1,
+  "license": "original",
+  "generator": "Built-in image generation",
+  "artDirection": "Original painted fantasy commander portraits inspired by classic strategy RPGs. Single faces, charcoal-blue backgrounds and warm side light; no game assets or copied characters.",
+  "portraits": [
+    {
+      "id": "roman-knight",
+      "file": "public/art/heroes/roman-knight.png",
+      "finalPrompt": "Use case: stylized-concept. Asset type: one individual square hero portrait for the original fantasy strategy game Peris, part of a cohesive ten-portrait set. Style: classic painted fantasy strategy RPG portrait with the tactile brushwork, strong character faces and rich restrained colour of Heroes of Might and Magic-era portrait art, original character design. Close head-and-shoulders framing, single subject only, face large and centred, eyes at about 40 percent of image height, shoulders at bottom, head fully inside image. Charcoal-blue atmospheric background, warm side light, readable silhouette at 48px. Detailed painterly illustration, no photorealism, no cartoon or 3D rendering. No borders, no lettering, no logos, no UI, no watermark. Subject: A seasoned Roman-inspired human commander, man in his forties with cropped dark hair, a scar on one cheek, silver segmented armour, restrained bronze laurel helmet with a short crimson crest, crimson cloak; helmet leaves the entire recognisable face visible."
+    },
+    {
+      "id": "persian-mage",
+      "file": "public/art/heroes/persian-mage.png",
+      "finalPrompt": "Use case: stylized-concept. Asset type: one individual square hero portrait for the original fantasy strategy game Peris, part of a cohesive ten-portrait set. Style: classic painted fantasy strategy RPG portrait with the tactile brushwork, strong character faces and rich restrained colour of Heroes of Might and Magic-era portrait art, original character design. Close head-and-shoulders framing, single subject only, face large and centred, eyes at about 40 percent of image height, shoulders at bottom, head fully inside image. Charcoal-blue atmospheric background, warm side light, readable silhouette at 48px. Detailed painterly illustration, no photorealism, no cartoon or 3D rendering. No borders, no lettering, no logos, no UI, no watermark. Subject: A dignified Persian-inspired human sorceress, woman with warm brown skin, long black hair, dark expressive eyes, lapis silk robes and gold embroidery, modest bejewelled circlet, subtle blue magical light."
+    },
+    {
+      "id": "elf-ranger",
+      "file": "public/art/heroes/elf-ranger.png",
+      "finalPrompt": "Use case: stylized-concept. Asset type: one individual square hero portrait for the original fantasy strategy game Peris, part of a cohesive ten-portrait set. Style: classic painted fantasy strategy RPG portrait with the tactile brushwork, strong character faces and rich restrained colour of Heroes of Might and Magic-era portrait art, original character design. Close head-and-shoulders framing, single subject only, face large and centred, eyes at about 40 percent of image height, shoulders at bottom, head fully inside image. Charcoal-blue atmospheric background, warm side light, readable silhouette at 48px. Detailed painterly illustration, no photorealism, no cartoon or 3D rendering. No borders, no lettering, no logos, no UI, no watermark. Subject: A silver-haired elven woman ranger with clearly pointed ears, sharp calm features, amber eyes, midnight-blue leather armour, a bow and a few feathered arrows at the shoulder."
+    },
+    {
+      "id": "dwarf-thane",
+      "file": "public/art/heroes/dwarf-thane.png",
+      "finalPrompt": "Use case: stylized-concept. Asset type: one individual square hero portrait for the original fantasy strategy game Peris, part of a cohesive ten-portrait set. Style: classic painted fantasy strategy RPG portrait with the tactile brushwork, strong character faces and rich restrained colour of Heroes of Might and Magic-era portrait art, original character design. Close head-and-shoulders framing, single subject only, face large and centred, eyes at about 40 percent of image height, shoulders at bottom, head fully inside image. Charcoal-blue atmospheric background, warm side light, readable silhouette at 48px. Detailed painterly illustration, no photorealism, no cartoon or 3D rendering. No borders, no lettering, no logos, no UI, no watermark. Subject: A stout dwarf man thane with a huge braided copper beard, rugged round face, strong eyebrows, navy and gold heavy armour, intricate geometric metalwork, a compact open-faced iron crown."
+    },
+    {
+      "id": "gnome-alchemist",
+      "file": "public/art/heroes/gnome-alchemist.png",
+      "finalPrompt": "Use case: stylized-concept. Asset type: one individual square hero portrait for the original fantasy strategy game Peris, part of a cohesive ten-portrait set. Style: classic painted fantasy strategy RPG portrait with the tactile brushwork, strong character faces and rich restrained colour of Heroes of Might and Magic-era portrait art, original character design. Close head-and-shoulders framing, single subject only, face large and centred, eyes at about 40 percent of image height, shoulders at bottom, head fully inside image. Charcoal-blue atmospheric background, warm side light, readable silhouette at 48px. Detailed painterly illustration, no photorealism, no cartoon or 3D rendering. No borders, no lettering, no logos, no UI, no watermark. Subject: A female gnome alchemist with a small mature face, large curious eyes, copper hair tied back, brass goggles resting above her forehead, a midnight-purple coat, tiny brass flask at her collar."
+    },
+    {
+      "id": "panda-monk",
+      "file": "public/art/heroes/panda-monk.png",
+      "finalPrompt": "Use case: stylized-concept. Asset type: one individual square hero portrait for the original fantasy strategy game Peris, part of a cohesive ten-portrait set. Style: classic painted fantasy strategy RPG portrait with the tactile brushwork, strong character faces and rich restrained colour of Heroes of Might and Magic-era portrait art, original character design. Close head-and-shoulders framing, single subject only, face large and centred, eyes at about 40 percent of image height, shoulders at bottom, head fully inside image. Charcoal-blue atmospheric background, warm side light, readable silhouette at 48px. Detailed painterly illustration, no photorealism, no cartoon or 3D rendering. No borders, no lettering, no logos, no UI, no watermark. Subject: An anthropomorphic black-and-white panda male wandering monk, unmistakable panda muzzle and round ears, wise eyes, Chinese-inspired dark blue robe with restrained gold trim, prayer beads, bamboo hat pushed behind his head; dignified grounded fantasy design."
+    },
+    {
+      "id": "undead-necromancer",
+      "file": "public/art/heroes/undead-necromancer.png",
+      "finalPrompt": "Use case: stylized-concept. Asset type: one individual square hero portrait for the original fantasy strategy game Peris, part of a cohesive ten-portrait set. Style: classic painted fantasy strategy RPG portrait with the tactile brushwork, strong character faces and rich restrained colour of Heroes of Might and Magic-era portrait art, original character design. Close head-and-shoulders framing, single subject only, face large and centred, eyes at about 40 percent of image height, shoulders at bottom, head fully inside image. Charcoal-blue atmospheric background, warm side light, readable silhouette at 48px. Detailed painterly illustration, no photorealism, no cartoon or 3D rendering. No borders, no lettering, no logos, no UI, no watermark. Subject: An undead female necromancer, gaunt pale bone-coloured face, hollow glowing ice-blue eyes, weathered black and violet ceremonial robes, silver bone circlet, ominous and aristocratic, face visible and tasteful non-gory."
+    },
+    {
+      "id": "demon-warlock",
+      "file": "public/art/heroes/demon-warlock.png",
+      "finalPrompt": "Use case: stylized-concept. Asset type: one individual square hero portrait for the original fantasy strategy game Peris, part of a cohesive ten-portrait set. Style: classic painted fantasy strategy RPG portrait with the tactile brushwork, strong character faces and rich restrained colour of Heroes of Might and Magic-era portrait art, original character design. Close head-and-shoulders framing, single subject only, face large and centred, eyes at about 40 percent of image height, shoulders at bottom, head fully inside image. Charcoal-blue atmospheric background, warm side light, readable silhouette at 48px. Detailed painterly illustration, no photorealism, no cartoon or 3D rendering. No borders, no lettering, no logos, no UI, no watermark. Subject: A crimson-skinned demon male warlock, two swept-back ivory horns, handsome severe angular face, glowing amber eyes, black obsidian armour with restrained brass ornament, charcoal shadows and faint ember light."
+    },
+    {
+      "id": "egyptian-seer",
+      "file": "public/art/heroes/egyptian-seer.png",
+      "finalPrompt": "Use case: stylized-concept. Asset type: one individual square hero portrait for the original fantasy strategy game Peris, part of a cohesive ten-portrait set. Style: classic painted fantasy strategy RPG portrait with the tactile brushwork, strong character faces and rich restrained colour of Heroes of Might and Magic-era portrait art, original character design. Close head-and-shoulders framing, single subject only, face large and centred, eyes at about 40 percent of image height, shoulders at bottom, head fully inside image. Charcoal-blue atmospheric background, warm side light, readable silhouette at 48px. Detailed painterly illustration, no photorealism, no cartoon or 3D rendering. No borders, no lettering, no logos, no UI, no watermark. Subject: An Egyptian-inspired human woman seer with deep brown skin, precise dark kohl eyeliner, short black hair, a gold and lapis collar, ivory linen and midnight blue ceremonial mantle, subtle falcon-shaped gold circlet."
+    },
+    {
+      "id": "spartan-captain",
+      "file": "public/art/heroes/spartan-captain.png",
+      "finalPrompt": "Use case: stylized-concept. Asset type: one individual square hero portrait for the original strategy game Peris. A calm, confident Spartan-inspired woman commander, dark curly hair, warm Mediterranean complexion, open bronze helmet with a modest red crest, crimson shoulder cloak, bronze armour. Face fully visible. Classic hand-painted fantasy strategy RPG portrait, rich restrained colours, tactile brushwork and expressive character face. Close head-and-shoulders framing, single character, complete head inside the image, eyes at 40 percent image height, large recognisable face, readable silhouette at 48px. Charcoal-blue atmospheric background and warm side lighting matching the other Peris portraits. Original design, no text, logos, watermark, borders or UI. Not a 3D render or cartoon."
+    }
+  ],
+  "commonPrompt": "Use case: stylized-concept. Asset type: one individual square hero portrait for the original fantasy strategy game Peris, part of a cohesive ten-portrait set. Style: classic painted fantasy strategy RPG portrait with the tactile brushwork, strong character faces and rich restrained colour of Heroes of Might and Magic-era portrait art, original character design. Close head-and-shoulders framing, single subject only, face large and centred, eyes at about 40 percent of image height, shoulders at bottom, head fully inside image. Charcoal-blue atmospheric background, warm side light, readable silhouette at 48px. Detailed painterly illustration, no photorealism, no cartoon or 3D rendering. No borders, no lettering, no logos, no UI, no watermark. Subject: "
+}

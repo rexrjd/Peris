@@ -1,3 +1,4 @@
+import { FIELD_W,FIELD_H,FIELD_SCALE } from '../src/features/battle/domain/dimensions';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { Box3, Group, InstancedMesh, Matrix4, Vector3 } from 'three';
@@ -12,7 +13,7 @@ import { type RenderState } from '../src/shared/rendering/contracts';
 import { BattleCamera } from '../src/features/battle/rendering/three/BattleCamera';
 import { battlefieldHeight, createBattlefield } from '../src/features/battle/rendering/three/terrain';
 import { battleInteraction, type BattleGesture } from '../src/features/battle/rendering/three/interaction';
-import { createLowPolySoldiers, soldierSlots } from '../src/features/battle/rendering/three/soldiers';
+import { createLowPolySoldiers, soldierSlots, strikeAnimation } from '../src/features/battle/rendering/three/soldiers';
 import { disposeObject } from '../src/features/battle/rendering/three/dispose';
 import { BattleScene } from '../src/features/battle/rendering/three/BattleScene';
 import { Raycaster, Scene } from 'three';
@@ -48,10 +49,10 @@ test('overview and resized/rotated cameras frame the entire battlefield, includi
         camera.setSize(width, height); camera.center();
         for (const rotation of [0, .5, -.9]) {
             camera.rotate(rotation);
-            for (const x of [0, 1200]) for (const y of [0, 700]) assert.ok(camera.project(x, y).visible);
+            for (const x of [0, FIELD_W]) for (const y of [0, FIELD_H]) assert.ok(camera.project(x, y).visible);
         }
     }
-    camera.focus(-500, 1000); near(camera.target.x, 0); near(camera.target.z, 700);
+    camera.focus(-500, FIELD_H+500); near(camera.target.x, 0); near(camera.target.z, FIELD_H);
     camera.zoom(1e9); assert.ok(camera.span >= 120);
 });
 
@@ -69,7 +70,7 @@ test('siege inspection fits tall roofs and wide living siege bounds in landscape
 });
 
 test('visual high ground and terrain coloring retain the existing tactical terrain footprints', () => {
-    assert.equal(terrainAt('highlands', 650, 285).kind, 'High ground'); assert.equal(battlefieldHeight('highlands', 650, 285), 28);
+    assert.equal(terrainAt('highlands', 650*FIELD_SCALE, 285*FIELD_SCALE).kind, 'High ground'); assert.equal(battlefieldHeight('highlands', 650*FIELD_SCALE, 285*FIELD_SCALE), 28);
     assert.equal(battlefieldHeight('highlands', 50, 50), 0);
     for (const terrain of ['plains', 'woods', 'river', 'highlands'] as const) {
         const scene = createBattlefield(terrain);
@@ -78,41 +79,36 @@ test('visual high ground and terrain coloring retain the existing tactical terra
     }
 });
 
-test('selection toggles own formations and screen-space group selection excludes enemies, fallen and routed troops', () => {
+test('3D inspection selects either side, including routed units, and never issues movement or attack orders', () => {
     const { state, own, enemy } = setup();
-    assert.deepEqual(battleInteraction(state, gesture(), own[1], project, true), { select: [own[1].id] });
-    assert.deepEqual(battleInteraction(state, { ...gesture(), shift: true }, own[0], project, true), { select: [] });
+    const before = structuredClone(state.world.formations);
+    assert.deepEqual(battleInteraction(state, gesture(), enemy), { select: [enemy.id] });
+    assert.deepEqual(battleInteraction(state, { ...gesture(), shift: true }, own[0]), { select: [] });
     own[1].status = 'routed';
-    const drag = { ...gesture(), start: { x: 0, y: 0 }, end: { x: 1200, y: 700 } };
-    const result = battleInteraction(state, drag, undefined, project, false);
-    assert.ok(result && 'select' in result);
-    assert.ok(!result.select.includes(enemy.id)); assert.ok(!result.select.includes(own[1].id));
-    assert.deepEqual(result.select, own.filter(f => f.status !== 'routed').map(f => f.id));
-    state.selectedIds = [enemy.id, own[1].id];
-    assert.equal(battleInteraction(state, gesture(2), undefined, project, true), null);
+    assert.deepEqual(battleInteraction(state, gesture(), own[1]), { select: [own[1].id] });
+    own[1].status = before.find(f => f.id === own[1].id)!.status;
+    for (const phase of ['deployment', 'combat'] as const) for (const touchOrder of ['select', 'move', 'attack'] as const) {
+        state.battle!.phase = phase; state.touchOrder = touchOrder;
+        assert.deepEqual(battleInteraction(state, gesture(), enemy), { select: [enemy.id] });
+        assert.equal(battleInteraction(state, gesture(2), enemy), null);
+        assert.equal(battleInteraction(state, { ...gesture(), end: { x: 200, y: 200 } }, enemy), null);
+        assert.deepEqual(battleInteraction(state, gesture(), undefined), { select: [] });
+    }
+    assert.deepEqual(state.world.formations, before);
+    enemy.soldiers = 0;
+    assert.deepEqual(battleInteraction(state, gesture(), enemy), { select: [] });
 });
 
-test('3D move and line gestures use the original deployment, frontage and facing rules', () => {
-    const { state, own, battle } = setup();
-    const result = battleInteraction(state, gesture(2), undefined, project, true);
-    assert.ok(result && 'order' in result); applyOrder(battle, state.world.formations, state.playerId, result.order);
-    near(own[0].x, 220); near(own[0].y, 250);
-    const line = battleInteraction(state, { ...gesture(2), end: { x: 10, y: 120 }, ground: { x: 220, y: 330 } }, undefined, project, true);
-    assert.ok(line && 'order' in line); applyOrder(battle, state.world.formations, state.playerId, line.order);
-    near(own[0].facing, 0); assert.equal(own[0].columns, 10); near(own[0].y, 290);
-    assert.throws(() => applyOrder(battle, state.world.formations, state.playerId, { kind: 'move', ids: state.selectedIds, x: 800, y: 350 }), /shaded zone/);
-});
-
-test('touch and mouse attack commands use the existing combat simulation and cannot attack before combat', () => {
-    const { state, own, enemy, battle } = setup(); state.touchOrder = 'attack';
-    assert.equal(battleInteraction(state, gesture(), enemy, project, true), null);
-    battle.phase = 'combat';
-    const attack = battleInteraction(state, gesture(), enemy, project, true);
-    assert.ok(attack && 'order' in attack); applyOrder(battle, state.world.formations, state.playerId, attack.order);
-    assert.equal(own[0].target_formation_id, enemy.id);
-    const x = own[0].x; stepBattle(battle, state.world.formations, .05); assert.ok(own[0].x > x);
-    enemy.status = 'routed'; assert.equal(battleInteraction(state, gesture(), enemy, project, true), null);
-    assert.equal(battleInteraction(state, gesture(1), undefined, project, true), null);
+test('3D casualties keep the initial formation grid and real strikes gate attack animation', () => {
+    const { own } = setup(); const f = { ...own[0], soldiers: 60, initial_soldiers: 60, columns: 10 };
+    const original = soldierSlots(f);
+    f.soldiers = 17;
+    assert.ok(soldierSlots(f).every(slot => original.some(p => p.x === slot.x && p.y === slot.y)));
+    f.status = 'engaged';
+    assert.equal(strikeAnimation(f, 3), false);
+    f.attack_ready_at = 4.2;
+    assert.equal(strikeAnimation(f, 3.1), true);
+    assert.equal(strikeAnimation(f, 3.8), false);
 });
 
 test('low-poly formations stay bounded, reflect casualties and facing, and never mutate authoritative state', () => {

@@ -3,7 +3,6 @@ import { MapRenderer } from '../../features/map/rendering/MapRenderer';
 import { BattleRenderer } from '../../features/battle/rendering/BattleRenderer';
 import { clamp } from '../../shared/math/geometry';
 import { tone } from '../../platform/audio/audio';
-import { preferences } from '../../platform/preferences/preferences';
 import { cellAt, cellCenter, isWalkable } from '../../features/map/domain/worldGrid';
 export class InputController {
     private cleanup: (() => void)[] = [];
@@ -54,7 +53,7 @@ export class InputController {
                 this.ctx.pointer = p;
                 return;
             }
-            if (this.ctx.down && (this.ctx.down.button === 1 || (s.mode === 'world' && !s.moveMode && this.ctx.down.button === 0))) {
+            if (this.ctx.down && (this.ctx.down.button === 1 || ((s.mode === 'battle' || !s.moveMode) && this.ctx.down.button === 0))) {
                 const scale = this.ctx.zoomBase * this.ctx.camera.zoom;
                 this.ctx.camera.x -= (p.x - this.ctx.pointer.x) / scale;
                 this.ctx.camera.y -= (p.y - this.ctx.pointer.y) / scale;
@@ -91,42 +90,7 @@ export class InputController {
             }
             const formations = s.world.formations.filter(f => f.battle_id === s.battle?.id);
             const hit = this.battle.hit(wp.x, wp.y, formations);
-            if (e.button === 2 || s.touchOrder === 'move' || s.touchOrder === 'attack') {
-                if (!s.selectedIds.length)
-                    return;
-                if (hit && hit.owner_id !== s.playerId && s.battle?.phase === 'combat') {
-                    a.order({ kind: 'attack', ids: s.selectedIds, target: hit.id });
-                    return;
-                }
-                if (s.touchOrder === 'attack')
-                    return;
-                if (drag > 18 && e.button === 2) {
-                    const start = this.ctx.worldPoint(down.x, down.y), dx = wp.x - start.x, dy = wp.y - start.y;
-                    a.order({ kind: 'move', ids: s.selectedIds, x: (wp.x + start.x) / 2, y: (wp.y + start.y) / 2, facing: Math.atan2(dy, dx) * 180 / Math.PI - 90, columns: clamp(Math.round(Math.hypot(dx, dy) / Math.max(1, s.selectedIds.length) / 8), 4, 20) });
-                }
-                else
-                    a.order({ kind: 'move', ids: s.selectedIds, x: wp.x, y: wp.y });
-                return;
-            }
-            if (e.button !== 0)
-                return;
-            if (drag > 8) {
-                const start = this.ctx.worldPoint(down.x, down.y), x1 = Math.min(start.x, wp.x), x2 = Math.max(start.x, wp.x), y1 = Math.min(start.y, wp.y), y2 = Math.max(start.y, wp.y);
-                const ids = formations.filter(f => f.owner_id === s.playerId && f.soldiers > 0 && f.status !== 'routed' && f.x >= x1 && f.x <= x2 && f.y >= y1 && f.y <= y2).map(f => f.id);
-                a.selectUnits(down.shift ? [...new Set([...s.selectedIds, ...ids])] : ids);
-            }
-            else if (hit?.owner_id === s.playerId) {
-                a.selectUnits(down.shift ? (s.selectedIds.includes(hit.id) ? s.selectedIds.filter(id => id !== hit.id) : [...s.selectedIds, hit.id]) : [hit.id]);
-                tone('select');
-            }
-            else if (preferences().simpleOrders && s.selectedIds.length && !down.shift) {
-                if (hit && s.battle?.phase === 'combat')
-                    a.order({ kind: 'attack', ids: s.selectedIds, target: hit.id });
-                else if (!hit)
-                    a.order({ kind: 'move', ids: s.selectedIds, x: wp.x, y: wp.y });
-            }
-            else
-                a.selectUnits([]);
+            if(e.button===0&&drag<8){a.selectUnits(hit?[hit.id]:[]);if(hit)tone('select');}
         }) as EventListener);
         this.on(this.ctx.canvas, 'pointercancel', () => { this.ctx.down = null; this.ctx.minimapDrag = false; this.touches.clear(); this.pinch = null; });
         this.on(this.ctx.canvas, 'wheel', ((e: WheelEvent) => {
@@ -165,12 +129,6 @@ export class InputController {
             const own = s.world.formations.filter(f => f.battle_id === s.battle?.id && f.owner_id === s.playerId && f.soldiers > 0 && f.status !== 'routed');
             if (k === 'a')
                 a.selectUnits(own.map(f => f.id));
-            if (k === 'h')
-                a.order({ kind: 'halt', ids: s.selectedIds });
-            if (k === 'g')
-                a.order({ kind: 'stance', ids: s.selectedIds, stance: 'guard' });
-            if (k === 'r')
-                a.rally();
             if (k === ' ')
                 a.pause();
             if (k === 'escape') {
@@ -183,7 +141,7 @@ export class InputController {
                     a.selectUnits([f.id]);
             }
             if (k === 'f' && s.selectedIds.length) {
-                const f = own.find(f => f.id === s.selectedIds[0]);
+                const f=s.world.formations.find(f=>f.battle_id===s.battle?.id&&f.id===s.selectedIds[0]);
                 if (f) {
                     this.ctx.camera.x = f.x;
                     this.ctx.camera.y = f.y;

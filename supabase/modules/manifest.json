@@ -4,11 +4,13 @@
   "city/city-slots.sql",
   "map/world-bounds.sql",
   "map/world-terrain.sql",
+  "map/battle-geography.sql",
   "map/territory.sql",
   "map/peris_army_position.sql",
   "magic/mage-tower.sql",
   "city/population.sql",
   "empire/gameplay.sql",
+  "map/bandits.sql",
   "city/peris_settle.sql",
   "battle/peris_add_formations.sql",
   "campaign/peris_start_raid.sql",
@@ -33,5 +35,6 @@
   "factions/city-factions.sql",
   "snapshot/peris_snapshot.sql",
   "snapshot/peris_map_snapshot.sql",
+  "battle/automatic.sql",
   "security/permissions.sql"
 ]

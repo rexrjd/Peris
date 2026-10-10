@@ -1,3 +1,4 @@
+import { autoCastSpells } from '../../features/magic/domain/automatic';
 import { normalizeRealm } from '../../features/empire/domain/normalization';
 import { trainSettlers, sendSettlers, nextEntityId } from '../../features/empire/domain/expansion';
 import { recruitHero, improveHero, equipArtifact, transferTroops, rebaseArmy } from '../../features/heroes/domain/commands';
@@ -21,7 +22,7 @@ import { claimObjective } from '../../features/campaign/domain/commands';
 import { renameCity } from '../../features/city/domain/rename';
 import { queueSlot } from '../../features/city/domain/slotCommands';
 import { citySlots, refreshCityEconomy } from '../../features/city/domain/slots';
-import {researchSpell,castSpell} from '../../features/magic/domain/commands';
+import {researchSpell} from '../../features/magic/domain/commands';
 import { claimMapField, queueMapField } from '../../features/map/domain/territory';
 export class LocalEngine implements GameEngine {
     readonly playerId = 'solo-ruler';
@@ -35,11 +36,13 @@ export class LocalEngine implements GameEngine {
     private alive = true;
     private nextId: number;
     private finalized = new Set<number>();
+    private battleDebt=0;
     speed = 1;
     paused = false;
     saveError = false;
     constructor(world: World, persistent = true) {
         normalizeRealm(world);
+        for(const battle of world.battles)if(battle.status==='active'&&battle.phase==='deployment'){battle.phase='combat';battle.attacker_ready=battle.defender_ready=true;}
         this.snapshot = world;
         world.city_slots ??= citySlots(world,world.settlements[0].id);
         for (const order of world.orders) if (order.kind==='upgrade' && ['barracks','stables','storehouse'].includes(order.item)) {
@@ -53,6 +56,8 @@ export class LocalEngine implements GameEngine {
         this.persistent = persistent;
         this.nextId = Math.max(100, Date.now() % 100000000, nextEntityId(world));
         this.snapshot.battles.filter(b => b.status === 'resolved').forEach(b => this.finalized.add(b.id));
+        const resumed=this.active();
+        if(resumed?.phase==='combat')this.battleDebt=Math.min(900,Math.max(0,(Date.now()-Date.parse(resumed.last_tick_at))/1000));
         settleLocal(world, this.playerId);
         this.timer = window.setInterval(() => this.tick(), 50);
         this.save();
@@ -69,19 +74,22 @@ export class LocalEngine implements GameEngine {
         } }
     private active() { return this.snapshot.battles.find(b => b.status === 'active'); }
     private tick() {
-        const now = performance.now(), dt = Math.min(.5, (now - this.last) / 1000);
+        const now=performance.now(),elapsed=Math.max(0,(now-this.last)/1000),dt=Math.min(.5,elapsed);
         this.last = now;
         const b = this.active();
         if (b && b.phase === 'combat' && !this.paused) {
-            let remaining = dt * this.speed;
+            this.battleDebt+=elapsed*this.speed;
+            let remaining=Math.min(10,this.battleDebt);this.battleDebt-=remaining;
+            b.last_tick_at=new Date().toISOString();
             while (remaining > 0 && b.status === 'active') {
                 const step = Math.min(.05, remaining);
-                stepBattle(b, this.snapshot.formations.filter(f => f.battle_id === b.id), step);
+                stepBattle(b,this.snapshot.formations.filter(f=>f.battle_id===b.id),step,()=>autoCastSpells(this.snapshot,b,()=>++this.nextId,id=>this.finalize(id)));
                 remaining -= step;
             }
             if (b.status === 'resolved')
                 this.finalize(b.id);
         }
+        if(!b||this.paused)this.battleDebt=0;
         if (Math.floor(now / 250) !== Math.floor((now - dt * 1000) / 250)) {
             settleLocal(this.snapshot, this.playerId);
             for (const army of this.snapshot.armies.filter(a => a.owner_id === this.playerId)) if (!this.active() && army.raid_target_id && army.status === 'idle') {
@@ -129,7 +137,7 @@ export class LocalEngine implements GameEngine {
             case 'setFaction':changeFaction(context,cmd);break;
             case 'debugCity':debugCity(context,cmd);break;
             case 'researchSpell':researchSpell(context,cmd);break;
-            case 'castSpell':castSpell(context,cmd);break;
+            case 'castSpell':throw new Error('The AI controls battle spells automatically.');
             case 'buildSlot':
             case 'upgradeSlot': queueSlot(context,cmd); break;
             case 'upgrade':

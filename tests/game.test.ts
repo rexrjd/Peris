@@ -1,3 +1,4 @@
+import { FIELD_SCALE } from '../src/features/battle/domain/dimensions';
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { createSolo } from '../src/features/campaign/domain/newRealm'
@@ -6,6 +7,8 @@ import { applyOrder } from '../src/features/battle/domain/orders'
 import { finishBattle } from '../src/features/battle/domain/resolution'
 import { makeFormations } from '../src/features/battle/domain/formations'
 import { newBattle } from '../src/features/battle/domain/creation'
+import { resolveCombat } from '../src/features/battle/domain/combat'
+import { applyMorale } from '../src/features/battle/domain/morale'
 import { stepBattle } from '../src/features/battle/domain/simulation'
 import { armyPosition } from '../src/features/map/domain/movement'
 import { buildingCost } from '../src/features/city/domain/construction'
@@ -37,6 +40,7 @@ test('formations conserve troop numbers when splitting large armies',()=>{
 })
 test('formation ownership and deployment limits are enforced atomically',()=>{
  const w=createSolo('Rex'),{battle:b,formations:fs}=newBattle(1,'own',w.armies[0],{infantry:80,archers:30,cavalry:10},'plains','normal','Enemy')
+ b.phase='deployment'
  assert.throws(()=>applyOrder(b,fs,'other',{kind:'move',ids:[fs[0].id],x:250,y:150}))
  const own=fs.filter(f=>f.owner_id==='own'),before=own.map(f=>({x:f.x,y:f.y}))
  assert.throws(()=>applyOrder(b,fs,'own',{kind:'move',ids:own.map(f=>f.id),x:360,y:200}))
@@ -45,7 +49,7 @@ test('formation ownership and deployment limits are enforced atomically',()=>{
 })
 test('deployment never inflicts casualties; combat resolves and preserves survivors',()=>{
  const w=createSolo('Rex'),{battle:b,formations:fs}=newBattle(1,'own',w.armies[0],{infantry:30,archers:0,cavalry:0},'plains','easy','Enemy')
- stepBattle(b,fs,.1);assert.equal(b.elapsed,0);assert.equal(fs.at(-1)!.soldiers,30)
+ b.phase='deployment';stepBattle(b,fs,.1);assert.equal(b.elapsed,0);assert.equal(fs.at(-1)!.soldiers,30)
  b.phase='combat';const enemy=fs.find(f=>f.owner_id===null)!
  for(const f of fs.filter(f=>f.owner_id==='own')){f.x=enemy.x-35;f.y=enemy.y;f.target_formation_id=enemy.id}
  for(let i=0;i<5000&&b.status==='active';i++)stepBattle(b,fs,.1)
@@ -53,15 +57,15 @@ test('deployment never inflicts casualties; combat resolves and preserves surviv
  const result=JSON.stringify(b.result);finishBattle(b,fs,'defender','duplicate');assert.equal(JSON.stringify(b.result),result)
 })
 test('terrain changes cover, height and crossing speed',()=>{
- assert.equal(terrainAt('woods',525,185).cover,.6);assert.equal(terrainAt('highlands',650,285).height,1)
- assert.equal(terrainAt('river',600,345).speed,1);assert.equal(terrainAt('river',600,10).speed,.42)
- assert.equal(terrainAt('plains',600,10).cover,1)
+ assert.equal(terrainAt('woods',525*FIELD_SCALE,185*FIELD_SCALE).cover,.6);assert.equal(terrainAt('highlands',650*FIELD_SCALE,285*FIELD_SCALE).height,1)
+ assert.equal(terrainAt('river',600*FIELD_SCALE,345*FIELD_SCALE).speed,1);assert.equal(terrainAt('river',600*FIELD_SCALE,10*FIELD_SCALE).speed,.42)
+ assert.equal(terrainAt('plains',600*FIELD_SCALE,10*FIELD_SCALE).cover,1)
 })
 test('rear charges shock morale, while braced infantry mitigates frontal cavalry damage',()=>{
  const run=(rear:boolean,guard:boolean)=>{
   const w=createSolo('Rex'),{battle:b,formations:fs}=newBattle(1,'own',{...w.armies[0],infantry:0,archers:0,cavalry:24},{infantry:60,archers:0,cavalry:0},'plains','normal','Enemy')
   b.phase='combat';const f=fs[0],t=fs[1];t.facing=180;t.stance=guard?'guard':'balanced';t.x=600;t.y=350
-  f.x=rear?635:565;f.y=350;f.target_formation_id=t.id;f.charge_ready=true;stepBattle(b,fs,.1)
+  f.x=rear?635:565;f.y=350;f.facing=rear?180:0;f.target_formation_id=t.id;f.charge_ready=true;b.elapsed=.1;const byId=new Map(fs.map(f=>[f.id,f]));applyMorale(byId,resolveCombat(b,fs,byId,.1,[]),b,[])
   return {morale:t.morale,soldiers:t.soldiers}
  }
  const rear=run(true,false),front=run(false,false),brace=run(false,true)

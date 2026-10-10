@@ -1,3 +1,4 @@
+import { FIELD_W,FIELD_H } from '../../features/battle/domain/dimensions';
 import { RenderContext } from '../../shared/rendering/RenderContext';
 import { MapRenderer } from '../../features/map/rendering/MapRenderer';
 import { BattleRenderer } from '../../features/battle/rendering/BattleRenderer';
@@ -80,8 +81,8 @@ export class GameRenderer {
             this.ctx.camera.y += pan;
         if (s.mode === 'world') this.ctx.constrainMapCamera();
         else {
-            this.ctx.camera.x = clamp(this.ctx.camera.x, 0, 1200);
-            this.ctx.camera.y = clamp(this.ctx.camera.y, 0, 700);
+            this.ctx.camera.x = clamp(this.ctx.camera.x, 0, FIELD_W);
+            this.ctx.camera.y = clamp(this.ctx.camera.y, 0, FIELD_H);
         }
         if (s.mode === 'world') {
             const margin = CELL_SIZE * 4;
@@ -108,23 +109,6 @@ export class GameRenderer {
         else
             this.battle.draw(s.battle!.elapsed * 1000, s.paused ? 0 : dt);
         c.restore();
-        if (this.ctx.down && s.mode === 'battle') {
-            if (this.ctx.down.button === 0 && Math.hypot(this.ctx.pointer.x - this.ctx.down.x, this.ctx.pointer.y - this.ctx.down.y) > 8) {
-                c.fillStyle = '#f1d79712';
-                c.strokeStyle = '#f4d896';
-                c.lineWidth = 1;
-                c.fillRect(this.ctx.down.x, this.ctx.down.y, this.ctx.pointer.x - this.ctx.down.x, this.ctx.pointer.y - this.ctx.down.y);
-                c.strokeRect(this.ctx.down.x, this.ctx.down.y, this.ctx.pointer.x - this.ctx.down.x, this.ctx.pointer.y - this.ctx.down.y);
-            }
-            else if (this.ctx.down.button === 2) {
-                c.strokeStyle = '#f1dfad';
-                c.lineWidth = 3;
-                c.beginPath();
-                c.moveTo(this.ctx.down.x, this.ctx.down.y);
-                c.lineTo(this.ctx.pointer.x, this.ctx.pointer.y);
-                c.stroke();
-            }
-        }
         this.overlays.minimap();
         if (s.mode === 'world') this.map.drawHUD();
         this.battle.hover();

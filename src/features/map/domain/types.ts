@@ -1,6 +1,8 @@
 import { type Terrain } from '../../battle/domain/types';
 export type Camp = {
     id: number;
+    bandit?: boolean;
+    faction?: import('../../factions/domain/factions').Faction;
     name: string;
     x: number;
     y: number;
@@ -14,6 +16,8 @@ export type Camp = {
 export type MapSelection = {
     kind: 'camp' | 'settlement' | 'army';
     id: number;
+    bandit?: boolean;
+    faction?: import('../../factions/domain/factions').Faction;
 } | {
     kind: 'cell';
     col: number;

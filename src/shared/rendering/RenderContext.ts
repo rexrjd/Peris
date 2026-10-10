@@ -93,5 +93,5 @@ export class RenderContext {
             this.camera.y = this.w < 600 ? 350 : targets.reduce((n, f) => n + f.y, 0) / targets.length;
         }
     }
-    center(x = this.state().mode === 'world' ? 0 : 600, y = this.state().mode === 'world' ? 0 : 350) { this.camera.x = x; this.camera.y = y; this.camera.zoom = this.state().mode === 'world' ? this.mapMinZoom : this.w < 600 ? Math.min(this.w / FIELD_W, this.h / FIELD_H) / this.zoomBase : 1.15; }
+    center(x = this.state().mode === 'world' ? 0 : FIELD_W/2, y = this.state().mode === 'world' ? 0 : FIELD_H/2) { this.camera.x = x; this.camera.y = y; this.camera.zoom = this.state().mode === 'world' ? this.mapMinZoom : this.w < 600 ? Math.min(this.w / FIELD_W, this.h / FIELD_H) / this.zoomBase : 1.15; }
 }

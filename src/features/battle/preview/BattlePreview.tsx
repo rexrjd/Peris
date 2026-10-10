@@ -37,7 +37,7 @@ function Session({ faction,enemy,terrain,quality,id,prototypes,enemyPrototypes,p
     return <>
         <BattleView world={world} battle={world.battles[0]} engine={engine} initialRenderMode="3d" art={{faction,enemy,quality,prototypes,enemyPrototypes,pilotReview,roles:[...profile.troops,...profile.siege]}}
             run={async c => { try { await engine.command(c); } catch (error) { setMessage(error instanceof Error ? error.message : 'Order could not be issued'); } }}
-            onHelp={() => setMessage('Choose any of the nine units in Inspect, or select a unit card and Inspect selected troops. Scroll to zoom, Q/E to orbit. Begin battle, right-click an enemy to attack. Siege models are visual studies.')}
+            onHelp={() => setMessage('Choose any of the nine units in Inspect, or select a unit card and Inspect selected troops. Scroll to zoom, Q/E to orbit. Both armies fight automatically. Click either army to inspect, drag to pan, and pause for a closer look. Siege models are visual studies.')}
             onSettings={() => setMessage('Choose Balanced or Ultra above. Ultra uses higher resolution shadows. Switch to 2D if your device needs a lighter renderer.')}/>
         {world.battles[0].status === 'resolved' && <div className="preview-result" role="status">Battle finished · {world.battles[0].winner_side === 'attacker' ? 'Your host wins' : 'Enemy host wins'}. Start a new battle above.</div>}
         {message && <div className="preview-message" role="status">{message}<button aria-label="Dismiss message" onClick={() => setMessage('')}>×</button></div>}

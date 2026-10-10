@@ -1,0 +1,15 @@
+PERIS V12 — APPLY THESE FILES
+
+This ZIP contains updated source files and ten new hero portraits.
+Copy files to the matching paths in the Peris repository, then run npm ci and npm run build.
+
+EXISTING Supabase world: apply supabase/UPGRADE_TO_V12.sql.
+EMPTY database only: apply supabase/FRESH_INSTALL_V12.sql.
+The complete V12 upgrade includes the housing constraint fix and automatic-battle logic.
+
+See docs/world-battles-bandits-and-heroes.md for changes, tests and browser verification limits.
+FILE_MANIFEST.json lists every shipped source file and its SHA-256.
+
+Optional patch workflow: git apply world-battles.patch against base a82e532.
+The text patch excludes portrait PNGs; copy public/art/heroes/ from this ZIP as well.
+No live database changes, pushes or deployments were made.

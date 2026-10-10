@@ -2,6 +2,7 @@ import { type Battle, type Effect, type Formation } from './types';
 import { angleDiff, clamp, dist } from '../../../shared/math/geometry';
 import { UNITS } from '../../army/domain/units';
 import { terrainAt } from './terrain';
+import { contactDistance } from './spacing';
 export type PendingDamage = Map<number, {
     loss: number;
     morale: number;
@@ -15,9 +16,15 @@ export function resolveCombat(b: Battle, fs: Formation[], byId: Map<number, Form
         if (f.status === 'routed' || f.soldiers <= 0 || !f.target_formation_id)
             continue;
         const t = byId.get(f.target_formation_id);
-        if (!t || t.status === 'routed' || t.soldiers <= 0 || dist(f, t) > UNITS[f.unit_type].range + 4)
+        if (!t || t.status === 'routed' || t.soldiers <= 0 || dist(f,t) > (f.unit_type==='archers'?UNITS.archers.range:contactDistance(f,t))+4)
             continue;
-        const ranged = f.unit_type === 'archers' && dist(f, t) > 65;
+        const ranged=f.unit_type==='archers'&&dist(f,t)>contactDistance(f,t)+20;
+        if(b.elapsed<(f.attack_ready_at??0)||ranged&&f.status==='moving')continue;
+        const bearingToTarget=Math.atan2(t.y-f.y,t.x-f.x)*180/Math.PI;
+        if(Math.abs(angleDiff(bearingToTarget,f.facing))>65)continue;
+        const interval=ranged?2.5:f.unit_type==='cavalry'?1.4:1.2;
+        f.attack_ready_at=b.elapsed+interval;
+        if(f.damage_target_id!==t.id){f.damage_pool=0;f.damage_target_id=t.id;}
         const gt = terrainAt(b.terrain, t.x, t.y), gf = terrainAt(b.terrain, f.x, f.y);
         const bearing = Math.atan2(f.y - t.y, f.x - t.x) * 180 / Math.PI;
         const relative = Math.abs(angleDiff(bearing, t.facing));
@@ -30,24 +37,25 @@ export function resolveCombat(b: Battle, fs: Formation[], byId: Map<number, Form
         const elevation = ranged && gf.height > gt.height ? 1.25 : ranged && gf.height < gt.height ? .8 : 1;
         const meleeArcher = f.unit_type === 'archers' && !ranged ? .28 : 1;
         const defence = t.stance === 'guard' ? .8 : t.stance === 'aggressive' ? 1.15 : 1;
-        const difficulty = f.owner_id === null ? (b.difficulty === 'hard' ? 1.13 : b.difficulty === 'easy' ? .8 : 1) : 1;
-        f.damage_pool += (f.soldiers * (f.attack_multiplier ?? 1) * (f.magic_attack??1) * (1-(t.magic_defence??0)) * UNITS[f.unit_type].rate * matchup * stance * defence * brace * flank * charge * cover * elevation * meleeArcher * difficulty * (.55 + f.stamina / 220) * dt + (charge > 1 ? f.soldiers * .06 * brace * flank * (1-(t.magic_defence??0)) : 0)) / (t.defence_multiplier??1);
+        const difficulty=1; // Composition and morale define NPC difficulty, not hidden ownership damage.
+        f.damage_pool += (f.soldiers * (f.attack_multiplier ?? 1) * (f.magic_attack??1) * (1-(t.magic_defence??0)) * UNITS[f.unit_type].rate * matchup * stance * defence * brace * flank * charge * cover * elevation * meleeArcher * difficulty * (.55 + f.stamina / 220) * interval + (charge > 1 ? f.soldiers * .06 * brace * flank * (1-(t.magic_defence??0)) : 0)) / (t.defence_multiplier??1);
         const casualties = Math.min(Math.max(0, t.soldiers - (pending.get(t.id)?.loss ?? 0)), Math.floor(f.damage_pool));
         if (casualties > 0 || charge > 1) {
-            f.damage_pool -= casualties;
+            f.damage_pool-=casualties;
+            f.damage_pool%=1;
             f.kills += casualties;
             const p = pending.get(t.id) ?? { loss: 0, morale: 0 };
             p.loss += casualties;
-            p.morale += casualties / Math.max(1, t.initial_soldiers) * 85 + (flank > 1 ? casualties * 1.2 : 0) + (charge > 1 ? 12 : 0);
+            p.morale += casualties/Math.max(1,t.initial_soldiers)*(125+(flank>1?35:0))+(charge>1?8:0);
             pending.set(t.id, p);
             effects.push({ kind: 'death', x: t.x, y: t.y, side: t.side, at: b.elapsed });
         }
         if (charge > 1) {
             effects.push({ kind: 'charge', x: f.x, y: f.y, side: f.side, at: b.elapsed });
-            f.charge_ready = false;
+            f.charge_ready=false;f.charge_distance=0;
             f.stamina = clamp(f.stamina - 12, 0, 100);
         }
-        if (ranged && Math.floor(b.elapsed * 2) !== Math.floor((b.elapsed - dt) * 2))
+        if(ranged)
             effects.push({ kind: 'arrow', x: f.x, y: f.y, tx: t.x, ty: t.y, side: f.side, at: b.elapsed });
     }
     return pending;

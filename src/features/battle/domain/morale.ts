@@ -20,3 +20,14 @@ export function rallyFormations(fs: Formation[]) {
         f.target_y = f.y;
     } });
 }
+/** One rally per side, based on surviving manpower instead of one weak unit. */
+export function autoRally(b: Battle, fs: Formation[]) {
+    for(const side of ['attacker','defender'] as const){
+        const key=side==='attacker'?'rally_attacker':'rally_defender';
+        if(b[key])continue;
+        const troops=fs.filter(f=>f.side===side&&f.soldiers>0);
+        const count=troops.reduce((n,f)=>n+f.soldiers,0);
+        const morale=troops.reduce((n,f)=>n+f.morale*f.soldiers,0)/Math.max(1,count);
+        if(count>0&&morale<42){b[key]=true;rallyFormations(troops);}
+    }
+}

@@ -22,13 +22,13 @@ export class BattleRenderer {
         angle: number;
     }[] = [];
     private previousStatus = new Map<number, string>();
-    private lastVolley = 0;
+    private lastAttacks=new Map<number,number>();
     constructor(private ctx: RenderContext) { }
-    reset() { this.positions.clear(); this.deaths = []; this.particles = []; this.previousStatus.clear(); this.lastVolley = 0; }
+    reset() { this.positions.clear(); this.deaths = []; this.particles = []; this.previousStatus.clear(); this.lastAttacks.clear(); }
     hit(x: number, y: number, fs: Formation[]) {
         return fs.filter(f => f.soldiers > 0).find(f => {
             const pos = this.positions.get(f.id) ?? f, angle = -pos.facing * Math.PI / 180, dx = x - pos.x, dy = y - pos.y;
-            const lx = dx * Math.cos(angle) - dy * Math.sin(angle), ly = dx * Math.sin(angle) + dy * Math.cos(angle), size = formationSize(f);
+            const lx = dx * Math.cos(angle) - dy * Math.sin(angle), ly = dx * Math.sin(angle) + dy * Math.cos(angle), size = formationSize({...f,soldiers:f.initial_soldiers});
             return Math.abs(lx) < size.depth / 2 + 12 && Math.abs(ly) < size.width / 2 + 8;
         });
     }
@@ -61,10 +61,8 @@ export class BattleRenderer {
             c.fillRect(2, -1, 2, 2);
             c.restore();
         }
-        const volley = Math.floor(b.elapsed * 2), newVolley = volley !== this.lastVolley;
-        this.lastVolley = volley;
         for (const f of fs) {
-            const own = f.owner_id === s.playerId, selected = s.selectedIds.includes(f.id), size = formationSize(f);
+            const own = f.owner_id === s.playerId, selected = s.selectedIds.includes(f.id), size = formationSize({...f,soldiers:f.initial_soldiers});
             let pos = this.positions.get(f.id);
             if (!pos) {
                 pos = { x: f.x, y: f.y, facing: f.facing, soldiers: f.soldiers };
@@ -84,7 +82,7 @@ export class BattleRenderer {
             pos.facing += angleDiff(f.facing, pos.facing) * amount;
             if (f.soldiers <= 0)
                 continue;
-            if (own && selected && (f.target_formation_id || f.status === 'moving') && b.phase === 'combat') {
+            if (selected && (f.target_formation_id || f.status === 'moving') && b.phase === 'combat') {
                 const target = fs.find(t => t.id === f.target_formation_id), tx = target?.x ?? f.target_x, ty = target?.y ?? f.target_y;
                 c.strokeStyle = target ? '#d9876999' : '#eed49888';
                 c.lineWidth = 1.2;
@@ -108,7 +106,9 @@ export class BattleRenderer {
                 c.fill();
                 c.stroke();
             }
-            if (preferences().effects && newVolley && b.phase === 'combat' && f.unit_type === 'archers' && f.target_formation_id && f.status === 'engaged') {
+            const shot=(f.attack_ready_at??0)>(this.lastAttacks.get(f.id)??0);
+            this.lastAttacks.set(f.id,f.attack_ready_at??0);
+            if (preferences().effects && shot && b.phase === 'combat' && f.unit_type === 'archers' && f.target_formation_id ) {
                 const target = fs.find(t => t.id === f.target_formation_id);
                 if (target && dist(f, target) > 65 && dist(f, target) < 224) {
                     tone('arrow');
@@ -128,7 +128,7 @@ export class BattleRenderer {
             }
             if (f.status === 'routed')
                 c.globalAlpha = .55;
-            const count = Math.min(120, f.soldiers), cols = Math.min(f.columns, count), rows = Math.ceil(count / cols);
+            const initialCount=Math.min(120,f.initial_soldiers),count=Math.max(1,Math.round(initialCount*f.soldiers/f.initial_soldiers)),cols=Math.min(f.columns,initialCount),rows=Math.ceil(initialCount/cols);
             for (let i = 0; i < count; i++) {
                 const col = i % cols, row = Math.floor(i / cols), sx = (row - (rows - 1) / 2) * 8, sy = (col - (cols - 1) / 2) * 8;
                 drawSoldier(this.ctx, sx, sy, f, i, time);
@@ -178,7 +178,7 @@ export class BattleRenderer {
         if (!f)
             return;
         const c = this.ctx.c, x = clamp(this.ctx.pointer.x + 18, 8, this.ctx.w - 236), y = clamp(this.ctx.pointer.y + 18, 8, this.ctx.h - 90), own = f.owner_id === s.playerId;
-        c.fillStyle = '#17231ef5';
+        c.fillStyle = '#1b222df5';
         c.beginPath();
         c.roundRect(x, y, 226, 78, 4);
         c.fill();
@@ -194,6 +194,6 @@ export class BattleRenderer {
         c.fillText(`${f.soldiers} soldiers  ·  ${Math.round(f.morale)}% morale`, x + 12, y + 44);
         c.fillStyle = '#d1b981';
         c.font = '10px Open Sans,Arial';
-        c.fillText(own ? 'Click to select · Shift to add' : s.selectedIds.length ? 'Click to attack this formation' : 'Enemy formation', x + 12, y + 64);
+        c.fillText('Click to inspect · AI controls this formation', x + 12, y + 64);
     }
 }

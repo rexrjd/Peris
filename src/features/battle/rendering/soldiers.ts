@@ -4,7 +4,10 @@ import { ellipse } from '../../../shared/rendering/primitives';
 import { unitSprite } from '../../../shared/rendering/assets';
 import { preferences } from '../../../platform/preferences/preferences';
 export function drawSoldier(ctx: RenderContext, x: number, y: number, f: Formation, index: number, time: number, dead = false) {
-    const c = ctx.c, own = f.owner_id === ctx.state().playerId, moving = f.status === 'moving' || f.status === 'routed', jitter = moving ? Math.sin(time / 100 + index * 1.7) * 1.2 : Math.sin(time / 450 + index) * .2, melee = f.status === 'engaged' && f.unit_type !== 'archers' ? Math.sin(time / 110 + index * 1.7) : 0;
+    const c=ctx.c,own=f.owner_id===ctx.state().playerId,moving=f.status==='moving'||f.status==='routed';
+    const elapsed=ctx.state().battle?.elapsed??0,interval=f.unit_type==='cavalry'?1.4:1.2;
+    const sinceStrike=elapsed-((f.attack_ready_at??-10)-interval),strike=sinceStrike>=0&&sinceStrike<.35?Math.sin(sinceStrike/.35*Math.PI):0;
+    const jitter=moving&&!preferences().reducedMotion?Math.sin(time/140+index*1.7)*.6:0,melee=f.status==='engaged'&&f.unit_type!=='archers'?strike:0;
     c.save();
     c.translate(x, y + jitter);
     if (dead)
@@ -19,7 +22,7 @@ export function drawSoldier(ctx: RenderContext, x: number, y: number, f: Formati
             c.rotate(Math.sin(time / 120 + index) * .065);
         const width = f.unit_type === 'cavalry' ? 15 : f.unit_type === 'archers' ? 9 : 11, height = width * sprite.height / sprite.width;
         c.drawImage(sprite, -width / 2, -height / 2, width, height);
-        if (f.status === 'engaged' && f.unit_type === 'infantry' && Math.sin(time / 90 + index) > .85) {
+        if (f.status === 'engaged' && f.unit_type === 'infantry' && strike>.35) {
             c.strokeStyle = '#efe3b9bb';
             c.lineWidth = .7;
             c.beginPath();

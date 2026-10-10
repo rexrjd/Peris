@@ -38,7 +38,7 @@ create table if not exists public.peris_camps(
  id integer primary key,name text not null,x integer not null,y integer not null,tier integer not null,
  terrain text not null,infantry integer not null,archers integer not null,cavalry integer not null,description text not null
 );
-insert into public.peris_camps values
+insert into public.peris_camps(id,name,x,y,tier,terrain,infantry,archers,cavalry,description) values
  (1,'The broken standard',305,405,1,'plains',48,18,0,'Deserters have claimed the old crossroads. An ideal first campaign.'),
  (2,'Oakwood raiders',460,155,2,'woods',90,45,12,'Bowmen hide beneath dense oak cover. Keep your cavalry out of the trees.'),
  (3,'The river watch',655,485,2,'river',100,40,15,'A fortified crossing. The shallows slow troops; use the stone bridge.'),

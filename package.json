@@ -30,7 +30,13 @@
     "assets:check": "node scripts/check-assets.mjs",
     "assets:inspect": "gltf-transform inspect",
     "assets:optimize": "gltf-transform optimize",
-    "assets:validate": "gltf-transform validate"
+    "assets:validate": "gltf-transform validate",
+    "test:automatic-db": "node tests/automatic-battle-database.test.mjs",
+    "test:slot-upgrade-db": "node tests/city-slot-upgrade-database.test.mjs",
+    "build:bandits": "node --import tsx scripts/build-bandits.mjs",
+    "check:bandits": "node --import tsx scripts/build-bandits.mjs --check",
+    "test:world-battles-db": "node --import tsx tests/world-battles-database.test.mjs",
+    "test:world-battles-ui": "node tests/world-battles-ui-render.test.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.57.4",

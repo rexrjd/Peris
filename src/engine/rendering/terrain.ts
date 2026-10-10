@@ -1,3 +1,4 @@
+import { GROUND_COLORS } from '../../features/battle/domain/terrain';
 import { type Terrain } from '../../features/battle/domain/types';
 import { FIELD_H, FIELD_W } from '../../features/battle/domain/dimensions';
 import { seeded } from '../../shared/math/random';
@@ -11,7 +12,7 @@ export function makeTerrain(mode: 'world' | 'battle', terrain: Terrain = 'plains
     canvas.width = FIELD_W;
     canvas.height = FIELD_H;
     const c = canvas.getContext('2d')!, w = canvas.width, h = canvas.height, rng = seeded(7230 + terrain.length);
-    c.fillStyle = '#969568';
+    c.fillStyle = GROUND_COLORS[terrain];
     c.fillRect(0, 0, w, h);
     const grad = c.createLinearGradient(0, 0, w, h);
     grad.addColorStop(0, '#d0bd8025');
@@ -20,7 +21,7 @@ export function makeTerrain(mode: 'world' | 'battle', terrain: Terrain = 'plains
     c.fillStyle = grad;
     c.fillRect(0, 0, w, h);
     const ground = gameImage('ground');
-    if (ground.complete && ground.naturalWidth) {
+    if (ground.complete && ground.naturalWidth && ['plains','woods','river','farmland','marsh'].includes(terrain)) {
         c.save();
         c.globalAlpha = .74;
         c.filter = 'blur(.65px)';

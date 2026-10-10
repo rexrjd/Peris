@@ -76,11 +76,14 @@ export function Battle3DCanvas({ state, actions, onUnavailable, onInspectionChan
     };
     const inspectSelected = () => {
         const formation = state.world.formations.find(f => state.selectedIds.includes(f.id) && f.battle_id === state.battle?.id);
-        if (formation) inspectRole(armyRole(formation,state.world.formations));
+        if (formation && renderer.current && !loading) {
+            renderer.current.inspect(formation.id);
+            const role=armyRole(formation,state.world.formations);setInspectedRole(role);onInspectionChange?.(true,role);
+        }
     };
     const overview = () => { renderer.current?.center(); setInspectedRole(''); onInspectionChange?.(false); };
     return <div className="canvas-container battle-3d-canvas" data-unit-models={loading ? "loading" : art?.prototypes ? "published" : "legacy"} data-faction={art?.faction} data-enemy-faction={art?.enemy}>
-        <canvas ref={canvas} tabIndex={0} aria-label="3D tactical battlefield. Click to select, Shift-click to add, drag to select a group. Right-click to move or attack, right-drag to set a line. Middle-drag or Alt-drag and arrow keys pan. Scroll or pinch to zoom, Q and E rotate. Touch users can choose Move or Attack before tapping."/>
+        <canvas ref={canvas} tabIndex={0} aria-label="3D tactical battlefield. Both armies fight automatically. Click either formation to inspect, Shift-click to add. Drag or use arrow keys to pan. Scroll or pinch to zoom, Q and E rotate. Space pauses local battles."/>
         <div className="battle-3d-labels" ref={labels} style={{visibility:showLabels?'visible':'hidden'}}/><div className="battle-3d-selection" ref={selection} hidden/>
         {loading && <div className="army-loading" role="status">Preparing the army meshes…</div>}
         {art && <div className="army-inspection"><button disabled={loading} onClick={inspectSelected}>Inspect selected troops</button><button onClick={overview}>Battle overview</button><label>Inspect <select aria-label="Inspect unit role" value={inspectedRole} disabled={loading} onChange={e => inspectRole(e.target.value as ArmyRole)}><option value="" disabled>Choose a unit</option>{ARMY_ROLES.map(role => <option key={role} value={role}>{art.roles?.find(item => item.id === role)?.name || role.replaceAll('_',' ')}</option>)}</select></label><button disabled={loading} onClick={() => inspectRole('ram')}>Inspect ram</button><button disabled={loading} onClick={() => inspectRole('catapult')}>Inspect catapult</button><button aria-pressed={showLabels} onClick={() => setShowLabels(!showLabels)}>Labels</button><small>{stats}</small></div>}

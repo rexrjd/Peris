@@ -1,7 +1,7 @@
 import { type UnitType } from '../../army/domain/types';
 import { type Resources } from '../../../shared/model/resources';
 import type { Faction } from '../../factions/domain/factions';
-export type Terrain = 'plains' | 'woods' | 'highlands' | 'river';
+export type Terrain = 'plains' | 'woods' | 'highlands' | 'river' | 'farmland' | 'desert' | 'snow' | 'marsh' | 'coast' | 'darkland';
 export type Difficulty = 'easy' | 'normal' | 'hard';
 export type Battle = {
     id: number;
@@ -56,6 +56,9 @@ export type Formation = {
     target_formation_id: number | null;
     status: FormationStatus;
     damage_pool: number;
+    damage_target_id?: number;
+    attack_ready_at?: number;
+    charge_distance?: number;
     attack_multiplier?: number;
     defence_multiplier?: number;
     magic_attack?:number;magic_defence?:number;magic_speed?:number;

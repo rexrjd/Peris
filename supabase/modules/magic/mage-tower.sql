@@ -1,6 +1,8 @@
 -- Optional, unique mage tower and the twenty-spell research catalog.
+-- Existing population-era worlds already contain housing. Keep it valid at
+-- every migration step, before the population module reapplies this constraint.
 alter table public.peris_city_slots drop constraint if exists peris_city_slots_building_type_check;
-alter table public.peris_city_slots add constraint peris_city_slots_building_type_check check(building_type in ('barracks','stables','smithy','warehouse','granary','fishery','mage_tower'));
+alter table public.peris_city_slots add constraint peris_city_slots_building_type_check check(building_type in ('barracks','stables','smithy','warehouse','granary','fishery','mage_tower','housing'));
 alter table public.peris_city_slots drop constraint if exists peris_city_slots_level_check;
 alter table public.peris_city_slots add constraint peris_city_slots_level_check check(level between 0 and case when building_type='mage_tower' then 10 else 5 end);
 create unique index if not exists peris_one_mage_tower on public.peris_city_slots(settlement_id) where building_type='mage_tower';

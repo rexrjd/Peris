@@ -1,10 +1,12 @@
+import { FIELD_SCALE } from '../domain/dimensions';
 import { type Terrain } from '../domain/types';
 import { ellipse, path } from '../../../shared/rendering/primitives';
 import { tree } from '../../../shared/rendering/environment';
 export function drawBattleTerrain(c: CanvasRenderingContext2D, w: number, h: number, rng: () => number, terrain: Terrain) {
+    c.save(); c.scale(FIELD_SCALE,FIELD_SCALE); w/=FIELD_SCALE;h/=FIELD_SCALE;
     if (terrain === 'highlands') {
         for (let i = 8; i > 0; i--) {
-            ellipse(c, 650, 285, 190 + i * 9, 135 + i * 6, `rgba(192,171,111,${.025 + i * .009})`);
+            ellipse(c, 650, 285, 240 + i * 9, 180 + i * 6, `rgba(192,171,111,${.025 + i * .009})`);
         }
         const ridge = c.createRadialGradient(610, 225, 20, 650, 285, 225);
         ridge.addColorStop(0, '#dcce9770');
@@ -16,7 +18,7 @@ export function drawBattleTerrain(c: CanvasRenderingContext2D, w: number, h: num
             c.strokeStyle = '#d1c18c45';
             c.lineWidth = 1;
             c.beginPath();
-            c.ellipse(650, 285, 190 - i * 30, 135 - i * 22, 0, 0, Math.PI * 2);
+            c.ellipse(650, 285, 240 - i * 30, 180 - i * 22, 0, 0, Math.PI * 2);
             c.stroke();
         }
     }
@@ -43,8 +45,9 @@ export function drawBattleTerrain(c: CanvasRenderingContext2D, w: number, h: num
             c.stroke();
         }
     }
-    const woods = terrain === 'woods' ? [[525, 185, 99, 115], [825, 535, 133, 122]] : [[40, 80, 65, 60], [1130, 645, 70, 45]];
-    for (const [cx, cy, rx, ry] of woods) {
+    const barren=['desert','snow','highlands','darkland','coast'].includes(terrain);
+    const woods = terrain === 'woods' ? [[455, 180, 195, 125], [850, 535, 190, 130]] : [[40, 80, 65, 60], [1130, 645, 70, 45]];
+    for (const [cx, cy, rx, ry] of barren ? [] : woods) {
         const points = [];
         for (let i = 0; i < (terrain === 'woods' ? 130 : 40); i++) {
             const a = rng() * Math.PI * 2, r = Math.sqrt(rng());
@@ -74,4 +77,7 @@ export function drawBattleTerrain(c: CanvasRenderingContext2D, w: number, h: num
                 c.stroke();
             }
         }
+    if (terrain === 'farmland') { for(let y=70;y<650;y+=22)path(c,[[100,y],[1100,y]],2,'#7c634d55'); }
+    if (terrain === 'marsh') { for(let i=0;i<100;i++)ellipse(c,rng()*w,rng()*h,8+rng()*20,4+rng()*9,'#5c929966'); }
+    c.restore();
 }

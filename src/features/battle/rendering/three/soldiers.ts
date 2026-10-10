@@ -4,7 +4,7 @@ import { type Formation } from '../../domain/types';
 import { disposeObject } from './dispose';
 
 export type FormationPose = { x: number; y: number; facing: number };
-export type SoldierFrame = { formation: Formation; pose: FormationPose; time: number; dt: number; animate: boolean; detail?: 'near' | 'far'; height: (x: number, y: number) => number };
+export type SoldierFrame = { formation: Formation; pose: FormationPose; time: number; battleTime?: number; dt: number; animate: boolean; detail?: 'near' | 'far'; height: (x: number, y: number) => number };
 /** A GLB-backed implementation can own cloned skeletons and AnimationMixers here. */
 export interface SoldierVisual {
     readonly object: Object3D;
@@ -13,9 +13,24 @@ export interface SoldierVisual {
 }
 export type SoldierVisualFactory = (formation: Formation) => SoldierVisual;
 
-export function soldierSlots(f: Pick<Formation, 'soldiers' | 'columns'>) {
-    const count = Math.max(0, Math.min(120, f.soldiers)), cols = Math.max(1, Math.min(f.columns, count)), rows = Math.ceil(count / cols);
-    return Array.from({ length: count }, (_, i) => ({ x: (Math.floor(i / cols) - (rows - 1) / 2) * 8, y: (i % cols - (cols - 1) / 2) * 8 }));
+export function soldierSlots(f: Pick<Formation, 'soldiers' | 'columns'> & Partial<Pick<Formation, 'initial_soldiers'>>) {
+    const count = Math.max(0, Math.min(120, f.soldiers));
+    const original = Math.max(count, Math.min(120, f.initial_soldiers ?? f.soldiers));
+    const cols = Math.max(1, Math.min(f.columns, original)), rows = Math.ceil(original / cols);
+    return Array.from({ length: count }, (_, i) => {
+        const slot = Math.floor(i * original / Math.max(1, count));
+        return { x: (Math.floor(slot / cols) - (rows - 1) / 2) * 8, y: (slot % cols - (cols - 1) / 2) * 8 };
+    });
+}
+
+/** The asset gallery may loop an attack; real battles animate only actual strikes. */
+export function strikeAnimation(f: Formation, battleTime?: number) {
+    if (f.status !== 'engaged') return false;
+    if (battleTime === undefined) return true;
+    if (f.attack_ready_at === undefined) return false;
+    const interval = f.unit_type === 'archers' ? 2.5 : f.unit_type === 'cavalry' ? 1.4 : 1.2;
+    const elapsed = battleTime - (f.attack_ready_at - interval);
+    return elapsed >= 0 && elapsed < .6;
 }
 
 function combine(parts: BufferGeometry[]) {
@@ -54,7 +69,7 @@ class LowPolySoldiers implements SoldierVisual {
             ...[-2, 2].flatMap(x => [-1, 1].map(z => new BoxGeometry(.9, 3, .8).translate(x, 1.5, z))),
         ]), '#594739');
     }
-    update({ formation: f, pose, time, animate, height }: SoldierFrame) {
+    update({ formation: f, pose, time, battleTime, animate, height }: SoldierFrame) {
         const slots = soldierSlots(f), angle = pose.facing * Math.PI / 180;
         this.object.position.set(pose.x, 0, pose.y); this.object.rotation.y = -angle;
         for (let i = 0; i < slots.length; i++) {
@@ -62,7 +77,7 @@ class LowPolySoldiers implements SoldierVisual {
             const moving = f.status === 'moving' || f.status === 'routed';
             const bob = animate && moving ? Math.abs(Math.sin(time * (f.running ? 12 : 7) + i * .8)) * .65 : 0;
             this.dummy.position.set(slot.x, height(x, y) + bob, slot.y);
-            this.dummy.rotation.set(0, 0, animate && f.status === 'engaged' ? Math.sin(time * 9 + i) * .08 : 0);
+            this.dummy.rotation.set(0, 0, animate && strikeAnimation(f, battleTime) ? Math.sin(time * 9 + i) * .08 : 0);
             this.dummy.updateMatrix();
             for (const mesh of this.parts) mesh.setMatrixAt(i, this.dummy.matrix);
         }

@@ -1,3 +1,6 @@
+import { heroPortraitUrl } from '../../heroes/domain/portraits';
+import { heroForArmy } from '../../heroes/domain/heroes';
+import { armyFaction } from '../../army/domain/faction';
 import { RenderContext } from '../../../shared/rendering/RenderContext';
 import { type MapSelection } from '../domain/types';
 import { armyPosition, armyRouteRemaining } from '../domain/movement';
@@ -14,6 +17,7 @@ import { FACTIONS, factionOf } from '../../factions/domain/factions';
 
 /** Strategic presentation only: orders still use the existing command pipeline. */
 export class MapRenderer {
+    private portraits=new Map<string,HTMLImageElement>();
     private chunks = new Map<string, HTMLCanvasElement>();
     private readonly chunkCells = 8;
     private artReady = false;
@@ -164,14 +168,14 @@ export class MapRenderer {
         for (const rawCamp of s.world.camps) {
             const camp={...rawCamp,...this.imagePoint(rawCamp.x,rawCamp.y)};
             if (!this.visible(camp.x, camp.y)) continue;
-            const site = siteFor(camp.id), region = regionFor(camp.id);
+            const site = camp.bandit?{...siteFor(1),title:camp.name}:siteFor(camp.id), region = regionFor(camp.id);
             const cleared = s.world.progress.some(p => p.owner_id === s.playerId && p.camp_id === camp.id && p.defeated > 0), active = selected('camp', camp.id);
             if (this.scale < .15) { this.dot(camp.x, camp.y, '#ce9465', 2); continue; }
             this.ring(camp.x, camp.y + 7, active, hover('camp', camp.id), camp.id === 6 ? 47 : 35);
             const sprite = camp.id === 6 ? 10 : camp.id === 2 ? 11 : camp.id === 5 ? 12 : camp.id === 4 ? 9 : 8;
             if (!drawMapSprite(c, sprite, camp.x - 44, camp.y - 67, 88)) drawLandmark(c, camp.x, camp.y, site.kind, cleared ? '#94b77c' : region.color);
             if (active || this.scale > .3) this.label(camp.x, camp.y + 29 * unit, site.title, active ? '#ffe5a6' : cleared ? '#c9dfb5' : '#eddfbd');
-            if (active || this.ctx.camera.zoom > 1.5) this.label(camp.x, camp.y + 46 * unit, `TIER ${camp.tier}${cleared ? ' · STANDARD RECOVERED' : ' · HOSTILE HOLD'}`, '#c4c6ad', true);
+            if (active || this.ctx.camera.zoom > 1.5) this.label(camp.x, camp.y + 46 * unit, `TIER ${camp.tier}${camp.bandit?' · BANDIT CAMP':cleared ? ' · STANDARD RECOVERED' : ' · HOSTILE HOLD'}`, '#c4c6ad', true);
         }
         if (s.expansionRoute) {
             c.save(); c.strokeStyle = '#f9d79e'; c.lineWidth = 2 * unit;
@@ -192,14 +196,16 @@ export class MapRenderer {
                 c.restore();
             }
             if (!this.visible(pos.x, pos.y)) continue;
-            if (this.scale < .15) { this.dot(pos.x, pos.y, mine ? '#ffe3a1' : '#97b5ce', 2); continue; }
+            if (this.scale < .15 && !mine) { this.dot(pos.x, pos.y, '#97b5ce', 2); continue; }
             this.ring(pos.x, pos.y + 2, active, hover('army', army.id), 26);
             c.save(); c.translate(pos.x, pos.y - 5);
             // Markers stay legible in the full-realm mobile overview.
             const size = Math.max(.85, unit * .8); c.scale(size, size);
-            c.fillStyle = '#17251de0'; c.strokeStyle = active ? '#ffe6a1' : '#e4d4b0'; c.lineWidth = 1.3 / size * unit;
-            c.beginPath(); c.moveTo(0, -16); c.lineTo(12, 0); c.lineTo(0, 14); c.lineTo(-12, 0); c.closePath(); c.fill(); c.stroke();
-            c.fillStyle = mine ? '#d7ac63' : '#81a7be'; c.beginPath(); c.moveTo(0, -10); c.lineTo(7, 0); c.lineTo(0, 8); c.lineTo(-7, 0); c.closePath(); c.fill();
+            const source=heroPortraitUrl(armyFaction(s.world,army),heroForArmy(s.world,army.id)?.class);
+            let face=this.portraits.get(source);if(!face){face=new Image();face.src=source;this.portraits.set(source,face);}
+            c.beginPath();c.arc(0,0,17,0,Math.PI*2);c.fillStyle='#232b38';c.fill();
+            c.save();c.clip();if(face.complete&&face.naturalWidth)c.drawImage(face,-17,-17,34,34);c.restore();
+            c.strokeStyle=active?'#ffe6a1':mine?'#c9a768':'#88a7c9';c.lineWidth=2/size*unit;c.stroke();
             c.restore();
             this.label(pos.x, pos.y + 18 * unit, `${army.infantry + army.archers + army.cavalry}`, mine ? '#f1d6ac' : '#c9deea', true);
             if (active || (mine && moving)) this.label(pos.x, pos.y - 27 * unit, moving ? `ARRIVES IN ${clock((Date.parse(army.arrival_at) - now) / 1000)}` : army.name, '#f4dfb0', true);

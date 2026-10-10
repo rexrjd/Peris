@@ -225,7 +225,7 @@ export class OnlineEngine implements GameEngine {
         if (!battle && now - this.lastCorePoll < 2550) return;
         this.ticking = true; this.lastCorePoll = now;
         try {
-            if (battle?.phase === 'combat') {
+            if (battle?.status === 'active') {
                 const { error } = await this.rpc('peris_tick', { p_battle_id: battle.id });
                 if (error) throw error;
             } else if (!battle) {
@@ -239,6 +239,7 @@ export class OnlineEngine implements GameEngine {
     }
     command = async (cmd: Command) => {
         if (!this.alive) throw new Error('This realm session has ended.');
+        if(['order','rally','castSpell'].includes(cmd.type))throw new Error('Both armies and their spells are controlled automatically.');
         if (cmd.type === 'move' && (!Number.isFinite(cmd.x) || !Number.isFinite(cmd.y))) throw new Error('Choose valid world coordinates.');
         // An old server silently clamps marches to its 1,200px map. Reject before
         // sending the RPC, so installing this client cannot misdirect an army.

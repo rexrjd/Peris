@@ -12,7 +12,7 @@ async function battlefieldPixels(field:Locator) {
     })));
 }
 
-test('army preview supports mesh inspection, deployment, combat, quality changes and 2D fallback without touching a campaign',async({page},testInfo)=>{
+test('army preview supports mesh inspection, automatic combat, quality changes and 2D fallback without touching a campaign',async({page},testInfo)=>{
     test.setTimeout(120000);
     const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
     await page.addInitScript(()=>{localStorage.setItem('peris-settings',JSON.stringify({sound:false,music:false,reducedMotion:true}));localStorage.setItem('peris-solo-v6','preserve-this-campaign');});
@@ -21,10 +21,11 @@ test('army preview supports mesh inspection, deployment, combat, quality changes
     await expect(page.locator('.army-loading')).toHaveCount(0,{timeout:60000});
     await expect(page.locator('.battle-3d-label.friendly')).toHaveCount(7);
     await expect(page.locator('.unit-card')).toHaveCount(7);
-    const deploymentHeight=(await page.locator('.deployment-banner').boundingBox())!.height;
+    await page.getByRole('button',{name:/Ⅱ Pause/}).click();
+    await expect(page.locator('.deployment-banner')).toHaveCount(0);
     await page.getByRole('button',{name:'Inspect selected troops',exact:true}).click();
     await expect(page.locator('.tactical-shell')).toHaveClass(/model-inspection/);
-    expect((await page.locator('.deployment-banner').boundingBox())!.height).toBeLessThan(deploymentHeight);
+    await expect(page.locator('.pause-banner')).toBeVisible();
     await expect(page.locator('.army-inspection small')).toContainText('FPS',{timeout:20000});
     if(testInfo.project.name==='mobile-chromium')await page.getByRole('button',{name:'Zoom in',exact:true}).tap();
     else{await field.hover();await page.mouse.wheel(0,-300);}
@@ -36,16 +37,15 @@ test('army preview supports mesh inspection, deployment, combat, quality changes
     await page.screenshot({path:testInfo.outputPath('stonehurler.png')});
     await page.getByRole('button',{name:'Battle overview',exact:true}).click();
     await expect(page.locator('.tactical-shell')).not.toHaveClass(/model-inspection/);
-    expect((await page.locator('.deployment-banner').boundingBox())!.height).toBe(deploymentHeight);
+    await expect(page.locator('.pause-banner')).toBeVisible();
     await page.locator('.unit-card').first().click();
     const label=page.locator('.battle-3d-label.friendly.selected').first(),before=await label.getAttribute('style');
-    await page.getByRole('button',{name:'Move',exact:true}).click();
+    await expect(page.getByRole('button',{name:'Move',exact:true})).toHaveCount(0);
     const box=await field.boundingBox();if(!box)throw new Error('Missing battlefield');
-    await field.click({position:{x:box.width*.24,y:box.height*.7}});
+    await page.mouse.move(box.x+box.width*.5,box.y+box.height*.6);await page.mouse.down();await page.mouse.move(box.x+box.width*.5+55,box.y+box.height*.6+25,{steps:8});await page.mouse.up();
     await expect(label).not.toHaveAttribute('style',before!);
-    await page.getByRole('button',{name:'Begin battle',exact:true}).click();
+    await expect(page.getByRole('button',{name:'Begin battle',exact:true})).toHaveCount(0);
     await expect(page.locator('.deployment-banner')).toHaveCount(0);
-    await page.getByRole('button',{name:/Ⅱ Pause/}).click();
     await expect(page.locator('.pause-banner')).toBeVisible();
     const selection=await page.locator('.command-selection').innerText();
     await page.getByLabel('Graphics quality').selectOption('balanced');
@@ -112,7 +112,7 @@ test('a published Roman roster remains visible when its chosen opponent only has
     expect(errors).toEqual([]);
 });
 
-test('textured faction rosters inspect all nine roles and keep orders, pause state and campaign isolation in the battle renderer',async({page},testInfo)=>{
+test('textured faction rosters inspect all nine roles and keep automatic combat, pause state and campaign isolation in the battle renderer',async({page},testInfo)=>{
     test.setTimeout(150000);
     const errors:string[]=[],assets=new Map<string,number>();
     page.on('pageerror',error=>errors.push(error.message));
@@ -140,6 +140,7 @@ test('textured faction rosters inspect all nine roles and keep orders, pause sta
     expect(credits.ok()).toBe(true);
     expect(await credits.text()).toMatch(/Wildfire Games[\s\S]+CC BY-SA 3\.0/);
 
+    await page.getByRole('button',{name:/Ⅱ Pause/}).click();
     const inspector=page.getByLabel('Inspect unit role');
     await expect(inspector.locator('option')).toHaveCount(10);
     for(const role of ['line_infantry','spear_guard','archer','elite','scout','light_cavalry','heavy_cavalry','ram','catapult']){
@@ -177,14 +178,13 @@ test('textured faction rosters inspect all nine roles and keep orders, pause sta
 
     await page.getByRole('button',{name:'Battle overview',exact:true}).click();
     await page.locator('.unit-card').first().click();
-    const beforeMove=await selected.getAttribute('style');
-    await page.getByRole('button',{name:'Move',exact:true}).click();
+    const current=page.locator('.battle-3d-label.friendly.selected').first(),beforeMove=await current.getAttribute('style');
+    await expect(page.getByRole('button',{name:'Move',exact:true})).toHaveCount(0);
     const box=await field.boundingBox();if(!box)throw new Error('Missing prototype battlefield');
-    await field.click({position:{x:box.width*.24,y:box.height*.7}});
-    await expect(selected).not.toHaveAttribute('style',beforeMove!);
-    await page.getByRole('button',{name:'Begin battle',exact:true}).click();
+    await page.mouse.move(box.x+box.width*.5,box.y+box.height*.6);await page.mouse.down();await page.mouse.move(box.x+box.width*.5+55,box.y+box.height*.6+25,{steps:8});await page.mouse.up();
+    await expect(current).not.toHaveAttribute('style',beforeMove!);
+    await expect(page.getByRole('button',{name:'Begin battle',exact:true})).toHaveCount(0);
     await expect(page.locator('.deployment-banner')).toHaveCount(0);
-    await page.getByRole('button',{name:/Ⅱ Pause/}).click();
     await expect(page.locator('.pause-banner')).toBeVisible();
     const selection=await page.locator('.command-selection').innerText();
     await page.getByLabel('Graphics quality').selectOption('balanced');

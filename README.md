@@ -2,7 +2,7 @@
 
 Development tools: see **docs/DEV_TOOLS.md** for Codex/Blender/Playwright setup and **docs/GRAPHICS_PIPELINE.md** for model export and the next 3D battle milestone. On Windows, `START-PERIS-TOOLS.cmd` prepares the local checkout after Node.js is installed.
 
-The map release integrates a seeded seamless world and persistent external fields with latest main's city, eleven factions, magic, Empire and Heroes systems. See **MAP_RELEASE.md** for publication/database deployment and **MAP_WORLD.md** for map rules. Existing databases use **UPGRADE_TO_V10.sql**; empty installations use **FRESH_INSTALL_V10.sql**. The earlier map notes below describe the preceding continental release.
+The map release integrates a seeded seamless world and persistent external fields with latest main's city, eleven factions, magic, Empire and Heroes systems. See **MAP_RELEASE.md** for publication/database deployment and **MAP_WORLD.md** for map rules. Existing databases use **UPGRADE_TO_V11.sql**; empty installations use **FRESH_INSTALL_V11.sql**. The earlier map notes below describe the preceding continental release.
 
 This is a structural refactor of the latest Peris v7 game. It keeps the current campaign, artwork, tactical rules, save compatibility and online behavior while separating map, battle, city, army, campaign, UI, rendering and platform systems.
 
@@ -20,7 +20,7 @@ Requires Node 20.19 or later. Run `npm install`, then `npm run dev`. Use `npm.cm
 - `npm run test:territory-db` / `npm run test:map-db`: persistent land/construction, wrapped visibility, faction metadata and privacy checks.
 - `npm run build:standalone`: generate `standalone/Peris-v8-playable.html` for solo play.
 
-The 200 × 200 seamless map requires `supabase/UPGRADE_TO_V10.sql` for existing databases, preserving world data and anonymous accounts. Unsafe occupied positions or saved routes abort the upgrade and require manual migration. Use `FRESH_INSTALL_V10.sql` only for an empty database. Browser solo saves retain the `peris-campaign-v6` key, format and legacy route coordinates. See **MAP_WORLD.md** for map architecture, controls and deployment requirements, and **MAP_ART.md** for original map assets and generation prompts.
+The 200 × 200 seamless map requires `supabase/UPGRADE_TO_V11.sql` for existing databases, preserving world data and anonymous accounts. Unsafe occupied positions or saved routes abort the upgrade and require manual migration. Use `FRESH_INSTALL_V11.sql` only for an empty database. Browser solo saves retain the `peris-campaign-v6` key, format and legacy route coordinates. See **MAP_WORLD.md** for map architecture, controls and deployment requirements, and **MAP_ART.md** for original map assets and generation prompts.
 
 ## Empire gameplay
 
@@ -41,3 +41,11 @@ Select formations by click, Shift-click or selection drag. Right-click moves/att
 Online accounts use anonymous name-based login. PvP invitations require acceptance and both commanders' readiness. Database functions enforce mutations. Tactical simulation pauses when both participants disconnect; strategic timers continue offline. The world has 200 × 200 fields and thousands of candidate starting sites, up to ten cities and two hero-led armies per city (twenty armies maximum). Historical sites are retained; new accounts need a safe dry starting ring. Land marches follow validated wrapped routes; tactical formation movement remains simplified without per-soldier collision/pathfinding. Thousand-player concurrency has not been load tested.
 
 Original artwork is recorded in ARTWORK.md. Open Sans is bundled with its SIL OFL license. No live Supabase SQL or Vercel deployment was executed to create this archive.
+
+## Automatic battles
+
+All campaign, quick and accepted multiplayer battles use AI on both sides, including researched spells and rallies. Both the published faction models in 3D and Canvas 2D remain available. Click to inspect and drag to pan; solo viewers can pause or change speed. Existing worlds use `supabase/UPGRADE_TO_V11.sql`. See `docs/automatic-battles.md` for rules, verification and the current background scheduling limit.
+
+### V12: world encounters
+
+Battles now cover five times the area and use the target world's biome. Stable seeded bandit camps provide faction-varied PvE raids, resources and hero XP. Ten original painted portraits identify commanders in the roster and on the map. See [world encounters](docs/world-battles-bandits-and-heroes.md). Existing Supabase worlds use `supabase/UPGRADE_TO_V12.sql`; empty databases use `supabase/FRESH_INSTALL_V12.sql`.

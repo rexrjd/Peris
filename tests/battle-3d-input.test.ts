@@ -35,23 +35,29 @@ test('3D event binding handles captured clicks, camera gestures, canceled touche
         const canvas = new Canvas(), camera = new BattleCamera(() => 0); camera.setSize(1200, 700); camera.center();
         const actions: RenderActions = { order: o => orders.push(o), selectUnits: ids => { selections.push(ids); }, pause: () => {}, rally: () => {}, moveArmy: () => {}, selectMap: () => {} };
         const input = new BattleInput(canvas as unknown as HTMLCanvasElement, camera, () => state, () => actions, () => undefined,
-            f => camera.project(f.x, f.y), () => {});
+            () => {});
         const pointer = (id = 1, x = 400, button = 0, pointerType = 'mouse') => ({ pointerId: id, clientX: x, clientY: 300, button, pointerType, shiftKey: false, altKey: false });
         send(canvas, 'pointerdown', pointer()); send(canvas, 'pointerup', pointer());
-        assert.equal(orders.length, 1, 'captured click dispatches even if lost-capture fires synchronously');
+        assert.equal(orders.length, 0, 'captured click never produces a tactical command');
+        assert.deepEqual(selections.at(-1), []);
+        const center = camera.target.clone();
+        send(canvas, 'pointerdown', pointer(1, 400, 0)); send(canvas, 'pointermove', pointer(1, 470, 0)); send(canvas, 'pointerup', pointer(1, 470, 0));
+        assert.notDeepEqual(camera.target, center, 'left drag pans the spectator camera');
         send(canvas, 'pointerdown', pointer(1, 400, 1)); send(canvas, 'pointermove', pointer(1, 460, 1)); send(canvas, 'pointerup', pointer(1, 460, 1));
-        assert.equal(orders.length, 1, 'middle-drag is camera movement only');
+        assert.equal(orders.length, 0, 'middle-drag is camera movement only');
         send(canvas, 'pointerdown', pointer(1, 400, 0, 'touch')); send(canvas, 'pointerdown', pointer(2, 500, 0, 'touch'));
         send(canvas, 'pointermove', pointer(2, 580, 0, 'touch')); send(canvas, 'pointerup', pointer(2, 580, 0, 'touch'));
         send(canvas, 'pointermove', pointer(1, 430, 0, 'touch')); send(canvas, 'pointerup', pointer(1, 430, 0, 'touch'));
-        assert.equal(orders.length, 1, 'pinch and its remaining finger never produce a move');
+        assert.equal(orders.length, 0, 'pinch and its remaining finger never produce a move');
         send(canvas, 'pointerdown', pointer()); send(canvas, 'pointercancel', pointer()); send(canvas, 'pointerup', pointer());
-        assert.equal(orders.length, 1, 'cancellation never issues a move');
+        assert.equal(orders.length, 0, 'cancellation never issues a move');
         state.touchOrder = 'select'; send(windowTarget, 'keydown', { key: 'a', ctrlKey: false, metaKey: false, altKey: false, repeat: false });
         assert.deepEqual(selections.at(-1), own.map(f => f.id));
+        for (const key of ['h', 'g', 'r']) send(windowTarget, 'keydown', { key, repeat: false });
+        assert.equal(orders.length, 0, 'legacy hotkeys never issue orders');
         input.destroy();
         send(canvas, 'pointerdown', pointer()); send(canvas, 'pointerup', pointer()); send(windowTarget, 'keydown', { key: 'h' });
-        assert.equal(orders.length, 1, 'disposed input has no event listeners');
+        assert.equal(orders.length, 0, 'disposed input has no event listeners');
     } finally {
         if (savedWindow) Object.defineProperty(globalThis, 'window', savedWindow); else Reflect.deleteProperty(globalThis, 'window');
         if (savedDocument) Object.defineProperty(globalThis, 'document', savedDocument); else Reflect.deleteProperty(globalThis, 'document');

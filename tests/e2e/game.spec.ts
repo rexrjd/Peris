@@ -20,36 +20,22 @@ async function beginCampaign(page: Page) {
   await expect(page.locator('canvas[aria-label^="Interactive 200 by 200"]')).toBeVisible();
 }
 
-test('quick battle supports deployment, commands, pause and withdrawal', async ({ page }, testInfo) => {
-  const errors: string[] = [];
-  page.on('pageerror', error => errors.push(error.message));
-  await page.goto('/');
-  await expect(page.getByRole('heading', { name: 'PERIS', exact: true })).toBeVisible();
-  await page.getByRole('button', { name: /Quick battle/ }).click();
-  await page.getByRole('button', { name: 'Deploy your army' }).click();
-  const field = page.locator('.battle-3d-canvas canvas');
+test('quick battle starts automatically and supports inspection, pause and concession', async ({ page }, testInfo) => {
+  const errors: string[] = []; page.on('pageerror', error => errors.push(error.message));
+  await page.goto('/');await page.getByRole('button', { name: /Quick battle/ }).click();
+  await page.getByRole('button', { name: 'Watch the battle' }).click();
   await expect(page.locator('.battle-3d-canvas')).toHaveAttribute('data-unit-models', 'published', {timeout:60000});
   await expect(page.locator('.unit-card')).toHaveCount(7);
-  await expect(field).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Begin battle', exact: true })).toBeEnabled();
-  await capture(page, testInfo, 'battle-deployment');
-  await page.getByRole('button', { name: /^Select all/ }).click();
-  await expect(page.locator('.command-selection')).not.toHaveText('0 selected');
-  await page.getByRole('button', { name: 'Guard', exact: true }).click();
-  await expect(page.locator('.stance-tabs button.selected')).toHaveText('Guard');
-  await page.getByRole('button', { name: 'Begin battle', exact: true }).click();
-  await expect(page.getByRole('button', { name: /Pause/ })).toBeVisible();
-  await page.getByRole('button', { name: /Pause/, exact: false }).click();
+  await expect(page.locator('.battle-time')).toContainText('AI VS AI');
+  await expect(page.getByRole('button', { name: 'Begin battle', exact: true })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Guard', exact: true })).toHaveCount(0);
+  await page.getByRole('button', { name: /Ⅱ Pause/ }).click();
   await expect(page.locator('.pause-banner')).toBeVisible();
-  await page.getByRole('button', { name: 'Move', exact: true }).click();
-  const bounds = await field.boundingBox();
-  if (!bounds) throw new Error('Battlefield has no screen bounds.');
-  await field.click({ position: { x: bounds.width * .55, y: bounds.height * .65 } });
-  await expect(page.locator('.field-order-hint')).toHaveCount(0);
-  await page.getByRole('button', { name: /^Halt/ }).click();
-  await capture(page, testInfo, 'battle-paused');
-  await page.getByRole('button', { name: 'Withdraw from battle', exact: true }).click();
-  await page.getByRole('button', { name: 'Withdraw the host', exact: true }).click();
+  await page.locator('.unit-card').last().click();
+  await expect(page.locator('.unit-card.selected')).toHaveCount(1);
+  await capture(page,testInfo,'automatic-battle-paused');
+  await page.getByRole('button', { name: 'Concede battle', exact: true }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Concede battle', exact: true }).click();
   await page.getByRole('dialog', { name: 'Battle result' }).getByRole('button', { name: 'Return to main menu', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'PERIS', exact: true })).toBeVisible();
   expect(errors).toEqual([]);

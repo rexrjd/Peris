@@ -50,3 +50,11 @@ Four additional original generated assets are included:
 - `public/art/shared/environment-props.png`: transparent four-cell atlas containing oak tree, Roman keep, rebel camp and rocky hill.
 
 All were generated specifically for Peris. Sprite cropping, team tinting, animation, combat overlays and terrain behavior are implemented in code. Open Sans is bundled under the SIL Open Font License; see `public/fonts/OFL.txt`.
+
+## Commander portraits
+
+`public/art/heroes/` contains ten original PNG portraits generated for Peris using the built-in image generation tool. `assets/hero-portraits.json` records their filenames, art direction and prompts. The subjects cover four human cultures, Elves, Dwarves, Gnomes, Pandaren, Necropolis and Demons. Orcs retain an original geometric face portrait. No images or characters from Heroes of Might and Magic are used.
+
+`heroes/domain/portraits.ts` supplies the same faction identity to commander dossiers, army rosters and world-map markers. WebGL uses accessible face buttons above the actual army, preserving published faction models underneath. Canvas uses cached circular portrait images, with own armies readable even in the realm overview. Bandit camps use lightweight original tent and campfire meshes with faction colours.
+
+The battlefield is five times its original area. Forest instances, rocky ground, snowy and sandy palettes, river shallows and a stone bridge use the same scaled footprints as authoritative terrain rules. Troop sizes and weapon ranges remain unchanged.

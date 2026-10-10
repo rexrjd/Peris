@@ -1,20 +1,31 @@
-EMPIRE AND HEROES UPDATE — START HERE
+WORLD BATTLES, BANDIT CAMPS AND HERO PORTRAITS — START HERE
 
 Replace the included files at matching repository paths.
-For an existing Supabase world, run supabase/UPGRADE_TO_V10.sql once in the SQL editor.
-For an empty Supabase database only, use supabase/FRESH_INSTALL_V10.sql.
+For an existing Supabase world, run the corrected supabase/UPGRADE_TO_V12.sql
+from this ZIP in the SQL editor. It fixes upgrades with existing housing rows.
+For an empty Supabase database only, use supabase/FRESH_INSTALL_V12.sql.
 Do not use fresh installation on an existing world. Do not run older feature-only
-upgrade scripts after V10; use the complete V10 upgrade for current gameplay.
+upgrade scripts after V12; use the complete V12 upgrade for current gameplay.
 
 Existing cities, armies, troops, accounts, queues and solo saves are retained.
 Menu > Cities & expansion opens culture, settlers and founding.
 Army opens commanders, artifacts, army selection and troop transfers.
 Read docs/empire-and-heroes.md for the rules and a fast local test flow.
 
-Run npm install and npm run build. npm run test:empire-db verifies the database
+Battles start automatically. Both armies use AI, including spells and rallies.
+The latest 3D faction graphics and the 2D fallback are supported.
+Read docs/automatic-battles-compatibility.md for the tested main commit and checks.
+
+Run npm ci and npm run build. npm run test:empire-db verifies the database
 rules in an isolated local PostgreSQL instance without contacting your server.
 
 If upgrading from an older pre-refactor source tree, run
 node scripts/clean-legacy-paths.mjs from the repository root first. It removes
 only recognized unchanged legacy files and preserves personal edits.
 Use npm.cmd on Windows if PowerShell blocks npm scripts.
+
+V12 adds five-times-larger battlefield area, terrain from the actual target field,
+605 seeded bandit camps with all eleven factions, ten-minute bandit regrouping,
+and ten original painted commander portraits. Army map markers show hero faces.
+Six campaign standards remain separate from farming camps.
+See docs/world-battles-bandits-and-heroes.md for the exact scope and verification.

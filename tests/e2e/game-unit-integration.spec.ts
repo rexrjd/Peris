@@ -24,7 +24,7 @@ test('launcher unit preview and faction Quick Battle are normal game flows', asy
     await page.getByRole('button', { name: /Quick battle/ }).click();
     await page.getByLabel('Your faction', { exact: true }).selectOption('dwarf');
     await page.getByLabel('Enemy faction', { exact: true }).selectOption('demon');
-    await page.getByRole('button', { name: 'Deploy your army' }).click();
+    await page.getByRole('button', { name: 'Watch the battle' }).click();
     await expect(page.locator('.battle-3d-canvas')).toHaveAttribute('data-unit-models', 'published', { timeout: 60000 });
     await expect(page.locator('.battle-3d-canvas')).toHaveAttribute('data-faction', 'dwarf');
     await expect(page.locator('.battle-3d-canvas')).toHaveAttribute('data-enemy-faction', 'demon');
@@ -33,7 +33,7 @@ test('launcher unit preview and faction Quick Battle are normal game flows', asy
     await page.getByRole('button', { name: 'Inspect selected troops', exact: true }).click();
     await page.screenshot({ path: info.outputPath('game-dwarf-cavalry.png') });
     await page.getByRole('button', { name: 'Battle overview', exact: true }).click();
-    await page.getByRole('button', { name: 'Begin battle', exact: true }).click();
+    await expect(page.getByRole('button', { name: 'Begin battle', exact: true })).toHaveCount(0);
     await expect(page.locator('.deployment-banner')).toHaveCount(0);
     expect(models.some(url => /dwarf-roster\.glb\?v=/.test(url))).toBe(true);
     expect(models.some(url => /demon-roster-lod\.glb\?v=/.test(url))).toBe(true);
