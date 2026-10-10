@@ -1,10 +1,13 @@
 """Isolate legacy COLLADA imports before assembling the shared scene."""
-import bpy, pathlib, json, xml.etree.ElementTree as ET
+import bpy, pathlib, json, argparse, sys, xml.etree.ElementTree as ET
 root=pathlib.Path(__file__).resolve().parents[2]
 art=root/'assets/references/units/0ad'
 cache=root/'assets/source/battle/reference-import-cache-v4'
 cache.mkdir(parents=True,exist_ok=True)
-inventory=json.loads((art/'inventory.json').read_text())
+parser=argparse.ArgumentParser();parser.add_argument('--inventory',default='inventory.json')
+args=parser.parse_args(sys.argv[sys.argv.index('--')+1:] if '--' in sys.argv else [])
+if pathlib.Path(args.inventory).name!=args.inventory:raise ValueError('Inventory must be a filename in the reference folder')
+inventory=json.loads((art/args.inventory).read_text())
 def structure(node):
     return (node.tag,tuple(sorted(node.attrib.items())),(node.text or '').strip(),tuple(structure(child) for child in node))
 for file in inventory['files']:

@@ -10,6 +10,9 @@ export default defineConfig({
   expect: { timeout: 15_000 },
   reporter: [['list'], ['html', { open: 'never' }]],
   use: {
+    // Full Chromium uses the machine's graphics driver; the old headless shell
+    // renders these WebGL armies through SwiftShader on the CPU.
+    channel: 'chromium',
     baseURL: 'http://127.0.0.1:4173',
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',

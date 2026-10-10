@@ -1,0 +1,94 @@
+{
+  "source": "C:\\Users\\alipo\\OneDrive\\Desktop\\mmmm\\Peris\\assets\\source\\battle\\demon-portrait-quality-full-v14\\peris-demon-army.blend",
+  "sourceSha256": "81fab26e9c843105107979affb93a1e2d0f9a3a59d7700bd09fb8f1b93c8d75c",
+  "sourceUnchanged": true,
+  "geometryAlbedoUVRigActionsUnchanged": true,
+  "maps": [
+    {
+      "image": "Demon siege mottled oxblood scarred skin original roughness",
+      "originalSize": [
+        1024,
+        1024
+      ],
+      "runtimeSize": [
+        512,
+        512
+      ],
+      "maximumDifferenceAfterResize": 0.007282912731170654,
+      "alphaUnchangedByQuantization": true,
+      "levels": 64
+    },
+    {
+      "image": "Demon siege mottled oxblood scarred skin original surface relie",
+      "originalSize": [
+        1024,
+        1024
+      ],
+      "runtimeSize": [
+        512,
+        512
+      ],
+      "maximumDifferenceAfterResize": 0.0067227184772491455,
+      "alphaUnchangedByQuantization": true,
+      "levels": 64
+    },
+    {
+      "image": "Peris demon-refined-siege-and-rhino normal atlas",
+      "originalSize": [
+        4096,
+        4096
+      ],
+      "runtimeSize": [
+        512,
+        512
+      ],
+      "maximumDifferenceAfterResize": 0.007843077182769775,
+      "alphaUnchangedByQuantization": true,
+      "levels": 64
+    },
+    {
+      "image": "Peris demon-refined-siege-and-rhino orm atlas",
+      "originalSize": [
+        4096,
+        4096
+      ],
+      "runtimeSize": [
+        512,
+        512
+      ],
+      "maximumDifferenceAfterResize": 0.00784313678741455,
+      "alphaUnchangedByQuantization": true,
+      "levels": 64
+    },
+    {
+      "image": "Rhino charcoal cracked armored hide original roughness",
+      "originalSize": [
+        1024,
+        1024
+      ],
+      "runtimeSize": [
+        512,
+        512
+      ],
+      "maximumDifferenceAfterResize": 0.007469594478607178,
+      "alphaUnchangedByQuantization": true,
+      "levels": 64
+    },
+    {
+      "image": "Rhino charcoal cracked armored hide original surface relief",
+      "originalSize": [
+        1024,
+        1024
+      ],
+      "runtimeSize": [
+        512,
+        512
+      ],
+      "maximumDifferenceAfterResize": 0.00784313678741455,
+      "alphaUnchangedByQuantization": true,
+      "levels": 64
+    }
+  ],
+  "nativeSha256": "43e0015986ddef70eb605c2273cd78f7b4c48cc201bb4e9f380b9a57e5033f24",
+  "finishedUnitApproved": false
+}

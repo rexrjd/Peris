@@ -1,4 +1,4 @@
-import { ACESFilmicToneMapping, BoxGeometry, BufferGeometry, Color, DirectionalLight, Float32BufferAttribute, Group, HemisphereLight, Line, LineBasicMaterial, LineLoop, Mesh, MeshBasicMaterial, PlaneGeometry, Raycaster, RingGeometry, Scene, Vector2, WebGLRenderer, PCFShadowMap, PMREMGenerator, type WebGLRenderTarget } from 'three';
+import { ACESFilmicToneMapping, Box3, BoxGeometry, BufferGeometry, Color, DirectionalLight, Float32BufferAttribute, Group, HemisphereLight, Line, LineBasicMaterial, LineLoop, Mesh, MeshBasicMaterial, PlaneGeometry, Raycaster, RingGeometry, Scene, Vector2, WebGLRenderer, PCFShadowMap, PMREMGenerator, type WebGLRenderTarget } from 'three';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { type RenderActions, type RenderState } from '../../../../shared/rendering/contracts';
 import { type Formation } from '../../domain/types';
@@ -32,6 +32,7 @@ export class BattleScene {
     private inspectedId: number | null = null;
     private alive = true;
     private readonly formations = new Map<number, FormationView>();
+    private readonly showcases: Group[] = [];
     private readonly ray = new Raycaster();
     private readonly zones = new Group();
     private readonly previewLine = new Line(geometry(Array(6).fill(0)), new LineBasicMaterial({ color: '#ffe0a0', depthTest: false }));
@@ -49,12 +50,18 @@ export class BattleScene {
             this.renderer.toneMapping = ACESFilmicToneMapping; this.renderer.toneMappingExposure = 1.15;
             if (soldiers !== createLowPolySoldiers) {
                 const room=new RoomEnvironment(),pmrem=new PMREMGenerator(this.renderer);
-                this.environment=pmrem.fromScene(room,.04);this.scene.environment=this.environment.texture;this.scene.environmentIntensity=.45;
+                this.environment=pmrem.fromScene(room,.04);this.scene.environment=this.environment.texture;this.scene.environmentIntensity=.8;
                 room.dispose();pmrem.dispose();
+                // A shadowless sky fill keeps faces and dark metal readable on the
+                // side facing away from the sun, without changing authored surfaces.
+                const skyFill = new DirectionalLight('#dfe8db', 1.1);
+                skyFill.position.set(950, 650, -100); skyFill.target.position.set(600, 0, 350);
+                this.scene.add(skyFill, skyFill.target);
             }
             this.renderer.shadowMap.enabled = true; this.renderer.shadowMap.type = PCFShadowMap;
             this.scene.background = new Color('#526351');
             this.scene.add(new HemisphereLight('#d4e0ef', '#66533c', 1.6), this.sun);
+
             this.sun.position.set(250, 900, 450); this.sun.target.position.set(600, 0, 350); this.sun.castShadow = true;
             this.sun.shadow.mapSize.set(quality === 'ultra' ? 4096 : 2048, quality === 'ultra' ? 4096 : 2048);
             Object.assign(this.sun.shadow.camera, { left: -850, right: 850, top: 650, bottom: -650, far: 2200 });
@@ -99,8 +106,12 @@ export class BattleScene {
         pose.x += (f.x - pose.x) * amount; pose.y += (f.y - pose.y) * amount; pose.facing += angleDiff(f.facing, pose.facing) * amount;
         record.group.visible=!this.view.inspecting || state.selectedIds.includes(f.id);
         if(record.group.visible) record.soldiers.update({ formation: f, pose, dt: state.paused ? 0 : dt, time: this.visualTime, height, detail:this.view.span>180?'far':'near', animate: !state.paused && !preferences().reducedMotion && preferences().effects });
-        const size = formationSize(f), angle = pose.facing * Math.PI / 180, selected = state.selectedIds.includes(f.id), own = f.owner_id === state.playerId;
-        record.pick.position.set(pose.x, height(pose.x, pose.y) + 13, pose.y); record.pick.rotation.y = -angle; record.pick.scale.set(size.depth + 8, 26, size.width + 8);
+        const logicalSize = formationSize(f), footprint=record.soldiers.object.userData.renderFootprint as {depthScale:number;widthScale:number}|undefined;
+        const size=footprint?{depth:(logicalSize.depth-12)*footprint.depthScale+12,width:(logicalSize.width-12)*footprint.widthScale+12}:logicalSize;
+        const bounds=record.soldiers.object.userData.inspectionBounds as Box3|undefined;
+        const angle = pose.facing * Math.PI / 180, selected = state.selectedIds.includes(f.id), own = f.owner_id === state.playerId;
+        const pickHeight=bounds&&!bounds.isEmpty()?Math.max(26,bounds.max.y-bounds.min.y+6):26;
+        record.pick.position.set(pose.x,bounds&&!bounds.isEmpty()?(bounds.min.y+bounds.max.y)/2:height(pose.x, pose.y) + 13,pose.y); record.pick.rotation.y = -angle; record.pick.scale.set(size.depth + 8,pickHeight,size.width + 8);
         const attr = record.outline.geometry.getAttribute('position');
         [[-size.depth / 2, -size.width / 2], [size.depth / 2, -size.width / 2], [size.depth / 2, size.width / 2], [-size.depth / 2, size.width / 2]].forEach(([x, y], i) => {
             const wx = pose.x + x * Math.cos(angle) - y * Math.sin(angle), wy = pose.y + x * Math.sin(angle) + y * Math.cos(angle);
@@ -136,8 +147,9 @@ export class BattleScene {
             }
             if(this.view.inspecting && this.inspectedId!==null) {
                 this.inspectedId=this.state().selectedIds[0] ?? this.inspectedId;
-                const p=this.formations.get(this.inspectedId)?.pose;
-                if(p){this.view.target.x=p.x;this.view.target.z=p.y;this.view.update();}
+                const record=this.formations.get(this.inspectedId),p=record?.pose,bounds=record?.soldiers.object.userData.inspectionBounds as Box3|undefined;
+                if(bounds&&!bounds.isEmpty()){bounds.getCenter(this.view.target);this.view.update();}
+                else if(p){this.view.target.x=p.x;this.view.target.z=p.y;this.view.update();}
             }
             if (this.view.inspecting && this.quality === 'ultra') {
                 const span=Math.max(40,this.view.span*1.8);
@@ -180,13 +192,23 @@ export class BattleScene {
     zoom(factor: number) { this.view.zoom(factor); }
     rotate(angle: number) { this.view.rotate(angle); }
     center() { this.inspectedId=null;this.view.center(); }
-    inspect() {
-        const state = this.state(), f = state.world.formations.find(f => state.selectedIds.includes(f.id) && f.battle_id === state.battle?.id);
-        if (f) { this.inspectedId=f.id;this.view.inspect(f.x,f.y); }
+    inspect(id?: number) {
+        const state = this.state(), f = state.world.formations.find(f => (id === undefined ? state.selectedIds.includes(f.id) : f.id === id) && f.battle_id === state.battle?.id);
+        if (f) {
+            this.inspectedId=f.id;
+            const bounds=this.formations.get(f.id)?.soldiers.object.userData.inspectionBounds as Box3|undefined;
+            if(bounds&&!bounds.isEmpty())this.view.inspectBounds(bounds);else this.view.inspect(f.x,f.y);
+        }
     }
-    inspectProp(x: number, y: number) { this.inspectedId=null;this.view.inspect(x,y); this.view.span = 24; this.view.update(); }
-    addShowcase(group: Group) { this.scene.add(group); }
+    inspectProp(x: number, y: number) {
+        this.inspectedId=null;
+        const showcase=this.showcases.find(group=>group.position.x===x&&group.position.z===y),bounds=showcase?.userData.inspectionBounds as Box3|undefined;
+        if(showcase&&bounds){showcase.updateMatrixWorld(true);this.view.inspectBounds(bounds.clone().applyMatrix4(showcase.matrixWorld));}
+        else this.view.inspect(x,y);
+    }
+    addShowcase(group: Group) { this.showcases.push(group); this.scene.add(group); }
     focus(side: 'own' | 'enemy') {
+        this.inspectedId=null; this.view.inspecting=false; this.view.span=Math.max(450,this.view.span);
         const state = this.state(), fs = state.world.formations.filter(f => f.battle_id === state.battle?.id && f.soldiers > 0 && (side === 'own' ? f.owner_id === state.playerId : f.owner_id !== state.playerId));
         const selected = side === 'own' ? fs.filter(f => state.selectedIds.includes(f.id)) : [], targets = selected.length ? selected : fs;
         if (targets.length) this.view.focus(targets.reduce((sum, f) => sum + f.x, 0) / targets.length, targets.reduce((sum, f) => sum + f.y, 0) / targets.length);
@@ -196,6 +218,8 @@ export class BattleScene {
         if (!this.alive) return; this.alive = false;
         cancelAnimationFrame(this.frame); this.observer?.disconnect(); this.input?.destroy(); this.canvas.removeEventListener('webglcontextlost', this.contextLost);
         for (const record of this.formations.values()) this.remove(record);
+        for (const showcase of this.showcases) { showcase.userData.disposeShowcase?.(); this.scene.remove(showcase); }
+        this.showcases.length = 0;
         // Quality changes rebuild on the same canvas. Keep its context usable;
         // forcibly losing it here also invalidates the replacement renderer.
         this.formations.clear(); disposeObject(this.scene); this.environment?.dispose(); this.sun.shadow.dispose(); this.renderer?.dispose(); this.renderer = null;

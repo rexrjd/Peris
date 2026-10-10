@@ -1,0 +1,78 @@
+{
+  "edition": "demon-portrait-quality-full-v13",
+  "sourceNative": "C:\\Users\\alipo\\OneDrive\\Desktop\\mmmm\\Peris\\assets\\source\\battle\\demon-portrait-quality-full-v12\\peris-demon-army.blend",
+  "sourceSha256": "30c50ea7bd489f1646ecfc67b874e9d896d636d5cd0f7e41640c7286868acddb",
+  "sourceUnchanged": true,
+  "operations": [
+    {
+      "role": "heavy_cavalry",
+      "removedCrudeRigidSourceProps": [
+        {
+          "vertices": 222,
+          "owner": "spine1"
+        },
+        {
+          "vertices": 200,
+          "owner": "spine1"
+        },
+        {
+          "vertices": 200,
+          "owner": "spine1"
+        },
+        {
+          "vertices": 24,
+          "owner": "spine1"
+        },
+        {
+          "vertices": 222,
+          "owner": "spine1"
+        },
+        {
+          "vertices": 24,
+          "owner": "spine1"
+        },
+        {
+          "vertices": 24,
+          "owner": "head"
+        },
+        {
+          "vertices": 56,
+          "owner": "spine1"
+        }
+      ],
+      "sourceAnimalBounds": [
+        [
+          -5.718669891357422,
+          -2.5677218437194824,
+          0.030149726197123528
+        ],
+        [
+          10.70659351348877,
+          2.567721366882324,
+          7.758847236633301
+        ]
+      ],
+      "newKit": "Layered ray-fitted blackened plate, copper raised rims and devices, articulated head/haunch guards, fitted leather girths and saddle",
+      "riderSeatAndAnimalClipsUnchanged": true
+    },
+    {
+      "role": "catapult",
+      "newKit": "Fitted chest and back corslet, asymmetric spiked shoulders, overlapping hanging hip scales, articulated bracers and shin guards, original scarred oxblood skin",
+      "heldBoulderAndHandWeightsAndThrowActionsUnchanged": true
+    }
+  ],
+  "sourceRigRestBonesAndNativeClipsUnchanged": true,
+  "shields60PercentUnchanged": true,
+  "runtimeApproved": false,
+  "finishedUnitApproved": false,
+  "files": {
+    "editable-demon-study.blend": {
+      "bytes": 141253137,
+      "sha256": "a08fecaca89fc5a7d6eae5b1a9b7a851c2a913c52c162aa0d628281326e55bd1"
+    },
+    "peris-demon-army.blend": {
+      "bytes": 178756327,
+      "sha256": "acb8fcaa8d5785c2c606600ad57a8283cab8a4e732c96e36c63d3b7ddf22ef2d"
+    }
+  }
+}

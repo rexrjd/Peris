@@ -1,0 +1,75 @@
+{
+  "edition": "mount-metadata-audit-v1",
+  "scope": "Export metadata only; immutable artist natives retained",
+  "scout": {
+    "hip": [
+      -0.8020753135792554,
+      -0.000024883576231926607,
+      6.183496217044585
+    ],
+    "originalMeasuredBackTarget": [
+      -0.8020753860473633,
+      -0.00002524895899114199,
+      7.626467704772949
+    ],
+    "independentlyRecordedRootDelta": -1.442971563339233,
+    "target": [
+      -0.8020753860473633,
+      -0.00002524895899114199,
+      6.183496141433716
+    ],
+    "error": 3.800962915486378e-7
+  },
+  "files": [
+    {
+      "file": "assets/source/battle/mount-metadata-audit-v1/elf/exports/elf-roster.glb",
+      "changedNodes": 3,
+      "beforeSha256": "66b1c29904109137cf82397ae16dcd93506eb0e9be0bd5c1b5b753f92b268dca",
+      "afterSha256": "eaec1521fc5e455b1979707a107e4caffd198100d479746f7465f0ac914fc395",
+      "binaryChunksUnchanged": true,
+      "geometryUvMaterialsBindAndAnimationJsonUnchanged": true
+    },
+    {
+      "file": "public/models/battle/elf-roster.glb",
+      "changedNodes": 3,
+      "beforeSha256": "0d3c4dce9d0a6383f855396ce29ac4b09e9a3a75ba3aa1e1d246fd2ca2357651",
+      "afterSha256": "88eeb60ef89d2fcafd8b967eae6d9e68f0cf057756e05534fbe8946f7e3b013e",
+      "binaryChunksUnchanged": true,
+      "geometryUvMaterialsBindAndAnimationJsonUnchanged": true
+    },
+    {
+      "file": "public/models/battle/elf-roster-lod.glb",
+      "changedNodes": 3,
+      "beforeSha256": "9b239c75aed1f7b99b9a4a0ac380b140a31e2d4b84c9965656cd4f17da995e7c",
+      "afterSha256": "a028ff3934171da9b7688ae731c7ec3011a855c9c91500bcfcaa39cb5125ab74",
+      "binaryChunksUnchanged": true,
+      "geometryUvMaterialsBindAndAnimationJsonUnchanged": true
+    },
+    {
+      "file": "assets/source/battle/mount-metadata-audit-v1/gnome/exports/gnome-roster.glb",
+      "changedNodes": 1,
+      "beforeSha256": "d7fa685788843f66452d74bfbc5142dcd487070ae6c7a36976a021c13eac5ac8",
+      "afterSha256": "84e933c67dc36fbed3552597dd4a62a236666b9d97dc9e27ff93e3c4cfd289b8",
+      "binaryChunksUnchanged": true,
+      "geometryUvMaterialsBindAndAnimationJsonUnchanged": true
+    },
+    {
+      "file": "public/models/battle/gnome-roster.glb",
+      "changedNodes": 1,
+      "beforeSha256": "a43c65bea0d4624b09e09a520a93f596162b2529a26fbf17a6cb2cc47af1a228",
+      "afterSha256": "09217b050b977354d583275f40667a95d9c95bd167280ef6be1216b9a9121730",
+      "binaryChunksUnchanged": true,
+      "geometryUvMaterialsBindAndAnimationJsonUnchanged": true
+    },
+    {
+      "file": "public/models/battle/gnome-roster-lod.glb",
+      "changedNodes": 1,
+      "beforeSha256": "aacd2fcbac7f22f5424436ce4492d8e37ff476e4154012e4afbeb7410ab8df05",
+      "afterSha256": "732ebad6bf09e9b12fa02f08aa8a6b66020a93f30025ab86b19cc6e3289a6314",
+      "binaryChunksUnchanged": true,
+      "geometryUvMaterialsBindAndAnimationJsonUnchanged": true
+    }
+  ],
+  "runtimeApproved": false,
+  "finishedUnitApproved": false
+}

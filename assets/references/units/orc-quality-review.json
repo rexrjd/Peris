@@ -1,0 +1,159 @@
+{
+  "reviewedAt": "2026-10-09",
+  "faction": "orc",
+  "retainedEdition": "roster-v3",
+  "nativeSource": "assets/source/battle/roster-v3/peris-orc-army.blend",
+  "selectedPortrait": "public/art/battle/roster/orc.png",
+  "status": "withheld_from_textured_preview",
+  "observedFailures": [
+    "Retained line infantry has narrow human-like anatomy and imported helmet/chainmail instead of the broad Orc body and fitted faction kit in the selected portrait.",
+    "Standalone primitive tusks and ears do not form a coherent portrait-matched face.",
+    "Round wooden shield and generic equipment do not match the selected angular iron and copper shield and axe."
+  ],
+  "localBaselineRenders": "artifacts/battle-preview/quality-baseline-20261009/orc",
+  "replacementScope": "Accepted Axe baseline plus three accepted infantry prototypes; remaining mounted and siege units are being completed in separate immutable sources.",
+  "promotionRequirements": [
+    "Review anatomy, face, palette, costume, weapon, shield, hair and silhouette against the exact selected portrait.",
+    "Inspect idle, walking and attack for skin, cloth and armor intersections, weapon grip, foot contact and neck deformation.",
+    "Validate the actual exported GLB and retain component source attribution.",
+    "Review the Three.js battle renderer at inspection and battle distance, with measured near/far cost."
+  ],
+  "pilotRuntimeApproved": false,
+  "pilotFinishedUnitApproved": false,
+  "userAcceptedVisualBaseline": {
+    "edition": "orc-quality-pilot-v19",
+    "view": "artifacts/battle-preview/orc-quality-pilot-20261009/iteration-19/line_infantry-front_three_quarter.png",
+    "viewType": "Blender model render",
+    "feedback": "the orc above is very good",
+    "appearanceAccepted": true,
+    "scope": "Use this design as the baseline for faster production of the remaining Orc units. Animation, exported rendering and distance performance still require checks.",
+    "finishedUnitApproved": false
+  },
+  "latestPilotReview": {
+    "edition": "orc-quality-pilot-v19",
+    "export": "assets/source/battle/orc-quality-pilot-v19/exports/orc-roster.glb",
+    "exportSHA256": "aaf8e3dbece83bc10e163df06b9caf103d79851e48eafe1482f86d9e18d3b5dd",
+    "actualWebGLInspection": "artifacts/battle-preview/prototype-deadline-20261009/screenshots/orc/line_infantry-idle-near.jpg",
+    "battleRendererTested": true,
+    "battleRendererApproved": false,
+    "finishedUnitApproved": false,
+    "remainingDefects": [
+      "Accepted prototype appearance; source seam and close armor intersections remain art limitations.",
+      "Distance performance needs the controlled structural far pack and a fixed battlefield review."
+    ]
+  },
+  "previousPilotReviews": [
+    {
+      "edition": "orc-quality-pilot-v10",
+      "export": "assets/source/battle/orc-quality-pilot-v10/exports/orc-roster.glb",
+      "exportSHA256": "be79a2dffc9eb11d95d4d27da26e8950138b6f62bc8e0f0386070308907683ce",
+      "actualWebGLInspection": "artifacts/battle-preview/orc-quality-pilot-20261009/iteration-10",
+      "actualBattleSmokeReview": "artifacts/battle-preview/orc-quality-pilot-20261009/iteration-10/actual-battle-review.json",
+      "finishedUnitApproved": false,
+      "battleRendererTested": true,
+      "battleRendererApproved": false,
+      "remainingDefects": [
+        "Boot-ground contact and shield grip are not established by the formation-distance screenshot.",
+        "Attack was not captured in the actual battle renderer.",
+        "Rear calf/lining defect identified in source review remains unresolved.",
+        "Chest/shoulder construction and weapon identity remain below the portrait target.",
+        "No 60 FPS claim: a fixed-scene measured benchmark is pending after source rendering settles."
+      ]
+    },
+    {
+      "edition": "orc-quality-pilot-v11",
+      "export": "assets/source/battle/orc-quality-pilot-v11/exports/orc-roster.glb",
+      "exportSHA256": "020a14952e23e36550b67ec3c0a7da99f7085df03028372f878f27890d285379",
+      "actualWebGLInspection": "artifacts/battle-preview/orc-quality-pilot-20261009/iteration-11",
+      "actualBattleSmokeReview": "artifacts/battle-preview/orc-quality-pilot-20261009/iteration-11/actual-battle-review.json",
+      "finishedUnitApproved": false,
+      "battleRendererTested": true,
+      "battleRendererApproved": false,
+      "remainingDefects": [
+        "Native motion review shows projecting cuirass wedges and plate/body overlap in attack and walking.",
+        "Wrist/bracer seams and closed grips need a new fitted hand module and motion review.",
+        "Front nape bridge has an identified folded boundary; replacement construction is pending.",
+        "Idle axe crosses the face from the front three quarter view.",
+        "Full foot/terrain motion contact and controlled performance remain unverified."
+      ]
+    },
+    {
+      "edition": "orc-quality-pilot-v12",
+      "export": "assets/source/battle/orc-quality-pilot-v12/exports/orc-roster.glb",
+      "exportSHA256": "188f7655528784a000d447dd963ab559850f8bd804a5dd91fddc8102e62ba135",
+      "actualWebGLInspection": "artifacts/battle-preview/orc-quality-pilot-20261009/iteration-12",
+      "actualBattleSmokeReview": "artifacts/battle-preview/orc-quality-pilot-20261009/iteration-12/actual-battle-review.json",
+      "finishedUnitApproved": false,
+      "battleRendererTested": true,
+      "battleRendererApproved": false,
+      "remainingDefects": [
+        "Fitted hands and source wrist contours remain under development.",
+        "Shoulder, cuirass and waist fit have unresolved movement defects.",
+        "Guard pose and boot placement edits are being checked in the separate v13 native source.",
+        "Actual export boot bounds still dip below the studio idle floor in motion; native/export discrepancy is being diagnosed.",
+        "Controlled performance and terrain contact remain unverified."
+      ]
+    },
+    {
+      "edition": "orc-quality-pilot-v16",
+      "export": "assets/source/battle/orc-quality-pilot-v16/exports/orc-roster.glb",
+      "exportSHA256": "e67f453a0712d9bd64cbc083ab19a490cdf4313a728ead0e04521a7c7a1dd26e",
+      "actualWebGLInspection": "artifacts/battle-preview/orc-quality-pilot-20261009/iteration-16",
+      "actualBattleSmokeReview": "artifacts/battle-preview/orc-quality-pilot-20261009/iteration-16/actual-review.json",
+      "battleRendererTested": true,
+      "battleRendererApproved": false,
+      "finishedUnitApproved": false,
+      "remainingDefects": [
+        "Coarse breastplate intersects its curved generated leather garment, confirmed by posed clearance probe.",
+        "Small shoulder source scrap, wrist seams/grip detail and nape shading remain under correction.",
+        "Inspection screenshots show dark armor and limited face readability at formation distance."
+      ]
+    },
+    {
+      "edition": "orc-quality-pilot-v17",
+      "export": "assets/source/battle/orc-quality-pilot-v17/exports/orc-roster.glb",
+      "exportSHA256": "ec0d03a3a1e6612c0ff44df2f04be4b5ab529eca4a5052fa70390a1dd3da857d",
+      "actualWebGLInspection": "artifacts/battle-preview/orc-quality-pilot-20261009/iteration-17",
+      "actualBattleSmokeReview": "artifacts/battle-preview/orc-quality-pilot-20261009/iteration-17/actual-review.json",
+      "battleRendererTested": true,
+      "battleRendererApproved": false,
+      "finishedUnitApproved": false,
+      "remainingDefects": [
+        "Shoulder cuff/sleeve anatomy and hand grip seams remain under correction.",
+        "Legacy swordthrust action crosses moving body/armor and is being replaced by separately reviewed axe chop.",
+        "Far25,528triangles remains too costly; controlled distance-detail trials underway.",
+        "Battle face/armor readability and deliberate motion weight transfer need further art review."
+      ]
+    }
+  ],
+  "latestNativeStudy": {
+    "edition": "orc-quality-pilot-v17",
+    "native": "assets/source/battle/orc-quality-pilot-v17/peris-orc-army.blend",
+    "rawExport": "assets/source/battle/orc-quality-pilot-v17/exports/orc-roster.glb",
+    "sha256": "ec0d03a3a1e6612c0ff44df2f04be4b5ab529eca4a5052fa70390a1dd3da857d",
+    "selectedForLocalWipReview": true,
+    "finishedUnitApproved": false,
+    "exportGroundProbe": "artifacts/battle-preview/orc-quality-pilot-20261009/runtime-plan/ground-contact-v17.json",
+    "status": "Fitted plate, neck normals and face integrated; actual game deployment inspected. Shoulder/hands/legacy attack rejected; original axe action isolated for next edition."
+  },
+  "selectedLocalWipEdition": "orc-infantry-batch-v4",
+  "acceptedInfantryBatch": {
+    "edition": "orc-infantry-batch-v4",
+    "native": "assets/source/battle/orc-infantry-batch-v4/peris-orc-army.blend",
+    "normalizedExport": "assets/source/battle/orc-infantry-batch-v4/exports/orc-roster-normalized.glb",
+    "exportSHA256": "ab7a146f773f0c65e61ca5d625feafab231dae4004fc37d99c3abf5af93b5fa5",
+    "roles": [
+      "spear_guard",
+      "elite",
+      "archer"
+    ],
+    "appearanceAccepted": true,
+    "finishedUnitApproved": false,
+    "userFeedback": "Move to the mounted units after seeing the corrected War Bowman arrow and draw hand.",
+    "actualWebGLScreenshots": "artifacts/battle-preview/prototype-deadline-20261009/screenshots/orc/",
+    "remainingLimitations": [
+      "Small jagged seam behind the Bowman replacement wrist.",
+      "Source spear-thrust motions remain prototypes for Pike Brute and Tusk Guard."
+    ]
+  }
+}

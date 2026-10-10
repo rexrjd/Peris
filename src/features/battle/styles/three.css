@@ -11,3 +11,5 @@
 .battle-render-notice{font-size:10px;color:#e5c795;line-height:1.5;margin-bottom:10px}
 .commander-panel>.battle-render-notice{display:block}
 @media(max-width:600px){.battle-3d-label{font-size:6px;line-height:1.15;padding:1px 2px}.battle-3d-canvas .map-credit{display:none}.battle-3d-canvas .map-zoom{gap:3px}.battle-render-controls{margin-bottom:0;flex-shrink:0;flex-wrap:nowrap}.battle-render-controls>span{display:none}.commander-panel>.battle-render-notice{min-width:160px;max-width:180px;margin:0}}
+
+.army-pilot-notice{position:absolute;left:1rem;bottom:3.25rem;z-index:4;max-width:calc(100% - 2rem);padding:.5rem .7rem;color:var(--text,#eee3c1);background:#15291ee8;border:1px solid #9b8851;font-size:.72rem;pointer-events:none}

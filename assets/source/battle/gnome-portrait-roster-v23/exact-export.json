@@ -1,0 +1,6398 @@
+{
+  "method": "Unsaved clone: full object and every bone TRS sampled from saved-baseline native poses, restored before every native halfstep; same semantic clip names and one-second durations. Geometry, rig rest/binds and native original actions preserved. Namespace node names AFTER export using prototype_glb_names.namespace_exported_glb_nodes; no Blender bone-parent names are changed.",
+  "sourceNativeRestSignature": "02aaec97d27920b3cf0f47babe5bc42b17627697437cf7f314c07fcb44e4dfc8",
+  "sourceNativeActions": [
+    [
+      "line_infantry anatomy rig",
+      [
+        [
+          "line_infantry_idle",
+          [
+            [
+              "line_infantry_idle gnome-measured-ground root-height",
+              "0982951405895c7063f05a19e4299e62db8d767d76b7a13921754197e9c483fb",
+              [
+                1.0,
+                25.0,
+                0.0,
+                60.0,
+                0.4000000059604645
+              ]
+            ]
+          ]
+        ],
+        [
+          "line_infantry_walk",
+          [
+            [
+              "line_infantry_walk gnome-measured-ground root-height",
+              "d6da80c0a67f964e45e32fc7a5f7d35286ff5d33395d96aee7a212f226fc6fe4",
+              [
+                1.0,
+                25.0,
+                0.0,
+                40.00000762939453,
+                0.5999999046325684
+              ]
+            ]
+          ]
+        ],
+        [
+          "line_infantry_attack",
+          [
+            [
+              "line_infantry_attack gnome-measured-ground root-height",
+              "0f6a65674e929d1fa7b4b216d60f1e55e43be1a24fa3c3f6fa0cbf6c9256ef58",
+              [
+                1.0,
+                25.0,
+                0.0,
+                24.0,
+                1.0
+              ]
+            ]
+          ]
+        ]
+      ]
+    ],
+    [
+      "spear_guard anatomy rig",
+      [
+        [
+          "spear_guard_idle",
+          [
+            [
+              "spear_guard_idle gnome-measured-ground root-height",
+              "0982951405895c7063f05a19e4299e62db8d767d76b7a13921754197e9c483fb",
+              [
+                1.0,
+                25.0,
+                0.0,
+                60.0,
+                0.4000000059604645
+              ]
+            ]
+          ]
+        ],
+        [
+          "spear_guard_walk",
+          [
+            [
+              "spear_guard_walk gnome-measured-ground root-height",
+              "d6da80c0a67f964e45e32fc7a5f7d35286ff5d33395d96aee7a212f226fc6fe4",
+              [
+                1.0,
+                25.0,
+                0.0,
+                40.00000762939453,
+                0.5999999046325684
+              ]
+            ]
+          ]
+        ],
+        [
+          "spear_guard_attack",
+          [
+            [
+              "spear_guard_attack gnome-measured-ground root-height",
+              "0f6a65674e929d1fa7b4b216d60f1e55e43be1a24fa3c3f6fa0cbf6c9256ef58",
+              [
+                1.0,
+                25.0,
+                0.0,
+                24.0,
+                1.0
+              ]
+            ]
+          ]
+        ]
+      ]
+    ],
+    [
+      "elite anatomy rig",
+      [
+        [
+          "elite_idle",
+          [
+            [
+              "elite_idle gnome-measured-ground root-height",
+              "0982951405895c7063f05a19e4299e62db8d767d76b7a13921754197e9c483fb",
+              [
+                1.0,
+                25.0,
+                0.0,
+                60.0,
+                0.4000000059604645
+              ]
+            ]
+          ]
+        ],
+        [
+          "elite_walk",
+          [
+            [
+              "elite_walk gnome-measured-ground root-height",
+              "d6da80c0a67f964e45e32fc7a5f7d35286ff5d33395d96aee7a212f226fc6fe4",
+              [
+                1.0,
+                25.0,
+                0.0,
+                40.00000762939453,
+                0.5999999046325684
+              ]
+            ]
+          ]
+        ],
+        [
+          "elite_attack",
+          [
+            [
+              "elite_attack gnome-measured-ground root-height",
+              "0f6a65674e929d1fa7b4b216d60f1e55e43be1a24fa3c3f6fa0cbf6c9256ef58",
+              [
+                1.0,
+                25.0,
+                0.0,
+                24.0,
+                1.0
+              ]
+            ]
+          ]
+        ]
+      ]
+    ],
+    [
+      "archer anatomy rig",
+      [
+        [
+          "archer_idle",
+          [
+            [
+              "archer_idle gnome-measured-ground root-height",
+              "e92a14ce0acec644fecac1eae94e504d82d0b060816e4bec8fa4f5436bee281d",
+              [
+                1.0,
+                25.0,
+                0.0,
+                60.0,
+                0.4000000059604645
+              ]
+            ]
+          ]
+        ],
+        [
+          "archer_walk",
+          [
+            [
+              "archer_walk gnome-measured-ground root-height",
+              "212627807e91c312b7684010ab4608b98ddd0ad8469aca3d4b171970d6cbf98b",
+              [
+                1.0,
+                25.0,
+                0.0,
+                24.0,
+                1.0
+              ]
+            ]
+          ]
+        ],
+        [
+          "archer_attack",
+          [
+            [
+              "archer_attack gnome-measured-ground root-height",
+              "1af54d4ed32ebc7b93f76d7712be82974b733e33812f8694d11b02d2fb08a253",
+              [
+                1.0,
+                25.0,
+                0.0,
+                60.0,
+                0.4000000059604645
+              ]
+            ]
+          ]
+        ]
+      ]
+    ],
+    [
+      "scout mount rig",
+      [
+        [
+          "scout_idle",
+          [
+            [
+              "scout_idle gnome-measured-ground root-height gnome-portrait-ros",
+              "d75eec691a863ed697121c6bb8318f292b612f2062e12f7dbe3eeeed3446abfe",
+              [
+                1.0,
+                25.0,
+                0.0,
+                48.0,
+                0.5
+              ]
+            ]
+          ]
+        ],
+        [
+          "scout_walk",
+          [
+            [
+              "scout_walk gnome-measured-ground root-height gnome-portrait-ros",
+              "dd190dcce58b51dab41e64a93c77bfba6815ddeb5b300192cd18c86f6bf048a9",
+              [
+                1.0,
+                25.0,
+                0.0,
+                16.0,
+                1.5
+              ]
+            ]
+          ]
+        ],
+        [
+          "scout_attack",
+          [
+            [
+              "scout_attack gnome-measured-ground root-height gnome-portrait-r",
+              "d75eec691a863ed697121c6bb8318f292b612f2062e12f7dbe3eeeed3446abfe",
+              [
+                1.0,
+                25.0,
+                0.0,
+                48.0,
+                0.5
+              ]
+            ]
+          ]
+        ]
+      ]
+    ],
+    [
+      "scout seated rider rig",
+      [
+        [
+          "scout_idle",
+          [
+            [
+              "scout_idle.001",
+              "4a486fbb032bbaba6ca9f8bfef75086e6cc57a8b539334e4eb9020fe3a682f44",
+              [
+                1.0,
+                25.0,
+                0.0,
+                48.0,
+                0.5
+              ]
+            ]
+          ]
+        ],
+        [
+          "scout_walk",
+          [
+            [
+              "scout_walk.001",
+              "4f77489c8373c4f4329c8b252ce10fb045ab0dcf108a637d793bf79d1bd544e8",
+              [
+                1.0,
+                25.0,
+                0.0,
+                16.0,
+                1.5
+              ]
+            ]
+          ]
+        ],
+        [
+          "scout_attack",
+          [
+            [
+              "scout_attack.001",
+              "0bb2cea2c69fd11d06bea4260e700b895612858c94b011d50ec4579d46613d74",
+              [
+                1.0,
+                25.0,
+                0.0,
+                60.0,
+                0.4000000059604645
+              ]
+            ]
+          ]
+        ]
+      ]
+    ],
+    [
+      "light_cavalry mount rig",
+      [
+        [
+          "light_cavalry_idle",
+          [
+            [
+              "light_cavalry_idle gnome-measured-ground root-height gnome-port",
+              "d75eec691a863ed697121c6bb8318f292b612f2062e12f7dbe3eeeed3446abfe",
+              [
+                1.0,
+                25.0,
+                0.0,
+                48.0,
+                0.5
+              ]
+            ]
+          ]
+        ],
+        [
+          "light_cavalry_walk",
+          [
+            [
+              "light_cavalry_walk gnome-measured-ground root-height gnome-port",
+              "dd190dcce58b51dab41e64a93c77bfba6815ddeb5b300192cd18c86f6bf048a9",
+              [
+                1.0,
+                25.0,
+                0.0,
+                16.0,
+                1.5
+              ]
+            ]
+          ]
+        ],
+        [
+          "light_cavalry_attack",
+          [
+            [
+              "light_cavalry_attack gnome-measured-ground root-height gnome-po",
+              "d75eec691a863ed697121c6bb8318f292b612f2062e12f7dbe3eeeed3446abfe",
+              [
+                1.0,
+                25.0,
+                0.0,
+                48.0,
+                0.5
+              ]
+            ]
+          ]
+        ]
+      ]
+    ],
+    [
+      "light_cavalry seated rider rig",
+      [
+        [
+          "light_cavalry_idle",
+          [
+            [
+              "light_cavalry_idle.001",
+              "4a486fbb032bbaba6ca9f8bfef75086e6cc57a8b539334e4eb9020fe3a682f44",
+              [
+                1.0,
+                25.0,
+                0.0,
+                48.0,
+                0.5
+              ]
+            ]
+          ]
+        ],
+        [
+          "light_cavalry_walk",
+          [
+            [
+              "light_cavalry_walk.001",
+              "4f77489c8373c4f4329c8b252ce10fb045ab0dcf108a637d793bf79d1bd544e8",
+              [
+                1.0,
+                25.0,
+                0.0,
+                16.0,
+                1.5
+              ]
+            ]
+          ]
+        ],
+        [
+          "light_cavalry_attack",
+          [
+            [
+              "light_cavalry_attack.001",
+              "0bb2cea2c69fd11d06bea4260e700b895612858c94b011d50ec4579d46613d74",
+              [
+                1.0,
+                25.0,
+                0.0,
+                60.0,
+                0.4000000059604645
+              ]
+            ]
+          ]
+        ]
+      ]
+    ],
+    [
+      "ram siege engineering rig",
+      [
+        [
+          "ram_idle",
+          [
+            [
+              "ram_idle gnome-measured-ground root-height",
+              "40ad31b1c6650ed9bbe7ca8c3fe261e7a1fac12823e38de89ff8a573d7fe16d0",
+              [
+                1.0,
+                25.0,
+                0.9999988675117493,
+                30.0,
+                0.8275861740112305
+              ]
+            ]
+          ]
+        ],
+        [
+          "ram_walk",
+          [
+            [
+              "ram_walk gnome-measured-ground root-height",
+              "6dc85d37dca865f51fea9ef327f26f2c1c4f4245827cae846495ae4d75384398",
+              [
+                1.0,
+                25.0,
+                0.0,
+                30.0,
+                0.800000011920929
+              ]
+            ]
+          ]
+        ],
+        [
+          "ram_attack",
+          [
+            [
+              "ram_attack gnome-measured-ground root-height",
+              "3f8490d461543498afa689ca8bd641c7e9dfcf77b5fa51c667af51c3cf423f53",
+              [
+                1.0,
+                25.0,
+                0.9999988675117493,
+                30.0,
+                0.8275861740112305
+              ]
+            ]
+          ]
+        ]
+      ]
+    ],
+    [
+      "catapult siege engineering rig",
+      [
+        [
+          "catapult_idle",
+          [
+            [
+              "catapult_idle gnome-measured-ground root-height",
+              "ad2ad1b2716e0deaa40134fb59f817f4b0741a5b0e5c803a1c8c8a8e0862c2d1",
+              [
+                1.0,
+                25.0,
+                0.0,
+                120.0,
+                0.20000000298023224
+              ]
+            ]
+          ]
+        ],
+        [
+          "catapult_walk",
+          [
+            [
+              "catapult_walk gnome-measured-ground root-height",
+              "ad2ad1b2716e0deaa40134fb59f817f4b0741a5b0e5c803a1c8c8a8e0862c2d1",
+              [
+                1.0,
+                25.0,
+                0.0,
+                120.0,
+                0.20000000298023224
+              ]
+            ]
+          ]
+        ],
+        [
+          "catapult_attack",
+          [
+            [
+              "catapult_attack gnome-measured-ground root-height",
+              "4474c77ca49243a18b64cf5f801d65fcce307aa0865222dea6c0f8b478703276",
+              [
+                1.0,
+                25.0,
+                0.0,
+                120.0,
+                0.20000000298023224
+              ]
+            ]
+          ]
+        ]
+      ]
+    ],
+    [
+      "heavy_cavalry mount rig independent pony",
+      [
+        [
+          "heavy_cavalry_idle",
+          [
+            [
+              "heavy_cavalry_idle.002 gnome-measured-ground root-height gnome-",
+              "d75eec691a863ed697121c6bb8318f292b612f2062e12f7dbe3eeeed3446abfe",
+              [
+                1.0,
+                25.0,
+                0.0,
+                48.0,
+                0.5
+              ]
+            ]
+          ]
+        ],
+        [
+          "heavy_cavalry_walk",
+          [
+            [
+              "heavy_cavalry_walk.002 gnome-measured-ground root-height gnome-",
+              "dd190dcce58b51dab41e64a93c77bfba6815ddeb5b300192cd18c86f6bf048a9",
+              [
+                1.0,
+                25.0,
+                0.0,
+                16.0,
+                1.5
+              ]
+            ]
+          ]
+        ],
+        [
+          "heavy_cavalry_attack",
+          [
+            [
+              "heavy_cavalry_attack.002 gnome-measured-ground root-height gnom",
+              "d75eec691a863ed697121c6bb8318f292b612f2062e12f7dbe3eeeed3446abfe",
+              [
+                1.0,
+                25.0,
+                0.0,
+                48.0,
+                0.5
+              ]
+            ]
+          ]
+        ]
+      ]
+    ],
+    [
+      "heavy_cavalry seated rider rig independent pony",
+      [
+        [
+          "heavy_cavalry_idle",
+          [
+            [
+              "heavy_cavalry_idle.001",
+              "4a486fbb032bbaba6ca9f8bfef75086e6cc57a8b539334e4eb9020fe3a682f44",
+              [
+                1.0,
+                25.0,
+                0.0,
+                48.0,
+                0.5
+              ]
+            ]
+          ]
+        ],
+        [
+          "heavy_cavalry_walk",
+          [
+            [
+              "heavy_cavalry_walk.001",
+              "4f77489c8373c4f4329c8b252ce10fb045ab0dcf108a637d793bf79d1bd544e8",
+              [
+                1.0,
+                25.0,
+                0.0,
+                16.0,
+                1.5
+              ]
+            ]
+          ]
+        ],
+        [
+          "heavy_cavalry_attack",
+          [
+            [
+              "heavy_cavalry_attack.001",
+              "0bb2cea2c69fd11d06bea4260e700b895612858c94b011d50ec4579d46613d74",
+              [
+                1.0,
+                25.0,
+                0.0,
+                60.0,
+                0.4000000059604645
+              ]
+            ]
+          ]
+        ]
+      ]
+    ]
+  ],
+  "cloneTracks": [
+    {
+      "rig": "line_infantry anatomy rig",
+      "track": "line_infantry_idle",
+      "exportAction": "line_infantry anatomy rig line_infantry_idle exact 49 export sa",
+      "nativeFrames": [
+        1,
+        25
+      ],
+      "exportFrames": [
+        0,
+        48
+      ],
+      "fps": 48,
+      "samples": 49,
+      "completeBoneTRS": 102,
+      "completeObjectTRS": true
+    },
+    {
+      "rig": "line_infantry anatomy rig",
+      "track": "line_infantry_walk",
+      "exportAction": "line_infantry anatomy rig line_infantry_walk exact 49 export sa",
+      "nativeFrames": [
+        1,
+        25
+      ],
+      "exportFrames": [
+        0,
+        48
+      ],
+      "fps": 48,
+      "samples": 49,
+      "completeBoneTRS": 102,
+      "completeObjectTRS": true
+    },
+    {
+      "rig": "line_infantry anatomy rig",
+      "track": "line_infantry_attack",
+      "exportAction": "line_infantry anatomy rig line_infantry_attack exact 49 export ",
+      "nativeFrames": [
+        1,
+        25
+      ],
+      "exportFrames": [
+        0,
+        48
+      ],
+      "fps": 48,
+      "samples": 49,
+      "completeBoneTRS": 102,
+      "completeObjectTRS": true
+    },
+    {
+      "rig": "spear_guard anatomy rig",
+      "track": "spear_guard_idle",
+      "exportAction": "spear_guard anatomy rig spear_guard_idle exact 49 export sample",
+      "nativeFrames": [
+        1,
+        25
+      ],
+      "exportFrames": [
+        0,
+        48
+      ],
+      "fps": 48,
+      "samples": 49,
+      "completeBoneTRS": 102,
+      "completeObjectTRS": true
+    },
+    {
+      "rig": "spear_guard anatomy rig",
+      "track": "spear_guard_walk",
+      "exportAction": "spear_guard anatomy rig spear_guard_walk exact 49 export sample",
+      "nativeFrames": [
+        1,
+        25
+      ],
+      "exportFrames": [
+        0,
+        48
+      ],
+      "fps": 48,
+      "samples": 49,
+      "completeBoneTRS": 102,
+      "completeObjectTRS": true
+    },
+    {
+      "rig": "spear_guard anatomy rig",
+      "track": "spear_guard_attack",
+      "exportAction": "spear_guard anatomy rig spear_guard_attack exact 49 export samp",
+      "nativeFrames": [
+        1,
+        25
+      ],
+      "exportFrames": [
+        0,
+        48
+      ],
+      "fps": 48,
+      "samples": 49,
+      "completeBoneTRS": 102,
+      "completeObjectTRS": true
+    },
+    {
+      "rig": "archer anatomy rig",
+      "track": "archer_idle",
+      "exportAction": "archer anatomy rig archer_idle exact 49 export samples",
+      "nativeFrames": [
+        1,
+        25
+      ],
+      "exportFrames": [
+        0,
+        48
+      ],
+      "fps": 48,
+      "samples": 49,
+      "completeBoneTRS": 102,
+      "completeObjectTRS": true
+    },
+    {
+      "rig": "archer anatomy rig",
+      "track": "archer_walk",
+      "exportAction": "archer anatomy rig archer_walk exact 49 export samples",
+      "nativeFrames": [
+        1,
+        25
+      ],
+      "exportFrames": [
+        0,
+        48
+      ],
+      "fps": 48,
+      "samples": 49,
+      "completeBoneTRS": 102,
+      "completeObjectTRS": true
+    },
+    {
+      "rig": "archer anatomy rig",
+      "track": "archer_attack",
+      "exportAction": "archer anatomy rig archer_attack exact 49 export samples",
+      "nativeFrames": [
+        1,
+        25
+      ],
+      "exportFrames": [
+        0,
+        48
+      ],
+      "fps": 48,
+      "samples": 49,
+      "completeBoneTRS": 102,
+      "completeObjectTRS": true
+    },
+    {
+      "rig": "elite anatomy rig",
+      "track": "elite_idle",
+      "exportAction": "elite anatomy rig elite_idle exact 49 export samples",
+      "nativeFrames": [
+        1,
+        25
+      ],
+      "exportFrames": [
+        0,
+        48
+      ],
+      "fps": 48,
+      "samples": 49,
+      "completeBoneTRS": 102,
+      "completeObjectTRS": true
+    },
+    {
+      "rig": "elite anatomy rig",
+      "track": "elite_walk",
+      "exportAction": "elite anatomy rig elite_walk exact 49 export samples",
+      "nativeFrames": [
+        1,
+        25
+      ],
+      "exportFrames": [
+        0,
+        48
+      ],
+      "fps": 48,
+      "samples": 49,
+      "completeBoneTRS": 102,
+      "completeObjectTRS": true
+    },
+    {
+      "rig": "elite anatomy rig",
+      "track": "elite_attack",
+      "exportAction": "elite anatomy rig elite_attack exact 49 export samples",
+      "nativeFrames": [
+        1,
+        25
+      ],
+      "exportFrames": [
+        0,
+        48
+      ],
+      "fps": 48,
+      "samples": 49,
+      "completeBoneTRS": 102,
+      "completeObjectTRS": true
+    },
+    {
+      "rig": "scout mount rig",
+      "track": "scout_idle",
+      "exportAction": "scout mount rig scout_idle exact 49 export samples",
+      "nativeFrames": [
+        1,
+        25
+      ],
+      "exportFrames": [
+        0,
+        48
+      ],
+      "fps": 48,
+      "samples": 49,
+      "completeBoneTRS": 86,
+      "completeObjectTRS": true
+    },
+    {
+      "rig": "scout seated rider rig",
+      "track": "scout_idle",
+      "exportAction": "scout seated rider rig scout_idle exact 49 export samples",
+      "nativeFrames": [
+        1,
+        25
+      ],
+      "exportFrames": [
+        0,
+        48
+      ],
+      "fps": 48,
+      "samples": 49,
+      "completeBoneTRS": 102,
+      "completeObjectTRS": true
+    },
+    {
+      "rig": "scout mount rig",
+      "track": "scout_walk",
+      "exportAction": "scout mount rig scout_walk exact 49 export samples",
+      "nativeFrames": [
+        1,
+        25
+      ],
+      "exportFrames": [
+        0,
+        48
+      ],
+      "fps": 48,
+      "samples": 49,
+      "completeBoneTRS": 86,
+      "completeObjectTRS": true
+    },
+    {
+      "rig": "scout seated rider rig",
+      "track": "scout_walk",
+      "exportAction": "scout seated rider rig scout_walk exact 49 export samples",
+      "nativeFrames": [
+        1,
+        25
+      ],
+      "exportFrames": [
+        0,
+        48
+      ],
+      "fps": 48,
+      "samples": 49,
+      "completeBoneTRS": 102,
+      "completeObjectTRS": true
+    },
+    {
+      "rig": "scout mount rig",
+      "track": "scout_attack",
+      "exportAction": "scout mount rig scout_attack exact 49 export samples",
+      "nativeFrames": [
+        1,
+        25
+      ],
+      "exportFrames": [
+        0,
+        48
+      ],
+      "fps": 48,
+      "samples": 49,
+      "completeBoneTRS": 86,
+      "completeObjectTRS": true
+    },
+    {
+      "rig": "scout seated rider rig",
+      "track": "scout_attack",
+      "exportAction": "scout seated rider rig scout_attack exact 49 export samples",
+      "nativeFrames": [
+        1,
+        25
+      ],
+      "exportFrames": [
+        0,
+        48
+      ],
+      "fps": 48,
+      "samples": 49,
+      "completeBoneTRS": 102,
+      "completeObjectTRS": true
+    },
+    {
+      "rig": "light_cavalry mount rig",
+      "track": "light_cavalry_idle",
+      "exportAction": "light_cavalry mount rig light_cavalry_idle exact 49 export samp",
+      "nativeFrames": [
+        1,
+        25
+      ],
+      "exportFrames": [
+        0,
+        48
+      ],
+      "fps": 48,
+      "samples": 49,
+      "completeBoneTRS": 86,
+      "completeObjectTRS": true
+    },
+    {
+      "rig": "light_cavalry seated rider rig",
+      "track": "light_cavalry_idle",
+      "exportAction": "light_cavalry seated rider rig light_cavalry_idle exact 49 expo",
+      "nativeFrames": [
+        1,
+        25
+      ],
+      "exportFrames": [
+        0,
+        48
+      ],
+      "fps": 48,
+      "samples": 49,
+      "completeBoneTRS": 102,
+      "completeObjectTRS": true
+    },
+    {
+      "rig": "light_cavalry mount rig",
+      "track": "light_cavalry_walk",
+      "exportAction": "light_cavalry mount rig light_cavalry_walk exact 49 export samp",
+      "nativeFrames": [
+        1,
+        25
+      ],
+      "exportFrames": [
+        0,
+        48
+      ],
+      "fps": 48,
+      "samples": 49,
+      "completeBoneTRS": 86,
+      "completeObjectTRS": true
+    },
+    {
+      "rig": "light_cavalry seated rider rig",
+      "track": "light_cavalry_walk",
+      "exportAction": "light_cavalry seated rider rig light_cavalry_walk exact 49 expo",
+      "nativeFrames": [
+        1,
+        25
+      ],
+      "exportFrames": [
+        0,
+        48
+      ],
+      "fps": 48,
+      "samples": 49,
+      "completeBoneTRS": 102,
+      "completeObjectTRS": true
+    },
+    {
+      "rig": "light_cavalry mount rig",
+      "track": "light_cavalry_attack",
+      "exportAction": "light_cavalry mount rig light_cavalry_attack exact 49 export sa",
+      "nativeFrames": [
+        1,
+        25
+      ],
+      "exportFrames": [
+        0,
+        48
+      ],
+      "fps": 48,
+      "samples": 49,
+      "completeBoneTRS": 86,
+      "completeObjectTRS": true
+    },
+    {
+      "rig": "light_cavalry seated rider rig",
+      "track": "light_cavalry_attack",
+      "exportAction": "light_cavalry seated rider rig light_cavalry_attack exact 49 ex",
+      "nativeFrames": [
+        1,
+        25
+      ],
+      "exportFrames": [
+        0,
+        48
+      ],
+      "fps": 48,
+      "samples": 49,
+      "completeBoneTRS": 102,
+      "completeObjectTRS": true
+    },
+    {
+      "rig": "heavy_cavalry mount rig independent pony",
+      "track": "heavy_cavalry_idle",
+      "exportAction": "heavy_cavalry mount rig independent pony heavy_cavalry_idle exa",
+      "nativeFrames": [
+        1,
+        25
+      ],
+      "exportFrames": [
+        0,
+        48
+      ],
+      "fps": 48,
+      "samples": 49,
+      "completeBoneTRS": 86,
+      "completeObjectTRS": true
+    },
+    {
+      "rig": "heavy_cavalry seated rider rig independent pony",
+      "track": "heavy_cavalry_idle",
+      "exportAction": "heavy_cavalry seated rider rig independent pony heavy_cavalry_i",
+      "nativeFrames": [
+        1,
+        25
+      ],
+      "exportFrames": [
+        0,
+        48
+      ],
+      "fps": 48,
+      "samples": 49,
+      "completeBoneTRS": 102,
+      "completeObjectTRS": true
+    },
+    {
+      "rig": "heavy_cavalry mount rig independent pony",
+      "track": "heavy_cavalry_walk",
+      "exportAction": "heavy_cavalry mount rig independent pony heavy_cavalry_walk exa",
+      "nativeFrames": [
+        1,
+        25
+      ],
+      "exportFrames": [
+        0,
+        48
+      ],
+      "fps": 48,
+      "samples": 49,
+      "completeBoneTRS": 86,
+      "completeObjectTRS": true
+    },
+    {
+      "rig": "heavy_cavalry seated rider rig independent pony",
+      "track": "heavy_cavalry_walk",
+      "exportAction": "heavy_cavalry seated rider rig independent pony heavy_cavalry_w",
+      "nativeFrames": [
+        1,
+        25
+      ],
+      "exportFrames": [
+        0,
+        48
+      ],
+      "fps": 48,
+      "samples": 49,
+      "completeBoneTRS": 102,
+      "completeObjectTRS": true
+    },
+    {
+      "rig": "heavy_cavalry mount rig independent pony",
+      "track": "heavy_cavalry_attack",
+      "exportAction": "heavy_cavalry mount rig independent pony heavy_cavalry_attack e",
+      "nativeFrames": [
+        1,
+        25
+      ],
+      "exportFrames": [
+        0,
+        48
+      ],
+      "fps": 48,
+      "samples": 49,
+      "completeBoneTRS": 86,
+      "completeObjectTRS": true
+    },
+    {
+      "rig": "heavy_cavalry seated rider rig independent pony",
+      "track": "heavy_cavalry_attack",
+      "exportAction": "heavy_cavalry seated rider rig independent pony heavy_cavalry_a",
+      "nativeFrames": [
+        1,
+        25
+      ],
+      "exportFrames": [
+        0,
+        48
+      ],
+      "fps": 48,
+      "samples": 49,
+      "completeBoneTRS": 102,
+      "completeObjectTRS": true
+    },
+    {
+      "rig": "ram siege engineering rig",
+      "track": "ram_idle",
+      "exportAction": "ram siege engineering rig ram_idle exact 49 export samples",
+      "nativeFrames": [
+        1,
+        25
+      ],
+      "exportFrames": [
+        0,
+        48
+      ],
+      "fps": 48,
+      "samples": 49,
+      "completeBoneTRS": 10,
+      "completeObjectTRS": true
+    },
+    {
+      "rig": "ram siege engineering rig",
+      "track": "ram_walk",
+      "exportAction": "ram siege engineering rig ram_walk exact 49 export samples",
+      "nativeFrames": [
+        1,
+        25
+      ],
+      "exportFrames": [
+        0,
+        48
+      ],
+      "fps": 48,
+      "samples": 49,
+      "completeBoneTRS": 10,
+      "completeObjectTRS": true
+    },
+    {
+      "rig": "ram siege engineering rig",
+      "track": "ram_attack",
+      "exportAction": "ram siege engineering rig ram_attack exact 49 export samples",
+      "nativeFrames": [
+        1,
+        25
+      ],
+      "exportFrames": [
+        0,
+        48
+      ],
+      "fps": 48,
+      "samples": 49,
+      "completeBoneTRS": 10,
+      "completeObjectTRS": true
+    },
+    {
+      "rig": "catapult siege engineering rig",
+      "track": "catapult_idle",
+      "exportAction": "catapult siege engineering rig catapult_idle exact 49 export sa",
+      "nativeFrames": [
+        1,
+        25
+      ],
+      "exportFrames": [
+        0,
+        48
+      ],
+      "fps": 48,
+      "samples": 49,
+      "completeBoneTRS": 8,
+      "completeObjectTRS": true
+    },
+    {
+      "rig": "catapult siege engineering rig",
+      "track": "catapult_walk",
+      "exportAction": "catapult siege engineering rig catapult_walk exact 49 export sa",
+      "nativeFrames": [
+        1,
+        25
+      ],
+      "exportFrames": [
+        0,
+        48
+      ],
+      "fps": 48,
+      "samples": 49,
+      "completeBoneTRS": 8,
+      "completeObjectTRS": true
+    },
+    {
+      "rig": "catapult siege engineering rig",
+      "track": "catapult_attack",
+      "exportAction": "catapult siege engineering rig catapult_attack exact 49 export ",
+      "nativeFrames": [
+        1,
+        25
+      ],
+      "exportFrames": [
+        0,
+        48
+      ],
+      "fps": 48,
+      "samples": 49,
+      "completeBoneTRS": 8,
+      "completeObjectTRS": true
+    }
+  ],
+  "samplesPerClip": 49,
+  "maximumWorldMatrixError": 2.86102294921875e-06,
+  "nativePoseEqualityVerified": true,
+  "cloneActionDerivativeOnly": true,
+  "nativeActionsModifiedByThisHelper": false,
+  "requiresPostExportNameNamespace": true,
+  "runtimeGPUApproved": false,
+  "runtimeNodeNamespace": {
+    "method": "Separate GLB derivative: node.name strings only receive stable role/node-index prefixes. Numeric node identities, hierarchy, skins, animation channel targets and BIN bytes unchanged.",
+    "source": {
+      "path": "C:\\Users\\alipo\\OneDrive\\Desktop\\mmmm\\Peris\\assets\\source\\battle\\gnome-portrait-roster-v23\\exports\\gnome-roster-source-names.glb",
+      "sha256": "28b75c4afa1e9b408f58337b2cb93786b4078e2394e3a8c6e1af6b2a5b415ac4"
+    },
+    "output": {
+      "path": "C:\\Users\\alipo\\OneDrive\\Desktop\\mmmm\\Peris\\assets\\source\\battle\\gnome-portrait-roster-v23\\exports\\gnome-roster.glb",
+      "sha256": "e54ebb050db62eb2ec313f10df930eede34759c5d47a2d266b4c79aa2aa30db5",
+      "bytes": 68383720
+    },
+    "binarySha256Before": "eb2b62065ea3149d3679515052b2b8ecae9fa1b9e8901c5d54e403b6154bc798",
+    "binarySha256After": "eb2b62065ea3149d3679515052b2b8ecae9fa1b9e8901c5d54e403b6154bc798",
+    "binaryByteExact": true,
+    "structuralJSONEqualExcludingNodeNames": true,
+    "globallyUniqueRuntimeNodeNames": true,
+    "nodesRenamed": 1021,
+    "semanticSeparator": "__",
+    "nodeNames": [
+      {
+        "node": 0,
+        "sourceName": "fingertip_L",
+        "runtimeName": "line_infantry_node0__fingertip_L"
+      },
+      {
+        "node": 1,
+        "sourceName": "prop_glove_finger_L",
+        "runtimeName": "line_infantry_node1__prop_glove_finger_L"
+      },
+      {
+        "node": 2,
+        "sourceName": "finger_L",
+        "runtimeName": "line_infantry_node2__finger_L"
+      },
+      {
+        "node": 3,
+        "sourceName": "prop-shield",
+        "runtimeName": "line_infantry_node3__prop_shield"
+      },
+      {
+        "node": 4,
+        "sourceName": "shield",
+        "runtimeName": "line_infantry_node4__shield"
+      },
+      {
+        "node": 5,
+        "sourceName": "prop-weapon_bow",
+        "runtimeName": "line_infantry_node5__prop_weapon_bow"
+      },
+      {
+        "node": 6,
+        "sourceName": "weapon_bow",
+        "runtimeName": "line_infantry_node6__weapon_bow"
+      },
+      {
+        "node": 7,
+        "sourceName": "prop-ammo",
+        "runtimeName": "line_infantry_node7__prop_ammo"
+      },
+      {
+        "node": 8,
+        "sourceName": "ammo",
+        "runtimeName": "line_infantry_node8__ammo"
+      },
+      {
+        "node": 9,
+        "sourceName": "prop-weapon_L",
+        "runtimeName": "line_infantry_node9__prop_weapon_L"
+      },
+      {
+        "node": 10,
+        "sourceName": "weapon_L",
+        "runtimeName": "line_infantry_node10__weapon_L"
+      },
+      {
+        "node": 11,
+        "sourceName": "prop_glove_hand_L",
+        "runtimeName": "line_infantry_node11__prop_glove_hand_L"
+      },
+      {
+        "node": 12,
+        "sourceName": "hand_L",
+        "runtimeName": "line_infantry_node12__hand_L"
+      },
+      {
+        "node": 13,
+        "sourceName": "prop_glove_wrist_L",
+        "runtimeName": "line_infantry_node13__prop_glove_wrist_L"
+      },
+      {
+        "node": 14,
+        "sourceName": "prop-shield_arm",
+        "runtimeName": "line_infantry_node14__prop_shield_arm"
+      },
+      {
+        "node": 15,
+        "sourceName": "shield_arm",
+        "runtimeName": "line_infantry_node15__shield_arm"
+      },
+      {
+        "node": 16,
+        "sourceName": "prop_brace_L",
+        "runtimeName": "line_infantry_node16__prop_brace_L"
+      },
+      {
+        "node": 17,
+        "sourceName": "forearm_L",
+        "runtimeName": "line_infantry_node17__forearm_L"
+      },
+      {
+        "node": 18,
+        "sourceName": "prop_couter_L",
+        "runtimeName": "line_infantry_node18__prop_couter_L"
+      },
+      {
+        "node": 19,
+        "sourceName": "prop-armpad_L",
+        "runtimeName": "line_infantry_node19__prop_armpad_L"
+      },
+      {
+        "node": 20,
+        "sourceName": "prop_rerebrace_L",
+        "runtimeName": "line_infantry_node20__prop_rerebrace_L"
+      },
+      {
+        "node": 21,
+        "sourceName": "arm_L",
+        "runtimeName": "line_infantry_node21__arm_L"
+      },
+      {
+        "node": 22,
+        "sourceName": "prop-shoulderpad_L",
+        "runtimeName": "line_infantry_node22__prop_shoulderpad_L"
+      },
+      {
+        "node": 23,
+        "sourceName": "shoulder_L",
+        "runtimeName": "line_infantry_node23__shoulder_L"
+      },
+      {
+        "node": 24,
+        "sourceName": "prop-helmet",
+        "runtimeName": "line_infantry_node24__prop_helmet"
+      },
+      {
+        "node": 25,
+        "sourceName": "helmet",
+        "runtimeName": "line_infantry_node25__helmet"
+      },
+      {
+        "node": 26,
+        "sourceName": "prop-head",
+        "runtimeName": "line_infantry_node26__prop_head"
+      },
+      {
+        "node": 27,
+        "sourceName": "head",
+        "runtimeName": "line_infantry_node27__head"
+      },
+      {
+        "node": 28,
+        "sourceName": "prop-neck_guard",
+        "runtimeName": "line_infantry_node28__prop_neck_guard"
+      },
+      {
+        "node": 29,
+        "sourceName": "neck_guard",
+        "runtimeName": "line_infantry_node29__neck_guard"
+      },
+      {
+        "node": 30,
+        "sourceName": "neck",
+        "runtimeName": "line_infantry_node30__neck"
+      },
+      {
+        "node": 31,
+        "sourceName": "prop_bevor",
+        "runtimeName": "line_infantry_node31__prop_bevor"
+      },
+      {
+        "node": 32,
+        "sourceName": "fingertip_R",
+        "runtimeName": "line_infantry_node32__fingertip_R"
+      },
+      {
+        "node": 33,
+        "sourceName": "prop_glove_finger_R",
+        "runtimeName": "line_infantry_node33__prop_glove_finger_R"
+      },
+      {
+        "node": 34,
+        "sourceName": "finger_R",
+        "runtimeName": "line_infantry_node34__finger_R"
+      },
+      {
+        "node": 35,
+        "sourceName": "prop-weapon_R",
+        "runtimeName": "line_infantry_node35__prop_weapon_R"
+      },
+      {
+        "node": 36,
+        "sourceName": "weapon_R",
+        "runtimeName": "line_infantry_node36__weapon_R"
+      },
+      {
+        "node": 37,
+        "sourceName": "prop-projectile",
+        "runtimeName": "line_infantry_node37__prop_projectile"
+      },
+      {
+        "node": 38,
+        "sourceName": "projectile",
+        "runtimeName": "line_infantry_node38__projectile"
+      },
+      {
+        "node": 39,
+        "sourceName": "prop_glove_hand_R",
+        "runtimeName": "line_infantry_node39__prop_glove_hand_R"
+      },
+      {
+        "node": 40,
+        "sourceName": "hand_R",
+        "runtimeName": "line_infantry_node40__hand_R"
+      },
+      {
+        "node": 41,
+        "sourceName": "prop_glove_wrist_R",
+        "runtimeName": "line_infantry_node41__prop_glove_wrist_R"
+      },
+      {
+        "node": 42,
+        "sourceName": "prop_brace_R",
+        "runtimeName": "line_infantry_node42__prop_brace_R"
+      },
+      {
+        "node": 43,
+        "sourceName": "forearm_R",
+        "runtimeName": "line_infantry_node43__forearm_R"
+      },
+      {
+        "node": 44,
+        "sourceName": "prop_couter_R",
+        "runtimeName": "line_infantry_node44__prop_couter_R"
+      },
+      {
+        "node": 45,
+        "sourceName": "prop-armpad_R",
+        "runtimeName": "line_infantry_node45__prop_armpad_R"
+      },
+      {
+        "node": 46,
+        "sourceName": "prop_rerebrace_R",
+        "runtimeName": "line_infantry_node46__prop_rerebrace_R"
+      },
+      {
+        "node": 47,
+        "sourceName": "arm_R",
+        "runtimeName": "line_infantry_node47__arm_R"
+      },
+      {
+        "node": 48,
+        "sourceName": "prop-shoulderpad_R",
+        "runtimeName": "line_infantry_node48__prop_shoulderpad_R"
+      },
+      {
+        "node": 49,
+        "sourceName": "shoulder_R",
+        "runtimeName": "line_infantry_node49__shoulder_R"
+      },
+      {
+        "node": 50,
+        "sourceName": "prop-back",
+        "runtimeName": "line_infantry_node50__prop_back"
+      },
+      {
+        "node": 51,
+        "sourceName": "prop-quiver_back",
+        "runtimeName": "line_infantry_node51__prop_quiver_back"
+      },
+      {
+        "node": 52,
+        "sourceName": "cape3",
+        "runtimeName": "line_infantry_node52__cape3"
+      },
+      {
+        "node": 53,
+        "sourceName": "cape2",
+        "runtimeName": "line_infantry_node53__cape2"
+      },
+      {
+        "node": 54,
+        "sourceName": "cape1",
+        "runtimeName": "line_infantry_node54__cape1"
+      },
+      {
+        "node": 55,
+        "sourceName": "prop_breastplate",
+        "runtimeName": "line_infantry_node55__prop_breastplate"
+      },
+      {
+        "node": 56,
+        "sourceName": "prop_backplate",
+        "runtimeName": "line_infantry_node56__prop_backplate"
+      },
+      {
+        "node": 57,
+        "sourceName": "prop_quiver_B",
+        "runtimeName": "line_infantry_node57__prop_quiver_B"
+      },
+      {
+        "node": 58,
+        "sourceName": "chest",
+        "runtimeName": "line_infantry_node58__chest"
+      },
+      {
+        "node": 59,
+        "sourceName": "spine1",
+        "runtimeName": "line_infantry_node59__spine1"
+      },
+      {
+        "node": 60,
+        "sourceName": "spine",
+        "runtimeName": "line_infantry_node60__spine"
+      },
+      {
+        "node": 61,
+        "sourceName": "prop_foot_L",
+        "runtimeName": "line_infantry_node61__prop_foot_L"
+      },
+      {
+        "node": 62,
+        "sourceName": "foot_L",
+        "runtimeName": "line_infantry_node62__foot_L"
+      },
+      {
+        "node": 63,
+        "sourceName": "prop_leg_L",
+        "runtimeName": "line_infantry_node63__prop_leg_L"
+      },
+      {
+        "node": 64,
+        "sourceName": "leg_L",
+        "runtimeName": "line_infantry_node64__leg_L"
+      },
+      {
+        "node": 65,
+        "sourceName": "prop_cuisse_L",
+        "runtimeName": "line_infantry_node65__prop_cuisse_L"
+      },
+      {
+        "node": 66,
+        "sourceName": "prop_chaff_L",
+        "runtimeName": "line_infantry_node66__prop_chaff_L"
+      },
+      {
+        "node": 67,
+        "sourceName": "thigh_L",
+        "runtimeName": "line_infantry_node67__thigh_L"
+      },
+      {
+        "node": 68,
+        "sourceName": "prop_foot_R",
+        "runtimeName": "line_infantry_node68__prop_foot_R"
+      },
+      {
+        "node": 69,
+        "sourceName": "foot_R",
+        "runtimeName": "line_infantry_node69__foot_R"
+      },
+      {
+        "node": 70,
+        "sourceName": "prop_leg_R",
+        "runtimeName": "line_infantry_node70__prop_leg_R"
+      },
+      {
+        "node": 71,
+        "sourceName": "leg_R",
+        "runtimeName": "line_infantry_node71__leg_R"
+      },
+      {
+        "node": 72,
+        "sourceName": "prop_cuisse_R",
+        "runtimeName": "line_infantry_node72__prop_cuisse_R"
+      },
+      {
+        "node": 73,
+        "sourceName": "prop_chaff_R",
+        "runtimeName": "line_infantry_node73__prop_chaff_R"
+      },
+      {
+        "node": 74,
+        "sourceName": "thigh_R",
+        "runtimeName": "line_infantry_node74__thigh_R"
+      },
+      {
+        "node": 75,
+        "sourceName": "prop-sheath_L",
+        "runtimeName": "line_infantry_node75__prop_sheath_L"
+      },
+      {
+        "node": 76,
+        "sourceName": "prop-quiver_R",
+        "runtimeName": "line_infantry_node76__prop_quiver_R"
+      },
+      {
+        "node": 77,
+        "sourceName": "prop_fauld",
+        "runtimeName": "line_infantry_node77__prop_fauld"
+      },
+      {
+        "node": 78,
+        "sourceName": "prop_sheath_01_R",
+        "runtimeName": "line_infantry_node78__prop_sheath_01_R"
+      },
+      {
+        "node": 79,
+        "sourceName": "sheath_01_R",
+        "runtimeName": "line_infantry_node79__sheath_01_R"
+      },
+      {
+        "node": 80,
+        "sourceName": "prop_sheath_01_L",
+        "runtimeName": "line_infantry_node80__prop_sheath_01_L"
+      },
+      {
+        "node": 81,
+        "sourceName": "sheath_01_L",
+        "runtimeName": "line_infantry_node81__sheath_01_L"
+      },
+      {
+        "node": 82,
+        "sourceName": "prop_seax_front",
+        "runtimeName": "line_infantry_node82__prop_seax_front"
+      },
+      {
+        "node": 83,
+        "sourceName": "prop_seax_back",
+        "runtimeName": "line_infantry_node83__prop_seax_back"
+      },
+      {
+        "node": 84,
+        "sourceName": "prop_sheath_02_R",
+        "runtimeName": "line_infantry_node84__prop_sheath_02_R"
+      },
+      {
+        "node": 85,
+        "sourceName": "sheath_02_R",
+        "runtimeName": "line_infantry_node85__sheath_02_R"
+      },
+      {
+        "node": 86,
+        "sourceName": "prop_sheath_02_L",
+        "runtimeName": "line_infantry_node86__prop_sheath_02_L"
+      },
+      {
+        "node": 87,
+        "sourceName": "sheath_02_L",
+        "runtimeName": "line_infantry_node87__sheath_02_L"
+      },
+      {
+        "node": 88,
+        "sourceName": "prop_quiver_R",
+        "runtimeName": "line_infantry_node88__prop_quiver_R"
+      },
+      {
+        "node": 89,
+        "sourceName": "quiver_R",
+        "runtimeName": "line_infantry_node89__quiver_R"
+      },
+      {
+        "node": 90,
+        "sourceName": "prop_quiver_L",
+        "runtimeName": "line_infantry_node90__prop_quiver_L"
+      },
+      {
+        "node": 91,
+        "sourceName": "quiver_L",
+        "runtimeName": "line_infantry_node91__quiver_L"
+      },
+      {
+        "node": 92,
+        "sourceName": "prop-sheath_R",
+        "runtimeName": "line_infantry_node92__prop_sheath_R"
+      },
+      {
+        "node": 93,
+        "sourceName": "hip",
+        "runtimeName": "line_infantry_node93__hip"
+      },
+      {
+        "node": 94,
+        "sourceName": "knee_L",
+        "runtimeName": "line_infantry_node94__knee_L"
+      },
+      {
+        "node": 95,
+        "sourceName": "knee_R",
+        "runtimeName": "line_infantry_node95__knee_R"
+      },
+      {
+        "node": 96,
+        "sourceName": "handIK_L",
+        "runtimeName": "line_infantry_node96__handIK_L"
+      },
+      {
+        "node": 97,
+        "sourceName": "handIK_R",
+        "runtimeName": "line_infantry_node97__handIK_R"
+      },
+      {
+        "node": 98,
+        "sourceName": "footIK_L",
+        "runtimeName": "line_infantry_node98__footIK_L"
+      },
+      {
+        "node": 99,
+        "sourceName": "footIK_R",
+        "runtimeName": "line_infantry_node99__footIK_R"
+      },
+      {
+        "node": 100,
+        "sourceName": "elbow_L",
+        "runtimeName": "line_infantry_node100__elbow_L"
+      },
+      {
+        "node": 101,
+        "sourceName": "elbow_R",
+        "runtimeName": "line_infantry_node101__elbow_R"
+      },
+      {
+        "node": 102,
+        "sourceName": "line_infantry licensed-gnome-head",
+        "runtimeName": "line_infantry_node102__line_infantry_licensed_gnome_head"
+      },
+      {
+        "node": 103,
+        "sourceName": "line_infantry textured anatomy",
+        "runtimeName": "line_infantry_node103__line_infantry_textured_anatomy"
+      },
+      {
+        "node": 104,
+        "sourceName": "line_infantry anatomy rig",
+        "runtimeName": "line_infantry_node104__line_infantry_anatomy_rig"
+      },
+      {
+        "node": 105,
+        "sourceName": "fingertip_L",
+        "runtimeName": "spear_guard_node105__fingertip_L"
+      },
+      {
+        "node": 106,
+        "sourceName": "prop_glove_finger_L",
+        "runtimeName": "spear_guard_node106__prop_glove_finger_L"
+      },
+      {
+        "node": 107,
+        "sourceName": "finger_L",
+        "runtimeName": "spear_guard_node107__finger_L"
+      },
+      {
+        "node": 108,
+        "sourceName": "prop-shield",
+        "runtimeName": "spear_guard_node108__prop_shield"
+      },
+      {
+        "node": 109,
+        "sourceName": "shield",
+        "runtimeName": "spear_guard_node109__shield"
+      },
+      {
+        "node": 110,
+        "sourceName": "prop-weapon_bow",
+        "runtimeName": "spear_guard_node110__prop_weapon_bow"
+      },
+      {
+        "node": 111,
+        "sourceName": "weapon_bow",
+        "runtimeName": "spear_guard_node111__weapon_bow"
+      },
+      {
+        "node": 112,
+        "sourceName": "prop-ammo",
+        "runtimeName": "spear_guard_node112__prop_ammo"
+      },
+      {
+        "node": 113,
+        "sourceName": "ammo",
+        "runtimeName": "spear_guard_node113__ammo"
+      },
+      {
+        "node": 114,
+        "sourceName": "prop-weapon_L",
+        "runtimeName": "spear_guard_node114__prop_weapon_L"
+      },
+      {
+        "node": 115,
+        "sourceName": "weapon_L",
+        "runtimeName": "spear_guard_node115__weapon_L"
+      },
+      {
+        "node": 116,
+        "sourceName": "prop_glove_hand_L",
+        "runtimeName": "spear_guard_node116__prop_glove_hand_L"
+      },
+      {
+        "node": 117,
+        "sourceName": "hand_L",
+        "runtimeName": "spear_guard_node117__hand_L"
+      },
+      {
+        "node": 118,
+        "sourceName": "prop_glove_wrist_L",
+        "runtimeName": "spear_guard_node118__prop_glove_wrist_L"
+      },
+      {
+        "node": 119,
+        "sourceName": "prop-shield_arm",
+        "runtimeName": "spear_guard_node119__prop_shield_arm"
+      },
+      {
+        "node": 120,
+        "sourceName": "shield_arm",
+        "runtimeName": "spear_guard_node120__shield_arm"
+      },
+      {
+        "node": 121,
+        "sourceName": "prop_brace_L",
+        "runtimeName": "spear_guard_node121__prop_brace_L"
+      },
+      {
+        "node": 122,
+        "sourceName": "forearm_L",
+        "runtimeName": "spear_guard_node122__forearm_L"
+      },
+      {
+        "node": 123,
+        "sourceName": "prop_couter_L",
+        "runtimeName": "spear_guard_node123__prop_couter_L"
+      },
+      {
+        "node": 124,
+        "sourceName": "prop-armpad_L",
+        "runtimeName": "spear_guard_node124__prop_armpad_L"
+      },
+      {
+        "node": 125,
+        "sourceName": "prop_rerebrace_L",
+        "runtimeName": "spear_guard_node125__prop_rerebrace_L"
+      },
+      {
+        "node": 126,
+        "sourceName": "arm_L",
+        "runtimeName": "spear_guard_node126__arm_L"
+      },
+      {
+        "node": 127,
+        "sourceName": "prop-shoulderpad_L",
+        "runtimeName": "spear_guard_node127__prop_shoulderpad_L"
+      },
+      {
+        "node": 128,
+        "sourceName": "shoulder_L",
+        "runtimeName": "spear_guard_node128__shoulder_L"
+      },
+      {
+        "node": 129,
+        "sourceName": "prop-helmet",
+        "runtimeName": "spear_guard_node129__prop_helmet"
+      },
+      {
+        "node": 130,
+        "sourceName": "helmet",
+        "runtimeName": "spear_guard_node130__helmet"
+      },
+      {
+        "node": 131,
+        "sourceName": "prop-head",
+        "runtimeName": "spear_guard_node131__prop_head"
+      },
+      {
+        "node": 132,
+        "sourceName": "head",
+        "runtimeName": "spear_guard_node132__head"
+      },
+      {
+        "node": 133,
+        "sourceName": "prop-neck_guard",
+        "runtimeName": "spear_guard_node133__prop_neck_guard"
+      },
+      {
+        "node": 134,
+        "sourceName": "neck_guard",
+        "runtimeName": "spear_guard_node134__neck_guard"
+      },
+      {
+        "node": 135,
+        "sourceName": "neck",
+        "runtimeName": "spear_guard_node135__neck"
+      },
+      {
+        "node": 136,
+        "sourceName": "prop_bevor",
+        "runtimeName": "spear_guard_node136__prop_bevor"
+      },
+      {
+        "node": 137,
+        "sourceName": "fingertip_R",
+        "runtimeName": "spear_guard_node137__fingertip_R"
+      },
+      {
+        "node": 138,
+        "sourceName": "prop_glove_finger_R",
+        "runtimeName": "spear_guard_node138__prop_glove_finger_R"
+      },
+      {
+        "node": 139,
+        "sourceName": "finger_R",
+        "runtimeName": "spear_guard_node139__finger_R"
+      },
+      {
+        "node": 140,
+        "sourceName": "prop-weapon_R",
+        "runtimeName": "spear_guard_node140__prop_weapon_R"
+      },
+      {
+        "node": 141,
+        "sourceName": "weapon_R",
+        "runtimeName": "spear_guard_node141__weapon_R"
+      },
+      {
+        "node": 142,
+        "sourceName": "prop-projectile",
+        "runtimeName": "spear_guard_node142__prop_projectile"
+      },
+      {
+        "node": 143,
+        "sourceName": "projectile",
+        "runtimeName": "spear_guard_node143__projectile"
+      },
+      {
+        "node": 144,
+        "sourceName": "prop_glove_hand_R",
+        "runtimeName": "spear_guard_node144__prop_glove_hand_R"
+      },
+      {
+        "node": 145,
+        "sourceName": "hand_R",
+        "runtimeName": "spear_guard_node145__hand_R"
+      },
+      {
+        "node": 146,
+        "sourceName": "prop_glove_wrist_R",
+        "runtimeName": "spear_guard_node146__prop_glove_wrist_R"
+      },
+      {
+        "node": 147,
+        "sourceName": "prop_brace_R",
+        "runtimeName": "spear_guard_node147__prop_brace_R"
+      },
+      {
+        "node": 148,
+        "sourceName": "forearm_R",
+        "runtimeName": "spear_guard_node148__forearm_R"
+      },
+      {
+        "node": 149,
+        "sourceName": "prop_couter_R",
+        "runtimeName": "spear_guard_node149__prop_couter_R"
+      },
+      {
+        "node": 150,
+        "sourceName": "prop-armpad_R",
+        "runtimeName": "spear_guard_node150__prop_armpad_R"
+      },
+      {
+        "node": 151,
+        "sourceName": "prop_rerebrace_R",
+        "runtimeName": "spear_guard_node151__prop_rerebrace_R"
+      },
+      {
+        "node": 152,
+        "sourceName": "arm_R",
+        "runtimeName": "spear_guard_node152__arm_R"
+      },
+      {
+        "node": 153,
+        "sourceName": "prop-shoulderpad_R",
+        "runtimeName": "spear_guard_node153__prop_shoulderpad_R"
+      },
+      {
+        "node": 154,
+        "sourceName": "shoulder_R",
+        "runtimeName": "spear_guard_node154__shoulder_R"
+      },
+      {
+        "node": 155,
+        "sourceName": "prop-back",
+        "runtimeName": "spear_guard_node155__prop_back"
+      },
+      {
+        "node": 156,
+        "sourceName": "prop-quiver_back",
+        "runtimeName": "spear_guard_node156__prop_quiver_back"
+      },
+      {
+        "node": 157,
+        "sourceName": "cape3",
+        "runtimeName": "spear_guard_node157__cape3"
+      },
+      {
+        "node": 158,
+        "sourceName": "cape2",
+        "runtimeName": "spear_guard_node158__cape2"
+      },
+      {
+        "node": 159,
+        "sourceName": "cape1",
+        "runtimeName": "spear_guard_node159__cape1"
+      },
+      {
+        "node": 160,
+        "sourceName": "prop_breastplate",
+        "runtimeName": "spear_guard_node160__prop_breastplate"
+      },
+      {
+        "node": 161,
+        "sourceName": "prop_backplate",
+        "runtimeName": "spear_guard_node161__prop_backplate"
+      },
+      {
+        "node": 162,
+        "sourceName": "prop_quiver_B",
+        "runtimeName": "spear_guard_node162__prop_quiver_B"
+      },
+      {
+        "node": 163,
+        "sourceName": "chest",
+        "runtimeName": "spear_guard_node163__chest"
+      },
+      {
+        "node": 164,
+        "sourceName": "spine1",
+        "runtimeName": "spear_guard_node164__spine1"
+      },
+      {
+        "node": 165,
+        "sourceName": "spine",
+        "runtimeName": "spear_guard_node165__spine"
+      },
+      {
+        "node": 166,
+        "sourceName": "prop_foot_L",
+        "runtimeName": "spear_guard_node166__prop_foot_L"
+      },
+      {
+        "node": 167,
+        "sourceName": "foot_L",
+        "runtimeName": "spear_guard_node167__foot_L"
+      },
+      {
+        "node": 168,
+        "sourceName": "prop_leg_L",
+        "runtimeName": "spear_guard_node168__prop_leg_L"
+      },
+      {
+        "node": 169,
+        "sourceName": "leg_L",
+        "runtimeName": "spear_guard_node169__leg_L"
+      },
+      {
+        "node": 170,
+        "sourceName": "prop_cuisse_L",
+        "runtimeName": "spear_guard_node170__prop_cuisse_L"
+      },
+      {
+        "node": 171,
+        "sourceName": "prop_chaff_L",
+        "runtimeName": "spear_guard_node171__prop_chaff_L"
+      },
+      {
+        "node": 172,
+        "sourceName": "thigh_L",
+        "runtimeName": "spear_guard_node172__thigh_L"
+      },
+      {
+        "node": 173,
+        "sourceName": "prop_foot_R",
+        "runtimeName": "spear_guard_node173__prop_foot_R"
+      },
+      {
+        "node": 174,
+        "sourceName": "foot_R",
+        "runtimeName": "spear_guard_node174__foot_R"
+      },
+      {
+        "node": 175,
+        "sourceName": "prop_leg_R",
+        "runtimeName": "spear_guard_node175__prop_leg_R"
+      },
+      {
+        "node": 176,
+        "sourceName": "leg_R",
+        "runtimeName": "spear_guard_node176__leg_R"
+      },
+      {
+        "node": 177,
+        "sourceName": "prop_cuisse_R",
+        "runtimeName": "spear_guard_node177__prop_cuisse_R"
+      },
+      {
+        "node": 178,
+        "sourceName": "prop_chaff_R",
+        "runtimeName": "spear_guard_node178__prop_chaff_R"
+      },
+      {
+        "node": 179,
+        "sourceName": "thigh_R",
+        "runtimeName": "spear_guard_node179__thigh_R"
+      },
+      {
+        "node": 180,
+        "sourceName": "prop-sheath_L",
+        "runtimeName": "spear_guard_node180__prop_sheath_L"
+      },
+      {
+        "node": 181,
+        "sourceName": "prop-quiver_R",
+        "runtimeName": "spear_guard_node181__prop_quiver_R"
+      },
+      {
+        "node": 182,
+        "sourceName": "prop_fauld",
+        "runtimeName": "spear_guard_node182__prop_fauld"
+      },
+      {
+        "node": 183,
+        "sourceName": "prop_sheath_01_R",
+        "runtimeName": "spear_guard_node183__prop_sheath_01_R"
+      },
+      {
+        "node": 184,
+        "sourceName": "sheath_01_R",
+        "runtimeName": "spear_guard_node184__sheath_01_R"
+      },
+      {
+        "node": 185,
+        "sourceName": "prop_sheath_01_L",
+        "runtimeName": "spear_guard_node185__prop_sheath_01_L"
+      },
+      {
+        "node": 186,
+        "sourceName": "sheath_01_L",
+        "runtimeName": "spear_guard_node186__sheath_01_L"
+      },
+      {
+        "node": 187,
+        "sourceName": "prop_seax_front",
+        "runtimeName": "spear_guard_node187__prop_seax_front"
+      },
+      {
+        "node": 188,
+        "sourceName": "prop_seax_back",
+        "runtimeName": "spear_guard_node188__prop_seax_back"
+      },
+      {
+        "node": 189,
+        "sourceName": "prop_sheath_02_R",
+        "runtimeName": "spear_guard_node189__prop_sheath_02_R"
+      },
+      {
+        "node": 190,
+        "sourceName": "sheath_02_R",
+        "runtimeName": "spear_guard_node190__sheath_02_R"
+      },
+      {
+        "node": 191,
+        "sourceName": "prop_sheath_02_L",
+        "runtimeName": "spear_guard_node191__prop_sheath_02_L"
+      },
+      {
+        "node": 192,
+        "sourceName": "sheath_02_L",
+        "runtimeName": "spear_guard_node192__sheath_02_L"
+      },
+      {
+        "node": 193,
+        "sourceName": "prop_quiver_R",
+        "runtimeName": "spear_guard_node193__prop_quiver_R"
+      },
+      {
+        "node": 194,
+        "sourceName": "quiver_R",
+        "runtimeName": "spear_guard_node194__quiver_R"
+      },
+      {
+        "node": 195,
+        "sourceName": "prop_quiver_L",
+        "runtimeName": "spear_guard_node195__prop_quiver_L"
+      },
+      {
+        "node": 196,
+        "sourceName": "quiver_L",
+        "runtimeName": "spear_guard_node196__quiver_L"
+      },
+      {
+        "node": 197,
+        "sourceName": "prop-sheath_R",
+        "runtimeName": "spear_guard_node197__prop_sheath_R"
+      },
+      {
+        "node": 198,
+        "sourceName": "hip",
+        "runtimeName": "spear_guard_node198__hip"
+      },
+      {
+        "node": 199,
+        "sourceName": "knee_L",
+        "runtimeName": "spear_guard_node199__knee_L"
+      },
+      {
+        "node": 200,
+        "sourceName": "knee_R",
+        "runtimeName": "spear_guard_node200__knee_R"
+      },
+      {
+        "node": 201,
+        "sourceName": "handIK_L",
+        "runtimeName": "spear_guard_node201__handIK_L"
+      },
+      {
+        "node": 202,
+        "sourceName": "handIK_R",
+        "runtimeName": "spear_guard_node202__handIK_R"
+      },
+      {
+        "node": 203,
+        "sourceName": "footIK_L",
+        "runtimeName": "spear_guard_node203__footIK_L"
+      },
+      {
+        "node": 204,
+        "sourceName": "footIK_R",
+        "runtimeName": "spear_guard_node204__footIK_R"
+      },
+      {
+        "node": 205,
+        "sourceName": "elbow_L",
+        "runtimeName": "spear_guard_node205__elbow_L"
+      },
+      {
+        "node": 206,
+        "sourceName": "elbow_R",
+        "runtimeName": "spear_guard_node206__elbow_R"
+      },
+      {
+        "node": 207,
+        "sourceName": "spear_guard licensed-gnome-head",
+        "runtimeName": "spear_guard_node207__spear_guard_licensed_gnome_head"
+      },
+      {
+        "node": 208,
+        "sourceName": "spear_guard textured anatomy",
+        "runtimeName": "spear_guard_node208__spear_guard_textured_anatomy"
+      },
+      {
+        "node": 209,
+        "sourceName": "spear_guard anatomy rig",
+        "runtimeName": "spear_guard_node209__spear_guard_anatomy_rig"
+      },
+      {
+        "node": 210,
+        "sourceName": "fingertip_L",
+        "runtimeName": "elite_node210__fingertip_L"
+      },
+      {
+        "node": 211,
+        "sourceName": "prop_glove_finger_L",
+        "runtimeName": "elite_node211__prop_glove_finger_L"
+      },
+      {
+        "node": 212,
+        "sourceName": "finger_L",
+        "runtimeName": "elite_node212__finger_L"
+      },
+      {
+        "node": 213,
+        "sourceName": "prop-shield",
+        "runtimeName": "elite_node213__prop_shield"
+      },
+      {
+        "node": 214,
+        "sourceName": "shield",
+        "runtimeName": "elite_node214__shield"
+      },
+      {
+        "node": 215,
+        "sourceName": "prop-weapon_bow",
+        "runtimeName": "elite_node215__prop_weapon_bow"
+      },
+      {
+        "node": 216,
+        "sourceName": "weapon_bow",
+        "runtimeName": "elite_node216__weapon_bow"
+      },
+      {
+        "node": 217,
+        "sourceName": "prop-ammo",
+        "runtimeName": "elite_node217__prop_ammo"
+      },
+      {
+        "node": 218,
+        "sourceName": "ammo",
+        "runtimeName": "elite_node218__ammo"
+      },
+      {
+        "node": 219,
+        "sourceName": "prop-weapon_L",
+        "runtimeName": "elite_node219__prop_weapon_L"
+      },
+      {
+        "node": 220,
+        "sourceName": "weapon_L",
+        "runtimeName": "elite_node220__weapon_L"
+      },
+      {
+        "node": 221,
+        "sourceName": "prop_glove_hand_L",
+        "runtimeName": "elite_node221__prop_glove_hand_L"
+      },
+      {
+        "node": 222,
+        "sourceName": "hand_L",
+        "runtimeName": "elite_node222__hand_L"
+      },
+      {
+        "node": 223,
+        "sourceName": "prop_glove_wrist_L",
+        "runtimeName": "elite_node223__prop_glove_wrist_L"
+      },
+      {
+        "node": 224,
+        "sourceName": "prop-shield_arm",
+        "runtimeName": "elite_node224__prop_shield_arm"
+      },
+      {
+        "node": 225,
+        "sourceName": "shield_arm",
+        "runtimeName": "elite_node225__shield_arm"
+      },
+      {
+        "node": 226,
+        "sourceName": "prop_brace_L",
+        "runtimeName": "elite_node226__prop_brace_L"
+      },
+      {
+        "node": 227,
+        "sourceName": "forearm_L",
+        "runtimeName": "elite_node227__forearm_L"
+      },
+      {
+        "node": 228,
+        "sourceName": "prop_couter_L",
+        "runtimeName": "elite_node228__prop_couter_L"
+      },
+      {
+        "node": 229,
+        "sourceName": "prop-armpad_L",
+        "runtimeName": "elite_node229__prop_armpad_L"
+      },
+      {
+        "node": 230,
+        "sourceName": "prop_rerebrace_L",
+        "runtimeName": "elite_node230__prop_rerebrace_L"
+      },
+      {
+        "node": 231,
+        "sourceName": "arm_L",
+        "runtimeName": "elite_node231__arm_L"
+      },
+      {
+        "node": 232,
+        "sourceName": "prop-shoulderpad_L",
+        "runtimeName": "elite_node232__prop_shoulderpad_L"
+      },
+      {
+        "node": 233,
+        "sourceName": "shoulder_L",
+        "runtimeName": "elite_node233__shoulder_L"
+      },
+      {
+        "node": 234,
+        "sourceName": "prop-helmet",
+        "runtimeName": "elite_node234__prop_helmet"
+      },
+      {
+        "node": 235,
+        "sourceName": "helmet",
+        "runtimeName": "elite_node235__helmet"
+      },
+      {
+        "node": 236,
+        "sourceName": "prop-head",
+        "runtimeName": "elite_node236__prop_head"
+      },
+      {
+        "node": 237,
+        "sourceName": "head",
+        "runtimeName": "elite_node237__head"
+      },
+      {
+        "node": 238,
+        "sourceName": "prop-neck_guard",
+        "runtimeName": "elite_node238__prop_neck_guard"
+      },
+      {
+        "node": 239,
+        "sourceName": "neck_guard",
+        "runtimeName": "elite_node239__neck_guard"
+      },
+      {
+        "node": 240,
+        "sourceName": "neck",
+        "runtimeName": "elite_node240__neck"
+      },
+      {
+        "node": 241,
+        "sourceName": "prop_bevor",
+        "runtimeName": "elite_node241__prop_bevor"
+      },
+      {
+        "node": 242,
+        "sourceName": "fingertip_R",
+        "runtimeName": "elite_node242__fingertip_R"
+      },
+      {
+        "node": 243,
+        "sourceName": "prop_glove_finger_R",
+        "runtimeName": "elite_node243__prop_glove_finger_R"
+      },
+      {
+        "node": 244,
+        "sourceName": "finger_R",
+        "runtimeName": "elite_node244__finger_R"
+      },
+      {
+        "node": 245,
+        "sourceName": "prop-weapon_R",
+        "runtimeName": "elite_node245__prop_weapon_R"
+      },
+      {
+        "node": 246,
+        "sourceName": "weapon_R",
+        "runtimeName": "elite_node246__weapon_R"
+      },
+      {
+        "node": 247,
+        "sourceName": "prop-projectile",
+        "runtimeName": "elite_node247__prop_projectile"
+      },
+      {
+        "node": 248,
+        "sourceName": "projectile",
+        "runtimeName": "elite_node248__projectile"
+      },
+      {
+        "node": 249,
+        "sourceName": "prop_glove_hand_R",
+        "runtimeName": "elite_node249__prop_glove_hand_R"
+      },
+      {
+        "node": 250,
+        "sourceName": "hand_R",
+        "runtimeName": "elite_node250__hand_R"
+      },
+      {
+        "node": 251,
+        "sourceName": "prop_glove_wrist_R",
+        "runtimeName": "elite_node251__prop_glove_wrist_R"
+      },
+      {
+        "node": 252,
+        "sourceName": "prop_brace_R",
+        "runtimeName": "elite_node252__prop_brace_R"
+      },
+      {
+        "node": 253,
+        "sourceName": "forearm_R",
+        "runtimeName": "elite_node253__forearm_R"
+      },
+      {
+        "node": 254,
+        "sourceName": "prop_couter_R",
+        "runtimeName": "elite_node254__prop_couter_R"
+      },
+      {
+        "node": 255,
+        "sourceName": "prop-armpad_R",
+        "runtimeName": "elite_node255__prop_armpad_R"
+      },
+      {
+        "node": 256,
+        "sourceName": "prop_rerebrace_R",
+        "runtimeName": "elite_node256__prop_rerebrace_R"
+      },
+      {
+        "node": 257,
+        "sourceName": "arm_R",
+        "runtimeName": "elite_node257__arm_R"
+      },
+      {
+        "node": 258,
+        "sourceName": "prop-shoulderpad_R",
+        "runtimeName": "elite_node258__prop_shoulderpad_R"
+      },
+      {
+        "node": 259,
+        "sourceName": "shoulder_R",
+        "runtimeName": "elite_node259__shoulder_R"
+      },
+      {
+        "node": 260,
+        "sourceName": "prop-back",
+        "runtimeName": "elite_node260__prop_back"
+      },
+      {
+        "node": 261,
+        "sourceName": "prop-quiver_back",
+        "runtimeName": "elite_node261__prop_quiver_back"
+      },
+      {
+        "node": 262,
+        "sourceName": "cape3",
+        "runtimeName": "elite_node262__cape3"
+      },
+      {
+        "node": 263,
+        "sourceName": "cape2",
+        "runtimeName": "elite_node263__cape2"
+      },
+      {
+        "node": 264,
+        "sourceName": "cape1",
+        "runtimeName": "elite_node264__cape1"
+      },
+      {
+        "node": 265,
+        "sourceName": "prop_breastplate",
+        "runtimeName": "elite_node265__prop_breastplate"
+      },
+      {
+        "node": 266,
+        "sourceName": "prop_backplate",
+        "runtimeName": "elite_node266__prop_backplate"
+      },
+      {
+        "node": 267,
+        "sourceName": "prop_quiver_B",
+        "runtimeName": "elite_node267__prop_quiver_B"
+      },
+      {
+        "node": 268,
+        "sourceName": "chest",
+        "runtimeName": "elite_node268__chest"
+      },
+      {
+        "node": 269,
+        "sourceName": "spine1",
+        "runtimeName": "elite_node269__spine1"
+      },
+      {
+        "node": 270,
+        "sourceName": "spine",
+        "runtimeName": "elite_node270__spine"
+      },
+      {
+        "node": 271,
+        "sourceName": "prop_foot_L",
+        "runtimeName": "elite_node271__prop_foot_L"
+      },
+      {
+        "node": 272,
+        "sourceName": "foot_L",
+        "runtimeName": "elite_node272__foot_L"
+      },
+      {
+        "node": 273,
+        "sourceName": "prop_leg_L",
+        "runtimeName": "elite_node273__prop_leg_L"
+      },
+      {
+        "node": 274,
+        "sourceName": "leg_L",
+        "runtimeName": "elite_node274__leg_L"
+      },
+      {
+        "node": 275,
+        "sourceName": "prop_cuisse_L",
+        "runtimeName": "elite_node275__prop_cuisse_L"
+      },
+      {
+        "node": 276,
+        "sourceName": "prop_chaff_L",
+        "runtimeName": "elite_node276__prop_chaff_L"
+      },
+      {
+        "node": 277,
+        "sourceName": "thigh_L",
+        "runtimeName": "elite_node277__thigh_L"
+      },
+      {
+        "node": 278,
+        "sourceName": "prop_foot_R",
+        "runtimeName": "elite_node278__prop_foot_R"
+      },
+      {
+        "node": 279,
+        "sourceName": "foot_R",
+        "runtimeName": "elite_node279__foot_R"
+      },
+      {
+        "node": 280,
+        "sourceName": "prop_leg_R",
+        "runtimeName": "elite_node280__prop_leg_R"
+      },
+      {
+        "node": 281,
+        "sourceName": "leg_R",
+        "runtimeName": "elite_node281__leg_R"
+      },
+      {
+        "node": 282,
+        "sourceName": "prop_cuisse_R",
+        "runtimeName": "elite_node282__prop_cuisse_R"
+      },
+      {
+        "node": 283,
+        "sourceName": "prop_chaff_R",
+        "runtimeName": "elite_node283__prop_chaff_R"
+      },
+      {
+        "node": 284,
+        "sourceName": "thigh_R",
+        "runtimeName": "elite_node284__thigh_R"
+      },
+      {
+        "node": 285,
+        "sourceName": "prop-sheath_L",
+        "runtimeName": "elite_node285__prop_sheath_L"
+      },
+      {
+        "node": 286,
+        "sourceName": "prop-quiver_R",
+        "runtimeName": "elite_node286__prop_quiver_R"
+      },
+      {
+        "node": 287,
+        "sourceName": "prop_fauld",
+        "runtimeName": "elite_node287__prop_fauld"
+      },
+      {
+        "node": 288,
+        "sourceName": "prop_sheath_01_R",
+        "runtimeName": "elite_node288__prop_sheath_01_R"
+      },
+      {
+        "node": 289,
+        "sourceName": "sheath_01_R",
+        "runtimeName": "elite_node289__sheath_01_R"
+      },
+      {
+        "node": 290,
+        "sourceName": "prop_sheath_01_L",
+        "runtimeName": "elite_node290__prop_sheath_01_L"
+      },
+      {
+        "node": 291,
+        "sourceName": "sheath_01_L",
+        "runtimeName": "elite_node291__sheath_01_L"
+      },
+      {
+        "node": 292,
+        "sourceName": "prop_seax_front",
+        "runtimeName": "elite_node292__prop_seax_front"
+      },
+      {
+        "node": 293,
+        "sourceName": "prop_seax_back",
+        "runtimeName": "elite_node293__prop_seax_back"
+      },
+      {
+        "node": 294,
+        "sourceName": "prop_sheath_02_R",
+        "runtimeName": "elite_node294__prop_sheath_02_R"
+      },
+      {
+        "node": 295,
+        "sourceName": "sheath_02_R",
+        "runtimeName": "elite_node295__sheath_02_R"
+      },
+      {
+        "node": 296,
+        "sourceName": "prop_sheath_02_L",
+        "runtimeName": "elite_node296__prop_sheath_02_L"
+      },
+      {
+        "node": 297,
+        "sourceName": "sheath_02_L",
+        "runtimeName": "elite_node297__sheath_02_L"
+      },
+      {
+        "node": 298,
+        "sourceName": "prop_quiver_R",
+        "runtimeName": "elite_node298__prop_quiver_R"
+      },
+      {
+        "node": 299,
+        "sourceName": "quiver_R",
+        "runtimeName": "elite_node299__quiver_R"
+      },
+      {
+        "node": 300,
+        "sourceName": "prop_quiver_L",
+        "runtimeName": "elite_node300__prop_quiver_L"
+      },
+      {
+        "node": 301,
+        "sourceName": "quiver_L",
+        "runtimeName": "elite_node301__quiver_L"
+      },
+      {
+        "node": 302,
+        "sourceName": "prop-sheath_R",
+        "runtimeName": "elite_node302__prop_sheath_R"
+      },
+      {
+        "node": 303,
+        "sourceName": "hip",
+        "runtimeName": "elite_node303__hip"
+      },
+      {
+        "node": 304,
+        "sourceName": "knee_L",
+        "runtimeName": "elite_node304__knee_L"
+      },
+      {
+        "node": 305,
+        "sourceName": "knee_R",
+        "runtimeName": "elite_node305__knee_R"
+      },
+      {
+        "node": 306,
+        "sourceName": "handIK_L",
+        "runtimeName": "elite_node306__handIK_L"
+      },
+      {
+        "node": 307,
+        "sourceName": "handIK_R",
+        "runtimeName": "elite_node307__handIK_R"
+      },
+      {
+        "node": 308,
+        "sourceName": "footIK_L",
+        "runtimeName": "elite_node308__footIK_L"
+      },
+      {
+        "node": 309,
+        "sourceName": "footIK_R",
+        "runtimeName": "elite_node309__footIK_R"
+      },
+      {
+        "node": 310,
+        "sourceName": "elbow_L",
+        "runtimeName": "elite_node310__elbow_L"
+      },
+      {
+        "node": 311,
+        "sourceName": "elbow_R",
+        "runtimeName": "elite_node311__elbow_R"
+      },
+      {
+        "node": 312,
+        "sourceName": "elite licensed-gnome-head",
+        "runtimeName": "elite_node312__elite_licensed_gnome_head"
+      },
+      {
+        "node": 313,
+        "sourceName": "elite textured anatomy",
+        "runtimeName": "elite_node313__elite_textured_anatomy"
+      },
+      {
+        "node": 314,
+        "sourceName": "elite anatomy rig",
+        "runtimeName": "elite_node314__elite_anatomy_rig"
+      },
+      {
+        "node": 315,
+        "sourceName": "fingertip_L",
+        "runtimeName": "archer_node315__fingertip_L"
+      },
+      {
+        "node": 316,
+        "sourceName": "prop_glove_finger_L",
+        "runtimeName": "archer_node316__prop_glove_finger_L"
+      },
+      {
+        "node": 317,
+        "sourceName": "finger_L",
+        "runtimeName": "archer_node317__finger_L"
+      },
+      {
+        "node": 318,
+        "sourceName": "prop-shield",
+        "runtimeName": "archer_node318__prop_shield"
+      },
+      {
+        "node": 319,
+        "sourceName": "shield",
+        "runtimeName": "archer_node319__shield"
+      },
+      {
+        "node": 320,
+        "sourceName": "prop-weapon_bow",
+        "runtimeName": "archer_node320__prop_weapon_bow"
+      },
+      {
+        "node": 321,
+        "sourceName": "weapon_bow",
+        "runtimeName": "archer_node321__weapon_bow"
+      },
+      {
+        "node": 322,
+        "sourceName": "prop-ammo",
+        "runtimeName": "archer_node322__prop_ammo"
+      },
+      {
+        "node": 323,
+        "sourceName": "ammo",
+        "runtimeName": "archer_node323__ammo"
+      },
+      {
+        "node": 324,
+        "sourceName": "prop-weapon_L",
+        "runtimeName": "archer_node324__prop_weapon_L"
+      },
+      {
+        "node": 325,
+        "sourceName": "weapon_L",
+        "runtimeName": "archer_node325__weapon_L"
+      },
+      {
+        "node": 326,
+        "sourceName": "prop_glove_hand_L",
+        "runtimeName": "archer_node326__prop_glove_hand_L"
+      },
+      {
+        "node": 327,
+        "sourceName": "hand_L",
+        "runtimeName": "archer_node327__hand_L"
+      },
+      {
+        "node": 328,
+        "sourceName": "prop_glove_wrist_L",
+        "runtimeName": "archer_node328__prop_glove_wrist_L"
+      },
+      {
+        "node": 329,
+        "sourceName": "prop-shield_arm",
+        "runtimeName": "archer_node329__prop_shield_arm"
+      },
+      {
+        "node": 330,
+        "sourceName": "shield_arm",
+        "runtimeName": "archer_node330__shield_arm"
+      },
+      {
+        "node": 331,
+        "sourceName": "prop_brace_L",
+        "runtimeName": "archer_node331__prop_brace_L"
+      },
+      {
+        "node": 332,
+        "sourceName": "forearm_L",
+        "runtimeName": "archer_node332__forearm_L"
+      },
+      {
+        "node": 333,
+        "sourceName": "prop_couter_L",
+        "runtimeName": "archer_node333__prop_couter_L"
+      },
+      {
+        "node": 334,
+        "sourceName": "prop-armpad_L",
+        "runtimeName": "archer_node334__prop_armpad_L"
+      },
+      {
+        "node": 335,
+        "sourceName": "prop_rerebrace_L",
+        "runtimeName": "archer_node335__prop_rerebrace_L"
+      },
+      {
+        "node": 336,
+        "sourceName": "arm_L",
+        "runtimeName": "archer_node336__arm_L"
+      },
+      {
+        "node": 337,
+        "sourceName": "prop-shoulderpad_L",
+        "runtimeName": "archer_node337__prop_shoulderpad_L"
+      },
+      {
+        "node": 338,
+        "sourceName": "shoulder_L",
+        "runtimeName": "archer_node338__shoulder_L"
+      },
+      {
+        "node": 339,
+        "sourceName": "prop-helmet",
+        "runtimeName": "archer_node339__prop_helmet"
+      },
+      {
+        "node": 340,
+        "sourceName": "helmet",
+        "runtimeName": "archer_node340__helmet"
+      },
+      {
+        "node": 341,
+        "sourceName": "prop-head",
+        "runtimeName": "archer_node341__prop_head"
+      },
+      {
+        "node": 342,
+        "sourceName": "head",
+        "runtimeName": "archer_node342__head"
+      },
+      {
+        "node": 343,
+        "sourceName": "prop-neck_guard",
+        "runtimeName": "archer_node343__prop_neck_guard"
+      },
+      {
+        "node": 344,
+        "sourceName": "neck_guard",
+        "runtimeName": "archer_node344__neck_guard"
+      },
+      {
+        "node": 345,
+        "sourceName": "neck",
+        "runtimeName": "archer_node345__neck"
+      },
+      {
+        "node": 346,
+        "sourceName": "prop_bevor",
+        "runtimeName": "archer_node346__prop_bevor"
+      },
+      {
+        "node": 347,
+        "sourceName": "fingertip_R",
+        "runtimeName": "archer_node347__fingertip_R"
+      },
+      {
+        "node": 348,
+        "sourceName": "prop_glove_finger_R",
+        "runtimeName": "archer_node348__prop_glove_finger_R"
+      },
+      {
+        "node": 349,
+        "sourceName": "finger_R",
+        "runtimeName": "archer_node349__finger_R"
+      },
+      {
+        "node": 350,
+        "sourceName": "prop-weapon_R",
+        "runtimeName": "archer_node350__prop_weapon_R"
+      },
+      {
+        "node": 351,
+        "sourceName": "weapon_R",
+        "runtimeName": "archer_node351__weapon_R"
+      },
+      {
+        "node": 352,
+        "sourceName": "prop-projectile",
+        "runtimeName": "archer_node352__prop_projectile"
+      },
+      {
+        "node": 353,
+        "sourceName": "projectile",
+        "runtimeName": "archer_node353__projectile"
+      },
+      {
+        "node": 354,
+        "sourceName": "prop_glove_hand_R",
+        "runtimeName": "archer_node354__prop_glove_hand_R"
+      },
+      {
+        "node": 355,
+        "sourceName": "hand_R",
+        "runtimeName": "archer_node355__hand_R"
+      },
+      {
+        "node": 356,
+        "sourceName": "prop_glove_wrist_R",
+        "runtimeName": "archer_node356__prop_glove_wrist_R"
+      },
+      {
+        "node": 357,
+        "sourceName": "prop_brace_R",
+        "runtimeName": "archer_node357__prop_brace_R"
+      },
+      {
+        "node": 358,
+        "sourceName": "forearm_R",
+        "runtimeName": "archer_node358__forearm_R"
+      },
+      {
+        "node": 359,
+        "sourceName": "prop_couter_R",
+        "runtimeName": "archer_node359__prop_couter_R"
+      },
+      {
+        "node": 360,
+        "sourceName": "prop-armpad_R",
+        "runtimeName": "archer_node360__prop_armpad_R"
+      },
+      {
+        "node": 361,
+        "sourceName": "prop_rerebrace_R",
+        "runtimeName": "archer_node361__prop_rerebrace_R"
+      },
+      {
+        "node": 362,
+        "sourceName": "arm_R",
+        "runtimeName": "archer_node362__arm_R"
+      },
+      {
+        "node": 363,
+        "sourceName": "prop-shoulderpad_R",
+        "runtimeName": "archer_node363__prop_shoulderpad_R"
+      },
+      {
+        "node": 364,
+        "sourceName": "shoulder_R",
+        "runtimeName": "archer_node364__shoulder_R"
+      },
+      {
+        "node": 365,
+        "sourceName": "prop-back",
+        "runtimeName": "archer_node365__prop_back"
+      },
+      {
+        "node": 366,
+        "sourceName": "prop-quiver_back",
+        "runtimeName": "archer_node366__prop_quiver_back"
+      },
+      {
+        "node": 367,
+        "sourceName": "cape3",
+        "runtimeName": "archer_node367__cape3"
+      },
+      {
+        "node": 368,
+        "sourceName": "cape2",
+        "runtimeName": "archer_node368__cape2"
+      },
+      {
+        "node": 369,
+        "sourceName": "cape1",
+        "runtimeName": "archer_node369__cape1"
+      },
+      {
+        "node": 370,
+        "sourceName": "prop_breastplate",
+        "runtimeName": "archer_node370__prop_breastplate"
+      },
+      {
+        "node": 371,
+        "sourceName": "prop_backplate",
+        "runtimeName": "archer_node371__prop_backplate"
+      },
+      {
+        "node": 372,
+        "sourceName": "prop_quiver_B",
+        "runtimeName": "archer_node372__prop_quiver_B"
+      },
+      {
+        "node": 373,
+        "sourceName": "chest",
+        "runtimeName": "archer_node373__chest"
+      },
+      {
+        "node": 374,
+        "sourceName": "spine1",
+        "runtimeName": "archer_node374__spine1"
+      },
+      {
+        "node": 375,
+        "sourceName": "spine",
+        "runtimeName": "archer_node375__spine"
+      },
+      {
+        "node": 376,
+        "sourceName": "prop_foot_L",
+        "runtimeName": "archer_node376__prop_foot_L"
+      },
+      {
+        "node": 377,
+        "sourceName": "foot_L",
+        "runtimeName": "archer_node377__foot_L"
+      },
+      {
+        "node": 378,
+        "sourceName": "prop_leg_L",
+        "runtimeName": "archer_node378__prop_leg_L"
+      },
+      {
+        "node": 379,
+        "sourceName": "leg_L",
+        "runtimeName": "archer_node379__leg_L"
+      },
+      {
+        "node": 380,
+        "sourceName": "prop_cuisse_L",
+        "runtimeName": "archer_node380__prop_cuisse_L"
+      },
+      {
+        "node": 381,
+        "sourceName": "prop_chaff_L",
+        "runtimeName": "archer_node381__prop_chaff_L"
+      },
+      {
+        "node": 382,
+        "sourceName": "thigh_L",
+        "runtimeName": "archer_node382__thigh_L"
+      },
+      {
+        "node": 383,
+        "sourceName": "prop_foot_R",
+        "runtimeName": "archer_node383__prop_foot_R"
+      },
+      {
+        "node": 384,
+        "sourceName": "foot_R",
+        "runtimeName": "archer_node384__foot_R"
+      },
+      {
+        "node": 385,
+        "sourceName": "prop_leg_R",
+        "runtimeName": "archer_node385__prop_leg_R"
+      },
+      {
+        "node": 386,
+        "sourceName": "leg_R",
+        "runtimeName": "archer_node386__leg_R"
+      },
+      {
+        "node": 387,
+        "sourceName": "prop_cuisse_R",
+        "runtimeName": "archer_node387__prop_cuisse_R"
+      },
+      {
+        "node": 388,
+        "sourceName": "prop_chaff_R",
+        "runtimeName": "archer_node388__prop_chaff_R"
+      },
+      {
+        "node": 389,
+        "sourceName": "thigh_R",
+        "runtimeName": "archer_node389__thigh_R"
+      },
+      {
+        "node": 390,
+        "sourceName": "prop-sheath_L",
+        "runtimeName": "archer_node390__prop_sheath_L"
+      },
+      {
+        "node": 391,
+        "sourceName": "prop-quiver_R",
+        "runtimeName": "archer_node391__prop_quiver_R"
+      },
+      {
+        "node": 392,
+        "sourceName": "prop_fauld",
+        "runtimeName": "archer_node392__prop_fauld"
+      },
+      {
+        "node": 393,
+        "sourceName": "prop_sheath_01_R",
+        "runtimeName": "archer_node393__prop_sheath_01_R"
+      },
+      {
+        "node": 394,
+        "sourceName": "sheath_01_R",
+        "runtimeName": "archer_node394__sheath_01_R"
+      },
+      {
+        "node": 395,
+        "sourceName": "prop_sheath_01_L",
+        "runtimeName": "archer_node395__prop_sheath_01_L"
+      },
+      {
+        "node": 396,
+        "sourceName": "sheath_01_L",
+        "runtimeName": "archer_node396__sheath_01_L"
+      },
+      {
+        "node": 397,
+        "sourceName": "prop_seax_front",
+        "runtimeName": "archer_node397__prop_seax_front"
+      },
+      {
+        "node": 398,
+        "sourceName": "prop_seax_back",
+        "runtimeName": "archer_node398__prop_seax_back"
+      },
+      {
+        "node": 399,
+        "sourceName": "prop_sheath_02_R",
+        "runtimeName": "archer_node399__prop_sheath_02_R"
+      },
+      {
+        "node": 400,
+        "sourceName": "sheath_02_R",
+        "runtimeName": "archer_node400__sheath_02_R"
+      },
+      {
+        "node": 401,
+        "sourceName": "prop_sheath_02_L",
+        "runtimeName": "archer_node401__prop_sheath_02_L"
+      },
+      {
+        "node": 402,
+        "sourceName": "sheath_02_L",
+        "runtimeName": "archer_node402__sheath_02_L"
+      },
+      {
+        "node": 403,
+        "sourceName": "prop_quiver_R",
+        "runtimeName": "archer_node403__prop_quiver_R"
+      },
+      {
+        "node": 404,
+        "sourceName": "quiver_R",
+        "runtimeName": "archer_node404__quiver_R"
+      },
+      {
+        "node": 405,
+        "sourceName": "prop_quiver_L",
+        "runtimeName": "archer_node405__prop_quiver_L"
+      },
+      {
+        "node": 406,
+        "sourceName": "quiver_L",
+        "runtimeName": "archer_node406__quiver_L"
+      },
+      {
+        "node": 407,
+        "sourceName": "prop-sheath_R",
+        "runtimeName": "archer_node407__prop_sheath_R"
+      },
+      {
+        "node": 408,
+        "sourceName": "hip",
+        "runtimeName": "archer_node408__hip"
+      },
+      {
+        "node": 409,
+        "sourceName": "knee_L",
+        "runtimeName": "archer_node409__knee_L"
+      },
+      {
+        "node": 410,
+        "sourceName": "knee_R",
+        "runtimeName": "archer_node410__knee_R"
+      },
+      {
+        "node": 411,
+        "sourceName": "handIK_L",
+        "runtimeName": "archer_node411__handIK_L"
+      },
+      {
+        "node": 412,
+        "sourceName": "handIK_R",
+        "runtimeName": "archer_node412__handIK_R"
+      },
+      {
+        "node": 413,
+        "sourceName": "footIK_L",
+        "runtimeName": "archer_node413__footIK_L"
+      },
+      {
+        "node": 414,
+        "sourceName": "footIK_R",
+        "runtimeName": "archer_node414__footIK_R"
+      },
+      {
+        "node": 415,
+        "sourceName": "elbow_L",
+        "runtimeName": "archer_node415__elbow_L"
+      },
+      {
+        "node": 416,
+        "sourceName": "elbow_R",
+        "runtimeName": "archer_node416__elbow_R"
+      },
+      {
+        "node": 417,
+        "sourceName": "archer licensed-gnome-head",
+        "runtimeName": "archer_node417__archer_licensed_gnome_head"
+      },
+      {
+        "node": 418,
+        "sourceName": "archer textured anatomy",
+        "runtimeName": "archer_node418__archer_textured_anatomy"
+      },
+      {
+        "node": 419,
+        "sourceName": "archer anatomy rig",
+        "runtimeName": "archer_node419__archer_anatomy_rig"
+      },
+      {
+        "node": 420,
+        "sourceName": "Hoof_F_R",
+        "runtimeName": "scout_node420__Hoof_F_R"
+      },
+      {
+        "node": 421,
+        "sourceName": "Hand_R",
+        "runtimeName": "scout_node421__Hand_R"
+      },
+      {
+        "node": 422,
+        "sourceName": "Horse_Hand_IK_R",
+        "runtimeName": "scout_node422__Horse_Hand_IK_R"
+      },
+      {
+        "node": 423,
+        "sourceName": "Hoof_F_L",
+        "runtimeName": "scout_node423__Hoof_F_L"
+      },
+      {
+        "node": 424,
+        "sourceName": "Hand_L",
+        "runtimeName": "scout_node424__Hand_L"
+      },
+      {
+        "node": 425,
+        "sourceName": "Horse_Hand_IK_L",
+        "runtimeName": "scout_node425__Horse_Hand_IK_L"
+      },
+      {
+        "node": 426,
+        "sourceName": "Horse_HeadNub",
+        "runtimeName": "scout_node426__Horse_HeadNub"
+      },
+      {
+        "node": 427,
+        "sourceName": "Hoof_B_L",
+        "runtimeName": "scout_node427__Hoof_B_L"
+      },
+      {
+        "node": 428,
+        "sourceName": "Foot_L",
+        "runtimeName": "scout_node428__Foot_L"
+      },
+      {
+        "node": 429,
+        "sourceName": "Horse_leg_IK_L",
+        "runtimeName": "scout_node429__Horse_leg_IK_L"
+      },
+      {
+        "node": 430,
+        "sourceName": "Hoof_B_R",
+        "runtimeName": "scout_node430__Hoof_B_R"
+      },
+      {
+        "node": 431,
+        "sourceName": "Foot_R",
+        "runtimeName": "scout_node431__Foot_R"
+      },
+      {
+        "node": 432,
+        "sourceName": "Horse_leg_IK_R",
+        "runtimeName": "scout_node432__Horse_leg_IK_R"
+      },
+      {
+        "node": 433,
+        "sourceName": "prop_head",
+        "runtimeName": "scout_node433__prop_head"
+      },
+      {
+        "node": 434,
+        "sourceName": "Horse_ear_2_R",
+        "runtimeName": "scout_node434__Horse_ear_2_R"
+      },
+      {
+        "node": 435,
+        "sourceName": "Horse_ear_R",
+        "runtimeName": "scout_node435__Horse_ear_R"
+      },
+      {
+        "node": 436,
+        "sourceName": "Horse_ear_2_L",
+        "runtimeName": "scout_node436__Horse_ear_2_L"
+      },
+      {
+        "node": 437,
+        "sourceName": "Horse_ear_L",
+        "runtimeName": "scout_node437__Horse_ear_L"
+      },
+      {
+        "node": 438,
+        "sourceName": "Horse_Head",
+        "runtimeName": "scout_node438__Horse_Head"
+      },
+      {
+        "node": 439,
+        "sourceName": "Horse_Neck_2",
+        "runtimeName": "scout_node439__Horse_Neck_2"
+      },
+      {
+        "node": 440,
+        "sourceName": "Horse_Neck_1",
+        "runtimeName": "scout_node440__Horse_Neck_1"
+      },
+      {
+        "node": 441,
+        "sourceName": "Horse_Neck",
+        "runtimeName": "scout_node441__Horse_Neck"
+      },
+      {
+        "node": 442,
+        "sourceName": "Horse_Hoof_R",
+        "runtimeName": "scout_node442__Horse_Hoof_R"
+      },
+      {
+        "node": 443,
+        "sourceName": "Horse_Hand_R",
+        "runtimeName": "scout_node443__Horse_Hand_R"
+      },
+      {
+        "node": 444,
+        "sourceName": "Horse_Forearm_R",
+        "runtimeName": "scout_node444__Horse_Forearm_R"
+      },
+      {
+        "node": 445,
+        "sourceName": "Knee_Stretch_R",
+        "runtimeName": "scout_node445__Knee_Stretch_R"
+      },
+      {
+        "node": 446,
+        "sourceName": "Horse_Arm_R",
+        "runtimeName": "scout_node446__Horse_Arm_R"
+      },
+      {
+        "node": 447,
+        "sourceName": "Horse_upperarm_R",
+        "runtimeName": "scout_node447__Horse_upperarm_R"
+      },
+      {
+        "node": 448,
+        "sourceName": "Horse_shoulder_R",
+        "runtimeName": "scout_node448__Horse_shoulder_R"
+      },
+      {
+        "node": 449,
+        "sourceName": "Horse_Hoof_L",
+        "runtimeName": "scout_node449__Horse_Hoof_L"
+      },
+      {
+        "node": 450,
+        "sourceName": "Horse_Hand_L",
+        "runtimeName": "scout_node450__Horse_Hand_L"
+      },
+      {
+        "node": 451,
+        "sourceName": "Horse_Forearm_L",
+        "runtimeName": "scout_node451__Horse_Forearm_L"
+      },
+      {
+        "node": 452,
+        "sourceName": "Knee_Stretch_L",
+        "runtimeName": "scout_node452__Knee_Stretch_L"
+      },
+      {
+        "node": 453,
+        "sourceName": "Horse_Arm_L",
+        "runtimeName": "scout_node453__Horse_Arm_L"
+      },
+      {
+        "node": 454,
+        "sourceName": "Horse_upperarm_L",
+        "runtimeName": "scout_node454__Horse_upperarm_L"
+      },
+      {
+        "node": 455,
+        "sourceName": "Horse_shoulder_L",
+        "runtimeName": "scout_node455__Horse_shoulder_L"
+      },
+      {
+        "node": 456,
+        "sourceName": "prop_chest",
+        "runtimeName": "scout_node456__prop_chest"
+      },
+      {
+        "node": 457,
+        "sourceName": "Horse_Spine_2",
+        "runtimeName": "scout_node457__Horse_Spine_2"
+      },
+      {
+        "node": 458,
+        "sourceName": "prop_shield",
+        "runtimeName": "scout_node458__prop_shield"
+      },
+      {
+        "node": 459,
+        "sourceName": "fingertip_L",
+        "runtimeName": "scout_node459__fingertip_L"
+      },
+      {
+        "node": 460,
+        "sourceName": "prop_glove_finger_L",
+        "runtimeName": "scout_node460__prop_glove_finger_L"
+      },
+      {
+        "node": 461,
+        "sourceName": "finger_L",
+        "runtimeName": "scout_node461__finger_L"
+      },
+      {
+        "node": 462,
+        "sourceName": "prop-shield",
+        "runtimeName": "scout_node462__prop_shield"
+      },
+      {
+        "node": 463,
+        "sourceName": "shield",
+        "runtimeName": "scout_node463__shield"
+      },
+      {
+        "node": 464,
+        "sourceName": "prop-weapon_bow",
+        "runtimeName": "scout_node464__prop_weapon_bow"
+      },
+      {
+        "node": 465,
+        "sourceName": "weapon_bow",
+        "runtimeName": "scout_node465__weapon_bow"
+      },
+      {
+        "node": 466,
+        "sourceName": "prop-ammo",
+        "runtimeName": "scout_node466__prop_ammo"
+      },
+      {
+        "node": 467,
+        "sourceName": "ammo",
+        "runtimeName": "scout_node467__ammo"
+      },
+      {
+        "node": 468,
+        "sourceName": "prop-weapon_L",
+        "runtimeName": "scout_node468__prop_weapon_L"
+      },
+      {
+        "node": 469,
+        "sourceName": "weapon_L",
+        "runtimeName": "scout_node469__weapon_L"
+      },
+      {
+        "node": 470,
+        "sourceName": "prop_glove_hand_L",
+        "runtimeName": "scout_node470__prop_glove_hand_L"
+      },
+      {
+        "node": 471,
+        "sourceName": "hand_L",
+        "runtimeName": "scout_node471__hand_L"
+      },
+      {
+        "node": 472,
+        "sourceName": "prop_glove_wrist_L",
+        "runtimeName": "scout_node472__prop_glove_wrist_L"
+      },
+      {
+        "node": 473,
+        "sourceName": "prop-shield_arm",
+        "runtimeName": "scout_node473__prop_shield_arm"
+      },
+      {
+        "node": 474,
+        "sourceName": "shield_arm",
+        "runtimeName": "scout_node474__shield_arm"
+      },
+      {
+        "node": 475,
+        "sourceName": "prop_brace_L",
+        "runtimeName": "scout_node475__prop_brace_L"
+      },
+      {
+        "node": 476,
+        "sourceName": "forearm_L",
+        "runtimeName": "scout_node476__forearm_L"
+      },
+      {
+        "node": 477,
+        "sourceName": "prop_couter_L",
+        "runtimeName": "scout_node477__prop_couter_L"
+      },
+      {
+        "node": 478,
+        "sourceName": "prop-armpad_L",
+        "runtimeName": "scout_node478__prop_armpad_L"
+      },
+      {
+        "node": 479,
+        "sourceName": "prop_rerebrace_L",
+        "runtimeName": "scout_node479__prop_rerebrace_L"
+      },
+      {
+        "node": 480,
+        "sourceName": "arm_L",
+        "runtimeName": "scout_node480__arm_L"
+      },
+      {
+        "node": 481,
+        "sourceName": "prop-shoulderpad_L",
+        "runtimeName": "scout_node481__prop_shoulderpad_L"
+      },
+      {
+        "node": 482,
+        "sourceName": "shoulder_L",
+        "runtimeName": "scout_node482__shoulder_L"
+      },
+      {
+        "node": 483,
+        "sourceName": "prop-helmet",
+        "runtimeName": "scout_node483__prop_helmet"
+      },
+      {
+        "node": 484,
+        "sourceName": "helmet",
+        "runtimeName": "scout_node484__helmet"
+      },
+      {
+        "node": 485,
+        "sourceName": "prop-head",
+        "runtimeName": "scout_node485__prop_head"
+      },
+      {
+        "node": 486,
+        "sourceName": "head",
+        "runtimeName": "scout_node486__head"
+      },
+      {
+        "node": 487,
+        "sourceName": "prop-neck_guard",
+        "runtimeName": "scout_node487__prop_neck_guard"
+      },
+      {
+        "node": 488,
+        "sourceName": "neck_guard",
+        "runtimeName": "scout_node488__neck_guard"
+      },
+      {
+        "node": 489,
+        "sourceName": "neck",
+        "runtimeName": "scout_node489__neck"
+      },
+      {
+        "node": 490,
+        "sourceName": "prop_bevor",
+        "runtimeName": "scout_node490__prop_bevor"
+      },
+      {
+        "node": 491,
+        "sourceName": "fingertip_R",
+        "runtimeName": "scout_node491__fingertip_R"
+      },
+      {
+        "node": 492,
+        "sourceName": "prop_glove_finger_R",
+        "runtimeName": "scout_node492__prop_glove_finger_R"
+      },
+      {
+        "node": 493,
+        "sourceName": "finger_R",
+        "runtimeName": "scout_node493__finger_R"
+      },
+      {
+        "node": 494,
+        "sourceName": "prop-weapon_R",
+        "runtimeName": "scout_node494__prop_weapon_R"
+      },
+      {
+        "node": 495,
+        "sourceName": "weapon_R",
+        "runtimeName": "scout_node495__weapon_R"
+      },
+      {
+        "node": 496,
+        "sourceName": "prop-projectile",
+        "runtimeName": "scout_node496__prop_projectile"
+      },
+      {
+        "node": 497,
+        "sourceName": "projectile",
+        "runtimeName": "scout_node497__projectile"
+      },
+      {
+        "node": 498,
+        "sourceName": "prop_glove_hand_R",
+        "runtimeName": "scout_node498__prop_glove_hand_R"
+      },
+      {
+        "node": 499,
+        "sourceName": "hand_R",
+        "runtimeName": "scout_node499__hand_R"
+      },
+      {
+        "node": 500,
+        "sourceName": "prop_glove_wrist_R",
+        "runtimeName": "scout_node500__prop_glove_wrist_R"
+      },
+      {
+        "node": 501,
+        "sourceName": "prop_brace_R",
+        "runtimeName": "scout_node501__prop_brace_R"
+      },
+      {
+        "node": 502,
+        "sourceName": "forearm_R",
+        "runtimeName": "scout_node502__forearm_R"
+      },
+      {
+        "node": 503,
+        "sourceName": "prop_couter_R",
+        "runtimeName": "scout_node503__prop_couter_R"
+      },
+      {
+        "node": 504,
+        "sourceName": "prop-armpad_R",
+        "runtimeName": "scout_node504__prop_armpad_R"
+      },
+      {
+        "node": 505,
+        "sourceName": "prop_rerebrace_R",
+        "runtimeName": "scout_node505__prop_rerebrace_R"
+      },
+      {
+        "node": 506,
+        "sourceName": "arm_R",
+        "runtimeName": "scout_node506__arm_R"
+      },
+      {
+        "node": 507,
+        "sourceName": "prop-shoulderpad_R",
+        "runtimeName": "scout_node507__prop_shoulderpad_R"
+      },
+      {
+        "node": 508,
+        "sourceName": "shoulder_R",
+        "runtimeName": "scout_node508__shoulder_R"
+      },
+      {
+        "node": 509,
+        "sourceName": "prop-back",
+        "runtimeName": "scout_node509__prop_back"
+      },
+      {
+        "node": 510,
+        "sourceName": "prop-quiver_back",
+        "runtimeName": "scout_node510__prop_quiver_back"
+      },
+      {
+        "node": 511,
+        "sourceName": "cape3",
+        "runtimeName": "scout_node511__cape3"
+      },
+      {
+        "node": 512,
+        "sourceName": "cape2",
+        "runtimeName": "scout_node512__cape2"
+      },
+      {
+        "node": 513,
+        "sourceName": "cape1",
+        "runtimeName": "scout_node513__cape1"
+      },
+      {
+        "node": 514,
+        "sourceName": "prop_breastplate",
+        "runtimeName": "scout_node514__prop_breastplate"
+      },
+      {
+        "node": 515,
+        "sourceName": "prop_backplate",
+        "runtimeName": "scout_node515__prop_backplate"
+      },
+      {
+        "node": 516,
+        "sourceName": "prop_quiver_B",
+        "runtimeName": "scout_node516__prop_quiver_B"
+      },
+      {
+        "node": 517,
+        "sourceName": "chest",
+        "runtimeName": "scout_node517__chest"
+      },
+      {
+        "node": 518,
+        "sourceName": "spine1",
+        "runtimeName": "scout_node518__spine1"
+      },
+      {
+        "node": 519,
+        "sourceName": "spine",
+        "runtimeName": "scout_node519__spine"
+      },
+      {
+        "node": 520,
+        "sourceName": "prop_foot_L",
+        "runtimeName": "scout_node520__prop_foot_L"
+      },
+      {
+        "node": 521,
+        "sourceName": "foot_L",
+        "runtimeName": "scout_node521__foot_L"
+      },
+      {
+        "node": 522,
+        "sourceName": "prop_leg_L",
+        "runtimeName": "scout_node522__prop_leg_L"
+      },
+      {
+        "node": 523,
+        "sourceName": "leg_L",
+        "runtimeName": "scout_node523__leg_L"
+      },
+      {
+        "node": 524,
+        "sourceName": "prop_cuisse_L",
+        "runtimeName": "scout_node524__prop_cuisse_L"
+      },
+      {
+        "node": 525,
+        "sourceName": "prop_chaff_L",
+        "runtimeName": "scout_node525__prop_chaff_L"
+      },
+      {
+        "node": 526,
+        "sourceName": "thigh_L",
+        "runtimeName": "scout_node526__thigh_L"
+      },
+      {
+        "node": 527,
+        "sourceName": "prop_foot_R",
+        "runtimeName": "scout_node527__prop_foot_R"
+      },
+      {
+        "node": 528,
+        "sourceName": "foot_R",
+        "runtimeName": "scout_node528__foot_R"
+      },
+      {
+        "node": 529,
+        "sourceName": "prop_leg_R",
+        "runtimeName": "scout_node529__prop_leg_R"
+      },
+      {
+        "node": 530,
+        "sourceName": "leg_R",
+        "runtimeName": "scout_node530__leg_R"
+      },
+      {
+        "node": 531,
+        "sourceName": "prop_cuisse_R",
+        "runtimeName": "scout_node531__prop_cuisse_R"
+      },
+      {
+        "node": 532,
+        "sourceName": "prop_chaff_R",
+        "runtimeName": "scout_node532__prop_chaff_R"
+      },
+      {
+        "node": 533,
+        "sourceName": "thigh_R",
+        "runtimeName": "scout_node533__thigh_R"
+      },
+      {
+        "node": 534,
+        "sourceName": "prop-sheath_L",
+        "runtimeName": "scout_node534__prop_sheath_L"
+      },
+      {
+        "node": 535,
+        "sourceName": "prop-quiver_R",
+        "runtimeName": "scout_node535__prop_quiver_R"
+      },
+      {
+        "node": 536,
+        "sourceName": "prop_fauld",
+        "runtimeName": "scout_node536__prop_fauld"
+      },
+      {
+        "node": 537,
+        "sourceName": "prop_sheath_01_R",
+        "runtimeName": "scout_node537__prop_sheath_01_R"
+      },
+      {
+        "node": 538,
+        "sourceName": "sheath_01_R",
+        "runtimeName": "scout_node538__sheath_01_R"
+      },
+      {
+        "node": 539,
+        "sourceName": "prop_sheath_01_L",
+        "runtimeName": "scout_node539__prop_sheath_01_L"
+      },
+      {
+        "node": 540,
+        "sourceName": "sheath_01_L",
+        "runtimeName": "scout_node540__sheath_01_L"
+      },
+      {
+        "node": 541,
+        "sourceName": "prop_seax_front",
+        "runtimeName": "scout_node541__prop_seax_front"
+      },
+      {
+        "node": 542,
+        "sourceName": "prop_seax_back",
+        "runtimeName": "scout_node542__prop_seax_back"
+      },
+      {
+        "node": 543,
+        "sourceName": "prop_sheath_02_R",
+        "runtimeName": "scout_node543__prop_sheath_02_R"
+      },
+      {
+        "node": 544,
+        "sourceName": "sheath_02_R",
+        "runtimeName": "scout_node544__sheath_02_R"
+      },
+      {
+        "node": 545,
+        "sourceName": "prop_sheath_02_L",
+        "runtimeName": "scout_node545__prop_sheath_02_L"
+      },
+      {
+        "node": 546,
+        "sourceName": "sheath_02_L",
+        "runtimeName": "scout_node546__sheath_02_L"
+      },
+      {
+        "node": 547,
+        "sourceName": "prop_quiver_R",
+        "runtimeName": "scout_node547__prop_quiver_R"
+      },
+      {
+        "node": 548,
+        "sourceName": "quiver_R",
+        "runtimeName": "scout_node548__quiver_R"
+      },
+      {
+        "node": 549,
+        "sourceName": "prop_quiver_L",
+        "runtimeName": "scout_node549__prop_quiver_L"
+      },
+      {
+        "node": 550,
+        "sourceName": "quiver_L",
+        "runtimeName": "scout_node550__quiver_L"
+      },
+      {
+        "node": 551,
+        "sourceName": "prop-sheath_R",
+        "runtimeName": "scout_node551__prop_sheath_R"
+      },
+      {
+        "node": 552,
+        "sourceName": "hip",
+        "runtimeName": "scout_node552__hip"
+      },
+      {
+        "node": 553,
+        "sourceName": "knee_L",
+        "runtimeName": "scout_node553__knee_L"
+      },
+      {
+        "node": 554,
+        "sourceName": "knee_R",
+        "runtimeName": "scout_node554__knee_R"
+      },
+      {
+        "node": 555,
+        "sourceName": "handIK_L",
+        "runtimeName": "scout_node555__handIK_L"
+      },
+      {
+        "node": 556,
+        "sourceName": "handIK_R",
+        "runtimeName": "scout_node556__handIK_R"
+      },
+      {
+        "node": 557,
+        "sourceName": "footIK_L",
+        "runtimeName": "scout_node557__footIK_L"
+      },
+      {
+        "node": 558,
+        "sourceName": "footIK_R",
+        "runtimeName": "scout_node558__footIK_R"
+      },
+      {
+        "node": 559,
+        "sourceName": "elbow_L",
+        "runtimeName": "scout_node559__elbow_L"
+      },
+      {
+        "node": 560,
+        "sourceName": "elbow_R",
+        "runtimeName": "scout_node560__elbow_R"
+      },
+      {
+        "node": 561,
+        "sourceName": "scout licensed-gnome-head",
+        "runtimeName": "scout_node561__scout_licensed_gnome_head"
+      },
+      {
+        "node": 562,
+        "sourceName": "scout mounted rider",
+        "runtimeName": "scout_node562__scout_mounted_rider"
+      },
+      {
+        "node": 563,
+        "sourceName": "scout seated rider rig",
+        "runtimeName": "scout_node563__scout_seated_rider_rig"
+      },
+      {
+        "node": 564,
+        "sourceName": "prop_rider",
+        "runtimeName": "scout_node564__prop_rider"
+      },
+      {
+        "node": 565,
+        "sourceName": "prop_saddle",
+        "runtimeName": "scout_node565__prop_saddle"
+      },
+      {
+        "node": 566,
+        "sourceName": "Horse_Belly",
+        "runtimeName": "scout_node566__Horse_Belly"
+      },
+      {
+        "node": 567,
+        "sourceName": "prop_wings",
+        "runtimeName": "scout_node567__prop_wings"
+      },
+      {
+        "node": 568,
+        "sourceName": "Horse_Spine_1",
+        "runtimeName": "scout_node568__Horse_Spine_1"
+      },
+      {
+        "node": 569,
+        "sourceName": "Horse_Hoof_back_L",
+        "runtimeName": "scout_node569__Horse_Hoof_back_L"
+      },
+      {
+        "node": 570,
+        "sourceName": "Horse_Foot_L",
+        "runtimeName": "scout_node570__Horse_Foot_L"
+      },
+      {
+        "node": 571,
+        "sourceName": "Horse_Shin_L",
+        "runtimeName": "scout_node571__Horse_Shin_L"
+      },
+      {
+        "node": 572,
+        "sourceName": "Knee_Stretch_B_L",
+        "runtimeName": "scout_node572__Knee_Stretch_B_L"
+      },
+      {
+        "node": 573,
+        "sourceName": "Horse_Leg_L",
+        "runtimeName": "scout_node573__Horse_Leg_L"
+      },
+      {
+        "node": 574,
+        "sourceName": "Leg_Stretch_L",
+        "runtimeName": "scout_node574__Leg_Stretch_L"
+      },
+      {
+        "node": 575,
+        "sourceName": "Horse_Thigh_L",
+        "runtimeName": "scout_node575__Horse_Thigh_L"
+      },
+      {
+        "node": 576,
+        "sourceName": "Horse_Femur_L",
+        "runtimeName": "scout_node576__Horse_Femur_L"
+      },
+      {
+        "node": 577,
+        "sourceName": "Horse_Hoof_back_R",
+        "runtimeName": "scout_node577__Horse_Hoof_back_R"
+      },
+      {
+        "node": 578,
+        "sourceName": "Horse_Foot_R",
+        "runtimeName": "scout_node578__Horse_Foot_R"
+      },
+      {
+        "node": 579,
+        "sourceName": "Horse_Shin_R",
+        "runtimeName": "scout_node579__Horse_Shin_R"
+      },
+      {
+        "node": 580,
+        "sourceName": "Knee_Stretch_B_R",
+        "runtimeName": "scout_node580__Knee_Stretch_B_R"
+      },
+      {
+        "node": 581,
+        "sourceName": "Horse_Leg_R",
+        "runtimeName": "scout_node581__Horse_Leg_R"
+      },
+      {
+        "node": 582,
+        "sourceName": "Leg_Stretch_R",
+        "runtimeName": "scout_node582__Leg_Stretch_R"
+      },
+      {
+        "node": 583,
+        "sourceName": "Horse_Thigh_R",
+        "runtimeName": "scout_node583__Horse_Thigh_R"
+      },
+      {
+        "node": 584,
+        "sourceName": "Horse_Femur_R",
+        "runtimeName": "scout_node584__Horse_Femur_R"
+      },
+      {
+        "node": 585,
+        "sourceName": "Horse_Tail_10",
+        "runtimeName": "scout_node585__Horse_Tail_10"
+      },
+      {
+        "node": 586,
+        "sourceName": "Horse_Tail_9",
+        "runtimeName": "scout_node586__Horse_Tail_9"
+      },
+      {
+        "node": 587,
+        "sourceName": "Horse_Tail_8",
+        "runtimeName": "scout_node587__Horse_Tail_8"
+      },
+      {
+        "node": 588,
+        "sourceName": "Horse_Tail_7",
+        "runtimeName": "scout_node588__Horse_Tail_7"
+      },
+      {
+        "node": 589,
+        "sourceName": "Horse_Tail_6",
+        "runtimeName": "scout_node589__Horse_Tail_6"
+      },
+      {
+        "node": 590,
+        "sourceName": "Horse_Tail_5",
+        "runtimeName": "scout_node590__Horse_Tail_5"
+      },
+      {
+        "node": 591,
+        "sourceName": "Horse_Tail_4",
+        "runtimeName": "scout_node591__Horse_Tail_4"
+      },
+      {
+        "node": 592,
+        "sourceName": "Horse_Tail_3",
+        "runtimeName": "scout_node592__Horse_Tail_3"
+      },
+      {
+        "node": 593,
+        "sourceName": "Horse_Tail_2",
+        "runtimeName": "scout_node593__Horse_Tail_2"
+      },
+      {
+        "node": 594,
+        "sourceName": "Horse_Tail",
+        "runtimeName": "scout_node594__Horse_Tail"
+      },
+      {
+        "node": 595,
+        "sourceName": "Horse_Tail_base",
+        "runtimeName": "scout_node595__Horse_Tail_base"
+      },
+      {
+        "node": 596,
+        "sourceName": "Horse_Spine",
+        "runtimeName": "scout_node596__Horse_Spine"
+      },
+      {
+        "node": 597,
+        "sourceName": "Leg_target_L",
+        "runtimeName": "scout_node597__Leg_target_L"
+      },
+      {
+        "node": 598,
+        "sourceName": "Leg_target_R",
+        "runtimeName": "scout_node598__Leg_target_R"
+      },
+      {
+        "node": 599,
+        "sourceName": "Knee_F_L",
+        "runtimeName": "scout_node599__Knee_F_L"
+      },
+      {
+        "node": 600,
+        "sourceName": "Knee_F_R",
+        "runtimeName": "scout_node600__Knee_F_R"
+      },
+      {
+        "node": 601,
+        "sourceName": "Shoulder_Target_R",
+        "runtimeName": "scout_node601__Shoulder_Target_R"
+      },
+      {
+        "node": 602,
+        "sourceName": "Shoulder_Target_L",
+        "runtimeName": "scout_node602__Shoulder_Target_L"
+      },
+      {
+        "node": 603,
+        "sourceName": "Knee_B_L",
+        "runtimeName": "scout_node603__Knee_B_L"
+      },
+      {
+        "node": 604,
+        "sourceName": "Knee_B_R",
+        "runtimeName": "scout_node604__Knee_B_R"
+      },
+      {
+        "node": 605,
+        "sourceName": "prop_decals",
+        "runtimeName": "scout_node605__prop_decals"
+      },
+      {
+        "node": 606,
+        "sourceName": "prop_rider_R",
+        "runtimeName": "scout_node606__prop_rider_R"
+      },
+      {
+        "node": 607,
+        "sourceName": "prop_rider_L",
+        "runtimeName": "scout_node607__prop_rider_L"
+      },
+      {
+        "node": 608,
+        "sourceName": "prop_hair",
+        "runtimeName": "scout_node608__prop_hair"
+      },
+      {
+        "node": 609,
+        "sourceName": "Horse_Hair",
+        "runtimeName": "scout_node609__Horse_Hair"
+      },
+      {
+        "node": 610,
+        "sourceName": "Horse_root",
+        "runtimeName": "scout_node610__Horse_root"
+      },
+      {
+        "node": 611,
+        "sourceName": "scout original-gnome-mount",
+        "runtimeName": "scout_node611__scout_original_gnome_mount"
+      },
+      {
+        "node": 612,
+        "sourceName": "scout mount rig",
+        "runtimeName": "scout_node612__scout_mount_rig"
+      },
+      {
+        "node": 613,
+        "sourceName": "Hoof_F_R",
+        "runtimeName": "light_cavalry_node613__Hoof_F_R"
+      },
+      {
+        "node": 614,
+        "sourceName": "Hand_R",
+        "runtimeName": "light_cavalry_node614__Hand_R"
+      },
+      {
+        "node": 615,
+        "sourceName": "Horse_Hand_IK_R",
+        "runtimeName": "light_cavalry_node615__Horse_Hand_IK_R"
+      },
+      {
+        "node": 616,
+        "sourceName": "Hoof_F_L",
+        "runtimeName": "light_cavalry_node616__Hoof_F_L"
+      },
+      {
+        "node": 617,
+        "sourceName": "Hand_L",
+        "runtimeName": "light_cavalry_node617__Hand_L"
+      },
+      {
+        "node": 618,
+        "sourceName": "Horse_Hand_IK_L",
+        "runtimeName": "light_cavalry_node618__Horse_Hand_IK_L"
+      },
+      {
+        "node": 619,
+        "sourceName": "Horse_HeadNub",
+        "runtimeName": "light_cavalry_node619__Horse_HeadNub"
+      },
+      {
+        "node": 620,
+        "sourceName": "Hoof_B_L",
+        "runtimeName": "light_cavalry_node620__Hoof_B_L"
+      },
+      {
+        "node": 621,
+        "sourceName": "Foot_L",
+        "runtimeName": "light_cavalry_node621__Foot_L"
+      },
+      {
+        "node": 622,
+        "sourceName": "Horse_leg_IK_L",
+        "runtimeName": "light_cavalry_node622__Horse_leg_IK_L"
+      },
+      {
+        "node": 623,
+        "sourceName": "Hoof_B_R",
+        "runtimeName": "light_cavalry_node623__Hoof_B_R"
+      },
+      {
+        "node": 624,
+        "sourceName": "Foot_R",
+        "runtimeName": "light_cavalry_node624__Foot_R"
+      },
+      {
+        "node": 625,
+        "sourceName": "Horse_leg_IK_R",
+        "runtimeName": "light_cavalry_node625__Horse_leg_IK_R"
+      },
+      {
+        "node": 626,
+        "sourceName": "prop_head",
+        "runtimeName": "light_cavalry_node626__prop_head"
+      },
+      {
+        "node": 627,
+        "sourceName": "Horse_ear_2_R",
+        "runtimeName": "light_cavalry_node627__Horse_ear_2_R"
+      },
+      {
+        "node": 628,
+        "sourceName": "Horse_ear_R",
+        "runtimeName": "light_cavalry_node628__Horse_ear_R"
+      },
+      {
+        "node": 629,
+        "sourceName": "Horse_ear_2_L",
+        "runtimeName": "light_cavalry_node629__Horse_ear_2_L"
+      },
+      {
+        "node": 630,
+        "sourceName": "Horse_ear_L",
+        "runtimeName": "light_cavalry_node630__Horse_ear_L"
+      },
+      {
+        "node": 631,
+        "sourceName": "Horse_Head",
+        "runtimeName": "light_cavalry_node631__Horse_Head"
+      },
+      {
+        "node": 632,
+        "sourceName": "Horse_Neck_2",
+        "runtimeName": "light_cavalry_node632__Horse_Neck_2"
+      },
+      {
+        "node": 633,
+        "sourceName": "Horse_Neck_1",
+        "runtimeName": "light_cavalry_node633__Horse_Neck_1"
+      },
+      {
+        "node": 634,
+        "sourceName": "Horse_Neck",
+        "runtimeName": "light_cavalry_node634__Horse_Neck"
+      },
+      {
+        "node": 635,
+        "sourceName": "Horse_Hoof_R",
+        "runtimeName": "light_cavalry_node635__Horse_Hoof_R"
+      },
+      {
+        "node": 636,
+        "sourceName": "Horse_Hand_R",
+        "runtimeName": "light_cavalry_node636__Horse_Hand_R"
+      },
+      {
+        "node": 637,
+        "sourceName": "Horse_Forearm_R",
+        "runtimeName": "light_cavalry_node637__Horse_Forearm_R"
+      },
+      {
+        "node": 638,
+        "sourceName": "Knee_Stretch_R",
+        "runtimeName": "light_cavalry_node638__Knee_Stretch_R"
+      },
+      {
+        "node": 639,
+        "sourceName": "Horse_Arm_R",
+        "runtimeName": "light_cavalry_node639__Horse_Arm_R"
+      },
+      {
+        "node": 640,
+        "sourceName": "Horse_upperarm_R",
+        "runtimeName": "light_cavalry_node640__Horse_upperarm_R"
+      },
+      {
+        "node": 641,
+        "sourceName": "Horse_shoulder_R",
+        "runtimeName": "light_cavalry_node641__Horse_shoulder_R"
+      },
+      {
+        "node": 642,
+        "sourceName": "Horse_Hoof_L",
+        "runtimeName": "light_cavalry_node642__Horse_Hoof_L"
+      },
+      {
+        "node": 643,
+        "sourceName": "Horse_Hand_L",
+        "runtimeName": "light_cavalry_node643__Horse_Hand_L"
+      },
+      {
+        "node": 644,
+        "sourceName": "Horse_Forearm_L",
+        "runtimeName": "light_cavalry_node644__Horse_Forearm_L"
+      },
+      {
+        "node": 645,
+        "sourceName": "Knee_Stretch_L",
+        "runtimeName": "light_cavalry_node645__Knee_Stretch_L"
+      },
+      {
+        "node": 646,
+        "sourceName": "Horse_Arm_L",
+        "runtimeName": "light_cavalry_node646__Horse_Arm_L"
+      },
+      {
+        "node": 647,
+        "sourceName": "Horse_upperarm_L",
+        "runtimeName": "light_cavalry_node647__Horse_upperarm_L"
+      },
+      {
+        "node": 648,
+        "sourceName": "Horse_shoulder_L",
+        "runtimeName": "light_cavalry_node648__Horse_shoulder_L"
+      },
+      {
+        "node": 649,
+        "sourceName": "prop_chest",
+        "runtimeName": "light_cavalry_node649__prop_chest"
+      },
+      {
+        "node": 650,
+        "sourceName": "Horse_Spine_2",
+        "runtimeName": "light_cavalry_node650__Horse_Spine_2"
+      },
+      {
+        "node": 651,
+        "sourceName": "prop_shield",
+        "runtimeName": "light_cavalry_node651__prop_shield"
+      },
+      {
+        "node": 652,
+        "sourceName": "fingertip_L",
+        "runtimeName": "light_cavalry_node652__fingertip_L"
+      },
+      {
+        "node": 653,
+        "sourceName": "prop_glove_finger_L",
+        "runtimeName": "light_cavalry_node653__prop_glove_finger_L"
+      },
+      {
+        "node": 654,
+        "sourceName": "finger_L",
+        "runtimeName": "light_cavalry_node654__finger_L"
+      },
+      {
+        "node": 655,
+        "sourceName": "prop-shield",
+        "runtimeName": "light_cavalry_node655__prop_shield"
+      },
+      {
+        "node": 656,
+        "sourceName": "shield",
+        "runtimeName": "light_cavalry_node656__shield"
+      },
+      {
+        "node": 657,
+        "sourceName": "prop-weapon_bow",
+        "runtimeName": "light_cavalry_node657__prop_weapon_bow"
+      },
+      {
+        "node": 658,
+        "sourceName": "weapon_bow",
+        "runtimeName": "light_cavalry_node658__weapon_bow"
+      },
+      {
+        "node": 659,
+        "sourceName": "prop-ammo",
+        "runtimeName": "light_cavalry_node659__prop_ammo"
+      },
+      {
+        "node": 660,
+        "sourceName": "ammo",
+        "runtimeName": "light_cavalry_node660__ammo"
+      },
+      {
+        "node": 661,
+        "sourceName": "prop-weapon_L",
+        "runtimeName": "light_cavalry_node661__prop_weapon_L"
+      },
+      {
+        "node": 662,
+        "sourceName": "weapon_L",
+        "runtimeName": "light_cavalry_node662__weapon_L"
+      },
+      {
+        "node": 663,
+        "sourceName": "prop_glove_hand_L",
+        "runtimeName": "light_cavalry_node663__prop_glove_hand_L"
+      },
+      {
+        "node": 664,
+        "sourceName": "hand_L",
+        "runtimeName": "light_cavalry_node664__hand_L"
+      },
+      {
+        "node": 665,
+        "sourceName": "prop_glove_wrist_L",
+        "runtimeName": "light_cavalry_node665__prop_glove_wrist_L"
+      },
+      {
+        "node": 666,
+        "sourceName": "prop-shield_arm",
+        "runtimeName": "light_cavalry_node666__prop_shield_arm"
+      },
+      {
+        "node": 667,
+        "sourceName": "shield_arm",
+        "runtimeName": "light_cavalry_node667__shield_arm"
+      },
+      {
+        "node": 668,
+        "sourceName": "prop_brace_L",
+        "runtimeName": "light_cavalry_node668__prop_brace_L"
+      },
+      {
+        "node": 669,
+        "sourceName": "forearm_L",
+        "runtimeName": "light_cavalry_node669__forearm_L"
+      },
+      {
+        "node": 670,
+        "sourceName": "prop_couter_L",
+        "runtimeName": "light_cavalry_node670__prop_couter_L"
+      },
+      {
+        "node": 671,
+        "sourceName": "prop-armpad_L",
+        "runtimeName": "light_cavalry_node671__prop_armpad_L"
+      },
+      {
+        "node": 672,
+        "sourceName": "prop_rerebrace_L",
+        "runtimeName": "light_cavalry_node672__prop_rerebrace_L"
+      },
+      {
+        "node": 673,
+        "sourceName": "arm_L",
+        "runtimeName": "light_cavalry_node673__arm_L"
+      },
+      {
+        "node": 674,
+        "sourceName": "prop-shoulderpad_L",
+        "runtimeName": "light_cavalry_node674__prop_shoulderpad_L"
+      },
+      {
+        "node": 675,
+        "sourceName": "shoulder_L",
+        "runtimeName": "light_cavalry_node675__shoulder_L"
+      },
+      {
+        "node": 676,
+        "sourceName": "prop-helmet",
+        "runtimeName": "light_cavalry_node676__prop_helmet"
+      },
+      {
+        "node": 677,
+        "sourceName": "helmet",
+        "runtimeName": "light_cavalry_node677__helmet"
+      },
+      {
+        "node": 678,
+        "sourceName": "prop-head",
+        "runtimeName": "light_cavalry_node678__prop_head"
+      },
+      {
+        "node": 679,
+        "sourceName": "head",
+        "runtimeName": "light_cavalry_node679__head"
+      },
+      {
+        "node": 680,
+        "sourceName": "prop-neck_guard",
+        "runtimeName": "light_cavalry_node680__prop_neck_guard"
+      },
+      {
+        "node": 681,
+        "sourceName": "neck_guard",
+        "runtimeName": "light_cavalry_node681__neck_guard"
+      },
+      {
+        "node": 682,
+        "sourceName": "neck",
+        "runtimeName": "light_cavalry_node682__neck"
+      },
+      {
+        "node": 683,
+        "sourceName": "prop_bevor",
+        "runtimeName": "light_cavalry_node683__prop_bevor"
+      },
+      {
+        "node": 684,
+        "sourceName": "fingertip_R",
+        "runtimeName": "light_cavalry_node684__fingertip_R"
+      },
+      {
+        "node": 685,
+        "sourceName": "prop_glove_finger_R",
+        "runtimeName": "light_cavalry_node685__prop_glove_finger_R"
+      },
+      {
+        "node": 686,
+        "sourceName": "finger_R",
+        "runtimeName": "light_cavalry_node686__finger_R"
+      },
+      {
+        "node": 687,
+        "sourceName": "prop-weapon_R",
+        "runtimeName": "light_cavalry_node687__prop_weapon_R"
+      },
+      {
+        "node": 688,
+        "sourceName": "weapon_R",
+        "runtimeName": "light_cavalry_node688__weapon_R"
+      },
+      {
+        "node": 689,
+        "sourceName": "prop-projectile",
+        "runtimeName": "light_cavalry_node689__prop_projectile"
+      },
+      {
+        "node": 690,
+        "sourceName": "projectile",
+        "runtimeName": "light_cavalry_node690__projectile"
+      },
+      {
+        "node": 691,
+        "sourceName": "prop_glove_hand_R",
+        "runtimeName": "light_cavalry_node691__prop_glove_hand_R"
+      },
+      {
+        "node": 692,
+        "sourceName": "hand_R",
+        "runtimeName": "light_cavalry_node692__hand_R"
+      },
+      {
+        "node": 693,
+        "sourceName": "prop_glove_wrist_R",
+        "runtimeName": "light_cavalry_node693__prop_glove_wrist_R"
+      },
+      {
+        "node": 694,
+        "sourceName": "prop_brace_R",
+        "runtimeName": "light_cavalry_node694__prop_brace_R"
+      },
+      {
+        "node": 695,
+        "sourceName": "forearm_R",
+        "runtimeName": "light_cavalry_node695__forearm_R"
+      },
+      {
+        "node": 696,
+        "sourceName": "prop_couter_R",
+        "runtimeName": "light_cavalry_node696__prop_couter_R"
+      },
+      {
+        "node": 697,
+        "sourceName": "prop-armpad_R",
+        "runtimeName": "light_cavalry_node697__prop_armpad_R"
+      },
+      {
+        "node": 698,
+        "sourceName": "prop_rerebrace_R",
+        "runtimeName": "light_cavalry_node698__prop_rerebrace_R"
+      },
+      {
+        "node": 699,
+        "sourceName": "arm_R",
+        "runtimeName": "light_cavalry_node699__arm_R"
+      },
+      {
+        "node": 700,
+        "sourceName": "prop-shoulderpad_R",
+        "runtimeName": "light_cavalry_node700__prop_shoulderpad_R"
+      },
+      {
+        "node": 701,
+        "sourceName": "shoulder_R",
+        "runtimeName": "light_cavalry_node701__shoulder_R"
+      },
+      {
+        "node": 702,
+        "sourceName": "prop-back",
+        "runtimeName": "light_cavalry_node702__prop_back"
+      },
+      {
+        "node": 703,
+        "sourceName": "prop-quiver_back",
+        "runtimeName": "light_cavalry_node703__prop_quiver_back"
+      },
+      {
+        "node": 704,
+        "sourceName": "cape3",
+        "runtimeName": "light_cavalry_node704__cape3"
+      },
+      {
+        "node": 705,
+        "sourceName": "cape2",
+        "runtimeName": "light_cavalry_node705__cape2"
+      },
+      {
+        "node": 706,
+        "sourceName": "cape1",
+        "runtimeName": "light_cavalry_node706__cape1"
+      },
+      {
+        "node": 707,
+        "sourceName": "prop_breastplate",
+        "runtimeName": "light_cavalry_node707__prop_breastplate"
+      },
+      {
+        "node": 708,
+        "sourceName": "prop_backplate",
+        "runtimeName": "light_cavalry_node708__prop_backplate"
+      },
+      {
+        "node": 709,
+        "sourceName": "prop_quiver_B",
+        "runtimeName": "light_cavalry_node709__prop_quiver_B"
+      },
+      {
+        "node": 710,
+        "sourceName": "chest",
+        "runtimeName": "light_cavalry_node710__chest"
+      },
+      {
+        "node": 711,
+        "sourceName": "spine1",
+        "runtimeName": "light_cavalry_node711__spine1"
+      },
+      {
+        "node": 712,
+        "sourceName": "spine",
+        "runtimeName": "light_cavalry_node712__spine"
+      },
+      {
+        "node": 713,
+        "sourceName": "prop_foot_L",
+        "runtimeName": "light_cavalry_node713__prop_foot_L"
+      },
+      {
+        "node": 714,
+        "sourceName": "foot_L",
+        "runtimeName": "light_cavalry_node714__foot_L"
+      },
+      {
+        "node": 715,
+        "sourceName": "prop_leg_L",
+        "runtimeName": "light_cavalry_node715__prop_leg_L"
+      },
+      {
+        "node": 716,
+        "sourceName": "leg_L",
+        "runtimeName": "light_cavalry_node716__leg_L"
+      },
+      {
+        "node": 717,
+        "sourceName": "prop_cuisse_L",
+        "runtimeName": "light_cavalry_node717__prop_cuisse_L"
+      },
+      {
+        "node": 718,
+        "sourceName": "prop_chaff_L",
+        "runtimeName": "light_cavalry_node718__prop_chaff_L"
+      },
+      {
+        "node": 719,
+        "sourceName": "thigh_L",
+        "runtimeName": "light_cavalry_node719__thigh_L"
+      },
+      {
+        "node": 720,
+        "sourceName": "prop_foot_R",
+        "runtimeName": "light_cavalry_node720__prop_foot_R"
+      },
+      {
+        "node": 721,
+        "sourceName": "foot_R",
+        "runtimeName": "light_cavalry_node721__foot_R"
+      },
+      {
+        "node": 722,
+        "sourceName": "prop_leg_R",
+        "runtimeName": "light_cavalry_node722__prop_leg_R"
+      },
+      {
+        "node": 723,
+        "sourceName": "leg_R",
+        "runtimeName": "light_cavalry_node723__leg_R"
+      },
+      {
+        "node": 724,
+        "sourceName": "prop_cuisse_R",
+        "runtimeName": "light_cavalry_node724__prop_cuisse_R"
+      },
+      {
+        "node": 725,
+        "sourceName": "prop_chaff_R",
+        "runtimeName": "light_cavalry_node725__prop_chaff_R"
+      },
+      {
+        "node": 726,
+        "sourceName": "thigh_R",
+        "runtimeName": "light_cavalry_node726__thigh_R"
+      },
+      {
+        "node": 727,
+        "sourceName": "prop-sheath_L",
+        "runtimeName": "light_cavalry_node727__prop_sheath_L"
+      },
+      {
+        "node": 728,
+        "sourceName": "prop-quiver_R",
+        "runtimeName": "light_cavalry_node728__prop_quiver_R"
+      },
+      {
+        "node": 729,
+        "sourceName": "prop_fauld",
+        "runtimeName": "light_cavalry_node729__prop_fauld"
+      },
+      {
+        "node": 730,
+        "sourceName": "prop_sheath_01_R",
+        "runtimeName": "light_cavalry_node730__prop_sheath_01_R"
+      },
+      {
+        "node": 731,
+        "sourceName": "sheath_01_R",
+        "runtimeName": "light_cavalry_node731__sheath_01_R"
+      },
+      {
+        "node": 732,
+        "sourceName": "prop_sheath_01_L",
+        "runtimeName": "light_cavalry_node732__prop_sheath_01_L"
+      },
+      {
+        "node": 733,
+        "sourceName": "sheath_01_L",
+        "runtimeName": "light_cavalry_node733__sheath_01_L"
+      },
+      {
+        "node": 734,
+        "sourceName": "prop_seax_front",
+        "runtimeName": "light_cavalry_node734__prop_seax_front"
+      },
+      {
+        "node": 735,
+        "sourceName": "prop_seax_back",
+        "runtimeName": "light_cavalry_node735__prop_seax_back"
+      },
+      {
+        "node": 736,
+        "sourceName": "prop_sheath_02_R",
+        "runtimeName": "light_cavalry_node736__prop_sheath_02_R"
+      },
+      {
+        "node": 737,
+        "sourceName": "sheath_02_R",
+        "runtimeName": "light_cavalry_node737__sheath_02_R"
+      },
+      {
+        "node": 738,
+        "sourceName": "prop_sheath_02_L",
+        "runtimeName": "light_cavalry_node738__prop_sheath_02_L"
+      },
+      {
+        "node": 739,
+        "sourceName": "sheath_02_L",
+        "runtimeName": "light_cavalry_node739__sheath_02_L"
+      },
+      {
+        "node": 740,
+        "sourceName": "prop_quiver_R",
+        "runtimeName": "light_cavalry_node740__prop_quiver_R"
+      },
+      {
+        "node": 741,
+        "sourceName": "quiver_R",
+        "runtimeName": "light_cavalry_node741__quiver_R"
+      },
+      {
+        "node": 742,
+        "sourceName": "prop_quiver_L",
+        "runtimeName": "light_cavalry_node742__prop_quiver_L"
+      },
+      {
+        "node": 743,
+        "sourceName": "quiver_L",
+        "runtimeName": "light_cavalry_node743__quiver_L"
+      },
+      {
+        "node": 744,
+        "sourceName": "prop-sheath_R",
+        "runtimeName": "light_cavalry_node744__prop_sheath_R"
+      },
+      {
+        "node": 745,
+        "sourceName": "hip",
+        "runtimeName": "light_cavalry_node745__hip"
+      },
+      {
+        "node": 746,
+        "sourceName": "knee_L",
+        "runtimeName": "light_cavalry_node746__knee_L"
+      },
+      {
+        "node": 747,
+        "sourceName": "knee_R",
+        "runtimeName": "light_cavalry_node747__knee_R"
+      },
+      {
+        "node": 748,
+        "sourceName": "handIK_L",
+        "runtimeName": "light_cavalry_node748__handIK_L"
+      },
+      {
+        "node": 749,
+        "sourceName": "handIK_R",
+        "runtimeName": "light_cavalry_node749__handIK_R"
+      },
+      {
+        "node": 750,
+        "sourceName": "footIK_L",
+        "runtimeName": "light_cavalry_node750__footIK_L"
+      },
+      {
+        "node": 751,
+        "sourceName": "footIK_R",
+        "runtimeName": "light_cavalry_node751__footIK_R"
+      },
+      {
+        "node": 752,
+        "sourceName": "elbow_L",
+        "runtimeName": "light_cavalry_node752__elbow_L"
+      },
+      {
+        "node": 753,
+        "sourceName": "elbow_R",
+        "runtimeName": "light_cavalry_node753__elbow_R"
+      },
+      {
+        "node": 754,
+        "sourceName": "light_cavalry licensed-gnome-head",
+        "runtimeName": "light_cavalry_node754__light_cavalry_licensed_gnome_head"
+      },
+      {
+        "node": 755,
+        "sourceName": "light_cavalry mounted rider",
+        "runtimeName": "light_cavalry_node755__light_cavalry_mounted_rider"
+      },
+      {
+        "node": 756,
+        "sourceName": "light_cavalry seated rider rig",
+        "runtimeName": "light_cavalry_node756__light_cavalry_seated_rider_rig"
+      },
+      {
+        "node": 757,
+        "sourceName": "prop_rider",
+        "runtimeName": "light_cavalry_node757__prop_rider"
+      },
+      {
+        "node": 758,
+        "sourceName": "prop_saddle",
+        "runtimeName": "light_cavalry_node758__prop_saddle"
+      },
+      {
+        "node": 759,
+        "sourceName": "Horse_Belly",
+        "runtimeName": "light_cavalry_node759__Horse_Belly"
+      },
+      {
+        "node": 760,
+        "sourceName": "prop_wings",
+        "runtimeName": "light_cavalry_node760__prop_wings"
+      },
+      {
+        "node": 761,
+        "sourceName": "Horse_Spine_1",
+        "runtimeName": "light_cavalry_node761__Horse_Spine_1"
+      },
+      {
+        "node": 762,
+        "sourceName": "Horse_Hoof_back_L",
+        "runtimeName": "light_cavalry_node762__Horse_Hoof_back_L"
+      },
+      {
+        "node": 763,
+        "sourceName": "Horse_Foot_L",
+        "runtimeName": "light_cavalry_node763__Horse_Foot_L"
+      },
+      {
+        "node": 764,
+        "sourceName": "Horse_Shin_L",
+        "runtimeName": "light_cavalry_node764__Horse_Shin_L"
+      },
+      {
+        "node": 765,
+        "sourceName": "Knee_Stretch_B_L",
+        "runtimeName": "light_cavalry_node765__Knee_Stretch_B_L"
+      },
+      {
+        "node": 766,
+        "sourceName": "Horse_Leg_L",
+        "runtimeName": "light_cavalry_node766__Horse_Leg_L"
+      },
+      {
+        "node": 767,
+        "sourceName": "Leg_Stretch_L",
+        "runtimeName": "light_cavalry_node767__Leg_Stretch_L"
+      },
+      {
+        "node": 768,
+        "sourceName": "Horse_Thigh_L",
+        "runtimeName": "light_cavalry_node768__Horse_Thigh_L"
+      },
+      {
+        "node": 769,
+        "sourceName": "Horse_Femur_L",
+        "runtimeName": "light_cavalry_node769__Horse_Femur_L"
+      },
+      {
+        "node": 770,
+        "sourceName": "Horse_Hoof_back_R",
+        "runtimeName": "light_cavalry_node770__Horse_Hoof_back_R"
+      },
+      {
+        "node": 771,
+        "sourceName": "Horse_Foot_R",
+        "runtimeName": "light_cavalry_node771__Horse_Foot_R"
+      },
+      {
+        "node": 772,
+        "sourceName": "Horse_Shin_R",
+        "runtimeName": "light_cavalry_node772__Horse_Shin_R"
+      },
+      {
+        "node": 773,
+        "sourceName": "Knee_Stretch_B_R",
+        "runtimeName": "light_cavalry_node773__Knee_Stretch_B_R"
+      },
+      {
+        "node": 774,
+        "sourceName": "Horse_Leg_R",
+        "runtimeName": "light_cavalry_node774__Horse_Leg_R"
+      },
+      {
+        "node": 775,
+        "sourceName": "Leg_Stretch_R",
+        "runtimeName": "light_cavalry_node775__Leg_Stretch_R"
+      },
+      {
+        "node": 776,
+        "sourceName": "Horse_Thigh_R",
+        "runtimeName": "light_cavalry_node776__Horse_Thigh_R"
+      },
+      {
+        "node": 777,
+        "sourceName": "Horse_Femur_R",
+        "runtimeName": "light_cavalry_node777__Horse_Femur_R"
+      },
+      {
+        "node": 778,
+        "sourceName": "Horse_Tail_10",
+        "runtimeName": "light_cavalry_node778__Horse_Tail_10"
+      },
+      {
+        "node": 779,
+        "sourceName": "Horse_Tail_9",
+        "runtimeName": "light_cavalry_node779__Horse_Tail_9"
+      },
+      {
+        "node": 780,
+        "sourceName": "Horse_Tail_8",
+        "runtimeName": "light_cavalry_node780__Horse_Tail_8"
+      },
+      {
+        "node": 781,
+        "sourceName": "Horse_Tail_7",
+        "runtimeName": "light_cavalry_node781__Horse_Tail_7"
+      },
+      {
+        "node": 782,
+        "sourceName": "Horse_Tail_6",
+        "runtimeName": "light_cavalry_node782__Horse_Tail_6"
+      },
+      {
+        "node": 783,
+        "sourceName": "Horse_Tail_5",
+        "runtimeName": "light_cavalry_node783__Horse_Tail_5"
+      },
+      {
+        "node": 784,
+        "sourceName": "Horse_Tail_4",
+        "runtimeName": "light_cavalry_node784__Horse_Tail_4"
+      },
+      {
+        "node": 785,
+        "sourceName": "Horse_Tail_3",
+        "runtimeName": "light_cavalry_node785__Horse_Tail_3"
+      },
+      {
+        "node": 786,
+        "sourceName": "Horse_Tail_2",
+        "runtimeName": "light_cavalry_node786__Horse_Tail_2"
+      },
+      {
+        "node": 787,
+        "sourceName": "Horse_Tail",
+        "runtimeName": "light_cavalry_node787__Horse_Tail"
+      },
+      {
+        "node": 788,
+        "sourceName": "Horse_Tail_base",
+        "runtimeName": "light_cavalry_node788__Horse_Tail_base"
+      },
+      {
+        "node": 789,
+        "sourceName": "Horse_Spine",
+        "runtimeName": "light_cavalry_node789__Horse_Spine"
+      },
+      {
+        "node": 790,
+        "sourceName": "Leg_target_L",
+        "runtimeName": "light_cavalry_node790__Leg_target_L"
+      },
+      {
+        "node": 791,
+        "sourceName": "Leg_target_R",
+        "runtimeName": "light_cavalry_node791__Leg_target_R"
+      },
+      {
+        "node": 792,
+        "sourceName": "Knee_F_L",
+        "runtimeName": "light_cavalry_node792__Knee_F_L"
+      },
+      {
+        "node": 793,
+        "sourceName": "Knee_F_R",
+        "runtimeName": "light_cavalry_node793__Knee_F_R"
+      },
+      {
+        "node": 794,
+        "sourceName": "Shoulder_Target_R",
+        "runtimeName": "light_cavalry_node794__Shoulder_Target_R"
+      },
+      {
+        "node": 795,
+        "sourceName": "Shoulder_Target_L",
+        "runtimeName": "light_cavalry_node795__Shoulder_Target_L"
+      },
+      {
+        "node": 796,
+        "sourceName": "Knee_B_L",
+        "runtimeName": "light_cavalry_node796__Knee_B_L"
+      },
+      {
+        "node": 797,
+        "sourceName": "Knee_B_R",
+        "runtimeName": "light_cavalry_node797__Knee_B_R"
+      },
+      {
+        "node": 798,
+        "sourceName": "prop_decals",
+        "runtimeName": "light_cavalry_node798__prop_decals"
+      },
+      {
+        "node": 799,
+        "sourceName": "prop_rider_R",
+        "runtimeName": "light_cavalry_node799__prop_rider_R"
+      },
+      {
+        "node": 800,
+        "sourceName": "prop_rider_L",
+        "runtimeName": "light_cavalry_node800__prop_rider_L"
+      },
+      {
+        "node": 801,
+        "sourceName": "prop_hair",
+        "runtimeName": "light_cavalry_node801__prop_hair"
+      },
+      {
+        "node": 802,
+        "sourceName": "Horse_Hair",
+        "runtimeName": "light_cavalry_node802__Horse_Hair"
+      },
+      {
+        "node": 803,
+        "sourceName": "Horse_root",
+        "runtimeName": "light_cavalry_node803__Horse_root"
+      },
+      {
+        "node": 804,
+        "sourceName": "light_cavalry original-gnome-mount",
+        "runtimeName": "light_cavalry_node804__light_cavalry_original_gnome_mount"
+      },
+      {
+        "node": 805,
+        "sourceName": "light_cavalry mount rig",
+        "runtimeName": "light_cavalry_node805__light_cavalry_mount_rig"
+      },
+      {
+        "node": 806,
+        "sourceName": "l_mid",
+        "runtimeName": "ram_node806__l_mid"
+      },
+      {
+        "node": 807,
+        "sourceName": "l_back",
+        "runtimeName": "ram_node807__l_back"
+      },
+      {
+        "node": 808,
+        "sourceName": "l_front",
+        "runtimeName": "ram_node808__l_front"
+      },
+      {
+        "node": 809,
+        "sourceName": "r_mid",
+        "runtimeName": "ram_node809__r_mid"
+      },
+      {
+        "node": 810,
+        "sourceName": "r_back",
+        "runtimeName": "ram_node810__r_back"
+      },
+      {
+        "node": 811,
+        "sourceName": "r_front",
+        "runtimeName": "ram_node811__r_front"
+      },
+      {
+        "node": 812,
+        "sourceName": "weapon",
+        "runtimeName": "ram_node812__weapon"
+      },
+      {
+        "node": 813,
+        "sourceName": "prop_shield_left",
+        "runtimeName": "ram_node813__prop_shield_left"
+      },
+      {
+        "node": 814,
+        "sourceName": "prop_shield_right",
+        "runtimeName": "ram_node814__prop_shield_right"
+      },
+      {
+        "node": 815,
+        "sourceName": "sixwheel",
+        "runtimeName": "ram_node815__sixwheel"
+      },
+      {
+        "node": 816,
+        "sourceName": "ram textured anatomy",
+        "runtimeName": "ram_node816__ram_textured_anatomy"
+      },
+      {
+        "node": 817,
+        "sourceName": "ram siege engineering rig",
+        "runtimeName": "ram_node817__ram_siege_engineering_rig"
+      },
+      {
+        "node": 818,
+        "sourceName": "windlass",
+        "runtimeName": "catapult_node818__windlass"
+      },
+      {
+        "node": 819,
+        "sourceName": "prop_projectile",
+        "runtimeName": "catapult_node819__prop_projectile"
+      },
+      {
+        "node": 820,
+        "sourceName": "sling",
+        "runtimeName": "catapult_node820__sling"
+      },
+      {
+        "node": 821,
+        "sourceName": "rope_left",
+        "runtimeName": "catapult_node821__rope_left"
+      },
+      {
+        "node": 822,
+        "sourceName": "rope_right",
+        "runtimeName": "catapult_node822__rope_right"
+      },
+      {
+        "node": 823,
+        "sourceName": "rope_center",
+        "runtimeName": "catapult_node823__rope_center"
+      },
+      {
+        "node": 824,
+        "sourceName": "spoke",
+        "runtimeName": "catapult_node824__spoke"
+      },
+      {
+        "node": 825,
+        "sourceName": "onagermain",
+        "runtimeName": "catapult_node825__onagermain"
+      },
+      {
+        "node": 826,
+        "sourceName": "catapult textured anatomy",
+        "runtimeName": "catapult_node826__catapult_textured_anatomy"
+      },
+      {
+        "node": 827,
+        "sourceName": "catapult siege engineering rig",
+        "runtimeName": "catapult_node827__catapult_siege_engineering_rig"
+      },
+      {
+        "node": 828,
+        "sourceName": "Hoof_F_R",
+        "runtimeName": "heavy_cavalry_node828__Hoof_F_R"
+      },
+      {
+        "node": 829,
+        "sourceName": "Hand_R",
+        "runtimeName": "heavy_cavalry_node829__Hand_R"
+      },
+      {
+        "node": 830,
+        "sourceName": "Horse_Hand_IK_R",
+        "runtimeName": "heavy_cavalry_node830__Horse_Hand_IK_R"
+      },
+      {
+        "node": 831,
+        "sourceName": "Hoof_F_L",
+        "runtimeName": "heavy_cavalry_node831__Hoof_F_L"
+      },
+      {
+        "node": 832,
+        "sourceName": "Hand_L",
+        "runtimeName": "heavy_cavalry_node832__Hand_L"
+      },
+      {
+        "node": 833,
+        "sourceName": "Horse_Hand_IK_L",
+        "runtimeName": "heavy_cavalry_node833__Horse_Hand_IK_L"
+      },
+      {
+        "node": 834,
+        "sourceName": "Horse_HeadNub",
+        "runtimeName": "heavy_cavalry_node834__Horse_HeadNub"
+      },
+      {
+        "node": 835,
+        "sourceName": "Hoof_B_L",
+        "runtimeName": "heavy_cavalry_node835__Hoof_B_L"
+      },
+      {
+        "node": 836,
+        "sourceName": "Foot_L",
+        "runtimeName": "heavy_cavalry_node836__Foot_L"
+      },
+      {
+        "node": 837,
+        "sourceName": "Horse_leg_IK_L",
+        "runtimeName": "heavy_cavalry_node837__Horse_leg_IK_L"
+      },
+      {
+        "node": 838,
+        "sourceName": "Hoof_B_R",
+        "runtimeName": "heavy_cavalry_node838__Hoof_B_R"
+      },
+      {
+        "node": 839,
+        "sourceName": "Foot_R",
+        "runtimeName": "heavy_cavalry_node839__Foot_R"
+      },
+      {
+        "node": 840,
+        "sourceName": "Horse_leg_IK_R",
+        "runtimeName": "heavy_cavalry_node840__Horse_leg_IK_R"
+      },
+      {
+        "node": 841,
+        "sourceName": "prop_head",
+        "runtimeName": "heavy_cavalry_node841__prop_head"
+      },
+      {
+        "node": 842,
+        "sourceName": "Horse_ear_2_R",
+        "runtimeName": "heavy_cavalry_node842__Horse_ear_2_R"
+      },
+      {
+        "node": 843,
+        "sourceName": "Horse_ear_R",
+        "runtimeName": "heavy_cavalry_node843__Horse_ear_R"
+      },
+      {
+        "node": 844,
+        "sourceName": "Horse_ear_2_L",
+        "runtimeName": "heavy_cavalry_node844__Horse_ear_2_L"
+      },
+      {
+        "node": 845,
+        "sourceName": "Horse_ear_L",
+        "runtimeName": "heavy_cavalry_node845__Horse_ear_L"
+      },
+      {
+        "node": 846,
+        "sourceName": "Horse_Head",
+        "runtimeName": "heavy_cavalry_node846__Horse_Head"
+      },
+      {
+        "node": 847,
+        "sourceName": "Horse_Neck_2",
+        "runtimeName": "heavy_cavalry_node847__Horse_Neck_2"
+      },
+      {
+        "node": 848,
+        "sourceName": "Horse_Neck_1",
+        "runtimeName": "heavy_cavalry_node848__Horse_Neck_1"
+      },
+      {
+        "node": 849,
+        "sourceName": "Horse_Neck",
+        "runtimeName": "heavy_cavalry_node849__Horse_Neck"
+      },
+      {
+        "node": 850,
+        "sourceName": "Horse_Hoof_R",
+        "runtimeName": "heavy_cavalry_node850__Horse_Hoof_R"
+      },
+      {
+        "node": 851,
+        "sourceName": "Horse_Hand_R",
+        "runtimeName": "heavy_cavalry_node851__Horse_Hand_R"
+      },
+      {
+        "node": 852,
+        "sourceName": "Horse_Forearm_R",
+        "runtimeName": "heavy_cavalry_node852__Horse_Forearm_R"
+      },
+      {
+        "node": 853,
+        "sourceName": "Knee_Stretch_R",
+        "runtimeName": "heavy_cavalry_node853__Knee_Stretch_R"
+      },
+      {
+        "node": 854,
+        "sourceName": "Horse_Arm_R",
+        "runtimeName": "heavy_cavalry_node854__Horse_Arm_R"
+      },
+      {
+        "node": 855,
+        "sourceName": "Horse_upperarm_R",
+        "runtimeName": "heavy_cavalry_node855__Horse_upperarm_R"
+      },
+      {
+        "node": 856,
+        "sourceName": "Horse_shoulder_R",
+        "runtimeName": "heavy_cavalry_node856__Horse_shoulder_R"
+      },
+      {
+        "node": 857,
+        "sourceName": "Horse_Hoof_L",
+        "runtimeName": "heavy_cavalry_node857__Horse_Hoof_L"
+      },
+      {
+        "node": 858,
+        "sourceName": "Horse_Hand_L",
+        "runtimeName": "heavy_cavalry_node858__Horse_Hand_L"
+      },
+      {
+        "node": 859,
+        "sourceName": "Horse_Forearm_L",
+        "runtimeName": "heavy_cavalry_node859__Horse_Forearm_L"
+      },
+      {
+        "node": 860,
+        "sourceName": "Knee_Stretch_L",
+        "runtimeName": "heavy_cavalry_node860__Knee_Stretch_L"
+      },
+      {
+        "node": 861,
+        "sourceName": "Horse_Arm_L",
+        "runtimeName": "heavy_cavalry_node861__Horse_Arm_L"
+      },
+      {
+        "node": 862,
+        "sourceName": "Horse_upperarm_L",
+        "runtimeName": "heavy_cavalry_node862__Horse_upperarm_L"
+      },
+      {
+        "node": 863,
+        "sourceName": "Horse_shoulder_L",
+        "runtimeName": "heavy_cavalry_node863__Horse_shoulder_L"
+      },
+      {
+        "node": 864,
+        "sourceName": "prop_chest",
+        "runtimeName": "heavy_cavalry_node864__prop_chest"
+      },
+      {
+        "node": 865,
+        "sourceName": "Horse_Spine_2",
+        "runtimeName": "heavy_cavalry_node865__Horse_Spine_2"
+      },
+      {
+        "node": 866,
+        "sourceName": "prop_shield",
+        "runtimeName": "heavy_cavalry_node866__prop_shield"
+      },
+      {
+        "node": 867,
+        "sourceName": "fingertip_L",
+        "runtimeName": "heavy_cavalry_node867__fingertip_L"
+      },
+      {
+        "node": 868,
+        "sourceName": "prop_glove_finger_L",
+        "runtimeName": "heavy_cavalry_node868__prop_glove_finger_L"
+      },
+      {
+        "node": 869,
+        "sourceName": "finger_L",
+        "runtimeName": "heavy_cavalry_node869__finger_L"
+      },
+      {
+        "node": 870,
+        "sourceName": "prop-shield",
+        "runtimeName": "heavy_cavalry_node870__prop_shield"
+      },
+      {
+        "node": 871,
+        "sourceName": "shield",
+        "runtimeName": "heavy_cavalry_node871__shield"
+      },
+      {
+        "node": 872,
+        "sourceName": "prop-weapon_bow",
+        "runtimeName": "heavy_cavalry_node872__prop_weapon_bow"
+      },
+      {
+        "node": 873,
+        "sourceName": "weapon_bow",
+        "runtimeName": "heavy_cavalry_node873__weapon_bow"
+      },
+      {
+        "node": 874,
+        "sourceName": "prop-ammo",
+        "runtimeName": "heavy_cavalry_node874__prop_ammo"
+      },
+      {
+        "node": 875,
+        "sourceName": "ammo",
+        "runtimeName": "heavy_cavalry_node875__ammo"
+      },
+      {
+        "node": 876,
+        "sourceName": "prop-weapon_L",
+        "runtimeName": "heavy_cavalry_node876__prop_weapon_L"
+      },
+      {
+        "node": 877,
+        "sourceName": "weapon_L",
+        "runtimeName": "heavy_cavalry_node877__weapon_L"
+      },
+      {
+        "node": 878,
+        "sourceName": "prop_glove_hand_L",
+        "runtimeName": "heavy_cavalry_node878__prop_glove_hand_L"
+      },
+      {
+        "node": 879,
+        "sourceName": "hand_L",
+        "runtimeName": "heavy_cavalry_node879__hand_L"
+      },
+      {
+        "node": 880,
+        "sourceName": "prop_glove_wrist_L",
+        "runtimeName": "heavy_cavalry_node880__prop_glove_wrist_L"
+      },
+      {
+        "node": 881,
+        "sourceName": "prop-shield_arm",
+        "runtimeName": "heavy_cavalry_node881__prop_shield_arm"
+      },
+      {
+        "node": 882,
+        "sourceName": "shield_arm",
+        "runtimeName": "heavy_cavalry_node882__shield_arm"
+      },
+      {
+        "node": 883,
+        "sourceName": "prop_brace_L",
+        "runtimeName": "heavy_cavalry_node883__prop_brace_L"
+      },
+      {
+        "node": 884,
+        "sourceName": "forearm_L",
+        "runtimeName": "heavy_cavalry_node884__forearm_L"
+      },
+      {
+        "node": 885,
+        "sourceName": "prop_couter_L",
+        "runtimeName": "heavy_cavalry_node885__prop_couter_L"
+      },
+      {
+        "node": 886,
+        "sourceName": "prop-armpad_L",
+        "runtimeName": "heavy_cavalry_node886__prop_armpad_L"
+      },
+      {
+        "node": 887,
+        "sourceName": "prop_rerebrace_L",
+        "runtimeName": "heavy_cavalry_node887__prop_rerebrace_L"
+      },
+      {
+        "node": 888,
+        "sourceName": "arm_L",
+        "runtimeName": "heavy_cavalry_node888__arm_L"
+      },
+      {
+        "node": 889,
+        "sourceName": "prop-shoulderpad_L",
+        "runtimeName": "heavy_cavalry_node889__prop_shoulderpad_L"
+      },
+      {
+        "node": 890,
+        "sourceName": "shoulder_L",
+        "runtimeName": "heavy_cavalry_node890__shoulder_L"
+      },
+      {
+        "node": 891,
+        "sourceName": "prop-helmet",
+        "runtimeName": "heavy_cavalry_node891__prop_helmet"
+      },
+      {
+        "node": 892,
+        "sourceName": "helmet",
+        "runtimeName": "heavy_cavalry_node892__helmet"
+      },
+      {
+        "node": 893,
+        "sourceName": "prop-head",
+        "runtimeName": "heavy_cavalry_node893__prop_head"
+      },
+      {
+        "node": 894,
+        "sourceName": "head",
+        "runtimeName": "heavy_cavalry_node894__head"
+      },
+      {
+        "node": 895,
+        "sourceName": "prop-neck_guard",
+        "runtimeName": "heavy_cavalry_node895__prop_neck_guard"
+      },
+      {
+        "node": 896,
+        "sourceName": "neck_guard",
+        "runtimeName": "heavy_cavalry_node896__neck_guard"
+      },
+      {
+        "node": 897,
+        "sourceName": "neck",
+        "runtimeName": "heavy_cavalry_node897__neck"
+      },
+      {
+        "node": 898,
+        "sourceName": "prop_bevor",
+        "runtimeName": "heavy_cavalry_node898__prop_bevor"
+      },
+      {
+        "node": 899,
+        "sourceName": "fingertip_R",
+        "runtimeName": "heavy_cavalry_node899__fingertip_R"
+      },
+      {
+        "node": 900,
+        "sourceName": "prop_glove_finger_R",
+        "runtimeName": "heavy_cavalry_node900__prop_glove_finger_R"
+      },
+      {
+        "node": 901,
+        "sourceName": "finger_R",
+        "runtimeName": "heavy_cavalry_node901__finger_R"
+      },
+      {
+        "node": 902,
+        "sourceName": "prop-weapon_R",
+        "runtimeName": "heavy_cavalry_node902__prop_weapon_R"
+      },
+      {
+        "node": 903,
+        "sourceName": "weapon_R",
+        "runtimeName": "heavy_cavalry_node903__weapon_R"
+      },
+      {
+        "node": 904,
+        "sourceName": "prop-projectile",
+        "runtimeName": "heavy_cavalry_node904__prop_projectile"
+      },
+      {
+        "node": 905,
+        "sourceName": "projectile",
+        "runtimeName": "heavy_cavalry_node905__projectile"
+      },
+      {
+        "node": 906,
+        "sourceName": "prop_glove_hand_R",
+        "runtimeName": "heavy_cavalry_node906__prop_glove_hand_R"
+      },
+      {
+        "node": 907,
+        "sourceName": "hand_R",
+        "runtimeName": "heavy_cavalry_node907__hand_R"
+      },
+      {
+        "node": 908,
+        "sourceName": "prop_glove_wrist_R",
+        "runtimeName": "heavy_cavalry_node908__prop_glove_wrist_R"
+      },
+      {
+        "node": 909,
+        "sourceName": "prop_brace_R",
+        "runtimeName": "heavy_cavalry_node909__prop_brace_R"
+      },
+      {
+        "node": 910,
+        "sourceName": "forearm_R",
+        "runtimeName": "heavy_cavalry_node910__forearm_R"
+      },
+      {
+        "node": 911,
+        "sourceName": "prop_couter_R",
+        "runtimeName": "heavy_cavalry_node911__prop_couter_R"
+      },
+      {
+        "node": 912,
+        "sourceName": "prop-armpad_R",
+        "runtimeName": "heavy_cavalry_node912__prop_armpad_R"
+      },
+      {
+        "node": 913,
+        "sourceName": "prop_rerebrace_R",
+        "runtimeName": "heavy_cavalry_node913__prop_rerebrace_R"
+      },
+      {
+        "node": 914,
+        "sourceName": "arm_R",
+        "runtimeName": "heavy_cavalry_node914__arm_R"
+      },
+      {
+        "node": 915,
+        "sourceName": "prop-shoulderpad_R",
+        "runtimeName": "heavy_cavalry_node915__prop_shoulderpad_R"
+      },
+      {
+        "node": 916,
+        "sourceName": "shoulder_R",
+        "runtimeName": "heavy_cavalry_node916__shoulder_R"
+      },
+      {
+        "node": 917,
+        "sourceName": "prop-back",
+        "runtimeName": "heavy_cavalry_node917__prop_back"
+      },
+      {
+        "node": 918,
+        "sourceName": "prop-quiver_back",
+        "runtimeName": "heavy_cavalry_node918__prop_quiver_back"
+      },
+      {
+        "node": 919,
+        "sourceName": "cape3",
+        "runtimeName": "heavy_cavalry_node919__cape3"
+      },
+      {
+        "node": 920,
+        "sourceName": "cape2",
+        "runtimeName": "heavy_cavalry_node920__cape2"
+      },
+      {
+        "node": 921,
+        "sourceName": "cape1",
+        "runtimeName": "heavy_cavalry_node921__cape1"
+      },
+      {
+        "node": 922,
+        "sourceName": "prop_breastplate",
+        "runtimeName": "heavy_cavalry_node922__prop_breastplate"
+      },
+      {
+        "node": 923,
+        "sourceName": "prop_backplate",
+        "runtimeName": "heavy_cavalry_node923__prop_backplate"
+      },
+      {
+        "node": 924,
+        "sourceName": "prop_quiver_B",
+        "runtimeName": "heavy_cavalry_node924__prop_quiver_B"
+      },
+      {
+        "node": 925,
+        "sourceName": "chest",
+        "runtimeName": "heavy_cavalry_node925__chest"
+      },
+      {
+        "node": 926,
+        "sourceName": "spine1",
+        "runtimeName": "heavy_cavalry_node926__spine1"
+      },
+      {
+        "node": 927,
+        "sourceName": "spine",
+        "runtimeName": "heavy_cavalry_node927__spine"
+      },
+      {
+        "node": 928,
+        "sourceName": "prop_foot_L",
+        "runtimeName": "heavy_cavalry_node928__prop_foot_L"
+      },
+      {
+        "node": 929,
+        "sourceName": "foot_L",
+        "runtimeName": "heavy_cavalry_node929__foot_L"
+      },
+      {
+        "node": 930,
+        "sourceName": "prop_leg_L",
+        "runtimeName": "heavy_cavalry_node930__prop_leg_L"
+      },
+      {
+        "node": 931,
+        "sourceName": "leg_L",
+        "runtimeName": "heavy_cavalry_node931__leg_L"
+      },
+      {
+        "node": 932,
+        "sourceName": "prop_cuisse_L",
+        "runtimeName": "heavy_cavalry_node932__prop_cuisse_L"
+      },
+      {
+        "node": 933,
+        "sourceName": "prop_chaff_L",
+        "runtimeName": "heavy_cavalry_node933__prop_chaff_L"
+      },
+      {
+        "node": 934,
+        "sourceName": "thigh_L",
+        "runtimeName": "heavy_cavalry_node934__thigh_L"
+      },
+      {
+        "node": 935,
+        "sourceName": "prop_foot_R",
+        "runtimeName": "heavy_cavalry_node935__prop_foot_R"
+      },
+      {
+        "node": 936,
+        "sourceName": "foot_R",
+        "runtimeName": "heavy_cavalry_node936__foot_R"
+      },
+      {
+        "node": 937,
+        "sourceName": "prop_leg_R",
+        "runtimeName": "heavy_cavalry_node937__prop_leg_R"
+      },
+      {
+        "node": 938,
+        "sourceName": "leg_R",
+        "runtimeName": "heavy_cavalry_node938__leg_R"
+      },
+      {
+        "node": 939,
+        "sourceName": "prop_cuisse_R",
+        "runtimeName": "heavy_cavalry_node939__prop_cuisse_R"
+      },
+      {
+        "node": 940,
+        "sourceName": "prop_chaff_R",
+        "runtimeName": "heavy_cavalry_node940__prop_chaff_R"
+      },
+      {
+        "node": 941,
+        "sourceName": "thigh_R",
+        "runtimeName": "heavy_cavalry_node941__thigh_R"
+      },
+      {
+        "node": 942,
+        "sourceName": "prop-sheath_L",
+        "runtimeName": "heavy_cavalry_node942__prop_sheath_L"
+      },
+      {
+        "node": 943,
+        "sourceName": "prop-quiver_R",
+        "runtimeName": "heavy_cavalry_node943__prop_quiver_R"
+      },
+      {
+        "node": 944,
+        "sourceName": "prop_fauld",
+        "runtimeName": "heavy_cavalry_node944__prop_fauld"
+      },
+      {
+        "node": 945,
+        "sourceName": "prop_sheath_01_R",
+        "runtimeName": "heavy_cavalry_node945__prop_sheath_01_R"
+      },
+      {
+        "node": 946,
+        "sourceName": "sheath_01_R",
+        "runtimeName": "heavy_cavalry_node946__sheath_01_R"
+      },
+      {
+        "node": 947,
+        "sourceName": "prop_sheath_01_L",
+        "runtimeName": "heavy_cavalry_node947__prop_sheath_01_L"
+      },
+      {
+        "node": 948,
+        "sourceName": "sheath_01_L",
+        "runtimeName": "heavy_cavalry_node948__sheath_01_L"
+      },
+      {
+        "node": 949,
+        "sourceName": "prop_seax_front",
+        "runtimeName": "heavy_cavalry_node949__prop_seax_front"
+      },
+      {
+        "node": 950,
+        "sourceName": "prop_seax_back",
+        "runtimeName": "heavy_cavalry_node950__prop_seax_back"
+      },
+      {
+        "node": 951,
+        "sourceName": "prop_sheath_02_R",
+        "runtimeName": "heavy_cavalry_node951__prop_sheath_02_R"
+      },
+      {
+        "node": 952,
+        "sourceName": "sheath_02_R",
+        "runtimeName": "heavy_cavalry_node952__sheath_02_R"
+      },
+      {
+        "node": 953,
+        "sourceName": "prop_sheath_02_L",
+        "runtimeName": "heavy_cavalry_node953__prop_sheath_02_L"
+      },
+      {
+        "node": 954,
+        "sourceName": "sheath_02_L",
+        "runtimeName": "heavy_cavalry_node954__sheath_02_L"
+      },
+      {
+        "node": 955,
+        "sourceName": "prop_quiver_R",
+        "runtimeName": "heavy_cavalry_node955__prop_quiver_R"
+      },
+      {
+        "node": 956,
+        "sourceName": "quiver_R",
+        "runtimeName": "heavy_cavalry_node956__quiver_R"
+      },
+      {
+        "node": 957,
+        "sourceName": "prop_quiver_L",
+        "runtimeName": "heavy_cavalry_node957__prop_quiver_L"
+      },
+      {
+        "node": 958,
+        "sourceName": "quiver_L",
+        "runtimeName": "heavy_cavalry_node958__quiver_L"
+      },
+      {
+        "node": 959,
+        "sourceName": "prop-sheath_R",
+        "runtimeName": "heavy_cavalry_node959__prop_sheath_R"
+      },
+      {
+        "node": 960,
+        "sourceName": "hip",
+        "runtimeName": "heavy_cavalry_node960__hip"
+      },
+      {
+        "node": 961,
+        "sourceName": "knee_L",
+        "runtimeName": "heavy_cavalry_node961__knee_L"
+      },
+      {
+        "node": 962,
+        "sourceName": "knee_R",
+        "runtimeName": "heavy_cavalry_node962__knee_R"
+      },
+      {
+        "node": 963,
+        "sourceName": "handIK_L",
+        "runtimeName": "heavy_cavalry_node963__handIK_L"
+      },
+      {
+        "node": 964,
+        "sourceName": "handIK_R",
+        "runtimeName": "heavy_cavalry_node964__handIK_R"
+      },
+      {
+        "node": 965,
+        "sourceName": "footIK_L",
+        "runtimeName": "heavy_cavalry_node965__footIK_L"
+      },
+      {
+        "node": 966,
+        "sourceName": "footIK_R",
+        "runtimeName": "heavy_cavalry_node966__footIK_R"
+      },
+      {
+        "node": 967,
+        "sourceName": "elbow_L",
+        "runtimeName": "heavy_cavalry_node967__elbow_L"
+      },
+      {
+        "node": 968,
+        "sourceName": "elbow_R",
+        "runtimeName": "heavy_cavalry_node968__elbow_R"
+      },
+      {
+        "node": 969,
+        "sourceName": "heavy_cavalry licensed-gnome-head",
+        "runtimeName": "heavy_cavalry_node969__heavy_cavalry_licensed_gnome_head"
+      },
+      {
+        "node": 970,
+        "sourceName": "heavy_cavalry mounted rider",
+        "runtimeName": "heavy_cavalry_node970__heavy_cavalry_mounted_rider"
+      },
+      {
+        "node": 971,
+        "sourceName": "heavy_cavalry seated rider rig independent pony",
+        "runtimeName": "heavy_cavalry_node971__heavy_cavalry_seated_rider_rig_independent_pony"
+      },
+      {
+        "node": 972,
+        "sourceName": "prop_rider",
+        "runtimeName": "heavy_cavalry_node972__prop_rider"
+      },
+      {
+        "node": 973,
+        "sourceName": "prop_saddle",
+        "runtimeName": "heavy_cavalry_node973__prop_saddle"
+      },
+      {
+        "node": 974,
+        "sourceName": "Horse_Belly",
+        "runtimeName": "heavy_cavalry_node974__Horse_Belly"
+      },
+      {
+        "node": 975,
+        "sourceName": "prop_wings",
+        "runtimeName": "heavy_cavalry_node975__prop_wings"
+      },
+      {
+        "node": 976,
+        "sourceName": "Horse_Spine_1",
+        "runtimeName": "heavy_cavalry_node976__Horse_Spine_1"
+      },
+      {
+        "node": 977,
+        "sourceName": "Horse_Hoof_back_L",
+        "runtimeName": "heavy_cavalry_node977__Horse_Hoof_back_L"
+      },
+      {
+        "node": 978,
+        "sourceName": "Horse_Foot_L",
+        "runtimeName": "heavy_cavalry_node978__Horse_Foot_L"
+      },
+      {
+        "node": 979,
+        "sourceName": "Horse_Shin_L",
+        "runtimeName": "heavy_cavalry_node979__Horse_Shin_L"
+      },
+      {
+        "node": 980,
+        "sourceName": "Knee_Stretch_B_L",
+        "runtimeName": "heavy_cavalry_node980__Knee_Stretch_B_L"
+      },
+      {
+        "node": 981,
+        "sourceName": "Horse_Leg_L",
+        "runtimeName": "heavy_cavalry_node981__Horse_Leg_L"
+      },
+      {
+        "node": 982,
+        "sourceName": "Leg_Stretch_L",
+        "runtimeName": "heavy_cavalry_node982__Leg_Stretch_L"
+      },
+      {
+        "node": 983,
+        "sourceName": "Horse_Thigh_L",
+        "runtimeName": "heavy_cavalry_node983__Horse_Thigh_L"
+      },
+      {
+        "node": 984,
+        "sourceName": "Horse_Femur_L",
+        "runtimeName": "heavy_cavalry_node984__Horse_Femur_L"
+      },
+      {
+        "node": 985,
+        "sourceName": "Horse_Hoof_back_R",
+        "runtimeName": "heavy_cavalry_node985__Horse_Hoof_back_R"
+      },
+      {
+        "node": 986,
+        "sourceName": "Horse_Foot_R",
+        "runtimeName": "heavy_cavalry_node986__Horse_Foot_R"
+      },
+      {
+        "node": 987,
+        "sourceName": "Horse_Shin_R",
+        "runtimeName": "heavy_cavalry_node987__Horse_Shin_R"
+      },
+      {
+        "node": 988,
+        "sourceName": "Knee_Stretch_B_R",
+        "runtimeName": "heavy_cavalry_node988__Knee_Stretch_B_R"
+      },
+      {
+        "node": 989,
+        "sourceName": "Horse_Leg_R",
+        "runtimeName": "heavy_cavalry_node989__Horse_Leg_R"
+      },
+      {
+        "node": 990,
+        "sourceName": "Leg_Stretch_R",
+        "runtimeName": "heavy_cavalry_node990__Leg_Stretch_R"
+      },
+      {
+        "node": 991,
+        "sourceName": "Horse_Thigh_R",
+        "runtimeName": "heavy_cavalry_node991__Horse_Thigh_R"
+      },
+      {
+        "node": 992,
+        "sourceName": "Horse_Femur_R",
+        "runtimeName": "heavy_cavalry_node992__Horse_Femur_R"
+      },
+      {
+        "node": 993,
+        "sourceName": "Horse_Tail_10",
+        "runtimeName": "heavy_cavalry_node993__Horse_Tail_10"
+      },
+      {
+        "node": 994,
+        "sourceName": "Horse_Tail_9",
+        "runtimeName": "heavy_cavalry_node994__Horse_Tail_9"
+      },
+      {
+        "node": 995,
+        "sourceName": "Horse_Tail_8",
+        "runtimeName": "heavy_cavalry_node995__Horse_Tail_8"
+      },
+      {
+        "node": 996,
+        "sourceName": "Horse_Tail_7",
+        "runtimeName": "heavy_cavalry_node996__Horse_Tail_7"
+      },
+      {
+        "node": 997,
+        "sourceName": "Horse_Tail_6",
+        "runtimeName": "heavy_cavalry_node997__Horse_Tail_6"
+      },
+      {
+        "node": 998,
+        "sourceName": "Horse_Tail_5",
+        "runtimeName": "heavy_cavalry_node998__Horse_Tail_5"
+      },
+      {
+        "node": 999,
+        "sourceName": "Horse_Tail_4",
+        "runtimeName": "heavy_cavalry_node999__Horse_Tail_4"
+      },
+      {
+        "node": 1000,
+        "sourceName": "Horse_Tail_3",
+        "runtimeName": "heavy_cavalry_node1000__Horse_Tail_3"
+      },
+      {
+        "node": 1001,
+        "sourceName": "Horse_Tail_2",
+        "runtimeName": "heavy_cavalry_node1001__Horse_Tail_2"
+      },
+      {
+        "node": 1002,
+        "sourceName": "Horse_Tail",
+        "runtimeName": "heavy_cavalry_node1002__Horse_Tail"
+      },
+      {
+        "node": 1003,
+        "sourceName": "Horse_Tail_base",
+        "runtimeName": "heavy_cavalry_node1003__Horse_Tail_base"
+      },
+      {
+        "node": 1004,
+        "sourceName": "Horse_Spine",
+        "runtimeName": "heavy_cavalry_node1004__Horse_Spine"
+      },
+      {
+        "node": 1005,
+        "sourceName": "Leg_target_L",
+        "runtimeName": "heavy_cavalry_node1005__Leg_target_L"
+      },
+      {
+        "node": 1006,
+        "sourceName": "Leg_target_R",
+        "runtimeName": "heavy_cavalry_node1006__Leg_target_R"
+      },
+      {
+        "node": 1007,
+        "sourceName": "Knee_F_L",
+        "runtimeName": "heavy_cavalry_node1007__Knee_F_L"
+      },
+      {
+        "node": 1008,
+        "sourceName": "Knee_F_R",
+        "runtimeName": "heavy_cavalry_node1008__Knee_F_R"
+      },
+      {
+        "node": 1009,
+        "sourceName": "Shoulder_Target_R",
+        "runtimeName": "heavy_cavalry_node1009__Shoulder_Target_R"
+      },
+      {
+        "node": 1010,
+        "sourceName": "Shoulder_Target_L",
+        "runtimeName": "heavy_cavalry_node1010__Shoulder_Target_L"
+      },
+      {
+        "node": 1011,
+        "sourceName": "Knee_B_L",
+        "runtimeName": "heavy_cavalry_node1011__Knee_B_L"
+      },
+      {
+        "node": 1012,
+        "sourceName": "Knee_B_R",
+        "runtimeName": "heavy_cavalry_node1012__Knee_B_R"
+      },
+      {
+        "node": 1013,
+        "sourceName": "prop_decals",
+        "runtimeName": "heavy_cavalry_node1013__prop_decals"
+      },
+      {
+        "node": 1014,
+        "sourceName": "prop_rider_R",
+        "runtimeName": "heavy_cavalry_node1014__prop_rider_R"
+      },
+      {
+        "node": 1015,
+        "sourceName": "prop_rider_L",
+        "runtimeName": "heavy_cavalry_node1015__prop_rider_L"
+      },
+      {
+        "node": 1016,
+        "sourceName": "prop_hair",
+        "runtimeName": "heavy_cavalry_node1016__prop_hair"
+      },
+      {
+        "node": 1017,
+        "sourceName": "Horse_Hair",
+        "runtimeName": "heavy_cavalry_node1017__Horse_Hair"
+      },
+      {
+        "node": 1018,
+        "sourceName": "Horse_root",
+        "runtimeName": "heavy_cavalry_node1018__Horse_root"
+      },
+      {
+        "node": 1019,
+        "sourceName": "heavy_cavalry original-gnome-mount",
+        "runtimeName": "heavy_cavalry_node1019__heavy_cavalry_original_gnome_mount"
+      },
+      {
+        "node": 1020,
+        "sourceName": "heavy_cavalry mount rig independent pony",
+        "runtimeName": "heavy_cavalry_node1020__heavy_cavalry_mount_rig_independent_pony"
+      }
+    ],
+    "nativeFilesChanged": false
+  },
+  "sourceNative": "C:\\Users\\alipo\\OneDrive\\Desktop\\mmmm\\Peris\\assets\\source\\battle\\gnome-portrait-roster-v23\\peris-gnome-army.blend",
+  "sourceNativeSha256": "d0e53db804071811369d1dd97595acfc6b1a430d2545e1420dfc300abd4fb289",
+  "sourceNativeUnchanged": true,
+  "raw": "C:\\Users\\alipo\\OneDrive\\Desktop\\mmmm\\Peris\\assets\\source\\battle\\gnome-portrait-roster-v23\\exports\\gnome-roster.glb",
+  "rawBytes": 68383720,
+  "rawSha256": "e54ebb050db62eb2ec313f10df930eede34759c5d47a2d266b4c79aa2aa30db5",
+  "runtimeApproved": false,
+  "finishedUnitApproved": false
+}

@@ -1,7 +1,7 @@
 {
   "title": "Peris unit production references",
   "date": "2026-10-09",
-  "purpose": "Research and production guidance for an infantry and cavalry prototype before expanding the faction roster.",
+  "purpose": "Research, licensed sources, editable models and actual in-game review for all Peris faction troop and siege graphics.",
   "recommendation": "Create, fit, rig, texture, and inspect the source units in Blender. Deliver optimized GLB assets to the existing Three.js battle renderer.",
   "sourcePack": {
     "game": "0 A.D.",
@@ -11,10 +11,10 @@
     "revision": "61a3b9507d974084e6badb88a0826bd89a6d5b8b",
     "license": "CC-BY-SA-3.0",
     "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
-    "inventory": "0ad/inventory.json",
+    "inventory": "0ad/inventory-roster-v3.json",
     "licenseFile": "0ad/LICENSE.txt",
-    "files": 141,
-    "bytes": 22072298,
+    "files": 791,
+    "bytes": 127125797,
     "usage": "Licensed source study and adapted prototypes. Redistributed source assets and their adaptations require Wildfire Games attribution, the author and license links, and CC BY-SA 3.0 licensing.",
     "observations": [
       {
@@ -29,7 +29,9 @@
         "finding": "The infantry actor reuses a body mesh with separate equipment and action/formation variants.",
         "evidence": "0ad/actors/units/romans/infantry_swordsman_c4.xml"
       }
-    ]
+    ],
+    "previousInventory": "0ad/inventory.json",
+    "familyCatalog": "roster-sources-v3.json"
   },
   "artReferences": [
     {
@@ -92,34 +94,47 @@
       "step": 2,
       "title": "Build a modular rig",
       "action": "Share compatible skeletons within a body family. Fit equipment to named attachments. Check joint deformation in action poses.",
-      "sourceIds": ["0ad-actors", "gpu-gems"]
+      "sourceIds": [
+        "0ad-actors",
+        "gpu-gems"
+      ]
     },
     {
       "step": 3,
       "title": "Treat cavalry as a complete assembly",
       "action": "Fit pelvis to saddle, thighs around the horse, boots to stirrups where present, and hands to reins or weapon grips. Use a rider attachment and a shared animation clock; verify idle, locomotion, and attack from side and front views. Retain compatible horse and rider clips rather than placing a standing soldier above a horse.",
-      "sourceIds": ["0ad-actors", "three-animation"],
+      "sourceIds": [
+        "0ad-actors",
+        "three-animation"
+      ],
       "basis": "The attachment is observed in 0 A.D.; the pose and synchronization checks are the proposed Peris workflow."
     },
     {
       "step": 4,
       "title": "Author materials for the game",
       "action": "Use UV textures for base color, normal detail, and metallic/roughness response. Keep metal, skin, leather, and cloth distinct under neutral lighting. Adapt the downloaded legacy specular materials deliberately; a specular image is not automatically a metallic or roughness map.",
-      "sourceIds": ["gltf-materials"],
+      "sourceIds": [
+        "gltf-materials"
+      ],
       "basis": "glTF material model plus the proposed conversion and visual checks for Peris."
     },
     {
       "step": 5,
       "title": "Export a controlled GLB",
       "action": "Preserve the editable Blender source. Export the intended unit collection, including the skin and named animation clips. Inspect the result, optimize a separate output, validate it, and compare it in Three.js with the source appearance.",
-      "sourceIds": ["three-models", "three-animation"],
+      "sourceIds": [
+        "three-models",
+        "three-animation"
+      ],
       "basis": "Three.js supports GLB skins and animation clips; the source preservation and validation sequence is the proposed Peris workflow."
     },
     {
       "step": 6,
       "title": "Render armies within a measured budget",
       "action": "Share compatible assets, cull offscreen soldiers, and reduce distant detail. After validating individual clips, consider bone animation textures with per-instance timing. Measure armies on named hardware.",
-      "sourceIds": ["gpu-gems"],
+      "sourceIds": [
+        "gpu-gems"
+      ],
       "basis": "NVIDIA's DirectX 10 technique requires adaptation and measurements in Three.js/WebGL."
     }
   ],
@@ -170,16 +185,27 @@
     }
   ],
   "prototypes": {
-    "status": "First Roman infantry and seated cavalry prototypes are available for visual review in the playable battle preview.",
-    "previewUrl": "/?battle-preview=1&unit-prototypes=1",
+    "status": "Earlier two-unit licensed reference trial; its editable source and exports remain preserved.",
+    "previewUrl": "/?battle-preview=1&unit-prototypes=1&faction=roman",
     "editableSource": "assets/source/battle/reference-v2/peris-reference-prototypes.blend",
     "reviewScript": "scripts/blender/open_unit_review.py",
     "asset": "public/models/battle/reference-prototypes.glb",
     "distantAsset": "public/models/battle/reference-prototypes-lod.glb",
     "credits": "public/licenses/peris-unit-prototypes.txt",
-    "roles": ["line_infantry", "heavy_cavalry"],
-    "clips": ["idle", "walk", "attack"],
-    "prerequisites": ["Installed npm dependencies", "Blender 4.5 with COLLADA import", "Python 3 with Pillow"],
+    "roles": [
+      "line_infantry",
+      "heavy_cavalry"
+    ],
+    "clips": [
+      "idle",
+      "walk",
+      "attack"
+    ],
+    "prerequisites": [
+      "Installed npm dependencies",
+      "Blender 4.5 with COLLADA import",
+      "Python 3 with Pillow"
+    ],
     "rebuildOrder": [
       "node scripts/fetch-unit-references.mjs",
       "python scripts/convert-reference-textures.py",
@@ -190,7 +216,110 @@
     "preservation": "Use an unused edition name for a new assembly. The builder refuses to overwrite existing editable sources. The review script saves a separate side-by-side scene under artifacts.",
     "performanceRecord": "previews/performance.json",
     "actualGameCapture": "previews/roman-cavalry.png",
-    "limitations": "The remaining faction roles retain the procedural prototype art. Siege studies are visual only; Academy research and Workshop recruitment are still design work. On Intel Iris Xe, Ultra at 1600x1000 averaged 56.7 FPS for twenty cavalry visible and 19.5 FPS for the full 540-soldier overview, with long stalls. Full-army performance still needs optimization."
+    "limitations": "The recorded performance concerns the earlier two-unit trial. See rosterPrototypes for the complete faction production and current review."
   },
-  "status": "First two licensed prototypes integrated; continuing visual review and faction art development."
+  "status": "Faction rosters are being revised and reviewed in the game. Exported models may still require visual corrections.",
+  "rosterPrototypes": {
+    "status": "Faction rosters are being revised and reviewed in the game. Exported models may still require visual corrections.",
+    "edition": "roster-v3",
+    "factionsExported": [
+      "roman",
+      "spartan",
+      "persian",
+      "egyptian",
+      "orc",
+      "elf",
+      "dwarf",
+      "gnome",
+      "pandaren",
+      "undead",
+      "demon"
+    ],
+    "factionsEnabled": [
+      "roman",
+      "spartan",
+      "persian",
+      "egyptian",
+      "elf",
+      "dwarf",
+      "gnome",
+      "pandaren",
+      "undead",
+      "demon"
+    ],
+    "factionsWithheld": [
+      "orc"
+    ],
+    "factionsReady": [],
+    "totalFactions": 11,
+    "roles": [
+      "line_infantry",
+      "spear_guard",
+      "archer",
+      "elite",
+      "scout",
+      "light_cavalry",
+      "heavy_cavalry",
+      "ram",
+      "catapult"
+    ],
+    "unitsExported": 99,
+    "unitsEnabled": 90,
+    "unitsWithheld": 9,
+    "unitsReady": 0,
+    "screenshotsReady": 24,
+    "screenshotsCurrent": 24,
+    "screenshotsPreserved": 33,
+    "screenshotsArchived": 9,
+    "withheld": {
+      "orc": {
+        "reason": "Retained roster fails the selected Orc portrait and anatomy review. A separate one-role quality pilot is still being developed; this retained full pack is not enabled in the battle preview.",
+        "evidence": "assets/references/units/orc-quality-review.json",
+        "retained": {
+          "near": {
+            "path": "public/models/battle/orc-roster.glb",
+            "bytes": 12780620,
+            "sha256": "47cbb655b0e6a9c1f9657969bcc027f7a8ed80be031394bdab05aeb66ffb840a"
+          },
+          "far": {
+            "path": "public/models/battle/orc-roster-lod.glb",
+            "bytes": 5745100,
+            "sha256": "a10ad2671517cdecf155ed93743b7f23e299629f592f4477df1f543161fa24d5"
+          }
+        }
+      }
+    },
+    "countDefinitions": {
+      "unitsExported": "Complete exported roles retained locally, including withheld archives.",
+      "unitsEnabled": "Roles in complete near/far packs currently enabled for the battle preview; this is not art approval.",
+      "unitsReady": "Distinct enabled roles with matching model/image fingerprints and an explicit portrait-match-v1 review.",
+      "screenshotsReady": "Distinct roles with screenshots whose image and complete near/far model fingerprints match enabled preview assets.",
+      "screenshotsPreserved": "All saved screenshot records, including historical, unverified and withheld studies."
+    },
+    "visualStandard": "portrait-match-v1: unique role silhouette, equipment, materials, anatomy and pose matched to each unit portrait",
+    "visualReviewCriteria": [
+      "Recognizable race anatomy and silhouette from the battle camera, including faces and exposed racial features.",
+      "Distinct faction equipment and materials across all nine roles; fantasy units must not read as recolored historical soldiers.",
+      "Readable role weapons, scout and heavy cavalry differences, and siege identity.",
+      "Riders seated on the mount with supported legs, stable proportions and coherent saddle equipment.",
+      "Current model fingerprints match every published actual game screenshot."
+    ],
+    "previewUrl": "/?battle-preview=1&unit-prototypes=1",
+    "screenshotGallery": "previews/roster-v3/index.html",
+    "editableSourcePattern": "assets/source/battle/roster-v3/peris-<faction>-army.blend",
+    "assetPattern": "public/models/battle/<faction>-roster.glb",
+    "distantAssetPattern": "public/models/battle/<faction>-roster-lod.glb",
+    "publicationReport": "public/models/battle/faction-rosters.json",
+    "credits": "public/licenses/peris-faction-rosters.txt",
+    "rebuildOrder": [
+      "node scripts/fetch-roster-references.mjs",
+      "python scripts/convert-reference-textures.py --inventory inventory-roster-v3.json",
+      "blender --background --python scripts/blender/cache_reference_imports.py -- --inventory inventory-roster-v3.json",
+      "blender --background --python scripts/blender/build_faction_rosters.py -- --edition roster-next --factions roman spartan persian egyptian orc elf dwarf gnome pandaren undead demon",
+      "PowerShell: $env:PERIS_ROSTER_EDITION='roster-next'",
+      "node scripts/prepare-faction-rosters.mjs"
+    ],
+    "preservation": "The source builder refuses to overwrite a previous edition. Packed editable sources, earlier runtime packs and historical screenshot records remain preserved. Withheld exports cannot count as enabled previews or portrait-approved current units.",
+    "limitations": "These are visual prototypes. Seven troop looks use existing infantry, archer and cavalry combat rules. Rams, catapults and fantasy stonehurlers are inspection models. Academy research and Workshop recruitment remain design plans. Screenshot FPS is a capture statistic, not a sustained performance measurement."
+  }
 }

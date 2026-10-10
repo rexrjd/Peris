@@ -1,0 +1,144 @@
+REFERENCE GUIDANCE — ORC, ELF, DWARF, UNDEAD
+Study milestone; model work remains paused. No Peris model is approved.
+The stored JPEGs are external creator reference art, not screenshots of our game.
+The exact runtime portrait in public/art/battle/roster/<race>.png controls the final identity.
+Tile order: line / spear / archer; elite / scout / light cavalry; heavy / ram / catapult.
+
+ORC
+Viewed: NenZ Orc Tanker (front, shield side, rear three-quarter, back), and
+marcosoresina Test Orc Head (face closeup, profile, both three-quarters, rear low).
+Build a relatively small head into a huge trapezius/deltoid frame, long heavy arms
+and short bowed legs. The bust demonstrates jaw projection, thick lower lip,
+recessed small eyes, nested brow/cheek folds and a cupped attached ear. Preserve
+our low square face/topknot and small upward lower-jaw tusks; do not copy the
+bust's tall bald dome, aged round chin, or add downward cheek fangs.
+Our kit is copper-edged charcoal overlapping plate over fitted leather/hide,
+with cross straps, orange ragged cloth, exposed upper arms and believable
+rivets/grips. Tanker's wood shield/hammer/fur explain construction and materials,
+but our line retains its portrait axe and angular shield. Keep pike, bow and
+elite halberd silhouettes distinct. Wolf scout, horse light, mammoth heavy.
+Giant idle holds its boulder overhead with real two-hand contact.
+
+ELF
+Viewed: michael_grodkowski Elf Warrior (all six stored body/armor views), and
+Mark Wilson Head Sculpts (four comparative face/ear views).
+The body demonstrates narrow long limbs, flowing fluted plate, overlapping
+waist lames and a continuous flexible dark layer, with mail-like flex zones at
+elbows/hips. Translate to silver-edged green leaf plates, woven green cloth and
+dark leather. Preserve support and movement gaps, not holes between floating
+plates. Closed gold helmet/A-pose provide construction only; they do not prove
+bare ears, combat grips or the final pose.
+The head study has attached thick cupped ears and narrow cheek/jaw planes.
+Reduce its exaggerated ear length, brows/lashes and feminine pointed chin to
+our restrained male portraits. Keep blond hair/open face, fine sword, leaf pike,
+wood bow and sweeping elite polearm. Stag scout, horse light, elk heavy.
+Rootstone must be structural roots/rock, not gray human cloth; idle cradles stone
+at chest. Comparative heads are CC BY-NC; commercial asset reuse is not cleared.
+
+DWARF
+Viewed: Gabriele_Zero3DArt Dwarf Warrior Game Ready (five stored body/face views).
+Real stout mass, thick upper arms/short legs, deep brow/broad nose and beard roots
+matter more than shrinking a human. Beard has separate directional braids and
+flyaways; our portrait requires warm russet braids/copper cuffs, not its dark-gray
+beard or helmetless mohawk. Layer angular iron/copper plates over flexible dark
+cloth/leather, with hip mail only where compatible; armor rims, cape folds and
+hammer wraps must have depth and contact.
+Source pose grips hammer shaft in one hand and cups head with the other. Our line
+uses one-hand hammer plus shield, so choose appropriate weapon weight/scale
+instead of copying the giant display hammer. Keep tall pike, horizontal real
+crossbow and two-head rune axe distinct. Goat scout, pony light, boar heavy.
+Runestone is angular cracked/engraved blocks with structural joints; no gold
+smooth donut joints or human clothing. Boulder idle is chest cradle.
+
+UNDEAD
+Viewed: Pigcraft Bone Knight (front, side, three-quarter, back).
+Skull needs real orbit/nasal cavities, mandible and irregular teeth; body needs
+actual rib/spine/pelvis gaps and paired long bones. Layer broken corroded plate
+around that frame. Living-troop opaque underclothes must not fill skeletal holes;
+use straps/torn violet fragments and retain bone negative space in LOD/shadows.
+Transfer aged bone versus metal roughness and thick plate rims, not the source
+horns/greatsword onto every role. Keep portrait spear, hooded bow, elite halberd,
+bone-horse scout/light and genuine skeletal mammoth heavy. Tomb slab colossus
+has inscribed block anatomy and a shoulder/head-raised boulder, not a gray human.
+
+NEXT ACCEPTANCE GATES
+Reference viewing is knowledge, not approval. Static screenshots do not establish
+rig/UV rights, hand contact through motion, cloth clearance or supported mounted
+gait. Use side/back views and idle/walk/attack samples before claiming those pass.
+Show actual game inspection plus battle distance; label work-in-progress clearly.
+All nine roles need their own authored coverage/weapon/pose/mount or mechanism;
+small recolors and copied human forms fail. Viewer-only art is study only, no
+viewer extraction. No archives were acquired during this review. The initial milestone ended at four races; the Gnome/Demon update below records
+new direct studies. The later Panda section below records its new direct studies.
+
+
+GNOME / DEMON REFERENCE UPDATE — LIMITED STUDIES, NO UNIT APPROVED
+
+GNOME
+Matheus Elias Gnome Character (front/side) is rejected primary: balloon nose,
+pointed red garden hat, torso-hiding white beard and mitten hands do not match
+our serious short-bearded engineer soldier. Keep only style contrast/silhouette
+lessons. PPrager Gnome Warrior (front/side/rear) is visibly green goblin anatomy;
+author credits Last Goblin Standing by Prospass. Use dented plate, soft shirt,
+mail throat and leather wraps as gear-construction study only. Extended arms and
+open fingers are not actual weapon grips or a battle stance.
+Gustavo Groppo Gnome (three credited portfolio screenshots) is an offline 3D
+render: skin pores/creases, connected cupped ears, fine hair, uneven teeth,
+stitches/leather folds, brass wear and carved wood are a useful finish benchmark.
+Its old fleshy nose, white beard, grin, lantern/skull staff and shaman kit are not
+our troop design, downloadable rig or web performance evidence. Preserve our
+moderate face, short brown beard, burgundy soft cap/goggles, quilted leather,
+brass fittings, actual sword/pike/crossbow and clockwork elite. Engineer body,
+mechanical face/boar/gear mechanisms and animated contacts still need direct
+study; research is not complete just because three sources were viewed.
+
+DEMON
+Pedro B. Goulart Demon Warrior & Axes of Agony (front/detail/side/rear) shows
+continuous organic ridges, attached spines and claw transitions, rough pale
+shell against red soft tissue, and a rough ornate axe with sharper metal edge.
+Use connected anatomy/material hierarchy principles. Do not copy its single
+mouth-eye, pale nude exoskeleton, red seam biology or twin axes into the two-eyed
+red Div with curved ridged horns, charcoal/copper crafted plate and red cloth.
+CC BY4 is displayed, but download required login; no archive/rig/UVs acquired.
+Camilo Aldana Balrog (side/rear/detail) helps broad upper-body mass, bent limbs,
+claws and organic wing/back attachment. The file named torso-wing-root-detail crops
+most of the head; dark fire lighting hides face/horn/surface detail. These shots
+are limited silhouette evidence. Do not copy recognizable LOTR wings/tail/fire
+weapon or treat glow as a material-quality benchmark. Our original Div targets
+and per-role weapons/cloth remain primary; face/horn roots, animal saddle gait
+and real boulder contact remain unresolved. No literal runtime asset approved.
+
+Evidence: race-study-notes.json lists exact local JPEG paths, SHA256 values,
+source records and observations. These external artworks are study only; all
+63 Peris roles remain unapproved and model work remains paused.
+
+
+PANDAREN REFERENCE UPDATE — CONSTRUCTION/POSE, NO UNIT APPROVED
+Magnaomega Kalik Fight Pose (four stored views) shows wide bent-knee balance,
+paw pads/fingers, real sandal/wrap contacts, stitched cloth/pouches and bamboo
+nodes. It is slender feminine stylized anatomy with purple paws, huge eyes,
+hair bunches and bare waist. Use pose/paw/soft-kit principles only, not that body,
+face or costume. Extended palm/staff display is not our bow/spear/sword grip.
+Adrijana Bohinc DAE Panda Warrior (three views; Wen Yubang concept credited)
+shows genuinely broad bear shoulders/torso, thick short limbs, attached round
+ears/muzzle and integrated paws; robe/sash/belt layers continue behind the body.
+Its long smooth white beard, oversized beads, turquoise/orange cloth/claws and
+pillar weapon are not our bare furry muzzle, jade/gold lamellar and red scarf.
+Gauntlet rests on pillar cap rather than demonstrating firm combat shaft grip.
+No official source archives/licenses acquired for either. Static poses do not
+prove rigging, cloth/fur motion, mounted seats, bow draw or game performance.
+The separate gray mountain giant still requires its ape-like head/mane and
+chest-boulder cradle, not a panda face or enlarged soldier.
+
+CORRECTED DEMON DETAIL LABEL
+Balrog torso-wing-root-detail.jpg preserves identical bytes/SHA256; it records
+torso, wing root and forearm with most of the head cropped. It supplies no face
+or precise horn-root detail approval. Neutral facial/material references remain
+needed. No literal Balrog, wings/fire weapon or protected source import.
+
+DOWNLOADABLE EXAMPLES NOW HAVE PRIORITY
+Choose official authored appropriately licensed source downloads, then verify
+actual archive, topology/UVs, textures, rig/weights and portrait compatibility.
+A public Download label or login readiness is not an acquired model. All sources
+remain studies until acquisition/rights/source review is documented; all 63
+Peris models remain unapproved and modeling stays paused.

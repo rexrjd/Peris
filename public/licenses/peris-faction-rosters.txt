@@ -1,0 +1,64 @@
+Peris textured faction rosters
+
+Original meshes, textures and animations: Wildfire Games
+https://wildfiregames.com/
+Source revision: 61a3b9507d974084e6badb88a0826bd89a6d5b8b
+https://github.com/0ad/0ad/tree/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art
+
+The Dwarf catapult UI portrait is an actual Peris Blender render of the adapted model, under the same CC BY-SA 3.0 terms.
+
+Adaptations for Peris: faction assembly, added equipment and fantasy shapes, shared texture atlases, seated mount/rider assembly, matched animation clips, GLB exports and distance models.
+Wildfire Games assets and their Peris adaptations are licensed CC BY-SA 3.0.
+https://creativecommons.org/licenses/by-sa/3.0/
+
+The current Orc prototype pack also includes adapted heads from
+"Male Orc for print" by Crazyon520, licensed CC BY 4.0.
+https://sketchfab.com/3d-models/male-orc-for-print-2362b5e5d94f4303a06faa17d1e7e611
+https://creativecommons.org/licenses/by/4.0/
+Changes include head proportion, surface, pose, game rig fitting and assembly.
+These head components retain their own attribution, source URL and source-file
+SHA256 in the GLB node extras. Body, rig and original Peris equipment retain
+their separate CC BY-SA 3.0 attribution.
+
+Editable sources are retained locally under assets/source/battle/ in immutable
+edition folders. assets/manifest.json identifies each active editable source;
+public/models/battle/faction-rosters.json records its source edition and hashes.
+The original roster-v3 sources remain available for comparison.
+Source inventory and hashes: assets/references/units/0ad/inventory-roster-v3.json
+Source family catalog: assets/references/units/roster-sources-v3.json
+Rebuild prerequisites: installed project npm dependencies; Blender 4.5 with COLLADA import support; Python 3 with Pillow.
+Rebuild order: scripts/fetch-roster-references.mjs; scripts/convert-reference-textures.py --inventory inventory-roster-v3.json; scripts/blender/cache_reference_imports.py (Blender) -- --inventory inventory-roster-v3.json; scripts/blender/build_faction_rosters.py (Blender); scripts/prepare-faction-rosters.mjs.
+Use PERIS_ROSTER_EDITION to identify the matching editable-source edition when preparing exports. Earlier sources and runtime packs are retained.
+
+These are visual prototypes. Seven troop looks use existing infantry/archer/cavalry battle rules. The ram and catapult/stonehurler roles are inspection studies. Academy research and Workshop recruitment remain design plans.
+
+Additional active component credits:
+Seifert
+https://sketchfab.com/3d-models/stylized-elf-warrior-sculpt-7dd1ff28b7944c4face76d1adbea063e
+CC BY 4.0: https://creativecommons.org/licenses/by/4.0/
+Source SHA256: 4e737101a428dcab8cea87f3afb8801fe8d103b1cc78fb18c2b7eb841eda5b3d
+Adaptation: Head-only Body2 crop at source Z1.68, moderate width/depth/height fit to existing rig, generated UV and original warm facial paint; original Peris eyes, ears and hair separately authored; distinct Demon adaptation: widened brow/temple planes, tapered angular chin, rooted swept horns, short ears, red facial paint and amber gaze; no Elf hair; Div siege adaptation on the existing enlarged body/throw rig, red anatomy paint, separate short cloth wrap and cloven hooves
+
+Jan Pohl
+https://sketchfab.com/3d-models/dwarf-blacksmith-e48bfff956ef483cb987890dc856c8b5
+CC BY 4.0: https://creativecommons.org/licenses/by/4.0/
+Source SHA256: 6b4b6d8eb48c1e6132439fa9058ed093274080ca6d07f199fc6c44f773b56f42
+Adaptation: Head-only crop, fitted to existing source prop-head; copied head surface reduction. Original Dwarf texture/UV maps retained. Gnome connected source skull/nose with modest original brow mass, generated UV and original warm face/short-beard paint; source floor-length hair excluded after actual review. No source rig or file edits.
+
+Katerina Novakova
+https://sketchfab.com/3d-models/day-6-uncontrollable-hair-c2a7936eca4640d18570ec860957092b
+CC BY 4.0: https://creativecommons.org/licenses/by/4.0/
+Source SHA256: 6deac8bc2993df5d9c5e0f259a54c5db301b88b69887bf4bf8b851d53b4a7cc3
+Adaptation: Head-only crop, fitted to existing source prop-head; copied head surface reduction. Original Dwarf texture/UV maps retained. Gnome connected source skull/nose with modest original brow mass, generated UV and original warm face/short-beard paint; source floor-length hair excluded after actual review. No source rig or file edits. Bounded original orbital recession and connected lid folds; derived smooth normals recomputed after surface adaptation (not unchanged custom normals). Original feathered short-beard albedo on retained UV, original seated brown eyes and curved short locks; no directional shadow paint. Original warm feathered chestnut beard albedo replaces previous dark jaw paint on same source UV. Narrow surface-fitted amber/brown gaze replaces protruding ellipsoid eyes; short seated brows, irregular beard locks and moustache are original Peris geometry. Source skull, UV, weights and rest rig unchanged.
+
+danielmclogan
+https://sketchfab.com/3d-models/skeleton-animated-9210377c7a514cf6b48a31b9d3991ff3
+CC BY 4.0: https://creativecommons.org/licenses/by/4.0/
+Source SHA256: ed7d1fe4e971e3cb990a480b47e93aee39e4307fe4aa94ee4f5e04c9ade4ef96
+Adaptation: Source skeletal geometry and original UV texture adapted to existing Peris prototype proportions and source bone weights; no source clips imported. Separate from CC-BY-SA-3.0 rig and equipment.
+
+Crazyon520
+https://sketchfab.com/3d-models/male-orc-for-print-2362b5e5d94f4303a06faa17d1e7e611
+CC BY 4.0: https://creativecommons.org/licenses/by/4.0/
+Source SHA256: c13245d8f8742154dddf5fa6db2cf15cf9f5910eba46cbf86f630dc6f89b4298
+Adaptation: Previous source head-only crop, face-aware reduction and generated UV; coherent smooth lower muzzle/chin raise up to 0.0035 source units, six complete lower tooth islands and both tusks translated with jaw; tusks shortened to 78 percent height above fixed roots; posterior oblique neck crop; new tangent normal bake from identically altered dense source skin; original Peris anatomy-aware olive paint; warm sclera amber iris and pupil painted on source eye islands; aged warm ivory tooth and tusk material; fit to body head socket; regenerated smooth seam normals; fitted volumetric posterior neck bridge with head-to-neck weights; conforming tapered solid scalp clump; rigid facial weights; Peris giant fit: uniform 1.06 rest-space size around head center and giant neck translation; accepted stern gaze and dense source normal map retained

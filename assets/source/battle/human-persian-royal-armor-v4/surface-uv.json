@@ -1,0 +1,21 @@
+{
+  "sourceNative": "C:\\Users\\alipo\\OneDrive\\Desktop\\mmmm\\Peris\\assets\\source\\battle\\human-persian-royal-armor-v3\\peris-persian-army.blend",
+  "sourceSha256": "bf046ddf8f4a3118e25057e636a725d725053c4268d005bd1c2e6e26e52649d3",
+  "originalNative": "C:\\Users\\alipo\\OneDrive\\Desktop\\mmmm\\Peris\\assets\\source\\battle\\human-portrait-quality-v13\\persian\\peris-persian-army.blend",
+  "originalSha256": "b50e2090011ceda4a92ca824a941d1dad2592cbbd37f6ea889d7680f67f30c5b",
+  "sourceFilesUnchanged": true,
+  "geometryWeightsRestActionsUnchanged": true,
+  "shellFaces": 2052,
+  "collapsedUVFacesBefore": 396,
+  "collapsedUVFacesAfter": 0,
+  "sourceChartFallbackFaces": 14,
+  "originalUVChartProportionsRetained": true,
+  "atlasTile": {
+    "index": 0,
+    "size": 4096,
+    "innerSize": 1359,
+    "gutter": 3
+  },
+  "nativeSha256": "7e58cf4f5420639e7053bf8982c7da58c458e578e849ce678a40402d485e0aa4",
+  "finishedUnitApproved": false
+}

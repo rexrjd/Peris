@@ -43,6 +43,9 @@ def main():
             export_yup=True, export_apply=False, export_animations=True,
             export_skins=True, export_materials="EXPORT", export_extras=True,
             export_animation_mode=args.animation_mode, export_merge_animation="NLA_TRACK",
+            # A constant root height can differ between role clips. Dropping it
+            # makes the player fall back to the node's unrelated default pose.
+            export_optimize_animation_keep_anim_object=True,
         )
         if "FINISHED" not in result:
             raise RuntimeError("Blender did not complete the export.")

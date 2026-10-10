@@ -5,7 +5,7 @@ export default defineConfig({
   plugins: [react()],
   server: {
     // Generated exports need no live reload; cloud-synced notices can be locked.
-    watch: { ignored: ['**/standalone/**', '**/tmp/**', '**/public/licenses/**'] },
+    watch: { ignored: ['**/standalone/**', '**/tmp/**', '**/public/licenses/**', '**/assets/source/**', '**/assets/references/units/downloads/**', '**/artifacts/**'] },
   },
   build: {
     // Rollup's call-argument analysis stalls this build in the installed

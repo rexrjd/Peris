@@ -1,4 +1,4 @@
-import { OrthographicCamera, Plane, Raycaster, Vector2, Vector3 } from 'three';
+import { Box3, OrthographicCamera, Plane, Raycaster, Vector2, Vector3 } from 'three';
 import { FIELD_H, FIELD_W } from '../../domain/dimensions';
 import { clamp } from '../../../../shared/math/geometry';
 
@@ -71,5 +71,13 @@ export class BattleCamera {
     rotate(angle: number) { const overview = Math.abs(this.span - this.overviewSpan) < .01; this.yaw += angle; if (overview) this.span = this.overviewSpan; this.update(); }
     focus(x: number, y: number) { this.target.x = x; this.target.z = y; this.span = Math.min(this.span, 450); this.update(); }
     inspect(x: number, y: number) { this.inspecting = true; this.target.set(x, this.elevation(x,y) + 6, y); this.span = 55; this.yaw = Math.PI / 3; this.update(); }
+    inspectBounds(bounds: Box3) {
+        if(bounds.isEmpty())return;
+        this.inspecting=true; bounds.getCenter(this.target); this.yaw=Math.PI/3; this.update();
+        const projected=new Box3(),corner=new Vector3();
+        for(const x of [bounds.min.x,bounds.max.x])for(const y of [bounds.min.y,bounds.max.y])for(const z of [bounds.min.z,bounds.max.z])projected.expandByPoint(corner.set(x,y,z).applyMatrix4(this.camera.matrixWorldInverse));
+        const size=projected.getSize(new Vector3());
+        this.span=Math.max(size.y,size.x*this.height/this.width)*1.3;this.update();
+    }
     center() { this.inspecting = false; this.target.set(FIELD_W / 2, 0, FIELD_H / 2); this.yaw = 0; this.span = this.overviewSpan; this.update(); }
 }

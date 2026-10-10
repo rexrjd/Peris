@@ -1,0 +1,125 @@
+{
+  "edition": "pandaren-quality-roster-v12",
+  "source": "C:\\Users\\alipo\\OneDrive\\Desktop\\mmmm\\Peris\\assets\\source\\battle\\pandaren-quality-roster-v11b\\peris-pandaren-army.blend",
+  "sourceSha256": "356d26dc2ea341a9e4547036b93c8198c15d2cc07c40e729a469e76fecb4bc90",
+  "sourceUnchanged": true,
+  "native": "C:\\Users\\alipo\\OneDrive\\Desktop\\mmmm\\Peris\\assets\\source\\battle\\pandaren-quality-roster-v12\\peris-pandaren-army.blend",
+  "nativeSha256": "a866b501d854e0c623d40818d110aac02b2f770f7439bdb3d45e563049cc0cb4",
+  "numericalBeforeFingerprint": "f307eb8ecb132a6536e2a5960174a1283111ff3f0838e0ebb82de83bdbb12943",
+  "numericalAfterFingerprint": "f307eb8ecb132a6536e2a5960174a1283111ff3f0838e0ebb82de83bdbb12943",
+  "geometryUVWeightsRestBindsSavedPoseAllActionChannelsIdentical": true,
+  "existingBaseColorMapsUVsAndGoodPBRMapsPreserved": true,
+  "authoredSpatialNormalAndORMMapRecords": [
+    {
+      "material": "Original charcoal bear connected gripping glove",
+      "kind": "fur",
+      "baseColorAndUVPreserved": true,
+      "existingNormalPreserved": true,
+      "existingMetalRoughnessPreserved": false,
+      "roughnessScalarBefore": 0.8899999856948853,
+      "metallicScalarBefore": 0.0,
+      "maps": {
+        "orm": {
+          "path": "C:\\Users\\alipo\\OneDrive\\Desktop\\mmmm\\Peris\\assets\\source\\battle\\pandaren-quality-roster-v12\\textures\\completion\\198eb10974472c3a-orm.png",
+          "sha256": "f674c3d90e04f0ca0da72edfad7310cc2cf5c8d857ab0d2a047ba4962b51180a",
+          "roughnessRange": [
+            0.8575336337089539,
+            0.922558605670929
+          ],
+          "metallicRange": [
+            0.0,
+            0.0
+          ]
+        }
+      }
+    },
+    {
+      "material": "Original mountain bear off-white belly fur",
+      "kind": "fur",
+      "baseColorAndUVPreserved": true,
+      "existingNormalPreserved": true,
+      "existingMetalRoughnessPreserved": false,
+      "roughnessScalarBefore": 0.8899999856948853,
+      "metallicScalarBefore": 0.0,
+      "maps": {
+        "orm": {
+          "path": "C:\\Users\\alipo\\OneDrive\\Desktop\\mmmm\\Peris\\assets\\source\\battle\\pandaren-quality-roster-v12\\textures\\completion\\d41cd6ee47131e45-orm.png",
+          "sha256": "74082844f78d98dd8f67504c1321369ae906b70be71e9fcce1d082ffe8a15a55",
+          "roughnessRange": [
+            0.8574809432029724,
+            0.9225482940673828
+          ],
+          "metallicRange": [
+            0.0,
+            0.0
+          ]
+        }
+      }
+    },
+    {
+      "material": "Panda final dark weathered ram timber",
+      "kind": "leather",
+      "baseColorAndUVPreserved": true,
+      "existingNormalPreserved": true,
+      "existingMetalRoughnessPreserved": false,
+      "roughnessScalarBefore": 0.8100000023841858,
+      "metallicScalarBefore": 0.0,
+      "maps": {
+        "orm": {
+          "path": "C:\\Users\\alipo\\OneDrive\\Desktop\\mmmm\\Peris\\assets\\source\\battle\\pandaren-quality-roster-v12\\textures\\completion\\ca49ac7c25443d24-orm.png",
+          "sha256": "88048bd517624a817328aa02f12a19d848fdda7cf6d4a100c7e22ae0c22e926e",
+          "roughnessRange": [
+            0.7774573564529419,
+            0.842534065246582
+          ],
+          "metallicRange": [
+            0.0,
+            0.0
+          ]
+        }
+      }
+    },
+    {
+      "material": "Panda final rough jade siege cover",
+      "kind": "cloth",
+      "baseColorAndUVPreserved": true,
+      "existingNormalPreserved": true,
+      "existingMetalRoughnessPreserved": false,
+      "roughnessScalarBefore": 0.8100000023841858,
+      "metallicScalarBefore": 0.0,
+      "maps": {
+        "orm": {
+          "path": "C:\\Users\\alipo\\OneDrive\\Desktop\\mmmm\\Peris\\assets\\source\\battle\\pandaren-quality-roster-v12\\textures\\completion\\2ef3f47503f2fe68-orm.png",
+          "sha256": "1d8c0339f572ea3b731d6f14c44bf62e3b7b84682a9fa2eeac384053b062f5fa",
+          "roughnessRange": [
+            0.7598116993904114,
+            0.8603494763374329
+          ],
+          "metallicRange": [
+            0.0,
+            0.0
+          ]
+        }
+      }
+    }
+  ],
+  "verifiedFull49RawMaterialCompletion": {
+    "sourceRaw": "C:\\Users\\alipo\\OneDrive\\Desktop\\mmmm\\Peris\\assets\\source\\battle\\pandaren-quality-roster-v11b\\exports\\pandaren-roster.glb",
+    "sourceRawSha256": "3994aa57743aef9d23036cf5b5c2b967a6ca156eeb97ae5d62b589ad70386397",
+    "raw": "C:\\Users\\alipo\\OneDrive\\Desktop\\mmmm\\Peris\\assets\\source\\battle\\pandaren-quality-roster-v12\\exports\\pandaren-roster.glb",
+    "rawSha256": "07e0fb90578eae686760cb031ff90bcde58df4391c3bbe9179ce3123cb991eec",
+    "bytes": 61819084,
+    "updatedMaterials": [
+      "Original charcoal bear connected gripping glove",
+      "Original mountain bear off-white belly fur",
+      "Panda final dark weathered ram timber",
+      "Panda final rough jade siege cover"
+    ],
+    "geometryAccessorNodeSkinAnimationJSONIdentical": true,
+    "originalBINPrefixByteIdentical": true,
+    "originalBINSha256": "d0059b186020022096240f5561c86f6b11f3d6efdbb0fa51ed4be0525dda64b4",
+    "allMaterialsHaveNormalAndMetalRoughnessTextures": true,
+    "full49SamplingAndUniqueNodeNamesPreserved": true
+  },
+  "finishedArtApproved": false
+}

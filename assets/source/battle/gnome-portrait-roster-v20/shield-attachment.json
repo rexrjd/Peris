@@ -1,0 +1,87 @@
+{
+  "file": "C:\\Users\\alipo\\OneDrive\\Desktop\\mmmm\\Peris\\assets\\source\\battle\\gnome-portrait-roster-v20\\exports\\gnome-roster-runtime.glb",
+  "sha256": "d7fa685788843f66452d74bfbc5142dcd487070ae6c7a36976a021c13eac5ac8",
+  "method": "Actual Three.js skinning over all49poses×3clips for every carried-shield role. Every pure hand_L vertex stays invariant in evaluated hand_L coordinates. Construction provenance identifies field/rim/device/closed rear shaft/supports all rigid hand_L; mixed wrist seam vertices are excluded from this rigid-only proof.",
+  "records": [
+    {
+      "role": "line_infantry",
+      "clips": 3,
+      "samples": 147,
+      "rigidHandLPoints": 4931,
+      "maximumHandLocalDrift": 4.464422001611701e-15,
+      "argmax": {
+        "state": "idle",
+        "frame": 20,
+        "vertex": 22124,
+        "mesh": "line_infantry_node103__line_infantry_textured_anatomy"
+      },
+      "stable": true
+    },
+    {
+      "role": "spear_guard",
+      "clips": 3,
+      "samples": 147,
+      "rigidHandLPoints": 4931,
+      "maximumHandLocalDrift": 4.0064286501198265e-15,
+      "argmax": {
+        "state": "idle",
+        "frame": 20,
+        "vertex": 22204,
+        "mesh": "spear_guard_node208__spear_guard_textured_anatomy"
+      },
+      "stable": true
+    },
+    {
+      "role": "elite",
+      "clips": 3,
+      "samples": 147,
+      "rigidHandLPoints": 4931,
+      "maximumHandLocalDrift": 4.464422001611701e-15,
+      "argmax": {
+        "state": "idle",
+        "frame": 20,
+        "vertex": 21951,
+        "mesh": "elite_node313__elite_textured_anatomy"
+      },
+      "stable": true
+    },
+    {
+      "role": "light_cavalry",
+      "clips": 3,
+      "samples": 147,
+      "rigidHandLPoints": 4913,
+      "maximumHandLocalDrift": 8.974286388936799e-15,
+      "argmax": {
+        "state": "walk",
+        "frame": 31,
+        "vertex": 22016,
+        "mesh": "light_cavalry_node755__light_cavalry_mounted_rider"
+      },
+      "stable": true
+    },
+    {
+      "role": "heavy_cavalry",
+      "clips": 3,
+      "samples": 147,
+      "rigidHandLPoints": 5005,
+      "maximumHandLocalDrift": 1.2434497875801753e-14,
+      "argmax": {
+        "state": "walk",
+        "frame": 25,
+        "vertex": 23172,
+        "mesh": "heavy_cavalry_node970__heavy_cavalry_mounted_rider"
+      },
+      "stable": true
+    }
+  ],
+  "allCarriedShieldHandAttachmentsStable": true,
+  "noCarriedShieldRoles": [
+    "archer",
+    "scout",
+    "ram",
+    "catapult"
+  ],
+  "textureLimitation": "Texture placeholders in memory only; geometry/skin/actions exact exported file.",
+  "runtimeApproved": false,
+  "finishedUnitApproved": false
+}

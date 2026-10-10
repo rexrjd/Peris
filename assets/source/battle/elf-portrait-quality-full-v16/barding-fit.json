@@ -1,0 +1,25 @@
+{
+  "sourceNative": "C:\\Users\\alipo\\OneDrive\\Desktop\\mmmm\\Peris\\assets\\source\\battle\\elf-portrait-quality-full-v15\\peris-elf-army.blend",
+  "sourceSha256": "e1a0ab643f8f916edf03d0c0d438d97e5aa0dc04adc5b89e5f50d6bc6e0f23b6",
+  "sourceUnchanged": true,
+  "originalSourceGeometryWeightsRestAndClipsUnchanged": true,
+  "operations": [
+    {
+      "mesh": "scout original-elf-mount",
+      "removedNewPanelVertices": 90,
+      "originalFittedGreenTackRetained": true
+    },
+    {
+      "mesh": "light_cavalry original-elf-mount",
+      "removedNewPanelVertices": 90,
+      "originalFittedGreenTackRetained": true
+    },
+    {
+      "mesh": "heavy_cavalry original-elf-mount",
+      "removedNewPanelVertices": 522,
+      "originalFittedGreenTackRetained": true
+    }
+  ],
+  "nativeSha256": "b566419ddfed8921f064880dd0db5db964db3ab0837bc2514ac7c6b4ec92c04e",
+  "finishedUnitApproved": false
+}

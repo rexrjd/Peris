@@ -28,6 +28,21 @@ assets/source/battle/reference-v1/
 assets/source/battle/reference-v2/exports/
 assets/source/battle/reference-v2/textures/
 assets/source/battle/seated-v2/exports/
+assets/source/battle/roster-*/exports/
+assets/source/battle/roster-*/textures/
+assets/source/battle/roster-*/history/
 assets/source/battle/exports/
 assets/source/battle/peris-*-army.blend
 artifacts/
+
+# Local reference viewer captures retain their creators' source metadata.
+assets/references/units/sketchfab/**/*.jpg
+
+# Downloaded reference archives and local study evidence are retained locally.
+assets/references/units/downloads/
+
+# Editable artist sources and raw/intermediate exports stay in the local catalog.
+# Keep pipeline snapshots, provenance, review records and build scripts in Git.
+assets/source/battle/**/*.blend
+assets/source/battle/**/*.glb
+assets/source/battle/**/textures/

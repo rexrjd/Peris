@@ -506,7 +506,7 @@
       "look": "tall slender woodland elves with pointed ears, emerald leaf-shaped fitted armor, pale silver trim, cream skin tones, restrained Peri-inspired elegance without wings, coherent functional military gear",
       "infantry": "long narrow blade and leaf-shaped silver-green shield",
       "archer": "elegant carved wooden bow and quiver, emerald cloth cloak and light silver leaf armor",
-      "cavalry": "slender gray horse with light emerald tack, pointed-ear rider in silver-green armor carrying spear and slim leaf-shaped shield",
+      "cavalry": "Great antlered stags with fitted saddles, green blankets and gold barding; seated slender elves in golden armor.",
       "troops": [
         {
           "id": "line_infantry",
@@ -556,7 +556,7 @@
           "research": "Scouting",
           "recruit": "Stables",
           "purpose": "Reconnaissance; avoid direct combat",
-          "equipment": "Mounted scout: slender forest stag with small leather saddle and pointed-ear scout rider; short sidearm, map pouch, minimal armor; avoid direct combat."
+          "equipment": "Great antlered stag with fitted saddle, slender seated Elf rider, golden faction armor; mount armor increases by cavalry rank."
         },
         {
           "id": "light_cavalry",
@@ -565,7 +565,7 @@
           "research": "Mounted warfare",
           "recruit": "Stables",
           "purpose": "Scout and flank",
-          "equipment": "Light spear, small shield, light faction saddle cloth with little mount armor",
+          "equipment": "Great antlered stag with fitted saddle, slender seated Elf rider, golden faction armor; mount armor increases by cavalry rank.",
           "name": "Glade Rider"
         },
         {
@@ -575,7 +575,7 @@
           "research": "Armored riding",
           "recruit": "Stables",
           "purpose": "Committed charges",
-          "equipment": "Heavy mounted charge unit: large powerful armored elk with leaf-shaped silver-and-emerald barding and an elf lancer; silhouette distinct from standard horse cavalry.",
+          "equipment": "Great antlered stag with fitted saddle, slender seated Elf rider, golden faction armor; mount armor increases by cavalry rank.",
           "name": "Moon Lancer"
         }
       ],
@@ -606,7 +606,7 @@
       "look": "short broad dwarves with barrel chests, thick limbs and braided russet beards, slate-and-copper angular heavy armor, geometric shields, visibly 0.78 human height, serious sturdy warriors",
       "infantry": "substantial war hammer and angular copper-edged shield",
       "archer": "stout mechanically simple crossbow, short broad bearded body, slate padded armor and copper helmet, bolt quiver",
-      "cavalry": "stocky dark pony with copper-and-slate barding, short broad dwarf rider with compact spear and angular shield",
+      "cavalry": "Stocky shaggy white mountain rams with broad curled horns, dark blue blankets and gold framed armor on heavy mounts; seated dwarf riders.",
       "troops": [
         {
           "id": "line_infantry",
@@ -656,7 +656,7 @@
           "research": "Scouting",
           "recruit": "Stables",
           "purpose": "Reconnaissance; avoid direct combat",
-          "equipment": "Mounted scout: sturdy mountain goat with modest copper-and-leather saddle and a short dwarf scout; short sidearm, map pouch, minimal armor; avoid direct combat."
+          "equipment": "Shaggy white mountain ram, simple saddle, curled horns, modest leather tack and a dwarf scout."
         },
         {
           "id": "light_cavalry",
@@ -665,8 +665,8 @@
           "research": "Mounted warfare",
           "recruit": "Stables",
           "purpose": "Scout and flank",
-          "equipment": "Light spear, small shield, light faction saddle cloth with little mount armor",
-          "name": "Pony Scout"
+          "equipment": "Mountain ram, blue saddle blanket, gold trimmed light tack and seated dwarf spear rider.",
+          "name": "Ram Outrider"
         },
         {
           "id": "heavy_cavalry",
@@ -675,8 +675,8 @@
           "research": "Armored riding",
           "recruit": "Stables",
           "purpose": "Committed charges",
-          "equipment": "Heavy mounted charge unit: large armored boar with copper-and-slate barding and a short broad dwarf lancer; silhouette distinct from standard horse cavalry.",
-          "name": "Boar Lancer"
+          "equipment": "Large shaggy white mountain ram, broad curled horns, dark navy and gold framed fitted barding and forehead armor; seated dwarf lancer.",
+          "name": "Ram Lancer"
         }
       ],
       "siege": [
@@ -690,12 +690,12 @@
         },
         {
           "id": "catapult",
-          "name": "Runestone Golem",
+          "name": "Geared Siege Catapult",
           "workshopLevel": 2,
           "academyLevel": 2,
           "research": "Siege engineering",
           "role": "Arcing stone bombardment (catapult role)",
-          "visual": "compact powerful runic stone golem with clearly articulated basalt limbs and copper joint bands, throws granite boulders; living siege unit in the catapult role"
+          "visual": "advanced Dwarf engineering: iron-and-brass geared winch, reinforced timber torsion frame, heavy articulated throwing arm and four substantial wheels; mechanical siege unit in the catapult role"
         }
       ],
       "fantasyNotes": "Epic fantasy film inspiration, including scale contrast and believable creature mounts, with original designs and no named movie characters, symbols or costumes."
@@ -706,7 +706,7 @@
       "look": "small compact gnome engineer-soldiers, visibly 0.67 human height, serious clever expressions, oxblood cloth, brass-trimmed leather and padded armor, goggles above brow, modest tool belts, no modern guns",
       "infantry": "compact short sword and small round brass-edged shield",
       "archer": "simple mechanical crossbow, oxblood cap, brass goggles on forehead, leather quiver",
-      "cavalry": "small sturdy chestnut pony with oxblood saddle fabric and brass fittings, small gnome rider with compact spear and round shield",
+      "cavalry": "Huge furred rats with round bare ears, pointed muzzles, visible whiskers and long hairless tails; independent seated gnome riders.",
       "troops": [
         {
           "id": "line_infantry",
@@ -750,13 +750,13 @@
         },
         {
           "id": "scout",
-          "name": "Courier Scout",
+          "name": "Rat Courier",
           "role": "Mounted scout",
           "level": 1,
           "research": "Scouting",
           "recruit": "Stables",
           "purpose": "Reconnaissance; avoid direct combat",
-          "equipment": "Mounted scout: small pony with minimal oxblood tack and a gnome courier; short sidearm, map pouch, minimal armor; avoid direct combat."
+          "equipment": "Huge rat, light courier saddle, pointed nose, round ears and long bare tail; seated gnome scout."
         },
         {
           "id": "light_cavalry",
@@ -765,8 +765,8 @@
           "research": "Mounted warfare",
           "recruit": "Stables",
           "purpose": "Scout and flank",
-          "equipment": "Light spear, small shield, light faction saddle cloth with little mount armor",
-          "name": "Pony Courier"
+          "equipment": "Huge rat with light bridle and saddle blanket; gnome spear rider.",
+          "name": "Rat Outrider"
         },
         {
           "id": "heavy_cavalry",
@@ -775,8 +775,8 @@
           "research": "Armored riding",
           "recruit": "Stables",
           "purpose": "Committed charges",
-          "equipment": "Heavy mounted charge unit: large mechanical brass boar mount with visible simple hinged legs and small gnome lance rider, original grounded fantasy craftsmanship, no science fiction weaponry; silhouette distinct from standard horse cavalry.",
-          "name": "Brass Lancer"
+          "equipment": "Huge rat with fitted brass edged dark barding, bare ears and long tail; seated gnome lancer.",
+          "name": "Brass Rat Lancer"
         }
       ],
       "siege": [

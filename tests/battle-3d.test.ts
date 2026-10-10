@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { InstancedMesh, Matrix4, Vector3 } from 'three';
+import { Box3, Group, InstancedMesh, Matrix4, Vector3 } from 'three';
 import { createSolo } from '../src/features/campaign/domain/newRealm';
 import { newBattle } from '../src/features/battle/domain/creation';
 import { applyOrder } from '../src/features/battle/domain/orders';
@@ -53,6 +53,19 @@ test('overview and resized/rotated cameras frame the entire battlefield, includi
     }
     camera.focus(-500, 1000); near(camera.target.x, 0); near(camera.target.z, 700);
     camera.zoom(1e9); assert.ok(camera.span >= 120);
+});
+
+test('siege inspection fits tall roofs and wide living siege bounds in landscape and portrait viewports',()=>{
+    for(const [width,height] of [[1345,620],[390,300],[300,600]])for(const size of [[38,42,24],[80,28,55]]){
+        const camera=new BattleCamera(()=>4);camera.setSize(width,height);
+        const bounds=new Box3(new Vector3(75-size[0]/2,4,290-size[2]/2),new Vector3(75+size[0]/2,4+size[1],290+size[2]/2));
+        camera.inspectBounds(bounds);assert.equal(camera.inspecting,true);
+        near(camera.target.y,4+size[1]/2);
+        for(const x of [bounds.min.x,bounds.max.x])for(const y of [bounds.min.y,bounds.max.y])for(const z of [bounds.min.z,bounds.max.z]){
+            const corner=new Vector3(x,y,z).project(camera.camera);
+            assert.ok(Math.abs(corner.x)<.8&&Math.abs(corner.y)<.8,'Every model corner fits with room for inspection controls');
+        }
+    }
 });
 
 test('visual high ground and terrain coloring retain the existing tactical terrain footprints', () => {
@@ -143,19 +156,41 @@ test('real scene picking follows interpolated rotated formation boxes and view u
     }
 });
 
+test('large mount silhouettes keep their visual picking and inspection inside the original formation command contract',()=>{
+    const {state,own}=setup('highlands'),savedDocument=Object.getOwnPropertyDescriptor(globalThis,'document');
+    Object.defineProperty(globalThis,'document',{configurable:true,value:{createElement:()=>({dataset:{},style:{},hidden:false,textContent:'',remove(){}})}});
+    try {
+        const view=new BattleCamera((x,y)=>battlefieldHeight('highlands',x,y));view.setSize(1200,700);view.focus(650,285);
+        const scene=Object.create(BattleScene.prototype);
+        Object.assign(scene,{scene:new Scene(),view,state:()=>state,labels:{append(){}},soldiers:createLowPolySoldiers,ray:new Raycaster(),formations:new Map(),visualTime:0});
+        const f={...own[0],unit_type:'cavalry' as const,soldiers:20,columns:4,x:650,y:285,facing:0},before=structuredClone(f);
+        state.world.formations=[f];state.selectedIds=[f.id];
+        const record=scene.create(f);scene.formations.set(f.id,record);
+        record.soldiers.object.userData.renderFootprint={depthScale:3.375,widthScale:2.25};
+        record.soldiers.object.userData.inspectionBounds=new Box3(new Vector3(584,28,250),new Vector3(716,76,320));
+        scene.updateFormation(f,record,0);scene.inspect(f.id);
+        assert.equal(scene.hit(view.project(710,285,35))?.id,f.id,'The outer tall silhouette selects its existing cavalry formation');
+        assert.equal(scene.hit(view.project(900,285,35)),undefined,'Expanded picking still excludes unrelated terrain');
+        near(view.target.y,52);assert.equal(view.inspecting,true);
+        assert.deepEqual(f,before,'Visual bounds never rewrite logical formation or orders');
+        scene.remove(record);
+    } finally {if(savedDocument)Object.defineProperty(globalThis,'document',savedDocument);else Reflect.deleteProperty(globalThis,'document');}
+});
+
 test('graphics interruption reports fallback exactly once and disposes scene resources and listeners', () => {
     const savedCancel = Object.getOwnPropertyDescriptor(globalThis, 'cancelAnimationFrame');
-    let cancelled = 0, disconnected = 0, inputDisposed = 0, rendererDisposed = 0, removedListener = 0, fallback = 0, materialDisposed = 0;
+    let cancelled = 0, disconnected = 0, inputDisposed = 0, rendererDisposed = 0, removedListener = 0, fallback = 0, materialDisposed = 0, showcaseDisposed=0;
     Object.defineProperty(globalThis, 'cancelAnimationFrame', { configurable: true, value: () => { cancelled++; } });
     try {
         const scene = Object.create(BattleScene.prototype), rendered = createBattlefield('plains');
+        const showcase=new Group();showcase.userData.disposeShowcase=()=>showcaseDisposed++;rendered.add(showcase);
         rendered.traverse(object => { const material = (object as any).material; if (material) material.addEventListener('dispose', () => { materialDisposed++; }); });
         Object.assign(scene, { alive: true, frame: 1, scene: rendered, observer: { disconnect() { disconnected++; } },
-            input: { destroy() { inputDisposed++; } }, formations: new Map(), canvas: { removeEventListener() { removedListener++; } },
+            input: { destroy() { inputDisposed++; } }, formations: new Map(), showcases:[showcase], canvas: { removeEventListener() { removedListener++; } },
             sun: { shadow: { dispose() {} } }, renderer: { dispose() { rendererDisposed++; }, forceContextLoss() {} }, labels: { replaceChildren() {} },
             unavailable: () => { fallback++; } });
         scene.fail(); scene.fail(); scene.destroy();
-        assert.deepEqual([cancelled, disconnected, inputDisposed, rendererDisposed, removedListener, fallback, materialDisposed], [1, 1, 1, 1, 1, 1, 1]);
+        assert.deepEqual([cancelled, disconnected, inputDisposed, rendererDisposed, removedListener, fallback, materialDisposed,showcaseDisposed], [1, 1, 1, 1, 1, 1, 1,1]);
     } finally {
         if (savedCancel) Object.defineProperty(globalThis, 'cancelAnimationFrame', savedCancel); else Reflect.deleteProperty(globalThis, 'cancelAnimationFrame');
     }

@@ -1,0 +1,353 @@
+{
+  "file": "C:\\Users\\alipo\\OneDrive\\Desktop\\mmmm\\Peris\\assets\\source\\battle\\gnome-portrait-roster-v20\\exports\\gnome-roster-runtime.glb",
+  "sha256": "d7fa685788843f66452d74bfbc5142dcd487070ae6c7a36976a021c13eac5ac8",
+  "bytes": 31552196,
+  "triangles": 237224,
+  "meshParts": 19,
+  "skins": 12,
+  "clips": [
+    {
+      "name": "line_infantry_idle",
+      "start": 0,
+      "end": 1,
+      "channels": 309
+    },
+    {
+      "name": "line_infantry_walk",
+      "start": 0,
+      "end": 1,
+      "channels": 309
+    },
+    {
+      "name": "line_infantry_attack",
+      "start": 0,
+      "end": 1,
+      "channels": 309
+    },
+    {
+      "name": "spear_guard_idle",
+      "start": 0,
+      "end": 1,
+      "channels": 309
+    },
+    {
+      "name": "spear_guard_walk",
+      "start": 0,
+      "end": 1,
+      "channels": 309
+    },
+    {
+      "name": "spear_guard_attack",
+      "start": 0,
+      "end": 1,
+      "channels": 309
+    },
+    {
+      "name": "elite_idle",
+      "start": 0,
+      "end": 1,
+      "channels": 309
+    },
+    {
+      "name": "elite_walk",
+      "start": 0,
+      "end": 1,
+      "channels": 309
+    },
+    {
+      "name": "elite_attack",
+      "start": 0,
+      "end": 1,
+      "channels": 309
+    },
+    {
+      "name": "archer_idle",
+      "start": 0,
+      "end": 1,
+      "channels": 309
+    },
+    {
+      "name": "archer_walk",
+      "start": 0,
+      "end": 1,
+      "channels": 309
+    },
+    {
+      "name": "archer_attack",
+      "start": 0,
+      "end": 1,
+      "channels": 309
+    },
+    {
+      "name": "scout_idle",
+      "start": 0,
+      "end": 1,
+      "channels": 570
+    },
+    {
+      "name": "scout_walk",
+      "start": 0,
+      "end": 1,
+      "channels": 570
+    },
+    {
+      "name": "scout_attack",
+      "start": 0,
+      "end": 1,
+      "channels": 570
+    },
+    {
+      "name": "light_cavalry_idle",
+      "start": 0,
+      "end": 1,
+      "channels": 570
+    },
+    {
+      "name": "light_cavalry_walk",
+      "start": 0,
+      "end": 1,
+      "channels": 570
+    },
+    {
+      "name": "light_cavalry_attack",
+      "start": 0,
+      "end": 1,
+      "channels": 570
+    },
+    {
+      "name": "ram_idle",
+      "start": 0,
+      "end": 1,
+      "channels": 33
+    },
+    {
+      "name": "ram_walk",
+      "start": 0,
+      "end": 1,
+      "channels": 33
+    },
+    {
+      "name": "ram_attack",
+      "start": 0,
+      "end": 1,
+      "channels": 33
+    },
+    {
+      "name": "catapult_idle",
+      "start": 0,
+      "end": 1,
+      "channels": 27
+    },
+    {
+      "name": "catapult_walk",
+      "start": 0,
+      "end": 1,
+      "channels": 27
+    },
+    {
+      "name": "catapult_attack",
+      "start": 0,
+      "end": 1,
+      "channels": 27
+    },
+    {
+      "name": "heavy_cavalry_idle",
+      "start": 0,
+      "end": 1,
+      "channels": 570
+    },
+    {
+      "name": "heavy_cavalry_walk",
+      "start": 0,
+      "end": 1,
+      "channels": 570
+    },
+    {
+      "name": "heavy_cavalry_attack",
+      "start": 0,
+      "end": 1,
+      "channels": 570
+    }
+  ],
+  "parts": [
+    {
+      "name": "line_infantry_node102__line_infantry_licensed_gnome_head",
+      "role": "line_infantry",
+      "triangles": 6499,
+      "license": "CC-BY-4.0",
+      "partition": "licensed-gnome-head",
+      "author": "Katerina Novakova; Peris component adaptation (see embedded credit)",
+      "source": "https://sketchfab.com/3d-models/day-6-uncontrollable-hair-c2a7936eca4640d18570ec860957092b",
+      "sourceSha256": "6deac8bc2993df5d9c5e0f259a54c5db301b88b69887bf4bf8b851d53b4a7cc3"
+    },
+    {
+      "name": "line_infantry_node103__line_infantry_textured_anatomy",
+      "role": "line_infantry",
+      "triangles": 26986,
+      "license": "CC-BY-SA-3.0",
+      "partition": "",
+      "author": "Wildfire Games; original Peris race equipment"
+    },
+    {
+      "name": "spear_guard_node207__spear_guard_licensed_gnome_head",
+      "role": "spear_guard",
+      "triangles": 6499,
+      "license": "CC-BY-4.0",
+      "partition": "licensed-gnome-head",
+      "author": "Katerina Novakova; Peris component adaptation (see embedded credit)",
+      "source": "https://sketchfab.com/3d-models/day-6-uncontrollable-hair-c2a7936eca4640d18570ec860957092b",
+      "sourceSha256": "6deac8bc2993df5d9c5e0f259a54c5db301b88b69887bf4bf8b851d53b4a7cc3"
+    },
+    {
+      "name": "spear_guard_node208__spear_guard_textured_anatomy",
+      "role": "spear_guard",
+      "triangles": 27042,
+      "license": "CC-BY-SA-3.0",
+      "partition": "",
+      "author": "Wildfire Games; original Peris race equipment"
+    },
+    {
+      "name": "elite_node312__elite_licensed_gnome_head",
+      "role": "elite",
+      "triangles": 6499,
+      "license": "CC-BY-4.0",
+      "partition": "licensed-gnome-head",
+      "author": "Katerina Novakova; Peris component adaptation (see embedded credit)",
+      "source": "https://sketchfab.com/3d-models/day-6-uncontrollable-hair-c2a7936eca4640d18570ec860957092b",
+      "sourceSha256": "6deac8bc2993df5d9c5e0f259a54c5db301b88b69887bf4bf8b851d53b4a7cc3"
+    },
+    {
+      "name": "elite_node313__elite_textured_anatomy",
+      "role": "elite",
+      "triangles": 26602,
+      "license": "CC-BY-SA-3.0",
+      "partition": "",
+      "author": "Wildfire Games; original Peris race equipment"
+    },
+    {
+      "name": "archer_node417__archer_licensed_gnome_head",
+      "role": "archer",
+      "triangles": 6499,
+      "license": "CC-BY-4.0",
+      "partition": "licensed-gnome-head",
+      "author": "Katerina Novakova; Peris component adaptation (see embedded credit)",
+      "source": "https://sketchfab.com/3d-models/day-6-uncontrollable-hair-c2a7936eca4640d18570ec860957092b",
+      "sourceSha256": "6deac8bc2993df5d9c5e0f259a54c5db301b88b69887bf4bf8b851d53b4a7cc3"
+    },
+    {
+      "name": "archer_node418__archer_textured_anatomy",
+      "role": "archer",
+      "triangles": 14297,
+      "license": "CC-BY-SA-3.0",
+      "partition": "",
+      "author": "Wildfire Games; original Peris race equipment"
+    },
+    {
+      "name": "scout_node561__scout_licensed_gnome_head",
+      "role": "scout",
+      "triangles": 6499,
+      "license": "CC-BY-4.0",
+      "partition": "licensed-gnome-head",
+      "author": "Katerina Novakova; Peris component adaptation (see embedded credit)",
+      "source": "https://sketchfab.com/3d-models/day-6-uncontrollable-hair-c2a7936eca4640d18570ec860957092b",
+      "sourceSha256": "6deac8bc2993df5d9c5e0f259a54c5db301b88b69887bf4bf8b851d53b4a7cc3"
+    },
+    {
+      "name": "scout_node562__scout_mounted_rider",
+      "role": "scout",
+      "triangles": 19494,
+      "license": "CC-BY-SA-3.0",
+      "partition": "",
+      "author": "Wildfire Games; original Peris race equipment"
+    },
+    {
+      "name": "scout_node611__scout_textured_anatomy",
+      "role": "scout",
+      "triangles": 2310,
+      "license": "CC-BY-SA-3.0",
+      "partition": "",
+      "author": "Wildfire Games; original Peris race equipment"
+    },
+    {
+      "name": "light_cavalry_node754__light_cavalry_licensed_gnome_head",
+      "role": "light_cavalry",
+      "triangles": 6499,
+      "license": "CC-BY-4.0",
+      "partition": "licensed-gnome-head",
+      "author": "Katerina Novakova; Peris component adaptation (see embedded credit)",
+      "source": "https://sketchfab.com/3d-models/day-6-uncontrollable-hair-c2a7936eca4640d18570ec860957092b",
+      "sourceSha256": "6deac8bc2993df5d9c5e0f259a54c5db301b88b69887bf4bf8b851d53b4a7cc3"
+    },
+    {
+      "name": "light_cavalry_node755__light_cavalry_mounted_rider",
+      "role": "light_cavalry",
+      "triangles": 27118,
+      "license": "CC-BY-SA-3.0",
+      "partition": "",
+      "author": "Wildfire Games; original Peris race equipment"
+    },
+    {
+      "name": "light_cavalry_node804__light_cavalry_textured_anatomy",
+      "role": "light_cavalry",
+      "triangles": 2310,
+      "license": "CC-BY-SA-3.0",
+      "partition": "",
+      "author": "Wildfire Games; original Peris race equipment"
+    },
+    {
+      "name": "ram_node816__ram_textured_anatomy",
+      "role": "ram",
+      "triangles": 8626,
+      "license": "CC-BY-SA-3.0",
+      "partition": "",
+      "author": "Wildfire Games; original Peris race equipment"
+    },
+    {
+      "name": "catapult_node826__catapult_textured_anatomy",
+      "role": "catapult",
+      "triangles": 7378,
+      "license": "CC-BY-SA-3.0",
+      "partition": "",
+      "author": "Wildfire Games; original Peris race equipment"
+    },
+    {
+      "name": "heavy_cavalry_node969__heavy_cavalry_licensed_gnome_head",
+      "role": "heavy_cavalry",
+      "triangles": 6499,
+      "license": "CC-BY-4.0",
+      "partition": "licensed-gnome-head",
+      "author": "Katerina Novakova; Peris component adaptation (see embedded credit)",
+      "source": "https://sketchfab.com/3d-models/day-6-uncontrollable-hair-c2a7936eca4640d18570ec860957092b",
+      "sourceSha256": "6deac8bc2993df5d9c5e0f259a54c5db301b88b69887bf4bf8b851d53b4a7cc3"
+    },
+    {
+      "name": "heavy_cavalry_node970__heavy_cavalry_mounted_rider",
+      "role": "heavy_cavalry",
+      "triangles": 27258,
+      "license": "CC-BY-SA-3.0",
+      "partition": "",
+      "author": "Wildfire Games; original Peris race equipment"
+    },
+    {
+      "name": "heavy_cavalry_node1019__heavy_cavalry_textured_anatomy",
+      "role": "heavy_cavalry",
+      "triangles": 2310,
+      "license": "CC-BY-SA-3.0",
+      "partition": "",
+      "author": "Wildfire Games; original Peris race equipment"
+    }
+  ],
+  "checks": {
+    "all9Roles": true,
+    "all27Clips0to1": true,
+    "allSkinnedAndWeightsNormalized": true,
+    "allPositionDataFinite": true,
+    "mixedCreditsPreserved": true,
+    "allArtApprovalFlagsFalse": true
+  },
+  "limitations": [
+    "Technical source/export gate only; native and actual GPU contact/motion/appearance remain separate checks."
+  ],
+  "runtimeApproved": false,
+  "finishedUnitApproved": false
+}

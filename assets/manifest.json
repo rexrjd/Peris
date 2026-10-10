@@ -196,6 +196,248 @@
       "source": "assets/source/battle/seated-v2/peris-demon-army.blend",
       "maxBytes": 3145728,
       "description": "Distance detail mesh. Same rigs and 27 clips, uncompressed glTF. Inspect at tactical distance."
+    },
+    {
+      "id": "battle-orc-roster",
+      "file": "public/models/battle/orc-roster.glb",
+      "license": "licensed",
+      "source": "https://github.com/0ad/0ad/tree/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art",
+      "editableSource": "assets/source/battle/orc-prototype-deadline-v6/peris-orc-army.blend",
+      "attribution": "Body, rig and Peris anatomy/equipment: Wildfire Games / Peris, CC BY-SA 3.0, https://creativecommons.org/licenses/by-sa/3.0/. Separate adapted component: Crazyon520, CC BY 4.0, https://sketchfab.com/3d-models/male-orc-for-print-2362b5e5d94f4303a06faa17d1e7e611. Component source hashes and changes remain embedded in the GLB.",
+      "maxBytes": 33554432,
+      "sha256": "4e41f64811afec780bdf9117f5cf65c3afd62ac79430e8985eb43e7a8e89eb06",
+      "description": "Nine orc visual prototype roles, 27 combined clips at 0..1 seconds. near detail. Seven troop looks use existing combat; two siege models are studies. Prototype publication is separate from final art approval."
+    },
+    {
+      "id": "battle-orc-roster-lod",
+      "file": "public/models/battle/orc-roster-lod.glb",
+      "license": "licensed",
+      "source": "https://github.com/0ad/0ad/tree/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art",
+      "editableSource": "assets/source/battle/orc-distance-v12/peris-orc-army.blend",
+      "attribution": "Body, rig and Peris anatomy/equipment: Wildfire Games / Peris, CC BY-SA 3.0, https://creativecommons.org/licenses/by-sa/3.0/. Separate adapted component: Crazyon520, CC BY 4.0, https://sketchfab.com/3d-models/male-orc-for-print-2362b5e5d94f4303a06faa17d1e7e611. Component source hashes and changes remain embedded in the GLB.",
+      "maxBytes": 20971520,
+      "sha256": "9722ef2c4a4527e8406b50f65c02ed043f16a368dd84a8eef2f33d28b8ac6399",
+      "description": "Nine orc visual prototype roles, 27 combined clips at 0..1 seconds. far detail. Seven troop looks use existing combat; two siege models are studies. Prototype publication is separate from final art approval."
+    },
+    {
+      "id": "battle-undead-roster",
+      "file": "public/models/battle/undead-roster.glb",
+      "license": "licensed",
+      "source": "https://github.com/0ad/0ad/tree/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art",
+      "editableSource": "assets/source/battle/undead-quality-batch-v9/peris-undead-army.blend",
+      "attribution": "Body, rig and Peris anatomy/equipment: Wildfire Games / Peris, CC BY-SA 3.0, https://creativecommons.org/licenses/by-sa/3.0/. Separate adapted component: danielmclogan, CC BY 4.0, https://sketchfab.com/3d-models/skeleton-animated-9210377c7a514cf6b48a31b9d3991ff3. Component source hashes and changes remain embedded in the GLB.",
+      "maxBytes": 16777216,
+      "sha256": "4689c46ad5fda3a828fc662f2e94b8c07769c0ebc7f5ae72eb32eecc8b7786a7",
+      "description": "Nine undead visual prototype roles, 27 combined clips at 0..1 seconds. near detail. Seven troop looks use existing combat; two siege models are studies. Prototype publication is separate from final art approval."
+    },
+    {
+      "id": "battle-undead-roster-lod",
+      "file": "public/models/battle/undead-roster-lod.glb",
+      "license": "licensed",
+      "source": "https://github.com/0ad/0ad/tree/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art",
+      "editableSource": "assets/source/battle/undead-quality-batch-v9/peris-undead-army.blend",
+      "attribution": "Body, rig and Peris anatomy/equipment: Wildfire Games / Peris, CC BY-SA 3.0, https://creativecommons.org/licenses/by-sa/3.0/. Separate adapted component: danielmclogan, CC BY 4.0, https://sketchfab.com/3d-models/skeleton-animated-9210377c7a514cf6b48a31b9d3991ff3. Component source hashes and changes remain embedded in the GLB.",
+      "maxBytes": 8388608,
+      "sha256": "06c301ed0199fb64162807d2b5b21bf0bc83c0be218f8eb3f3e9225a6c14a6d9",
+      "description": "Nine undead visual prototype roles, 27 combined clips at 0..1 seconds. far detail. Seven troop looks use existing combat; two siege models are studies. Prototype publication is separate from final art approval."
+    },
+    {
+      "id": "battle-pandaren-roster",
+      "file": "public/models/battle/pandaren-roster.glb",
+      "license": "CC-BY-SA-3.0",
+      "source": "https://github.com/0ad/0ad/tree/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art",
+      "editableSource": "assets/source/battle/pandaren-quality-roster-v12/peris-pandaren-army.blend",
+      "attribution": "Body, rig and Peris anatomy/equipment: Wildfire Games / Peris, CC BY-SA 3.0, https://creativecommons.org/licenses/by-sa/3.0/. Component source hashes and changes remain embedded in the GLB.",
+      "maxBytes": 16777216,
+      "sha256": "f2a8a5f4248ad900d53ea996ee942871e0a6d49e1214ab7f2870afca6fc3a595",
+      "description": "Nine pandaren visual prototype roles, 27 combined clips at 0..1 seconds. near detail. Seven troop looks use existing combat; two siege models are studies. Prototype publication is separate from final art approval."
+    },
+    {
+      "id": "battle-pandaren-roster-lod",
+      "file": "public/models/battle/pandaren-roster-lod.glb",
+      "license": "CC-BY-SA-3.0",
+      "source": "https://github.com/0ad/0ad/tree/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art",
+      "editableSource": "assets/source/battle/pandaren-quality-roster-v12/peris-pandaren-army.blend",
+      "attribution": "Body, rig and Peris anatomy/equipment: Wildfire Games / Peris, CC BY-SA 3.0, https://creativecommons.org/licenses/by-sa/3.0/. Component source hashes and changes remain embedded in the GLB.",
+      "maxBytes": 8388608,
+      "sha256": "dae61488531266d08b3058df564d611818722eca0cd526492fc128c26bd97a89",
+      "description": "Nine pandaren visual prototype roles, 27 combined clips at 0..1 seconds. far detail. Seven troop looks use existing combat; two siege models are studies. Prototype publication is separate from final art approval."
+    },
+    {
+      "id": "battle-spartan-roster",
+      "file": "public/models/battle/spartan-roster.glb",
+      "license": "CC-BY-SA-3.0",
+      "source": "https://github.com/0ad/0ad/tree/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art",
+      "editableSource": "assets/source/battle/human-portrait-quality-v13/spartan/peris-spartan-army.blend",
+      "attribution": "Body, rig and Peris anatomy/equipment: Wildfire Games / Peris, CC BY-SA 3.0, https://creativecommons.org/licenses/by-sa/3.0/. Component source hashes and changes remain embedded in the GLB.",
+      "maxBytes": 16777216,
+      "sha256": "182b8a4dd53159667a70e7fe39b118248d8f6985d0535d4e5857658535e34d53",
+      "description": "Nine spartan visual prototype roles, 27 combined clips at 0..1 seconds. near detail. Seven troop looks use existing combat; two siege models are studies. Prototype publication is separate from final art approval."
+    },
+    {
+      "id": "battle-spartan-roster-lod",
+      "file": "public/models/battle/spartan-roster-lod.glb",
+      "license": "CC-BY-SA-3.0",
+      "source": "https://github.com/0ad/0ad/tree/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art",
+      "editableSource": "assets/source/battle/human-portrait-quality-v13/spartan/peris-spartan-army.blend",
+      "attribution": "Body, rig and Peris anatomy/equipment: Wildfire Games / Peris, CC BY-SA 3.0, https://creativecommons.org/licenses/by-sa/3.0/. Component source hashes and changes remain embedded in the GLB.",
+      "maxBytes": 8388608,
+      "sha256": "fc159fb4449ed91d9957323b186e79225e7382839f295e267369ef8b91c5c4f5",
+      "description": "Nine spartan visual prototype roles, 27 combined clips at 0..1 seconds. far detail. Seven troop looks use existing combat; two siege models are studies. Prototype publication is separate from final art approval."
+    },
+    {
+      "id": "battle-egyptian-roster",
+      "file": "public/models/battle/egyptian-roster.glb",
+      "license": "CC-BY-SA-3.0",
+      "source": "https://github.com/0ad/0ad/tree/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art",
+      "editableSource": "assets/source/battle/human-portrait-quality-v13/egyptian/peris-egyptian-army.blend",
+      "attribution": "Body, rig and Peris anatomy/equipment: Wildfire Games / Peris, CC BY-SA 3.0, https://creativecommons.org/licenses/by-sa/3.0/. Component source hashes and changes remain embedded in the GLB.",
+      "maxBytes": 16777216,
+      "sha256": "23251c1a3cb567c29c56ea6bb9f5fb6a925f14f1f5beedcdfe94a466624ad6a3",
+      "description": "Nine egyptian visual prototype roles, 27 combined clips at 0..1 seconds. near detail. Seven troop looks use existing combat; two siege models are studies. Prototype publication is separate from final art approval."
+    },
+    {
+      "id": "battle-egyptian-roster-lod",
+      "file": "public/models/battle/egyptian-roster-lod.glb",
+      "license": "CC-BY-SA-3.0",
+      "source": "https://github.com/0ad/0ad/tree/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art",
+      "editableSource": "assets/source/battle/human-portrait-quality-v13/egyptian/peris-egyptian-army.blend",
+      "attribution": "Body, rig and Peris anatomy/equipment: Wildfire Games / Peris, CC BY-SA 3.0, https://creativecommons.org/licenses/by-sa/3.0/. Component source hashes and changes remain embedded in the GLB.",
+      "maxBytes": 8388608,
+      "sha256": "e9fe6802ba84d10faa2b55044592c607ee614f20aad2ebe53965bf0f464fdd6f",
+      "description": "Nine egyptian visual prototype roles, 27 combined clips at 0..1 seconds. far detail. Seven troop looks use existing combat; two siege models are studies. Prototype publication is separate from final art approval."
+    },
+    {
+      "id": "battle-roman-roster",
+      "file": "public/models/battle/roman-roster.glb",
+      "license": "CC-BY-SA-3.0",
+      "source": "https://github.com/0ad/0ad/tree/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art",
+      "editableSource": "assets/source/battle/human-portrait-quality-v14/roman/peris-roman-army.blend",
+      "attribution": "Body, rig and Peris anatomy/equipment: Wildfire Games / Peris, CC BY-SA 3.0, https://creativecommons.org/licenses/by-sa/3.0/. Component source hashes and changes remain embedded in the GLB.",
+      "maxBytes": 16777216,
+      "sha256": "2d5edaf40121e0bb3e622b4b5ab9e7668562d04f34228c2b7b067fca5d295ce7",
+      "description": "Nine roman visual prototype roles, 27 combined clips at 0..1 seconds. near detail. Seven troop looks use existing combat; two siege models are studies. Prototype publication is separate from final art approval."
+    },
+    {
+      "id": "battle-roman-roster-lod",
+      "file": "public/models/battle/roman-roster-lod.glb",
+      "license": "CC-BY-SA-3.0",
+      "source": "https://github.com/0ad/0ad/tree/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art",
+      "editableSource": "assets/source/battle/human-portrait-quality-v14/roman/peris-roman-army.blend",
+      "attribution": "Body, rig and Peris anatomy/equipment: Wildfire Games / Peris, CC BY-SA 3.0, https://creativecommons.org/licenses/by-sa/3.0/. Component source hashes and changes remain embedded in the GLB.",
+      "maxBytes": 8388608,
+      "sha256": "6c6119ed75051de81a093dba208d33078d414f99dddb22fa00d095c31817b7ff",
+      "description": "Nine roman visual prototype roles, 27 combined clips at 0..1 seconds. far detail. Seven troop looks use existing combat; two siege models are studies. Prototype publication is separate from final art approval."
+    },
+    {
+      "id": "battle-demon-roster",
+      "file": "public/models/battle/demon-roster.glb",
+      "license": "licensed",
+      "source": "https://github.com/0ad/0ad/tree/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art",
+      "editableSource": "assets/source/battle/demon-portrait-quality-full-v15/peris-demon-army.blend",
+      "attribution": "Body, rig and Peris anatomy/equipment: Wildfire Games / Peris, CC BY-SA 3.0, https://creativecommons.org/licenses/by-sa/3.0/. Separate adapted component: Seifert, CC BY 4.0, https://sketchfab.com/3d-models/stylized-elf-warrior-sculpt-7dd1ff28b7944c4face76d1adbea063e. Component source hashes and changes remain embedded in the GLB.",
+      "maxBytes": 16777216,
+      "sha256": "d6dc8c341a1124d3b8955fa5e88c33d592f85651d4631bcecae9b205b0fd7914",
+      "description": "Nine demon visual prototype roles, 27 combined clips at 0..1 seconds. near detail. Seven troop looks use existing combat; two siege models are studies. Prototype publication is separate from final art approval."
+    },
+    {
+      "id": "battle-demon-roster-lod",
+      "file": "public/models/battle/demon-roster-lod.glb",
+      "license": "licensed",
+      "source": "https://github.com/0ad/0ad/tree/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art",
+      "editableSource": "assets/source/battle/demon-portrait-quality-full-v15/peris-demon-army.blend",
+      "attribution": "Body, rig and Peris anatomy/equipment: Wildfire Games / Peris, CC BY-SA 3.0, https://creativecommons.org/licenses/by-sa/3.0/. Separate adapted component: Seifert, CC BY 4.0, https://sketchfab.com/3d-models/stylized-elf-warrior-sculpt-7dd1ff28b7944c4face76d1adbea063e. Component source hashes and changes remain embedded in the GLB.",
+      "maxBytes": 8388608,
+      "sha256": "742eeb7811489f2a214f24e063c1de4e94dc2b04e42fd590b76366671e74840b",
+      "description": "Nine demon visual prototype roles, 27 combined clips at 0..1 seconds. far detail. Seven troop looks use existing combat; two siege models are studies. Prototype publication is separate from final art approval."
+    },
+    {
+      "id": "battle-dwarf-roster",
+      "file": "public/models/battle/dwarf-roster.glb",
+      "license": "licensed",
+      "source": "https://github.com/0ad/0ad/tree/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art",
+      "editableSource": "assets/source/battle/dwarf-portrait-roster-v30/peris-dwarf-army.blend",
+      "attribution": "Body, rig and Peris anatomy/equipment: Wildfire Games / Peris, CC BY-SA 3.0, https://creativecommons.org/licenses/by-sa/3.0/. Separate adapted component: Jan Pohl, CC BY 4.0, https://sketchfab.com/3d-models/dwarf-blacksmith-e48bfff956ef483cb987890dc856c8b5. Component source hashes and changes remain embedded in the GLB.",
+      "maxBytes": 16777216,
+      "sha256": "bcb80e1f2068bdc5525006a28d6ac7bee061d805810ce3daa790154f2af408f2",
+      "description": "Nine dwarf visual prototype roles, 27 combined clips at 0..1 seconds. near detail. Seven troop looks use existing combat; two siege models are studies. Prototype publication is separate from final art approval."
+    },
+    {
+      "id": "battle-dwarf-roster-lod",
+      "file": "public/models/battle/dwarf-roster-lod.glb",
+      "license": "licensed",
+      "source": "https://github.com/0ad/0ad/tree/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art",
+      "editableSource": "assets/source/battle/dwarf-portrait-roster-v30/peris-dwarf-army.blend",
+      "attribution": "Body, rig and Peris anatomy/equipment: Wildfire Games / Peris, CC BY-SA 3.0, https://creativecommons.org/licenses/by-sa/3.0/. Separate adapted component: Jan Pohl, CC BY 4.0, https://sketchfab.com/3d-models/dwarf-blacksmith-e48bfff956ef483cb987890dc856c8b5. Component source hashes and changes remain embedded in the GLB.",
+      "maxBytes": 8388608,
+      "sha256": "c65b10e35b92624138314c5323099ac307a9c06e3d9556ca49cb459a8f4073ca",
+      "description": "Nine dwarf visual prototype roles, 27 combined clips at 0..1 seconds. far detail. Seven troop looks use existing combat; two siege models are studies. Prototype publication is separate from final art approval."
+    },
+    {
+      "id": "battle-gnome-roster",
+      "file": "public/models/battle/gnome-roster.glb",
+      "license": "licensed",
+      "source": "https://github.com/0ad/0ad/tree/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art",
+      "editableSource": "assets/source/battle/gnome-portrait-roster-v23/peris-gnome-army.blend",
+      "attribution": "Body, rig and Peris anatomy/equipment: Wildfire Games / Peris, CC BY-SA 3.0, https://creativecommons.org/licenses/by-sa/3.0/. Separate adapted component: Katerina Novakova, CC BY 4.0, https://sketchfab.com/3d-models/day-6-uncontrollable-hair-c2a7936eca4640d18570ec860957092b. Component source hashes and changes remain embedded in the GLB.",
+      "maxBytes": 16777216,
+      "sha256": "afeae9ef8db2bd8a415119c2ff85f987210227d8e1e3245ff705cf7e427ff2e2",
+      "description": "Nine gnome visual prototype roles, 27 combined clips at 0..1 seconds. near detail. Seven troop looks use existing combat; two siege models are studies. Prototype publication is separate from final art approval."
+    },
+    {
+      "id": "battle-gnome-roster-lod",
+      "file": "public/models/battle/gnome-roster-lod.glb",
+      "license": "licensed",
+      "source": "https://github.com/0ad/0ad/tree/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art",
+      "editableSource": "assets/source/battle/gnome-portrait-roster-v23/peris-gnome-army.blend",
+      "attribution": "Body, rig and Peris anatomy/equipment: Wildfire Games / Peris, CC BY-SA 3.0, https://creativecommons.org/licenses/by-sa/3.0/. Separate adapted component: Katerina Novakova, CC BY 4.0, https://sketchfab.com/3d-models/day-6-uncontrollable-hair-c2a7936eca4640d18570ec860957092b. Component source hashes and changes remain embedded in the GLB.",
+      "maxBytes": 8388608,
+      "sha256": "1499839180efe590f0fab7129ae5f3b2f976eafdb1e649b3d5f2e70a5aaf726e",
+      "description": "Nine gnome visual prototype roles, 27 combined clips at 0..1 seconds. far detail. Seven troop looks use existing combat; two siege models are studies. Prototype publication is separate from final art approval."
+    },
+    {
+      "id": "battle-persian-roster",
+      "file": "public/models/battle/persian-roster.glb",
+      "license": "CC-BY-SA-3.0",
+      "source": "https://github.com/0ad/0ad/tree/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art",
+      "editableSource": "assets/source/battle/human-persian-royal-armor-v4/peris-persian-army.blend",
+      "attribution": "Body, rig and Peris anatomy/equipment: Wildfire Games / Peris, CC BY-SA 3.0, https://creativecommons.org/licenses/by-sa/3.0/. Component source hashes and changes remain embedded in the GLB.",
+      "maxBytes": 16777216,
+      "sha256": "96665c585a3dd7fe4cbf4de2ccdc02d5507cb6abdc10f9529d289677049a53ec",
+      "description": "Nine persian visual prototype roles, 27 combined clips at 0..1 seconds. near detail. Seven troop looks use existing combat; two siege models are studies. Prototype publication is separate from final art approval."
+    },
+    {
+      "id": "battle-persian-roster-lod",
+      "file": "public/models/battle/persian-roster-lod.glb",
+      "license": "CC-BY-SA-3.0",
+      "source": "https://github.com/0ad/0ad/tree/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art",
+      "editableSource": "assets/source/battle/human-persian-royal-armor-v4/peris-persian-army.blend",
+      "attribution": "Body, rig and Peris anatomy/equipment: Wildfire Games / Peris, CC BY-SA 3.0, https://creativecommons.org/licenses/by-sa/3.0/. Component source hashes and changes remain embedded in the GLB.",
+      "maxBytes": 8388608,
+      "sha256": "3096fd46961737d5233aa5a162ec5b40e2ade836b808ef252323241dd7abb2fe",
+      "description": "Nine persian visual prototype roles, 27 combined clips at 0..1 seconds. far detail. Seven troop looks use existing combat; two siege models are studies. Prototype publication is separate from final art approval."
+    },
+    {
+      "id": "battle-elf-roster",
+      "file": "public/models/battle/elf-roster.glb",
+      "license": "licensed",
+      "source": "https://github.com/0ad/0ad/tree/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art",
+      "editableSource": "assets/source/battle/elf-portrait-quality-full-v19/peris-elf-army.blend",
+      "attribution": "Body, rig and Peris anatomy/equipment: Wildfire Games / Peris, CC BY-SA 3.0, https://creativecommons.org/licenses/by-sa/3.0/. Separate adapted component: Seifert, CC BY 4.0, https://sketchfab.com/3d-models/stylized-elf-warrior-sculpt-7dd1ff28b7944c4face76d1adbea063e. Component source hashes and changes remain embedded in the GLB.",
+      "maxBytes": 16777216,
+      "sha256": "cd71407f4272e030550af7cd92d913c2a3bea8abd0ab63f44f54ae8f430f3162",
+      "description": "Nine elf visual prototype roles, 27 combined clips at 0..1 seconds. near detail. Seven troop looks use existing combat; two siege models are studies. Prototype publication is separate from final art approval."
+    },
+    {
+      "id": "battle-elf-roster-lod",
+      "file": "public/models/battle/elf-roster-lod.glb",
+      "license": "licensed",
+      "source": "https://github.com/0ad/0ad/tree/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art",
+      "editableSource": "assets/source/battle/elf-portrait-quality-full-v19/peris-elf-army.blend",
+      "attribution": "Body, rig and Peris anatomy/equipment: Wildfire Games / Peris, CC BY-SA 3.0, https://creativecommons.org/licenses/by-sa/3.0/. Separate adapted component: Seifert, CC BY 4.0, https://sketchfab.com/3d-models/stylized-elf-warrior-sculpt-7dd1ff28b7944c4face76d1adbea063e. Component source hashes and changes remain embedded in the GLB.",
+      "maxBytes": 8388608,
+      "sha256": "a06638fe0bc776755a50b697f3a2a296453439273764e59e724eaadb255ebf98",
+      "description": "Nine elf visual prototype roles, 27 combined clips at 0..1 seconds. far detail. Seven troop looks use existing combat; two siege models are studies. Prototype publication is separate from final art approval."
     }
   ]
 }

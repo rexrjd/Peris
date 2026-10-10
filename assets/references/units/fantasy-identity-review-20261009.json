@@ -1,0 +1,20 @@
+{
+  "reviewedAt": "2026-10-09T16:50:00Z",
+  "purpose": "Keep Peris fantasy anatomy and equipment recognizable while retaining its own portrait direction.",
+  "referenceUse": "Appearance studies. Source models are used only when separately credited and explicitly fitted; movie/game illustrations are not runtime meshes.",
+  "primarySources": [
+    { "url": "https://worldofwarcraft.blizzard.com/en-us/game/races/pandaren-horde", "status": "Official race source found in search; direct text fetch returned 403.", "use": "Broad upright bear identity, rounded ears, black and white fur, substantial torso; Peris portraits select jade military equipment." },
+    { "url": "https://us.media.blizzard.com/manuals/wow/wow-classic-manual-enUS.pdf", "status": "Official manual reference retained from prior research.", "use": "Gnome tinker identity and dwarf proportions; verify visuals against acquired local source studies." },
+    { "url": "https://wiki.totalwar.com/w/Vampire_Counts_Army_Roster", "status": "Official Creative Assembly roster read directly.", "use": "Exposed skeleton warriors/spearmen, grave armor and ragged cloth, skeletal and barded skeletal mounts. Reference archetypes; Peris keeps its own ranged roster." }
+  ],
+  "localPortraits": "public/art/battle/roster/<faction>.png",
+  "raceChecks": {
+    "elf": "Slender proportions, connected pointed ears, refined warm face, flowing hair, fitted leaf armor and fine weapons. Avoid an alien head or bearded human silhouette.",
+    "dwarf": "Short stocky body, substantial head and beard, broad hands/boots, worked iron and leather, tools and heavy weapon grips.",
+    "gnome": "Small engineer build, connected distinctive nose, hair/beard, fitted goggles, brass/gear details, practical tools. Avoid a smaller dwarf copy.",
+    "pandaren": "Bear muzzle and jaws, round ears, anatomical eye masks, broad paws and belly, jade/copper lamellar military kit and red cloth.",
+    "undead": "Real skull/jaw and paired limb bones, open ribs/pelvis, bony hands, rusted and torn kit; retain complete skeletal mount anatomy.",
+    "demon": "Distinct two-eyed angular red face, rooted swept horns, claw/hoof anatomy and dark crafted armor. Avoid a red recolor of the Orc face."
+  },
+  "approval": "Art direction checklist, not a claim that all models have passed final visual review."
+}
