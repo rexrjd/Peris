@@ -59,18 +59,20 @@ export function useFrontier() {
     };
 
     const execute = async (intent: PendingCommand) => {
-        if (busyRef.current) return;
+        if (busyRef.current) return false;
         busyRef.current = true; setBusy(true); setActionError(''); setNotice(''); setPending(intent);
         try {
             await commandFrontier(intent.requestId, intent.command);
-            if (!mounted.current) return;
+            if (!mounted.current) return false;
             setPending(null); setNotice(intent.message);
             try { await refresh(); }
             catch (error) { if (mounted.current) setConnectionError(error instanceof Error ? error.message : 'Waiting for the server.'); }
+            return true;
         } catch (error) {
-            if (!mounted.current) return;
+            if (!mounted.current) return false;
             if (!(error instanceof FrontierApiError) || !error.uncertain) setPending(null);
             setActionError(error instanceof Error ? error.message : 'The order could not be completed.');
+            return false;
         } finally { busyRef.current = false; if (mounted.current) setBusy(false); }
     };
 
@@ -78,7 +80,7 @@ export function useFrontier() {
         snapshot, authenticated, connectionError, actionError, notice, now, busy,
         locked: busy || pending !== null, pending, join,
         run: (command: FrontierCommand, message: string) => {
-            if (!busyRef.current && !pending) void execute({ requestId: crypto.randomUUID(), command, message });
+            return !busyRef.current && !pending ? execute({ requestId: crypto.randomUUID(), command, message }) : Promise.resolve(false);
         },
         retry: () => { if (pending) void execute(pending); },
     };

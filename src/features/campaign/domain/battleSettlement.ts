@@ -5,6 +5,8 @@ import { settleLocal } from './settlement';
 import { type UnitType } from '../../army/domain/types';
 import { lootFor } from './rewards';
 import { RESOURCES } from '../../../shared/model/resources';
+import { restoreRaidReserve, startRaidReturn } from '../../map/domain/commands';
+import { homeArmyPosition } from '../../map/domain/garrisons';
 /** Apply permanent casualties, spoils, reports and home regrouping once per battle. */
 export function settleBattle(w: World, id: number, owner: string, nextId: () => number) {
     const b = w.battles.find(b => b.id === id)!, result = b.result!, won = b.winner_side === 'attacker';
@@ -16,6 +18,7 @@ export function settleBattle(w: World, id: number, owner: string, nextId: () => 
     if (reward) result.hero_reward = reward;
     for (const type of ['infantry', 'archers', 'cavalry'] as UnitType[])
         a[type] = w.formations.filter(f => f.battle_id === id && f.side === 'attacker' && f.unit_type === type).reduce((sum, f) => sum + f.soldiers, 0);
+    restoreRaidReserve(a);
     if (won) {
         p.victories++;
         const camp = w.camps.find(c => c.id === b.camp_id)!, loot = lootFor(camp.tier);
@@ -32,9 +35,12 @@ export function settleBattle(w: World, id: number, owner: string, nextId: () => 
             w.progress.push({ camp_id: camp.id, owner_id: owner, defeated: 1, available_at: new Date(Date.now() + campCooldown(camp)).toISOString() });
     }
     w.reports.unshift({ id: nextId(), owner_id: owner, battle_id: id, title: b.enemy_name, won, result: { ...result }, created_at: new Date().toISOString() });
-    // The field army regroups at home. No troop restoration is hidden in this return.
-    a.status = 'idle';
-    a.raid_target_id = null;
-    a.start_x = a.target_x = s.x + 40;
-    a.start_y = a.target_y = s.y + 30;
+    // Newly sent raids return along their validated route to their actual departure station.
+    if (!startRaidReturn(w, a)) {
+        // Imported battles that predate departure stations retain their home regrouping.
+        a.status = 'idle';
+        a.march_path = null; a.march_distance = null; a.march_returning = false;
+        const home = homeArmyPosition(s);
+        a.start_x = a.target_x = home.x; a.start_y = a.target_y = home.y;
+    }
 }

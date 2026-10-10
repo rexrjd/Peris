@@ -1,6 +1,6 @@
 create or replace function public.peris_settle(p_owner uuid,p_until timestamptz default now()) returns void
 language plpgsql security definer set search_path='' as $$
-declare s public.settlements%rowtype;o public.peris_orders%rowtype;event record;target_slot integer;field_col integer;field_row integer;
+declare s public.settlements%rowtype;o public.peris_orders%rowtype;event record;target_slot integer;field_col integer;field_row integer;arriving_army bigint;
 begin
  -- Cell reservation lock precedes player locks everywhere, including offline arrivals.
  if exists(select 1 from public.peris_settler_expeditions where owner_id=p_owner and status='travelling'and arrival_at<=p_until)then perform pg_advisory_xact_lock(204200);end if;
@@ -41,5 +41,11 @@ begin
  end loop;
  perform public.peris_culture_accrue(p_owner,p_until);
  for s in select * from public.settlements where owner_id=p_owner order by id loop perform public.peris_population_accrue(s.id,p_until);end loop;
+ for arriving_army in select id from public.armies where owner_id=p_owner and status='moving' and raid_target_id is null and arrival_at<=p_until order by id for update loop
+  update public.armies set status='idle',start_x=target_x,start_y=target_y,march_path=null,march_distance=null,
+   march_sent_at=null,march_cancel_until=null,march_origin=null,march_returning=false,updated_at=p_until where id=arriving_army;
+  perform public.peris_garrison_merge(arriving_army);
+ end loop;
+ -- Attack arrivals retain their outbound route for the eventual return.
  update public.armies set status='idle',start_x=target_x,start_y=target_y,updated_at=p_until where owner_id=p_owner and status='moving'and arrival_at<=p_until;
 end $$;

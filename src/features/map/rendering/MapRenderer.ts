@@ -5,10 +5,10 @@ import { RenderContext } from '../../../shared/rendering/RenderContext';
 import { type MapSelection } from '../domain/types';
 import { armyPosition, armyRouteRemaining } from '../domain/movement';
 import { siteFor, regionFor } from '../domain/geography';
-import { cellAt, cellCenter, getCell, FIELD_COLORS, WORLD_REGIONS, worldRegionAt } from '../domain/worldGrid';
+import { cellAt, cellCenter, getCell, WORLD_REGIONS, worldRegionAt } from '../domain/worldGrid';
 import { CELL_SIZE, WORLD_MIN_X, WORLD_MIN_Y, WORLD_W, WORLD_H, wrappedWorldDelta } from '../domain/dimensions';
-import { drawCell } from './terrain';
-import { mapArtReady, drawMapSprite } from './mapArt';
+import { drawCell, COMPATIBILITY_GROUND } from './terrain';
+import { drawMapSprite, drawCampSprite } from './mapArt';
 import { drawLandmark } from './landmarks';
 import { clock } from '../../../shared/time/clock';
 import { findMarchPath, type MarchPath } from '../domain/pathfinding';
@@ -20,7 +20,6 @@ export class MapRenderer {
     private portraits=new Map<string,HTMLImageElement>();
     private chunks = new Map<string, HTMLCanvasElement>();
     private readonly chunkCells = 8;
-    private artReady = false;
     private previewKey = '';
     private preview: MarchPath | null = null;
     constructor(private ctx: RenderContext) { }
@@ -64,11 +63,6 @@ export class MapRenderer {
         return canvas;
     }
     drawTerrain() {
-        if (this.artReady !== mapArtReady()) {
-            this.artReady = mapArtReady();
-            for (const canvas of this.chunks.values()) { canvas.width = 0; canvas.height = 0; }
-            this.chunks.clear();
-        }
         const c = this.ctx.c, scale = this.scale, camera = this.ctx.camera;
         const left = camera.x - this.ctx.w / scale / 2, right = camera.x + this.ctx.w / scale / 2;
         const top = camera.y - this.ctx.h / scale / 2, bottom = camera.y + this.ctx.h / scale / 2;
@@ -82,7 +76,7 @@ export class MapRenderer {
             drawOverview();
             c.save(); c.globalAlpha = .3;
             for (let row = Math.floor(top / CELL_SIZE); row <= Math.floor(bottom / CELL_SIZE); row++) for (let col = Math.floor(left / CELL_SIZE); col <= Math.floor(right / CELL_SIZE); col++) {
-                const cell = getCell(col, row); c.fillStyle = FIELD_COLORS[cell.terrain]; c.fillRect(col * CELL_SIZE, row * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+                const cell = getCell(col, row); c.fillStyle = COMPATIBILITY_GROUND[cell.terrain]; c.fillRect(col * CELL_SIZE, row * CELL_SIZE, CELL_SIZE, CELL_SIZE);
             }
             c.restore();
         } else {
@@ -90,7 +84,7 @@ export class MapRenderer {
             for (let row = Math.floor(top / size); row <= Math.floor((bottom - 1) / size); row++) for (let col = Math.floor(left / size); col <= Math.floor((right - 1) / size); col++) c.drawImage(this.chunk(col, row), col * size, row * size);
         }
         if (CELL_SIZE * scale >= 9) {
-            c.save(); c.strokeStyle = '#213b2c38'; c.lineWidth = 1 / scale; c.beginPath();
+            c.save(); c.strokeStyle = '#213b2c24'; c.lineWidth = 1 / scale; c.beginPath();
             for (let x = Math.ceil(left / CELL_SIZE) * CELL_SIZE; x <= right; x += CELL_SIZE) { c.moveTo(x, top); c.lineTo(x, bottom); }
             for (let y = Math.ceil(top / CELL_SIZE) * CELL_SIZE; y <= bottom; y += CELL_SIZE) { c.moveTo(left, y); c.lineTo(right, y); }
             c.stroke(); c.restore();
@@ -160,8 +154,8 @@ export class MapRenderer {
             if (!this.visible(town.x, town.y)) continue;
             const mine = town.owner_id === s.playerId, active = selected('settlement', town.id);
             if (this.scale < .15) { this.dot(town.x, town.y, mine ? '#ffe3a1' : '#a3c7da', 3); continue; }
-            this.ring(town.x, town.y + 5, active, hover('settlement', town.id), 43);
-            if (!drawMapSprite(c, 8, town.x - 46, town.y - 65, 92)) drawLandmark(c, town.x, town.y, 'home', mine ? '#cba85c' : '#7398ae');
+            this.ring(town.x, town.y + 5, active, hover('settlement', town.id), 34);
+            if (!drawMapSprite(c, 8, town.x - 32, town.y - 45, 64)) drawLandmark(c, town.x, town.y, 'home', mine ? '#cba85c' : '#7398ae');
             if (active || this.scale > .3) this.label(town.x, town.y + 32 * unit, town.name, mine ? '#f4dfab' : '#d3e2ea');
             if (active || this.ctx.camera.zoom > 1.5) this.label(town.x, town.y + 49 * unit, mine ? 'YOUR SETTLEMENT' : 'RIVAL SETTLEMENT', '#bfbfa1', true);
         }
@@ -172,8 +166,7 @@ export class MapRenderer {
             const cleared = s.world.progress.some(p => p.owner_id === s.playerId && p.camp_id === camp.id && p.defeated > 0), active = selected('camp', camp.id);
             if (this.scale < .15) { this.dot(camp.x, camp.y, '#ce9465', 2); continue; }
             this.ring(camp.x, camp.y + 7, active, hover('camp', camp.id), camp.id === 6 ? 47 : 35);
-            const sprite = camp.id === 6 ? 10 : camp.id === 2 ? 11 : camp.id === 5 ? 12 : camp.id === 4 ? 9 : 8;
-            if (!drawMapSprite(c, sprite, camp.x - 44, camp.y - 67, 88)) drawLandmark(c, camp.x, camp.y, site.kind, cleared ? '#94b77c' : region.color);
+            if (!camp.bandit || !drawCampSprite(c, camp.tier, camp.x - 34, camp.y - 46, 68)) drawLandmark(c, camp.x, camp.y, site.kind, cleared ? '#94b77c' : region.color);
             if (active || this.scale > .3) this.label(camp.x, camp.y + 29 * unit, site.title, active ? '#ffe5a6' : cleared ? '#c9dfb5' : '#eddfbd');
             if (active || this.ctx.camera.zoom > 1.5) this.label(camp.x, camp.y + 46 * unit, `TIER ${camp.tier}${camp.bandit?' · BANDIT CAMP':cleared ? ' · STANDARD RECOVERED' : ' · HOSTILE HOLD'}`, '#c4c6ad', true);
         }
@@ -202,9 +195,14 @@ export class MapRenderer {
             // Markers stay legible in the full-realm mobile overview.
             const size = Math.max(.85, unit * .8); c.scale(size, size);
             const hero=heroForArmy(s.world,army.id), source=heroPortraitUrl(armyFaction(s.world,army),hero?.class,hero?.id);
-            let face=this.portraits.get(source);if(!face){face=new Image();face.src=source;this.portraits.set(source,face);}
             c.beginPath();c.arc(0,0,17,0,Math.PI*2);c.fillStyle='#232b38';c.fill();
-            c.save();c.clip();if(face.complete&&face.naturalWidth)c.drawImage(face,-17,-17,34,34);c.restore();
+            if (s.mapPurpose === 'frontier') {
+                c.save(); c.strokeStyle='#e7c98e'; c.lineWidth=2;
+                c.beginPath(); c.moveTo(-6,7); c.lineTo(6,-7); c.moveTo(-2,-7); c.lineTo(6,-7); c.lineTo(6,1); c.stroke(); c.restore();
+            } else {
+                let face=this.portraits.get(source);if(!face){face=new Image();face.src=source;this.portraits.set(source,face);}
+                c.save();c.clip();if(face.complete&&face.naturalWidth)c.drawImage(face,-17,-17,34,34);c.restore();
+            }
             c.strokeStyle=active?'#ffe6a1':mine?'#c9a768':'#88a7c9';c.lineWidth=2/size*unit;c.stroke();
             c.restore();
             this.label(pos.x, pos.y + 18 * unit, `${army.infantry + army.archers + army.cavalry}`, mine ? '#f1d6ac' : '#c9deea', true);

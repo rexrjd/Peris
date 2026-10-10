@@ -1,0 +1,26 @@
+.march-dialog{width:min(560px,calc(100vw - 28px));max-height:calc(100dvh - 32px);overflow:auto}
+.march-destination{display:flex;align-items:center;flex-wrap:wrap;gap:9px;padding:12px 0;border-bottom:1px solid #a9935e40}
+.march-destination small,.march-muted{color:#9ca9b9;font-size:12px;line-height:1.6}
+.march-select{display:grid;gap:7px;font-weight:600;font-size:12px}
+.march-select select,.march-troops input,.campaign-farm-form :is(input,select){background:#18202b;color:#e8e5dc;border:1px solid #78828d;border-radius:5px;padding:10px;min-height:42px;font:inherit;max-width:100%}
+.march-troops{margin:18px 0;padding:0;border:0}
+.march-troops legend{font-size:12px;font-weight:600;margin-bottom:8px}
+.march-troops label{display:grid;grid-template-columns:32px minmax(0,1fr) 86px;gap:12px;align-items:center;padding:10px 0;border-top:1px solid #ffffff18;font-size:13px}
+.march-troops .fw-troop-icon{display:inline-block;width:30px;height:30px;background-repeat:no-repeat;background-size:300% 300%;image-rendering:auto}
+.march-troops small{display:block;color:#9ca9b9;font-size:10px;margin-top:4px}
+.march-troops input{width:100%;min-width:0}
+.march-review{display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;padding:13px;background:#ffffff08;border-radius:6px;font-size:11px;color:#9ca9b9}
+.march-review strong{display:block;font-size:13px;color:#e8e5dc;margin-top:5px}
+.march-actions{display:flex;justify-content:space-between;gap:12px;margin-top:20px}
+.march-actions .button{margin:0}
+.march-error{font-size:12px;color:#f3b69d}
+.march-cancel-panel{position:absolute;left:18px;bottom:230px;z-index:6;max-width:min(320px,calc(100% - 36px));padding:13px;background:#18202bf0;border:1px solid #b7a266;border-radius:7px;color:#e8e5dc;font-size:12px;box-shadow:0 3px 16px #0004}
+.march-cancel-panel strong,.march-cancel-panel small{display:block;margin-bottom:7px}
+.march-cancel-panel small{color:#b4bdca}
+.march-cancel-panel button{width:100%;min-height:36px;margin:0}
+.station-reinforcement-panel{position:absolute;bottom:70px;left:380px;z-index:5;padding:12px;background:#18202bf0;color:#e8e5dc;border:1px solid #b7a266;border-radius:7px;max-width:min(300px,calc(100% - 24px));font-size:12px}
+.scene-stage:has(.map-army-picker[open]) :is(.march-cancel-panel,.station-reinforcement-panel){visibility:hidden}
+.station-reinforcement-panel span{display:block;margin-bottom:8px}
+.station-reinforcement-panel .button{margin:0;font-size:11px}
+@media(max-width:760px){.march-cancel-panel{left:12px;bottom:70px;max-width:calc(100% - 24px)}.march-troops label{grid-template-columns:28px minmax(0,1fr) 76px;gap:8px}.march-dialog{padding:20px}}
+@media(max-width:760px){.station-reinforcement-panel{left:12px;bottom:90px}}

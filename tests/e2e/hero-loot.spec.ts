@@ -39,8 +39,10 @@ test('victory receipt shows actual rewards and opens the earned item for the cor
  const saved=await page.evaluate(()=>JSON.parse(localStorage.getItem('peris-campaign-v6')!));expect(saved.hero_artifacts).toHaveLength(1);expect(saved.heroes.find((h:{id:number})=>h.id===reward.hero_id).experience).toBe(reward.experience_after);expect(saved.hero_artifacts[0].hero_id).toBe(reward.hero_id);expect(errors).toEqual([]);
 });
 
-test('finishing an NPC battle automatically opens a real XP and equipment receipt',async({page},info)=>{
- const world=createSolo('Automatic rewards'),camp=world.camps.find(c=>c.bandit)!;let id=30000;
+test('finishing a story battle automatically opens a real XP and equipment receipt',async({page},info)=>{
+ // Bandit farming resolves quietly; original story encounters retain their receipt.
+ const world=createSolo('Automatic rewards'),camp=world.camps.find(c=>c.id===1&&!c.bandit)!;let id=30000;
+ expect(camp).toBeDefined();expect(camp.bandit).toBeFalsy();
  beginRaid(world,'solo-ruler',camp.id,()=>++id);const battle=world.battles.at(-1)!;
  world.formations.filter(f=>f.battle_id===battle.id&&f.side==='defender').forEach(f=>{f.soldiers=0;f.status='routed';});
  await page.addInitScript(w=>{localStorage.setItem('peris-campaign-v6',JSON.stringify(w));localStorage.setItem('peris-settings',JSON.stringify({sound:false,music:false,reducedMotion:true}));localStorage.setItem(`peris-welcome:${w.players[0].id}:${w.players[0].created_at}`,'yes');},world);

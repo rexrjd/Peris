@@ -82,6 +82,7 @@ test('corner and edge marches use canonical neighbor pairs and the short wrapped
 test('new commands mark v4 routes and preserve state when invalid destinations fail', () => {
   const world=createSolo('Seam'),army=world.armies[0],from=cellCenter(99,99),to=cellCenter(-100,-100),context=contextFor(world)
   Object.assign(army,{status:'idle',start_x:from.x,start_y:from.y,target_x:from.x,target_y:from.y})
+  world.map_plots=[{col:99,row:99,owner_id:context.playerId,settlement_id:world.settlements[0].id,building_type:null,level:0},{col:-100,row:-100,owner_id:context.playerId,settlement_id:world.settlements[0].id,building_type:null,level:0}]
   const before=structuredClone(army)
   assert.throws(()=>marchArmy(context,{type:'move',x:NaN,y:0}),/destination/)
   assert.deepEqual(army,before)
@@ -89,7 +90,7 @@ test('new commands mark v4 routes and preserve state when invalid destinations f
   assert.equal(army.march_map_version,4)
   assert.equal(army.target_x,to.x);assert.equal(army.target_y,to.y)
   near(army.march_distance!,Math.SQRT2*CELL_SIZE)
-  near(Date.parse(army.arrival_at)-Date.parse(context.now),Math.floor(army.march_distance!/22*1000))
+  near(Date.parse(army.arrival_at)-Date.parse(context.now),30000+Math.floor(army.march_distance!/22*1000))
 })
 
 test('v4 armies interpolate over seams while untagged old routes retain linear history', () => {

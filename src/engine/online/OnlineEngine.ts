@@ -69,7 +69,7 @@ export class OnlineEngine implements GameEngine {
         this.channel = supabase.channel(`peris-world-${playerId}`);
         const own = `owner_id=eq.${playerId}`;
         // No global subscription: a distant ruler's orders do not wake this client.
-        for (const table of ['peris_map_plots', 'settlements', 'armies', 'battle_formations', 'peris_orders', 'peris_reports', 'peris_heroes', 'peris_hero_artifacts', 'peris_settler_expeditions']) this.watch(table, own);
+        for (const table of ['peris_map_plots', 'settlements', 'armies', 'battle_formations', 'peris_orders', 'peris_reports', 'peris_heroes', 'peris_hero_artifacts', 'peris_settler_expeditions', 'peris_campaign_farm_lists', 'peris_campaign_farms', 'peris_garrisons']) this.watch(table, own);
         this.watch('players', `id=eq.${playerId}`);
         if (town) this.watch('buildings', `settlement_id=eq.${town.id}`);
         for (const table of ['battles', 'peris_challenges']) {
@@ -266,6 +266,22 @@ export class OnlineEngine implements GameEngine {
             const route = findMarchPath(armyPosition(army, Date.now() + offset), camp);
             if (!route) throw new Error('No connected land route reaches this camp.');
             prepared = { ...cmd, armyId: army.id, route: route.path };
+        }
+        if (cmd.type === 'startCampaignFarmList' && currentMap(this.core.map)) {
+            const offset = Date.parse(this.core.server_now) - this.lastCoreSnapshotAt;
+            const clock = Date.now() + offset;
+            const routes = (this.core.campaign_farms ?? [])
+                .filter(target => target.owner_id === this.playerId && target.list_id === cmd.id)
+                .flatMap(target => {
+                    const army = this.core.armies.find(row => row.owner_id === this.playerId && row.id === target.army_id);
+                    const camp = this.core.camps.find(row => row.id === target.camp_id);
+                    if (!army || !camp) return [];
+                    const route = findMarchPath(armyPosition(army, clock), camp);
+                    return route ? [{ targetId: target.id, path: route.path }] : [];
+                });
+            // The server derives troops and destinations from saved targets and
+            // validates each path. These routes only avoid a client/server sea detour.
+            prepared = { ...cmd, routes };
         }
         if ((cmd.type === 'claimField' || cmd.type === 'buildField') && !currentMap(this.core.map)) throw new Error(WORLD_UPGRADE);
         if(cmd.type==='foundCity'){const city=this.core.settlements.find(s=>s.owner_id===this.playerId&&(cmd.settlementId===undefined||s.id===cmd.settlementId));if(!city)throw new Error('Choose your city.');const route=findMarchPath(city,{x:((cmd.col+100)%200+200)%200*128-12800+64,y:((cmd.row+100)%200+200)%200*128-12800+64});if(!route)throw new Error('No connected land route reaches this site.');prepared={...cmd,route:route.path};}

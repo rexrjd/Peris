@@ -1,11 +1,12 @@
 import type { Resources } from '../../../shared/model/resources';
 import type { Troops } from '../domain/types';
+import { troopTotal } from '../domain/units';
 
-export const unitLabels = { infantry: 'Infantry', archers: 'Archers', cavalry: 'Cavalry' } as const;
-export const unitIcons = { infantry: 'shield', archers: 'bow', cavalry: 'horse' } as const;
+export const unitLabels = { infantry: 'Infantry', spearmen: 'Spear guard', archers: 'Archers', elite: 'Elite guard', cavalry: 'Light cavalry', scout: 'Mounted scout', heavyCavalry: 'Heavy cavalry', ram: 'Ram', catapult: 'Catapult' } as const;
+export const unitIcons = { infantry: 'shield', spearmen: 'shield', archers: 'bow', elite: 'shield', cavalry: 'horse', scout: 'horse', heavyCavalry: 'horse', ram: 'town', catapult: 'town' } as const;
 export const number = (value: number) => Math.floor(value).toLocaleString();
 export const totalResources = (resources: Resources) => resources.wood + resources.stone + resources.food + resources.gold;
-export const totalTroops = (troops: Troops) => troops.infantry + troops.archers + troops.cavalry;
+export const totalTroops = (troops: Troops) => troopTotal(troops);
 export function duration(ms: number) {
     const seconds = Math.max(0, Math.ceil(ms / 1000));
     if (seconds < 60) return `${seconds}s`;

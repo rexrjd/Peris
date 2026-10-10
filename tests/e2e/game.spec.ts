@@ -11,6 +11,26 @@ async function capture(page: Page, testInfo: TestInfo, name: string) {
   await testInfo.attach(name, { body: await page.screenshot(), contentType: 'image/png' });
 }
 
+async function dragMap(page: Page, testInfo: TestInfo, name: string) {
+  const field = page.locator('canvas[aria-label^="Interactive 200 by 200"]');
+  const box = (await field.boundingBox())!;
+  const x = box.x + box.width * .45, y = box.y + box.height * .42;
+  const before = await field.screenshot();
+  const selections = await page.locator('.atlas-inspector').count();
+  await page.mouse.move(x, y); await page.mouse.down();
+  await page.mouse.move(x + 100, y + 60, { steps: 12 }); await page.mouse.up();
+  await expect.poll(async () => !(await field.screenshot()).equals(before)).toBe(true);
+  await expect(page.locator('.atlas-inspector')).toHaveCount(selections);
+  // Drag out and back while choosing a destination: release must never order a march.
+  await page.getByRole('button', { name: 'March', exact: true }).click();
+  await page.mouse.move(x, y); await page.mouse.down();
+  await page.mouse.move(x + 90, y + 40, { steps: 10 });
+  await page.mouse.move(x, y, { steps: 10 }); await page.mouse.up();
+  await expect(page.getByRole('button', { name: 'Cancel', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Cancel', exact: true }).click();
+  await capture(page, testInfo, name);
+}
+
 async function beginCampaign(page: Page) {
   await page.goto('/');
   await page.getByRole('button', { name: 'Begin your campaign', exact: true }).click();
@@ -19,6 +39,37 @@ async function beginCampaign(page: Page) {
   await page.getByRole('button', { name: 'Begin the restoration' }).click();
   await expect(page.locator('canvas[aria-label^="Interactive 200 by 200"]')).toBeVisible();
 }
+
+test('quick access opens campaign buildings and links to Frontier farm lists', async ({ page }, testInfo) => {
+  test.setTimeout(120_000);
+  const errors: string[] = [];
+  page.on('pageerror', error => errors.push(error.message));
+  await beginCampaign(page);
+  const quick = page.getByRole('button', { name: 'Quick access', exact: true });
+  const shortcuts = page.getByRole('navigation', { name: 'Quick access shortcuts' });
+  await quick.click();
+  await expect(shortcuts.getByRole('link', { name: /^Frontier farm lists/ })).toHaveAttribute('href', '/?frontier=1#fw-farms-title');
+  await capture(page, testInfo, 'campaign-quick-access');
+  await page.keyboard.press('Escape');
+  await expect(quick).toBeFocused();
+  await quick.click();
+  await shortcuts.getByRole('button', { name: /^Farm lists/ }).click();
+  await expect(page.getByRole('dialog', { name: 'Farm lists', exact: true })).toBeVisible();
+  await page.keyboard.press('Escape');
+  for (const building of ['Barracks', 'Stables', 'Warehouse', 'Granary']) {
+    await quick.click();
+    await shortcuts.getByRole('button', { name: new RegExp(`^${building}`) }).click();
+    await expect(page.getByRole('complementary', { name: 'Selected building' })).toBeVisible();
+    await expect(page.getByRole('radio', { name: new RegExp(`^${building}`) })).toBeChecked();
+    await expect(page.getByRole('button', { name: `Build ${building}`, exact: true })).toBeVisible();
+  }
+  await quick.click();
+  await shortcuts.getByRole('button', { name: /^Main building/ }).click();
+  await expect(page.getByRole('complementary', { name: 'Selected building' }).getByRole('heading', { name: 'Main building', exact: true })).toBeVisible();
+  await capture(page, testInfo, 'campaign-building-shortcut');
+  await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  expect(errors).toEqual([]);
+});
 
 test('quick battle starts automatically and supports inspection, pause and concession', async ({ page }, testInfo) => {
   const errors: string[] = []; page.on('pageerror', error => errors.push(error.message));
@@ -61,6 +112,7 @@ test('campaign map renders in WebGL and its camera controls work', async ({ page
   await page.getByLabel('Rotate camera left').click();
   await page.getByRole('button', { name: 'Zoom in', exact: true }).click();
   await page.getByRole('button', { name: 'Focus your settlement', exact: true }).click();
+  await dragMap(page, testInfo, 'world-map-drag');
   await capture(page, testInfo, 'world-map');
   await page.getByRole('button', { name: 'City', exact: true }).click();
   await expect(page.locator('.scene-canvas')).toHaveCount(0);
@@ -81,5 +133,6 @@ test('map remains usable when WebGL is unavailable', async ({ page }, testInfo) 
   await expect(page.locator('.scene-compatibility')).toContainText('Compatibility map');
   await page.getByRole('button', { name: 'Zoom in', exact: true }).click();
   await page.getByRole('button', { name: 'Focus your settlement', exact: true }).click();
+  await dragMap(page, testInfo, 'world-map-compatibility-drag');
   await capture(page, testInfo, 'world-map-compatibility');
 });

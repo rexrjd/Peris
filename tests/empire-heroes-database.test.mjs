@@ -65,6 +65,7 @@ try {
     await admin(`insert into public.peris_city_slots values(${capital.id},0,'barracks',1);select public.peris_city_economy(${capital.id})`);
     await login(); await command({ type: 'recruit', settlementId: capital.id, armyId: firstArmy.id, item: 'infantry', quantity: 5 });
     const destination = cellCenter(Math.floor(capital.x / 128) + 1, Math.floor(capital.y / 128));
+    await command({ type: 'claimField', settlementId: capital.id, col: Math.floor(destination.x / 128), row: Math.floor(destination.y / 128) });
     const march = findMarchPath({ x: second.start_x, y: second.start_y }, destination);
     await command({ type: 'move', armyId: second.id, ...destination, route: march.path });
     await assert.rejects(() => command({ type: 'move', armyId: firstArmy.id, ...destination, route: march.path }), /training/);
@@ -111,6 +112,14 @@ try {
     assert.equal((await snapshot()).heroes.find(h => h.id === hero.id).experience, xp); assert.equal((await snapshot()).hero_artifacts.length, items);
     console.log('PASS · hero skill points, equipment ownership/slots, actual combat bonuses, selected-army casualties and idempotent loot/XP');
 
+    // A campaign raid keeps its legion busy for the actual return journey.
+    let returning = (await snapshot()).armies.find(a => a.id === second.id);
+    assert.equal(returning.status, 'moving'); assert.equal(returning.march_returning, true);
+    assert.deepEqual([returning.target_x, returning.target_y], [colony.x + 40, colony.y + 30]);
+    await admin(`update public.armies set arrival_at=now()-interval '1 second' where id=${second.id}`);
+    await login(); await rpc('sync_my_state');
+    assert.equal((await snapshot()).armies.find(a => a.id === second.id).status, 'idle');
+
     // Mage knowledge/power apply to the selected battle, using research in any owned city.
     await admin(`update public.peris_heroes set class='mage' where id=${hero.id};insert into public.peris_city_slots values(${colony.id},0,'mage_tower',1);select public.peris_city_economy(${colony.id})`);
     await login(); await command({type:'researchSpell',settlementId:colony.id,spell:'spark'});
@@ -124,6 +133,10 @@ try {
     await admin(`select public.peris_cast_spell_for('${u}',${magicBattle.id},'spark',${enemy.id})`);await login();w=await snapshot();
     assert.equal(w.formations.find(f=>f.id===enemy.id).soldiers,soldiers-10);assert.equal(w.battles.find(b=>b.id===magicBattle.id).mana_attacker,45);
     await admin(`select public.peris_finish(${magicBattle.id},'draw','spell test complete')`);await login();
+    returning = (await snapshot()).armies.find(a => a.id === second.id);
+    assert.equal(returning.status, 'moving'); assert.equal(returning.march_returning, true);
+    await admin(`update public.armies set arrival_at=now()-interval '1 second' where id=${second.id}`);
+    await login(); await rpc('sync_my_state');
     // The invitation stores the initiating army; the defender chooses their own army.
     await command({type:'challenge',armyId:second.id,ownerId:v});const invitation=(await snapshot()).challenges[0];assert.equal(invitation.attacker_army_id,second.id);
     await login(v);const rivalArmy=(await snapshot()).armies[0];

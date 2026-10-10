@@ -5,7 +5,7 @@ create index if not exists peris_signup_camp_cell on public.peris_camps
  ((public.peris_wrap_cell(floor(x/128::numeric)::integer)),(public.peris_wrap_cell(floor(y/128::numeric)::integer)));
 
 create or replace function public.create_player(p_display_name text)returns jsonb language plpgsql security definer set search_path='' as $$
-declare u uuid:=auth.uid();n text:=btrim(p_display_name);sp public.spawn_points%rowtype;candidate public.spawn_points%rowtype;sid bigint;land bytea;cx integer;cy integer;
+declare u uuid:=auth.uid();n text:=btrim(p_display_name);sp public.spawn_points%rowtype;candidate public.spawn_points%rowtype;sid bigint;land bytea;cx integer;cy integer;home jsonb;
 begin
  if u is null then raise exception 'Authentication required';end if;
  if exists(select 1 from public.players where id=u)then return jsonb_build_object('ok',true);end if;
@@ -41,7 +41,8 @@ begin
  insert into public.players(id,display_name)values(u,n);
  insert into public.settlements(owner_id,spawn_point_id,name,x,y,wood,stone,food,gold)values(u,sp.id,n||'''s Keep',sp.x,sp.y,1250,1000,1500,500)returning id into sid;
  insert into public.buildings(settlement_id,building_type,level)select sid,t,0 from unnest(array['lumber','quarry','farm','market','barracks','stables','wall','storehouse'])t;
- insert into public.armies(owner_id,home_settlement_id,name,infantry,archers,cavalry,start_x,start_y,target_x,target_y)values(u,sid,'Legio I · The Dawn',120,50,16,sp.x+40,sp.y+30,sp.x+40,sp.y+30);
+ home:=public.peris_home_army_position(sp.x,sp.y);
+ insert into public.armies(owner_id,home_settlement_id,name,infantry,archers,cavalry,start_x,start_y,target_x,target_y)values(u,sid,'Legio I · The Dawn',120,50,16,(home->>'x')::integer,(home->>'y')::integer,(home->>'x')::integer,(home->>'y')::integer);
  return jsonb_build_object('ok',true);
 exception when unique_violation then raise exception 'That ruler name is already taken';
 end $$;

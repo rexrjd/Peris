@@ -1,5 +1,5 @@
 create or replace function public.peris_queue_recruit(p_type text,p_quantity integer) returns jsonb language plpgsql security definer set search_path='' as $$
-declare u uuid:=auth.uid();s public.settlements%rowtype;a public.armies%rowtype;l integer;at_time timestamptz;duration numeric;cw integer;cs integer;cf integer;cg integer;queued integer;
+declare u uuid:=auth.uid();s public.settlements%rowtype;a public.armies%rowtype;l integer;at_time timestamptz;duration numeric;cw integer;cs integer;cf integer;cg integer;queued integer;home jsonb;
 begin
  if u is null then raise exception 'Authentication required';end if;
  if p_type is null or p_type not in ('infantry','archers','cavalry') or p_quantity is null or p_quantity<1 or p_quantity>200 then raise exception 'Choose between 1 and 200 soldiers';end if;
@@ -8,7 +8,8 @@ begin
  select * into s from public.settlements where id=public.peris_city_id(u) for update;
  select * into a from public.armies where id=public.peris_army_id(u) for update;
  if s.id is null or a.id is null then raise exception 'Realm not found';end if;
- if a.status='moving' or sqrt(power(a.target_x-s.x-40,2)+power(a.target_y-s.y-30,2))>90 then raise exception 'Bring your army home to recruit';end if;
+ home:=public.peris_home_army_position(s.x,s.y);
+ if a.status='moving' or a.raid_target_id is not null or a.raid_reserve is not null or sqrt(power(a.target_x-(home->>'x')::integer,2)+power(a.target_y-(home->>'y')::integer,2))>90 then raise exception 'Bring your army home to recruit';end if;
  if (select count(*) from public.peris_orders where owner_id=u and army_id=public.peris_army_id(u) and kind='recruit')>=3 then raise exception 'Training queue is full';end if;
  select coalesce(sum(quantity),0) into queued from public.peris_orders where owner_id=u and army_id=public.peris_army_id(u) and kind='recruit';
  if a.infantry+a.archers+a.cavalry+queued+p_quantity>1000 then raise exception 'Army capacity is 1,000 soldiers';end if;

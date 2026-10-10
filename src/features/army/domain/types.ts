@@ -1,4 +1,5 @@
 export type UnitType = 'infantry' | 'archers' | 'cavalry';
+export type ArmyTroops = Record<UnitType, number>;
 export type Army = {
     /** Public presentation metadata; not a combat statistic. */
     faction?: import('../../factions/domain/factions').Faction;
@@ -23,4 +24,12 @@ export type Army = {
     march_distance?: number | null;
     /** New toroidal routes use shortest wrapped segments; old routes remain linear. */
     march_map_version?: number | null;
+    /** New orders stage for thirty real seconds; old saves have no cancellation metadata. */
+    march_sent_at?: string | null;
+    march_cancel_until?: string | null;
+    /** Unsent troops belong to this legion and do not participate in its raid. */
+    raid_reserve?: ArmyTroops | null;
+    march_origin?: { col: number; row: number; x: number; y: number } | null;
+    /** Returning after an attack is never a new cancellable departure. */
+    march_returning?: boolean;
 };

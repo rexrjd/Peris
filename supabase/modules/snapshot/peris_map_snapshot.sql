@@ -51,7 +51,7 @@ begin
    'players',coalesce((select jsonb_agg(jsonb_build_object('id',p.id,'display_name',p.display_name) order by p.id)
      from public.players p join visible_owners o on o.owner_id=p.id),'[]'::jsonb),
    'settlements',coalesce((select jsonb_agg(to_jsonb(s)||jsonb_build_object('map_development',public.peris_map_development(s.id)) order by s.id) from visible_settlements s),'[]'::jsonb),
-   'armies',coalesce((select jsonb_agg(to_jsonb(a)-'map_x'-'map_y' order by a.id) from visible_armies a),'[]'::jsonb),
+   'armies',coalesce((select jsonb_agg(case when a.owner_id=u then to_jsonb(a)-'map_x'-'map_y' else to_jsonb(a)-'map_x'-'map_y'-'raid_reserve'-'march_sent_at'-'march_cancel_until'-'march_origin'-'march_returning' end order by a.id) from visible_armies a),'[]'::jsonb),
    'map_plots',coalesce((select jsonb_agg(p order by p.row,p.col) from visible_plots p),'[]'::jsonb),
    'total_players',(select count(*) from public.players),'total_settlements',(select count(*) from public.settlements),
    'settlements_truncated',(select count(*)>600 from nearby_settlements),

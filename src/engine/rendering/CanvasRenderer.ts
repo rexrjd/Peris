@@ -27,6 +27,7 @@ export class GameRenderer {
     private lastTouchOrder = 'select';
     private lastMapFocus: number | undefined;
     private lastViewport = '';
+    private lastMapCenter = '';
     constructor(canvas: HTMLCanvasElement, state: () => RenderState, actions: () => RenderActions) {
         this.ctx = new RenderContext(canvas, state, actions);
         this.map = new MapRenderer(this.ctx);
@@ -85,6 +86,8 @@ export class GameRenderer {
             this.ctx.camera.y = clamp(this.ctx.camera.y, 0, FIELD_H);
         }
         if (s.mode === 'world') {
+            const centerKey = `${this.ctx.camera.x.toFixed(3)}:${this.ctx.camera.y.toFixed(3)}`;
+            if (centerKey !== this.lastMapCenter) { this.lastMapCenter = centerKey; this.ctx.actions().mapCenter?.({ x: this.ctx.camera.x, y: this.ctx.camera.y }); }
             const margin = CELL_SIZE * 4;
             const bounds = {
                 minX: Math.floor((this.ctx.camera.x - this.ctx.w / scale / 2 - margin) / CELL_SIZE) * CELL_SIZE,

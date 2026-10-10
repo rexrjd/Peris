@@ -6,6 +6,7 @@ import { type World } from '../../../shared/model/world';
 import { completeMapField } from '../../map/domain/territory';
 import { refreshCityEconomy } from '../../city/domain/slots';
 import { accrueCulture, completeExpedition } from '../../empire/domain/expansion';
+import { mergeStationGarrison } from '../../map/domain/garrisons';
 
 /** Complete all cities' queues in time order; every order belongs to one city/army. */
 export function settleLocal(w: World, owner: string, now = Date.now(), travel = true) {
@@ -38,5 +39,13 @@ export function settleLocal(w: World, owner: string, now = Date.now(), travel = 
     }
     accrueCulture(w, owner, now);
     for (const city of w.settlements.filter(s => s.owner_id === owner)) accrueResources(city, now);
-    if (travel) for (const army of w.armies.filter(a => a.owner_id === owner)) completeTravel(army, now);
+    if (travel) for (const army of w.armies.filter(a => a.owner_id === owner)) {
+        const arriving = army.status === 'moving' && Date.parse(army.arrival_at) <= now;
+        completeTravel(army, now);
+        if (arriving && army.raid_target_id === null) {
+            mergeStationGarrison(w, army);
+            army.march_origin = null; army.march_returning = false;
+            army.march_sent_at = null; army.march_cancel_until = null;
+        }
+    }
 }

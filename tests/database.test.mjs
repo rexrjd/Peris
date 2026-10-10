@@ -33,6 +33,7 @@ await rpc('peris_queue_recruit',['infantry',20]);await rejects(()=>rpc('move_arm
 await admin(`update public.peris_orders set finish_at=now()-interval '1 minute',started_at=now()-interval '2 minutes';`);await login(u);await rpc('sync_my_state');w=await snap();assert.equal(w.players.find(p=>p.id===u).upgrades,1);assert.equal(w.players.find(p=>p.id===u).recruits,20);await rpc('peris_claim',['builder']);await rejects(()=>rpc('peris_claim',['builder']),'Reward granted twice');
 console.log('PASS · recruitment, upgrade completion and single-use rewards');
 await rejects(()=>rpc('move_army',[sea.x,sea.y]),'Compatibility move RPC crossed actual sea');
+await admin(`insert into public.peris_map_plots(owner_id,settlement_id,col,row,building_type,level)select '${u}',id,-1,2,null,0 from public.settlements where owner_id='${u}';insert into public.peris_map_plots(owner_id,settlement_id,col,row,building_type,level)select '${u}',id,3,3,null,0 from public.settlements where owner_id='${u}'`);await login(u);
 await rpc('move_army',[-64,320]);w=await snap();assert.deepEqual([w.armies[0].target_x,w.armies[0].target_y],[-64,320]);
 let a=w.armies[0],seconds=(Date.parse(a.arrival_at)-Date.parse(a.departure_at))/1000;assert.ok(Math.abs(seconds-Math.hypot(a.target_x-a.start_x,a.target_y-a.start_y)/22)<.002);
 await rejects(()=>rpc('move_army',[null,0]),'Null march destination accepted');
@@ -57,7 +58,15 @@ for(let row=-99;row<99;row++)for(let col=-99;col<99;col++)if(land(col,row)){
  if(!corner&&land(col+1,row+1)&&(!land(col+1,row)||!land(col,row+1)))corner=[col,row];
 }
 assert.ok(coastal);assert.ok(corner);
-for(const [cell,dx,dy]of [[coastal,1,0],[corner,1,1]]){const [col,row]=cell,x=(col+.5)*128,y=(row+.5)*128,tx=x+dx*128,ty=y+dy*128;await admin(`update public.armies set status='idle',start_x=${x},start_y=${y},target_x=${x},target_y=${y},march_path=null,march_distance=null where owner_id='${u}'`);await login(u);await rejects(()=>rpc('peris_march',[tx,ty,JSON.stringify([[x,y],[tx,ty]])]),'Route entered water or cut a sea corner');await rejects(()=>rpc('move_army',[tx,ty]),'Legacy RPC bypassed sea route validation');}
+for(const [cell,dx,dy]of [[coastal,1,0],[corner,1,1]]){
+ const [col,row]=cell,x=(col+.5)*128,y=(row+.5)*128,tx=x+dx*128,ty=y+dy*128;
+ // Admin-owned fixture fields isolate walkability from the separate station ownership rule.
+ await admin(`insert into public.peris_map_plots(owner_id,settlement_id,col,row,building_type,level)select '${u}',id,${col},${row},null,0 from public.settlements where owner_id='${u}' on conflict(col,row)do nothing;
+  insert into public.peris_map_plots(owner_id,settlement_id,col,row,building_type,level)select '${u}',id,${col+dx},${row+dy},null,0 from public.settlements where owner_id='${u}' on conflict(col,row)do nothing;
+  update public.armies set status='idle',start_x=${x},start_y=${y},target_x=${x},target_y=${y},march_path=null,march_distance=null where owner_id='${u}'`);
+ await login(u);await assert.rejects(()=>rpc('peris_march',[tx,ty,JSON.stringify([[x,y],[tx,ty]])]),/sea|water/,'Route entered water or cut a sea corner');
+ await assert.rejects(()=>rpc('move_army',[tx,ty]),/sea|water/,'Legacy RPC bypassed sea route validation');
+}
 await admin(`update public.armies set status='moving',start_x=12736,start_y=12736,target_x=-12736,target_y=-12736,march_path=null,march_distance=null,march_map_version=4,departure_at='2030-01-01T00:00:00Z',arrival_at='2030-01-01T00:00:20Z' where owner_id='${u}'`);
 let fallback=(await db.query(`select public.peris_army_position(a,'2030-01-01T00:00:10Z') as point from public.armies a where owner_id='${u}'`)).rows[0].point;
 assert.deepEqual(fallback,{x:-12800,y:-12800},'Version4 fallback follows the short corner crossing even without stored route points');

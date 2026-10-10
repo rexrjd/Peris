@@ -73,7 +73,7 @@ export function sendSettlers(ctx: LocalCommandContext, col: number, row: number,
     (world.settler_expeditions ??= []).push({ id: ctx.nextId(), owner_id: ctx.playerId, origin_settlement_id: city.id, ...target, name: name.trim(), culture_cost: cost, departure_at: ctx.now, arrival_at: new Date(Date.parse(ctx.now) + Math.max(5, route.distance / 18) * 1000).toISOString(), march_path: route.path, status: 'travelling' });
 }
 export function nextEntityId(world: World) {
-    return Math.max(0, ...[world.settlements, world.buildings, world.armies, world.orders, world.battles, world.formations, world.reports, world.heroes ?? [], world.hero_artifacts ?? [], world.settler_expeditions ?? []].flatMap(rows => rows.map(r => r.id))) + 1;
+    return Math.max(0, ...[world.settlements, world.buildings, world.armies, world.orders, world.battles, world.formations, world.reports, world.heroes ?? [], world.hero_artifacts ?? [], world.settler_expeditions ?? [], world.campaign_farm_lists ?? [], world.campaign_farms ?? []].flatMap(rows => rows.map(r => r.id))) + 1;
 }
 export function completeExpedition(world: World, expedition: SettlerExpedition) {
     if (expedition.status !== 'travelling') return;

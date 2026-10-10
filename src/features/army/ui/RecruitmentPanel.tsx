@@ -8,6 +8,7 @@ import { armyOverview, recruitmentPlan, UNIT_ROLES, count, percent } from '../do
 import { Icon } from '../../../shared/ui/Icons';
 import { Cost } from '../../../shared/ui/Shared';
 import { clock } from '../../../shared/time/clock';
+import { homeArmyPosition } from '../../map/domain/garrisons';
 
 export function RecruitmentPanel({ world, army, city, run, busy, now, onCity, onOpenCity, onLogistics }: { world: World; army: Army; city: Settlement; run: (c: Command, message?: string) => void; busy: boolean; now: number; onCity?: (id: number) => void; onOpenCity?: (id: number) => void; onLogistics: () => void }) {
     const [type, setType] = useState<UnitType>('infantry'), [quantity, setQuantity] = useState(20);
@@ -29,6 +30,6 @@ export function RecruitmentPanel({ world, army, city, run, busy, now, onCity, on
         <div className="recruit-cost-heading"><span>Total supplies</span><small>From {city.name}</small></div><Cost cost={plan.cost} resources={plan.resources} compact/>
         <div className="recruit-timing"><span>Training time<b>{clock(plan.seconds)}</b></span><span>Ready in, with queue<b>{clock(plan.finishSeconds)}</b></span></div>
         <button className="command-button primary" disabled={busy || !!plan.reason} onClick={() => run({ type: 'recruit', armyId: army.id, settlementId: city.id, item: type, quantity }, `${quantity} ${meta.name.toLowerCase()} added to ${army.name}’s training`)}>Train {quantity} {meta.name.toLowerCase()}<Icon name="plus" size={16}/></button>
-        {plan.reason && <div className="recruit-blocked"><p>{plan.reason}</p>{!plan.near && !plan.orders.length && <button className="command-text-button" disabled={busy} onClick={() => run({ type: 'move', armyId: army.id, settlementId: city.id, x: city.x + 40, y: city.y + 30 }, `${army.name} is marching to ${city.name}`)}>March to {city.name}<Icon name="arrow" size={15}/></button>}{!plan.level && onOpenCity && <button className="command-text-button" onClick={() => onOpenCity(city.id)}>Develop this city<Icon name="arrow" size={15}/></button>}</div>}
+        {plan.reason && <div className="recruit-blocked"><p>{plan.reason}</p>{!plan.near && !plan.orders.length && <button className="command-text-button" disabled={busy} onClick={() => run({ type: 'move', armyId: army.id, settlementId: city.id, ...homeArmyPosition(city) }, `${army.name} is marching to ${city.name}`)}>March to {city.name}<Icon name="arrow" size={15}/></button>}{!plan.level && onOpenCity && <button className="command-text-button" onClick={() => onOpenCity(city.id)}>Develop this city<Icon name="arrow" size={15}/></button>}</div>}
     </section></div>;
 }

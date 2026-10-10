@@ -14,6 +14,57 @@ const TIERS: CampTier[] = ['low', 'medium', 'hard'];
 const factions = Object.keys(FACTIONS) as Faction[];
 const key = ({ col, row }: Position) => `${col},${row}`;
 const legacyCells = new Set([...CAMPS, ...BANDIT_CAMPS].map(camp => key(wrapWorldCell(Math.floor(camp.x / CELL_SIZE), Math.floor(camp.y / CELL_SIZE)))));
+type Candidate = Position & { order: number };
+type CampPlacement = Position & { tier: CampTier };
+// Balance local opportunities without turning every field into a rigid camp grid.
+const CAMP_SECTOR_SIZE = 10;
+
+function shuffle<T>(items: T[], random: () => number): T[] {
+    for (let i = items.length - 1; i > 0; i--) {
+        const other = Math.floor(random() * (i + 1));
+        [items[i], items[other]] = [items[other], items[i]];
+    }
+    return items;
+}
+
+/** Exact proportional allocation: each bucket receives its floor share, then
+ * the largest fractional remainders receive the leftover places. Seeded ties
+ * avoid consistently favoring the north/west edge of the world. */
+function quotas(weights: number[], count: number, random: () => number): number[] {
+    const total = weights.reduce((sum, weight) => sum + weight, 0);
+    if (!count) return weights.map(() => 0);
+    const shares = weights.map(weight => count * weight / total);
+    const result = shares.map(Math.floor);
+    const remainders = shares.map((share, index) => ({ index, fraction: share - result[index], order: random() }))
+        .sort((a, b) => b.fraction - a.fraction || a.order - b.order);
+    let remaining = count - result.reduce((sum, value) => sum + value, 0);
+    for (const { index } of remainders) if (remaining && result[index] < weights[index]) { result[index]++; remaining--; }
+    return result;
+}
+
+function fullCampPlacements(available: Candidate[], config: FrontierConfig): CampPlacement[] {
+    const random = seeded(config.seed ^ 0x43414d50), sectors = new Map<string, Candidate[]>();
+    for (const candidate of available) {
+        const sector = `${Math.floor((candidate.col + WORLD_COLS / 2) / CAMP_SECTOR_SIZE)},${Math.floor((candidate.row + WORLD_ROWS / 2) / CAMP_SECTOR_SIZE)}`;
+        const cells = sectors.get(sector) ?? []; cells.push(candidate); sectors.set(sector, cells);
+    }
+    const buckets = [...sectors.values()];
+    const total = TIERS.reduce((sum, tier) => sum + config.campCounts[tier], 0);
+    const counts = quotas(buckets.map(cells => cells.length), total, random);
+    // Allocate exact tier totals locally as well. Low shares are rounded first;
+    // medium/hard split the remaining slots. Positions never depend on tier.
+    const low = quotas(counts, config.campCounts.low, random);
+    const medium = quotas(counts.map((count, i) => count - low[i]), config.campCounts.medium, random);
+    return buckets.flatMap((cells, i) => {
+        cells.sort((a, b) => a.order - b.order);
+        const tiers = shuffle<CampTier>([
+            ...Array<CampTier>(low[i]).fill('low'),
+            ...Array<CampTier>(medium[i]).fill('medium'),
+            ...Array<CampTier>(counts[i] - low[i] - medium[i]).fill('hard'),
+        ], random);
+        return cells.slice(0, counts[i]).map(({ col, row }, index) => ({ col, row, tier: tiers[index] }));
+    });
+}
 
 function hash(text: string) {
     let value = 2166136261;
@@ -39,7 +90,7 @@ function ring(position: Position): Position[] {
 export function createRealmCamps(config: FrontierConfig, now: number): { camps: FrontierCamp[]; villageSites: Position[] } {
     if (!Number.isFinite(now)) throw new Error('A realm needs a valid creation time.');
     for (const tier of TIERS) if (!Number.isSafeInteger(config.campCounts[tier]) || config.campCounts[tier] < 0) throw new Error('Camp counts must be nonnegative whole numbers.');
-    const random = seeded(config.seed), candidates: (Position & { order: number })[] = [];
+    const random = seeded(config.seed), candidates: Candidate[] = [];
     const eligible = (position: Position) => !legacyCells.has(key(position)) && !isHistoricStartingField(position.col, position.row) && isWalkable(position.col, position.row);
     for (let row = -WORLD_ROWS / 2; row < WORLD_ROWS / 2; row++) for (let col = -WORLD_COLS / 2; col < WORLD_COLS / 2; col++) {
         const position = { col, row };
@@ -64,24 +115,29 @@ export function createRealmCamps(config: FrontierConfig, now: number): { camps: 
     }
     if (villageSites.length !== siteCount) throw new Error('Not enough safe village sites exist for this realm.');
     const available = candidates.filter(position => !reserved.has(key(position)));
-    if (config.fixture === 'development') available.sort((a, b) => wrappedCellDistance(a, villageSites[0]) - wrappedCellDistance(b, villageSites[0]) || a.order - b.order);
-    else available.sort((a, b) => a.order - b.order);
     const total = TIERS.reduce((sum, tier) => sum + config.campCounts[tier], 0);
     if (total > available.length) throw new Error('Not enough unoccupied dry fields exist for the requested camps.');
-    const positions: Position[] = [];
-    for (const candidate of available) {
-        if (positions.length >= total) break;
-        if (config.fixture === 'development' && !findMarchPath(cellCenter(villageSites[0].col, villageSites[0].row), cellCenter(candidate.col, candidate.row))) continue;
-        positions.push(candidate);
+    let placements: CampPlacement[];
+    if (config.fixture === 'development') {
+        available.sort((a, b) => wrappedCellDistance(a, villageSites[0]) - wrappedCellDistance(b, villageSites[0]) || a.order - b.order);
+        const positions: Position[] = [];
+        for (const candidate of available) {
+            if (positions.length >= total) break;
+            if (!findMarchPath(cellCenter(villageSites[0].col, villageSites[0].row), cellCenter(candidate.col, candidate.row))) continue;
+            positions.push(candidate);
+        }
+        if (positions.length !== total) throw new Error('Not enough reachable camp fields exist for the development realm.');
+        const tiers = shuffle(TIERS.flatMap(tier => Array<CampTier>(config.campCounts[tier]).fill(tier)), seeded(config.seed ^ 0x54494552));
+        placements = positions.map(({ col, row }, index) => ({ col, row, tier: tiers[index] }));
+    } else {
+        placements = fullCampPlacements(available, config);
     }
-    if (positions.length !== total) throw new Error('Not enough reachable camp fields exist for the development realm.');
-    let cursor = 0;
-    const camps = TIERS.flatMap(tier => Array.from({ length: config.campCounts[tier] }, () => {
-        const { col, row } = positions[cursor++], id = `frontier-camp-${col + WORLD_COLS / 2}-${row + WORLD_ROWS / 2}`;
+    const camps = placements.map(({ col, row, tier }) => {
+        const id = `frontier-camp-${col + WORLD_COLS / 2}-${row + WORLD_ROWS / 2}`;
         const faction = factions[Math.floor(seeded(config.seed ^ hash(id))() * factions.length)];
         return { id, col, row, tier, faction, name: `${FACTIONS[faction].name} ${tier === 'low' ? 'outpost' : tier === 'medium' ? 'warband' : 'stronghold'}`,
             defenders: emptyTroops(), resources: emptyResources(), producedAt: now, recruitSequence: 0, nextRecruitAt: now + recruitDelay(config, id, 0) } satisfies FrontierCamp;
-    }));
+    });
     return { camps, villageSites };
 }
 

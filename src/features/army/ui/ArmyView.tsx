@@ -12,6 +12,8 @@ import { armyOverview, count, percent } from '../domain/commandRoom';
 import { soldierTotal } from '../domain/units';
 import { armyPosition } from '../../map/domain/movement';
 import { CELL_SIZE, wrapWorldCell } from '../../map/domain/dimensions';
+import { garrisonAt } from '../../map/domain/garrisons';
+import { MarchDialog, type MarchDestination } from '../../map/ui/MarchDialog';
 import { Icon } from '../../../shared/ui/Icons';
 import { clock } from '../../../shared/time/clock';
 
@@ -29,6 +31,7 @@ export function ArmyView({ world, playerId, run, busy, now, cityId, armyId, onCi
     onMap?: (id: number, orders?: boolean) => void; onOpenCity?: (id: number) => void; initialTab?: CommandTab; initialArtifactId?: number;
 }) {
     const [tab, setTab] = useState<CommandTab>(initialTab), [hireOpen, setHire] = useState(false);
+    const [marchRequest, setMarchRequest] = useState<{ armyId: number; destination: MarchDestination } | null>(null);
     const roster = useRef<HTMLDivElement>(null);
     const armies = world.armies.filter(a => a.owner_id === playerId), cities = world.settlements.filter(s => s.owner_id === playerId);
     const army = armies.find(a => a.id === armyId) ?? armies[0], info = army ? armyOverview(world, army, now) : undefined;
@@ -41,8 +44,16 @@ export function ArmyView({ world, playerId, run, busy, now, cityId, armyId, onCi
     const hero = army ? heroForArmy(world, army.id) : undefined, points = hero ? Math.max(0, heroPoints(hero)) : 0;
     const armyCount = armies.length, total = armies.reduce((n, a) => n + soldierTotal(a), 0), moving = armies.filter(a => a.status === 'moving').length;
     const pos = army ? armyPosition(army, now) : { x: 0, y: 0 }, field = wrapWorldCell(Math.floor(pos.x / CELL_SIZE), Math.floor(pos.y / CELL_SIZE));
+    const station = garrisonAt(world, playerId, pos);
+    const cancelUntil = army?.march_cancel_until ? Date.parse(army.march_cancel_until) : 0;
+    const canCancel = army?.status === 'moving' && !!army.march_sent_at && now < cancelUntil;
     const title = hero?.name ?? army?.name ?? 'Your armies';
     const changeTab = (next: CommandTab) => setTab(next);
+    const reviewMarch = (command: Command, message?: string) => {
+        if (command.type !== 'move') { run(command, message); return; }
+        const destinationCity = cities.find(city => Math.floor(city.x / CELL_SIZE) === Math.floor(command.x / CELL_SIZE) && Math.floor(city.y / CELL_SIZE) === Math.floor(command.y / CELL_SIZE));
+        setMarchRequest({ armyId: command.armyId ?? army.id, destination: { kind: 'move', x: command.x, y: command.y, label: destinationCity?.name ?? 'Legion reinforcement station' } });
+    };
     return <section className="army-command">
         <header className="army-command-heading"><div><span className="command-kicker">Military command</span><h1>Your armies<span>{armyCount} / {armyLimit(world, playerId)}</span></h1><p>{count(total)} soldiers under your banners{moving ? ` · ${moving} ${moving === 1 ? 'army' : 'armies'} marching` : ' · Your commanders await orders'}</p></div><button className="command-button primary" disabled={busy || !cities.length} onClick={() => setHire(true)}><Icon name="plus" size={17}/>Raise army</button></header>
         <div ref={roster} className="command-army-roster" role="group" aria-label="Your armies">{armies.map(a => {
@@ -53,10 +64,13 @@ export function ArmyView({ world, playerId, run, busy, now, cityId, armyId, onCi
             <div className="army-banner-effects"><div><strong>{count(info.total)}</strong><small>Soldiers</small></div><div title="Hero damage multiplied by home city smithies"><strong>+{percent(info.damage - 1)}</strong><small>Troop damage</small></div><div><strong>+{percent(info.bonuses.speed - 1)}</strong><small>March speed</small></div></div>
             <div className="army-banner-actions">{onMap && <><button className="command-button primary" disabled={busy || !!info.orders.length} onClick={() => onMap(army.id, true)}>{info.orders.length ? 'Finish training to march' : 'Give orders'}<Icon name="arrow" size={16}/></button><button className="command-text-button" onClick={() => onMap(army.id)}><Icon name="focus" size={15}/>Locate on map</button></>}{points > 0 && <button className="command-text-button skill-points-link" onClick={() => changeTab('commander')}><Icon name="sparkles" size={15}/>{points} skill {points === 1 ? 'point' : 'points'} available</button>}</div>
         </div>
+        {canCancel && <div className="army-cancel-order" role="region" aria-label="Cancellable march"><span>{army.name} is preparing to leave. Cancellation closes in {clock((cancelUntil - now) / 1000)}.</span><button className="command-button secondary" disabled={busy} onClick={() => run({ type: 'cancelMarch', armyId: army.id, sentAt: army.march_sent_at! }, 'March cancelled. Troops are back at the departure station.')}>Cancel march ({Math.ceil((cancelUntil - now) / 1000)}s)</button></div>}
+        {station && soldierTotal(station) > 0 && army.status === 'idle' && <div className="army-cancel-order"><span>{station.infantry} infantry, {station.archers} archers and {station.cavalry} cavalry stationed on this field.</span><button className="command-button secondary" disabled={busy || !!info.orders.length || soldierTotal(army) >= 1000} onClick={() => run({ type: 'collectGarrison', armyId: army.id }, 'Stationed troops joined this legion.')}>Merge stationed troops</button></div>}
         <nav className="army-command-tabs" aria-label="Army management">{tabs.map(item => <button key={item.id} aria-current={tab === item.id ? 'page' : undefined} onClick={() => changeTab(item.id)}><Icon name={item.icon} size={17}/>{item.label}{item.id === 'commander' && points > 0 && <b>{points}</b>}{item.id === 'army' && info.orders.length > 0 && <b>{info.orders.length}</b>}</button>)}</nav>
         <div className="army-command-body" key={army.id} role="region" aria-label={tabs.find(item => item.id === tab)?.label + ' management'}>
-            {tab === 'army' ? <RecruitmentPanel world={world} army={army} city={city} run={run} busy={busy} now={now} onCity={onCity} onOpenCity={onOpenCity} onLogistics={() => changeTab('logistics')}/> : tab === 'commander' ? <HeroPanel world={world} army={army} run={run} busy={busy} now={now} onCity={onOpenCity}/> : tab === 'equipment' ? <EquipmentPanel initialArtifactId={initialArtifactId} world={world} army={army} run={run} busy={busy} onArmy={onArmy}/> : <ArmyLogistics world={world} army={army} cityId={city.id} now={now} run={run} busy={busy} onMap={onMap}/>}
+            {tab === 'army' ? <RecruitmentPanel world={world} army={army} city={city} run={reviewMarch} busy={busy} now={now} onCity={onCity} onOpenCity={onOpenCity} onLogistics={() => changeTab('logistics')}/> : tab === 'commander' ? <HeroPanel world={world} army={army} run={run} busy={busy} now={now} onCity={onOpenCity}/> : tab === 'equipment' ? <EquipmentPanel initialArtifactId={initialArtifactId} world={world} army={army} run={run} busy={busy} onArmy={onArmy}/> : <ArmyLogistics world={world} army={army} cityId={city.id} now={now} run={reviewMarch} busy={busy} onMap={onMap}/>}
         </div></> : <div className="command-empty"><Icon name="army" size={42}/><h2>Your first banner awaits.</h2><p>Raise an army to choose a commander and start recruiting soldiers.</p></div>}
         {hireOpen && city && <HireArmyDialog world={world} owner={playerId} cityId={city.id} now={now} run={run} busy={busy} onClose={() => setHire(false)} onCreated={id => { setHire(false); onArmy?.(id); changeTab('army'); }}/>}
+        {marchRequest && <MarchDialog world={world} playerId={playerId} now={now} busy={busy} initialArmyId={marchRequest.armyId} destination={marchRequest.destination} run={run} onArmy={onArmy} onClose={() => setMarchRequest(null)} />}
     </section>;
 }

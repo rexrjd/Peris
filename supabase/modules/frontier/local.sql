@@ -37,6 +37,15 @@ create table if not exists frontier.training (
 );
 create index if not exists training_due on frontier.training (at, id);
 create index if not exists training_owner on frontier.training (owner_id);
+create table if not exists frontier.research (
+    id text primary key,
+    owner_id text not null references frontier.villages(id),
+    unit text not null,
+    at double precision not null,
+    data jsonb not null,
+    unique (owner_id, unit)
+);
+create index if not exists research_due on frontier.research (at, id);
 create table if not exists frontier.raids (
     id text primary key,
     owner_id text not null references frontier.villages(id),
@@ -58,6 +67,23 @@ create table if not exists frontier.farms (
 );
 create index if not exists farms_due on frontier.farms (at, id) where at is not null;
 create index if not exists farms_owner on frontier.farms (owner_id);
+create table if not exists frontier.farm_lists (
+    id text primary key,
+    owner_id text not null references frontier.villages(id),
+    data jsonb not null
+);
+create index if not exists farm_lists_owner on frontier.farm_lists (owner_id);
+-- Existing targets, schedules and troops stay intact when upgrading a saved realm.
+insert into frontier.farm_lists(id,owner_id,data)
+select distinct 'legacy-' || owner_id, owner_id,
+    jsonb_build_object('id','legacy-' || owner_id,'ownerId',owner_id,'name','Saved farms','casualtiesOnly',false)
+from frontier.farms where not (data ? 'listId')
+on conflict (id) do nothing;
+update frontier.farms set data=jsonb_set(data,'{listId}',to_jsonb('legacy-' || owner_id))
+where not (data ? 'listId');
+-- A list preset never rewrites existing per-target troop selections.
+update frontier.farm_lists set data=jsonb_set(data,'{troops}','{"infantry":1,"archers":0,"cavalry":0}'::jsonb)
+where not (data ? 'troops');
 create table if not exists frontier.commands (
     owner_id text not null references frontier.villages(id),
     request_id text not null,

@@ -117,6 +117,7 @@ begin
   else return public.peris_respond((p_command->>'id')::bigint,(p_command->>'accept')::boolean);end if;
  end if;
  perform public.peris_settle(u);
+ if command_kind='cancelMarch'then return public.peris_cancel_march((p_command->>'armyId')::bigint,(p_command->>'sentAt')::timestamptz);end if;
  select * into s from public.settlements where id=public.peris_city_id(u)for update;
  select * into a from public.armies where id=public.peris_army_id(u)for update;
  if exists(select 1 from public.battles where status='active'and(attacker_owner_id=u or defender_owner_id=u))then raise exception 'Finish the current battle first';end if;
@@ -127,15 +128,7 @@ begin
  when 'recruit'then return public.peris_queue_recruit(p_command->>'item',(p_command->>'quantity')::integer);
  when 'move'then if p_command ? 'route'then return public.peris_march(round((p_command->>'x')::numeric)::integer,round((p_command->>'y')::numeric)::integer,p_command->'route');else return public.move_army(round((p_command->>'x')::numeric)::integer,round((p_command->>'y')::numeric)::integer);end if;
  when 'raid'then
-  if p_command ? 'route'then
-   select * into camp from public.peris_camps where id=(p_command->>'campId')::integer;
-   if camp.id is null then raise exception 'Camp not found';end if;
-   if a.infantry+a.archers+a.cavalry=0 then raise exception 'Recruit soldiers before starting a raid';end if;
-   if exists(select 1 from public.peris_progress where owner_id=u and camp_id=camp.id and available_at>now())then raise exception 'The camp is still regrouping';end if;
-   perform public.peris_march(camp.x,camp.y,p_command->'route');
-   update public.armies set raid_target_id=camp.id where id=a.id;
-   return jsonb_build_object('ok',true);
-  else return public.peris_raid((p_command->>'campId')::integer);end if;
+  return public.peris_prepare_raid((p_command->>'campId')::integer,p_command->'route',p_command->'troops');
  when 'claimField'then return public.peris_claim_field((p_command->>'col')::integer,(p_command->>'row')::integer);
  when 'buildField'then return public.peris_queue_field((p_command->>'col')::integer,(p_command->>'row')::integer,p_command->>'item');
  when 'researchSpell'then return public.peris_research_spell(p_command->>'spell');
@@ -184,7 +177,8 @@ begin
   if count_armies>=least(20,count_cities*2)then raise exception 'Found another city to support more armies';end if;
   if s.gold<500 then raise exception 'Hiring a hero costs 500 gold';end if;
   update public.settlements set gold=gold-500 where id=s.id;
-  insert into public.armies(owner_id,home_settlement_id,name,infantry,archers,cavalry,start_x,start_y,target_x,target_y)values(u,s.id,hero_name||'’s army',0,0,0,s.x+40,s.y+30,s.x+40,s.y+30)returning id into new_army_id;
+  position:=public.peris_home_army_position(s.x,s.y);
+  insert into public.armies(owner_id,home_settlement_id,name,infantry,archers,cavalry,start_x,start_y,target_x,target_y)values(u,s.id,hero_name||'’s army',0,0,0,(position->>'x')::integer,(position->>'y')::integer,(position->>'x')::integer,(position->>'y')::integer)returning id into new_army_id;
   update public.peris_heroes set name=hero_name,class=hero_class where army_id=new_army_id;
  when 'heroSkill'then
   select * into h from public.peris_heroes where id=(p_command->>'heroId')::bigint and owner_id=u for update;
@@ -202,7 +196,7 @@ begin
   select * into t from public.armies where id=(p_command->>'targetArmyId')::bigint and owner_id=u for update;
   if t.id is null or t.id=a.id then raise exception 'Choose a different army of your own';end if;
   position:=public.peris_army_position(a);target:=public.peris_army_position(t);
-  if a.status<>'idle'or t.status<>'idle'or sqrt(power(public.peris_wrapped_delta((position->>'x')::numeric,(target->>'x')::numeric),2)+power(public.peris_wrapped_delta((position->>'y')::numeric,(target->>'y')::numeric),2))>90 then raise exception 'Bring both idle armies together first';end if;
+  if a.status<>'idle'or t.status<>'idle'or a.raid_reserve is not null or t.raid_reserve is not null or a.raid_target_id is not null or t.raid_target_id is not null or sqrt(power(public.peris_wrapped_delta((position->>'x')::numeric,(target->>'x')::numeric),2)+power(public.peris_wrapped_delta((position->>'y')::numeric,(target->>'y')::numeric),2))>90 then raise exception 'Bring both idle armies together first';end if;
   if exists(select 1 from public.peris_orders where kind='recruit'and army_id in(a.id,t.id))then raise exception 'Finish both training queues before transferring troops';end if;
   inf:=(p_command->>'infantry')::integer;arc:=(p_command->>'archers')::integer;cav:=(p_command->>'cavalry')::integer;
   if inf is null or arc is null or cav is null or inf<0 or arc<0 or cav<0 or inf>a.infantry or arc>a.archers or cav>a.cavalry then raise exception 'Choose available soldiers';end if;
@@ -211,7 +205,8 @@ begin
   update public.armies set infantry=infantry+inf,archers=archers+arc,cavalry=cavalry+cav where id=t.id;
  when 'rebaseArmy'then
   position:=public.peris_army_position(a);
-  if a.status<>'idle'or sqrt(power(public.peris_wrapped_delta((position->>'x')::numeric,s.x+40),2)+power(public.peris_wrapped_delta((position->>'y')::numeric,s.y+30),2))>90 then raise exception 'Bring this army to the selected city first';end if;
+  target:=public.peris_home_army_position(s.x,s.y);
+  if a.status<>'idle'or sqrt(power(public.peris_wrapped_delta((position->>'x')::numeric,(target->>'x')::numeric),2)+power(public.peris_wrapped_delta((position->>'y')::numeric,(target->>'y')::numeric),2))>90 then raise exception 'Bring this army to the selected city first';end if;
   if exists(select 1 from public.peris_orders where kind='recruit'and army_id=a.id)then raise exception 'Finish training before changing the home city';end if;
   update public.armies set home_settlement_id=s.id where id=a.id;
  else raise exception 'Unknown empire command';
