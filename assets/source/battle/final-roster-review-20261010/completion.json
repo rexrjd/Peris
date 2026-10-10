@@ -1,0 +1,295 @@
+{
+  "scope": "99 visual prototypes for review",
+  "verifiedAtUTC": "2026-10-10T00:01:29.270Z",
+  "reviewBranch": "codex/battle-art-preview",
+  "baseRef": "mehdi/map-overhaul",
+  "models": [
+    {
+      "faction": "roman",
+      "sourceEdition": "human-portrait-quality-v14-roman",
+      "nativeSha256": "20f4b23ccc4451774d6e93c21fd176163fce4d6b7e1e830f4a065e61d7cac233",
+      "captures": 9,
+      "near": {
+        "path": "public/models/battle/roman-roster.glb",
+        "sha256": "2d5edaf40121e0bb3e622b4b5ab9e7668562d04f34228c2b7b067fca5d295ce7",
+        "bytes": 9812100,
+        "triangles": 65970
+      },
+      "far": {
+        "path": "public/models/battle/roman-roster-lod.glb",
+        "sha256": "6c6119ed75051de81a093dba208d33078d414f99dddb22fa00d095c31817b7ff",
+        "bytes": 5226280,
+        "triangles": 24830
+      }
+    },
+    {
+      "faction": "spartan",
+      "sourceEdition": "human-portrait-quality-v13-spartan",
+      "nativeSha256": "582883fade6de2f3a58e107f84ee96664639721e4b3542eb25086b9fd7afd836",
+      "captures": 9,
+      "near": {
+        "path": "public/models/battle/spartan-roster.glb",
+        "sha256": "182b8a4dd53159667a70e7fe39b118248d8f6985d0535d4e5857658535e34d53",
+        "bytes": 10732688,
+        "triangles": 64515
+      },
+      "far": {
+        "path": "public/models/battle/spartan-roster-lod.glb",
+        "sha256": "fc159fb4449ed91d9957323b186e79225e7382839f295e267369ef8b91c5c4f5",
+        "bytes": 5247124,
+        "triangles": 24296
+      }
+    },
+    {
+      "faction": "persian",
+      "sourceEdition": "human-persian-royal-armor-v4",
+      "nativeSha256": "7e58cf4f5420639e7053bf8982c7da58c458e578e849ce678a40402d485e0aa4",
+      "captures": 9,
+      "near": {
+        "path": "public/models/battle/persian-roster.glb",
+        "sha256": "96665c585a3dd7fe4cbf4de2ccdc02d5507cb6abdc10f9529d289677049a53ec",
+        "bytes": 7111804,
+        "triangles": 46444
+      },
+      "far": {
+        "path": "public/models/battle/persian-roster-lod.glb",
+        "sha256": "3096fd46961737d5233aa5a162ec5b40e2ade836b808ef252323241dd7abb2fe",
+        "bytes": 4041796,
+        "triangles": 22994
+      }
+    },
+    {
+      "faction": "egyptian",
+      "sourceEdition": "human-portrait-quality-v13-egyptian",
+      "nativeSha256": "cc8c02f54f612e0524fd548f5df45c6b2f62d31106ece16d5aaadd81da05cdba",
+      "captures": 9,
+      "near": {
+        "path": "public/models/battle/egyptian-roster.glb",
+        "sha256": "23251c1a3cb567c29c56ea6bb9f5fb6a925f14f1f5beedcdfe94a466624ad6a3",
+        "bytes": 13757548,
+        "triangles": 141995
+      },
+      "far": {
+        "path": "public/models/battle/egyptian-roster-lod.glb",
+        "sha256": "e9fe6802ba84d10faa2b55044592c607ee614f20aad2ebe53965bf0f464fdd6f",
+        "bytes": 6897948,
+        "triangles": 52092
+      }
+    },
+    {
+      "faction": "elf",
+      "sourceEdition": "elf-portrait-quality-full-v19",
+      "nativeSha256": "fc0122f937e19dce81d1a881f8db563e5beb37f7524b6249d23bdd3bfd0dac70",
+      "captures": 9,
+      "near": {
+        "path": "public/models/battle/elf-roster.glb",
+        "sha256": "cd71407f4272e030550af7cd92d913c2a3bea8abd0ab63f44f54ae8f430f3162",
+        "bytes": 12428608,
+        "triangles": 96605
+      },
+      "far": {
+        "path": "public/models/battle/elf-roster-lod.glb",
+        "sha256": "a06638fe0bc776755a50b697f3a2a296453439273764e59e724eaadb255ebf98",
+        "bytes": 7437448,
+        "triangles": 54949
+      }
+    },
+    {
+      "faction": "dwarf",
+      "sourceEdition": "dwarf-portrait-roster-v30",
+      "nativeSha256": "8a37f34f0ca305cf34ddd6076e5aa65722497bf1312adbeff6ad7aa1c01b27f8",
+      "captures": 9,
+      "near": {
+        "path": "public/models/battle/dwarf-roster.glb",
+        "sha256": "bcb80e1f2068bdc5525006a28d6ac7bee061d805810ce3daa790154f2af408f2",
+        "bytes": 12325904,
+        "triangles": 129705
+      },
+      "far": {
+        "path": "public/models/battle/dwarf-roster-lod.glb",
+        "sha256": "c65b10e35b92624138314c5323099ac307a9c06e3d9556ca49cb459a8f4073ca",
+        "bytes": 7856572,
+        "triangles": 68348
+      }
+    },
+    {
+      "faction": "gnome",
+      "sourceEdition": "gnome-portrait-roster-v23",
+      "nativeSha256": "d0e53db804071811369d1dd97595acfc6b1a430d2545e1420dfc300abd4fb289",
+      "captures": 9,
+      "near": {
+        "path": "public/models/battle/gnome-roster.glb",
+        "sha256": "afeae9ef8db2bd8a415119c2ff85f987210227d8e1e3245ff705cf7e427ff2e2",
+        "bytes": 10299436,
+        "triangles": 94196
+      },
+      "far": {
+        "path": "public/models/battle/gnome-roster-lod.glb",
+        "sha256": "1499839180efe590f0fab7129ae5f3b2f976eafdb1e649b3d5f2e70a5aaf726e",
+        "bytes": 7614336,
+        "triangles": 51098
+      }
+    },
+    {
+      "faction": "pandaren",
+      "sourceEdition": "pandaren-quality-roster-v12",
+      "nativeSha256": "a866b501d854e0c623d40818d110aac02b2f770f7439bdb3d45e563049cc0cb4",
+      "captures": 9,
+      "near": {
+        "path": "public/models/battle/pandaren-roster.glb",
+        "sha256": "f2a8a5f4248ad900d53ea996ee942871e0a6d49e1214ab7f2870afca6fc3a595",
+        "bytes": 16048156,
+        "triangles": 119644
+      },
+      "far": {
+        "path": "public/models/battle/pandaren-roster-lod.glb",
+        "sha256": "dae61488531266d08b3058df564d611818722eca0cd526492fc128c26bd97a89",
+        "bytes": 7146016,
+        "triangles": 45004
+      }
+    },
+    {
+      "faction": "undead",
+      "sourceEdition": "undead-quality-batch-v9",
+      "nativeSha256": "8b4f89727ea0a2986f53d19cb0b13149d18ccd83cc5f062e3a8712bfb92e0644",
+      "captures": 9,
+      "near": {
+        "path": "public/models/battle/undead-roster.glb",
+        "sha256": "4689c46ad5fda3a828fc662f2e94b8c07769c0ebc7f5ae72eb32eecc8b7786a7",
+        "bytes": 15586436,
+        "triangles": 142115
+      },
+      "far": {
+        "path": "public/models/battle/undead-roster-lod.glb",
+        "sha256": "06c301ed0199fb64162807d2b5b21bf0bc83c0be218f8eb3f3e9225a6c14a6d9",
+        "bytes": 6952780,
+        "triangles": 56143
+      }
+    },
+    {
+      "faction": "demon",
+      "sourceEdition": "demon-portrait-quality-full-v15",
+      "nativeSha256": "43e0015986ddef70eb605c2273cd78f7b4c48cc201bb4e9f380b9a57e5033f24",
+      "captures": 9,
+      "near": {
+        "path": "public/models/battle/demon-roster.glb",
+        "sha256": "d6dc8c341a1124d3b8955fa5e88c33d592f85651d4631bcecae9b205b0fd7914",
+        "bytes": 16676284,
+        "triangles": 121418
+      },
+      "far": {
+        "path": "public/models/battle/demon-roster-lod.glb",
+        "sha256": "742eeb7811489f2a214f24e063c1de4e94dc2b04e42fd590b76366671e74840b",
+        "bytes": 7276472,
+        "triangles": 59136
+      }
+    },
+    {
+      "faction": "orc",
+      "sourceEdition": "orc-prototype-deadline-v6",
+      "nativeSha256": "17b24c84babc123c8d855d456fdd8d7a81e5302aaa88a9562e0abcc5a842718e",
+      "captures": 9,
+      "near": {
+        "path": "public/models/battle/orc-roster.glb",
+        "sha256": "4e41f64811afec780bdf9117f5cf65c3afd62ac79430e8985eb43e7a8e89eb06",
+        "bytes": 28453528,
+        "triangles": 269954
+      },
+      "far": {
+        "path": "public/models/battle/orc-roster-lod.glb",
+        "sha256": "9722ef2c4a4527e8406b50f65c02ed043f16a368dd84a8eef2f33d28b8ac6399",
+        "bytes": 11605116,
+        "triangles": 47831
+      }
+    }
+  ],
+  "actualBrowserScreenshots": {
+    "unitCount": 99,
+    "gallery": "artifacts/battle-preview/final-roster-revisions-20261010-v2/index.html",
+    "currentFingerprintsVerified": true,
+    "originalScreenshotsPreserved": true,
+    "changedFactionSheetsVisuallyReviewed": [
+      "dwarf",
+      "elf",
+      "gnome",
+      "demon",
+      "persian"
+    ]
+  },
+  "checks": {
+    "unit": {
+      "total": 215,
+      "passed": 214,
+      "skipped": 1,
+      "log": "artifacts/battle-preview/final-published-model-tests.log"
+    },
+    "tooling": {
+      "passed": 4,
+      "log": "artifacts/battle-preview/final-current-tooling.log"
+    },
+    "build": {
+      "passed": true,
+      "log": "artifacts/battle-preview/final-current-build.log"
+    },
+    "assetValidation": {
+      "models": 46,
+      "baselineFullCheck": "artifacts/battle-preview/final-current-assets.log",
+      "latestElfValidation": [
+        "artifacts/battle-preview/prototype-deadline-20261009/published/elf-portrait-quality-full-v19/elf/validate-near.log",
+        "artifacts/battle-preview/prototype-deadline-20261009/published/elf-portrait-quality-full-v19/elf/validate-far.log"
+      ],
+      "currentManifest": "artifacts/battle-preview/final-published-manifest.log",
+      "note": "44 unchanged validated GLBs plus the two current Elf derivatives validated during publication; current manifest checked after publication."
+    },
+    "browser": {
+      "passed": 5,
+      "skipped": 1,
+      "log": "artifacts/battle-preview/final-published-browser.log",
+      "scope": "desktop and mobile battle inspection, orders, pause, save isolation, withheld-model cleanup, and all 99 desktop gallery roles",
+      "skipReason": "The exhaustive 99-role desktop gallery capture is not duplicated in mobile emulation."
+    }
+  },
+  "performance": [
+    {
+      "quality": "ultra",
+      "gpu": "ANGLE (Intel, Intel(R) Iris(R) Xe Graphics (0x00009A49) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "cpu": "11th Gen Intel(R) Core(TM) i5-11300H @ 3.10GHz",
+      "faction": "dwarf",
+      "enemy": "orc",
+      "viewport": {
+        "width": 1600,
+        "height": 1000
+      },
+      "overviewFPS": 26.116784906837143,
+      "heavyCavalryInspectionFPS": 46.46675461216465,
+      "totalBattleSoldiers": 540,
+      "report": "artifacts\\battle-preview\\faction-performance\\2026-10-09T23-59-26-886Z/performance.json",
+      "limitations": "Five one-second RAF windows after a ten-second warmup per view. Idle deployment animations; these results do not establish sustained combat or mobile performance. Inspection hides other formations."
+    },
+    {
+      "quality": "balanced",
+      "gpu": "ANGLE (Intel, Intel(R) Iris(R) Xe Graphics (0x00009A49) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "cpu": "11th Gen Intel(R) Core(TM) i5-11300H @ 3.10GHz",
+      "faction": "dwarf",
+      "enemy": "orc",
+      "viewport": {
+        "width": 1600,
+        "height": 1000
+      },
+      "overviewFPS": 29.29115407143633,
+      "heavyCavalryInspectionFPS": 58.39794311678115,
+      "totalBattleSoldiers": 540,
+      "report": "artifacts\\battle-preview\\faction-performance\\2026-10-10T00-00-32-057Z/performance.json",
+      "limitations": "Five one-second RAF windows after a ten-second warmup per view. Idle deployment animations; these results do not establish sustained combat or mobile performance. Inspection hides other formations."
+    }
+  ],
+  "editableSourcesAndReferenceMaterialsRetainedLocally": true,
+  "originalNativesPreserved": true,
+  "productionArtApproved": false,
+  "academyWorkshopAndSiegeGameplayImplemented": false,
+  "limitations": [
+    "77 appearances use existing infantry, archer and cavalry combat rules; 22 siege models are inspection studies.",
+    "Adapted motion, anatomy, material detail, individual unit differentiation, and mounted hand grips remain open for artist review.",
+    "Performance measurements cover idle deployment on an integrated GPU, not sustained combat or real mobile hardware."
+  ]
+}

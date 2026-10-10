@@ -1,6 +1,6 @@
-# PERIS seamless world — map v4 / database v9
+# PERIS seamless world — map v4 / database v10
 
-The actual game now uses the seeded low-poly map, built on the city, faction and magic work merged from `origin/main` (`a26e5e7`). There are 200 × 200 fields of 128 logical units, canonical field coordinates −100 through 99. Both axes wrap. Shared seed: 1346720329. About 93.26% is dry land, with rivers, lakes, forests, mountains, desert and ruins. Historic starting sites and campaign positions retain their coordinates and dry surroundings.
+The actual game uses the seeded low-poly map alongside main's city, faction, magic, Empire and Heroes systems. There are 200 × 200 fields of 128 logical units, canonical field coordinates −100 through 99. Both axes wrap. Shared seed: 1346720329. About 93.26% is dry land, with rivers, lakes, forests, mountains, desert and ruins. Historic starting sites and campaign positions retain their coordinates and dry surroundings.
 
 ## Village architecture and development
 
@@ -31,12 +31,12 @@ Private snapshots include all owned plots. Public viewport pages cap rivals at 6
 
 New marches use wrapped eight-neighbour A* with land validation and corner protection. The server validates geometry, overrides the start, computes distance/arrival and tags accepted routes with map version four. Previous untagged/version-three routes retain linear interpolation. Claims and pending jobs persist through validated save import/export. Campaign encounters and real-time battles retain their rules.
 
-Thousands of candidate spawn sites exist. New accounts require a dry 3 × 3 ring, no neighbouring claims and safe village spacing. Existing IDs and positions remain intact. Main still supports one village and one army per player. Multiple village founding, alliances, trade, conquest, ships and autonomous battle workers are future work. Thousands of simultaneous players have not been load tested.
+Thousands of candidate spawn sites exist. New accounts require a dry 3 × 3 ring, no neighbouring claims and safe village spacing. Existing IDs and positions remain intact. Empire gameplay supports up to ten cities; each city adds capacity for two hero-led armies, up to twenty armies across the empire. See `docs/empire-and-heroes.md` for founding and ownership rules. Alliances, trade, conquest, ships and autonomous battle workers are future work. Thousands of simultaneous players have not been load tested.
 
 ## Build and release
 
 Change geography, run `npm run build:world`, then `npm run build:sql`. Server geography contains a 5 kB walkability mask plus a 40 kB terrain byte map. Run their check commands, TypeScript/build, gameplay tests and database suites. See MAP_RELEASE.md for publication commands.
 
-Apply `supabase/UPGRADE_TO_V9.sql` to an existing database after backup/review; use `FRESH_INSTALL_V9.sql` only for an empty one. Generating source does not deploy SQL. The transaction aborts instead of moving/deleting unsafe occupied positions or turning a town into sea. Existing routes and historic spawn IDs remain. Online v4 commands require matching metadata. Local saves keep their v6 format/key; larger-world legacy imports do not silently relocate armies.
+Apply `supabase/UPGRADE_TO_V10.sql` to an existing database after backup/review; use `FRESH_INSTALL_V10.sql` only for an empty one. Generating source does not deploy SQL. The transaction aborts instead of moving/deleting unsafe occupied positions or turning a town into sea. Existing routes and historic spawn IDs remain. Online commands require matching world metadata and the V10 Empire functions. Local saves keep their v6 format/key; larger-world legacy imports do not silently relocate armies.
 
-Rendered browser QA remains pending because the saved local browser permission rejects access. Automated geometry, interaction, save, route and isolated migration tests do not establish visual fidelity or GPU frame rates.
+Desktop/mobile browser checks cover map drawing, camera controls and the Canvas compatibility view. Automated geometry, interaction, save, route and isolated migration tests do not establish visual fidelity or GPU frame rates.

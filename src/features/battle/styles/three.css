@@ -1,0 +1,15 @@
+.battle-3d-canvas{overflow:hidden;background:#344b42}
+.battle-3d-canvas>canvas{display:block;width:100%;height:100%;touch-action:none}
+.battle-3d-labels{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.battle-3d-label{position:absolute;top:0;left:0;white-space:pre;font-size:9px;line-height:1.5;text-align:center;color:#e7ddc5;background:#182a24cf;border:1px solid #b7a67a77;border-radius:3px;padding:3px 6px;box-shadow:0 2px 6px #10201955}
+.battle-3d-label.hostile{border-color:#7cabb6;color:#d6e6eb}
+.battle-3d-label.selected{border-color:#ffe3a0;color:#ffe3a0}
+.battle-3d-selection{position:absolute;pointer-events:none;border:1px solid #ffe3a0;background:#ffe3a022}
+.battle-render-controls{display:flex;align-items:center;gap:6px;margin:0 0 14px;font-size:9px;color:#b3bd95;flex-wrap:wrap}
+.battle-render-controls button{background:#283c2c;border:1px solid #8a9b6955;color:#b9c59c;padding:7px 9px;border-radius:3px}
+.battle-render-controls button[aria-pressed=true]{border-color:#e6ca8d;color:#eed9a5;background:#51603b}
+.battle-render-notice{font-size:10px;color:#e5c795;line-height:1.5;margin-bottom:10px}
+.commander-panel>.battle-render-notice{display:block}
+@media(max-width:600px){.battle-3d-label{font-size:6px;line-height:1.15;padding:1px 2px}.battle-3d-canvas .map-credit{display:none}.battle-3d-canvas .map-zoom{gap:3px}.battle-render-controls{margin-bottom:0;flex-shrink:0;flex-wrap:nowrap}.battle-render-controls>span{display:none}.commander-panel>.battle-render-notice{min-width:160px;max-width:180px;margin:0}}
+
+.army-pilot-notice{position:absolute;left:1rem;bottom:3.25rem;z-index:4;max-width:calc(100% - 2rem);padding:.5rem .7rem;color:var(--text,#eee3c1);background:#15291ee8;border:1px solid #9b8851;font-size:.72rem;pointer-events:none}

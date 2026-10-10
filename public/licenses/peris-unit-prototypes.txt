@@ -1,0 +1,15 @@
+Peris unit prototypes
+
+Original models, textures and animations: Wildfire Games
+https://wildfiregames.com/
+Source revision: 61a3b9507d974084e6badb88a0826bd89a6d5b8b
+https://github.com/0ad/0ad/tree/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art
+
+Adaptations for Peris: equipment assembly, faction tint, materials, matched rider/horse clips, GLB export and LOD.
+Original assets and adaptations are licensed CC BY-SA 3.0.
+https://creativecommons.org/licenses/by-sa/3.0/
+
+Editable source: assets/source/battle/reference-v2/peris-reference-prototypes.blend
+Rebuild prerequisites: installed project npm dependencies, Blender 4.5 with COLLADA import support, and Python 3 with Pillow.
+Rebuild order: scripts/fetch-unit-references.mjs; scripts/convert-reference-textures.py (Python/Pillow); scripts/blender/cache_reference_imports.py (Blender); scripts/blender/build_reference_prototypes.py (Blender); scripts/prepare-reference-prototypes.mjs.
+Assembly preserves existing source files. Choose an unused --edition name and use the same PERIS_REFERENCE_EDITION when preparing the output.

@@ -1,0 +1,45 @@
+{
+  "sourceNative": "C:\\Users\\alipo\\OneDrive\\Desktop\\mmmm\\Peris\\assets\\source\\battle\\elf-portrait-quality-full-v14\\peris-elf-army.blend",
+  "sourceSha256": "9f66e1038680c48a443b067187a4219b4b6b76705bab16e0c1fbcd0521881f20",
+  "sourceUnchanged": true,
+  "geometryRestWeightsActionsTexturesUnchanged": true,
+  "changes": [
+    {
+      "rig": "line_infantry anatomy rig",
+      "old": null,
+      "new": "line_infantry"
+    },
+    {
+      "rig": "spear_guard anatomy rig",
+      "old": null,
+      "new": "spear_guard"
+    },
+    {
+      "rig": "elite anatomy rig",
+      "old": null,
+      "new": "elite"
+    },
+    {
+      "rig": "archer anatomy rig",
+      "old": null,
+      "new": "archer"
+    },
+    {
+      "rig": "light_cavalry seated rider rig",
+      "old": null,
+      "new": "light_cavalry"
+    },
+    {
+      "rig": "ram siege engineering rig",
+      "old": null,
+      "new": "ram"
+    },
+    {
+      "rig": "light_cavalry great stag anatomy rig",
+      "old": "heavy_cavalry",
+      "new": "light_cavalry"
+    }
+  ],
+  "nativeSha256": "e1a0ab643f8f916edf03d0c0d438d97e5aa0dc04adc5b89e5f50d6bc6e0f23b6",
+  "finishedUnitApproved": false
+}

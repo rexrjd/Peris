@@ -1,0 +1,172 @@
+{
+  "schemaVersion": 1,
+  "status": "Read-only art and construction acceptance targets. Modeling remains paused. New equipment candidates have metadata screening; actual viewer review and source acquisition are separate gates.",
+  "primaryArtDirection": "The existing individual Peris portrait is the target for face, clothing coverage, weapon, palette and pose. External references provide anatomy, surface quality and construction knowledge.",
+  "observedReferenceViews": [
+    {
+      "path": "artifacts/battle-preview/sketchfab-references/orc-tanker-reference.jpg",
+      "observations": [
+        "Head is small relative to huge trapezius/shoulder and arm mass.",
+        "Brow, cheeks, nose, muzzle and teeth form a connected face; exposed muscle and hands are anatomical.",
+        "Iron rim, timber faces, leather wrapping, fur and skin are distinct physical surfaces, each with appropriate wear."
+      ]
+    },
+    {
+      "path": "artifacts/battle-preview/sketchfab-references/bone-knight-side-reference.jpg",
+      "observations": [
+        "Rib/spine gaps remain open in profile; ribs connect into a coherent torso rather than hiding behind a pale human skin.",
+        "Shoulder/forearm plates have shell thickness, edging, straps and layer overlap; skeletal wrist/elbow remain legible.",
+        "Skull/horns share a connected anatomical base, with natural cavity depth and a genuine jaw profile."
+      ]
+    }
+  ],
+  "families": [
+    {
+      "family": "Mounted anatomy and rider contact",
+      "referenceUids": [
+        "8bde6991ce9a4be5994499df9aa0dc89",
+        "527c570af430404ba8458d473db8cc20",
+        "e64dbf0951c84837ad5aeb64962b9e07"
+      ],
+      "acceptance": [
+        "Side/front/rear views show pelvis on a padded seat, thighs actually straddling the mount, bent knees and feet supported at a plausible reachable position.",
+        "The saddle has a structural tree or pad, a continuous girth/harness, fastenings and clear attachment to the mount. A decorative ring or floating slab does not satisfy the seat.",
+        "Reins run from an actual bridle/bit to hands; straps avoid eyes, mouth and breathing space.",
+        "Inspect evaluated idle, walk and attack poses, including mixed rider/mount clips. Contact must remain coherent through motion rather than passing only bind-pose metadata.",
+        "Light scout, ordinary cavalry and heavy cavalry visibly differ in mount armor coverage, saddle load and rider kit while retaining the faction's portrait identity."
+      ]
+    },
+    {
+      "family": "Mammoth and howdah",
+      "referenceUids": [
+        "42bca8b9071e4d80aba7ab73293e94d4",
+        "d083b8023d694f40920411f16d3cc7b7",
+        "0b8cf3da491c4445a4affdc06d53465a"
+      ],
+      "acceptance": [
+        "Distinct mammoth skull dome/shoulder hump, small ears, long trunk, curved tusks and shaggy belly/spine silhouette; anatomy reads from side as well as front.",
+        "Tusks emerge as a paired skull feature and have curved taper, not extra straight brown cones behind ivory replacements.",
+        "A howdah has visible load-bearing rails/deck/seat and a harness distributed over the actual back. The rider's feet sit on the deck and knees bend in a seated chair pose.",
+        "Orc and Pandaren platforms use their own approved iron/ochre versus jade/bronze/red construction; skeletal Undead retains actual bone negative space."
+      ]
+    },
+    {
+      "family": "Goat, boar, wolf and stag",
+      "referenceUids": [
+        "3a4a2513f0624969a0b4be9bd686df91",
+        "fd49d4c49bc545299fc34ae1c96330f0",
+        "bb06f8485c2d4dbdb62292dd117e9dd2",
+        "2efe52a8f95248369131b49de0b51fa1",
+        "56de4df672654ed599777d2980bf0f53",
+        "179aee2e82ec44bfb56c438c2b434337",
+        "4d4412cff0e44c4a9b304ab241828de0"
+      ],
+      "acceptance": [
+        "Wolf shows articulated long forelimbs/hocks, muzzle, shoulder blades and tail balance; boar has compact neck/shoulder mass, short legs, bristles, snout and anatomically rooted tusks.",
+        "Goat scout has true swept horns, beard, withers and cloven feet; stag has branched antlers and a graceful long-legged silhouette.",
+        "Saddle/rider pose changes with actual species and body width. Do not reuse one horse pelvis offset for every quadruped.",
+        "Match the primary portraits' scout mounts: Elf stag, Dwarf goat, Demon wolf. Record any mismatch with earlier roster text explicitly before construction."
+      ]
+    },
+    {
+      "family": "Skeletal mounts",
+      "referenceUids": [
+        "eaca504567604e879b8ab2cf2763025e",
+        "6c546d825f904b0f84cb3afd1feb57a1",
+        "229976b3db4646b39c44e57a7e3d8744"
+      ],
+      "acceptance": [
+        "Horse/mammoth skull, jaw, vertebrae, ribs, pelvis, scapula and limb ends have species-specific forms and real anatomical connections.",
+        "Bone thickness varies by structural purpose, with cavities and tendons/straps where needed. Uniform tubes and spherical gold joints fail the target.",
+        "Profile and rear leave rib/spine gaps visible; required saddle supports can bridge them but must not restore a smooth ivory living-animal torso.",
+        "At runtime inspection distance, the bones retain shape and texture. Hidden joints should use economical tessellation rather than raising formation cost without visible improvement."
+      ]
+    },
+    {
+      "family": "Fitted armor shells and clothes",
+      "referenceUids": [
+        "d0d99472f0524e9dac9a8e8cad147c51",
+        "f7609a6bfdf74ee195f27a7f81ea9bbb",
+        "b98b8f64d935415aab0fe9b70074511f"
+      ],
+      "acceptance": [
+        "Continuous undersuit/cuirass volume follows the actual race anatomy. Layered plates sit over it with intentional seams/overlaps; exposed skin appears only where the individual portrait exposes it.",
+        "Shoulder/neck/forearm/knee plates have deliberate shell thickness, edge bevels, straps and attachment. No floating collars, scattered plate patches, or chest holes caused by unrelated limb weights.",
+        "Armor is fitted against evaluated body surfaces and its animation articulation is reviewed visually. Rigid plate pieces follow the appropriate joint; cloth/hide uses smooth controlled deformation.",
+        "Iron, bronze, leather, wood, fur, jade and cloth have separate surface response and coherent scale. Wear follows exposed edges, friction, creases and impact locations rather than uniform procedural noise.",
+        "Open-faced portraits keep visible racial eyes, brow, muzzle, beard or ears. Historical source helmets and costumes cannot remain merely recolored beneath fantasy addons.",
+        "Closed boots/paw wraps/greaves cover or deliberately expose toes according to the portrait; no accidental retained Greek sandals."
+      ]
+    },
+    {
+      "family": "Axes, hammers and polearms",
+      "referenceUids": [
+        "2813cc7571554ddcb59176cf4204bb3e",
+        "47cea5b6d917479ea057b8e885edf5ad",
+        "a8b42a89274b40f8b01f7a4e21f35047",
+        "588cf2b78fcf43c78e34386c2b34c713",
+        "a1df207a419f4110873ff0ed8ff13f0c"
+      ],
+      "acceptance": [
+        "The selected role weapon is recognizable from silhouette: a cutting axe blade, striking hammer face or long pike/glaive has a distinct geometry and length.",
+        "Visible blade bevel/edge thickness, socket/eye/fastening and grip wrapping support a real construction. A generic black box at the face is not a finished weapon.",
+        "Hands close around a reachable grip, with wrists and elbows supporting the weapon's mass. Guard/idle poses leave the approved face legible.",
+        "Match each individual portrait's ornament, scale, material and handedness before adding generic race motifs. Light roles cannot inherit the heavy elite weapon by default."
+      ]
+    },
+    {
+      "family": "Bows and crossbows",
+      "referenceUids": [
+        "1774a072f1cd45bf9c0875c1a23919a7",
+        "0368b8111f5e4731beb025cd625b48a2",
+        "502ca9f6478c40fd88a2c5a4c2d15438",
+        "9c9bb4a8b7c94bffb3eab4d33ec207aa"
+      ],
+      "acceptance": [
+        "Bow has coherent limb curvature, a taut string, nocking point, hand grip and arrow flight path. Draw motion affects the actual limb/string rig while the grip remains at the hand socket.",
+        "Crossbow has a clear stock, transverse limbs, string, bolt rail, trigger and loading/foot support. It must not read as a thin hand-held bow.",
+        "A supporting hand holds the stock/fore-end and the firing hand reaches the grip/trigger; the projectile aligns with the rail and attack direction.",
+        "Dwarf/Gnome crossbow roles remove incompatible round shields and arrow quivers; carry bolt cases and loading tools matching the portrait.",
+        "Scout/light/heavy bow/crossbow variants differ in dimensions and construction, not just tint."
+      ]
+    },
+    {
+      "family": "Mechanical mount and siege engineering",
+      "referenceUids": [
+        "ab38c06f6881464fa529bef98deb4fb1",
+        "d303ec8dd1524b24acd4e016fd46ba7e",
+        "ac668f7031984e35869ccb6fcb3554c3",
+        "7c48be4c381c491591ff0e7266cd9192"
+      ],
+      "acceptance": [
+        "Gnome boar is constructed from segmented shells around an exposed chassis, with actual hinge/piston leg mechanisms, gears, rivets and cable/hose connections. Metallic paint on a live smooth boar fails.",
+        "Joint centers and piston endpoints form a plausible linkage and remain clear through animation; shell pieces provide clearance at knees, shoulders and neck.",
+        "Catapult/ram have actual beam joints, axles/wheels, lashing/iron straps, trigger/tension/windlass mechanisms and a clear projectile or striking path.",
+        "Gnome Gear Catapult's drive gears and brass axle/wheel assemblies are large enough to read at the game inspection scale; a tiny gear on a stock onager fails.",
+        "Living siege has a unique whole-body form and two-hand boulder support matched to the approved portrait; an anatomical human recolored grey does not make a stone/root giant."
+      ]
+    },
+    {
+      "family": "Horned rhino beast",
+      "referenceUids": [
+        "a915d9179fe6422b9d669a3a0d726b8e",
+        "02bacacbca2e4fa8aae6408b5aa931ee",
+        "dbee4f8f32fd4a96b5a021137dd4e2c6"
+      ],
+      "acceptance": [
+        "The heavy beast has a barrel chest, low massive neck, broad muzzle, rooted horn and real weight-bearing legs/three-toed feet; it must read as its own species rather than a modified horse.",
+        "Demon plates/straps leave anatomical face folds, horn roots, ears, breathing space and leg clearance legible. Heavy saddle structure fits the real shoulder/back width.",
+        "Compare low-resolution gait and high-detail surface studies, then verify full rider/mount motion and portrait identity in actual game inspection."
+      ]
+    }
+  ],
+  "reviewDeliverables": [
+    "Actual reference viewer front, side, rear and three-quarter captures for selected primary studies; visible NoAI/provenance check recorded.",
+    "One portrait-matched finished unit hero candidate with neutral source closeups and actual Three.js unit inspection screenshots before propagating the approach.",
+    "Each role gets an individual art review against its own portrait and multiple views; file generation, clip counts and normalized weights are necessary technical checks but do not constitute artistic approval."
+  ],
+  "unresolvedCoverage": [
+    "Four rhino/spearhead supplement records await exact API confirmation after HTTP 429; cached primary pages are cited and no archive acquisition is claimed.",
+    "Every selected API-only candidate still needs visible public-page badge/provenance review. No model archive has been acquired or inspected."
+  ]
+}

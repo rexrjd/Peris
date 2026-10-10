@@ -17,8 +17,9 @@ test('resource HUD exposes individual storage limits, rates and full-storage sta
     rate: resource => resource === 'food' ? '-12.5' : '+14', onSelect: () => {},
   }));
   assert.equal((html.match(/<button/g) ?? []).length, 4);
-  assert.ok(html.includes('Timber: 5,000 of 5,000 stored, storage full'));
-  assert.ok(html.includes('Food: 3,500 of 10,000 stored; -12.5 per minute'));
+  const numbers = new Intl.NumberFormat();
+  assert.ok(html.includes(`Timber: ${numbers.format(5000)} of ${numbers.format(5000)} stored, storage full`));
+  assert.ok(html.includes(`Food: ${numbers.format(3500)} of ${numbers.format(10000)} stored; -12.5 per minute`));
   assert.ok(html.includes('resource-food shortage'));
   for (const width of ['100%', '50%', '35%', '2%']) assert.ok(html.includes(`width:${width}`));
 });

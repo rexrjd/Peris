@@ -1,0 +1,40 @@
+{
+  "edition": "dwarf-portrait-roster-v27",
+  "faction": "dwarf",
+  "native": {
+    "path": "C:\\Users\\alipo\\OneDrive\\Desktop\\mmmm\\Peris\\assets\\source\\battle\\dwarf-portrait-roster-v27\\peris-dwarf-army.blend",
+    "bytes": 43790645,
+    "sha256": "1f99ad5657969c2cfc870b868d068e9af5b403923fd4c4beeaf13e01c1206e6c"
+  },
+  "raw": {
+    "path": "C:\\Users\\alipo\\OneDrive\\Desktop\\mmmm\\Peris\\assets\\source\\battle\\dwarf-portrait-roster-v27\\exports\\dwarf-roster-runtime.glb",
+    "bytes": 41099056,
+    "sha256": "f2d5df259cbb27d47b2d0260de8f647cac95545dd5a8e1517eb8a887c91a3550"
+  },
+  "technicalGate": "C:\\Users\\alipo\\OneDrive\\Desktop\\mmmm\\Peris\\assets\\source\\battle\\dwarf-portrait-roster-v27\\technical-gate.json",
+  "runtimeContact": "C:\\Users\\alipo\\OneDrive\\Desktop\\mmmm\\Peris\\assets\\source\\battle\\dwarf-portrait-roster-v27\\runtime-contact.json",
+  "exactSavedBaselineExport": "C:\\Users\\alipo\\OneDrive\\Desktop\\mmmm\\Peris\\assets\\source\\battle\\dwarf-portrait-roster-v27\\exact-export.json",
+  "sourceAndChangedOperations": "C:\\Users\\alipo\\OneDrive\\Desktop\\mmmm\\Peris\\assets\\source\\battle\\dwarf-portrait-roster-v27\\provenance.json",
+  "captures": "C:\\Users\\alipo\\OneDrive\\Desktop\\mmmm\\Peris\\artifacts\\battle-preview\\dwarf-gnome-quality-v1\\dwarf-v27-final-captures\\capture-provenance.json",
+  "allNineActualHeroSheet": "C:\\Users\\alipo\\OneDrive\\Desktop\\mmmm\\Peris\\artifacts\\battle-preview\\dwarf-gnome-quality-v1\\dwarf-v27-final-captures\\all-nine-actual-native-heroes.png",
+  "roleCoverage": [
+    "line_infantry",
+    "spear_guard",
+    "elite",
+    "archer",
+    "scout",
+    "light_cavalry",
+    "heavy_cavalry",
+    "ram",
+    "catapult"
+  ],
+  "limits": [
+    "Actual native screenshots and CPU exported support samples. Root must review exact optimized WebGL appearance and contacts separately.",
+    "Static detailed heads retain their documented licensed source anatomy; speech and expression animation are not authored.",
+    "Source motion style and shield torso/hip clearance are visually reviewed samples, not full physical collision simulation; attacking legs and holding arms are not included in a full shield collision claim.",
+    "Archer retains an articulated bow rather than the crossbow in the painted roster picture.",
+    "Dwarf scout mount retains horse anatomy rather than a goat; heavy boar has inherited low polygon anatomy. The new mechanical catapult intentionally supersedes the old painted rock giant."
+  ],
+  "runtimeApproved": false,
+  "finishedUnitApproved": false
+}

@@ -1,0 +1,12 @@
+{
+  "sourceNative": "C:\\Users\\alipo\\OneDrive\\Desktop\\mmmm\\Peris\\assets\\source\\battle\\human-persian-royal-armor-v2\\peris-persian-army.blend",
+  "sourceSha256": "04f4fb29697023fed469842509be03270297349204fe32869250201244b46397",
+  "sourceUnchanged": true,
+  "coveredHorseFacesRemoved": 616,
+  "hoofContactRigAndActionsRetained": true,
+  "legacyTackRetained": false,
+  "legacyTackRemovedUnderNewBarding": true,
+  "newArmorShellUnchanged": true,
+  "nativeSha256": "bf046ddf8f4a3118e25057e636a725d725053c4268d005bd1c2e6e26e52649d3",
+  "finishedUnitApproved": false
+}

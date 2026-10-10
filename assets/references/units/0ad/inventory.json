@@ -1,0 +1,857 @@
+{
+  "revision": "61a3b9507d974084e6badb88a0826bd89a6d5b8b",
+  "license": "CC-BY-SA-3.0",
+  "author": "Wildfire Games",
+  "authorUrl": "https://wildfiregames.com/",
+  "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
+  "purpose": "Source study and adapted Peris prototypes. Original assets and adaptations retain CC BY-SA 3.0.",
+  "files": [
+    {
+      "path": "LICENSE.txt",
+      "bytes": 1426,
+      "sha256": "ef98babd771c206032e005f3d440a1e610df409d9a9191f03e64deaa4abefbd9",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/LICENSE.txt"
+    },
+    {
+      "path": "actors/units/romans/infantry_swordsman_c4.xml",
+      "bytes": 1737,
+      "sha256": "cc8c2e24b1e7eeb6e74ae7b1582278758921ccec59f85991ba05451a50ac34dd",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/actors/units/romans/infantry_swordsman_c4.xml"
+    },
+    {
+      "path": "actors/units/romans/cavalry_spearman_e_m.xml",
+      "bytes": 1753,
+      "sha256": "74cf65ac82c4d9ad5bbc511c3c14f95586d5580a152a10be893c7f1d57df289a",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/actors/units/romans/cavalry_spearman_e_m.xml"
+    },
+    {
+      "path": "actors/units/romans/cavalry_spearman_e_r.xml",
+      "bytes": 1972,
+      "sha256": "e82c44815ee1c76be8346c2b5d1359de41dd6e226a32b7d0eb24696ea68738dc",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/actors/units/romans/cavalry_spearman_e_r.xml"
+    },
+    {
+      "path": "meshes/skeletal/elephant_asian_male.dae",
+      "bytes": 306639,
+      "sha256": "b9bc4fb28214c694ac932165ea2e724c77e56e413b57adb0b9de16fc303bd32c",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/meshes/skeletal/elephant_asian_male.dae"
+    },
+    {
+      "path": "meshes/props/elephant/howdah_01.dae",
+      "bytes": 53518,
+      "sha256": "41baaab5a7146d6b09e7662ea21cabeed55f17105fad26a52b3d150179305ede",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/meshes/props/elephant/howdah_01.dae"
+    },
+    {
+      "path": "meshes/structural/rome_ram.dae",
+      "bytes": 273984,
+      "sha256": "a0ed319b93cf370d8f6b43d35e55ef1a130d3ea0bf6b6c85506b7b951a05466f",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/meshes/structural/rome_ram.dae"
+    },
+    {
+      "path": "meshes/structural/siege_onager.dae",
+      "bytes": 418839,
+      "sha256": "614a50ab4bc5bcf08253fb4a988a42497e560eef9ea7acdbc30ce5f62ddc3f9b",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/meshes/structural/siege_onager.dae"
+    },
+    {
+      "path": "meshes/skeletal/new/m_armor_tunic_long.dae",
+      "bytes": 233278,
+      "sha256": "5182f7b92230eb43c38c3e747e6c3f0f15075358e28a97ddbc815677dfd0dd92",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/meshes/skeletal/new/m_armor_tunic_long.dae"
+    },
+    {
+      "path": "actors/props/units/heads/new/rome_head_veteran.xml",
+      "bytes": 1235,
+      "sha256": "97611f6ab81514fc56a6ba960a68b243987d8ac501f88642092a70045812a04e",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/actors/props/units/heads/new/rome_head_veteran.xml"
+    },
+    {
+      "path": "actors/props/units/helmets/rome_gallic_type_h_cent_transversal.xml",
+      "bytes": 1130,
+      "sha256": "d674110f12c3e1f63f84d18d7f4b0747ff1630beed13a27cf857fe04b9726c38",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/actors/props/units/helmets/rome_gallic_type_h_cent_transversal.xml"
+    },
+    {
+      "path": "actors/props/units/weapons/sheath_gladius_e.xml",
+      "bytes": 963,
+      "sha256": "6e72670973f16460d6370a44ce669fd49b059a580f7d62653597f8b0a7c5e5f3",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/actors/props/units/weapons/sheath_gladius_e.xml"
+    },
+    {
+      "path": "actors/props/units/weapons/gladius.xml",
+      "bytes": 1122,
+      "sha256": "c573b7e508048c889b9bb3d538a46c37e4d1091d33fa57a839d890ab1a157313",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/actors/props/units/weapons/gladius.xml"
+    },
+    {
+      "path": "actors/props/units/shields/scutum_rome_marian_04.xml",
+      "bytes": 752,
+      "sha256": "f7221cd4b7e6c81ac807d7bf202aff6c0f5d91c9d60a098002a6c6d4d8ae2fb1",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/actors/props/units/shields/scutum_rome_marian_04.xml"
+    },
+    {
+      "path": "actors/props/units/capes/cape_long_player.xml",
+      "bytes": 6135,
+      "sha256": "aecc2c4d8201f462333c79347a9b84d7f1387a6adcdc64280c0f21600bfc6591",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/actors/props/units/capes/cape_long_player.xml"
+    },
+    {
+      "path": "variants/biped/base_swordsman_shield_ready.xml",
+      "bytes": 2106,
+      "sha256": "6ff33915db76ed16ce434e609b6b6b3a9ef9f3a7a7e9f032be34e25493a07f74",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/variants/biped/base_swordsman_shield_ready.xml"
+    },
+    {
+      "path": "textures/skins/skeletal/imp/scale_centurion_01_01.dds",
+      "bytes": 87536,
+      "sha256": "7aa029f4350c9e9bbfccfc8d9dd2ccb22867d8aea33d3dcf8610389f5fe09d54",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/textures/skins/skeletal/imp/scale_centurion_01_01.dds"
+    },
+    {
+      "path": "textures/skins/skeletal/imp/scale_centurion_01_spec.png",
+      "bytes": 106711,
+      "sha256": "cab5f1f5ca19b8249290c5e6436b774c0cba118d5adef35091e0da6530237fb4",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/textures/skins/skeletal/imp/scale_centurion_01_spec.png"
+    },
+    {
+      "path": "textures/skins/default_norm.png",
+      "bytes": 69,
+      "sha256": "b1ba25ca729a28c798a99a1a0bcf9310d0994a55b4f9d1a36f163fb31676cecf",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/textures/skins/default_norm.png"
+    },
+    {
+      "path": "meshes/skeletal/horse_lusitano.dae",
+      "bytes": 324900,
+      "sha256": "e8baa846e2886f930b5330405e488f4af692a0659b53675eb08bd29f3845bcde",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/meshes/skeletal/horse_lusitano.dae"
+    },
+    {
+      "path": "actors/props/horse/chest_colorband_01.xml",
+      "bytes": 1482,
+      "sha256": "f2c6b89cae7ca8790fd852db9dfa5116560a3a0504309e82596c785638dc3966",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/actors/props/horse/chest_colorband_01.xml"
+    },
+    {
+      "path": "actors/props/horse/cav_blanket_rome.xml",
+      "bytes": 1627,
+      "sha256": "47c6295dbb57b9ccee8eea48408233799432ef9e89fb2fa0acac3a39af91a3c1",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/actors/props/horse/cav_blanket_rome.xml"
+    },
+    {
+      "path": "actors/props/horse/cav_rein_leather.xml",
+      "bytes": 1665,
+      "sha256": "089a542f49dc674ee5b877aee329e6c8c3efd9c9174aafc7b3fadfdf67dfe5bc",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/actors/props/horse/cav_rein_leather.xml"
+    },
+    {
+      "path": "variants/quadraped/horse/black.xml",
+      "bytes": 394,
+      "sha256": "8c7bde5b767c2d42cd81644b07c662f289d27f39d8681d789a9fe8d470710238",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/variants/quadraped/horse/black.xml"
+    },
+    {
+      "path": "variants/quadraped/base_horse_trot.xml",
+      "bytes": 1761,
+      "sha256": "c8dc9bc76ea09e6ea27c02b69851f5d2ebb02343b4adcb5eb1d398f98cf9dca9",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/variants/quadraped/base_horse_trot.xml"
+    },
+    {
+      "path": "variants/quadraped/base_horse_death.xml",
+      "bytes": 371,
+      "sha256": "e7571cc968f0ae20c70167f7c39cd9f3c3fba91b486f1df24c44bd4da5fe66f1",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/variants/quadraped/base_horse_death.xml"
+    },
+    {
+      "path": "variants/quadraped/base_horse_run.xml",
+      "bytes": 258,
+      "sha256": "894f67c6dfe6e4bd39bb63686ec3960d00df43875cb15964f5cdaf5ca949d10f",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/variants/quadraped/base_horse_run.xml"
+    },
+    {
+      "path": "variants/quadraped/base_horse_gather_meat.xml",
+      "bytes": 258,
+      "sha256": "17eab082a883a153e06e2526100058673cd947d472171b0c4547de353dd72931",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/variants/quadraped/base_horse_gather_meat.xml"
+    },
+    {
+      "path": "meshes/skeletal/new/m_armor_tunic_short.dae",
+      "bytes": 304317,
+      "sha256": "9c8164ab958933dd0116c4154d18bb11640c321364eb3c7794c99908abc15319",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/meshes/skeletal/new/m_armor_tunic_short.dae"
+    },
+    {
+      "path": "actors/props/units/shields/rome_parma_e.xml",
+      "bytes": 1267,
+      "sha256": "d91612da7b957c8114204280b39577ebb86866b39b2d2f9e16ad1f92b55a6244",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/actors/props/units/shields/rome_parma_e.xml"
+    },
+    {
+      "path": "actors/props/units/weapons/spear_lance_cavalry_reverse.xml",
+      "bytes": 459,
+      "sha256": "73b06b6422d276558e8f78e4d89847035f0edea507557475cf2f5206050253fb",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/actors/props/units/weapons/spear_lance_cavalry_reverse.xml"
+    },
+    {
+      "path": "actors/props/units/capes/rider/cape_long_player.xml",
+      "bytes": 4890,
+      "sha256": "15a27ce518afb912e2358092de6ad6179a23914fe7b21faf3e4f9de321539440",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/actors/props/units/capes/rider/cape_long_player.xml"
+    },
+    {
+      "path": "actors/props/units/helmets/hele_boeotian_g_crest.xml",
+      "bytes": 1053,
+      "sha256": "29efa07005bdcaf50ca5154a18a4a4e92cbd6cac41f236a7a216cad163f3bf01",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/actors/props/units/helmets/hele_boeotian_g_crest.xml"
+    },
+    {
+      "path": "variants/biped/rider/cavalry/base_spearman_relax_shield_01.xml",
+      "bytes": 2053,
+      "sha256": "e767ac08a95b81a685356533cbe6a88a3b5fd7b59fecca5a1e29ebc93a130672",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/variants/biped/rider/cavalry/base_spearman_relax_shield_01.xml"
+    },
+    {
+      "path": "textures/skins/skeletal/rome/cuirass_01_01.png",
+      "bytes": 109051,
+      "sha256": "df5039453b0569890c6d7c066f9e62cbba7edf288d7a405b8896bdc5e3ba7f6c",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/textures/skins/skeletal/rome/cuirass_01_01.png"
+    },
+    {
+      "path": "textures/skins/skeletal/hele/cuirass_02_spec.png",
+      "bytes": 43297,
+      "sha256": "0e87894b69d02447283c8f7327f386456a9b0efcd98d28fdf465fe3663696722",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/textures/skins/skeletal/hele/cuirass_02_spec.png"
+    },
+    {
+      "path": "meshes/props/new/dude_head.dae",
+      "bytes": 24596,
+      "sha256": "cd9b853b175feb8d89ada520ca5079edfa2de8e9aa20292c1d0ad3366740795e",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/meshes/props/new/dude_head.dae"
+    },
+    {
+      "path": "textures/skins/props/head/rome_veteran.dds",
+      "bytes": 5616,
+      "sha256": "aaac9e02a23c73094e9ec71497e8f178481867174234ab0de9e6a9dee63190d6",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/textures/skins/props/head/rome_veteran.dds"
+    },
+    {
+      "path": "textures/skins/props/head/rome_veteran_bloodied.dds",
+      "bytes": 5616,
+      "sha256": "9e31ebfff0336009406f4b1490aa59b86344cd3353355ccfa2ba4c39385b93f4",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/textures/skins/props/head/rome_veteran_bloodied.dds"
+    },
+    {
+      "path": "textures/skins/null_black.dds",
+      "bytes": 152,
+      "sha256": "1b2fefc88f9523c56af637318150f92722e88bf93f3876d38b6c039114b21c7a",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/textures/skins/null_black.dds"
+    },
+    {
+      "path": "meshes/props/helmet/rome_gallic_type_h_01.dae",
+      "bytes": 83859,
+      "sha256": "53a9ad4108f3b6499a656ed4d06ea76b7b8d6cea630e8ea0df3be3e3b8407c8f",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/meshes/props/helmet/rome_gallic_type_h_01.dae"
+    },
+    {
+      "path": "actors/props/units/helmets/props/rome_crest_bronze_02.xml",
+      "bytes": 763,
+      "sha256": "bbebb6fe3f65d59b21a38297be44e6bbe28eb412cb9e748a1568f0ad42b96a0e",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/actors/props/units/helmets/props/rome_crest_bronze_02.xml"
+    },
+    {
+      "path": "textures/skins/props/helmet/rome_gallic_type_h_01_norm.png",
+      "bytes": 67082,
+      "sha256": "5bbf499089c3a835aaab38ba6aec20e11b91de90da4649828afbdcf2915ea50e",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/textures/skins/props/helmet/rome_gallic_type_h_01_norm.png"
+    },
+    {
+      "path": "textures/skins/props/helmet/rome_gallic_type_h_01_spec.png",
+      "bytes": 81292,
+      "sha256": "0bfab9d2aca87c80c11278c1fb829f7ce4f2c70102a6d4eaf28fb46a690c2790",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/textures/skins/props/helmet/rome_gallic_type_h_01_spec.png"
+    },
+    {
+      "path": "textures/skins/props/helmet/rome_gallic_type_h_01.png",
+      "bytes": 107541,
+      "sha256": "ef9625ce1f9c312fd3c0d62de857cbaffb04c71d676f7419d4bf0539753df359",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/textures/skins/props/helmet/rome_gallic_type_h_01.png"
+    },
+    {
+      "path": "meshes/props/weapons/sheath_gladius_01.dae",
+      "bytes": 47962,
+      "sha256": "b939d39e3792e1a17731a4b88a6680e2c1a99f6aaa0d3a2cf17984bda7dea5f2",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/meshes/props/weapons/sheath_gladius_01.dae"
+    },
+    {
+      "path": "textures/skins/props/sheaths/gladius_norm.png",
+      "bytes": 27645,
+      "sha256": "edb32173a944435c04c0b5fd965dbd79781242c21d998380c15470da07e9ca8c",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/textures/skins/props/sheaths/gladius_norm.png"
+    },
+    {
+      "path": "textures/skins/props/sheaths/gladius_spec.png",
+      "bytes": 31635,
+      "sha256": "7b5ddbd3ac8c8ecb748e1f2ca45b74eb4edbe017d370647815445c8c5382f02c",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/textures/skins/props/sheaths/gladius_spec.png"
+    },
+    {
+      "path": "textures/skins/props/sheaths/gladius_red.png",
+      "bytes": 28726,
+      "sha256": "449e062bda683dd799a84c186925c5c1c2523ecf26fa19c4d7b0eff47a9a7905",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/textures/skins/props/sheaths/gladius_red.png"
+    },
+    {
+      "path": "meshes/props/weapons/gladius_03.dae",
+      "bytes": 7605,
+      "sha256": "4a4d58e497eb2cda98f7ec079cdee00b9603fe67e0b34c6764dc0bd8f3455288",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/meshes/props/weapons/gladius_03.dae"
+    },
+    {
+      "path": "textures/skins/props/prop_weap.dds",
+      "bytes": 87536,
+      "sha256": "761a9987655353d96cf5093d3d713a62dca98f5f605c8fef52311eac0b3a1bde",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/textures/skins/props/prop_weap.dds"
+    },
+    {
+      "path": "textures/skins/null_white.dds",
+      "bytes": 152,
+      "sha256": "8ce14a1e0f8acdde95f4982a60d784e0595b3e1efda2d28af7740ead3b1002ec",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/textures/skins/null_white.dds"
+    },
+    {
+      "path": "actors/props/units/shields/props/scutum_rome_boss_03_iron.xml",
+      "bytes": 644,
+      "sha256": "856a7fbcfe0b8141b09f6710a26f5cfeaa9dedb8baae1ecc6087e1f9faf5d0ec",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/actors/props/units/shields/props/scutum_rome_boss_03_iron.xml"
+    },
+    {
+      "path": "variants/shields/scutum_rome_imp_marian.xml",
+      "bytes": 404,
+      "sha256": "cce2257032685261c094cf4a566daf7c05341a805509f45c15ace45835364600",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/variants/shields/scutum_rome_imp_marian.xml"
+    },
+    {
+      "path": "meshes/props/new/capes/cape_hd_hoplite.dae",
+      "bytes": 115634,
+      "sha256": "baca6e0877ab1e971e5fa9d6b5baf3bee4311df19a7e33ee95e8f7d2db4c0f1b",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/meshes/props/new/capes/cape_hd_hoplite.dae"
+    },
+    {
+      "path": "variants/biped/base_axeman_shield_fast_ready.xml",
+      "bytes": 1806,
+      "sha256": "6cb0a0a8d6f25bebfd423a6723d1e8336f2938b3cf4a2d4f16a4df554ccda9c4",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/variants/biped/base_axeman_shield_fast_ready.xml"
+    },
+    {
+      "path": "textures/skins/props/cape_hd.dds",
+      "bytes": 43856,
+      "sha256": "015695f17334b5439bdbf85ab19a15ab67c29f75f8030446aaaa23efc815d373",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/textures/skins/props/cape_hd.dds"
+    },
+    {
+      "path": "animation/biped/infantry/swordsman/idle_ready_shield_01.dae",
+      "bytes": 1419599,
+      "sha256": "0af2b023ccb622db0e361c89ca4773eae0efcb275b4de7645e00bf071ddd11de",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/animation/biped/infantry/swordsman/idle_ready_shield_01.dae"
+    },
+    {
+      "path": "animation/biped/infantry/swordsman/jog_ready_shield.dae",
+      "bytes": 872946,
+      "sha256": "06600d38706f13cd791bf93a55b0b1b714ff3275365481138140bf0019dd0c8d",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/animation/biped/infantry/swordsman/jog_ready_shield.dae"
+    },
+    {
+      "path": "animation/biped/infantry/swordsman/attack_melee_shield_01.dae",
+      "bytes": 914509,
+      "sha256": "752ba49975601518ce9c46673e2adfa014e234deebba6718b521da272320a87a",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/animation/biped/infantry/swordsman/attack_melee_shield_01.dae"
+    },
+    {
+      "path": "meshes/props/horse/chest_colorband_01.dae",
+      "bytes": 88032,
+      "sha256": "e97f78c7e24e629d7b9dd78820f6021060f1a3b1bcf204b43196f45989c71502",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/meshes/props/horse/chest_colorband_01.dae"
+    },
+    {
+      "path": "variants/quadraped/base_horse_javelin_fast.xml",
+      "bytes": 1702,
+      "sha256": "0798d0e187699d8445dbb12aecff9a36ffcb0a16b24d1bc7a1a7183685d1f8d7",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/variants/quadraped/base_horse_javelin_fast.xml"
+    },
+    {
+      "path": "textures/skins/props/horse/peytral_bronze.png",
+      "bytes": 49671,
+      "sha256": "f163f172c7214e93d7469ee7c012e34ab0a7f65b13e50c55cdd5ae87e0cdd090",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/textures/skins/props/horse/peytral_bronze.png"
+    },
+    {
+      "path": "textures/skins/props/horse/peytral_spec.png",
+      "bytes": 23535,
+      "sha256": "9c29abeaf47b9a476be66518637d5dc77e11a109d6efe5fca21c02dc7333acfb",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/textures/skins/props/horse/peytral_spec.png"
+    },
+    {
+      "path": "textures/skins/props/horse/peytral_norm.png",
+      "bytes": 48660,
+      "sha256": "a726b2830764651f85d3ed9824c233f2cf87745e3ed123935a1d8155e13080fe",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/textures/skins/props/horse/peytral_norm.png"
+    },
+    {
+      "path": "variants/quadraped/horse/props/blanket_rome.xml",
+      "bytes": 219,
+      "sha256": "66030c352c946bf2cfd77abb08015ac39852c36783db409ac03a0c3ef7e452ed",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/variants/quadraped/horse/props/blanket_rome.xml"
+    },
+    {
+      "path": "meshes/props/horse/rein_01.dae",
+      "bytes": 116317,
+      "sha256": "13ad1621d63d8a7ea01f9208df2b1cb821eaa8f5283917354b01e4b1cd5dd8a1",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/meshes/props/horse/rein_01.dae"
+    },
+    {
+      "path": "textures/skins/props/horse/head_straps.png",
+      "bytes": 141008,
+      "sha256": "cd0204b5828c164ae324ac4397db32ded6b21035b7af16a4a74781a32d96ebc6",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/textures/skins/props/horse/head_straps.png"
+    },
+    {
+      "path": "textures/skins/props/horse/head_straps_norm.png",
+      "bytes": 116052,
+      "sha256": "21214d7613d06c25838379747eb6a665f606a1c9de010be4ad0fde6c590b915b",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/textures/skins/props/horse/head_straps_norm.png"
+    },
+    {
+      "path": "textures/skins/props/horse/head_straps_spec.png",
+      "bytes": 48538,
+      "sha256": "60b4e7485490a7c22e2ae67204d801f535af6c9601a3d090afb9a0550d50ce13",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/textures/skins/props/horse/head_straps_spec.png"
+    },
+    {
+      "path": "actors/props/horse/horse_hair_mane_gray_black.xml",
+      "bytes": 1409,
+      "sha256": "b805d378c05e47d0c89193bf0e7d4f20efd8ac81680dee2f2cd92e1c0e9c5568",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/actors/props/horse/horse_hair_mane_gray_black.xml"
+    },
+    {
+      "path": "actors/props/horse/horse_hair_tail_gray_black.xml",
+      "bytes": 1425,
+      "sha256": "9fb4f618b425d7c50ec5f3559d0b0b6845cd1cd8c8cb6db6600e476a7f10b55b",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/actors/props/horse/horse_hair_tail_gray_black.xml"
+    },
+    {
+      "path": "variants/quadraped/horse/base.xml",
+      "bytes": 244,
+      "sha256": "19402f08e2abe7c32ad402dca0a67c10c49da22eda9a5c7404d2ea548457c5d7",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/variants/quadraped/horse/base.xml"
+    },
+    {
+      "path": "textures/skins/skeletal/horse_black.png",
+      "bytes": 53172,
+      "sha256": "75a37dfb093e47cda8908e0efe94ab94b850107db8dc77feb41adbc4eb67f91c",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/textures/skins/skeletal/horse_black.png"
+    },
+    {
+      "path": "animation/quadraped/horse_attack_01.dae",
+      "bytes": 997094,
+      "sha256": "1a1d51faebd9dac240beb560dec1ffe82ca08d902e95baaa7bf5ae964824ff6d",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/animation/quadraped/horse_attack_01.dae"
+    },
+    {
+      "path": "animation/quadraped/horse_idle_01.dae",
+      "bytes": 1224960,
+      "sha256": "2e3fdacf89b2888c616971627a7dc24eaae47bda966bf4de76d8d13bd5b620bd",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/animation/quadraped/horse_idle_01.dae"
+    },
+    {
+      "path": "animation/quadraped/horse_trot.dae",
+      "bytes": 750906,
+      "sha256": "b32b4e9c4588ac4c51d1e1e94d499723bd4c4d9a3ee794511a87367f3bf2e048",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/animation/quadraped/horse_trot.dae"
+    },
+    {
+      "path": "actors/props/units/blood_01.xml",
+      "bytes": 2187,
+      "sha256": "656f50a90ee8b9c19e4ccad0574f61d4fdee6c30c7c64b8e08b1d8654e482a35",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/actors/props/units/blood_01.xml"
+    },
+    {
+      "path": "actors/particle/dust_cav.xml",
+      "bytes": 169,
+      "sha256": "68d1366600168cf9003d65e302082ea8702e05bd0268c6edd20137b3bc18dc10",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/actors/particle/dust_cav.xml"
+    },
+    {
+      "path": "meshes/props/shield/round_s_f.dae",
+      "bytes": 4629,
+      "sha256": "f24c5598004c6cfaa750a976e56cf3676e72ff7419a713f61406c77988a55c4c",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/meshes/props/shield/round_s_f.dae"
+    },
+    {
+      "path": "actors/props/units/shields/round_back.xml",
+      "bytes": 477,
+      "sha256": "a9a4dc73c35223318a59767e73f4226fd69f525f0d5f10473d95ca9c96edaeb0",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/actors/props/units/shields/round_back.xml"
+    },
+    {
+      "path": "textures/skins/props/shield/rome_parma_c.dds",
+      "bytes": 22000,
+      "sha256": "77ba5124f338526c010a9be4d000102ce649771d7bdf31797c5dd8c147eb7785",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/textures/skins/props/shield/rome_parma_c.dds"
+    },
+    {
+      "path": "meshes/props/spear_lance_cavalry_reverse.dae",
+      "bytes": 12919,
+      "sha256": "3d19977dc338e237635160e9171296f879e07c5b738dc1e7087f1b6cf55c4995",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/meshes/props/spear_lance_cavalry_reverse.dae"
+    },
+    {
+      "path": "variants/biped/rider/cavalry/base_spearman_2h_fast_ready.xml",
+      "bytes": 1985,
+      "sha256": "82e0c76f3e0a12d98955585e7989e81f13201d4a3e912c2e173fa32ddfb4b510",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/variants/biped/rider/cavalry/base_spearman_2h_fast_ready.xml"
+    },
+    {
+      "path": "meshes/props/helmet/hele_boeotian_a.dae",
+      "bytes": 29742,
+      "sha256": "33bb75782f9ab9a407131c5df6683d5e4cc1de6e8a2912f56f3f6e3acccbaee4",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/meshes/props/helmet/hele_boeotian_a.dae"
+    },
+    {
+      "path": "actors/props/units/helmets/props/hele_highcrest_bronze_01.xml",
+      "bytes": 1138,
+      "sha256": "ec3eb289b5c8e7037cced913f250259b2eefb1471d581ef64a5d394af2295540",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/actors/props/units/helmets/props/hele_highcrest_bronze_01.xml"
+    },
+    {
+      "path": "textures/skins/props/helmet/hele_boeotian_01_gold.png",
+      "bytes": 87955,
+      "sha256": "2507dc8dd4243c4be2ac585556a6b21bdf383a0c4125c014db5475ed1ec4a27d",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/textures/skins/props/helmet/hele_boeotian_01_gold.png"
+    },
+    {
+      "path": "textures/skins/props/helmet/hele_boeotian_01_norm.png",
+      "bytes": 27525,
+      "sha256": "c4b5aae49f9bac30b4902e4b880457d1afad421ff43000df409ebd44b3371469",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/textures/skins/props/helmet/hele_boeotian_01_norm.png"
+    },
+    {
+      "path": "textures/skins/props/helmet/hele_boeotian_01_spec.png",
+      "bytes": 65376,
+      "sha256": "fef516727362ef48523240524a476d58f4510f3b625c1745501cacbddd53c895",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/textures/skins/props/helmet/hele_boeotian_01_spec.png"
+    },
+    {
+      "path": "animation/biped/rider/cavalry/spearman/attack_melee_shield_01.dae",
+      "bytes": 1021691,
+      "sha256": "f350cd45174e3197631195bcae53dd01c80ebb078c3788dd44510d541d2efeec",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/animation/biped/rider/cavalry/spearman/attack_melee_shield_01.dae"
+    },
+    {
+      "path": "animation/biped/rider/cavalry/generic/idle_shield_relax_01.dae",
+      "bytes": 1308997,
+      "sha256": "58c4d7caf3b2296aba64af39fc405a1daebd17af3d1af1aa5cd6038b998902f3",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/animation/biped/rider/cavalry/generic/idle_shield_relax_01.dae"
+    },
+    {
+      "path": "animation/biped/rider/cavalry/generic/trot_shield_relax.dae",
+      "bytes": 731520,
+      "sha256": "32db0c92306637393baa6fc2d3e5dfc90d569b2693f7ed98df8b47a6922b8212",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/animation/biped/rider/cavalry/generic/trot_shield_relax.dae"
+    },
+    {
+      "path": "meshes/props/helmet/props/hele_crest_f.dae",
+      "bytes": 34865,
+      "sha256": "4698a0c976d13e9a776d0c2dd4d7e161ea9eda227b91f9611374717dd2fffbd2",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/meshes/props/helmet/props/hele_crest_f.dae"
+    },
+    {
+      "path": "actors/props/units/helmets/props/hele_crest_hair_05.xml",
+      "bytes": 660,
+      "sha256": "2d1ee8033697e26de856bb9a4466abb579f27a14bfe1bdc7f40589926096aec3",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/actors/props/units/helmets/props/hele_crest_hair_05.xml"
+    },
+    {
+      "path": "textures/skins/props/helmet/crest_02_norm.png",
+      "bytes": 17646,
+      "sha256": "069fdda95e1adf873e650537752463a5e713b2d2f5fb80c6e2da55b89cca1f5c",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/textures/skins/props/helmet/crest_02_norm.png"
+    },
+    {
+      "path": "textures/skins/props/helmet/crest_01_bronze_spec.png",
+      "bytes": 133848,
+      "sha256": "67abf397c7e7aa0c80fbb9bd31c47f43e65ae8fef67a49e1063ab5512521f1cf",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/textures/skins/props/helmet/crest_01_bronze_spec.png"
+    },
+    {
+      "path": "textures/skins/props/helmet/crest_05_bronze.png",
+      "bytes": 111705,
+      "sha256": "0071950269b3ffe6c8fc11e69b29262c972dd432e8a412f9d96cde1fbe214ee8",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/textures/skins/props/helmet/crest_05_bronze.png"
+    },
+    {
+      "path": "meshes/props/shield/props/scutum_boss_e.dae",
+      "bytes": 16267,
+      "sha256": "c3c843e37c28de3653678ac8a4751b4120c6396c8f78086d60b27c5a78278ae5",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/meshes/props/shield/props/scutum_boss_e.dae"
+    },
+    {
+      "path": "textures/skins/props/shield/scutum_rome_boss_02_iron.png",
+      "bytes": 47619,
+      "sha256": "c4369142ff68b9ba107ae98f84295a1803b8958e63a6e60dde30ad59556396d5",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/textures/skins/props/shield/scutum_rome_boss_02_iron.png"
+    },
+    {
+      "path": "textures/skins/props/shield/scutum_rome_boss_02_spec.png",
+      "bytes": 18834,
+      "sha256": "c9506064fc7fdf4c35f3d89ebda2a95547de7f3526b6590136821e63ed7c2c2d",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/textures/skins/props/shield/scutum_rome_boss_02_spec.png"
+    },
+    {
+      "path": "textures/skins/props/shield/scutum_rome_boss_02_norm.png",
+      "bytes": 47898,
+      "sha256": "b2b09f6f2e8294eed25ceaa89f409812014949e6a0fdc9029b033097b35c05ec",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/textures/skins/props/shield/scutum_rome_boss_02_norm.png"
+    },
+    {
+      "path": "variants/shields/scutum_rome_imp_base_01.xml",
+      "bytes": 424,
+      "sha256": "46e8aa3a8eef68a8be6d9e634e9cb841d26aedf3e27de3a13539e6d08d9943fe",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/variants/shields/scutum_rome_imp_base_01.xml"
+    },
+    {
+      "path": "textures/skins/props/shield/scutum_rome_imp_marian.png",
+      "bytes": 306495,
+      "sha256": "53e907608857870eb8a239b66a1f85644eb57701abebda6eeb9cde8f7309e764",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/textures/skins/props/shield/scutum_rome_imp_marian.png"
+    },
+    {
+      "path": "textures/skins/props/shield/scutum_rome_imp_marian_spec.png",
+      "bytes": 86077,
+      "sha256": "cb8eae1d42a242303ecd771d5753cc2f307e272a9744b67955798292422348f0",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/textures/skins/props/shield/scutum_rome_imp_marian_spec.png"
+    },
+    {
+      "path": "textures/skins/props/shield/scutum_rome_imp_marian_norm.png",
+      "bytes": 202589,
+      "sha256": "860270906f283578ce3978e2e3ccf6ddec816b51321b3315f572ed966f9c6027",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/textures/skins/props/shield/scutum_rome_imp_marian_norm.png"
+    },
+    {
+      "path": "animation/biped/infantry/swordsman/jog_relax_shield.dae",
+      "bytes": 889375,
+      "sha256": "d92ddebb54ece4ff42f32574f61206d8d7e3e5a8c7574bef6f6e1f3f1cd24fa1",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/animation/biped/infantry/swordsman/jog_relax_shield.dae"
+    },
+    {
+      "path": "animation/biped/infantry/axe/attack_melee_shield_01.dae",
+      "bytes": 328648,
+      "sha256": "ad20b12a8c0f192e876b2570544f979586c3ae58ce7fa5736f5620a22354d2f3",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/animation/biped/infantry/axe/attack_melee_shield_01.dae"
+    },
+    {
+      "path": "animation/quadraped/horse_pace.dae",
+      "bytes": 767877,
+      "sha256": "936280b17935b3d9bff10dcecbe59561473231779f82eb314787542fe0336d39",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/animation/quadraped/horse_pace.dae"
+    },
+    {
+      "path": "meshes/props/horse/blanket.dae",
+      "bytes": 94009,
+      "sha256": "0c9f6fef55af6d51ea1c64c8c5f50b618542972e655e5c366c15d90c6c0b0702",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/meshes/props/horse/blanket.dae"
+    },
+    {
+      "path": "textures/skins/props/horse/blanket_rome.png",
+      "bytes": 777624,
+      "sha256": "1f5bc2b49d544cf37ecbc5d76f0ef0fdf425833c40dd56cb37c623c84ec55254",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/textures/skins/props/horse/blanket_rome.png"
+    },
+    {
+      "path": "meshes/props/horse/hair_mane_01.dae",
+      "bytes": 96483,
+      "sha256": "59ad146c1af5f430db71bc63f5a06baec6487e22160e8366baf1cd895934947e",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/meshes/props/horse/hair_mane_01.dae"
+    },
+    {
+      "path": "variants/quadraped/horse/props/hair_black.xml",
+      "bytes": 222,
+      "sha256": "d73a7923ff7f6d3489891b6299be83151b9f9ddc5c26859e5bcee1c3a6b02777",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/variants/quadraped/horse/props/hair_black.xml"
+    },
+    {
+      "path": "meshes/props/horse/hair_tail_01.dae",
+      "bytes": 84691,
+      "sha256": "072888a3c60ed59d5f802f155110e37ca090627533c88f57ba6785b649f384c9",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/meshes/props/horse/hair_tail_01.dae"
+    },
+    {
+      "path": "textures/skins/skeletal/horse_norm.png",
+      "bytes": 61660,
+      "sha256": "7095a26efdc09c1cd1fb9980697bd7ec376bd5de715671b246ab334806128448",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/textures/skins/skeletal/horse_norm.png"
+    },
+    {
+      "path": "textures/skins/skeletal/horse_spec.png",
+      "bytes": 32504,
+      "sha256": "212e0d92b11cfa320a3a458241164586b7e763f9881ddf0a2120930d7165129f",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/textures/skins/skeletal/horse_spec.png"
+    },
+    {
+      "path": "textures/skins/props/blood_01.dds",
+      "bytes": 5616,
+      "sha256": "1bec3917c1491c6c9401efb23ba851a1198552caa4d35573a8f14d0c8ecbe78a",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/textures/skins/props/blood_01.dds"
+    },
+    {
+      "path": "meshes/props/shield/round_s_b.dae",
+      "bytes": 3905,
+      "sha256": "1f8335b44bd21de7ce2a813ea6c19ede4f63857991dda91f7a8cad65806252fd",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/meshes/props/shield/round_s_b.dae"
+    },
+    {
+      "path": "textures/skins/props/shield/celt_round_back.dds",
+      "bytes": 2176,
+      "sha256": "c5262d555bc86f67e16f3a5e616bbbb226fd2bfaf3e8ef054c0b9130086bac1c",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/textures/skins/props/shield/celt_round_back.dds"
+    },
+    {
+      "path": "animation/biped/rider/cavalry/spearman/attack_melee_2h_01.dae",
+      "bytes": 1070275,
+      "sha256": "64cdc447b0abd507ff1b2a5cd1acc0402fc8eff0646c056f5eb9f8b2f9436efa",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/animation/biped/rider/cavalry/spearman/attack_melee_2h_01.dae"
+    },
+    {
+      "path": "animation/biped/rider/cavalry/spearman/idle_relax_2h_01.dae",
+      "bytes": 1358395,
+      "sha256": "4dadd21d3e73b19b37aa5d765d7b7328927670e2d699fac0c5d44b6564ed26c3",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/animation/biped/rider/cavalry/spearman/idle_relax_2h_01.dae"
+    },
+    {
+      "path": "animation/biped/rider/cavalry/spearman/pace_2h_ready.dae",
+      "bytes": 785211,
+      "sha256": "69d156ee948b554a17c0947b043854a5d2bd23e3580368301a602e77ecb14496",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/animation/biped/rider/cavalry/spearman/pace_2h_ready.dae"
+    },
+    {
+      "path": "meshes/props/helmet/props/hele_highcrest_a.dae",
+      "bytes": 43573,
+      "sha256": "996ae9fdc9507ca9bec91cef5501bfe26698e24f151ea019fd8fe70f2d82cff6",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/meshes/props/helmet/props/hele_highcrest_a.dae"
+    },
+    {
+      "path": "actors/props/units/helmets/props/hele_highcrest_hair_01.xml",
+      "bytes": 668,
+      "sha256": "7c0585d1d7ec8fd5065ceb7bf2ef3ef72d53740c2ca3c54b9e42da74082bb73d",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/actors/props/units/helmets/props/hele_highcrest_hair_01.xml"
+    },
+    {
+      "path": "textures/skins/props/helmet/highcrest_01_norm.png",
+      "bytes": 13418,
+      "sha256": "ff5738b6242edfde2748dfcfe034f44d869a3dadc025a0fe92458ee32b0321d4",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/textures/skins/props/helmet/highcrest_01_norm.png"
+    },
+    {
+      "path": "textures/skins/props/helmet/highcrest_01_bronze_spec.png",
+      "bytes": 11138,
+      "sha256": "0292e55f51d8d4c056d1a14f2746b5a1b89b27cae2dd07fbbf360cf0a57adc73",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/textures/skins/props/helmet/highcrest_01_bronze_spec.png"
+    },
+    {
+      "path": "textures/skins/props/helmet/highcrest_01_bronze.png",
+      "bytes": 116568,
+      "sha256": "a2b8ac663f4357030d2753c1998a1886b83713377a552ec50d2f9fa184c6760f",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/textures/skins/props/helmet/highcrest_01_bronze.png"
+    },
+    {
+      "path": "meshes/props/helmet/props/hele_crest_hair_i.dae",
+      "bytes": 25209,
+      "sha256": "0a910de30910edd6044a63ff4d3ff9e94d99d72cf094c1ba1aa4401871d99f67",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/meshes/props/helmet/props/hele_crest_hair_i.dae"
+    },
+    {
+      "path": "textures/skins/props/helmet/old/hele_a3.dds",
+      "bytes": 5616,
+      "sha256": "e078af9ae8f69e6b2946cb221feea70e06ec446c567455b9c845c508fbc3c904",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/textures/skins/props/helmet/old/hele_a3.dds"
+    },
+    {
+      "path": "meshes/props/shield/scutum_03_f.dae",
+      "bytes": 55997,
+      "sha256": "d40a8c8d4d4ecfe5410735b4fc4e6ef5772fe905165587516db6b1b350597588",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/meshes/props/shield/scutum_03_f.dae"
+    },
+    {
+      "path": "actors/props/units/shields/props/scutum_rome_imp_back_01.xml",
+      "bytes": 537,
+      "sha256": "985c894358ebe02b37a721536bcb797e59e9c041fe0eb38b1ff96e252e6d77cc",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/actors/props/units/shields/props/scutum_rome_imp_back_01.xml"
+    },
+    {
+      "path": "textures/skins/props/shield/scutum_rome_imp_01_spec.png",
+      "bytes": 70236,
+      "sha256": "c18297d431ea0d49bcafa159ca2f989bafbef27f2934d3fc7adf021c8308dc21",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/textures/skins/props/shield/scutum_rome_imp_01_spec.png"
+    },
+    {
+      "path": "textures/skins/props/shield/scutum_rome_imp_01_norm.png",
+      "bytes": 209550,
+      "sha256": "720e8129c98cdbd61820c9f5229e01db1893faa375564aa44a94074738dc2d8c",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/textures/skins/props/shield/scutum_rome_imp_01_norm.png"
+    },
+    {
+      "path": "variants/quadraped/horse/props/hair_base.xml",
+      "bytes": 240,
+      "sha256": "187b19d65e730d463e7cad235c788834630283a94d7fb1cdb582f0571d290275",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/variants/quadraped/horse/props/hair_base.xml"
+    },
+    {
+      "path": "textures/skins/props/horse/hair_black.png",
+      "bytes": 74271,
+      "sha256": "98b070cd0befdb3bd07cb411d965c9c3618a1c43e29f96df1c75cef0b862b828",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/textures/skins/props/horse/hair_black.png"
+    },
+    {
+      "path": "meshes/props/helmet/props/hele_highcrest_hair_a.dae",
+      "bytes": 25270,
+      "sha256": "c378f9b79c4cf27f469e2b8f2993a1f7452bf27af4dcb0675956803b071258aa",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/meshes/props/helmet/props/hele_highcrest_hair_a.dae"
+    },
+    {
+      "path": "meshes/props/shield/props/scutum_03_b.dae",
+      "bytes": 50742,
+      "sha256": "28769afcc7a118f04f73f624271845e405320855bff22e3cad0566a1af55133a",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/meshes/props/shield/props/scutum_03_b.dae"
+    },
+    {
+      "path": "textures/skins/props/shield/scutum_rome_imp_back.png",
+      "bytes": 311216,
+      "sha256": "a302e342ea929c73d3a939eef9dd6a5e2f86b38f2339a8e45ddcbbdc20e1a4b6",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/textures/skins/props/shield/scutum_rome_imp_back.png"
+    },
+    {
+      "path": "textures/skins/props/shield/scutum_rome_imp_back_spec.png",
+      "bytes": 71079,
+      "sha256": "aac609fdf32cc27043db3dad7e7ed456986bc1b96f26ad9fb9317a33ada42b74",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/textures/skins/props/shield/scutum_rome_imp_back_spec.png"
+    },
+    {
+      "path": "textures/skins/props/shield/scutum_rome_imp_back_norm.png",
+      "bytes": 213764,
+      "sha256": "e5f0046e091c20e9d6bf3008457edcecb0778f0aaabc208698719c5758d86429",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/textures/skins/props/shield/scutum_rome_imp_back_norm.png"
+    },
+    {
+      "path": "textures/skins/props/horse/hair_norm.png",
+      "bytes": 91778,
+      "sha256": "a37d8b6262d9f1a693ee79911b65665a7606e91e4d755fb5b10619308cfb0f07",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/textures/skins/props/horse/hair_norm.png"
+    },
+    {
+      "path": "textures/skins/props/horse/hair_spec.png",
+      "bytes": 39392,
+      "sha256": "9bd09b01c84eb103ffc808d3f88666cf6266ab35145f99e9dae26637eefcc93e",
+      "url": "https://raw.githubusercontent.com/0ad/0ad/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/textures/skins/props/horse/hair_spec.png"
+    }
+  ],
+  "missing": []
+}

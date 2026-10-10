@@ -1,0 +1,40 @@
+{
+  "edition": "gnome-portrait-roster-v20",
+  "faction": "gnome",
+  "native": {
+    "path": "C:\\Users\\alipo\\OneDrive\\Desktop\\mmmm\\Peris\\assets\\source\\battle\\gnome-portrait-roster-v20\\peris-gnome-army.blend",
+    "bytes": 36147973,
+    "sha256": "522ad5e417e558969ea0a8419b4a911869bb48e2ad25a6d67ab59ae6925ef579"
+  },
+  "raw": {
+    "path": "C:\\Users\\alipo\\OneDrive\\Desktop\\mmmm\\Peris\\assets\\source\\battle\\gnome-portrait-roster-v20\\exports\\gnome-roster-runtime.glb",
+    "bytes": 31552196,
+    "sha256": "d7fa685788843f66452d74bfbc5142dcd487070ae6c7a36976a021c13eac5ac8"
+  },
+  "technicalGate": "C:\\Users\\alipo\\OneDrive\\Desktop\\mmmm\\Peris\\assets\\source\\battle\\gnome-portrait-roster-v20\\technical-gate.json",
+  "runtimeContact": "C:\\Users\\alipo\\OneDrive\\Desktop\\mmmm\\Peris\\assets\\source\\battle\\gnome-portrait-roster-v20\\runtime-contact.json",
+  "exactSavedBaselineExport": "C:\\Users\\alipo\\OneDrive\\Desktop\\mmmm\\Peris\\assets\\source\\battle\\gnome-portrait-roster-v20\\exact-export.json",
+  "sourceAndChangedOperations": "C:\\Users\\alipo\\OneDrive\\Desktop\\mmmm\\Peris\\assets\\source\\battle\\gnome-portrait-roster-v20\\provenance.json",
+  "captures": "C:\\Users\\alipo\\OneDrive\\Desktop\\mmmm\\Peris\\artifacts\\battle-preview\\dwarf-gnome-quality-v1\\gnome-v20-final-captures\\capture-provenance.json",
+  "allNineActualHeroSheet": "C:\\Users\\alipo\\OneDrive\\Desktop\\mmmm\\Peris\\artifacts\\battle-preview\\dwarf-gnome-quality-v1\\gnome-v20-final-captures\\all-nine-actual-native-heroes.png",
+  "roleCoverage": [
+    "line_infantry",
+    "spear_guard",
+    "elite",
+    "archer",
+    "scout",
+    "light_cavalry",
+    "heavy_cavalry",
+    "ram",
+    "catapult"
+  ],
+  "limits": [
+    "Actual native screenshots and CPU exported support samples. Root must review exact optimized WebGL appearance and contacts separately.",
+    "Static detailed heads retain their documented licensed source anatomy; speech and expression animation are not authored.",
+    "Source motion style and shield torso/hip clearance are visually reviewed samples, not full physical collision simulation; attacking legs and holding arms are not included in a full shield collision claim.",
+    "Archer retains an articulated bow rather than the crossbow in the painted roster picture.",
+    "Gnome face remains a soft static stylized sculpt with original fitted eye/hair additions; cloth appears lighter than the painted dark red target under this native review lighting. Heavy cavalry uses a pony clone with distinct barding and hand-held kit."
+  ],
+  "runtimeApproved": false,
+  "finishedUnitApproved": false
+}

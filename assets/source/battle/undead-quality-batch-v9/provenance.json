@@ -1,0 +1,464 @@
+{
+  "edition": "undead-quality-batch-v9",
+  "source": "C:\\Users\\alipo\\OneDrive\\Desktop\\mmmm\\Peris\\assets\\source\\battle\\undead-quality-batch-v8\\peris-undead-army.blend",
+  "sourceSha256": "635d10b802503ce8f168215b33d6573f3a1c8afcbeb10bad4231a0dceea5a817",
+  "sourceUnchanged": true,
+  "native": "C:\\Users\\alipo\\OneDrive\\Desktop\\mmmm\\Peris\\assets\\source\\battle\\undead-quality-batch-v9\\peris-undead-army.blend",
+  "nativeSha256": "8b4f89727ea0a2986f53d19cb0b13149d18ccd83cc5f062e3a8712bfb92e0644",
+  "numericalBeforeFingerprint": "436e39bf418aa034d927886738a927b6ecc7bd79d50f223948bb3d264c9020cd",
+  "numericalAfterFingerprint": "436e39bf418aa034d927886738a927b6ecc7bd79d50f223948bb3d264c9020cd",
+  "geometryUVWeightsRestBindsSavedPoseAllActionChannelsIdentical": true,
+  "existingBaseColorMapsUVsAndGoodPBRMapsPreserved": true,
+  "authoredSpatialNormalAndORMMapRecords": [
+    {
+      "material": "Skeleton_Body",
+      "kind": "bone",
+      "baseColorAndUVPreserved": true,
+      "existingNormalPreserved": false,
+      "existingMetalRoughnessPreserved": false,
+      "roughnessScalarBefore": 0.8929713368415833,
+      "metallicScalarBefore": 0.0,
+      "maps": {
+        "normal": {
+          "path": "C:\\Users\\alipo\\OneDrive\\Desktop\\mmmm\\Peris\\assets\\source\\battle\\undead-quality-batch-v9\\textures\\completion\\789d49249e8a04a5-normal.png",
+          "sha256": "7ae1f836b9611aec1ecfa5c144a495b0eb729b136a6df86f4d824d9b43aa742a",
+          "scale": 0.16
+        },
+        "orm": {
+          "path": "C:\\Users\\alipo\\OneDrive\\Desktop\\mmmm\\Peris\\assets\\source\\battle\\undead-quality-batch-v9\\textures\\completion\\c9b3eb693677b38f-orm.png",
+          "sha256": "468059b438924c9d35aaf81b89c9e64854aa2635bd22ddfa063fc37c8d69fcb7",
+          "roughnessRange": [
+            0.8604289293289185,
+            0.925509512424469
+          ],
+          "metallicRange": [
+            0.0,
+            0.0
+          ]
+        }
+      }
+    },
+    {
+      "material": "Skeleton_Body.001",
+      "kind": "bone",
+      "baseColorAndUVPreserved": true,
+      "existingNormalPreserved": false,
+      "existingMetalRoughnessPreserved": false,
+      "roughnessScalarBefore": 0.8929713368415833,
+      "metallicScalarBefore": 0.0,
+      "maps": {
+        "normal": {
+          "path": "C:\\Users\\alipo\\OneDrive\\Desktop\\mmmm\\Peris\\assets\\source\\battle\\undead-quality-batch-v9\\textures\\completion\\7b86e330a864bd44-normal.png",
+          "sha256": "9b60bcbea7abdd0146d43662347df717607d80bc5d21dfeecda17e3c6d7476cf",
+          "scale": 0.16
+        },
+        "orm": {
+          "path": "C:\\Users\\alipo\\OneDrive\\Desktop\\mmmm\\Peris\\assets\\source\\battle\\undead-quality-batch-v9\\textures\\completion\\5301860f53731db2-orm.png",
+          "sha256": "711cd76a0252141e2fdca65d43a7fd813f2bd103533dcb7b4fb5ca37dfd09d78",
+          "roughnessRange": [
+            0.8604128360748291,
+            0.9255126714706421
+          ],
+          "metallicRange": [
+            0.0,
+            0.0
+          ]
+        }
+      }
+    },
+    {
+      "material": "Skeleton_Body.002",
+      "kind": "bone",
+      "baseColorAndUVPreserved": true,
+      "existingNormalPreserved": false,
+      "existingMetalRoughnessPreserved": false,
+      "roughnessScalarBefore": 0.8929713368415833,
+      "metallicScalarBefore": 0.0,
+      "maps": {
+        "normal": {
+          "path": "C:\\Users\\alipo\\OneDrive\\Desktop\\mmmm\\Peris\\assets\\source\\battle\\undead-quality-batch-v9\\textures\\completion\\60d4c8ba6f26c441-normal.png",
+          "sha256": "9b575ae64f1aff210eae99b6fbc64a162d916a11e4470fd89f82c385148ec5f1",
+          "scale": 0.16
+        },
+        "orm": {
+          "path": "C:\\Users\\alipo\\OneDrive\\Desktop\\mmmm\\Peris\\assets\\source\\battle\\undead-quality-batch-v9\\textures\\completion\\322732eeacb55ae0-orm.png",
+          "sha256": "35e384199a9dfd4bffb2a15d0771a4d04d7bc010e613c4e48b8eff93bddfe160",
+          "roughnessRange": [
+            0.8604525327682495,
+            0.9254670739173889
+          ],
+          "metallicRange": [
+            0.0,
+            0.0
+          ]
+        }
+      }
+    },
+    {
+      "material": "Skeleton_Body.003",
+      "kind": "bone",
+      "baseColorAndUVPreserved": true,
+      "existingNormalPreserved": false,
+      "existingMetalRoughnessPreserved": false,
+      "roughnessScalarBefore": 0.8929713368415833,
+      "metallicScalarBefore": 0.0,
+      "maps": {
+        "normal": {
+          "path": "C:\\Users\\alipo\\OneDrive\\Desktop\\mmmm\\Peris\\assets\\source\\battle\\undead-quality-batch-v9\\textures\\completion\\196b09bc16bb5c70-normal.png",
+          "sha256": "8fab05e5a3ee5a792825669499aa17ea80a8148bf24319d568ba79134c9f24ff",
+          "scale": 0.16
+        },
+        "orm": {
+          "path": "C:\\Users\\alipo\\OneDrive\\Desktop\\mmmm\\Peris\\assets\\source\\battle\\undead-quality-batch-v9\\textures\\completion\\881bfed514d3508f-orm.png",
+          "sha256": "6d1ac2baa4bbcf22358f8f3cbfb150a42d6291eeb0bb2acf58f1d59742c1901e",
+          "roughnessRange": [
+            0.8604502081871033,
+            0.9255152940750122
+          ],
+          "metallicRange": [
+            0.0,
+            0.0
+          ]
+        }
+      }
+    },
+    {
+      "material": "Skeleton_Body.004",
+      "kind": "bone",
+      "baseColorAndUVPreserved": true,
+      "existingNormalPreserved": false,
+      "existingMetalRoughnessPreserved": false,
+      "roughnessScalarBefore": 0.8929713368415833,
+      "metallicScalarBefore": 0.0,
+      "maps": {
+        "normal": {
+          "path": "C:\\Users\\alipo\\OneDrive\\Desktop\\mmmm\\Peris\\assets\\source\\battle\\undead-quality-batch-v9\\textures\\completion\\7114f129b74ffa65-normal.png",
+          "sha256": "829f2900c663df576ed913c483d3ec903f80567e45a099a4dcb0476aa48f8d53",
+          "scale": 0.16
+        },
+        "orm": {
+          "path": "C:\\Users\\alipo\\OneDrive\\Desktop\\mmmm\\Peris\\assets\\source\\battle\\undead-quality-batch-v9\\textures\\completion\\e4493236fa2e6e37-orm.png",
+          "sha256": "6761b1125a60005a08df4c61433eafc7f1c7abd8a557df9f7bbdafa78745b3c0",
+          "roughnessRange": [
+            0.8604452013969421,
+            0.9255028963088989
+          ],
+          "metallicRange": [
+            0.0,
+            0.0
+          ]
+        }
+      }
+    },
+    {
+      "material": "Skeleton_Body.005",
+      "kind": "bone",
+      "baseColorAndUVPreserved": true,
+      "existingNormalPreserved": false,
+      "existingMetalRoughnessPreserved": false,
+      "roughnessScalarBefore": 0.8929713368415833,
+      "metallicScalarBefore": 0.0,
+      "maps": {
+        "normal": {
+          "path": "C:\\Users\\alipo\\OneDrive\\Desktop\\mmmm\\Peris\\assets\\source\\battle\\undead-quality-batch-v9\\textures\\completion\\98323a3f67dfef6f-normal.png",
+          "sha256": "f5bbd42335ae27f1287c0f73a3a24b7e0bf9c68d0021d4882f609d326079434d",
+          "scale": 0.16
+        },
+        "orm": {
+          "path": "C:\\Users\\alipo\\OneDrive\\Desktop\\mmmm\\Peris\\assets\\source\\battle\\undead-quality-batch-v9\\textures\\completion\\a091760c246fefd6-orm.png",
+          "sha256": "5401506ecf2816d15c381c0835e32b2608e6368e7c478278f3f5f69c8130861a",
+          "roughnessRange": [
+            0.8604718446731567,
+            0.9255222082138062
+          ],
+          "metallicRange": [
+            0.0,
+            0.0
+          ]
+        }
+      }
+    },
+    {
+      "material": "Skeleton_Body.006",
+      "kind": "bone",
+      "baseColorAndUVPreserved": true,
+      "existingNormalPreserved": false,
+      "existingMetalRoughnessPreserved": false,
+      "roughnessScalarBefore": 0.8929713368415833,
+      "metallicScalarBefore": 0.0,
+      "maps": {
+        "normal": {
+          "path": "C:\\Users\\alipo\\OneDrive\\Desktop\\mmmm\\Peris\\assets\\source\\battle\\undead-quality-batch-v9\\textures\\completion\\d33400b91f0d6e4a-normal.png",
+          "sha256": "bbabd8b69733250dfca05b01126cc5b24c86e761198df50aa4df748cb30c517d",
+          "scale": 0.16
+        },
+        "orm": {
+          "path": "C:\\Users\\alipo\\OneDrive\\Desktop\\mmmm\\Peris\\assets\\source\\battle\\undead-quality-batch-v9\\textures\\completion\\06f2bf7ed064e403-orm.png",
+          "sha256": "0f3eb20577a0be4ea6dbb498f50ab72994818d6457eb25ab99ba9d969a19356e",
+          "roughnessRange": [
+            0.8604268431663513,
+            0.9255067706108093
+          ],
+          "metallicRange": [
+            0.0,
+            0.0
+          ]
+        }
+      }
+    },
+    {
+      "material": "Skeleton_Body.007",
+      "kind": "bone",
+      "baseColorAndUVPreserved": true,
+      "existingNormalPreserved": false,
+      "existingMetalRoughnessPreserved": false,
+      "roughnessScalarBefore": 0.8929713368415833,
+      "metallicScalarBefore": 0.0,
+      "maps": {
+        "normal": {
+          "path": "C:\\Users\\alipo\\OneDrive\\Desktop\\mmmm\\Peris\\assets\\source\\battle\\undead-quality-batch-v9\\textures\\completion\\41f705aec3aecb55-normal.png",
+          "sha256": "b1bfd9c941da731a0c5aa765e907ad8ab49a16f3a79596479322417e47b662f9",
+          "scale": 0.16
+        },
+        "orm": {
+          "path": "C:\\Users\\alipo\\OneDrive\\Desktop\\mmmm\\Peris\\assets\\source\\battle\\undead-quality-batch-v9\\textures\\completion\\47ff65d052c498d5-orm.png",
+          "sha256": "6f6e203c6b6713be8ea6d2c7927b592916d9dfbb3d1674838ba529aa43198b29",
+          "roughnessRange": [
+            0.8604868054389954,
+            0.9255154728889465
+          ],
+          "metallicRange": [
+            0.0,
+            0.0
+          ]
+        }
+      }
+    },
+    {
+      "material": "Undead beast weathered porous bone",
+      "kind": "bone",
+      "baseColorAndUVPreserved": true,
+      "existingNormalPreserved": false,
+      "existingMetalRoughnessPreserved": false,
+      "roughnessScalarBefore": 0.9399999976158142,
+      "metallicScalarBefore": 0.0,
+      "maps": {
+        "normal": {
+          "path": "C:\\Users\\alipo\\OneDrive\\Desktop\\mmmm\\Peris\\assets\\source\\battle\\undead-quality-batch-v9\\textures\\completion\\064bf8a4a6091214-normal.png",
+          "sha256": "aee16082aaed1ef3f8fe7a296033914203d822a8a45b4985d8738848ff935da5",
+          "scale": 0.16
+        },
+        "orm": {
+          "path": "C:\\Users\\alipo\\OneDrive\\Desktop\\mmmm\\Peris\\assets\\source\\battle\\undead-quality-batch-v9\\textures\\completion\\7f69e7d718be2774-orm.png",
+          "sha256": "b9fbd7b79cdef53e6f1ad6b2e80277d9ada1bd662ef8af95dfd7718ff38a6363",
+          "roughnessRange": [
+            0.9074784517288208,
+            0.9725186824798584
+          ],
+          "metallicRange": [
+            0.0,
+            0.0
+          ]
+        }
+      }
+    },
+    {
+      "material": "Undead dry dark grip leather",
+      "kind": "leather",
+      "baseColorAndUVPreserved": true,
+      "existingNormalPreserved": false,
+      "existingMetalRoughnessPreserved": false,
+      "roughnessScalarBefore": 0.949999988079071,
+      "metallicScalarBefore": 0.0,
+      "maps": {
+        "normal": {
+          "path": "C:\\Users\\alipo\\OneDrive\\Desktop\\mmmm\\Peris\\assets\\source\\battle\\undead-quality-batch-v9\\textures\\completion\\c73ed9f98f8046fc-normal.png",
+          "sha256": "7c239527d218d6a9f1f87ed6df34b910a3ac344546215cdd2d39b0cf07118458",
+          "scale": 0.16
+        },
+        "orm": {
+          "path": "C:\\Users\\alipo\\OneDrive\\Desktop\\mmmm\\Peris\\assets\\source\\battle\\undead-quality-batch-v9\\textures\\completion\\058fb6c93895410d-orm.png",
+          "sha256": "6a85d5c76496154e37d26969cd701aa7b63938a1315d4e7d99d33a2425e7b296",
+          "roughnessRange": [
+            0.9174606204032898,
+            0.9825409054756165
+          ],
+          "metallicRange": [
+            0.0,
+            0.0
+          ]
+        }
+      }
+    },
+    {
+      "material": "Undead layered frayed violet cloth",
+      "kind": "cloth",
+      "baseColorAndUVPreserved": true,
+      "existingNormalPreserved": false,
+      "existingMetalRoughnessPreserved": false,
+      "roughnessScalarBefore": 0.9300000071525574,
+      "metallicScalarBefore": 0.0,
+      "maps": {
+        "normal": {
+          "path": "C:\\Users\\alipo\\OneDrive\\Desktop\\mmmm\\Peris\\assets\\source\\battle\\undead-quality-batch-v9\\textures\\completion\\590737efaa2d34b4-normal.png",
+          "sha256": "a603cb21cc85481ffe14044460503e5baeac41733b25025680027cfbb52c4a20",
+          "scale": 0.16
+        },
+        "orm": {
+          "path": "C:\\Users\\alipo\\OneDrive\\Desktop\\mmmm\\Peris\\assets\\source\\battle\\undead-quality-batch-v9\\textures\\completion\\e5266c505cf3c52f-orm.png",
+          "sha256": "c97ba508b1f0f7b35a4050d015f6e4b4690b2a39a186444487a12f7dd00efdbd",
+          "roughnessRange": [
+            0.880029022693634,
+            0.9800209403038025
+          ],
+          "metallicRange": [
+            0.0,
+            0.0
+          ]
+        }
+      }
+    },
+    {
+      "material": "Undead pitted blue-black corroded iron",
+      "kind": "metal",
+      "baseColorAndUVPreserved": true,
+      "existingNormalPreserved": false,
+      "existingMetalRoughnessPreserved": false,
+      "roughnessScalarBefore": 0.7400000095367432,
+      "metallicScalarBefore": 0.7200000286102295,
+      "maps": {
+        "normal": {
+          "path": "C:\\Users\\alipo\\OneDrive\\Desktop\\mmmm\\Peris\\assets\\source\\battle\\undead-quality-batch-v9\\textures\\completion\\a9aee4e1d0ad242e-normal.png",
+          "sha256": "459c084641354253c4bf27b37aed5675768292339c36de68685a273e1360fa03",
+          "scale": 0.22
+        },
+        "orm": {
+          "path": "C:\\Users\\alipo\\OneDrive\\Desktop\\mmmm\\Peris\\assets\\source\\battle\\undead-quality-batch-v9\\textures\\completion\\90839e3b2696a05e-orm.png",
+          "sha256": "3edb0a0daec2a7bf9b9ce2b313d7b847371fdbb4ea8e822eeb283bd23d3d0fa5",
+          "roughnessRange": [
+            0.7074487209320068,
+            0.7725417613983154
+          ],
+          "metallicRange": [
+            0.714140772819519,
+            0.7258575558662415
+          ]
+        }
+      }
+    },
+    {
+      "material": "Undead restrained green eye",
+      "kind": "metal",
+      "baseColorAndUVPreserved": true,
+      "existingNormalPreserved": false,
+      "existingMetalRoughnessPreserved": false,
+      "roughnessScalarBefore": 0.47999998927116394,
+      "metallicScalarBefore": 0.0,
+      "maps": {
+        "normal": {
+          "path": "C:\\Users\\alipo\\OneDrive\\Desktop\\mmmm\\Peris\\assets\\source\\battle\\undead-quality-batch-v9\\textures\\completion\\d7d688ea92098802-normal.png",
+          "sha256": "43a4a57d11bc293ab1a6719b058aeecffa37961ccd66be3456f9c84b16aa4623",
+          "scale": 0.22
+        },
+        "orm": {
+          "path": "C:\\Users\\alipo\\OneDrive\\Desktop\\mmmm\\Peris\\assets\\source\\battle\\undead-quality-batch-v9\\textures\\completion\\a64426c351a6e71f-orm.png",
+          "sha256": "15b29a1a12110a96c4b55c2300608ece18199515cb2917401641bcc8ecdb027e",
+          "roughnessRange": [
+            0.4474973976612091,
+            0.5125417113304138
+          ],
+          "metallicRange": [
+            0.0,
+            0.0
+          ]
+        }
+      }
+    },
+    {
+      "material": "Undead retained contact bone patina",
+      "kind": "bone",
+      "baseColorAndUVPreserved": true,
+      "existingNormalPreserved": false,
+      "existingMetalRoughnessPreserved": false,
+      "roughnessScalarBefore": 0.9300000071525574,
+      "metallicScalarBefore": 0.0,
+      "maps": {
+        "normal": {
+          "path": "C:\\Users\\alipo\\OneDrive\\Desktop\\mmmm\\Peris\\assets\\source\\battle\\undead-quality-batch-v9\\textures\\completion\\e2b1b424417b1083-normal.png",
+          "sha256": "19bd0793cdcdfbc65339d390292b14187c46ada042e655d2c75aa03b4520bce5",
+          "scale": 0.16
+        },
+        "orm": {
+          "path": "C:\\Users\\alipo\\OneDrive\\Desktop\\mmmm\\Peris\\assets\\source\\battle\\undead-quality-batch-v9\\textures\\completion\\3a8bb53cda5c0887-orm.png",
+          "sha256": "8fa1f9049902ee27fab459c8c8c4cdf1de11c44bb38f79c2bd6aac27bece4f87",
+          "roughnessRange": [
+            0.8974709510803223,
+            0.9625295996665955
+          ],
+          "metallicRange": [
+            0.0,
+            0.0
+          ]
+        }
+      }
+    },
+    {
+      "material": "Undead worn tarnished bronze",
+      "kind": "metal",
+      "baseColorAndUVPreserved": true,
+      "existingNormalPreserved": false,
+      "existingMetalRoughnessPreserved": false,
+      "roughnessScalarBefore": 0.7099999785423279,
+      "metallicScalarBefore": 0.6200000047683716,
+      "maps": {
+        "normal": {
+          "path": "C:\\Users\\alipo\\OneDrive\\Desktop\\mmmm\\Peris\\assets\\source\\battle\\undead-quality-batch-v9\\textures\\completion\\0de7a6f76eb30bff-normal.png",
+          "sha256": "b747818b82fef0fc51cf0953bf23860675ea66656c14726f9daa8a1c2ec6afc8",
+          "scale": 0.22
+        },
+        "orm": {
+          "path": "C:\\Users\\alipo\\OneDrive\\Desktop\\mmmm\\Peris\\assets\\source\\battle\\undead-quality-batch-v9\\textures\\completion\\77204d43667d6992-orm.png",
+          "sha256": "b3dc6e3ce862cb8551ca6f071ce8a1ee80b3f9b4a5889f8bf52337270d9c7ea0",
+          "roughnessRange": [
+            0.6774531602859497,
+            0.7425530552864075
+          ],
+          "metallicRange": [
+            0.614141583442688,
+            0.6258595585823059
+          ]
+        }
+      }
+    }
+  ],
+  "verifiedFull49RawMaterialCompletion": {
+    "sourceRaw": "C:\\Users\\alipo\\OneDrive\\Desktop\\mmmm\\Peris\\assets\\source\\battle\\undead-quality-batch-v8\\exports\\undead-roster.glb",
+    "sourceRawSha256": "894d1cd9d8e6cd051e077c8ca1f2ed98430ef627f7cb12ce6ba2adbe9b7c004b",
+    "raw": "C:\\Users\\alipo\\OneDrive\\Desktop\\mmmm\\Peris\\assets\\source\\battle\\undead-quality-batch-v9\\exports\\undead-roster.glb",
+    "rawSha256": "e0c30a6e0470713c6deb48de733791c4f8487e0e8b7e1fd826fd09977ce124dd",
+    "bytes": 34554776,
+    "updatedMaterials": [
+      "Skeleton_Body",
+      "Skeleton_Body.001",
+      "Skeleton_Body.002",
+      "Skeleton_Body.003",
+      "Skeleton_Body.004",
+      "Skeleton_Body.005",
+      "Skeleton_Body.006",
+      "Skeleton_Body.007",
+      "Undead beast weathered porous bone",
+      "Undead dry dark grip leather",
+      "Undead layered frayed violet cloth",
+      "Undead pitted blue-black corroded iron",
+      "Undead restrained green eye",
+      "Undead retained contact bone patina",
+      "Undead worn tarnished bronze"
+    ],
+    "geometryAccessorNodeSkinAnimationJSONIdentical": true,
+    "originalBINPrefixByteIdentical": true,
+    "originalBINSha256": "36c62607e86fd1e79e91791c1029a1dd7f3a2e11da280a22c07503ef64cd193d",
+    "allMaterialsHaveNormalAndMetalRoughnessTextures": true,
+    "full49SamplingAndUniqueNodeNamesPreserved": true
+  },
+  "finishedArtApproved": false
+}

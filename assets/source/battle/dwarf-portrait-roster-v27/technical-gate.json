@@ -1,0 +1,353 @@
+{
+  "file": "C:\\Users\\alipo\\OneDrive\\Desktop\\mmmm\\Peris\\assets\\source\\battle\\dwarf-portrait-roster-v27\\exports\\dwarf-roster-runtime.glb",
+  "sha256": "f2d5df259cbb27d47b2d0260de8f647cac95545dd5a8e1517eb8a887c91a3550",
+  "bytes": 41099056,
+  "triangles": 208576,
+  "meshParts": 19,
+  "skins": 12,
+  "clips": [
+    {
+      "name": "line_infantry_idle",
+      "start": 0,
+      "end": 1,
+      "channels": 309
+    },
+    {
+      "name": "line_infantry_walk",
+      "start": 0,
+      "end": 1,
+      "channels": 309
+    },
+    {
+      "name": "line_infantry_attack",
+      "start": 0,
+      "end": 1,
+      "channels": 309
+    },
+    {
+      "name": "spear_guard_idle",
+      "start": 0,
+      "end": 1,
+      "channels": 309
+    },
+    {
+      "name": "spear_guard_walk",
+      "start": 0,
+      "end": 1,
+      "channels": 309
+    },
+    {
+      "name": "spear_guard_attack",
+      "start": 0,
+      "end": 1,
+      "channels": 309
+    },
+    {
+      "name": "elite_idle",
+      "start": 0,
+      "end": 1,
+      "channels": 309
+    },
+    {
+      "name": "elite_walk",
+      "start": 0,
+      "end": 1,
+      "channels": 309
+    },
+    {
+      "name": "elite_attack",
+      "start": 0,
+      "end": 1,
+      "channels": 309
+    },
+    {
+      "name": "archer_idle",
+      "start": 0,
+      "end": 1,
+      "channels": 309
+    },
+    {
+      "name": "archer_walk",
+      "start": 0,
+      "end": 1,
+      "channels": 309
+    },
+    {
+      "name": "archer_attack",
+      "start": 0,
+      "end": 1,
+      "channels": 309
+    },
+    {
+      "name": "scout_idle",
+      "start": 0,
+      "end": 1,
+      "channels": 570
+    },
+    {
+      "name": "scout_walk",
+      "start": 0,
+      "end": 1,
+      "channels": 570
+    },
+    {
+      "name": "scout_attack",
+      "start": 0,
+      "end": 1,
+      "channels": 570
+    },
+    {
+      "name": "light_cavalry_idle",
+      "start": 0,
+      "end": 1,
+      "channels": 570
+    },
+    {
+      "name": "light_cavalry_walk",
+      "start": 0,
+      "end": 1,
+      "channels": 570
+    },
+    {
+      "name": "light_cavalry_attack",
+      "start": 0,
+      "end": 1,
+      "channels": 570
+    },
+    {
+      "name": "heavy_cavalry_idle",
+      "start": 0,
+      "end": 1,
+      "channels": 399
+    },
+    {
+      "name": "heavy_cavalry_walk",
+      "start": 0,
+      "end": 1,
+      "channels": 399
+    },
+    {
+      "name": "heavy_cavalry_attack",
+      "start": 0,
+      "end": 1,
+      "channels": 399
+    },
+    {
+      "name": "ram_idle",
+      "start": 0,
+      "end": 1,
+      "channels": 33
+    },
+    {
+      "name": "ram_walk",
+      "start": 0,
+      "end": 1,
+      "channels": 33
+    },
+    {
+      "name": "ram_attack",
+      "start": 0,
+      "end": 1,
+      "channels": 33
+    },
+    {
+      "name": "catapult_idle",
+      "start": 0,
+      "end": 1,
+      "channels": 39
+    },
+    {
+      "name": "catapult_walk",
+      "start": 0,
+      "end": 1,
+      "channels": 39
+    },
+    {
+      "name": "catapult_attack",
+      "start": 0,
+      "end": 1,
+      "channels": 39
+    }
+  ],
+  "parts": [
+    {
+      "name": "line_infantry_node102__line_infantry_licensed_dwarf_head",
+      "role": "line_infantry",
+      "triangles": 8203,
+      "license": "CC-BY-4.0",
+      "partition": "licensed-dwarf-head",
+      "author": "Jan Pohl; Peris component adaptation (see embedded credit)",
+      "source": "https://sketchfab.com/3d-models/dwarf-blacksmith-e48bfff956ef483cb987890dc856c8b5",
+      "sourceSha256": "6b4b6d8eb48c1e6132439fa9058ed093274080ca6d07f199fc6c44f773b56f42"
+    },
+    {
+      "name": "line_infantry_node103__line_infantry_textured_anatomy",
+      "role": "line_infantry",
+      "triangles": 17948,
+      "license": "CC-BY-SA-3.0",
+      "partition": "",
+      "author": "Wildfire Games; original Peris race equipment"
+    },
+    {
+      "name": "spear_guard_node207__spear_guard_licensed_dwarf_head",
+      "role": "spear_guard",
+      "triangles": 8203,
+      "license": "CC-BY-4.0",
+      "partition": "licensed-dwarf-head",
+      "author": "Jan Pohl; Peris component adaptation (see embedded credit)",
+      "source": "https://sketchfab.com/3d-models/dwarf-blacksmith-e48bfff956ef483cb987890dc856c8b5",
+      "sourceSha256": "6b4b6d8eb48c1e6132439fa9058ed093274080ca6d07f199fc6c44f773b56f42"
+    },
+    {
+      "name": "spear_guard_node208__spear_guard_textured_anatomy",
+      "role": "spear_guard",
+      "triangles": 17288,
+      "license": "CC-BY-SA-3.0",
+      "partition": "",
+      "author": "Wildfire Games; original Peris race equipment"
+    },
+    {
+      "name": "elite_node312__elite_licensed_dwarf_head",
+      "role": "elite",
+      "triangles": 8203,
+      "license": "CC-BY-4.0",
+      "partition": "licensed-dwarf-head",
+      "author": "Jan Pohl; Peris component adaptation (see embedded credit)",
+      "source": "https://sketchfab.com/3d-models/dwarf-blacksmith-e48bfff956ef483cb987890dc856c8b5",
+      "sourceSha256": "6b4b6d8eb48c1e6132439fa9058ed093274080ca6d07f199fc6c44f773b56f42"
+    },
+    {
+      "name": "elite_node313__elite_textured_anatomy",
+      "role": "elite",
+      "triangles": 18048,
+      "license": "CC-BY-SA-3.0",
+      "partition": "",
+      "author": "Wildfire Games; original Peris race equipment"
+    },
+    {
+      "name": "archer_node417__archer_licensed_dwarf_head",
+      "role": "archer",
+      "triangles": 8203,
+      "license": "CC-BY-4.0",
+      "partition": "licensed-dwarf-head",
+      "author": "Jan Pohl; Peris component adaptation (see embedded credit)",
+      "source": "https://sketchfab.com/3d-models/dwarf-blacksmith-e48bfff956ef483cb987890dc856c8b5",
+      "sourceSha256": "6b4b6d8eb48c1e6132439fa9058ed093274080ca6d07f199fc6c44f773b56f42"
+    },
+    {
+      "name": "archer_node418__archer_textured_anatomy",
+      "role": "archer",
+      "triangles": 7967,
+      "license": "CC-BY-SA-3.0",
+      "partition": "",
+      "author": "Wildfire Games; original Peris race equipment"
+    },
+    {
+      "name": "scout_node561__scout_licensed_dwarf_head",
+      "role": "scout",
+      "triangles": 8203,
+      "license": "CC-BY-4.0",
+      "partition": "licensed-dwarf-head",
+      "author": "Jan Pohl; Peris component adaptation (see embedded credit)",
+      "source": "https://sketchfab.com/3d-models/dwarf-blacksmith-e48bfff956ef483cb987890dc856c8b5",
+      "sourceSha256": "6b4b6d8eb48c1e6132439fa9058ed093274080ca6d07f199fc6c44f773b56f42"
+    },
+    {
+      "name": "scout_node562__scout_mounted_rider",
+      "role": "scout",
+      "triangles": 13172,
+      "license": "CC-BY-SA-3.0",
+      "partition": "",
+      "author": "Wildfire Games; original Peris race equipment"
+    },
+    {
+      "name": "scout_node611__scout_textured_anatomy",
+      "role": "scout",
+      "triangles": 2342,
+      "license": "CC-BY-SA-3.0",
+      "partition": "",
+      "author": "Wildfire Games; original Peris race equipment"
+    },
+    {
+      "name": "light_cavalry_node754__light_cavalry_licensed_dwarf_head",
+      "role": "light_cavalry",
+      "triangles": 8203,
+      "license": "CC-BY-4.0",
+      "partition": "licensed-dwarf-head",
+      "author": "Jan Pohl; Peris component adaptation (see embedded credit)",
+      "source": "https://sketchfab.com/3d-models/dwarf-blacksmith-e48bfff956ef483cb987890dc856c8b5",
+      "sourceSha256": "6b4b6d8eb48c1e6132439fa9058ed093274080ca6d07f199fc6c44f773b56f42"
+    },
+    {
+      "name": "light_cavalry_node755__light_cavalry_mounted_rider",
+      "role": "light_cavalry",
+      "triangles": 17252,
+      "license": "CC-BY-SA-3.0",
+      "partition": "",
+      "author": "Wildfire Games; original Peris race equipment"
+    },
+    {
+      "name": "light_cavalry_node804__light_cavalry_textured_anatomy",
+      "role": "light_cavalry",
+      "triangles": 2342,
+      "license": "CC-BY-SA-3.0",
+      "partition": "",
+      "author": "Wildfire Games; original Peris race equipment"
+    },
+    {
+      "name": "heavy_cavalry_node918__heavy_cavalry_licensed_dwarf_head",
+      "role": "heavy_cavalry",
+      "triangles": 8203,
+      "license": "CC-BY-4.0",
+      "partition": "licensed-dwarf-head",
+      "author": "Jan Pohl; Peris component adaptation (see embedded credit)",
+      "source": "https://sketchfab.com/3d-models/dwarf-blacksmith-e48bfff956ef483cb987890dc856c8b5",
+      "sourceSha256": "6b4b6d8eb48c1e6132439fa9058ed093274080ca6d07f199fc6c44f773b56f42"
+    },
+    {
+      "name": "heavy_cavalry_node919__heavy_cavalry_mounted_rider",
+      "role": "heavy_cavalry",
+      "triangles": 17726,
+      "license": "CC-BY-SA-3.0",
+      "partition": "",
+      "author": "Wildfire Games; original Peris race equipment"
+    },
+    {
+      "name": "heavy_cavalry_node940__heavy_cavalry_textured_anatomy",
+      "role": "heavy_cavalry",
+      "triangles": 3974,
+      "license": "CC-BY-SA-3.0",
+      "partition": "",
+      "author": "Wildfire Games; original Peris race equipment"
+    },
+    {
+      "name": "ram_node952__ram_textured_anatomy",
+      "role": "ram",
+      "triangles": 3306,
+      "license": "CC-BY-SA-3.0",
+      "partition": "",
+      "author": "Wildfire Games; original Peris race equipment"
+    },
+    {
+      "name": "catapult_node966__catapult_textured_anatomy",
+      "role": "catapult",
+      "triangles": 29790,
+      "license": "CC-BY-SA-3.0",
+      "partition": "",
+      "author": "Wildfire Games; original Peris race equipment"
+    }
+  ],
+  "checks": {
+    "all9Roles": true,
+    "all27Clips0to1": true,
+    "allSkinnedAndWeightsNormalized": true,
+    "allPositionDataFinite": true,
+    "mixedCreditsPreserved": true,
+    "allArtApprovalFlagsFalse": true
+  },
+  "limitations": [
+    "Technical source/export gate only; native and actual GPU contact/motion/appearance remain separate checks."
+  ],
+  "runtimeApproved": false,
+  "finishedUnitApproved": false
+}

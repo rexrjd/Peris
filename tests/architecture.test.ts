@@ -28,6 +28,7 @@ test('gameplay domains cannot depend on rendering, UI, adapters or browser APIs'
 test('source runtime dependencies have no circular imports',()=>{
  const graph=new Map<string,string[]>()
  for(const file of modules){const targets:string[]=[];for(const n of imports(file)){if(isType(n))continue;const from=(n.moduleSpecifier as ts.StringLiteral).text;if(!from.startsWith('.'))continue;if(from.endsWith('.css')){assert.ok(existsSync(path.resolve(path.dirname(file),from)));continue}
+  if(from.endsWith('.json')){const data=path.resolve(path.dirname(file),from);assert.ok(existsSync(data),`${file}: missing ${from}`);assert.doesNotThrow(()=>JSON.parse(readFileSync(data,'utf8')),`${file}: invalid JSON ${from}`);continue}
   const resolved=path.resolve(path.dirname(file),from),target=[resolved+'.ts',resolved+'.tsx'].find(existsSync);assert.ok(target,`${file}: missing ${from}`);targets.push(target)
  }graph.set(file,targets)}
  const active=new Set<string>(),finished=new Set<string>()

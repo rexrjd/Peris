@@ -1,0 +1,106 @@
+{
+  "sourceNative": "C:\\Users\\alipo\\OneDrive\\Desktop\\mmmm\\Peris\\assets\\source\\battle\\human-portrait-quality-v13\\persian\\peris-persian-army.blend",
+  "sourceSha256": "b50e2090011ceda4a92ca824a941d1dad2592cbbd37f6ea889d7680f67f30c5b",
+  "sourceUnchanged": true,
+  "originalRestBonesActionsGripsShieldsUnchanged": true,
+  "gildedExistingMetal": [
+    {
+      "material": "Peris persian shared PBR atlas",
+      "metallicTexelsRecolored": 3422250,
+      "nonMetalColorTexelsUnchanged": true,
+      "normalRoughnessAndUVUnchanged": true
+    }
+  ],
+  "operations": [
+    {
+      "role": "line_infantry",
+      "fittedArmor": {
+        "sourceMesh": "line_infantry textured anatomy",
+        "shellFaces": 918,
+        "sourceDeformationWeightsReused": true,
+        "sourceGeometryAndGripUnchanged": true
+      },
+      "fullCoverage": false
+    },
+    {
+      "role": "spear_guard",
+      "fittedArmor": {
+        "sourceMesh": "spear_guard textured anatomy",
+        "shellFaces": 918,
+        "sourceDeformationWeightsReused": true,
+        "sourceGeometryAndGripUnchanged": true
+      },
+      "fullCoverage": false
+    },
+    {
+      "role": "archer",
+      "fittedArmor": {
+        "sourceMesh": "archer textured anatomy",
+        "shellFaces": 532,
+        "sourceDeformationWeightsReused": true,
+        "sourceGeometryAndGripUnchanged": true
+      },
+      "fullCoverage": false
+    },
+    {
+      "role": "elite",
+      "fittedArmor": {
+        "sourceMesh": "elite textured anatomy",
+        "shellFaces": 1638,
+        "sourceDeformationWeightsReused": true,
+        "sourceGeometryAndGripUnchanged": true
+      },
+      "fullCoverage": false
+    },
+    {
+      "role": "scout",
+      "fittedArmor": {
+        "sourceMesh": "scout mounted rider",
+        "shellFaces": 532,
+        "sourceDeformationWeightsReused": true,
+        "sourceGeometryAndGripUnchanged": true
+      },
+      "fullCoverage": false
+    },
+    {
+      "role": "light_cavalry",
+      "fittedArmor": {
+        "sourceMesh": "light_cavalry mounted rider",
+        "shellFaces": 918,
+        "sourceDeformationWeightsReused": true,
+        "sourceGeometryAndGripUnchanged": true
+      },
+      "fullCoverage": false
+    },
+    {
+      "role": "heavy_cavalry",
+      "fittedArmor": {
+        "sourceMesh": "heavy_cavalry mounted rider",
+        "shellFaces": 7032,
+        "sourceDeformationWeightsReused": true,
+        "sourceGeometryAndGripUnchanged": true
+      },
+      "fullCoverage": true,
+      "horseBarding": {
+        "sourceMesh": "heavy_cavalry textured anatomy",
+        "shellFaces": 2052,
+        "sourceDeformationWeightsReused": true,
+        "sourceGeometryAndGripUnchanged": true
+      },
+      "headAndHandProtection": "Closed visor and fitted articulated glove shells; original grasping geometry and lance sockets retained",
+      "mountCoverage": "Fitted neck, trunk, head, rump and moving limb shell. Hoof contact surfaces are left clear."
+    }
+  ],
+  "runtimeApproved": false,
+  "finishedUnitApproved": false,
+  "files": {
+    "editable-persian-study.blend": {
+      "bytes": 39608910,
+      "sha256": "47d1015d57f5ef0d342d94ddff164fe2b631c01a75254da5d018baffe288295c"
+    },
+    "peris-persian-army.blend": {
+      "bytes": 63925357,
+      "sha256": "dd6cbf59b6058cc5e02e84d3757764e65ce5402831fb64b9f7e074fae3f83c23"
+    }
+  }
+}

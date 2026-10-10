@@ -45,10 +45,13 @@ export function Crest({ small = false }: {
 }) {
     return <svg className="crest" width={small ? 34 : 66} height={small ? 44 : 74} viewBox="0 0 66 74" aria-hidden="true"><path d="M33 4 58 14v28c0 13-25 26-25 26S8 55 8 42V14Z" fill="#282c26" stroke="#bda77a"/><path d="M33 13 49 19v22c0 9-16 17-16 17s-16-8-16-17V19Z" fill="none" stroke="#7c7453"/><text x="33" y="47" fill="#e2ce9d" fontFamily="Georgia" fontSize="34" textAnchor="middle">P</text></svg>;
 }
-export function UnitPortrait({ type, enemy = false }: {
+export function UnitPortrait({ type, enemy = false, atlas, tile = 0, image }: {
     type: UnitType;
     enemy?: boolean;
+    atlas?: string;
+    tile?: number;
+    image?: string;
 }) {
-    return <div className={`unit-portrait portrait-${type} ${enemy ? 'enemy-portrait' : ''}`} aria-hidden="true"/>;
+    return <div className={`unit-portrait portrait-${type} ${enemy ? 'enemy-portrait' : ''} ${atlas || image ? 'faction-portrait' : ''}`} style={image ? {backgroundImage:`url(${image})`,backgroundSize:'contain',backgroundPosition:'center',backgroundRepeat:'no-repeat'} : atlas ? {backgroundImage:`url(${atlas})`,backgroundSize:'300% 300%',backgroundPosition:`${tile%3*50}% ${Math.floor(tile/3)*50}%`} : undefined} aria-hidden="true"/>;
 }
 export function buildingIcon(type: BuildingType) { return ({ lumber: 'wood', quarry: 'stone', farm: 'food', market: 'gold', barracks: 'army', stables: 'flag', wall: 'shield', storehouse: 'town' } as const)[type]; }

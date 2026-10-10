@@ -1,0 +1,42 @@
+Peris local BlendKit setup — verified 2026-10-09
+
+Blender: 4.5.14 LTS
+Executable: C:\Users\alipo\.codex\tools\peris-blender-4.5.14\blender-4.5.14-windows-x64\blender.exe
+Add-on: Blendkit Online Asset Library 3.21.3.261002
+Installed module: C:\Users\alipo\AppData\Roaming\Blender Foundation\Blender\4.5\scripts\addons\blenderkit
+Asset cache: C:\Users\alipo\blenderkit_data
+
+Verified on a fresh Blender launch: add-on stays enabled, local client connects,
+live free-horse search returns results, and native Draft horse downloads and
+imports successfully. Blender MCP connection also verified, protocol 13.
+Blender was closed after saving the local inspection session at the user's request.
+
+Use BlendKit alongside Sketchfab, BlendSwap, CGTrader and primary artist sources
+for future research when its library offers an appropriate reference.
+Search through the official add-on; prefer free authored models with useful
+anatomy, construction or rigging. Record creator, source, license, acquisition
+and actual inspection separately. Keep raw references under the local ignored
+assets/references/units/downloads directory; do not silently ship them as units.
+
+The browser is signed in. The Blender add-on is not signed into the account;
+anonymous free search/download worked. If an account is needed later, use the
+official add-on login flow. Do not copy browser cookies or tokens.
+
+Draft horse by Irena Aidlin Moonin:
+https://www.blendkit.com/asset-gallery-detail/f844b8ab-524e-4c34-906b-97d9d86b1f2a/
+Royalty-free. Native 2K source, 454 rig bones, no actions in acquired source.
+Source, native file, inspection report and five actual viewport images:
+assets/references/units/downloads/mounts/blendkit-draft-horse/
+
+Horse (Beige) PL by Pierre-Louis Baril was reviewed as a still-render anatomy
+reference and cataloged locally; it was not downloaded.
+
+Horse Rigged All Gaits by fdoss001:
+https://blendswap.com/blend/28627
+Completed retry: 612,745,224 bytes, retained locally with hash and source record.
+Advertises walk/trot/canter/gallop and saddle/reins/bridle/stirrups.
+Native rig and motion have not yet been inspected. Comments identify an original
+mesh by Tarnyloo; verify that source and license chain before reuse.
+
+Installation/verification reports and preference backup are local in
+artifacts/blendkit-setup/. Existing enabled add-ons were preserved.

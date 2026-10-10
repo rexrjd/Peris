@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Peris · Unit production references</title>
+  <style>
+    :root { color-scheme: dark; --bg:#111b19; --panel:#1a2722; --line:#435043; --ink:#f0e6ca; --muted:#b3bea9; --accent:#dec489; --green:#bfd4a2; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.65 system-ui,-apple-system,"Segoe UI",sans-serif; }
+    a { color:var(--accent); text-underline-offset:4px; }
+    a:hover { color:#fff4d3; }
+    a:focus-visible { outline:3px solid var(--accent); outline-offset:5px; }
+    .wrap { max-width:1160px; margin:auto; padding:0 32px; }
+    nav { border-bottom:1px solid var(--line); background:#13201c; }
+    nav .wrap { min-height:76px; display:flex; align-items:center; justify-content:space-between; gap:24px; }
+    .brand,.eyebrow { font-size:12px; font-weight:700; letter-spacing:.18em; text-transform:uppercase; }
+    .brand { color:var(--accent); text-decoration:none; }
+    .navlinks { display:flex; gap:24px; flex-wrap:wrap; font-size:13px; }
+    .navlinks a { color:var(--muted); text-decoration:none; }
+    header { padding:72px 0 60px; }
+    .eyebrow { color:var(--green); margin:0 0 16px; }
+    h1,h2,h3 { font-family:Georgia,"Times New Roman",serif; font-weight:400; line-height:1.16; }
+    h1 { max-width:830px; font-size:clamp(38px,5vw,62px); margin:0 0 24px; letter-spacing:-.03em; }
+    .intro { max-width:790px; font-size:19px; color:var(--muted); }
+    .lead { display:grid; grid-template-columns:1.4fr 1fr; gap:32px; padding:24px 28px; margin-top:34px; background:var(--panel); border:1px solid var(--line); }
+    .lead p { margin:0; }
+    .lead strong { color:var(--accent); }
+    .note { color:var(--muted); font-size:14px; }
+    section { padding:48px 0; border-top:1px solid var(--line); scroll-margin-top:24px; }
+    h2 { font-size:34px; margin:0 0 14px; }
+    .section-intro { max-width:760px; color:var(--muted); margin-bottom:28px; }
+    .grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:18px; }
+    .card { padding:24px; border:1px solid var(--line); background:var(--panel); display:flex; flex-direction:column; }
+    .tag { color:var(--green); font-size:11px; letter-spacing:.12em; text-transform:uppercase; font-weight:700; }
+    .card h3 { font-size:24px; margin:12px 0; }
+    .creator { font-size:13px; color:var(--accent); margin:0; }
+    .card p { color:var(--muted); font-size:14px; }
+    .card .rights { font-size:12px; border-top:1px solid var(--line); padding-top:14px; margin-top:auto; }
+    .card a { font-size:14px; }
+    .source { display:grid; grid-template-columns:1fr 1.25fr; gap:32px; }
+    .stats { display:flex; gap:28px; padding:20px 0; border-top:1px solid var(--line); border-bottom:1px solid var(--line); margin:24px 0; }
+    .stats b { display:block; font:30px Georgia,serif; color:var(--accent); }
+    .stats span { font-size:12px; color:var(--muted); }
+    .evidence { margin:0; padding:24px; background:var(--panel); border:1px solid var(--line); }
+    .evidence li+li { margin-top:18px; }
+    .evidence p { margin:5px 0 0; font-size:14px; color:var(--muted); }
+    .evidence a { font-size:14px; }
+    .steps { list-style:none; padding:0; margin:0; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px; counter-reset:step; }
+    .steps li { counter-increment:step; padding:24px; background:var(--panel); border:1px solid var(--line); }
+    .steps h3 { font-size:25px; margin:0 0 15px; display:flex; gap:14px; }
+    .steps h3:before { content:counter(step,decimal-leading-zero); font:13px/28px system-ui,sans-serif; color:var(--accent); }
+    .steps p { color:var(--muted); font-size:14px; margin:0 0 12px; }
+    .steps .citations { font-size:12px; margin-bottom:0; }
+    .criteria { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px 32px; padding-left:22px; color:var(--muted); }
+    footer { border-top:1px solid var(--line); padding:32px 0 48px; font-size:13px; color:var(--muted); }
+    code { font-size:12px; overflow-wrap:anywhere; }
+    pre { white-space:pre-wrap; overflow-wrap:anywhere; padding:20px; background:var(--panel); border:1px solid var(--line); }
+    .game-capture { width:100%; height:auto; border:1px solid var(--line); display:block; }
+    @media(max-width:800px) { .grid { grid-template-columns:repeat(2,minmax(0,1fr)); } .lead,.source { grid-template-columns:1fr; } }
+    @media(max-width:540px) { .wrap { padding:0 20px; } nav .wrap { align-items:flex-start; flex-direction:column; padding-top:18px; padding-bottom:18px; gap:12px; } .navlinks { gap:18px; } header { padding-top:40px; } .grid,.steps,.criteria { grid-template-columns:1fr; } .lead { padding:22px; } section { padding:36px 0; } }
+  </style>
+</head>
+<body>
+  <nav aria-label="Page sections"><div class="wrap"><a class="brand" href="#top">Peris · Unit art workshop</a><div class="navlinks"><a href="#rosters">Unit screenshots</a><a href="#references">Art references</a><a href="#source">Downloaded source</a><a href="#workflow">Production workflow</a></div></div></nav>
+  <main id="top" class="wrap">
+    <header>
+      <p class="eyebrow">Research catalog · 9 October 2026</p>
+      <h1>From fitted units<br>to faction armies.</h1>
+      <p class="intro">Eleven factions, each with four foot troops, three mounted troops and two siege studies. Keep the editable models, their licensed sources, and actual game screenshots together for review.</p>
+      <div class="lead"><p><strong>Blender creates the units. Three.js renders the battle.</strong><br>Keep an editable source, export GLB with skins and clips, and inspect the result in the actual game. <a href="https://threejs.org/manual/pages/loading-3d-models.html" target="_blank" rel="noopener">Three.js model workflow</a></p><p class="note">This catalog combines licensed game source with public artist references. The steps below are a proposed Peris production process. Quality and army performance still require visual review and measurements.</p></div>
+    </header>
+
+    <section id="rosters">
+      <p><a href="sketchfab-progress.html">Open the live Sketchfab reference catalog ↗</a></p>
+      <p class="eyebrow">Faction production</p><h2>A screenshot for every finished unit</h2>
+      <p class="section-intro" id="roster-status">The faction rosters are being built and reviewed incrementally.</p>
+      <p><a href="previews/roster-v3/index.html">Open all actual unit screenshots ↗</a> · <a href="/?battle-preview=1&amp;unit-prototypes=1">Inspect the models in the game ↗</a> · <a href="/licenses/peris-faction-rosters.txt">Asset credits</a></p>
+      <p class="note">Use <em>Inspect unit role</em> in the battle preview to select any of the nine models. The inspection view clears the deployment instructions from the units. <em>Battle overview</em> restores the full army.</p>
+      <p class="note">These are visual prototypes. Seven troop looks use the existing infantry, archer and cavalry combat rules. Rams, catapults and fantasy stonehurlers are inspection studies. Academy research and Workshop recruitment remain design plans.</p>
+      <details><summary>Rebuild the faction rosters</summary><p class="note">Install the project dependencies, Blender 4.5 with COLLADA import, and Python with Pillow. Use an unused edition name to preserve previous sources.</p><pre><code>node scripts/fetch-roster-references.mjs
+python scripts/convert-reference-textures.py --inventory inventory-roster-v3.json
+blender --background --python scripts/blender/cache_reference_imports.py -- --inventory inventory-roster-v3.json
+blender --background --python scripts/blender/build_faction_rosters.py -- --edition roster-next --factions roman spartan persian egyptian orc elf dwarf gnome pandaren undead demon
+$env:PERIS_ROSTER_EDITION='roster-next'
+node scripts/prepare-faction-rosters.mjs</code></pre></details>
+    </section>
+
+    <section id="prototypes">
+      <p class="eyebrow">Earlier source trial</p><h2>The first infantry and seated cavalry</h2>
+      <p class="section-intro">The Roman line infantry and heavy cavalry now use textured, rigged source models with idle, movement, and attack clips. Horse and rider retain their own skeletons with a shared animation clock.</p>
+      <p><a href="/?battle-preview=1&amp;unit-prototypes=1">Open the playable prototype battle ↗</a> · <a href="/licenses/peris-unit-prototypes.txt">Credits and rebuild prerequisites</a></p>
+      <figure><img class="game-capture" src="previews/roman-cavalry.png" alt="Actual Three.js game capture showing twenty seated Roman cavalry prototypes during deployment"><figcaption class="note">Actual playable Three.js preview, captured during deployment with the cavalry inspection camera. The battlefield units are rendered 3D models; the portrait cards are concept illustrations.</figcaption></figure>
+      <p class="note"><strong>Earlier trial measurement on Intel Iris Xe:</strong> Ultra at 1600 × 1000 averaged 56.7 FPS with twenty cavalry visible, and 19.5 FPS in the full 540-soldier overview, including long stalls. This record applies to the earlier two-unit trial. <a href="previews/performance.json">Raw measurement record</a> · <a href="previews/army-overview.png">Actual army overview capture</a></p>
+      <div class="lead"><p><strong>Inspect in the game</strong><br>Select the first infantry card or the last cavalry card, then choose <em>Inspect selected troops</em>. Move the cavalry to check the seated pose in motion; use <em>Battle overview</em> to return to all formations.</p><p><strong>Inspect in Blender</strong><br>Open <code>assets/source/battle/reference-v2/peris-reference-prototypes.blend</code>. Run <code>scripts/blender/open_unit_review.py</code> for a separate side-by-side review scene. Middle mouse rotates; the wheel zooms; Space plays the idle loop.</p></div>
+      <p class="note">The first two-unit source edition remains preserved alongside the complete faction production above.</p>
+      <details><summary>Rebuild the prototypes</summary><p class="note">Install the project npm dependencies, Blender 4.5 with COLLADA import, and Python 3 with Pillow. Run these from the repository root. Replace <code>blender</code> and <code>python</code> with their installed executable paths if needed.</p><pre><code>node scripts/fetch-unit-references.mjs
+python scripts/convert-reference-textures.py
+blender --background --python scripts/blender/cache_reference_imports.py
+blender --background --python scripts/blender/build_reference_prototypes.py -- --edition reference-v3
+# PowerShell: use the same unused edition for optimization
+$env:PERIS_REFERENCE_EDITION='reference-v3'
+node scripts/prepare-reference-prototypes.mjs</code></pre><p class="note">The builder preserves existing sources. Choose another unused edition if <code>reference-v3</code> already exists. Export and optimization write separate outputs.</p></details>
+    </section>
+
+    <section id="references">
+      <p class="eyebrow">01 · Shape, fit, and material</p><h2>Study the work of the unit artists</h2>
+      <p class="section-intro">These creator and studio pages show actual Total War production artwork. Use their anatomical and construction cues to develop Peris' own faction designs. The linked artwork is for visual study.</p>
+      <div class="grid">
+        <article class="card"><span class="tag">Human infantry</span><h3>Roman linothorax</h3><p class="creator">Alexander Botev · Creative Assembly</p><p>Study armor fitted to the body, layered cloth, helmet proportions, and restrained material wear.</p><p><a href="https://creativeassembly.artstation.com/projects/GXgNVd" target="_blank" rel="noopener">Open Rome II artist reference ↗</a></p><p class="rights">Reference artwork · All rights reserved</p></article>
+        <article class="card"><span class="tag">Orc elite infantry</span><h3>Black Orc Big Boss</h3><p class="creator">Danny Sweeney</p><p>Study heavy silhouettes, broad shoulders and neck, and fitted armor plates that communicate weight.</p><p><a href="https://dekubrush.artstation.com/projects/d8JRAe" target="_blank" rel="noopener">Open Total War artist reference ↗</a></p><p class="rights">Reference artwork · All rights reserved</p></article>
+        <article class="card"><span class="tag">Fantasy heavy mounts</span><h3>War Mammoth</h3><p class="creator">Baj Singh</p><p>Study animal weight, shoulder and head anatomy, tusk placement, fur silhouette, and armor scale.</p><p><a href="https://www.artstation.com/artwork/RWx0O" target="_blank" rel="noopener">Open Total War artist reference ↗</a></p><p class="rights">Reference artwork · No model reuse license established</p></article>
+        <article class="card"><span class="tag">Mount equipment</span><h3>Howdah &amp; Warshrine</h3><p class="creator">Todd Marshall · Creative Assembly</p><p>Study platforms, straps, and structural supports fitted to a large creature's body.</p><p><a href="https://creativeassembly.artstation.com/projects/DxAd4A" target="_blank" rel="noopener">Open studio reference ↗</a></p><p class="rights">Reference artwork · All rights reserved</p></article>
+        <article class="card"><span class="tag">Giants and stonehurlers</span><h3>Norscan Giant</h3><p class="creator">Creative Assembly</p><p>Study scale, broad anatomical masses, joint placement, and a stance that communicates weight.</p><p><a href="https://creativeassembly.artstation.com/projects/8XD46" target="_blank" rel="noopener">Open studio reference ↗</a></p><p class="rights">Reference artwork · All rights reserved</p></article>
+        <article class="card"><span class="tag">Mounted fitting</span><h3>Dragon armour &amp; saddle</h3><p class="creator">Danny Sweeney</p><p>Study a saddle designed for the mount's body, fitted barding, and equipment attachment.</p><p><a href="https://dekubrush.artstation.com/projects/9baVO" target="_blank" rel="noopener">Open Total War artist reference ↗</a></p><p class="rights">Reference artwork · All rights reserved</p></article>
+      </div>
+    </section>
+
+    <section id="source">
+      <p class="eyebrow">02 · Concrete game source</p><h2>0 A.D. models and animation files</h2>
+      <div class="source"><div><p class="section-intro">The source pack from <a href="https://github.com/0ad/0ad" target="_blank" rel="noopener">0 A.D.</a> includes historical body families, modular weapons and armor, horse and rider rigs, animated animals, elephant equipment, rams, onagers, textures, and actor definitions.</p><div class="stats"><div><b id="source-files">737</b><span>source files</span></div><div><b id="source-size">117.8 MiB</b><span>downloaded data</span></div></div><p class="note">Pinned source revision:<br><code>61a3b9507d974084e6badb88a0826bd89a6d5b8b</code></p><p><a href="0ad/inventory-roster-v3.json">File inventory &amp; SHA-256 hashes</a> · <a href="roster-sources-v3.json">Source family catalog</a> · <a href="0ad/LICENSE.txt">Included license</a></p><p class="note"><strong>Attribution:</strong> original assets by <a href="https://wildfiregames.com/" target="_blank" rel="noopener">Wildfire Games</a>, licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/" target="_blank" rel="noopener">CC BY-SA 3.0</a>. Redistributed assets and their adaptations retain that license and these credits.</p></div><ol class="evidence"><li><strong>The horse carries a separate rider.</strong><p>The mount actor attaches the rider to its <code>rider</code> socket. Blanket, chest band, and reins are separate props.</p><a href="https://github.com/0ad/0ad/blob/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/actors/units/romans/cavalry_spearman_e_m.xml">Inspect the horse actor</a></li><li><strong>Equipment is modular.</strong><p>The rider has head, helmet, shield, weapon, and cape attachments, with mounted animation variants.</p><a href="https://github.com/0ad/0ad/blob/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/actors/units/romans/cavalry_spearman_e_r.xml">Inspect the rider actor</a></li><li><strong>A body can serve multiple actions.</strong><p>The infantry actor combines one body mesh with equipment and action/formation variants.</p><a href="https://github.com/0ad/0ad/blob/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/actors/units/romans/infantry_swordsman_c4.xml">Inspect the infantry actor</a></li></ol></div>
+    </section>
+
+    <section id="workflow">
+      <p class="eyebrow">03 · From source to battle</p><h2>A practical production sequence</h2>
+      <p class="section-intro">Complete the two prototype units, inspect their exported animations, and measure them in the battle before reproducing the process across factions.</p>
+      <ol class="steps">
+        <li><h3>Approve the silhouette</h3><p>Use a licensed base with coherent anatomy. Build Peris' identity through proportions, armor, cloth, weapons, and faction motifs. Review the infantry and cavalry from the game camera before expanding the roster.</p><p class="citations">Peris art direction proposal · informed by the references above</p></li>
+        <li><h3>Build a modular rig</h3><p>Share compatible skeletons within a body family. Fit equipment to named attachments. Check joint deformation in action poses.</p><p class="citations">Sources: <a href="https://github.com/0ad/0ad/blob/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/actors/units/romans/infantry_swordsman_c4.xml">0 A.D. actor</a> · <a href="https://developer.nvidia.com/gpugems/gpugems3/part-i-geometry/chapter-2-animated-crowd-rendering" target="_blank" rel="noopener">NVIDIA crowd rendering</a></p></li>
+        <li><h3>Fit the complete cavalry unit</h3><p>Seat the pelvis on the saddle, fit thighs around the horse, and place boots and hands against their equipment. Use a rider attachment and shared animation clock. Review idle, locomotion, and attack from front and side views.</p><p class="citations">Sources: <a href="https://github.com/0ad/0ad/blob/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/actors/units/romans/cavalry_spearman_e_m.xml">0 A.D. rider attachment</a> · <a href="https://threejs.org/manual/pages/animation-system.html" target="_blank" rel="noopener">Three.js clip synchronization</a></p></li>
+        <li><h3>Author the game materials</h3><p>Use base color, normal detail, and metallic/roughness response. Distinguish metal, skin, leather, and cloth under neutral lighting. Convert the downloaded legacy specular materials deliberately; specular images need interpretation.</p><p class="citations">Source: <a href="https://github.khronos.org/glTF-Tutorials/gltfTutorial/gltfTutorial_010_Materials.html" target="_blank" rel="noopener">Khronos glTF materials</a> · conversion approach is a Peris proposal</p></li>
+        <li><h3>Export and compare the GLB</h3><p>Preserve the editable Blender source. Export the intended unit collection with its skin and named clips. Inspect, optimize to a separate file, validate, and compare the export in Three.js with the accepted source.</p><p class="citations">Sources: <a href="https://threejs.org/manual/pages/loading-3d-models.html" target="_blank" rel="noopener">Three.js GLB workflow</a> · <a href="https://threejs.org/manual/pages/animation-system.html" target="_blank" rel="noopener">Animation clips</a></p></li>
+        <li><h3>Measure the army renderer</h3><p>Share compatible assets, cull offscreen soldiers, and reduce distant detail. After validating individual clips, consider bone animation textures with per-instance timing. Measure armies on named hardware.</p><p class="citations">Source: <a href="https://developer.nvidia.com/gpugems/gpugems3/part-i-geometry/chapter-2-animated-crowd-rendering" target="_blank" rel="noopener">NVIDIA GPU Gems 3, Chapter 2</a>. Its DirectX 10 method needs adaptation and measurement in Three.js/WebGL.</p></li>
+      </ol>
+    </section>
+
+    <section id="review"><p class="eyebrow">04 · Review criteria</p><h2>What makes the prototypes ready?</h2><ul class="criteria"><li>Recognizable race anatomy, face and silhouette from the battle camera.</li><li>Distinct faction armor, weapons, materials and mounts across every role.</li><li>Stable rider contact in idle, movement, and attack clips.</li><li>Complete clips, textures, attachments, and bind pose after export.</li><li>Visual comparison of source, optimized model, and detail levels.</li><li>Recorded hardware, viewport, unit count, quality, FPS, draw calls, and triangles.</li><li>Independent verification of existing formation commands, combat, and saves.</li><li>Published screenshots match the current models and pass the visual review.</li></ul></section>
+  </main>
+  <footer><div class="wrap">Research and prototype guidance · no production quality or performance target is claimed as achieved.<br><a href="catalog.json">Structured research catalog</a> · <a href="https://github.com/0ad/0ad/blob/61a3b9507d974084e6badb88a0826bd89a6d5b8b/binaries/data/mods/public/art/LICENSE.txt" target="_blank" rel="noopener">Original source license</a></div></footer>
+  <script type="module">
+    const catalog = await fetch('catalog.json').then(response => response.json());
+    document.querySelector('#source-files').textContent = catalog.sourcePack.files;
+    document.querySelector('#source-size').textContent = (catalog.sourcePack.bytes / 1024 ** 2).toFixed(1) + ' MiB';
+    const roster = catalog.rosterPrototypes;
+    if (roster) document.querySelector('#roster-status').textContent = roster.status + ' ' + roster.factionsReady.length + ' of ' + roster.totalFactions + ' factions reviewed; ' + roster.screenshotsReady + ' current unit screenshots available.';
+  </script>
+</body>
+</html>

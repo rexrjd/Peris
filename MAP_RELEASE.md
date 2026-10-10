@@ -1,20 +1,21 @@
 # Publish the map release
 
-All work belongs to `mehdi/map-overhaul`. Latest fetched main at preparation time: `a26e5e7`, merged on the feature branch as `68f4796`. No main checkout, force push, remote merge or live database deployment was performed.
+The map overhaul and tactical unit work are integrated with main's Empire/Heroes V10 systems. The original map work started on `mehdi/map-overhaul`; it is included in the unit branch's ancestry. Use a separate integration checkout to review and test newer main changes before publication.
 
-## Send the branch to GitHub
+## Publish a tested integration
 
 ```powershell
 git branch --show-current
 git status
-git push origin mehdi/map-overhaul
+git fetch origin
+git push origin HEAD:main
 ```
 
-The branch should be `mehdi/map-overhaul` and the working tree clean. Open a GitHub pull request from it into `main`; review with the city developer before merging. If main advances again, fetch and merge its new commits into this feature branch and rerun checks. Preserve shared history.
+Publish only the reviewed integration commit with a clean working tree and passing checks. Direct publication to `main` requires the maintainer's authorization. If main advances again, fetch and merge its new commits into the integration branch and rerun affected checks. Preserve shared history and use a normal push.
 
 ## Update the database and app together
 
-Back up the database, review `supabase/UPGRADE_TO_V9.sql`, then apply it through the project's normal Supabase release process. It installs wrapped rules, field ownership, construction and production without resetting city slots, factions or magic research. Do not use a fresh-install file on an existing database. Unsafe occupied positions abort the migration.
+Back up the database, review `supabase/UPGRADE_TO_V10.sql`, then apply it through the project's normal Supabase release process. It installs wrapped map and Empire/Heroes rules without resetting city slots, factions or magic research. Do not use a fresh-install file on an existing database. Unsafe occupied positions abort the migration. A Git push does not apply this SQL.
 
 Deploy the normal game with the matching database migration. The actual campaign/online map needs no `?map-preview=1`; that URL remains a temporary art demo with different rules. Source changes alone do not update the hosted database or game.
 
@@ -31,7 +32,12 @@ npm run test:magic-db
 npm run test:factions-db
 npm run test:territory-db
 npm run test:map-db
+npm run test:population-db
+npm run test:empire-db
+npm run test:tooling
+npm run assets:check
 npm run build
+npm run test:e2e
 ```
 
-Use `npm.cmd` if PowerShell blocks npm. Rendered desktop/mobile verification and multiplayer load testing remain outstanding. Browser access was denied by the saved permission during preparation. No remote push or deployment was made on your behalf.
+Use `npm.cmd` if PowerShell blocks npm. Inspect the browser captures as well as the test results. Multiplayer load testing and live deployment remain separate release work.

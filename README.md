@@ -1,6 +1,8 @@
 # Peris v0.8 · Gameplay architecture
 
-The map release integrates a seeded seamless world and persistent external fields with latest main's city, eleven factions and magic systems. See **MAP_RELEASE.md** for branch publication/database deployment and **MAP_WORLD.md** for current rules. Existing databases use **UPGRADE_TO_V10.sql**; empty installations use **FRESH_INSTALL_V10.sql**. The earlier map notes below describe the preceding continental release.
+Development tools: see **docs/DEV_TOOLS.md** for Codex/Blender/Playwright setup and **docs/GRAPHICS_PIPELINE.md** for model export and the next 3D battle milestone. On Windows, `START-PERIS-TOOLS.cmd` prepares the local checkout after Node.js is installed.
+
+The map release integrates a seeded seamless world and persistent external fields with latest main's city, eleven factions, magic, Empire and Heroes systems. See **MAP_RELEASE.md** for publication/database deployment and **MAP_WORLD.md** for map rules. Existing databases use **UPGRADE_TO_V10.sql**; empty installations use **FRESH_INSTALL_V10.sql**. The earlier map notes below describe the preceding continental release.
 
 This is a structural refactor of the latest Peris v7 game. It keeps the current campaign, artwork, tactical rules, save compatibility and online behavior while separating map, battle, city, army, campaign, UI, rendering and platform systems.
 
@@ -27,6 +29,8 @@ Open **Menu → Cities & expansion** or the city dock to train settlers and foun
 - `npm run test:empire-db`: isolated multiple-city/army, culture/settler, hero/artifact, combat and migration checks.
 
 ## Game
+
+Battles now include an optional **3D prototype** view in the command panel. It uses the existing tactical rules and orders, with procedural soldiers and automatic 2D fallback. See [BATTLE_3D.md](BATTLE_3D.md) for controls, validation, limitations and the future GLB character interface.
 
 Campaign: develop eight buildings, collect four resources, recruit infantry/archers/cavalry, march to six camps, deploy, fight and rebuild. Strategic income/queues/travel use timestamps and continue while away. Troop casualties persist. Quick battle supports four terrains, three difficulties and three army doctrines. Settings include sound/music, display/order options and campaign export/import/backup.
 
