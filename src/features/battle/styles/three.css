@@ -1,5 +1,16 @@
 .battle-3d-canvas{overflow:hidden;background:#344b42}
 .battle-3d-canvas>canvas{display:block;width:100%;height:100%;touch-action:none}
+.army-loading{position:absolute;inset:0;display:grid;place-content:center;color:#f1d89d;background:#17291ee0;z-index:4;font-size:18px}
+.army-inspection{position:absolute;top:105px;left:14px;right:14px;display:flex;flex-wrap:wrap;gap:5px;align-items:center;pointer-events:none}
+.army-inspection button{pointer-events:auto;background:#1c3025df;color:#ebd7a6;padding:7px 10px;border:1px solid #9b9c6c88;border-radius:3px;font-size:10px}
+.army-inspection label{pointer-events:auto;color:#ebd7a6;font-size:10px;display:flex;align-items:center;gap:5px;background:#1c3025df;border-radius:3px;padding:0 5px}
+.army-inspection select{max-width:155px;background:#263c30;color:#e5dcc0;border:1px solid #738164;padding:5px;border-radius:3px;font-size:10px}
+.army-inspection small{margin-left:auto;color:#e2d7b8;background:#162b22bb;padding:5px;font:10px monospace}
+.model-inspection .army-inspection{top:8px}
+.model-inspection .deployment-banner{top:auto;bottom:54px;left:auto;right:12px;padding:0;border:0;background:none;box-shadow:none}
+.model-inspection .deployment-banner>div{display:none}
+.model-inspection .deployment-banner .button{min-width:112px;min-height:34px;padding:8px;font-size:10px}
+@media(max-width:760px){.army-inspection{top:8px;left:6px;right:6px}.army-inspection button{font-size:8px;padding:5px}.army-inspection label,.army-inspection select{font-size:8px}.army-inspection select{max-width:120px;padding:3px}.army-inspection small{font-size:8px}}
 .battle-3d-labels{position:absolute;inset:0;pointer-events:none;overflow:hidden}
 .battle-3d-label{position:absolute;top:0;left:0;white-space:pre;font-size:9px;line-height:1.5;text-align:center;color:#e7ddc5;background:#182a24cf;border:1px solid #b7a67a77;border-radius:3px;padding:3px 6px;box-shadow:0 2px 6px #10201955}
 .battle-3d-label.hostile{border-color:#7cabb6;color:#d6e6eb}

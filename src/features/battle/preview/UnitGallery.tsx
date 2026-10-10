@@ -8,9 +8,9 @@ import './unit-gallery.css';
 
 type GalleryPack = { sourceEdition?: string; near?: { sha256?: string }; far?: { sha256?: string } };
 
-export default function UnitGallery() {
+export default function UnitGallery({ initialFaction, onClose, onBattle }: { initialFaction?: Faction; onClose?: () => void; onBattle?: (faction: Faction) => void } = {}) {
     const params = new URLSearchParams(location.search);
-    const [faction, setFaction] = useState<Faction>(() => factionOf(params.get('faction') || 'orc'));
+    const [faction, setFaction] = useState<Faction>(() => initialFaction ?? factionOf(params.get('faction') || 'orc'));
     const [role, setRole] = useState<ArmyRole>(() => ARMY_ROLES.includes(params.get('unit') as ArmyRole) ? params.get('unit') as ArmyRole : 'line_infantry');
     const [detail, setDetail] = useState<'near' | 'far'>('near'), [motion, setMotion] = useState<GalleryMotion>('idle'), [view, setView] = useState<GalleryView>('three');
     const [frame, setFrame] = useState(0), [playing, setPlaying] = useState(false), [status, setStatus] = useState('Preparing viewer…');
@@ -47,8 +47,8 @@ export default function UnitGallery() {
     const profile = rosters.roster.find(item => item.id === faction)!;
     const units = [...profile.troops, ...profile.siege];
     const unit = units.find(item => item.id === role)!;
-    return <main className="unit-gallery" data-model-edition={packs[faction]?.sourceEdition} data-model-sha256={override ? undefined : fingerprint}>
-        <header><div><small>PERIS · UNIT GALLERY</small><h1>{unit.name}</h1><p>{FACTIONS[faction].name} · {role === 'ram' || role === 'catapult' ? 'Siege visual study' : 'Battle troop visual prototype'}</p></div><a href={`/?battle-preview=1&unit-prototypes=1&faction=${faction}&enemy=${faction === 'roman' ? 'orc' : 'roman'}${localPilot ? '&orc-pilot=1' : ''}`}>Try in battle ↗</a></header>
+    return <main className={`unit-gallery ${onClose ? "embedded" : ""}`} data-model-edition={packs[faction]?.sourceEdition} data-model-sha256={override ? undefined : fingerprint}>
+        <header><div><small>PERIS · UNIT GALLERY</small><h1>{unit.name}</h1><p>{FACTIONS[faction].name} · {role === 'ram' || role === 'catapult' ? 'Siege visual study' : 'Battle troop visual prototype'}</p></div><>{onBattle && <button onClick={() => onBattle(faction)}>Quick battle with this faction</button>}{onClose ? <button onClick={onClose}>Return to game</button> : <a href={`/?battle-preview=1&unit-prototypes=1&faction=${faction}&enemy=${faction === 'roman' ? 'orc' : 'roman'}${localPilot ? '&orc-pilot=1' : ''}`}>Try in battle ↗</a>}</></header>
         <nav aria-label="Unit viewer controls">
             <label>Faction<select aria-label="Gallery faction" value={faction} onChange={event => { setFaction(factionOf(event.target.value)); setPlaying(false); setFrame(0); }}>{Object.entries(FACTIONS).map(([key, value]) => <option key={key} value={key}>{value.name}</option>)}</select></label>
             <label>Unit<select aria-label="Gallery unit" value={role} onChange={event => { setRole(event.target.value as ArmyRole); setPlaying(false); setFrame(0); }}>{units.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>

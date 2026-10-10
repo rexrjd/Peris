@@ -27,7 +27,9 @@ test('quick battle supports deployment, commands, pause and withdrawal', async (
   await expect(page.getByRole('heading', { name: 'PERIS', exact: true })).toBeVisible();
   await page.getByRole('button', { name: /Quick battle/ }).click();
   await page.getByRole('button', { name: 'Deploy your army' }).click();
-  const field = page.locator('canvas[aria-label^="Tactical battlefield"]');
+  const field = page.locator('.battle-3d-canvas canvas');
+  await expect(page.locator('.battle-3d-canvas')).toHaveAttribute('data-unit-models', 'published', {timeout:60000});
+  await expect(page.locator('.unit-card')).toHaveCount(7);
   await expect(field).toBeVisible();
   await expect(page.getByRole('button', { name: 'Begin battle', exact: true })).toBeEnabled();
   await capture(page, testInfo, 'battle-deployment');

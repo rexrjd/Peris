@@ -1,3 +1,5 @@
+import { readArmyCultures } from './armyCultures';
+import type { Faction } from '../../features/factions/domain/factions';
 import { rpcCommand } from './rpcCommands';
 import { type GameEngine } from '../contracts';
 import { type Command } from '../../shared/model/commands';
@@ -31,6 +33,9 @@ export class OnlineEngine implements GameEngine {
     snapshot: World;
     readonly playerId: string;
     private core: World;
+    private armyCultures = new Map<number, Faction>();
+    private culturesAt = 0;
+    private culturesBusy = false;
     private publicMap: PublicMapSnapshot | null = null;
     private viewport: MapBounds;
     private mapRevision = 0;
@@ -116,6 +121,28 @@ export class OnlineEngine implements GameEngine {
         window.clearTimeout(this.mapDebounce);
         this.mapDebounce = window.setTimeout(() => { this.mapDebounce = undefined; void this.refreshMap(); }, 300);
     };
+    private async refreshArmyCultures() {
+        if (!this.alive || this.culturesBusy || Date.now() - this.culturesAt < 10000) return;
+        this.culturesBusy = true;
+        const controller = new AbortController(); this.requests.add(controller);
+        try {
+            const world = { ...this.core, armies: [...this.core.armies, ...(this.publicMap?.armies ?? [])] };
+            const cultures = await readArmyCultures(world, {
+                armies: async ids => {
+                    if (!ids.length) return [];
+                    const { data, error } = await supabase.from('armies').select('id,owner_id,home_settlement_id').in('id', ids).abortSignal(controller.signal);
+                    if (error) throw error; return data ?? [];
+                },
+                cities: async ids => {
+                    if (!ids.length) return [];
+                    const { data, error } = await supabase.from('settlements').select('id,faction').in('id', ids).abortSignal(controller.signal);
+                    if (error) throw error; return data ?? [];
+                },
+            });
+            if (this.alive) { this.armyCultures = cultures; this.culturesAt = Date.now(); this.publish(); }
+        } catch { /* Map and battle commands remain usable if cosmetic lookup fails. */ }
+        finally { this.requests.delete(controller); this.culturesBusy = false; }
+    }
     private publish() {
         if (!this.alive) return;
         this.error = this.coreError ?? this.mapError;
@@ -135,6 +162,13 @@ export class OnlineEngine implements GameEngine {
                 map: { ...this.core.map!, total_players: publicMap.total_players, total_settlements: publicMap.total_settlements, settlements_truncated: publicMap.settlements_truncated, armies_truncated: publicMap.armies_truncated, plots_truncated: publicMap.plots_truncated },
             };
         }
+        this.snapshot = { ...this.snapshot,
+            armies: this.snapshot.armies.map(army => ({ ...army, faction: this.armyCultures.get(army.id) ?? army.faction })),
+            battles: this.snapshot.battles.map(battle => ({ ...battle,
+                attacker_faction: battle.attacker_faction ?? this.armyCultures.get(battle.attacker_army_id),
+                defender_faction: battle.defender_faction ?? (battle.defender_army_id === null ? undefined : this.armyCultures.get(battle.defender_army_id)),
+            })),
+        };
         this.listeners.forEach(fn => fn());
     }
     private async refreshMap() {
@@ -148,6 +182,7 @@ export class OnlineEngine implements GameEngine {
             if (error) throw error;
             if (this.alive && revision === this.mapRevision) {
                 this.publicMap = data as PublicMapSnapshot;
+                void this.refreshArmyCultures();
                 this.mapError = null;
                 this.publish();
             }
@@ -171,6 +206,7 @@ export class OnlineEngine implements GameEngine {
             if (this.alive) {
                 const hadMap = !!this.core.map;
                 this.core = data as World;
+                void this.refreshArmyCultures();
                 this.lastCoreSnapshotAt = Date.now();
                 this.coreError = null;
                 this.publish();

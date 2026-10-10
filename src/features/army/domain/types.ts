@@ -1,5 +1,7 @@
 export type UnitType = 'infantry' | 'archers' | 'cavalry';
 export type Army = {
+    /** Public presentation metadata; not a combat statistic. */
+    faction?: import('../../factions/domain/factions').Faction;
     id: number;
     owner_id: string;
     home_settlement_id: number;

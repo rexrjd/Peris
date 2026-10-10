@@ -31,6 +31,7 @@ export class BattleScene {
     private environment: WebGLRenderTarget | null = null;
     private inspectedId: number | null = null;
     private alive = true;
+    private readyFrames = 0;
     private readonly formations = new Map<number, FormationView>();
     private readonly showcases: Group[] = [];
     private readonly ray = new Raycaster();
@@ -41,7 +42,7 @@ export class BattleScene {
     constructor(private readonly canvas: HTMLCanvasElement, private readonly labels: HTMLDivElement, private readonly selectionBox: HTMLDivElement,
         private readonly state: () => RenderState, private readonly actions: () => RenderActions,
         private readonly unavailable: () => void, private readonly soldiers: SoldierVisualFactory = createLowPolySoldiers,
-        private readonly quality: 'balanced' | 'ultra' = 'balanced', private readonly diagnostics?: (fps: number, calls: number, triangles: number) => void) {
+        private readonly quality: 'balanced' | 'ultra' = 'balanced', private readonly diagnostics?: (fps: number, calls: number, triangles: number) => void, private readonly ready?: () => void) {
         const terrain = state().battle!.terrain;
         this.view = new BattleCamera((x, y) => battlefieldHeight(terrain, x, y));
         try {
@@ -161,6 +162,9 @@ export class BattleScene {
                 Object.assign(this.sun.shadow.camera,{left:-850,right:850,top:650,bottom:-650});this.sun.shadow.camera.updateProjectionMatrix();this.shadowSpan=0;
             }
             this.zones.visible = this.state().battle!.phase === 'deployment' && !this.view.inspecting; this.renderer!.render(this.scene, this.view.camera);
+            // Imported rigs, palettes, textures and shaders must reach actual
+            // frames before removing the loading cover or accepting visual QA.
+            if (++this.readyFrames === 2) this.ready?.();
             if (this.diagnostics) {
                 this.metricFrames++;
                 if (!this.metricStart) this.metricStart=time;

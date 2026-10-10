@@ -2,12 +2,12 @@ import { type Formation } from './types';
 import { type Army } from '../../army/domain/types';
 import { UNITS, UNIT_TYPES } from '../../army/domain/units';
 export function formationSize(f: Formation) { const cols = Math.min(f.columns, Math.max(1, f.soldiers)); return { width: cols * 8 + 12, depth: Math.ceil(Math.min(f.soldiers, 120) / cols) * 8 + 12 }; }
-export function makeFormations(battleId: number, army: Pick<Army, 'infantry' | 'archers' | 'cavalry'>, owner: string | null, side: 'attacker' | 'defender', morale = 90): Formation[] {
+export function makeFormations(battleId: number, army: Pick<Army, 'infantry' | 'archers' | 'cavalry'>, owner: string | null, side: 'attacker' | 'defender', morale = 90, counts?: Partial<Record<'infantry' | 'archers' | 'cavalry', number>>): Formation[] {
     let index = 0;
     const result: Formation[] = [];
     for (const type of UNIT_TYPES) {
         const max = type === 'infantry' ? 60 : type === 'archers' ? 40 : 24;
-        const n = Math.min(6, Math.ceil(army[type] / max));
+        const n = counts?.[type] === undefined ? Math.min(6, Math.ceil(army[type] / max)) : Math.min(army[type], Math.max(1, Math.min(6, Math.floor(counts[type]!))));
         for (let i = 0; i < n; i++) {
             const soldiers = Math.floor(army[type] / n) + (i < army[type] % n ? 1 : 0);
             const left = side === 'attacker';

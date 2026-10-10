@@ -42,6 +42,8 @@ export class UnitGalleryScene {
     private selected: Mesh[] = [];
     private generation = 0;
     private disposed = false;
+    private readyFrames = 0;
+    private readyMessage = '';
     private height = 2;
     private width = 2;
     private firstTime = 0;
@@ -73,7 +75,8 @@ export class UnitGalleryScene {
             const cameraChanged = this.controls.update();
             // A paused inspection needs a new frame only when its camera changes.
             // Pose, loading and resize changes render immediately in their handlers.
-            if (this.pose.playing || cameraChanged) this.renderer.render(this.scene, this.camera);
+            if (this.pose.playing || cameraChanged || this.readyFrames > 0) this.renderer.render(this.scene, this.camera);
+            if (this.readyFrames > 0 && --this.readyFrames === 0) this.status(this.readyMessage);
         });
     }
     private resize() {
@@ -106,6 +109,11 @@ export class UnitGalleryScene {
         });
         const clip = this.gltf.animations.find(item => item.name === `${pose.role}_${pose.motion}`);
         if (!this.selected.length || !clip) { this.status(`Unit unavailable: missing ${pose.role} geometry or ${pose.motion} animation`); return; }
+        const surfaces = this.selected.flatMap(mesh => Array.isArray(mesh.material) ? mesh.material : [mesh.material]);
+        this.host.dataset.unitTextures = surfaces.every(material => {
+            const image = material instanceof MeshStandardMaterial ? material.map?.image as { width?: number; height?: number } | undefined : undefined;
+            return (image?.width ?? 0) > 0 && (image?.height ?? 0) > 0;
+        }) ? 'ready' : 'missing';
         this.firstTime = Math.min(...clip.tracks.map(track => track.times[0])); this.lastTime = clip.duration;
         if (resetMotion) {
             this.elapsed = (this.lastTime - this.firstTime) * pose.frame / 24;
@@ -130,9 +138,11 @@ export class UnitGalleryScene {
         }
         if (reframe || roleChanged || viewChanged) this.frame();
         const triangles = this.selected.reduce((sum, mesh) => sum + (mesh.geometry.index?.count ?? mesh.geometry.attributes.position.count) / 3, 0);
-        // The ready signal also means the selected geometry has reached the canvas.
+        // Let the imported textures and shaders reach successive frames before
+        // reporting ready. A paused viewer then returns to rendering on demand.
         this.renderer.render(this.scene, this.camera);
-        this.status(`Ready · ${pose.role} · ${Math.round(triangles).toLocaleString()} triangles · ${this.selected.length} mesh parts · ${pose.motion}`);
+        this.readyMessage = `Ready · ${pose.role} · ${Math.round(triangles).toLocaleString()} triangles · ${this.selected.length} mesh parts · ${pose.motion}`;
+        this.readyFrames = 2; this.status('Preparing unit…');
     }
     private frame() {
         const aim = new Vector3(0, this.height * .48, 0);
@@ -142,6 +152,7 @@ export class UnitGalleryScene {
         this.controls.target.copy(aim); this.controls.update();
     }
     private clear() {
+        this.readyFrames = 0; this.readyMessage = '';
         if (this.gltf) {
             this.mixer?.stopAllAction(); this.mixer?.uncacheRoot(this.gltf.scene); this.scene.remove(this.gltf.scene); release(this.gltf.scene); this.gltf = undefined; this.mixer = undefined;
             if (!this.disposed) this.renderer.render(this.scene, this.camera);

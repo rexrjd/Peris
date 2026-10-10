@@ -1,5 +1,6 @@
 import { type UnitType } from '../../army/domain/types';
 import { type Resources } from '../../../shared/model/resources';
+import type { Faction } from '../../factions/domain/factions';
 export type Terrain = 'plains' | 'woods' | 'highlands' | 'river';
 export type Difficulty = 'easy' | 'normal' | 'hard';
 export type Battle = {
@@ -8,6 +9,9 @@ export type Battle = {
     defender_owner_id: string | null;
     attacker_army_id: number;
     defender_army_id: number | null;
+    /** Optional cosmetic overrides for isolated Quick Battles. */
+    attacker_faction?: Faction;
+    defender_faction?: Faction;
     status: 'active' | 'resolved';
     phase: 'deployment' | 'combat' | 'finished';
     attacker_ready: boolean;

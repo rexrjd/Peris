@@ -86,7 +86,9 @@ test('a published Roman roster remains visible when its chosen opponent only has
     const errors:string[]=[],assets=new Map<string,number>();
     page.on('pageerror',error=>errors.push(error.message));
     page.on('response',response=>{const path=new URL(response.url()).pathname;if(path.match(/\/models\/battle\/(roman|orc)-(army|roster)/))assets.set(path,response.status());});
-    await page.route('**/models/battle/faction-rosters.json',route=>route.fulfill({json:{factions:{roman:{near:{},far:{}},orc:{near:{},far:{}}},withheld:{orc:{reason:'Explicit quality review withholding'}}}}));
+    const publication = await (await page.request.get('/models/battle/faction-rosters.json')).json();
+    publication.withheld = { ...publication.withheld, orc: { reason: 'Explicit quality review withholding' } };
+    await page.route('**/models/battle/faction-rosters.json',route=>route.fulfill({json:publication}));
     await page.addInitScript(()=>{
         localStorage.setItem('peris-settings',JSON.stringify({sound:false,music:false,reducedMotion:true}));
         localStorage.setItem('peris-solo-v6','preserve-mixed-campaign');

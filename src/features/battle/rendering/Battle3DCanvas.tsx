@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Vector3 } from 'three';
 import { type Faction } from '../../factions/domain/factions';
-import { ARMY_ROLES, armyRole, createArmyFactory, loadArmy, loadArmyRoles, overlayArmyRolesPair, siegeShowcase, type ArmyRole } from './three/armyAssets';
+import { ARMY_ROLES, armyRole, createArmyFactory, loadBattleArmy as loadArmy, loadArmyRoles, overlayArmyRolesPair, siegeShowcase, type ArmyRole } from './three/armyAssets';
 import { battlefieldHeight } from './three/terrain';
 import { type RenderActions, type RenderState } from '../../../shared/rendering/contracts';
 import { Icon } from '../../../shared/ui/Icons';
@@ -53,14 +53,13 @@ export function Battle3DCanvas({ state, actions, onUnavailable, onInspectionChan
             try {
                 let lastStats = 0;
                 instance = new BattleScene(canvas.current, labels.current, selection.current, () => refs.current.state, () => refs.current.actions, () => refs.current.onUnavailable(),factory,art?.quality,
-                    art ? (fps,calls,triangles) => { if (performance.now()-lastStats > 1000) { lastStats=performance.now(); setStats(`${Math.round(fps)} FPS · ${calls} draws · ${(triangles/1e6).toFixed(2)}M triangles`); } } : undefined);
+                    art ? (fps,calls,triangles) => { if (performance.now()-lastStats > 1000) { lastStats=performance.now(); setStats(`${Math.round(fps)} FPS · ${calls} draws · ${(triangles/1e6).toFixed(2)}M triangles`); } } : undefined, () => { if (!cancelled) setLoading(false); });
                 if (ownArmy) {
                     const terrain = refs.current.state.battle!.terrain;
                     instance.addShowcase(siegeShowcase(ownArmy,'ram',new Vector3(75,battlefieldHeight(terrain,75,290),290)));
                     instance.addShowcase(siegeShowcase(ownArmy,'catapult',new Vector3(75,battlefieldHeight(terrain,75,350),350)));
                 }
                 renderer.current = instance;
-                setLoading(false);
             } catch (error) { release(); console.warn('3D battlefield unavailable', error); refs.current.onUnavailable(); }
         }).catch(error => { if (!cancelled) { console.warn('3D battlefield could not load', error); refs.current.onUnavailable(); } });
         return () => { cancelled = true; instance?.destroy(); release(); if (renderer.current === instance) renderer.current = null; };
@@ -80,7 +79,7 @@ export function Battle3DCanvas({ state, actions, onUnavailable, onInspectionChan
         if (formation) inspectRole(armyRole(formation,state.world.formations));
     };
     const overview = () => { renderer.current?.center(); setInspectedRole(''); onInspectionChange?.(false); };
-    return <div className="canvas-container battle-3d-canvas">
+    return <div className="canvas-container battle-3d-canvas" data-unit-models={loading ? "loading" : art?.prototypes ? "published" : "legacy"} data-faction={art?.faction} data-enemy-faction={art?.enemy}>
         <canvas ref={canvas} tabIndex={0} aria-label="3D tactical battlefield. Click to select, Shift-click to add, drag to select a group. Right-click to move or attack, right-drag to set a line. Middle-drag or Alt-drag and arrow keys pan. Scroll or pinch to zoom, Q and E rotate. Touch users can choose Move or Attack before tapping."/>
         <div className="battle-3d-labels" ref={labels} style={{visibility:showLabels?'visible':'hidden'}}/><div className="battle-3d-selection" ref={selection} hidden/>
         {loading && <div className="army-loading" role="status">Preparing the army meshes…</div>}

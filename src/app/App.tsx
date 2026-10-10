@@ -1,3 +1,6 @@
+import { lazy, Suspense } from 'react';
+import { factionOf, type Faction } from '../features/factions/domain/factions';
+const UnitGallery = lazy(() => import('../features/battle/preview/UnitGallery'));
 import { EmpirePanel } from '../features/empire/ui/EmpirePanel';
 import { useEffect } from 'react';
 import { useMemo } from 'react';
@@ -48,11 +51,14 @@ function writeFlag(key: string) { try {
 catch { /* The current session still remembers. */ } }
 export default function App() {
     const [engine, setEngine] = useState<GameEngine | null>(null), [busy, setBusy] = useState(false), [error, setError] = useState<string | null>(null), [settings, setSettings] = useState(false), [codex, setCodex] = useState(false);
+    const [previewFaction, setPreviewFaction] = useState<Faction>();
     const prefs = useSyncExternalStore(subscribePreferences, preferences), lastPractice = useRef<{
         terrain: Terrain;
         difficulty: Difficulty;
         doctrine: Doctrine;
-    }>({ terrain: 'plains', difficulty: 'normal', doctrine: 'balanced' });
+        faction: Faction;
+        enemy: Faction;
+    }>({ terrain: 'plains', difficulty: 'normal', doctrine: 'balanced', faction: 'roman', enemy: 'orc' });
     useEffect(() => () => engine?.destroy(), [engine]);
     useEffect(() => { document.documentElement.classList.toggle('reduced-motion', prefs.reducedMotion); }, [prefs.reducedMotion]);
     useEffect(() => { const unlock = () => unlockAudio(); window.addEventListener('pointerdown', unlock, { once: true }); return () => window.removeEventListener('pointerdown', unlock); }, []);
@@ -85,16 +91,18 @@ export default function App() {
     finally {
         setBusy(false);
     } };
-    const practice = (terrain: Terrain, difficulty: Difficulty, doctrine: Doctrine) => { lastPractice.current = { terrain, difficulty, doctrine }; replace(() => { const e = new LocalEngine(createSolo('Your legion'), false); e.startPractice(terrain, difficulty, doctrine); return e; }); };
+    const practice = (terrain: Terrain, difficulty: Difficulty, doctrine: Doctrine, faction: Faction = 'roman', enemy: Faction = 'orc') => { lastPractice.current = { terrain, difficulty, doctrine, faction, enemy }; replace(() => { const e = new LocalEngine(createSolo('Your legion'), false); e.startPractice(terrain, difficulty, doctrine, faction, enemy); return e; }); };
+    const gallery = previewFaction && <Modal title="Unit preview" className="unit-preview-modal" onClose={() => setPreviewFaction(undefined)}><Suspense fallback={<p role="status">Preparing unit preview…</p>}><UnitGallery initialFaction={previewFaction} onClose={() => setPreviewFaction(undefined)} onBattle={engine ? undefined : faction => { setPreviewFaction(undefined); practice("plains", "normal", "balanced", faction, faction === "roman" ? "orc" : "roman"); }}/></Suspense></Modal>;
     if (!engine)
-        return <><Login onSolo={solo} onOnline={name => void online(name)} onPractice={practice} onSettings={() => setSettings(true)} onCodex={() => setCodex(true)} busy={busy} error={error}/>{settings && <Settings onClose={() => setSettings(false)} onLoad={load}/>} {codex && <Codex onClose={() => setCodex(false)}/>}</>;
-    return <Realm key={`${engine.playerId}:${engine.snapshot.players.find(p => p.id === engine.playerId)?.created_at}:${engine.mode}`} engine={engine} onExit={() => { engine.destroy(); setEngine(null); }} onLoad={load} onRetry={() => practice(lastPractice.current.terrain, lastPractice.current.difficulty, lastPractice.current.doctrine)}/>;
+        return <><Login onUnitPreview={faction => setPreviewFaction(faction ?? "roman")} onSolo={solo} onOnline={name => void online(name)} onPractice={practice} onSettings={() => setSettings(true)} onCodex={() => setCodex(true)} busy={busy} error={error}/>{settings && <Settings onClose={() => setSettings(false)} onLoad={load}/>} {codex && <Codex onClose={() => setCodex(false)}/>} {gallery}</>;
+    return <><Realm onUnitPreview={setPreviewFaction} key={`${engine.playerId}:${engine.snapshot.players.find(p => p.id === engine.playerId)?.created_at}:${engine.mode}`} engine={engine} onExit={() => { engine.destroy(); setEngine(null); }} onLoad={load} onRetry={() => practice(lastPractice.current.terrain, lastPractice.current.difficulty, lastPractice.current.doctrine, lastPractice.current.faction, lastPractice.current.enemy)}/>{gallery}</>;
 }
-function Realm({ engine, onExit, onLoad, onRetry }: {
+function Realm({ engine, onExit, onLoad, onRetry, onUnitPreview }: {
     engine: GameEngine;
     onExit: () => void;
     onLoad: (world: World) => void;
     onRetry: () => void;
+    onUnitPreview: (faction: Faction) => void;
 }) {
     const world = useSyncExternalStore(engine.subscribe, () => engine.snapshot);
     const [view, setView] = useState<View>('world'), [selection, setSelection] = useState<MapSelection>(null), [moveMode, setMoveMode] = useState(false), [busy, setBusy] = useState(false), [notice, setNotice] = useState<{
@@ -185,7 +193,7 @@ function Realm({ engine, onExit, onLoad, onRetry }: {
    <header className="realm-topbar game-header"><button className="game-brand" aria-label="Peris world map" onClick={()=>navigate('world')}>PERIS</button>
    <GameNavigation view={view} rewards={QUESTS.some(q=>player[q.stat]>=q.target&&!world.claims.some(c=>c.quest_id===q.id&&c.owner_id===engine.playerId))} onNavigate={navigate}/>
    <ResourceHud resources={resources} capacity={storage} rate={rate} onSelect={setResource}/>
-   <details ref={menuRef} className="realm-tools game-menu"><summary aria-label="Game menu"><Icon name="settings" size={19}/><span>Menu</span></summary><div><div className="game-menu-player"><strong>{player.display_name}</strong><small>{campaignRank(done.size)}</small></div><button onClick={event=>{event.currentTarget.closest('details')?.removeAttribute('open');openEmpire();}}><Icon name="world" size={17}/>Empire atlas</button><button onClick={event=>{event.currentTarget.closest('details')?.removeAttribute('open');setHelp(true);}}><Icon name="book" size={17}/>Codex</button><button onClick={event=>{event.currentTarget.closest('details')?.removeAttribute('open');setSettings(true);}}><Icon name="settings" size={17}/>Settings</button><button onClick={onExit}><Icon name="exit" size={17}/>Main menu</button><small className="game-save-status">{engine.mode==='online'?'Shared world':'Campaign saved automatically'}</small></div></details></header>
+   <details ref={menuRef} className="realm-tools game-menu"><summary aria-label="Game menu"><Icon name="settings" size={19}/><span>Menu</span></summary><div><div className="game-menu-player"><strong>{player.display_name}</strong><small>{campaignRank(done.size)}</small></div><button onClick={event=>{event.currentTarget.closest('details')?.removeAttribute('open');openEmpire();}}><Icon name="world" size={17}/>Empire atlas</button><button onClick={event=>{event.currentTarget.closest('details')?.removeAttribute('open');onUnitPreview(factionOf(town.faction));}}><Icon name="army" size={17}/>Unit preview</button><button onClick={event=>{event.currentTarget.closest('details')?.removeAttribute('open');setHelp(true);}}><Icon name="book" size={17}/>Codex</button><button onClick={event=>{event.currentTarget.closest('details')?.removeAttribute('open');setSettings(true);}}><Icon name="settings" size={17}/>Settings</button><button onClick={onExit}><Icon name="exit" size={17}/>Main menu</button><small className="game-save-status">{engine.mode==='online'?'Shared world':'Campaign saved automatically'}</small></div></details></header>
    <main className={`realm-content ${view === 'world' ? 'world-content' : view === 'settlement' ? 'city-content' : view === 'army' ? 'army-content' : ''}`}>
     {!empireOpen && (view === 'world' ? <WorldView world={world} playerId={engine.playerId} selection={selection} setSelection={selectMap} cityId={town.id} armyId={selectedArmy.id} onCity={chooseCity} onArmy={chooseArmy} onEmpire={()=>openEmpire(selection?.kind==='cell'?selection:undefined)} moveMode={moveMode} setMoveMode={setMoveMode} run={dispatch} busy={busy} now={now} clockOffset={offset} navigate={navigate} mapViewport={engine.setMapViewport?.bind(engine)}/> : view === 'settlement' ? <SettlementView key={town.id} world={world} playerId={engine.playerId} cityId={town.id} onCity={chooseCity} onEmpire={()=>openEmpire()} run={dispatch} busy={busy} now={now}/> : view === 'army' ? <ArmyView world={world} playerId={engine.playerId} cityId={town.id} armyId={selectedArmy.id} onCity={chooseCity} onArmy={chooseArmy} onMap={(id, orders)=>{chooseArmy(id);navigate('world');setSelection({kind:'army',id});setMoveMode(!!orders);}} onOpenCity={id=>{chooseCity(id);navigate('settlement');}} run={dispatch} busy={busy} now={now}/> : <Chronicle world={world} playerId={engine.playerId} onReport={setReport} run={dispatch} onEnding={() => setEnding(true)}/>)}
    </main><footer className="realm-footer"><span>{engine.mode === 'online' ? 'THE SHARED WORLD' : 'THE SIX STANDARDS'}</span><span>{engine.mode === 'online' ? `${world.map?.total_players ?? world.players.length} rulers in the shared world` : 'Campaign saved automatically'}<button onClick={() => setHelp(true)}>The General's Codex</button></span></footer>

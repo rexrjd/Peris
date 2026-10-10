@@ -19,7 +19,7 @@ test('live completed fields repeat over seams, preserve canonical picking and bo
     };
     const fieldGeometry=new THREE.BoxGeometry(.16,.11,.16),fieldMaterial=new THREE.MeshBasicMaterial();
     const fieldMarkers=new THREE.InstancedMesh(fieldGeometry,fieldMaterial,FIELD_MARKER_BUDGET);
-    Object.assign(fixture,{view,scene:new THREE.Scene(),settlementModels:models,fields:new Map(),fieldCopies:new Map(),fieldKey:'',fieldMarkers,fieldMarkerSelections:[],entities:new Map(),entityCopies:new Map(),hittable:new Set(),hittableImages:new Map(),pickingRay:new THREE.Raycaster(),occlusion:new Map(),occlusionViewKey:'',viewportKey:'',landscape:{setConstructionCells:(cells:Set<string>)=>cleared.push(cells)},state:()=>({world,playerId:'me'}),actions:()=>({mapViewport:(bounds:unknown)=>selected.push(bounds)})});
+    Object.assign(fixture,{canvas:{dataset:{}},view,scene:new THREE.Scene(),settlementModels:models,fields:new Map(),fieldCopies:new Map(),fieldKey:'',fieldMarkers,fieldMarkerSelections:[],entities:new Map(),entityCopies:new Map(),hittable:new Set(),hittableImages:new Map(),pickingRay:new THREE.Raycaster(),occlusion:new Map(),occlusionViewKey:'',viewportKey:'',landscape:{setConstructionCells:(cells:Set<string>)=>cleared.push(cells)},state:()=>({world,playerId:'me'}),actions:()=>({mapViewport:(bounds:unknown)=>selected.push(bounds)})});
     fixture.syncFields();const field=fixture.fields.get('-100,0')!;
     assert.ok(field.visible);assert.ok(field.position.x>100,'the live field appears across the east seam');
     assert.deepEqual(field.userData.mapSelection,{kind:'cell',col:-100,row:0});
@@ -49,7 +49,7 @@ test('dense live fields keep a fixed model budget, prioritize selected and owned
     const models=new MapSettlementModels(),geometry=new THREE.BoxGeometry(.16,.11,.16),material=new THREE.MeshBasicMaterial(),markers=new THREE.InstancedMesh(geometry,material,FIELD_MARKER_BUDGET);
     let minted=0;const getField=models.getField.bind(models);models.getField=(...args)=>{minted++;return getField(...args);};
     const fixture=Object.create(WorldScene.prototype) as {syncFields():void;hit(x:number,y:number):unknown;fields:Map<string,THREE.Group>;fieldCopies:Map<string,THREE.Group[]>;fieldMarkerSelections:{kind:'cell';col:number;row:number}[]};
-    Object.assign(fixture,{view,scene:new THREE.Scene(),settlementModels:models,fields:new Map(),fieldCopies:new Map(),fieldKey:'',fieldMarkers:markers,fieldMarkerSelections:[],entities:new Map(),entityCopies:new Map(),hittable:new Set(),hittableImages:new Map(),pickingRay:new THREE.Raycaster(),occlusion:new Map(),occlusionViewKey:'',landscape:{setConstructionCells:()=>{}},state:()=>({world,playerId:'me',selection:selected})});
+    Object.assign(fixture,{canvas:{dataset:{}},view,scene:new THREE.Scene(),settlementModels:models,fields:new Map(),fieldCopies:new Map(),fieldKey:'',fieldMarkers:markers,fieldMarkerSelections:[],entities:new Map(),entityCopies:new Map(),hittable:new Set(),hittableImages:new Map(),pickingRay:new THREE.Raycaster(),occlusion:new Map(),occlusionViewKey:'',landscape:{setConstructionCells:()=>{}},state:()=>({world,playerId:'me',selection:selected})});
     fixture.syncFields();
     assert.equal(fixture.fields.size,FIELD_DETAIL_BUDGET);assert.equal(minted,FIELD_DETAIL_BUDGET,'only visible budgeted fields may mint native compounds');
     assert.ok(fixture.fields.has('39,24'),'selected field must win over nearer rivals');assert.ok(fixture.fields.has('0,-25'),'owned field must win over nearer rivals');
@@ -67,7 +67,7 @@ test('public settlement development changes the real cached silhouette without p
     const models=new MapSettlementModels(),world={settlements:[{id:7,x:64,y:64,owner_id:'rival',faction:'demon',map_development:4}],armies:[],camps:[],buildings:[]};
     const geometry=new THREE.OctahedronGeometry(.12),material=new THREE.MeshBasicMaterial();
     const fixture=Object.create(WorldScene.prototype) as {syncEntities():void;entities:Map<string,{model:THREE.Group;development:number}>};
-    Object.assign(fixture,{view,scene:new THREE.Scene(),settlementModels:models,entities:new Map(),entityCopies:new Map(),hittable:new Set(),hittableImages:new Map(),markers:new THREE.InstancedMesh(geometry,material,2048),landscape:{setSettlementCells:()=>{}},state:()=>({world,playerId:'me'}),shadowKey:''});
+    Object.assign(fixture,{canvas:{dataset:{}},view,scene:new THREE.Scene(),settlementModels:models,entities:new Map(),entityCopies:new Map(),hittable:new Set(),hittableImages:new Map(),markers:new THREE.InstancedMesh(geometry,material,2048),landscape:{setSettlementCells:()=>{}},state:()=>({world,playerId:'me'}),shadowKey:''});
     fixture.syncEntities();let entity=fixture.entities.get('settlement:7')!;
     assert.equal(entity.development,4);assert.equal(entity.model.children[0].userData.development,4);assert.equal(entity.model.children[0].userData.faction,'demon');
     world.settlements[0].map_development=999;fixture.syncEntities();entity=fixture.entities.get('settlement:7')!;

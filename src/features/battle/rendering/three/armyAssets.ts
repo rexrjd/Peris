@@ -1,4 +1,5 @@
 import { AnimationMixer, Box3, DataTexture, FloatType, Group, InstancedBufferAttribute, InstancedMesh, Matrix4, Material, Mesh, MeshDepthMaterial, MeshStandardMaterial, NearestFilter, Object3D, RGBAFormat, RGBADepthPacking, Skeleton, SkinnedMesh, Texture, Vector3, Vector4 } from 'three';
+import { publishedArmyUrl } from './publication';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { type Faction } from '../../../factions/domain/factions';
 import { soldierSlots, type SoldierFrame, type SoldierVisualFactory } from './soldiers';
@@ -26,6 +27,33 @@ export function armyMeshMatchesRole(mesh: Object3D, role: ArmyRole) {
 }
 type Part = { mesh: SkinnedMesh; palette: DataTexture; legacySurface: boolean };
 export type Army = { parts: Map<ArmyRole, Part[]>; dispose: () => void };
+type CachedArmy = { source: Promise<Army>; users: number; timer?: ReturnType<typeof setTimeout> };
+const battleSources = new Map<string, CachedArmy>();
+
+/** Keep an imported rig briefly across graphics toggles/quality changes.
+ * Every canvas owns a lease; the final lease releases the source after 10s. */
+export async function loadBattleArmy(faction: Faction, detail: 'near' | 'far' = 'near', published = false): Promise<Army> {
+    if (!published) return loadArmy(faction, detail, false);
+    const url = await publishedArmyUrl(faction, detail);
+    let entry = battleSources.get(url);
+    if (!entry) {
+        entry = { source: loadArmySource(url, ARMY_ROLES, false), users: 0 };
+        battleSources.set(url, entry);
+        void entry.source.catch(() => { if (battleSources.get(url) === entry) battleSources.delete(url); });
+    }
+    const record = entry; clearTimeout(record.timer); record.users++;
+    let source: Army;
+    try { source = await record.source; } catch (error) { record.users--; throw error; }
+    let released = false;
+    return { parts: source.parts, dispose: () => {
+        if (released) return; released = true;
+        if (--record.users === 0) record.timer = setTimeout(() => {
+            if (record.users !== 0) return;
+            if (battleSources.get(url) === record) battleSources.delete(url);
+            source.dispose();
+        }, 10000);
+    } };
+}
 type RenderFootprint = { depthScale: number; widthScale: number };
 const roleBounds = new WeakMap<Army,Map<ArmyRole,Box3>>();
 const FRAMES = 48;
@@ -130,7 +158,7 @@ export async function loadArmy(faction: Faction, detail: 'near' | 'far' = 'near'
     const suffix = detail === 'far' ? '-lod' : '';
     // The complete textured pack owns all nine roles, including each mount's
     // independent skeleton. Earlier procedural sources remain available.
-    return loadArmySource(`/models/battle/${faction}-${usePrototypes ? 'roster' : 'army'}${suffix}.glb`, ARMY_ROLES, !usePrototypes);
+    return loadArmySource(usePrototypes ? await publishedArmyUrl(faction, detail) : `/models/battle/${faction}-army${suffix}.glb`, ARMY_ROLES, !usePrototypes);
 }
 
 /** Load an explicitly selected imported role without claiming a complete faction pack. */

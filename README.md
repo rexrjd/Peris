@@ -30,7 +30,9 @@ Open **Menu → Cities & expansion** or the city dock to train settlers and foun
 
 ## Game
 
-Battles now include an optional **3D prototype** view in the command panel. It uses the existing tactical rules and orders, with procedural soldiers and automatic 2D fallback. See [BATTLE_3D.md](BATTLE_3D.md) for controls, validation, limitations and the future GLB character interface.
+Quick Battle, campaign battles and multiplayer duels now open with the published faction GLB troops in **3D units** view. The command panel also offers **2D**, with automatic fallback if WebGL or model loading fails. Army models use their home city's faction, including multiplayer armies with homes outside the visible map. Strategic maps use the published distance models at close zoom and retain lightweight markers in overview.
+
+Open **Unit preview** from the launcher or the in-game **Menu** to inspect every faction's nine models, rotate them and review animations. Quick Battle lets you choose both factions and displays four foot formations and three mounted formations for each host. The seven troop appearances retain infantry, archer and cavalry combat rules; the two siege models remain inspection studies. Academy unlocks and Workshop siege production are not implemented in this visual update. Source credits are in `public/licenses/peris-faction-rosters.txt`.
 
 Campaign: develop eight buildings, collect four resources, recruit infantry/archers/cavalry, march to six camps, deploy, fight and rebuild. Strategic income/queues/travel use timestamps and continue while away. Troop casualties persist. Quick battle supports four terrains, three difficulties and three army doctrines. Settings include sound/music, display/order options and campaign export/import/backup.
 

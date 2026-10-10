@@ -1,6 +1,7 @@
 import { normalizeRealm } from '../../features/empire/domain/normalization';
 import { trainSettlers, sendSettlers, nextEntityId } from '../../features/empire/domain/expansion';
 import { recruitHero, improveHero, equipArtifact, transferTroops, rebaseArmy } from '../../features/heroes/domain/commands';
+import type { Faction } from '../../features/factions/domain/factions';
 import {changeFaction,debugCity} from '../../features/factions/domain/debug';
 import { type GameEngine } from '../contracts';
 import { type Command, type LocalCommandContext } from '../../shared/model/commands';
@@ -98,7 +99,7 @@ export class LocalEngine implements GameEngine {
         }
     }
     private beginRaid(campId: number, armyId?: number) { beginRaid(this.snapshot, this.playerId, campId, () => ++this.nextId, armyId); }
-    startPractice(terrain: Terrain, difficulty: Difficulty, doctrine: 'balanced' | 'infantry' | 'cavalry' = 'balanced') { startPractice(this.snapshot, this.playerId, () => ++this.nextId, terrain, difficulty, doctrine); this.publish(); }
+    startPractice(terrain: Terrain, difficulty: Difficulty, doctrine: 'balanced' | 'infantry' | 'cavalry' = 'balanced', faction: Faction = 'roman', enemy: Faction = 'orc') { startPractice(this.snapshot, this.playerId, () => ++this.nextId, terrain, difficulty, doctrine, faction, enemy); this.publish(); }
     private finalize(id: number) {
         if (this.finalized.has(id))
             return;

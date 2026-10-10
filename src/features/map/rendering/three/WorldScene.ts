@@ -1,3 +1,5 @@
+import { MapArmyModels } from './armyModels';
+import { armyFaction } from '../../../army/domain/faction';
 import {FACTIONS,factionOf,type Faction} from '../../../factions/domain/factions';
 import {MapSettlementModels,mapSettlementDevelopment} from './factionSettlement';
 import {settlementMapDevelopment} from '../settlementPresentation';
@@ -16,7 +18,7 @@ import { createLandscape, sampleHeight } from './landscape';
 import { createArmyModel, createSettlementModel } from './models';
 
 type EntityKind = 'army' | 'settlement' | 'camp';
-type Entity = { kind: EntityKind; id: number; x: number; y: number; title: string; mine: boolean; model: THREE.Group; detail: boolean; faction?:Faction; development?:number };
+type Entity = { kind: EntityKind; id: number; x: number; y: number; title: string; mine: boolean; model: THREE.Group; detail: boolean; faction?:Faction; development?:number; composition?:string };
 type Label = { key: string; text: string; x: number; y: number; selection?: MapSelection };
 export const FIELD_DETAIL_BUDGET = 96;
 export const FIELD_MARKER_BUDGET = 2048;
@@ -31,6 +33,7 @@ export class WorldScene {
     private readonly landscape: ReturnType<typeof createLandscape>;
     private readonly entities = new Map<string, Entity>();
     private readonly entityCopies = new Map<string, THREE.Group[]>();
+    private readonly armyModels = new MapArmyModels();
     private readonly settlementModels = new MapSettlementModels();
     private readonly fields = new Map<string, THREE.Group>();
     private readonly fieldCopies = new Map<string, THREE.Group[]>();
@@ -108,10 +111,10 @@ export class WorldScene {
         if(this.settlementRecords!==s.world.settlements){this.settlementRecords=s.world.settlements;this.landscape.setSettlementCells(s.world.settlements.map(town => ({ x: town.x / CELL_SIZE, z: town.y / CELL_SIZE })));this.shadowKey='';}
         this.hittable.clear();
         this.hittableImages.clear();
-        const records: { kind: EntityKind; id: number; x: number; y: number; title: string; mine: boolean;faction?:Faction;development?:number }[] = [
+        const records: { kind: EntityKind; id: number; x: number; y: number; title: string; mine: boolean;faction?:Faction;development?:number; composition?:string }[] = [
             ...s.world.settlements.map(t => ({ kind: 'settlement' as const, id: t.id, x: t.x, y: t.y, title: t.name, mine: t.owner_id === s.playerId,faction:factionOf(t.faction), development:mapSettlementDevelopment(t.map_development??settlementMapDevelopment(s.world.buildings,t.id,s.world.city_slots)) })),
             ...s.world.camps.map(t => ({ kind: 'camp' as const, id: t.id, x: t.x, y: t.y, title: siteFor(t.id).title, mine: false })),
-            ...s.world.armies.map(t => ({ kind: 'army' as const, id: t.id, ...armyPosition(t, now), title: t.name, mine: t.owner_id === s.playerId })),
+            ...s.world.armies.map(t => ({ kind: 'army' as const, id: t.id, ...armyPosition(t, now), title: t.name, mine: t.owner_id === s.playerId, faction: armyFaction(s.world, t), composition: `${t.infantry > 0 ? 'i' : ''}${t.archers > 0 ? 'a' : ''}${t.cavalry > 0 ? 'c' : ''}` })),
         ];
         const priority = (record: typeof records[number]) => record.mine || s.selection?.kind !== 'cell' && s.selection?.kind === record.kind && s.selection?.id === record.id ? 0 : 1;
         records.sort((a, b) => priority(a) - priority(b));
@@ -128,13 +131,14 @@ export class WorldScene {
                 const model = new THREE.Group();
                 e = { ...record, model, detail: false }; this.entities.set(key, e); this.scene.add(model);
             }
-            if(e.faction!==record.faction || e.development!==record.development){this.removeCopies(key);this.disposeGroup(e.model);e.detail=false;}
+            if(e.faction!==record.faction || e.development!==record.development || e.composition!==record.composition || e.kind==='army' && this.armyModels.ready(factionOf(record.faction)) && !e.model.userData.publishedArmy){this.removeCopies(key);this.disposeGroup(e.model);e.detail=false;}
             Object.assign(e, record);
             const images = this.visibleImages(e.x, e.y);
             const detailed = this.view.span < 36 && images.length > 0 && (priority(e) === 0 || detailCount++ < 48);
             if (detailed && !e.detail) {
                 const kind = e.kind === 'settlement' ? 'village' : e.id === 6 ? 'ruins' : e.id === 2 ? 'sanctuary' : e.id === 5 ? 'volcano' : e.id === 3 ? 'crossing' : e.id === 4 ? 'keep' : 'village';
-                e.model.add(e.kind === 'army' ? createArmyModel(e.mine ? 0x345e48 : 0x749cb1) : e.kind==='settlement'?this.settlementModels.get(factionOf(e.faction),e.development):createSettlementModel(kind)); e.detail = true;
+                e.model.add(e.kind === 'army' ? this.armyModels.create(factionOf(e.faction), e.composition ?? 'i', e.mine ? 0x345e48 : 0x749cb1) ?? createArmyModel(e.mine ? 0x345e48 : 0x749cb1) : e.kind==='settlement'?this.settlementModels.get(factionOf(e.faction),e.development):createSettlementModel(kind)); e.detail = true;
+                e.model.userData.publishedArmy = e.kind === 'army' && !!e.model.children[0]?.userData.publishedArmy;
                 this.shadowKey='';
             }
             e.model.userData.mapSelection = { kind:e.kind,id:e.id };
@@ -159,6 +163,7 @@ export class WorldScene {
             }
             }
         }
+        this.canvas.dataset.armyModels = [...this.entities.values()].some(e => e.model.visible && e.model.userData.publishedArmy) ? 'published' : 'markers';
         this.markers.count = markerCount; this.markers.instanceMatrix.needsUpdate = true; if (this.markers.instanceColor) this.markers.instanceColor.needsUpdate = true;
         for (const [key, e] of this.entities) if (!active.has(key)) { this.removeCopies(key); this.scene.remove(e.model); this.disposeGroup(e.model); this.entities.delete(key); }
     }
@@ -224,7 +229,7 @@ export class WorldScene {
     }
     private disposeGroup(group: THREE.Group) {
         const geometries = new Set<THREE.BufferGeometry>(), materials = new Set<THREE.Material>();
-        group.traverse(o => { const m = o as THREE.Mesh; if (m.userData.sharedMapSettlementAsset) return; if (m.geometry) geometries.add(m.geometry); if (m.material) (Array.isArray(m.material) ? m.material : [m.material]).forEach(a => materials.add(a)); });
+        group.traverse(o => { const m = o as THREE.Mesh; if (m.userData.sharedMapSettlementAsset || m.userData.sharedMapArmyAsset) return; if (m.geometry) geometries.add(m.geometry); if (m.material) (Array.isArray(m.material) ? m.material : [m.material]).forEach(a => materials.add(a)); });
         geometries.forEach(g => g.dispose()); materials.forEach(m => m.dispose()); group.clear();
     }
     private syncFields() {
@@ -474,7 +479,7 @@ export class WorldScene {
         this.running = false; cancelAnimationFrame(this.frame); this.resize.disconnect(); this.cleanup.forEach(fn => fn());
         this.landscape.dispose(); this.entities.forEach(e => this.disposeGroup(e.model)); this.markers.dispose(); this.dotGeometry.dispose(); this.markerMaterial.dispose();
         this.entityCopies.clear(); this.entities.clear();
-        this.fieldCopies.clear();this.fields.clear();this.settlementModels.dispose();this.hittableImages.clear();
+        this.fieldCopies.clear();this.fields.clear();this.settlementModels.dispose();this.armyModels.dispose();this.hittableImages.clear();
         this.fieldMarkers.dispose();this.fieldGeometry.dispose();this.fieldMaterial.dispose();this.fieldMarkerSelections.length=0;
         this.sun.shadow.dispose(); this.hittable.clear(); this.occlusion.clear();
         this.disposeGroup(this.selection); this.disposeGroup(this.routes); this.disposeGroup(this.grid); this.labels.forEach(el => el.remove()); this.labels.clear();

@@ -1,12 +1,16 @@
-import { test } from 'node:test';
+import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { AnimationClip, Bone, Box3, BoxGeometry, BufferAttribute, Group, InstancedMesh, Matrix4, Mesh, MeshDepthMaterial, MeshStandardMaterial, Skeleton, SkinnedMesh, Texture, VectorKeyframeTrack, Vector3 } from 'three';
 import { GLTFLoader, type GLTF } from 'three/addons/loaders/GLTFLoader.js';
-import { ARMY_ROLES, armyIdleBounds, armyRole, createArmyFactory, loadArmy, loadArmyRole, loadArmyRoles, overlayArmyRolePair, overlayArmyRolesPair, siegeShowcase, type ArmyRole } from '../src/features/battle/rendering/three/armyAssets';
+import { ARMY_ROLES, armyIdleBounds, armyRole, createArmyFactory, loadArmy, loadBattleArmy, loadArmyRole, loadArmyRoles, overlayArmyRolePair, overlayArmyRolesPair, siegeShowcase, type ArmyRole } from '../src/features/battle/rendering/three/armyAssets';
 import { disposeObject } from '../src/features/battle/rendering/three/dispose';
 import { newBattle } from '../src/features/battle/domain/creation';
 import { createSolo } from '../src/features/campaign/domain/newRealm';
 import { BattleCamera } from '../src/features/battle/rendering/three/BattleCamera';
+
+const originalFetch = globalThis.fetch;
+before(() => { globalThis.fetch = async () => new Response(JSON.stringify({ factions: Object.fromEntries(['roman','spartan','persian','egyptian','orc','elf','dwarf','gnome','pandaren','undead','demon'].map(id => [id, { near: { sha256: 'a'.repeat(64) }, far: { sha256: 'b'.repeat(64) } }])) })); });
+after(() => { globalThis.fetch = originalFetch; });
 
 function fixture(roles: readonly ArmyRole[] = ARMY_ROLES, separateRigs = false) {
     const scene = new Group(), animations: AnimationClip[] = [], texture = new Texture();
@@ -40,7 +44,7 @@ test('a multi-role batch shares its import, replaces both details together and r
     try {
         for (const missingClip of [false, true]) {
             const sources = new Map<string, ReturnType<typeof fixture>>();
-            GLTFLoader.prototype.loadAsync = async url => {
+            GLTFLoader.prototype.loadAsync = async url => { url = url.split('?')[0];
                 const source = fixture(url.startsWith('/batch') ? roles : ARMY_ROLES);
                 if (missingClip && url === '/batch-far.glb') source.gltf.animations = source.gltf.animations.filter(clip => clip.name !== 'elite_attack');
                 sources.set(url, source); return source.gltf;
@@ -58,6 +62,25 @@ test('a multi-role batch shares its import, replaces both details together and r
             result.near.dispose(); result.far.dispose(); result.near.dispose(); result.far.dispose();
             for (const source of sources.values()) for (const resource of source.resources) assert.equal(source.disposals.get(resource), 1);
         }
+    } finally { GLTFLoader.prototype.loadAsync = original; }
+});
+
+test('battle graphics toggles reuse published rigs and the final lease frees them exactly once', async t => {
+    t.mock.timers.enable({ apis: ['setTimeout'] });
+    const original = GLTFLoader.prototype.loadAsync, source = fixture(); let imports = 0;
+    try {
+        GLTFLoader.prototype.loadAsync = async () => { imports++; return source.gltf; };
+        const first = await loadBattleArmy('gnome', 'near', true);
+        const second = await loadBattleArmy('gnome', 'near', true);
+        assert.equal(imports, 1); assert.equal(first.parts, second.parts);
+        first.dispose(); second.dispose(); first.dispose();
+        t.mock.timers.tick(5000);
+        const resumed = await loadBattleArmy('gnome', 'near', true);
+        assert.equal(imports, 1, 'Returning to 3D keeps the same imported rig');
+        t.mock.timers.tick(10000);
+        for (const resource of source.resources) assert.equal(source.disposals.get(resource), 0);
+        resumed.dispose(); t.mock.timers.tick(10000);
+        for (const resource of source.resources) assert.equal(source.disposals.get(resource), 1);
     } finally { GLTFLoader.prototype.loadAsync = original; }
 });
 
@@ -129,7 +152,7 @@ test('battle palettes retain a brief ground correction between the former 24 Hz 
 test('a partial role preserves mixed source credits and shares its rig palette through near/far battle instancing', async () => {
     const original = GLTFLoader.prototype.loadAsync, sources = new Map<string, ReturnType<typeof fixture>>();
     try {
-        GLTFLoader.prototype.loadAsync = async url => {
+        GLTFLoader.prototype.loadAsync = async url => { url = url.split('?')[0];
             const source = url.includes('/pilot-') ? partialFixture() : fixture();
             sources.set(url, source); return source.gltf;
         };
@@ -203,7 +226,7 @@ test('a rejected partial detail keeps both base details and frees fulfilled or f
     try {
         for (const failedDetail of ['near', 'far']) for (const failure of ['network', 'missing-clip']) await t.test(`${failedDetail} ${failure}`, async () => {
             const sources = new Map<string, ReturnType<typeof fixture>>();
-            GLTFLoader.prototype.loadAsync = async url => {
+            GLTFLoader.prototype.loadAsync = async url => { url = url.split('?')[0];
                 const failing = url === `/pilot-${failedDetail}.glb`;
                 if (failing && failure === 'network') throw new Error('404 pilot');
                 const source = url.includes('/pilot-') ? partialFixture() : fixture();
@@ -233,7 +256,7 @@ test('a rejected partial detail keeps both base details and frees fulfilled or f
 test('role pair overlay rejects mismatched partial roles without disposing its base armies', async () => {
     const original = GLTFLoader.prototype.loadAsync, sources: ReturnType<typeof fixture>[] = [];
     try {
-        GLTFLoader.prototype.loadAsync = async url => {
+        GLTFLoader.prototype.loadAsync = async url => { url = url.split('?')[0];
             const source = url === '/scout.glb' ? partialFixture('scout') : url === '/line.glb' ? partialFixture() : fixture();
             sources.push(source); return source.gltf;
         };
@@ -272,7 +295,7 @@ test('army sources retain separate mount rigs and own shared GPU resources throu
             const prototype = fixture(ARMY_ROLES, true), requested: string[] = [];
             const cutout = prototype.gltf.scene.children.find(group=>group.name==='heavy_cavalry')!.children[0] as SkinnedMesh;
             (cutout.material as MeshStandardMaterial).alphaTest=.5;
-            GLTFLoader.prototype.loadAsync = async url => { requested.push(url); return prototype.gltf; };
+            GLTFLoader.prototype.loadAsync = async url => { url = url.split('?')[0]; requested.push(url); return prototype.gltf; };
             const army = await loadArmy('roman', 'far', true), cavalry = army.parts.get('heavy_cavalry')!;
             assert.deepEqual(requested, ['/models/battle/roman-roster-lod.glb']);
             assert.equal(army.parts.size,9,'The textured roster supplies every role');
@@ -308,14 +331,14 @@ test('army sources retain separate mount rigs and own shared GPU resources throu
         await t.test('all factions use their own textured pack while the earlier pack stays explicitly available', async () => {
             for (const faction of ['orc','elf','dwarf','gnome','pandaren','undead','demon','spartan','persian','egyptian'] as const) {
                 const source = fixture(ARMY_ROLES,true), requested: string[] = [];
-                GLTFLoader.prototype.loadAsync = async url => { requested.push(url); return source.gltf; };
+                GLTFLoader.prototype.loadAsync = async url => { url = url.split('?')[0]; requested.push(url); return source.gltf; };
                 const army = await loadArmy(faction, 'near', true);
                 assert.deepEqual(requested, [`/models/battle/${faction}-roster.glb`]);
                 for(const part of [...army.parts.values()].flat())assert.equal(part.legacySurface,false);
                 army.dispose();
             }
             const source=fixture(),requested:string[]=[];
-            GLTFLoader.prototype.loadAsync=async url=>{requested.push(url);return source.gltf;};
+            GLTFLoader.prototype.loadAsync=async url=>{url=url.split('?')[0];requested.push(url);return source.gltf;};
             const earlier=await loadArmy('roman','far',false);earlier.dispose();
             assert.deepEqual(requested,['/models/battle/roman-army-lod.glb']);
         });
@@ -433,7 +456,7 @@ test('oversized mounts have distinct render slots and fitted inspection bounds w
 test('a finished army and an earlier opponent keep independent model packs, PBR treatment and near/far sources',async()=>{
     const original=GLTFLoader.prototype.loadAsync,sources=new Map<string,ReturnType<typeof fixture>>();
     try {
-        GLTFLoader.prototype.loadAsync=async url=>{const source=fixture(ARMY_ROLES,true);sources.set(url,source);return source.gltf;};
+        GLTFLoader.prototype.loadAsync=async url=>{url=url.split('?')[0];const source=fixture(ARMY_ROLES,true);sources.set(url,source);return source.gltf;};
         const own=await loadArmy('roman','near',true),enemy=await loadArmy('orc','near',false),ownFar=await loadArmy('roman','far',true),enemyFar=await loadArmy('orc','far',false);
         assert.deepEqual([...sources.keys()],['/models/battle/roman-roster.glb','/models/battle/orc-army.glb','/models/battle/roman-roster-lod.glb','/models/battle/orc-army-lod.glb']);
         assert.equal(own.parts.get('line_infantry')![0].legacySurface,false);assert.equal(enemy.parts.get('line_infantry')![0].legacySurface,true);
