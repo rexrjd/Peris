@@ -1,3 +1,8 @@
+-- PERIS multiplayer signup hotfix for an existing V10-V13 world.
+-- Replaces allocation only; preserves accounts, cities, armies, loot and world data.
+-- Run this entire file in Supabase SQL Editor, then retry the same ruler name.
+begin;
+
 -- Proximity lookups use bounded wrapped fields rather than every camp/city.
 create index if not exists peris_signup_city_cell on public.settlements
  ((public.peris_wrap_cell(floor(x/128::numeric)::integer)),(public.peris_wrap_cell(floor(y/128::numeric)::integer)));
@@ -46,3 +51,8 @@ begin
 exception when unique_violation then raise exception 'That ruler name is already taken';
 end $$;
 
+
+revoke all on function public.create_player(text) from public,anon;
+grant execute on function public.create_player(text) to authenticated;
+notify pgrst,'reload schema';
+commit;

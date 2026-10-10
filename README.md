@@ -16,6 +16,7 @@ Requires Node 20.19 or later. Run `npm install`, then `npm run dev`. Use `npm.cm
 - `npm test`: gameplay, save/progression and architecture checks.
 - `npm run test:db`: isolated upgrade/permissions/economy/tactical/PvP integration checks.
 - `npm run test:fresh`: isolated empty installation and existing-world protection.
+- `npm run test:signup-db`: existing-world signup hotfix, realistic planner/camp load, spacing, retries and data preservation.
 - `npm run build:sql` / `npm run check:sql`: generate/verify complete SQL bundles from modular source.
 - `npm run test:territory-db` / `npm run test:map-db`: persistent land/construction, wrapped visibility, faction metadata and privacy checks.
 - `npm run build:standalone`: generate `standalone/Peris-v8-playable.html` for solo play.
@@ -53,3 +54,7 @@ Battles now cover five times the area and use the target world's biome. Stable s
 ### V13: commander portraits and victory rewards
 
 Each faction has 20 original painted hero portraits (220 total). Every NPC victory with a commander awards equipment, including repeat raids, with actual XP and gear recorded once in a compact battle receipt. Open equipment selects the rewarded commander and the new item directly. See [hero portraits and loot](docs/hero-portraits-and-loot.md). Existing Supabase worlds use `supabase/UPGRADE_TO_V13.sql`; empty databases use `supabase/FRESH_INSTALL_V13.sql`.
+
+### Multiplayer signup timeout fix
+
+If creating a ruler reports **canceling statement due to statement timeout**, run the complete `supabase/FIX_MULTIPLAYER_SIGNUP.sql` in Supabase SQL Editor, then retry the same ruler name. This targeted V10–V13 hotfix preserves existing accounts, cities, armies, equipment and world data. Updated full installers include it too. See [signup fix](docs/multiplayer-signup-fix.md) for the cause and verification.

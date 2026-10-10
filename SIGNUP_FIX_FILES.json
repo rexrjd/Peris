@@ -1,0 +1,131 @@
+{
+  "baseline_commit": "7cea14e5ac546100d7610d11878a489376231335",
+  "archive_type": "changed-files update",
+  "files": [
+    {
+      "path": "README.md",
+      "size": 7507,
+      "sha256": "a6aea6dae22acbf4d8fadb4275596a2ff0ab53bafa01168f8cb5929263c44503"
+    },
+    {
+      "path": "docs/multiplayer-signup-fix.md",
+      "size": 3212,
+      "sha256": "d47d7b407ee6e90ba29b34b349568790b16233222ff8f4aac046e7ae3477667c"
+    },
+    {
+      "path": "package.json",
+      "size": 2892,
+      "sha256": "a4afc2a2a0ae0b4bc5ef9598c935d100fbadf592266048d9853d6d333f72218d"
+    },
+    {
+      "path": "scripts/build-sql.mjs",
+      "size": 2236,
+      "sha256": "f1f5f9c0047401ef8ef314d0bd357b91bbac4cae577ddbc1b6bccaa490122a70"
+    },
+    {
+      "path": "supabase/FIX_MULTIPLAYER_SIGNUP.sql",
+      "size": 4455,
+      "sha256": "9a0903c179a9bc21fc6535d3f6a9ba6d26a8fbcbcf8c135de2b8b80579274880"
+    },
+    {
+      "path": "supabase/FRESH_INSTALL_V10.sql",
+      "size": 451092,
+      "sha256": "bf5d67e9de804f4d6e6411fcb3617e1e626233c37a2c03655071679ba61e2a81"
+    },
+    {
+      "path": "supabase/FRESH_INSTALL_V11.sql",
+      "size": 451092,
+      "sha256": "bf5d67e9de804f4d6e6411fcb3617e1e626233c37a2c03655071679ba61e2a81"
+    },
+    {
+      "path": "supabase/FRESH_INSTALL_V12.sql",
+      "size": 451092,
+      "sha256": "bf5d67e9de804f4d6e6411fcb3617e1e626233c37a2c03655071679ba61e2a81"
+    },
+    {
+      "path": "supabase/FRESH_INSTALL_V13.sql",
+      "size": 451092,
+      "sha256": "bf5d67e9de804f4d6e6411fcb3617e1e626233c37a2c03655071679ba61e2a81"
+    },
+    {
+      "path": "supabase/FRESH_INSTALL_V6.sql",
+      "size": 451092,
+      "sha256": "bf5d67e9de804f4d6e6411fcb3617e1e626233c37a2c03655071679ba61e2a81"
+    },
+    {
+      "path": "supabase/FRESH_INSTALL_V7.sql",
+      "size": 451092,
+      "sha256": "bf5d67e9de804f4d6e6411fcb3617e1e626233c37a2c03655071679ba61e2a81"
+    },
+    {
+      "path": "supabase/FRESH_INSTALL_V8.sql",
+      "size": 451092,
+      "sha256": "bf5d67e9de804f4d6e6411fcb3617e1e626233c37a2c03655071679ba61e2a81"
+    },
+    {
+      "path": "supabase/FRESH_INSTALL_V9.sql",
+      "size": 451092,
+      "sha256": "bf5d67e9de804f4d6e6411fcb3617e1e626233c37a2c03655071679ba61e2a81"
+    },
+    {
+      "path": "supabase/UPGRADE_TO_V10.sql",
+      "size": 411104,
+      "sha256": "b3db51ff3f04305e2c6189f6aaca8eff2289f851c84902e763739c42123c9df5"
+    },
+    {
+      "path": "supabase/UPGRADE_TO_V11.sql",
+      "size": 411104,
+      "sha256": "b3db51ff3f04305e2c6189f6aaca8eff2289f851c84902e763739c42123c9df5"
+    },
+    {
+      "path": "supabase/UPGRADE_TO_V12.sql",
+      "size": 411104,
+      "sha256": "b3db51ff3f04305e2c6189f6aaca8eff2289f851c84902e763739c42123c9df5"
+    },
+    {
+      "path": "supabase/UPGRADE_TO_V13.sql",
+      "size": 411104,
+      "sha256": "b3db51ff3f04305e2c6189f6aaca8eff2289f851c84902e763739c42123c9df5"
+    },
+    {
+      "path": "supabase/UPGRADE_TO_V7.sql",
+      "size": 411104,
+      "sha256": "b3db51ff3f04305e2c6189f6aaca8eff2289f851c84902e763739c42123c9df5"
+    },
+    {
+      "path": "supabase/UPGRADE_TO_V8.sql",
+      "size": 411104,
+      "sha256": "b3db51ff3f04305e2c6189f6aaca8eff2289f851c84902e763739c42123c9df5"
+    },
+    {
+      "path": "supabase/UPGRADE_TO_V9.sql",
+      "size": 411104,
+      "sha256": "b3db51ff3f04305e2c6189f6aaca8eff2289f851c84902e763739c42123c9df5"
+    },
+    {
+      "path": "supabase/UPGRADE_V5_TO_V6.sql",
+      "size": 411104,
+      "sha256": "b3db51ff3f04305e2c6189f6aaca8eff2289f851c84902e763739c42123c9df5"
+    },
+    {
+      "path": "supabase/modules/accounts/create_player.sql",
+      "size": 4037,
+      "sha256": "d6dce64b523fdc6d57052bf5ad208bb29420eae5647a0da656ed252aab821904"
+    },
+    {
+      "path": "supabase/schema.sql",
+      "size": 411104,
+      "sha256": "b3db51ff3f04305e2c6189f6aaca8eff2289f851c84902e763739c42123c9df5"
+    },
+    {
+      "path": "tests/fixtures/signup-v13.sql",
+      "size": 2706,
+      "sha256": "bf1605a67a7b096bccbd0b56822b5ffc445298a8a7b4a0573c0e226a81c8e9b9"
+    },
+    {
+      "path": "tests/signup-database.test.mjs",
+      "size": 7886,
+      "sha256": "9916f14f8cf4204b9357c923b8ee56985e9a67257355340bc809debe8e481ba6"
+    }
+  ]
+}

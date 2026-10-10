@@ -39,7 +39,8 @@
     "test:world-battles-ui": "node tests/world-battles-ui-render.test.mjs",
     "build:hero-portraits": "node scripts/build-hero-portraits.mjs",
     "test:hero-loot-db": "node --import tsx tests/hero-loot-database.test.mjs",
-    "test:hero-loot-ui": "node tests/hero-loot-ui-render.test.mjs"
+    "test:hero-loot-ui": "node tests/hero-loot-ui-render.test.mjs",
+    "test:signup-db": "node tests/signup-database.test.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.57.4",
