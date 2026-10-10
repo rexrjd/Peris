@@ -1,15 +1,23 @@
-PERIS V12 — APPLY THESE FILES
+PERIS — WORLD MAP ARMY PICKER
 
-This ZIP contains updated source files and ten new hero portraits.
-Copy files to the matching paths in the Peris repository, then run npm ci and npm run build.
+Apply this update over Peris_world_battles_bandits_and_heroes.zip.
+Copy the three src/ files to the same paths in the active root project.
+For a checkout with additional edits, review and apply army-picker.patch instead.
+The archive includes source files only. No database migration is required.
 
-EXISTING Supabase world: apply supabase/UPGRADE_TO_V12.sql.
-EMPTY database only: apply supabase/FRESH_INSTALL_V12.sql.
-The complete V12 upgrade includes the housing constraint fix and automatic-battle logic.
+The bottom-left command panel now has:
+- A hero portrait, level and active army name; the full header opens the roster.
+- Separate readable infantry, archer and cavalry counts.
+- A roster showing commander, class, level, army name, status and soldier total.
+- A selected-army indicator and camera focus when choosing an army.
+- Status, Details and Return home controls in one compact panel.
+- Scrollable armies, Escape/outside dismissal and keyboard focus restoration.
+- Mobile layout below the map, keeping the roster within the screen.
 
-See docs/world-battles-bandits-and-heroes.md for changes, tests and browser verification limits.
-FILE_MANIFEST.json lists every shipped source file and its SHA-256.
+The existing faction portraits and gameplay commands are reused.
 
-Optional patch workflow: git apply world-battles.patch against base a82e532.
-The text patch excludes portrait PNGs; copy public/art/heroes/ from this ZIP as well.
-No live database changes, pushes or deployments were made.
+Verified: production build; 291 unit tests passed, one existing skip;
+4 tooling checks; asset validation; all 605 camp inspector renders;
+clean diff and archive SHA-256 checks.
+Browser interaction/screenshot verification could not run because the
+Playwright Chromium executable is absent in this environment.

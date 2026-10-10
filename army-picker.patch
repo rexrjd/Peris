@@ -1,0 +1,172 @@
+--- a/src/features/army/ui/ArmyMapPicker.tsx
++++ b/src/features/army/ui/ArmyMapPicker.tsx
+@@ -1,20 +1,65 @@
+-import { useEffect, useRef } from 'react';
++import { useEffect, useId, useRef } from 'react';
+ import type { World } from '../../../shared/model/world';
+ import type { Army } from '../domain/types';
+-import { armyOverview, count } from '../domain/commandRoom';
++import { armyOverview, count, UNIT_ROLES } from '../domain/commandRoom';
++import { UNIT_TYPES } from '../domain/units';
+ import { HERO_CLASSES, heroForArmy, heroLevel } from '../../heroes/domain/heroes';
+ import { HeroPortrait } from '../../heroes/ui/HeroPortrait';
+ import { Icon } from '../../../shared/ui/Icons';
+ import { clock } from '../../../shared/time/clock';
+ 
+-export function ArmyMapPicker({ world, army, now, onChoose }: { world: World; army: Army; now: number; onChoose: (id: number) => void }) {
++type Props = {
++    world: World; army: Army; now: number; onChoose: (id: number) => void;
++    onInspect?: () => void; onReturnHome?: () => void; returnDisabled?: boolean;
++};
++
++export function ArmyMapPicker({ world, army, now, onChoose, onInspect, onReturnHome, returnDisabled = false }: Props) {
+     const panel = useRef<HTMLDetailsElement>(null), trigger = useRef<HTMLElement>(null);
++    const optionsId = useId();
+     const owned = world.armies.filter(a => a.owner_id === army.owner_id), hero = heroForArmy(world, army.id);
++    const active = armyOverview(world, army, now);
++    const status = active.state === 'Ready' ? active.local ? `At ${active.local.name}` : 'On the field' : active.state;
++    const stateClass = (state: string) => `status-${state.toLowerCase().replaceAll(' ', '-')}`;
+     useEffect(() => {
+         const outside = (event: PointerEvent) => { if (panel.current?.open && event.target instanceof Node && !panel.current.contains(event.target)) panel.current.open = false; };
+         const escape = (event: KeyboardEvent) => { if (event.key === 'Escape' && panel.current?.open) { panel.current.open = false; trigger.current?.focus(); } };
+         window.addEventListener('pointerdown', outside); window.addEventListener('keydown', escape);
+         return () => { window.removeEventListener('pointerdown', outside); window.removeEventListener('keydown', escape); };
+     }, []);
+-    return <details ref={panel} className="map-army-picker"><summary ref={trigger} aria-label={`Army to command on the map: ${hero?.name ?? army.name}`}><strong>{hero?.name ?? army.name}</strong><span>{hero ? `Lv. ${heroLevel(hero)}` : 'Army'}<Icon name="chevron" size={13}/></span></summary><div className="map-army-options" role="group" aria-label="Choose army"><header><strong>Your armies</strong><small>{owned.length} banners</small></header>{owned.map(a => { const h = heroForArmy(world, a.id), info = armyOverview(world, a, now); return <button key={a.id} aria-pressed={a.id === army.id} onClick={() => { if (panel.current) panel.current.open = false; onChoose(a.id); trigger.current?.focus(); }}><HeroPortrait compact heroClass={h?.class} faction={info.home?.faction}/><span><strong>{h?.name ?? a.name}</strong><small>{h ? `${HERO_CLASSES[h.class].name} · Lv. ${heroLevel(h)} · ` : ''}{count(info.total)} soldiers</small><em>{info.state}{a.status === 'moving' ? ` · ${clock(info.arrival)}` : ''}</em></span>{a.id === army.id && <Icon name="check" size={15}/>}</button>; })}</div></details>;
++    return <div className="map-army-command">
++        <details ref={panel} className="map-army-picker">
++            <summary ref={trigger} aria-controls={optionsId} aria-label={`Choose army. Active commander: ${hero?.name ?? army.name}`}>
++                <span className="map-commander-face"><HeroPortrait compact heroClass={hero?.class} faction={active.home?.faction}/>{hero && <b>Lv. {heroLevel(hero)}</b>}</span>
++                <span className="map-commander-identity"><small>ACTIVE ARMY</small><strong>{hero?.name ?? army.name}</strong><span>{hero ? army.name : 'No commander assigned'}</span></span>
++                <span className="map-army-switch"><span>Switch <b>{owned.length}</b></span><Icon name="chevron" size={15}/></span>
++            </summary>
++            <div id={optionsId} className="map-army-options" role="group" aria-label="Choose army">
++                <header><div><strong>Your armies</strong><small>Choose a commander to follow on the map</small></div><span>{owned.length}</span></header>
++                <div className="map-army-roster">{owned.map(a => {
++                    const h = heroForArmy(world, a.id), info = armyOverview(world, a, now), selected = a.id === army.id;
++                    return <button type="button" key={a.id} aria-pressed={selected} onClick={() => {
++                        if (panel.current) panel.current.open = false;
++                        onChoose(a.id); trigger.current?.focus();
++                    }}>
++                        <HeroPortrait compact heroClass={h?.class} faction={info.home?.faction}/>
++                        <span className="map-roster-identity"><span className="map-roster-title"><strong>{h?.name ?? a.name}</strong>{h && <small>Lv. {heroLevel(h)}</small>}</span>
++                            <small>{h ? `${HERO_CLASSES[h.class].name} · ` : ''}{a.name}</small>
++                            <span className="map-roster-meta"><span className={stateClass(info.state)}>{info.state}{a.status === 'moving' ? ` · ${clock(info.arrival)}` : ''}</span><span>{count(info.total)} soldiers</span></span>
++                        </span>
++                        <span className="map-roster-selected" aria-label={selected ? 'Selected army' : undefined}>{selected && <Icon name="check" size={14}/>}</span>
++                    </button>;
++                })}</div>
++            </div>
++        </details>
++        <div className="map-army-troops" aria-label={`${count(active.total)} soldiers in selected army`}>{UNIT_TYPES.map(type =>
++            <span key={type}><Icon name={UNIT_ROLES[type].icon} size={15}/><span><strong>{count(army[type])}</strong><small>{UNIT_ROLES[type].name}</small></span></span>
++        )}</div>
++        <div className="map-army-footer">
++            <span className={`map-army-status ${stateClass(active.state)}`} role="status"><i/><span>{status}{army.status === 'moving' && <> · {clock(active.arrival)}</>}</span></span>
++            <div className="map-army-actions">
++                {onInspect && <button type="button" onClick={onInspect} aria-label="Inspect your legion">Details<Icon name="arrow" size={13}/></button>}
++                {onReturnHome && <button type="button" onClick={onReturnHome} disabled={returnDisabled} title="Return home" aria-label="Return home"><Icon name="town" size={16}/></button>}
++            </div>
++        </div>
++    </div>;
+ }
+--- a/src/features/army/styles/command-room.css
++++ b/src/features/army/styles/command-room.css
+@@ -1,13 +1,72 @@
+ /* A campaign command room: slate, copper, paper. Scoped away from the city HUD. */
+-.map-army-picker{position:relative;min-width:0;}
+-.game-shell .map-army-picker>summary{display:flex;align-items:center;gap:9px;justify-content:space-between;cursor:pointer;list-style:none;padding:2px 0;min-height:24px;color:#e9e4dc;}
+-.map-army-picker>summary::-webkit-details-marker{display:none;}.map-army-picker>summary>strong{font:600 12px 'Open Sans',Arial,sans-serif;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}.map-army-picker>summary>span{display:flex;align-items:center;gap:5px;font-size:9px;color:#a8b4c7;flex:none;}
+-.game-shell .map-army-options{position:absolute;left:-48px;bottom:calc(100% + 22px);width:310px;max-width:calc(100vw - 28px);max-height:min(420px,60dvh);overflow:auto;padding:7px;border:1px solid #ffffff2b;border-radius:9px;background:#1c222d;box-shadow:0 12px 35px #0006;z-index:12;}
+-.map-army-options>header{display:flex;justify-content:space-between;padding:9px 9px 13px;gap:10px;color:#e9e5dc;}.map-army-options>header>strong{font-size:11px;}.map-army-options>header>small{font-size:9px;color:#98a5bc;}
+-.game-shell .map-army-options>button{display:flex;align-items:center;gap:10px;width:100%;padding:9px 10px;text-align:left;border:1px solid transparent;border-radius:5px;background:transparent;color:#eae6df;}.game-shell .map-army-options>button:hover{background:#ffffff05;}.game-shell .map-army-options>button[aria-pressed=true]{border-color:#deb18b40;background:#deb18b08;}.map-army-options>button>span{flex:1;min-width:0;}.map-army-options strong{display:block;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}.map-army-options small{display:block;font-size:9px;color:#a2b0c5;margin:4px 0;}.map-army-options em{display:block;font-size:8px;color:#deb18b;font-style:normal;}.map-army-options .command-portrait{width:36px;height:42px;}.map-army-picker>summary:focus-visible{outline:2px solid #deb18b;outline-offset:3px;}
++/* The map command card and its roster share one anchored surface. */
++.game-shell .scene-stage .march-status.army-map-dock{display:block;width:344px;max-width:calc(100% - 32px);height:auto;min-height:0;padding:0;left:16px;bottom:16px;border:1px solid #ffffff24;border-radius:12px;background:#181e28f5;box-shadow:0 8px 28px #0005;color:#eeeae3;gap:0;overflow:visible}
++.map-army-command{position:relative;font-family:'Open Sans',Arial,sans-serif;line-height:1.4}
++.map-army-picker{min-width:0}
++.game-shell .map-army-picker>summary{display:flex;align-items:center;gap:11px;cursor:pointer;list-style:none;padding:10px 12px;min-height:64px;border-radius:11px 11px 0 0;color:#eeeae3;transition:background .15s}
++.map-army-picker>summary::-webkit-details-marker{display:none}
++.game-shell .map-army-picker>summary:hover,.map-army-picker[open]>summary{background:#ffffff06}
++.map-commander-face{position:relative;display:block;flex:none}
++.map-army-picker .map-commander-face .command-portrait{width:44px;height:48px;border-radius:7px;object-fit:cover;object-position:center 35%;border:1px solid #deb18b70}
++.map-commander-face>b{position:absolute;left:50%;bottom:-3px;transform:translateX(-50%);white-space:nowrap;padding:1px 5px;border:1px solid #deb18b4d;border-radius:4px;background:#252733;color:#ead3ac;font-size:8px;font-weight:600;line-height:1.5}
++.map-commander-identity{display:block;flex:1;min-width:0}
++.map-commander-identity>small{display:block;color:#9ca9bd;font-size:8px;letter-spacing:1.1px;margin-bottom:2px}
++.map-commander-identity>strong{display:block;font-size:13px;font-weight:600;color:#f2eee7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
++.map-commander-identity>span{display:block;font-size:10px;color:#a7b1c2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
++.map-army-switch{display:flex;flex:none;align-items:center;gap:7px;color:#d9c5a4;font-size:10px}
++.map-army-switch>span{display:flex;align-items:center;gap:5px}
++.map-army-switch b{display:grid;place-items:center;min-width:18px;height:18px;padding:0 4px;border-radius:4px;background:#ffffff09;color:#b9c4d6;font-size:9px;font-weight:500}
++.map-army-switch>svg{transform:rotate(180deg);transition:transform .15s}
++.map-army-picker[open] .map-army-switch>svg{transform:rotate(0)}
++.game-shell .map-army-options{position:absolute;left:-1px;bottom:calc(100% + 10px);width:calc(100% + 2px);max-width:calc(100vw - 24px);padding:6px;border:1px solid #ffffff2b;border-radius:12px;background:#1c2330;box-shadow:0 12px 40px #0007;z-index:12;color:#eeeae3}
++.map-army-options>header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 9px 13px;border-bottom:1px solid #ffffff0e;margin-bottom:5px}
++.map-army-options>header strong{display:block;font-size:12px;font-weight:600}
++.map-army-options>header small{display:block;font-size:9px;color:#a6b3c6;margin-top:3px}
++.map-army-options>header>span{padding:3px 7px;border:1px solid #ffffff18;border-radius:5px;font-size:10px;color:#c2ccdc}
++.map-army-roster{max-height:min(340px,calc(100dvh - 310px));overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#536074 transparent}
++.game-shell .map-army-roster>button{display:flex;align-items:center;gap:10px;width:100%;min-height:74px;padding:9px 8px;text-align:left;border:1px solid transparent;border-radius:7px;background:transparent;color:#eeeae3;transition:background .15s,border-color .15s}
++.game-shell .map-army-roster>button:hover{background:#ffffff06}
++.game-shell .map-army-roster>button[aria-pressed=true]{border-color:#deb18b55;background:#deb18b0e}
++.map-army-roster .command-portrait{width:40px;height:46px;border-radius:6px}
++.map-roster-identity{display:block;flex:1;min-width:0}
++.map-roster-title{display:flex;align-items:center;gap:7px}
++.map-roster-title>strong{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
++.map-roster-title>small{flex:none;color:#dec49f;font-size:9px}
++.map-roster-identity>small{display:block;font-size:9px;color:#a6b3c6;margin:3px 0 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
++.map-roster-meta{display:flex;justify-content:space-between;gap:7px;font-size:9px;color:#c4cdda}
++.map-roster-meta>span:first-child{color:#9cabc0}
++.map-roster-meta>span:last-child{white-space:nowrap;font-variant-numeric:tabular-nums}
++.map-roster-selected{display:grid;place-items:center;flex:none;width:20px;height:20px;color:#e7c493}
++.map-army-roster>button[aria-pressed=true] .map-roster-selected{background:#deb18b20;border-radius:50%}
++.map-army-troops{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));padding:8px 12px;border-block:1px solid #ffffff0c;background:#0b11151f}
++.map-army-troops>span{display:flex;align-items:center;justify-content:center;gap:8px;min-width:0;border-right:1px solid #ffffff0d}
++.map-army-troops>span:first-child{justify-content:flex-start}
++.map-army-troops>span:last-child{border:0}
++.map-army-troops svg{flex:none;color:#beaa8d}
++.map-army-troops strong{display:block;font-size:12px;font-weight:600;line-height:1.2;color:#eeeae3;font-variant-numeric:tabular-nums}
++.map-army-troops small{display:block;font-size:9px;color:#a4afc0;line-height:1.4;margin-top:2px}
++.map-army-footer{display:flex;align-items:center;justify-content:space-between;gap:9px;padding:5px 8px 5px 12px}
++.map-army-status{display:flex;align-items:center;gap:6px;min-width:0;font-size:9px;color:#b6c0d0}
++.map-army-status>i{width:5px;height:5px;border-radius:50%;flex:none;background:#9caec9}
++.map-army-status>span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
++.map-army-status.status-marching>i{background:#b7c8f1}
++.map-army-status.status-training>i{background:#deb18b}
++.map-army-status.status-empty-army>i{background:#d19b90}
++.map-army-actions{display:flex;align-items:center;gap:3px;flex:none}
++.game-shell .scene-stage .army-map-dock .map-army-actions>button{display:flex;align-items:center;justify-content:center;gap:5px;min-width:30px;min-height:30px;margin:0;padding:5px 7px;border:1px solid transparent;border-radius:5px;background:transparent;color:#d5c2a4;font-size:10px}
++.game-shell .scene-stage .army-map-dock .map-army-actions>button:hover:not(:disabled){background:#ffffff08;border-color:#ffffff16}
++.map-army-actions>button:disabled{opacity:.35;cursor:default}
++.game-shell .army-map-dock :is(summary,button):focus-visible{outline:2px solid #deb18b;outline-offset:-3px}
++.game-shell .scene-stage:has(>.army-map-dock) .map-zoom{bottom:180px}
++@media(max-width:900px){
++ .game-shell .scene-stage .march-status.army-map-dock{position:relative;left:auto;bottom:auto;width:100%;max-width:none;flex:none;border-radius:0;border-inline:0;border-bottom:0;box-shadow:none}
++ .map-army-command{max-width:480px;margin-inline:auto}
++ .game-shell .map-army-picker>summary{padding:8px 12px;min-height:58px}
++ .game-shell .map-army-options{left:6px;width:calc(100% - 12px)}
++ .game-shell .scene-stage:has(>.army-map-dock) .map-zoom{bottom:14px}
++}
++@media(prefers-reduced-motion:reduce){.map-army-command *{transition:none!important}}
+ .game-shell .realm-content.army-content{background:#141922;}
+-.game-shell .scene-stage .march-status:has(.map-army-picker) .scene-legion-open{width:24px;flex:none;padding:0;}
+-.map-army-picker+small{display:block;color:#aeb7c7;font-size:9px;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+ .army-command-tabs{position:sticky;top:0;z-index:5;}
+ .home-bonus-preview{display:grid;gap:6px;padding:12px;background:#ffffff03;border:1px solid var(--cmd-border);border-radius:6px;margin-top:15px;}.home-bonus-preview small{font-size:9px;color:var(--cmd-muted);}.home-bonus-preview strong{font-size:12px;color:var(--cmd-accent);font-weight:500;}
+ .army-command,.army-command-dialog{--cmd-bg:#141922;--cmd-panel:#1c222d;--cmd-border:#ffffff13;--cmd-text:#eeeae3;--cmd-muted:#a1aabb;--cmd-accent:#deb18b;color:var(--cmd-text);font-family:'Open Sans',Arial,sans-serif;}
+--- a/src/features/map/ui/WorldView.tsx
++++ b/src/features/map/ui/WorldView.tsx
+@@ -148,7 +148,13 @@
+      {selectedArmy && <><span className="eyebrow">{selectedArmy.owner_id === playerId ? 'YOUR LEGION' : 'RIVAL LEGION'}</span><h2>{selectedArmy.name}</h2><p>{soldierTotal(selectedArmy)} soldiers under {playerName(world.players, selectedArmy.owner_id)}.</p>{selectedArmy.owner_id === playerId ? <><button className="button gold" disabled={marchBlocked} onClick={() => { setMoveMode(true); setMapClaimMode(false); setFindOpen(false); setSelection(null); }}>Give marching orders<Icon name="arrow" size={16}/></button><button className="button outline" onClick={() => navigate('army')}>Manage troops</button></> : <button className="button outline" disabled={busy || outgoing} onClick={() => run({ type: 'challenge', ownerId: selectedArmy.owner_id }, 'Battle invitation sent')}>Invite to a live duel</button>}</>}
+     </aside>}
+    </div>
+-   <footer className="march-status"><div className="march-army-identity"><button className="legion-badge scene-legion-open" aria-label="Inspect your legion" onClick={() => setSelection({ kind: 'army', id: army.id })}><Icon name="army" size={23}/></button><div><ArmyMapPicker world={world} army={army} now={now} onChoose={id=>{onArmy?.(id);setMoveMode(false);setSelection({kind:"army",id});const chosen=world.armies.find(a=>a.id===id);if(chosen)setMapFocus({...armyPosition(chosen,now),key:Date.now()});}}/><small>{army.infantry} infantry · {army.archers} archers · {army.cavalry} cavalry</small></div></div><div className="march-state" role="status"><span className={moving ? 'marching-dot' : 'resting-dot'}/><span>{moving ? `Marching · ${clock((Date.parse(army.arrival_at) - now) / 1000)}` : dist(armyPosition(army, now), { x: world.settlements.find(s=>s.id===army.home_settlement_id)!.x + 40, y: world.settlements.find(s=>s.id===army.home_settlement_id)!.y + 30 }) < 90 ? 'At the keep' : 'On the field'}</span></div><button onClick={() => run({ type: 'move', x: world.settlements.find(s=>s.id===army.home_settlement_id)!.x + 40, y: world.settlements.find(s=>s.id===army.home_settlement_id)!.y + 30 }, 'The legion returns home')} disabled={busy || training.length > 0}>Return home</button></footer>
++   <footer className="march-status army-map-dock" aria-label="Army command panel">
++    <ArmyMapPicker world={world} army={army} now={now}
++     onChoose={id=>{onArmy?.(id);setMoveMode(false);setSelection({kind:"army",id});const chosen=world.armies.find(a=>a.id===id);if(chosen)setMapFocus({...armyPosition(chosen,now),key:Date.now()});}}
++     onInspect={()=>setSelection({kind:'army',id:army.id})}
++     onReturnHome={()=>run({type:'move',x:world.settlements.find(s=>s.id===army.home_settlement_id)!.x+40,y:world.settlements.find(s=>s.id===army.home_settlement_id)!.y+30},'The legion returns home')}
++     returnDisabled={busy||training.length>0}/>
++   </footer>
+   </section>
+   </div>
+   {exploreOpen && <Modal title={`A world of ${fieldCount} fields`} className="atlas-explore-modal" onClose={() => setExploreOpen(false)}><span className="eyebrow">{WORLD_COLS} COLUMNS × {WORLD_ROWS} ROWS · X / Y {minCol} TO {maxCol}</span><p className="atlas-explore-intro">The six campaign landmarks surround your starting keep. Beyond them, one ancient continent reaches from forest kingdoms to snowfields and dark frontiers. Coastal islands lie across the surrounding sea. Choose a region to explore its fields.</p><div className="atlas-explore-regions">{WORLD_REGIONS.map(r => <button key={r.id} onClick={() => exploreRegion(r)}><i style={{ background: r.color }}/><span><strong>{r.name}</strong><small>{r.subtitle}</small></span><Icon name="arrow" size={15}/></button>)}</div><div className="atlas-terrain-legend"><span className="field-label">LANDSCAPES OF LAND & SEA</span><div>{(Object.keys(FIELD_COLORS) as FieldTerrain[]).map(terrain => <span key={terrain}><i style={{ background: FIELD_COLORS[terrain] }}/>{terrainName(terrain)}</span>)}</div></div><p className="atlas-explore-help">Drag to pan; scroll or pinch to zoom. Select a field to inspect its coordinates and terrain. Your legion follows connected land; sea crossings require ships. Home and Army return the camera to your own realm; World overview reveals the full map.</p></Modal>}
