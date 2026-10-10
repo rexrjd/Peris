@@ -31,3 +31,7 @@ Peris combines persistent, field-based strategy with automatic AI-controlled for
 Run `npm test`, `npm run test:tooling`, `npm run assets:check`, and `npm run build` for this toolkit. Run `npm run test:e2e` for UI/rendering changes and inspect captured images. World or server changes also require generation checks and the affected isolated database suites. Separate pre-existing failures from regressions; never weaken a check merely to make it pass.
 
 Use small review branches. Report what changed, what passed, and what still needs local Blender/browser verification.
+
+## Shared repository workflow
+
+Before every push, fetch `origin/main` and inspect changes made by the other developer since this branch diverged. Integrate current main without overwriting either person's work, resolve any overlaps, and rerun affected checks before pushing. Never force-push main. Keep unfinished changes on a review branch.

@@ -1,5 +1,16 @@
 # Peris v0.8 · Gameplay architecture
 
+## Frontier Wars — local playable slice
+
+Run `npm ci` then `npm run dev:frontier`, and open **http://127.0.0.1:5174/?frontier=1**.
+Recruit troops, raid shared resource-producing mercenary camps, bring survivors and
+loot home, and save repeating farm targets. The local server persists the realm
+and continues processing with the browser closed. Existing campaign and Shared
+world modes remain available. Use `npm.cmd` in PowerShell if needed.
+
+See [Frontier Wars](docs/frontier-wars.md) for play instructions, balance assumptions,
+saved data, configuration, tests, server architecture, and the next milestone.
+
 Development tools: see **docs/DEV_TOOLS.md** for Codex/Blender/Playwright setup and **docs/GRAPHICS_PIPELINE.md** for model export and the next 3D battle milestone. On Windows, `START-PERIS-TOOLS.cmd` prepares the local checkout after Node.js is installed.
 
 The map release integrates a seeded seamless world and persistent external fields with latest main's city, eleven factions, magic, Empire and Heroes systems. See **MAP_RELEASE.md** for publication/database deployment and **MAP_WORLD.md** for map rules. Existing databases use **UPGRADE_TO_V11.sql**; empty installations use **FRESH_INSTALL_V11.sql**. The earlier map notes below describe the preceding continental release.

@@ -5,6 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:frontier": "node scripts/dev-frontier.mjs",
+    "server:frontier": "node --import tsx server/frontier/index.ts",
+    "check:frontier": "tsc -p tsconfig.frontier.json",
+    "test:frontier-server": "node --import tsx --test tests/frontier-server.test.mts tests/frontier-http.test.mts tests/frontier-vite.test.mts",
+    "test:frontier-ui": "playwright test -c playwright.frontier.config.ts",
     "build": "tsc -p tsconfig.app.json && vite build",
     "build:standalone": "npm run build && node scripts/standalone.mjs",
     "preview": "vite preview",

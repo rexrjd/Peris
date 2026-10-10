@@ -12,6 +12,9 @@ tmp/world-map/
 playwright-report/
 test-results/
 blob-report/
+.peris-frontier/
+.frontier-test-results/
+.frontier-playwright-report/
 *.blend1
 *.blend2
 __pycache__/

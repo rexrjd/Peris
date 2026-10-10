@@ -12,6 +12,8 @@ This release organizes the existing game by feature and responsibility. It prese
 | `src/features/city` | Buildings, production, capacity, construction, rename command, city layout and UI |
 | `src/features/empire` | Culture, city founding, settlers, ownership context and save normalization |
 | `src/features/heroes` | Commander classes, XP/attributes, artifacts, troop transfer and home-city changes |
+| `src/features/frontier` | Frontier camp balance/generation, stock and combat adapter, raid/farm/report UI |
+| `server/frontier` | Local persistent Frontier authority, sessions, transactional commands and indexed event processing |
 | `src/features/army` | Unit definitions, troop counts, recruitment, training completion and UI |
 | `src/features/campaign` | New realm, quests, rewards, progression, raid creation, strategic queue orchestration and battle settlement |
 | `src/features/menu`, `settings`, `codex` | Their own screen components and styles |
@@ -25,6 +27,14 @@ This release organizes the existing game by feature and responsibility. It prese
 | `tests` | Gameplay, save/progression, architecture and isolated database integration checks |
 
 Features contain `domain`, `ui`, `rendering` and `styles` only where needed. Domain code uses plain state and types. Rendering reads state and emits commands; it does not apply damage, spend resources or persist campaigns. The local engine coordinates feature systems. The online adapter asks authoritative database functions to perform mutations.
+
+Frontier Wars is a separate local realm reached through `/?frontier=1`. Its Node
+authority reuses the existing pure troop, pathfinding and automatic-combat domains.
+`src/platform/frontier.ts` sends same-origin commands; it does not simulate outcomes.
+The server owns a disk PGlite database and a bounded chronological event queue.
+Its schema source is `supabase/modules/frontier/local.sql`, generated separately
+as `supabase/FRONTIER_LOCAL.sql`; it is not included in existing Supabase installers.
+See `docs/frontier-wars.md` for the transaction and migration boundary.
 
 ## Where gameplay changes belong
 

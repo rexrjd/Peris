@@ -155,7 +155,7 @@ test('textured faction rosters inspect all nine roles and keep automatic combat,
             const name=await inspector.locator(`option[value="${role}"]`).innerText();
             await expect(page.locator('.siege-study h2')).toHaveText(name);
             await expect(page.locator('.command-meters')).toHaveCount(0);
-            await expect(page.locator('.command-unit-art')).not.toContainText('soldiers');
+            await expect(page.locator('.command-unit-art')).toHaveCount(0);
         }
     }
 

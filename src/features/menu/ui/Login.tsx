@@ -31,6 +31,7 @@ export function Login({ onSolo, onOnline, onPractice, onSettings, onCodex, onUni
             <form onSubmit={e => { e.preventDefault(); onOnline(name); }}><label className="field-label" htmlFor="ruler-name">YOUR RULER NAME</label><input id="ruler-name" value={name} onChange={e => setName(e.target.value)} maxLength={20} autoComplete="off" disabled={busy}/><button className="button gold launch-cta" disabled={busy}>{busy ? 'Opening the gates…' : 'Enter the shared world'}<Icon name="arrow"/></button><p className="mode-description">Develop a realm alongside other rulers. Invite a rival to a live duel when both legions are ready. Your existing account returns to its realm.</p></form>}
    <button className="quick-battle-link" onClick={() => setSetup(true)} disabled={busy}><Icon name="army"/>Quick battle <span>Take the field immediately <Icon name="arrow" size={14}/></span></button>
    <button className="menu-secondary" disabled={busy} onClick={() => onUnitPreview(faction)}>Unit preview · Browse all factions</button>
+   {!standalone && <a className="menu-secondary" href="?frontier=1" style={{ display: 'block', textAlign: 'center', textDecoration: 'none' }}>Frontier Wars · Mercenary camps</a>}
    <a className="menu-secondary" href="?map-preview=1" style={{ display: 'block', textAlign: 'center', textDecoration: 'none' }}>Explore the world map sample</a>
    {error && <div className="alert error" role="alert">{error}</div>}{busy && <div className="loading-bar" aria-label="Connecting to the shared world"><i /></div>}
   </section>

@@ -12,7 +12,7 @@ export default defineConfig({
   use: {
     // Full Chromium uses the machine's graphics driver; the old headless shell
     // renders these WebGL armies through SwiftShader on the CPU.
-    channel: 'chromium',
+    channel: process.env.PERIS_BROWSER_CHANNEL ?? 'chromium',
     baseURL: 'http://127.0.0.1:4173',
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
