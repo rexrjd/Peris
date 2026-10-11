@@ -64,8 +64,9 @@ function EditList({list,world,playerId,busy,run,onClose}:Props & {list:CampaignF
  </form></Modal>;
 }
 
-export function CampaignFarmLists({ world, playerId, busy, now, run, onClose, onRaid, onEdit, onLocate }: Props & {
+export function CampaignFarmLists({ world, playerId, busy, now, run, onClose, onRaid, onEdit, onLocate, embedded = false }: Props & {
     now: number;
+    embedded?: boolean;
     onRaid: (target: CampaignFarmTarget) => void; onEdit: (target: CampaignFarmTarget) => void; onLocate: (camp: Camp) => void;
 }) {
     const [editId,setEditId]=useState<number|null>(null),[sort,setSort]=useState('name');
@@ -73,8 +74,7 @@ export function CampaignFarmLists({ world, playerId, busy, now, run, onClose, on
     const lists = (world.campaign_farm_lists ?? []).filter(list => list.owner_id === playerId);
     const farms = (world.campaign_farms ?? []).filter(farm => farm.owner_id === playerId);
     const editing=lists.find(list=>list.id===editId);
-    if(editing)return <EditList list={editing} world={world} playerId={playerId} busy={busy} run={run} onClose={()=>setEditId(null)}/>;
-    const latest=(farm:CampaignFarmTarget)=>world.reports.filter(report=>report.camp_id===farm.camp_id||world.battles.some(battle=>battle.id===report.battle_id&&battle.camp_id===farm.camp_id)).sort((a,b)=>Date.parse(b.created_at)-Date.parse(a.created_at));
+    const latest=(farm:CampaignFarmTarget)=>world.reports.filter(report=>report.owner_id===playerId&&(report.camp_id===farm.camp_id||world.battles.some(battle=>battle.id===report.battle_id&&battle.camp_id===farm.camp_id))).sort((a,b)=>Date.parse(b.created_at)-Date.parse(a.created_at));
     const compare=(a:CampaignFarmTarget,b:CampaignFarmTarget)=>{
      const campA=world.camps.find(c=>c.id===a.camp_id),campB=world.camps.find(c=>c.id===b.camp_id),armyA=world.armies.find(army=>army.id===a.army_id),armyB=world.armies.find(army=>army.id===b.army_id);
      const distance=(camp:Camp|undefined,army:typeof armyA)=>camp&&army?Math.hypot(wrappedWorldDelta(army.target_x,camp.x),wrappedWorldDelta(army.target_y,camp.y)):Infinity;
@@ -82,20 +82,21 @@ export function CampaignFarmLists({ world, playerId, busy, now, run, onClose, on
      return (sort==='distance'?distance(campA,armyA)-distance(campB,armyB):sort==='result'?Number(rb[0]?.won??false)-Number(ra[0]?.won??false):sort==='lastRaid'?(Date.parse(rb[0]?.created_at??'1970-01-01')-Date.parse(ra[0]?.created_at??'1970-01-01')):sort==='bounty'?bounty(rb.slice(0,1))-bounty(ra.slice(0,1)):sort==='totalBounty'?bounty(rb)-bounty(ra):sort==='nextAttack'?(Date.parse(a.next_at??'9999-01-01')-Date.parse(b.next_at??'9999-01-01')):(campA?.name??'').localeCompare(campB?.name??''))||a.id-b.id;
     };
     const review = lists.find(list => list.id === reviewId);
-    if (review) {
-        const targets = farms.filter(farm => farm.list_id === review.id).sort((a, b) => a.id - b.id);
-        return <Modal title={`Start farm list: ${review.name}`} className="march-dialog campaign-farm-dialog" onClose={() => setReviewId(null)}>
+    const reviewTargets = review ? farms.filter(farm => farm.list_id === review.id).sort((a, b) => a.id - b.id) : [];
+    const dialog = editing
+        ? <EditList list={editing} world={world} playerId={playerId} busy={busy} run={run} onClose={() => setEditId(null)} />
+        : review ? <Modal title={`Start farm list: ${review.name}`} className="march-dialog campaign-farm-dialog" onClose={() => setReviewId(null)}>
             <p>Send one batch using these saved troop presets.</p>
-            <div className="campaign-batch-review">{targets.map(target => {
+            <div className="campaign-batch-review">{reviewTargets.map(target => {
                 const camp = world.camps.find(camp => camp.id === target.camp_id), army = world.armies.find(army => army.id === target.army_id);
                 return <article key={target.id}><strong>{camp?.name ?? 'Camp unavailable'}</strong><small>{army?.name ?? 'Legion unavailable'}</small><TroopSummary troops={target.troops} faction={armyFaction(world, army)}/></article>;
             })}</div>
             <p className="march-muted">Each legion can launch one raid at a time. Targets are checked in the order above; busy legions, insufficient troops and regrouping camps are skipped. Repeated clicks never create troops.</p>
             <p className="march-muted">Confirmed orders wait 30 seconds before departure. You can cancel each order during that window.</p>
-            <div className="march-actions"><button className="button outline" disabled={busy} onClick={() => setReviewId(null)}>Back</button><button className="button gold" disabled={busy || !targets.length} onClick={() => { run({ type: 'startCampaignFarmList', id: review.id }, 'Farm list processed. Available legions are preparing; unavailable targets were skipped.'); setReviewId(null); }}>Confirm batch</button></div>
-        </Modal>;
-    }
-    return <Modal title="Farm lists" className="march-dialog campaign-farm-dialog" onClose={onClose}>
+            <div className="march-actions"><button className="button outline" disabled={busy} onClick={() => setReviewId(null)}>Back</button><button className="button gold" disabled={busy || !reviewTargets.length} onClick={() => { run({ type: 'startCampaignFarmList', id: review.id }, 'Farm list processed. Available legions are preparing; unavailable targets were skipped.'); setReviewId(null); }}>Confirm batch</button></div>
+        </Modal> : null;
+    if (!embedded && dialog) return dialog;
+    const content = <>
         <p className="march-muted">Save camp targets and troop presets. Start a list to review a manual batch, or prepare one target separately.</p>
         <CreateList run={run} busy={busy} /><label className="campaign-sort">Sort targets<select aria-label="Sort farm targets" value={sort} onChange={event=>setSort(event.target.value)}><option value="name">Name</option><option value="distance">Distance</option><option value="result">Combat result</option><option value="lastRaid">Last raid</option><option value="bounty">Last bounty</option><option value="totalBounty">Total bounty in loaded reports</option><option value="nextAttack">Next attack</option></select></label>
         {!lists.length && <p>No lists yet. Create one, then choose a camp on the map and select Add to farm list.</p>}
@@ -112,5 +113,8 @@ export function CampaignFarmLists({ world, playerId, busy, now, run, onClose, on
                 })}
             </details>;
         })}</div>
-    </Modal>;
+    </>;
+    return embedded
+        ? <section className="campaign-farm-embedded" aria-label="Farm lists">{content}{dialog}</section>
+        : <Modal title="Farm lists" className="march-dialog campaign-farm-dialog" onClose={onClose}>{content}</Modal>;
 }

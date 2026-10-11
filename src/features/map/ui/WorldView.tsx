@@ -61,7 +61,10 @@ export function WorldView({ world, playerId, selection, setSelection, moveMode, 
     const [mapFocus, setMapFocus] = useState<{ x: number; y: number; key: number; zoom?: number } | undefined>(() => {
         const selected = selection?.kind === 'army' ? world.armies.find(a => a.id === selection.id && a.owner_id === playerId) : undefined;
         const home = world.settlements.find(city => city.owner_id === playerId && (cityId === undefined || city.id === cityId));
-        const point = selected ? armyPosition(selected, now) : home;
+        const landmark = selection?.kind === 'camp' ? world.camps.find(camp => camp.id === selection.id)
+            : selection?.kind === 'settlement' ? world.settlements.find(city => city.id === selection.id)
+            : selection?.kind === 'cell' ? cellCenter(selection.col, selection.row) : home;
+        const point = selected ? armyPosition(selected, now) : landmark ?? home;
         return point ? { x: point.x, y: point.y, key: 1, zoom: 13 / 11 } : undefined;
     });
     const [exploreOpen, setExploreOpen] = useState(false);

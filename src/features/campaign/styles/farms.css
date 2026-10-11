@@ -1,4 +1,8 @@
 .campaign-farm-form>label{display:grid;gap:7px;font-size:12px;font-weight:600;margin:12px 0}
+.campaign-farm-embedded{min-width:0}
+.campaign-farm-embedded>.march-muted:first-child{margin-top:0}
+.campaign-farm-embedded .campaign-farm-lists{display:grid;gap:14px}
+.campaign-farm-embedded .campaign-farm-list{margin-top:0}
 .campaign-create-list{display:flex;flex-wrap:wrap;align-items:end;gap:12px;margin:15px 0}
 .campaign-create-list label{display:grid;flex:1;min-width:130px;gap:7px;font-size:12px}
 .campaign-create-list input{background:#18202b;color:#e8e5dc;border:1px solid #78828d;border-radius:5px;padding:10px;min-height:42px;max-width:100%;font:inherit}
