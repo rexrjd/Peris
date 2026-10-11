@@ -21,6 +21,8 @@ grant execute on function public.peris_collect_garrison(bigint,jsonb)to authenti
 -- The argument-free identity helper is required by RLS; it exposes only the
 -- caller's current ruler UUID. Session bindings themselves remain inaccessible.
 grant execute on function public.peris_player_id(),public.peris_login(text)to authenticated;
+grant execute on function public.peris_enter_account(text,text,text,uuid)to authenticated;
+grant execute on function public.peris_account_directory(text,text,text,text,integer,integer)to anon,authenticated;
 grant execute on function public.peris_claim_field(integer,integer),public.peris_queue_field(integer,integer,text),public.peris_set_faction(text),public.peris_debug_city(text,text,integer),public.peris_snapshot(),public.peris_map_snapshot(integer,integer,integer,integer),public.peris_march(integer,integer,jsonb),public.peris_queue_upgrade(text),public.peris_queue_slot(integer,text),public.peris_research_spell(text),public.peris_cast_spell(bigint,text,bigint),public.peris_queue_recruit(text,integer),public.peris_raid(integer),public.peris_ready(bigint),
  public.peris_order(bigint,jsonb),public.peris_tick(bigint),public.peris_rally(bigint),public.peris_challenge(uuid),public.peris_respond(bigint,boolean),public.peris_claim(text),public.peris_rename(text)to authenticated;
 

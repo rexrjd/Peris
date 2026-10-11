@@ -67,9 +67,9 @@ Open **Menu → Cities & expansion** or the city dock to train settlers and foun
 
 Quick Battle, campaign battles and multiplayer duels now open with the published faction GLB troops in **3D units** view. The command panel also offers **2D**, with automatic fallback if WebGL or model loading fails. Army models use their home city's faction, including multiplayer armies with homes outside the visible map. Strategic maps use the published distance models at close zoom and retain lightweight markers in overview.
 
-Open **Unit preview** from the launcher or the in-game **Menu** to inspect every faction's nine models, rotate them and review animations. Quick Battle lets you choose both factions and displays four foot formations and three mounted formations for each host. The seven troop appearances retain infantry, archer and cavalry combat rules; the two siege models remain inspection studies. Academy unlocks and Workshop siege production are not implemented in this visual update. Source credits are in `public/licenses/peris-faction-rosters.txt`.
+Open **Unit preview** from the launcher or the in-game **Menu** to inspect every faction's nine models, rotate them and review animations. Quick Battle lets you choose both factions and displays four foot formations and three mounted formations for each host. Campaign and shared-world recruitment now preserve all nine roles, with research and Workshop production as described above. Siege units participate in formation combat; structural siege damage is still a future mechanic. Source credits are in `public/licenses/peris-faction-rosters.txt`.
 
-Campaign: develop eight buildings, collect four resources, recruit infantry/archers/cavalry, march to six camps, deploy, fight and rebuild. Strategic income/queues/travel use timestamps and continue while away. Troop casualties persist. Quick battle supports four terrains, three difficulties and three army doctrines. Settings include sound/music, display/order options and campaign export/import/backup.
+Campaign: develop sixteen city plots and outside resource sites, collect four resources, recruit faction troops, raid roaming camps and advance through six story locations. Strategic income/queues/travel use timestamps and continue while away. Troop casualties persist. Quick battle supports four terrains, three difficulties and three army doctrines. Settings include sound/music, display/order options and campaign export/import/backup.
 
 Select formations by click, Shift-click or selection drag. Right-click moves/attacks; right-drag sets frontage/facing. Simple left-click orders and touch Move/Attack modes are also available. A selects all; H halts, G guards, R rallies, F focuses, Escape opens the battle menu and Space pauses local combat. The minimap and camera controls navigate the field.
 
@@ -98,3 +98,13 @@ If creating a ruler reports **canceling statement due to statement timeout**, ru
 Enter a ruler name to control that account. Names are case-insensitive and ignore surrounding spaces. Existing names reopen their original realm from any browser; new names create one starter city, army and commander. Page refreshes resume the current realm, expired sessions reconnect by name, and **Menu → Switch ruler** returns to name entry. Each tab has an independent connection. Knowing a name is intentionally sufficient to control its account.
 
 Apply **`supabase/UPGRADE_TO_V14.sql`** to the existing database before deploying this frontend. Player IDs and progress remain intact, and anonymous Auth-user cleanup no longer deletes a ruler. Use `FRESH_INSTALL_V14.sql` only for an empty database. See [account stability](docs/name-only-accounts.md).
+
+### V15: account browser and race selection
+
+Shared world now has separate **Log in** and **Create account** screens. Browse all rulers through searchable portrait cards, race/activity filters and pagination. Select a ruler to see cities, armies, total population, strongest hero level and recent activity, then enter their realm. You can also log in by typing an existing name.
+
+Creation requires an unused name and one of the eleven races, including the four human cultures. The first city and its army/hero appearance use that race immediately. Login does not create a missing account; creation does not overwrite an occupied name. Lost-response retries reuse the same creation request and estate. Name-based control, independent tabs and session recovery remain as in V14.
+
+Run the entire **`supabase/UPGRADE_TO_V15.sql`** before deploying this frontend. Use `FRESH_INSTALL_V15.sql` only for an empty project. Frontier Wars remains a separate local mode. See [account entry and stability](docs/name-only-accounts.md).
+
+The revised V15 overlay targets main `3ebbb81` and keeps the painted faction villages, private garrisons, thirty-second march cancellation, farm lists and current Frontier authority. `npm run test:account-compatibility-db` verifies migration from that exact main snapshot, including live orders and troop conservation.

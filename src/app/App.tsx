@@ -19,6 +19,7 @@ import { LocalEngine } from '../engine/local/LocalEngine';
 import { createSolo } from '../features/campaign/domain/newRealm';
 import { type World } from '../shared/model/world';
 import { OnlineEngine, enterOnline } from '../engine/online/OnlineEngine';
+import type { AccountEntry } from '../platform/backend/accountLogin';
 import { activeRulerName, leaveRuler } from '../platform/backend/accountStorage';
 import { startPractice } from '../features/battle/domain/practice';
 import { Settings } from '../features/settings/ui/Settings';
@@ -85,8 +86,8 @@ export default function App() {
         }
     };
     const load = (world: World) => { engine?.destroy(); backupSolo(); replace(() => new LocalEngine(validateSave(world))); };
-    const online = async (name: string) => { if (openingOnline.current) return; openingOnline.current = true; setBusy(true); setError(null); try {
-        const next = await enterOnline(name);
+    const online = async (name: string, entry?: AccountEntry) => { if (openingOnline.current) return; openingOnline.current = true; setBusy(true); setError(null); try {
+        const next = await enterOnline(name, entry);
         replace(() => next);
     }
     catch (e) {
@@ -115,7 +116,7 @@ export default function App() {
     const practice = (terrain: Terrain, difficulty: Difficulty, doctrine: Doctrine, faction: Faction = 'roman', enemy: Faction = 'orc') => { lastPractice.current = { terrain, difficulty, doctrine, faction, enemy }; replace(() => { const e = new LocalEngine(createSolo('Your legion'), false); e.startPractice(terrain, difficulty, doctrine, faction, enemy); return e; }); };
     const gallery = previewFaction && <Modal title="Unit preview" className="unit-preview-modal" onClose={() => setPreviewFaction(undefined)}><Suspense fallback={<p role="status">Preparing unit preview…</p>}><UnitGallery initialFaction={previewFaction} onClose={() => setPreviewFaction(undefined)} onBattle={engine ? undefined : faction => { setPreviewFaction(undefined); practice("plains", "normal", "balanced", faction, faction === "roman" ? "orc" : "roman"); }}/></Suspense></Modal>;
     if (!engine)
-        return <><Login onUnitPreview={faction => setPreviewFaction(faction ?? "roman")} onSolo={solo} onOnline={name => void online(name)} onPractice={practice} onSettings={() => setSettings(true)} onCodex={() => setCodex(true)} busy={busy} error={error}/>{settings && <Settings onClose={() => setSettings(false)} onLoad={load}/>} {codex && <Codex onClose={() => setCodex(false)}/>} {gallery}</>;
+        return <><Login onUnitPreview={faction => setPreviewFaction(faction ?? "roman")} onSolo={solo} onOnline={(name, entry) => void online(name, entry)} onPractice={practice} onSettings={() => setSettings(true)} onCodex={() => setCodex(true)} busy={busy} error={error}/>{settings && <Settings onClose={() => setSettings(false)} onLoad={load}/>} {codex && <Codex onClose={() => setCodex(false)}/>} {gallery}</>;
     return <><Realm onUnitPreview={setPreviewFaction} key={`${engine.playerId}:${engine.snapshot.players.find(p => p.id === engine.playerId)?.created_at}:${engine.mode}`} engine={engine} onExit={() => { engine.destroy(); leaveRuler(); setEngine(null); }} onLoad={load} onRetry={() => practice(lastPractice.current.terrain, lastPractice.current.difficulty, lastPractice.current.doctrine, lastPractice.current.faction, lastPractice.current.enemy)}/>{gallery}</>;
 }
 function Realm({ engine, onExit, onLoad, onRetry, onUnitPreview }: {

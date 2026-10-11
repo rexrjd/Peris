@@ -58,3 +58,15 @@ test('a wrong ruler or incomplete snapshot cannot be installed as the active rea
     const wrongId = fixture(); wrongId.world.players[0].id = 'other';
     await assert.rejects(() => openRuler('Alpha', wrongId.backend), /could not be loaded/);
 });
+test('creation race and request identity survive a fresh-session retry', async () => {
+    const { backend } = fixture(); const entries: unknown[] = [];
+    const entry = { mode: 'create' as const, faction: 'orc' as const, creationId: '12345678-1234-4234-8234-123456789012' };
+    backend.login = async (_name, action) => { entries.push(action); if (entries.length === 1) throw { code: 'PT409' }; return { player_id: 'persistent-alpha', display_name: 'Alpha', created: true }; };
+    assert.equal((await openRuler('Alpha', backend, entry)).ruler.created, true);
+    assert.deepEqual(entries, [entry, entry]);
+});
+test('invalid creation race or request UUID fails before authentication', async () => {
+    for (const entry of [{ mode: 'create', faction: 'alien', creationId: '12345678-1234-4234-8234-123456789012' }, { mode: 'create', faction: 'orc', creationId: 'invalid' }] as unknown as Parameters<typeof openRuler>[2][]) {
+        const { backend, calls } = fixture(); await assert.rejects(() => openRuler('Alpha', backend, entry), /Choose a race/); assert.deepEqual(calls, []);
+    }
+});

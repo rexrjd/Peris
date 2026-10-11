@@ -1,354 +1,280 @@
 {
-  "baseline_commit": "3a598fde295c6dd3d62db81de430b5aac29ef388",
-  "original_account_baseline": "6fcc0df4ceeccacbb051dc51e697d785d6ea4158",
-  "archive_type": "changed-files update, merged with Frontier Wars",
-  "database_upgrade": "supabase/UPGRADE_TO_V14.sql",
-  "account_sql_changed_since_original_delivery": false,
+  "release": "V15 \u2014 Account browser, compatible with current main",
+  "base_commit": "3ebbb81b84902b14bdaffcb3c9c769a09cee9780",
+  "previous_overlay_base_commit": "0f159942434cb575217ed22f8793849e9cf8d0f8",
+  "reviewed_new_commits": 15,
+  "reviewed_changed_files": 212,
+  "database_upgrade": "supabase/UPGRADE_TO_V15.sql",
+  "type": "changed-files overlay",
+  "manifest_excludes_its_own_hash": true,
+  "validation": {
+    "unit_passed": 369,
+    "unit_existing_skips": 1,
+    "frontier_server_passed": 29,
+    "isolated_database_suites_passed": 9,
+    "production_account_browser_passed": 10,
+    "production_city_farm_browser_passed": 6
+  },
   "files": [
     {
+      "path": "ACCOUNT_UPDATE.patch",
+      "size_bytes": 2245202,
+      "sha256": "afda087c5e43e46d6aa43719a78a85a6868f419eef177e17c2be6ac9d53d6c3e"
+    },
+    {
+      "path": "ACCOUNT_UPDATE_COMPATIBILITY.txt",
+      "size_bytes": 3843,
+      "sha256": "97bd3be02058ea586a78d8f800707eb6b03a827402817da52effe2e6486d77dc"
+    },
+    {
+      "path": "ACCOUNT_UPDATE_README.txt",
+      "size_bytes": 3729,
+      "sha256": "dbfb9eeae3a08b69d2b8f3f5917f37dd08bfe7dfd44b9b9a9d2533f9c47cdf00"
+    },
+    {
       "path": "README.md",
-      "size": 9045,
-      "sha256": "a27ec86fb9121916d61c05ea53a7691f3497615ad636d2e81f97becfe3e3c38d"
+      "size_bytes": 13990,
+      "sha256": "7e72090e2e14d7b8bb161c908a7dc00cd4424107465ff6fc765fa851a9c4ca3b"
     },
     {
       "path": "docs/name-only-accounts.md",
-      "size": 7235,
-      "sha256": "239efe835f9d3c6de1a0e7a62850d87b361824b06462377bdc59fea1e281547b"
+      "size_bytes": 7615,
+      "sha256": "8443654ff3e5ebb26bff2cacd3b51e63c44fe35aeaaa1671c12a6e8607cb61b1"
     },
     {
       "path": "package.json",
-      "size": 3355,
-      "sha256": "601678542447572c3c20f6e573781b0edfb1a13e39e02ac56196f028561cf1bc"
+      "size_bytes": 3542,
+      "sha256": "da76a97d3de7ebd914cf0500385fd1b3e406c69b98e85f4499b4d3cbf1bd6005"
     },
     {
       "path": "scripts/build-sql.mjs",
-      "size": 2612,
-      "sha256": "e22ac2eeea36b93320e6d4e740556dd206a09eab7d4fdfc458e0116aefca85e5"
+      "size_bytes": 2689,
+      "sha256": "75b4538985424ebcdbe264eabd505f5de65addf0806e71b13ec7c53b1307dacf"
     },
     {
       "path": "src/app/App.tsx",
-      "size": 23713,
-      "sha256": "05a69a2bbac024bc6f2e771da993d44e6f7ef92b6da400812b3bc57eb62b2bbc"
+      "size_bytes": 25996,
+      "sha256": "d6630c1273034c3c6cc30e634d133e1814c6ee76116150566ec9abce88b77ea2"
+    },
+    {
+      "path": "src/app/styles/index.css",
+      "size_bytes": 1786,
+      "sha256": "7a07e0d6fc434cf8d38e0661348292fa104c391f38ca6e703785b8828318ca7a"
     },
     {
       "path": "src/engine/online/OnlineEngine.ts",
-      "size": 20677,
-      "sha256": "0f5e9ea67d53c8fdb0f4fc22c2f1342e5462939bc678ee54f6d7bdc09cfd6a64"
+      "size_bytes": 22414,
+      "sha256": "4b794517d33c8ef7154177abf5af40ca7eb5ee266d1f56456ea9319dcb9abbbc"
+    },
+    {
+      "path": "src/features/menu/styles/accounts.css",
+      "size_bytes": 16953,
+      "sha256": "2f0b7ef3543b62832369174ddb508fad023c1e942b04d2e5d76acb2122070424"
+    },
+    {
+      "path": "src/features/menu/ui/AccountAccess.tsx",
+      "size_bytes": 16374,
+      "sha256": "322f739062f7c74278de3c4da4fc0484eded10b1efb1a485596c959c78f73fab"
     },
     {
       "path": "src/features/menu/ui/Login.tsx",
-      "size": 10488,
-      "sha256": "c255d40919410ee9945f7cc56bd9b621b66edc5ec371c34263590d0491fabab0"
+      "size_bytes": 10361,
+      "sha256": "7b4e912dfbd2b2a32956f995d30c3cd1efb39f881093aa5f8acf2f382655d522"
+    },
+    {
+      "path": "src/platform/backend/accountDirectory.ts",
+      "size_bytes": 1705,
+      "sha256": "3284b33c0f2c0aa0ab1f6d8ca18ce6b8de0d91aa0841e4f30967f1008b1cb307"
     },
     {
       "path": "src/platform/backend/accountLogin.ts",
-      "size": 2444,
-      "sha256": "025f228643b08361b6eed27ffe271a2237b8093b406d6fc298e7ffe4d08f4359"
-    },
-    {
-      "path": "src/platform/backend/accountStorage.ts",
-      "size": 1973,
-      "sha256": "c089e221b87da9f40ab262ab3122e7b63f8e2c9cd559f7facb8a329f0f1f3f4e"
+      "size_bytes": 2922,
+      "sha256": "3680305cf0bacd589b8676c87d6703fcf08aa88aad20cfc6a039d15cc09597bc"
     },
     {
       "path": "src/platform/backend/accounts.ts",
-      "size": 2208,
-      "sha256": "7013b4e3f96b33198a938ecd1a4b54b3cceb99a43826654c4aefd8c506e4e689"
-    },
-    {
-      "path": "src/platform/backend/supabase.ts",
-      "size": 1212,
-      "sha256": "1c99b92a2f89e5e78dff2f2d0707aacc5979f0e0078e66658e20a72f07fb518f"
-    },
-    {
-      "path": "supabase/FIX_MULTIPLAYER_SIGNUP.sql",
-      "size": 4730,
-      "sha256": "199c0f766aea5315c2bf1a6cf4adeb1008ebba0ec56004c6b4de57fdfcfb95b7"
+      "size_bytes": 2523,
+      "sha256": "4cd91f5b5cfc42067f13cfa5f143efd59f8b0467bca305e3e6b5411e870dcaab"
     },
     {
       "path": "supabase/FRESH_INSTALL_V10.sql",
-      "size": 456606,
-      "sha256": "e0f6a65acb4c0a00761b578b8fb371a2ce094ffda0ef1249088f09c82bd5b298"
+      "size_bytes": 491720,
+      "sha256": "a6fc260d49bd1e03d1f8b05297391a015becc06266d55cc642e03a5c12ca1ad8"
     },
     {
       "path": "supabase/FRESH_INSTALL_V11.sql",
-      "size": 456606,
-      "sha256": "e0f6a65acb4c0a00761b578b8fb371a2ce094ffda0ef1249088f09c82bd5b298"
+      "size_bytes": 491720,
+      "sha256": "a6fc260d49bd1e03d1f8b05297391a015becc06266d55cc642e03a5c12ca1ad8"
     },
     {
       "path": "supabase/FRESH_INSTALL_V12.sql",
-      "size": 456606,
-      "sha256": "e0f6a65acb4c0a00761b578b8fb371a2ce094ffda0ef1249088f09c82bd5b298"
+      "size_bytes": 491720,
+      "sha256": "a6fc260d49bd1e03d1f8b05297391a015becc06266d55cc642e03a5c12ca1ad8"
     },
     {
       "path": "supabase/FRESH_INSTALL_V13.sql",
-      "size": 456606,
-      "sha256": "e0f6a65acb4c0a00761b578b8fb371a2ce094ffda0ef1249088f09c82bd5b298"
+      "size_bytes": 491720,
+      "sha256": "a6fc260d49bd1e03d1f8b05297391a015becc06266d55cc642e03a5c12ca1ad8"
     },
     {
       "path": "supabase/FRESH_INSTALL_V14.sql",
-      "size": 456606,
-      "sha256": "e0f6a65acb4c0a00761b578b8fb371a2ce094ffda0ef1249088f09c82bd5b298"
+      "size_bytes": 491720,
+      "sha256": "a6fc260d49bd1e03d1f8b05297391a015becc06266d55cc642e03a5c12ca1ad8"
+    },
+    {
+      "path": "supabase/FRESH_INSTALL_V15.sql",
+      "size_bytes": 491720,
+      "sha256": "a6fc260d49bd1e03d1f8b05297391a015becc06266d55cc642e03a5c12ca1ad8"
     },
     {
       "path": "supabase/FRESH_INSTALL_V6.sql",
-      "size": 456606,
-      "sha256": "e0f6a65acb4c0a00761b578b8fb371a2ce094ffda0ef1249088f09c82bd5b298"
+      "size_bytes": 491720,
+      "sha256": "a6fc260d49bd1e03d1f8b05297391a015becc06266d55cc642e03a5c12ca1ad8"
     },
     {
       "path": "supabase/FRESH_INSTALL_V7.sql",
-      "size": 456606,
-      "sha256": "e0f6a65acb4c0a00761b578b8fb371a2ce094ffda0ef1249088f09c82bd5b298"
+      "size_bytes": 491720,
+      "sha256": "a6fc260d49bd1e03d1f8b05297391a015becc06266d55cc642e03a5c12ca1ad8"
     },
     {
       "path": "supabase/FRESH_INSTALL_V8.sql",
-      "size": 456606,
-      "sha256": "e0f6a65acb4c0a00761b578b8fb371a2ce094ffda0ef1249088f09c82bd5b298"
+      "size_bytes": 491720,
+      "sha256": "a6fc260d49bd1e03d1f8b05297391a015becc06266d55cc642e03a5c12ca1ad8"
     },
     {
       "path": "supabase/FRESH_INSTALL_V9.sql",
-      "size": 456606,
-      "sha256": "e0f6a65acb4c0a00761b578b8fb371a2ce094ffda0ef1249088f09c82bd5b298"
+      "size_bytes": 491720,
+      "sha256": "a6fc260d49bd1e03d1f8b05297391a015becc06266d55cc642e03a5c12ca1ad8"
     },
     {
       "path": "supabase/UPGRADE_TO_V10.sql",
-      "size": 416558,
-      "sha256": "e217620d79220e8e6641d40f951af0f8063d18f8d3db082c5beed930540d01cf"
+      "size_bytes": 451557,
+      "sha256": "b96c55bafdcf3c6ab17b6ae795fc79689f5583b31d83832a6d9de921eac9c851"
     },
     {
       "path": "supabase/UPGRADE_TO_V11.sql",
-      "size": 416558,
-      "sha256": "e217620d79220e8e6641d40f951af0f8063d18f8d3db082c5beed930540d01cf"
+      "size_bytes": 451557,
+      "sha256": "b96c55bafdcf3c6ab17b6ae795fc79689f5583b31d83832a6d9de921eac9c851"
     },
     {
       "path": "supabase/UPGRADE_TO_V12.sql",
-      "size": 416558,
-      "sha256": "e217620d79220e8e6641d40f951af0f8063d18f8d3db082c5beed930540d01cf"
+      "size_bytes": 451557,
+      "sha256": "b96c55bafdcf3c6ab17b6ae795fc79689f5583b31d83832a6d9de921eac9c851"
     },
     {
       "path": "supabase/UPGRADE_TO_V13.sql",
-      "size": 416558,
-      "sha256": "e217620d79220e8e6641d40f951af0f8063d18f8d3db082c5beed930540d01cf"
+      "size_bytes": 451557,
+      "sha256": "b96c55bafdcf3c6ab17b6ae795fc79689f5583b31d83832a6d9de921eac9c851"
     },
     {
       "path": "supabase/UPGRADE_TO_V14.sql",
-      "size": 416558,
-      "sha256": "e217620d79220e8e6641d40f951af0f8063d18f8d3db082c5beed930540d01cf"
+      "size_bytes": 451557,
+      "sha256": "b96c55bafdcf3c6ab17b6ae795fc79689f5583b31d83832a6d9de921eac9c851"
+    },
+    {
+      "path": "supabase/UPGRADE_TO_V15.sql",
+      "size_bytes": 451557,
+      "sha256": "b96c55bafdcf3c6ab17b6ae795fc79689f5583b31d83832a6d9de921eac9c851"
     },
     {
       "path": "supabase/UPGRADE_TO_V7.sql",
-      "size": 416558,
-      "sha256": "e217620d79220e8e6641d40f951af0f8063d18f8d3db082c5beed930540d01cf"
+      "size_bytes": 451557,
+      "sha256": "b96c55bafdcf3c6ab17b6ae795fc79689f5583b31d83832a6d9de921eac9c851"
     },
     {
       "path": "supabase/UPGRADE_TO_V8.sql",
-      "size": 416558,
-      "sha256": "e217620d79220e8e6641d40f951af0f8063d18f8d3db082c5beed930540d01cf"
+      "size_bytes": 451557,
+      "sha256": "b96c55bafdcf3c6ab17b6ae795fc79689f5583b31d83832a6d9de921eac9c851"
     },
     {
       "path": "supabase/UPGRADE_TO_V9.sql",
-      "size": 416558,
-      "sha256": "e217620d79220e8e6641d40f951af0f8063d18f8d3db082c5beed930540d01cf"
+      "size_bytes": 451557,
+      "sha256": "b96c55bafdcf3c6ab17b6ae795fc79689f5583b31d83832a6d9de921eac9c851"
     },
     {
       "path": "supabase/UPGRADE_V5_TO_V6.sql",
-      "size": 416558,
-      "sha256": "e217620d79220e8e6641d40f951af0f8063d18f8d3db082c5beed930540d01cf"
+      "size_bytes": 451557,
+      "sha256": "b96c55bafdcf3c6ab17b6ae795fc79689f5583b31d83832a6d9de921eac9c851"
     },
     {
-      "path": "supabase/modules/accounts/create_player.sql",
-      "size": 4312,
-      "sha256": "d8e4f5e49537f7ac75307806d1e9c39f3ea3d1bd38a019915d378561b9d39096"
+      "path": "supabase/modules/accounts/access.sql",
+      "size_bytes": 2983,
+      "sha256": "99aa2c43d17240650b69e6def2602736aaf2b539b4bd87e8136722e990531412"
     },
     {
-      "path": "supabase/modules/accounts/login.sql",
-      "size": 1783,
-      "sha256": "eeb7707c3fabb6047b185a2db838024f010312508031de054de2ab2c3b679d8d"
-    },
-    {
-      "path": "supabase/modules/accounts/policies.sql",
-      "size": 1328,
-      "sha256": "e0e73397aa1b6b94ecdfecfe37e4f2fd03d63ff5176c80d06a0f278102f9e39b"
-    },
-    {
-      "path": "supabase/modules/accounts/sessions.sql",
-      "size": 1340,
-      "sha256": "7fc0f4b35958d2f34476c2a1d3d841070255448422b2fd943af66f4de7558c3f"
-    },
-    {
-      "path": "supabase/modules/army/peris_queue_recruit.sql",
-      "size": 2939,
-      "sha256": "c3a7d8c41d78ebd7a44ca5611d45098a29dee5c808499827a8761768a50a1899"
-    },
-    {
-      "path": "supabase/modules/battle/peris_order.sql",
-      "size": 4518,
-      "sha256": "1fbb650b1bb2c4d8d5c26a6c7138bdfd540576bc4eb3bd429cc5049805ee6632"
-    },
-    {
-      "path": "supabase/modules/battle/peris_rally.sql",
-      "size": 1311,
-      "sha256": "5fdaa2b908f4ecf85eb2bfc48750e45b159941244372bafe62a43db2a67a58ce"
-    },
-    {
-      "path": "supabase/modules/battle/peris_ready.sql",
-      "size": 664,
-      "sha256": "49ec1c3cdeaddc3924d330790b78741b161c8c9adda7823f8cf3f7b0088b6a68"
-    },
-    {
-      "path": "supabase/modules/battle/peris_tick.sql",
-      "size": 13194,
-      "sha256": "87cd363dff0d1208a1cf1992086739fe95d4b9bfa0d23b35fe49b7bb77cccdc8"
-    },
-    {
-      "path": "supabase/modules/battle/retreat_from_battle.sql",
-      "size": 617,
-      "sha256": "ee9e7a0c406d2565165748db3b2c6197996c4583a083a2e11ba4c13461434d12"
-    },
-    {
-      "path": "supabase/modules/campaign/peris_claim.sql",
-      "size": 1257,
-      "sha256": "66dc81ccc7cd2f31fdc3eaa7211738b71cacea0c5d0bddc67ee8e3cec037c4d8"
-    },
-    {
-      "path": "supabase/modules/campaign/peris_raid.sql",
-      "size": 978,
-      "sha256": "3409e12160350f1c93a73603d4abd19928c54cc3e814ef0cf950db7e98412a65"
-    },
-    {
-      "path": "supabase/modules/campaign/sync_my_state.sql",
-      "size": 969,
-      "sha256": "e9f56d197e518d7d6b20dcb2a53921fd39b79470230bdad2b3bcdb14c63f8fe7"
-    },
-    {
-      "path": "supabase/modules/city/city-slots.sql",
-      "size": 8019,
-      "sha256": "c0419ed5e630da3e85d5e8570e99105c71491af927d6d1f415fe8ef5b912569c"
-    },
-    {
-      "path": "supabase/modules/city/peris_queue_upgrade.sql",
-      "size": 2464,
-      "sha256": "ad1ba8a686268bc67b3d7029e1f6be8adcaff66c0e9e94b9346dbf5bc5ef5bc5"
-    },
-    {
-      "path": "supabase/modules/city/peris_rename.sql",
-      "size": 607,
-      "sha256": "cd251d9bcfd485513b8c4886018cf2eed85a09053bfc7b798625e180df0e4be9"
-    },
-    {
-      "path": "supabase/modules/empire/gameplay.sql",
-      "size": 23066,
-      "sha256": "09787517831706814d1a4c24599f077977b962514815ef6f36fc535ae3542710"
-    },
-    {
-      "path": "supabase/modules/empire/schema.sql",
-      "size": 9215,
-      "sha256": "633c913b5f0950f0ec01bd02e5882f003f4812fd1642fa03599be4178378bf83"
-    },
-    {
-      "path": "supabase/modules/factions/city-factions.sql",
-      "size": 6302,
-      "sha256": "0b4da20c268ee270b51e84ed742b63d1f09f43cc4c091f0bf933fd0d4d8f430c"
+      "path": "supabase/modules/accounts/directory.sql",
+      "size_bytes": 4549,
+      "sha256": "e09354998e727633bef887e304fa38cec77df2abae912cee72b52d2f9dd3b9c4"
     },
     {
       "path": "supabase/modules/install/fresh-base.sql",
-      "size": 40054,
-      "sha256": "912886d44e48c98051405df01b959d4dc35b5c2a1f7c3acef75347e4494cefa4"
-    },
-    {
-      "path": "supabase/modules/magic/mage-tower.sql",
-      "size": 12158,
-      "sha256": "ceda521adcc9e2b27cdc11234efbba84fdbf92c2a30790230f3d3109d69b05de"
+      "size_bytes": 40169,
+      "sha256": "c5cc39c9aa869dbc99fa7de03e1697adf214978cdd7774f63f690b75bffeb6fc"
     },
     {
       "path": "supabase/modules/manifest.json",
-      "size": 1217,
-      "sha256": "d021cb8bc40f0c30466d460b88abc6aa3ed682bbcc0565a470e76d04c2675ca5"
-    },
-    {
-      "path": "supabase/modules/map/move_army.sql",
-      "size": 1359,
-      "sha256": "bbd3fe5b6c75e7e1b99ddd57ad5193d561e12a3c023cbfbbaa8586ad47cb4aed"
-    },
-    {
-      "path": "supabase/modules/map/peris_march.sql",
-      "size": 4070,
-      "sha256": "7f0222637f28d0843902718bcf068d4cda75a15b1a2d7492651f1abc50107bb1"
-    },
-    {
-      "path": "supabase/modules/map/territory.sql",
-      "size": 12881,
-      "sha256": "179da42b2b312af87eb5cc90c23dc6c8814e35f79fbd1c823ddd8b686dbda702"
-    },
-    {
-      "path": "supabase/modules/multiplayer/peris_challenge.sql",
-      "size": 1073,
-      "sha256": "9fea918017856b5c829da232a514a8d2c8690f26dc63472ce1354caeec82f451"
-    },
-    {
-      "path": "supabase/modules/multiplayer/peris_respond.sql",
-      "size": 3021,
-      "sha256": "028c6436752007edb60181904131f8327f693a07140c856914777af0e97d564c"
+      "size_bytes": 1343,
+      "sha256": "127580be1580d651f00809845dfa5cbe81ac58ab284ef49899b16fd24dd4e2c0"
     },
     {
       "path": "supabase/modules/schema/base.sql",
-      "size": 9968,
-      "sha256": "b3b8758ffcff1813f711bd27809356b2eb698a0d3b3606bfce03d6fd46cc9249"
+      "size_bytes": 9973,
+      "sha256": "0a60fc175c6331f3381c9acbd7268e4e5ca1d4ee679551009f5e4050c917bfd3"
     },
     {
       "path": "supabase/modules/security/permissions.sql",
-      "size": 2879,
-      "sha256": "aa5147e2cb1929f6926f5f6c27b2be6a09f8f15f69b2c786792e5d47e5c1f530"
-    },
-    {
-      "path": "supabase/modules/snapshot/peris_map_snapshot.sql",
-      "size": 4651,
-      "sha256": "d100d5760f8e67437a449e08e15bc95cf03108907436bc872409d705885669a5"
+      "size_bytes": 3327,
+      "sha256": "13d5efbacdfd31b497370c58dcbf9f5bc60660d9dd9b62c76c2acabcdc5537d3"
     },
     {
       "path": "supabase/modules/snapshot/peris_snapshot.sql",
-      "size": 3606,
-      "sha256": "f4fda2b65482afa9f7c9311a1c6a82360f96e512719096714f864029d00781b2"
+      "size_bytes": 4036,
+      "sha256": "206c39aecf877d8c6a95a955e7dca5a4fdfc5710114a926027c450c12df67ddb"
     },
     {
       "path": "supabase/schema.sql",
-      "size": 416558,
-      "sha256": "e217620d79220e8e6641d40f951af0f8063d18f8d3db082c5beed930540d01cf"
+      "size_bytes": 451557,
+      "sha256": "b96c55bafdcf3c6ab17b6ae795fc79689f5583b31d83832a6d9de921eac9c851"
+    },
+    {
+      "path": "tests/account-compatibility-database.test.mjs",
+      "size_bytes": 6856,
+      "sha256": "f820b320dddb271db606c1ca8ecc47da99504ef979e1db513a4e0d076d7b7125"
+    },
+    {
+      "path": "tests/account-directory-database.test.mjs",
+      "size_bytes": 10381,
+      "sha256": "c07ffb2a9d25e28f5b599de8ba4e7ddfbcd587779e284d59a9faa9c4a419a89b"
     },
     {
       "path": "tests/account-login.test.ts",
-      "size": 4178,
-      "sha256": "ffae55449fc98190b281acd9f33b344c9ca7340c382f94bfe075dd1aeb385521"
+      "size_bytes": 5270,
+      "sha256": "c9879c4f6bde07021511ef21142189179e9b961c8a3ddb1dd697b74b65c1d29e"
     },
     {
-      "path": "tests/accounts-database.test.mjs",
-      "size": 9868,
-      "sha256": "8eaaa8f71006d805ee444f5387d25d158ddacc7e91dbb4433eb051a183385322"
+      "path": "tests/e2e/account-browser.spec.ts",
+      "size_bytes": 9143,
+      "sha256": "6e1b044f4572f6b9549efbff276f2495969dd5e0f1a5e6506192534b55679f91"
     },
     {
       "path": "tests/e2e/accounts.spec.ts",
-      "size": 5652,
-      "sha256": "e4a44ad9c8d55f8066ce102a270611b1cdb41e5b45a4610e404cfb0b51a21e29"
+      "size_bytes": 6353,
+      "sha256": "3f93686a5224c02b04fc243ebbf753801d6e4319f3f373cefc37a898eecec768"
     },
     {
-      "path": "tests/e2e/frontier.spec.ts",
-      "size": 3861,
-      "sha256": "6dedc916ba08099dd9a056b81625a5722a432ab74e15ac47ade084a738f5c1be"
+      "path": "tests/fixtures/accounts-main-3ebbb81.sql",
+      "size_bytes": 483814,
+      "sha256": "c655bec085b0b72d620a20e68a06abd607730501a5422e2c802178757ed7279c"
     },
     {
-      "path": "tests/fixtures/accounts-v13.sql",
-      "size": 451092,
-      "sha256": "bf5d67e9de804f4d6e6411fcb3617e1e626233c37a2c03655071679ba61e2a81"
-    },
-    {
-      "path": "tests/fresh-database.test.mjs",
-      "size": 5445,
-      "sha256": "0e53d6ee75a24c5d1fc74e35496db0bc3716167c07b5a81de6cafdc350bdbc49"
+      "path": "tests/fixtures/accounts-v14.sql",
+      "size_bytes": 456606,
+      "sha256": "e0f6a65acb4c0a00761b578b8fb371a2ce094ffda0ef1249088f09c82bd5b298"
     },
     {
       "path": "tests/helpers/account-server.mjs",
-      "size": 4553,
-      "sha256": "3d1b5c0ec33e30d102de5fb0ad178fcef454d17fc8f74bf2494f3433c4ccfadd"
+      "size_bytes": 5440,
+      "sha256": "5ff6d68a30660309780750deb66c59ee64722faa607bb2c1191f32ff6deaaeb5"
     }
   ]
 }

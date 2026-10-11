@@ -17,5 +17,7 @@ outputs['UPGRADE_TO_V16.sql']=upgrade
 outputs['FRESH_INSTALL_V16.sql']=fresh
 outputs['UPGRADE_TO_V14.sql']=upgrade
 outputs['FRESH_INSTALL_V14.sql']=fresh
+outputs['UPGRADE_TO_V15.sql']=upgrade
+outputs['FRESH_INSTALL_V15.sql']=fresh
 for(const[file,content]of Object.entries(outputs)){const target=path.join(root,'supabase',file);if(process.argv.includes('--check')){if(await readSource(target)!==content)throw Error('Stale SQL bundle: '+file)}else{let existing;try{existing=await readSource(target)}catch(error){if(error.code!=='ENOENT')throw error}if(existing!==content)await fs.writeFile(target,content)}}
 console.log(process.argv.includes('--check')?'SQL bundles match modular source':'SQL bundles rebuilt')

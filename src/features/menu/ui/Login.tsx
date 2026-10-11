@@ -2,6 +2,8 @@ import { FACTIONS, type Faction } from '../../factions/domain/factions';
 import { PRACTICE_HOSTS } from '../../battle/domain/practice';
 import rosters from '../../../../assets/concepts/faction-sheets-v1/expanded-rosters.json';
 import { useState } from 'react';
+import { AccountAccess } from './AccountAccess';
+import type { AccountEntry } from '../../../platform/backend/accountLogin';
 import { lastRulerName } from '../../../platform/backend/accountStorage';
 import { type Difficulty, type Terrain } from '../../battle/domain/types';
 import { readSolo } from '../../../platform/storage/solo';
@@ -11,7 +13,7 @@ import { Modal } from '../../../shared/ui/Shared';
 export type Doctrine = 'balanced' | 'infantry' | 'cavalry';
 export function Login({ onSolo, onOnline, onPractice, onSettings, onCodex, onUnitPreview, busy, error }: {
     onSolo: (name: string, resume: boolean) => void;
-    onOnline: (name: string) => void;
+    onOnline: (name: string, entry: AccountEntry) => void;
     onPractice: (terrain: Terrain, difficulty: Difficulty, doctrine: Doctrine, faction: Faction, enemy: Faction) => void;
     onUnitPreview: (faction?: Faction) => void;
     onSettings: () => void;
@@ -23,17 +25,19 @@ export function Login({ onSolo, onOnline, onPractice, onSettings, onCodex, onUni
     const [faction, setFaction] = useState<Faction>('roman'), [enemyFaction, setEnemyFaction] = useState<Faction>('orc');
     const saved = readSolo(), standalone = location.protocol === 'file:', done = saved ? conquered(saved, 'solo-ruler').size : 0;
     const terrainCopy: Partial<Record<Terrain,string>> = { plains: 'Open ground, room for flanks and decisive charges.', woods: 'Oak cover protects against arrows and slows cavalry.', river: 'Control the stone bridge and cover the crossing.', highlands: 'Take the ridge to give your archers the advantage.' };
-    return <main className="launcher">
+    return <main className={`launcher${mode === 'online' ? ' launcher-online' : ''}`}>
   <div className="launcher-art"/><div className="launcher-shade"/><div className="launcher-dust" aria-hidden="true">{Array.from({ length: 12 }, (_, i) => <i key={i} style={{ left: `${15 + i * 7}%`, animationDelay: `${-i * 1.8}s` }}/>)}</div>
   <div className="launcher-top"><span>THE AGE OF AMBITION</span><div><button onClick={onCodex}><Icon name="book" size={17}/>Codex</button><button onClick={onSettings}><Icon name="settings" size={17}/>Settings</button></div></div>
-  <section className="launcher-panel"><Crest /><div className="eyebrow">A PROVINCE LOST. A STANDARD RAISED.</div><h1>PERIS</h1><div className="title-rule"/><p className="launcher-intro">Build a home. Lead a legion.<br />Bring the six standards back.</p>
+  <section className={mode === 'online' ? 'account-launcher' : 'launcher-panel'}>{mode === 'online' ? <div className="account-brand"><Crest/><strong>PERIS</strong><span>THE SHARED WORLD</span></div> : <><Crest /><div className="eyebrow">A PROVINCE LOST. A STANDARD RAISED.</div><h1>PERIS</h1><div className="title-rule"/><p className="launcher-intro">Build a home. Lead a legion.<br />Bring the six standards back.</p></>}
    <div className="mode-tabs"><button className={mode === 'solo' ? 'active' : ''} onClick={() => setMode('solo')}>The campaign</button><button className={mode === 'online' ? 'active' : ''} disabled={standalone} title={standalone ? 'Play multiplayer on the deployed game' : undefined} onClick={() => setMode('online')}>Shared world</button></div>
    {mode === 'solo' ? <>{saved ? <><div className="menu-save"><span className="eyebrow">YOUR REALM AWAITS</span><strong>{saved.settlements[0].name}</strong><small>{campaignRank(done)} · {done} / 6 standards</small><div className="menu-standards">{[1, 2, 3, 4, 5, 6].map(n => <i key={n} className={conquered(saved, 'solo-ruler').has(n) ? 'claimed' : ''}><Icon name="flag" size={17}/></i>)}</div></div><button className="button gold launch-cta" disabled={busy} onClick={() => onSolo('', true)}>Continue campaign <Icon name="arrow"/></button><button className="menu-secondary" disabled={busy} onClick={() => setNewGame(true)}>Begin a new campaign</button></> : <><button className="button gold launch-cta" disabled={busy} onClick={() => setNewGame(true)}>Begin your campaign <Icon name="arrow"/></button><p className="mode-description">Found cities. Raise hero-led armies. Reclaim the six standards of Peris.</p></>}</> :
-            <form onSubmit={e => { e.preventDefault(); if (!busy) onOnline(name); }}><label className="field-label" htmlFor="ruler-name">YOUR RULER NAME</label><input id="ruler-name" value={name} onChange={e => setName(e.target.value)} minLength={2} maxLength={20} required autoComplete="off" autoCapitalize="none" spellCheck={false} disabled={busy}/><button className="button gold launch-cta" disabled={busy}>{busy ? 'Opening your realm…' : 'Enter the shared world'}<Icon name="arrow"/></button><p className="mode-description">Same name, same realm on any device. New name, new account. Names are case-insensitive.</p></form>}
+            <AccountAccess onOpen={onOnline} busy={busy} error={error}/>}
+   <div className="launcher-extras">
    <button className="quick-battle-link" onClick={() => setSetup(true)} disabled={busy}><Icon name="army"/>Quick battle <span>Take the field immediately <Icon name="arrow" size={14}/></span></button>
    <button className="menu-secondary" disabled={busy} onClick={() => onUnitPreview(faction)}>Unit preview · Browse all factions</button>
    <a className="menu-secondary" href="?map-preview=1" style={{ display: 'block', textAlign: 'center', textDecoration: 'none' }}>Explore the world map sample</a>
-   {error && <div className="alert error" role="alert">{error}</div>}{busy && <div className="loading-bar" aria-label="Connecting to the shared world"><i /></div>}
+   </div>
+   {mode === 'solo' && error && <div className="alert error" role="alert">{error}</div>}{busy && <div className="loading-bar" aria-label="Connecting to the shared world"><i /></div>}
   </section>
   <div className="launcher-bottom"><button onClick={() => setCredits(true)}>Original world & artwork</button><span>THE SIX STANDARDS · V0.7</span></div>
   {newGame && <Modal title="Raise your standard" className="new-campaign-modal" onClose={() => setNewGame(false)}><p>How will the province remember you?</p><form onSubmit={e => { e.preventDefault(); if (name.trim().length >= 2) {

@@ -1,10 +1,10 @@
--- PERIS v7 fresh installation. ONLY for an EMPTY Supabase project.
--- Existing v5/v6/v7 world: use UPGRADE_TO_V7.sql. This file refuses existing players.
+-- PERIS V15 fresh installation. ONLY for an EMPTY Supabase project.
+-- Existing world: use UPGRADE_TO_V15.sql. This file refuses existing players.
 begin;
 do $$ declare occupied boolean;begin
  if to_regclass('public.players') is not null then
  execute 'select exists(select 1 from public.players)' into occupied;
- if occupied then raise exception 'A Peris campaign already exists. Use UPGRADE_TO_V7.sql to preserve it.';end if;
+ if occupied then raise exception 'A Peris campaign already exists. Use UPGRADE_TO_V15.sql to preserve it.';end if;
  end if;
 end $$;
 -- PERIS V5 - TOTAL WAR STYLE BATTLE PROTOTYPE RESET
@@ -21,6 +21,8 @@ drop table if exists public.buildings cascade;
 drop table if exists public.settlements cascade;
 drop table if exists public.spawn_points cascade;
 drop table if exists public.peris_account_sessions cascade;
+drop table if exists public.peris_account_creations cascade;
+drop table if exists public.peris_account_activity cascade;
 drop table if exists public.players cascade;
 
 drop function if exists public.create_peris_world_for_player() cascade;

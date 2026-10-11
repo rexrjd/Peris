@@ -1,4 +1,4 @@
--- PERIS v14 · Stable name-only ruler accounts. Run the complete generated file in Supabase SQL Editor.
+-- PERIS v15 · Account directory and race selection. Run the complete generated file in Supabase SQL Editor.
 -- Requires the v5 schema. Preserves players, settlements, resources and armies.
 -- Safe to run again. No Auth users or campaign data are deleted.
 begin;

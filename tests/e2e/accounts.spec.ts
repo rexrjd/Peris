@@ -19,11 +19,18 @@ async function connect(context: BrowserContext) {
         await route.fulfill({ status: response.status, headers: response.headers, body: response.data == null ? '' : JSON.stringify(response.data) });
     });
 }
-async function login(page: Page, name: string) {
+async function manual(page: Page) {
+    const details=page.locator('.account-manual');if(!await details.evaluate(element=>element.hasAttribute('open')))await details.locator('summary').click();
+}
+async function create(page: Page,name: string){
+    await page.getByRole('button',{name:'Create account',exact:true}).click();await page.getByLabel('Name your ruler').fill(name);await page.locator('.account-create .account-primary').click();await expect(page.getByLabel('Game menu')).toBeVisible();
+}
+async function login(page: Page, name: string, newAccount=false) {
     await page.bringToFront();
     await page.goto('/');
     await page.getByRole('button', { name: 'Shared world', exact: true }).click();
-    await page.getByLabel('YOUR RULER NAME').fill(name);
+    if(newAccount){await create(page,name);return;}
+    await manual(page);await page.getByLabel('YOUR RULER NAME').fill(name);
     await page.getByRole('button', { name: 'Enter the shared world', exact: true }).click();
     await expect(page.getByLabel('Game menu')).toBeVisible();
 }
@@ -34,7 +41,7 @@ async function ruler(page: Page, name: string) {
 }
 test('name login, refresh, fresh device, switch and expired session keep the correct account', async ({ page, context, browser }, testInfo) => {
     test.setTimeout(120000); const errors: string[] = []; page.on('pageerror', error => errors.push(error.message));
-    await connect(context); await login(page, 'Account Alpha'); await ruler(page, 'Account Alpha');
+    await connect(context); await login(page, 'Account Alpha',true); await ruler(page, 'Account Alpha');
     const alpha = server.logins.at(-1); expect(alpha.created).toBe(true);
     await page.screenshot({ path: testInfo.outputPath('name-login.png') });
     await page.reload(); await expect(page.getByLabel('Game menu')).toBeVisible(); await ruler(page, 'Account Alpha');
@@ -42,7 +49,7 @@ test('name login, refresh, fresh device, switch and expired session keep the cor
     const other = await browser.newContext({ viewport: { width: 1024, height: 768 } });await connect(other);const second = await other.newPage();
     await login(second, '  account alpha  ');await ruler(second, 'Account Alpha');expect(server.logins.at(-1).player_id).toBe(alpha.player_id);expect(server.logins.at(-1).created).toBe(false);
     await second.getByRole('button', { name: 'Switch ruler', exact: true }).click();
-    await second.getByLabel('YOUR RULER NAME').fill('Account Beta');await second.getByRole('button', { name: 'Enter the shared world', exact: true }).click();await ruler(second, 'Account Beta');
+    await create(second,'Account Beta');await ruler(second, 'Account Beta');
     const beta = server.logins.at(-1);expect(beta.player_id).not.toBe(alpha.player_id);
     await page.getByLabel('Game menu').click();await ruler(page, 'Account Alpha');
     server.expire(alpha.auth_id);await expect.poll(() => server.logins.filter((login: {player_id: string}) => login.player_id === alpha.player_id).length, { timeout: 15000 }).toBeGreaterThan(3);
@@ -50,18 +57,18 @@ test('name login, refresh, fresh device, switch and expired session keep the cor
     const recovered = server.logins.at(-1);expect(recovered.player_id).toBe(alpha.player_id);expect(recovered.auth_id).not.toBe(alpha.auth_id);
     await page.evaluate(() => { for (let i = sessionStorage.length - 1; i >= 0; i--) { const key = sessionStorage.key(i)!; if (key.startsWith('peris-session:')) sessionStorage.removeItem(key); } });
     await page.reload();await expect(page.getByLabel('Game menu')).toBeVisible();await ruler(page, 'Account Alpha');expect(server.logins.at(-1).player_id).toBe(alpha.player_id);
-    await page.getByRole('button', { name: 'Switch ruler', exact: true }).click();await expect(page.getByLabel('YOUR RULER NAME')).toHaveValue('Account Alpha');
-    await page.reload();await expect(page.getByLabel('YOUR RULER NAME')).toBeVisible();await expect(page.getByLabel('Game menu')).toHaveCount(0);
+    await page.getByRole('button', { name: 'Switch ruler', exact: true }).click();await manual(page);await expect(page.getByLabel('YOUR RULER NAME')).toHaveValue('Account Alpha');
+    await page.reload();await manual(page);await expect(page.getByLabel('YOUR RULER NAME')).toBeVisible();await expect(page.getByLabel('Game menu')).toHaveCount(0);
     expect(await server.counts()).toEqual({ players: 2, cities: 2, armies: 2 });expect(errors).toEqual([]);await other.close();
 });
 test('two tabs can control different names without changing each other', async ({ context }, testInfo) => {
     await connect(context); const first = await context.newPage(), second = await context.newPage();
-    await login(first, 'Tab Alpha');await ruler(first, 'Tab Alpha');
-    await login(second, 'Tab Beta');await ruler(second, 'Tab Beta');
+    await login(first, 'Tab Alpha',true);await ruler(first, 'Tab Alpha');
+    await login(second, 'Tab Beta',true);await ruler(second, 'Tab Beta');
     await first.bringToFront();
     await first.reload();await expect(first.getByLabel('Game menu')).toBeVisible();await ruler(first, 'Tab Alpha');
     await second.bringToFront();
-    await second.getByRole('button', { name: 'Switch ruler', exact: true }).click();await second.getByLabel('YOUR RULER NAME').fill('tab alpha');await second.getByRole('button', { name: 'Enter the shared world', exact: true }).click();await ruler(second, 'Tab Alpha');
+    await second.getByRole('button', { name: 'Switch ruler', exact: true }).click();await manual(second);await second.getByLabel('YOUR RULER NAME').fill('tab alpha');await second.getByRole('button', { name: 'Enter the shared world', exact: true }).click();await ruler(second, 'Tab Alpha');
     await first.bringToFront();
     await first.getByLabel('Game menu').click();await ruler(first, 'Tab Alpha');
     await first.screenshot({ path: testInfo.outputPath('independent-tabs.png') });

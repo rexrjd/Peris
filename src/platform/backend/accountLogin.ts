@@ -1,9 +1,11 @@
 import type { World } from '../../shared/model/world';
+import { isFaction, type Faction } from '../../features/factions/domain/factions';
+export type AccountEntry = { mode: 'login' } | { mode: 'create'; faction: Faction; creationId: string };
 export type RulerLogin = { player_id: string; display_name: string; created: boolean };
 export type AccountBackend = {
     session: () => Promise<string | null>;
     freshSession: () => Promise<string>;
-    login: (name: string) => Promise<RulerLogin>;
+    login: (name: string, entry?: AccountEntry) => Promise<RulerLogin>;
     sync: () => Promise<void>;
     snapshot: () => Promise<World>;
 };
@@ -18,17 +20,18 @@ const expired = (error: unknown) => {
 };
 export function expiredSession(error: unknown) { return expired(error); }
 /** One serialized attempt per tab; never infer ownership from the Auth UUID. */
-export async function openRuler(value: string, backend: AccountBackend) {
+export async function openRuler(value: string, backend: AccountBackend, entry: AccountEntry = { mode: 'login' }) {
     const name = rulerName(value);
+    if (entry.mode === 'create' && (!isFaction(entry.faction) || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(entry.creationId))) throw new Error('Choose a race for your new account.');
     let session: string | null;
     try { session = await backend.session(); } catch (error) { if (!expired(error)) throw error; session = null; }
     if (!session) session = await backend.freshSession();
     let ruler: RulerLogin;
-    try { ruler = await backend.login(name); }
+    try { ruler = await backend.login(name, entry); }
     catch (error) {
         if ((error as { code?: string }).code !== 'PT409' && !expired(error)) throw error;
         session = await backend.freshSession();
-        ruler = await backend.login(name);
+        ruler = await backend.login(name, entry);
     }
     if (typeof ruler?.player_id !== 'string' || typeof ruler.display_name !== 'string' || ruler.display_name.toLowerCase() !== name.toLowerCase()) throw new Error('The server opened a different ruler. Please retry.');
     // Settle offline queues before reading, so the first frame is current.
