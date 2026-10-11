@@ -3,9 +3,9 @@ import type { BuildingType } from '../domain/types';
 import type { SlotType } from '../domain/slots';
 
 /** Only publish an atlas here after its style, alpha and twelve cells are reviewed. */
-export const APPROVED_VILLAGE_ATLASES: readonly Faction[] = [];
+export const APPROVED_VILLAGE_ATLASES: readonly Faction[] = ['roman', 'spartan', 'persian', 'egyptian', 'orc', 'elf', 'dwarf', 'gnome', 'pandaren', 'undead', 'demon'];
 /** Cell width / cell height, measured from the published atlas rather than the prompt. */
-export const VILLAGE_ATLAS_ASPECTS: Partial<Record<Faction, number>> = {};
+export const VILLAGE_ATLAS_ASPECTS: Partial<Record<Faction, number>> = Object.fromEntries(APPROVED_VILLAGE_ATLASES.map(faction => [faction, 1]));
 export const VILLAGE_ATLAS_CELLS = ['market', 'lumber', 'quarry', 'farm', 'barracks', 'stables', 'smithy', 'warehouse', 'granary', 'fishery', 'mage_tower', 'housing'] as const;
 
 export function villageAtlasCell(type: BuildingType | SlotType) {

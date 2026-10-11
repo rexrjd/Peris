@@ -1,5 +1,22 @@
 # Peris v0.8 · Gameplay architecture
 
+## Village artwork
+
+The campaign **City → Village** view uses original soft-painted buildings with
+deeper shadows for all eleven factions. Romans have a square masonry courtyard,
+Orcs a circular timber palisade, and Elves a living woodland boundary. Smaller
+buildings leave space for sixteen ordinary plots plus the Main building; resource
+sites stay outside the enclosure. Plots still unlock through existing Main building
+upgrades. **3D** and the searchable **Buildings** list remain available.
+
+Building clicks open the existing upgrade dialog with the matching artwork,
+actual costs and persistent construction queue. Water, smoke, banners and magical
+light are decorative. Race-specific guards patrol outside completed walls, soldiers
+drill beside built barracks, and residents gather beside the Main building and homes.
+Every outside road enters through the gate. Activity stays clear of building controls,
+pauses in hidden tabs, and respects game and system reduced-motion settings.
+See `assets/city-village-v1.json` and `ARTWORK.md` for sources and export instructions.
+
 ## Frontier Wars — local playable slice
 
 Run `npm ci` then `npm run dev:frontier`, and open **http://127.0.0.1:5174/?frontier=1**.

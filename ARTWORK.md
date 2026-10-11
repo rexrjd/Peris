@@ -1,5 +1,39 @@
 # Original Peris artwork
 
+## Soft-painted villages
+
+The selected city direction uses original transparent building atlases for all
+eleven factions, generated with the built-in image tool on 2026-10-11. Soft painted
+materials, richer midtones and deeper natural shadows retain detail at small sizes.
+Each race has twelve building roles and distinct materials or silhouettes; the
+Dwarf and Gnome sets were revised to avoid resembling recoloured human buildings.
+
+`assets/city-village-v1.json` records full prompts, role order and original ownership.
+Untouched generated sheets are preserved in `assets/source/city-village-v1/`.
+`node scripts/build-city-art.mjs` reproduces the 1200×1600 WebP atlases in
+`public/art/city/village-v1/`. Exporting trims each cell independently, preserves
+alpha, fits it into a 400px square and leaves a 24px transparent gutter. It does
+not redraw the artwork. One atlas is decoded and shared across a village.
+
+The painted layout reserves sixteen ordinary plots plus the main hall, keeping
+the existing level-based unlock rules and saved slot identities. Resource sites
+are outside the boundary. Race outlines and gates are original SVG geometry:
+square masonry, circular timber, living woodland and additional faction variants.
+These local city outlines never change ownership of fields on the global map.
+
+The Village tab and upgrade dialogs use these sprites. The existing live 3D city
+and model fallback remain available. Decorative water, chimney smoke, a gate
+standard and small magical glow respect system and in-game reduced-motion settings.
+Raised wall faces, mortar, parapets, palisade posts and living foliage are original
+SVG geometry. Outside lanes meet below the enclosure and enter at its single gate;
+inside paths are clipped to the village boundary. Up to eight lightweight SVG NPCs
+use faction-specific proportions, faces, clothing and equipment: two outside guards,
+two barracks trainees and up to four gathering residents. These activities appear
+only beside completed buildings, avoid every building image, pause in hidden tabs
+and hide with either reduced-motion setting. Residents are decorative and do not
+represent stationed troop numbers. Carts and evening lighting remain preview studies.
+No timing, production, combat or save rule depends on animation.
+
 The active strategic world uses original, code-generated low-poly 3D scenery. Earlier painted relief and the transparent terrain/landmark atlas remain under `public/art/map/` for the illustrated minimap and 2D compatibility renderer. See **MAP_ART.md** for those asset prompts and **MAP_WORLD.md** for the current controls and rendering architecture. Existing tactical troop atlases remain independent.
 
 ## Strategic 3D scenery

@@ -8,20 +8,22 @@ import { stationCell } from '../../src/features/map/domain/garrisons';
 import { RESOURCES } from '../../src/shared/model/resources';
 import { validateSave } from '../../src/platform/storage/saves';
 
-async function start(page: Page, world: World) {
+async function start(page: Page, world: World, reducedMotion = true) {
     validateSave(world);
-    await page.addInitScript(w => {
+    await page.addInitScript(({w,reducedMotion}) => {
         if (!localStorage.getItem('peris-campaign-v6')) localStorage.setItem('peris-campaign-v6', JSON.stringify(w));
-        localStorage.setItem('peris-settings', JSON.stringify({ sound: false, music: false, reducedMotion: true }));
+        localStorage.setItem('peris-settings', JSON.stringify({ sound: false, music: false, reducedMotion }));
         localStorage.setItem(`peris-welcome:${w.players[0].id}:${w.players[0].created_at}`, 'yes');
-    }, world);
+    }, {w:world,reducedMotion});
     await page.goto('/');
     await page.getByRole('button', { name: 'Continue campaign', exact: true }).click();
     await page.getByRole('button', { name: 'City', exact: true }).click();
     await expect(page.getByRole('complementary', { name: 'Village resources and population' })).toBeVisible();
     if (page.viewportSize()!.width < 650) {
         const center = await page.locator('.village-center').boundingBox(), economy = await page.locator('.village-economy').boundingBox();
-        expect(center!.height).toBeGreaterThan(350);
+        const frame=await page.locator('.village-scene-frame').boundingBox();
+        expect(frame!.width/frame!.height).toBeCloseTo(1000/680,1);
+        expect(center!.height).toBeGreaterThan(frame!.height);
         expect(economy!.y).toBeGreaterThanOrEqual(center!.y + center!.height);
         const population = page.getByRole('complementary', { name: 'Village resources and population' }).getByRole('button', { name: /residents$/ });
         await population.scrollIntoViewIfNeeded();
@@ -60,7 +62,7 @@ test('city building popup spends once, shows a persisted queue and completes the
     await expect(dialog.getByRole('row', { name: /Building plots/ })).toContainText(String(slotCount(2)));
     const button = dialog.getByRole('button', { name: 'Upgrade to level 2', exact: true });
     await expect(button).toBeEnabled();
-    await expect(dialog.locator('.city-building-model-preview canvas')).toBeVisible();
+    await expect(dialog.locator('.city-building-artwork')).toBeVisible();
     await capture(page, info, 'village-building-popup');
     const before = await save(page), cost = buildingCost('market', 1);
     await button.click();
@@ -84,7 +86,7 @@ test('city building popup spends once, shows a persisted queue and completes the
     await capture(page, info, 'village-building-in-progress');
     await expect.poll(async () => (await save(page)).buildings.find(building => building.building_type === 'market')?.level, { timeout: 35_000 }).toBe(2);
     await expect(dialog.getByRole('button', { name: 'Upgrade to level 3', exact: true })).toBeEnabled();
-    await expect(dialog.locator('.city-building-model-preview canvas')).toBeVisible();
+    await expect(dialog.locator('.city-building-artwork')).toBeVisible();
     expect((await save(page)).orders.filter(row => row.kind === 'upgrade')).toHaveLength(0);
     expect(errors).toEqual([]);
 });
@@ -197,4 +199,77 @@ test('city remains usable when WebGL is unavailable and the same popup accepts c
     await dialog.getByRole('button', { name: 'Construct Main building', exact: true }).click();
     await expect.poll(async () => (await save(page)).orders.filter(order => order.kind === 'upgrade').length).toBe(1);
     await capture(page, info, 'village-graphics-fallback');
+});
+
+test('painted city loads sixteen separate plots and retains progress through reload and view changes', async ({ page }, info) => {
+    const world=createSolo('Painted city QA');
+    for(const building of world.buildings) building.level=building.building_type==='market'?5:3;
+    world.city_slots=Array.from({length:16},(_,slot_index)=>({settlement_id:1,slot_index,building_type:'housing' as const,level:2}));
+    world.city_slots.push({settlement_id:1,slot_index:16,building_type:'fishery',level:2});
+    refreshCityEconomy(world,1);
+    await start(page,world);
+    const village=page.locator('.painted-settlement-scene');
+    await expect(village).toBeVisible();
+    await expect(village.locator('.city-building-artwork')).toHaveCount(21);
+    await expect(village.locator('[data-building^="slot:"]')).toHaveCount(16);
+    expect(await village.getAttribute('data-city-shape')).toBe('square');
+    const overlaps=await village.locator('.city-building-artwork').evaluateAll(els=>{
+        const bad:string[][]=[];
+        for(let i=0;i<els.length;i++)for(let j=i+1;j<els.length;j++){
+            const a=els[i].getBoundingClientRect(),b=els[j].getBoundingClientRect();
+            if(a.left<b.right&&a.right>b.left&&a.top<b.bottom&&a.bottom>b.top)bad.push([els[i].parentElement!.dataset.building!,els[j].parentElement!.dataset.building!]);
+        }return bad;
+    });expect(overlaps).toEqual([]);
+    expect(await village.locator('.painted-city-water').evaluate(el=>getComputedStyle(el).animationName)).toBe('none');
+    await capture(page,info,'painted-city-sixteen-plots');
+    const before=await save(page);
+    await selectPlot(page,'slot:15');
+    await expect(page.getByRole('dialog',{name:'Selected building',exact:true}).locator('.city-building-artwork')).toBeVisible();
+    await page.keyboard.press('Escape');
+    await page.getByRole('button',{name:'3D',exact:true}).click();
+    await expect(village).toHaveCount(0);
+    await page.getByRole('button',{name:'Village',exact:true}).click();
+    await expect(village.locator('.city-building-artwork')).toHaveCount(21);
+    await page.reload();await page.getByRole('button',{name:'Continue campaign',exact:true}).click();await page.getByRole('button',{name:'City',exact:true}).click();
+    await expect(village.locator('.city-building-artwork')).toHaveCount(21);
+    const after=await save(page);
+    expect(after.city_slots).toEqual(before.city_slots);
+    expect(after.buildings).toEqual(before.buildings);
+    expect(after.orders).toEqual(before.orders);
+});
+
+test('village patrols move, roads use the gate, and decorative residents preserve construction controls', async ({page},info) => {
+    const world=createSolo('Village activity QA');
+    for(const b of world.buildings) b.level=b.building_type==='market'?5:3;
+    world.city_slots=Array.from({length:16},(_,slot_index)=>({settlement_id:1,slot_index,building_type:slot_index===0?'barracks' as const:'housing' as const,level:2}));
+    refreshCityEconomy(world,1);
+    await page.emulateMedia({reducedMotion:'no-preference'});
+    await start(page,world,false);
+    const village=page.locator('.painted-settlement-scene');
+    await village.scrollIntoViewIfNeeded();
+    await expect(village.locator('[data-city-activity=patrol]')).toHaveCount(2);
+    await expect(village.locator('[data-city-activity=training]')).toHaveCount(2);
+    const guard=village.locator('.city-npc-travel').first();
+    await expect(guard.locator('ellipse').first()).toBeVisible();
+    const position=()=>guard.locator('ellipse').first().evaluate(el=>{const p=el.getBoundingClientRect();return [p.x,p.y]});
+    const before=await position();await page.waitForTimeout(300);expect(await position()).not.toEqual(before);
+    expect(await village.locator('.painted-city-activity').evaluate(el=>getComputedStyle(el).pointerEvents)).toBe('none');
+    const invalidRoads=await village.evaluate(el=>{
+        const floor=el.querySelector('clipPath path') as SVGPathElement;
+        return Array.from(el.querySelectorAll('[data-city-road=outside]')).filter(road=>{
+            const p=road as SVGPathElement,n=p.getTotalLength();
+            return Array.from({length:201},(_,i)=>p.getPointAtLength(n*i/200)).some(q=>floor.isPointInFill(q));
+        }).length;
+    });expect(invalidRoads).toBe(0);
+    await capture(page,info,'village-wall-patrols-training');
+    await selectPlot(page,'slot:0');
+    await expect(page.getByRole('dialog',{name:'Selected building',exact:true})).toBeVisible();
+    await page.keyboard.press('Escape');
+    await page.evaluate(()=>{Object.defineProperty(document,'hidden',{configurable:true,value:true});document.dispatchEvent(new Event('visibilitychange'))});
+    await expect(village).toHaveAttribute('data-hidden','true');
+    await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+    const stopped=await position();await page.waitForTimeout(180);expect(await position()).toEqual(stopped);
+    await page.emulateMedia({reducedMotion:'reduce'});
+    await expect(village.locator('.painted-city-activity')).toBeHidden();
+    expect((await save(page)).city_slots).toEqual(world.city_slots);
 });

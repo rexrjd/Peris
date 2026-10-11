@@ -1,10 +1,11 @@
-import { useId, type CSSProperties } from 'react';
+import { useEffect, useId, useState, type CSSProperties } from 'react';
 import { FACTIONS, type Faction } from '../../factions/domain/factions';
 import { BUILDINGS } from '../domain/buildings';
 import type { BuildingType } from '../domain/types';
 import { SLOT_BUILDINGS, type CitySlot, type SlotType } from '../domain/slots';
 import { BuildingArtwork } from './BuildingArtwork';
-import { PAINTED_CITY, paintedCityLayout, paintedPlotName, type PaintedCityPlot } from './paintedLayout';
+import { PAINTED_CITY, cityBoundary, paintedCityLayout, paintedPlotName, type PaintedCityPlot } from './paintedLayout';
+import { VILLAGE_ROADS, villageActivitySvg, villageWallSvg } from './villageDecoration';
 
 export type PaintedSettlementSceneProps = {
     selected: string;
@@ -25,12 +26,13 @@ function details(plot: PaintedCityPlot) {
 
 /** Terrain and city furniture are separate from the persisted buildings and plots. */
 function VillageGround({ faction, wallLevel, plots, textureId }: { faction: Faction; wallLevel: number; plots: PaintedCityPlot[]; textureId: string }) {
-    const palette = FACTIONS[faction], { centerX, centerY, radiusX, radiusY } = PAINTED_CITY;
+    const palette = FACTIONS[faction], boundary = cityBoundary(faction), { centerX, centerY } = PAINTED_CITY;
     const river = 'M890 -20 C858 130 929 265 894 365 S857 480 855 700';
     return <svg className="painted-city-ground" viewBox="0 0 1000 680" aria-hidden="true">
         <defs>
             <pattern id={textureId} width="300" height="300" patternUnits="userSpaceOnUse"><image href="/art/shared/meadow-ground.png" width="300" height="300" opacity=".26"/></pattern>
             <linearGradient id={`${textureId}-river`} x1="0" y1="0" x2="1" y2="0"><stop stopColor={color(palette.water)}/><stop offset=".5" stopColor="#aec7b4"/><stop offset="1" stopColor={color(palette.water)}/></linearGradient>
+            <clipPath id={`${textureId}-inside`}><path d={boundary.path}/></clipPath>
         </defs>
         <rect width="1000" height="680" fill={color(palette.ground)}/>
         <rect width="1000" height="680" fill={`url(#${textureId})`}/>
@@ -45,28 +47,29 @@ function VillageGround({ faction, wallLevel, plots, textureId }: { faction: Fact
             <ellipse cy="-12" rx={17 + index % 5} ry="20" fill={color(palette.green)}/>
             <ellipse cx="-6" cy="-17" rx="12" ry="15" fill={color(palette.leaf)}/>
         </g>)}
-        <ellipse cx={centerX} cy={centerY} rx={radiusX} ry={radiusY} fill={color(palette.earth)} opacity=".56"/>
-        <ellipse cx={centerX} cy={centerY} rx={radiusX - 11} ry={radiusY - 8} fill={color(palette.ground)} opacity=".63"/>
+        <path d={boundary.path} fill={color(palette.earth)} opacity=".56"/>
+        <path d={boundary.path} fill={color(palette.ground)} opacity=".63"/>
         <g fill="none" stroke={color(palette.road)} strokeLinecap="round">
+            <path data-city-road="gate-entrance" d={VILLAGE_ROADS.entrance} strokeWidth="20"/>
+            {VILLAGE_ROADS.outside.map((path, i) => <path data-city-road="outside" key={i} d={path} strokeWidth="14" opacity=".85"/>)}
+            <g clipPath={`url(#${textureId}-inside)`} data-city-road="inside">
             <ellipse cx={centerX} cy={centerY} rx="198" ry="133" strokeWidth="13" opacity=".75"/>
             <ellipse cx={centerX} cy={centerY} rx="93" ry="60" strokeWidth="9" opacity=".6"/>
-            <path d="M500 345Q500 481 500 599T500 680" strokeWidth="20"/>
-            <path d="M500 614Q327 591 140 502M500 614Q708 601 851 541" strokeWidth="14" opacity=".75"/>
-            <path d="M132 217Q184 162 233 129T500 103Q760 111 876 290" strokeWidth="13" opacity=".6"/>
             {plots.filter(plot => plot.slot !== undefined && plot.slot < 16).map(plot => <path key={plot.key} d={`M500 345Q${(500 + plot.x) / 2} ${plot.y + 18} ${plot.x} ${plot.y}`} strokeWidth="8" opacity=".65"/>)}
+            </g>
         </g>
-        <ellipse cx={centerX} cy={centerY} rx={radiusX} ry={radiusY} fill="none" stroke={color(wallLevel >= 3 ? palette.stone : palette.wood)} strokeWidth={wallLevel === 0 ? 3 : wallLevel >= 3 ? 14 : 8} strokeDasharray={wallLevel > 0 && wallLevel < 3 ? '3 4' : undefined} opacity={wallLevel === 0 ? .48 : .9}/>
-        {wallLevel >= 3 && <ellipse cx={centerX} cy={centerY - 5} rx={radiusX} ry={radiusY} fill="none" stroke={color(palette.light)} strokeWidth="5" strokeDasharray="8 9"/>}
-        <path d="M481 595H519" stroke={color(palette.road)} strokeWidth="25"/>
-        <g transform="translate(857 460)"><path d="M-26-7H27V10H-26Z" fill={color(palette.timber)}/><path d="M-25-3H26M-25 3H26" stroke={color(palette.wood)} strokeWidth="2"/></g>
+        <g dangerouslySetInnerHTML={{ __html: villageWallSvg(faction, wallLevel, textureId) }}/>
+        <g transform="translate(861 657)"><path d="M-26-7H27V10H-26Z" fill={color(palette.timber)}/><path d="M-25-3H26M-25 3H26" stroke={color(palette.wood)} strokeWidth="2"/></g>
     </svg>;
 }
 
 function Gate({ faction, level }: { faction: Faction; level: number }) {
-    const p = FACTIONS[faction], stone = level >= 3;
+    const p = FACTIONS[faction], stone = !['timber','living','bamboo'].includes(cityBoundary(faction).material);
+    if (['orc','gnome','pandaren'].includes(faction)) return <svg className="painted-city-gate" viewBox="0 0 120 120" aria-hidden="true"><ellipse cx="60" cy="98" rx="40" ry="10" fill="#263b2d" opacity=".18"/>{[27,37,81,91].map(x => <g key={x}><path d={`M${x} 97V44L${x+5} 31 ${x+10} 44V97Z`} fill={color(p.wood)} stroke={color(p.timber)}/><path d={`M${x+3} 48V92`} stroke={color(p.timber)}/></g>)}<path d="M38 49H83V60H38Z" fill={color(p.timber)}/><path d="M42 34Q60 6 77 34" stroke={color(p.light)} strokeWidth="5" fill="none"/><path d="M30 67H47M80 67H96" stroke={color(p.darkStone)} strokeWidth="3"/></svg>;
+    if (faction === 'elf') return <svg className="painted-city-gate" viewBox="0 0 120 120" aria-hidden="true"><path d="M27 100Q40 76 36 51Q32 31 61 22Q92 33 85 58Q82 82 96 100M25 101Q18 58 42 39M95 101Q111 58 83 36" fill="none" stroke={color(p.timber)} strokeWidth="6"/><path d="M31 45Q8 12 41 18Q62-4 86 18Q115 18 87 48Q81 15 62 26Q41 20 31 45Z" fill={color(p.leaf)}/><path d="M56 20L61 8 66 20 61 32Z" fill={color(p.water)}/></svg>;
     return <svg className="painted-city-gate" viewBox="0 0 120 120" aria-hidden="true">
         <ellipse cx="60" cy="94" rx="38" ry="11" fill="#263b2d" opacity=".18"/>
-        {[28, 81].map(x => <g key={x}><path d={`M${x} 89V${stone ? 48 : 54}L${x + 12} ${stone ? 43 : 46}L${x + 17} 50V89Z`} fill={color(stone ? p.stone : p.timber)} stroke={color(stone ? p.darkStone : p.wood)} strokeWidth="2"/>{stone && <path d={`M${x - 2} 49V38H${x + 4}V44H${x + 10}V36H${x + 17}V48`} fill={color(p.light)}/>}</g>)}
+        {[24, 81].map(x => <g key={x}><path d={`M${x} 94V44L${x+12} 40 ${x+20} 46V94Z`} fill={color(p.stone)} stroke={color(p.darkStone)} strokeWidth="2"/><path d={`M${x+14} 48V91`} stroke={color(p.darkStone)} strokeWidth="5" opacity=".45"/><path d={`M${x} 61H${x+14}M${x} 75H${x+14}M${x+7} 48V61M${x+7} 75V90`} stroke={color(p.darkStone)} strokeWidth=".8"/>{stone && <path d={`M${x - 2} 49V35H${x + 4}V43H${x + 10}V35H${x + 20}V49`} fill={color(p.light)}/>}</g>)}
         <path d="M39 51H84V61H39Z" fill={color(stone ? p.stone : p.wood)}/>
         <path d="M45 65V89M79 65V89" stroke={color(p.wood)} strokeWidth="3"/>
         {level >= 2 && <g className="painted-city-banner"><path d="M89 47V17" stroke={color(p.wood)} strokeWidth="2"/><path d="M90 18L109 21 106 31 90 28Z" fill={color(p.roof)}/><path d="M99 22V27" stroke={color(p.gold)} strokeWidth="2"/></g>}
@@ -76,8 +79,15 @@ function Gate({ faction, level }: { faction: Faction; level: number }) {
 export function PaintedSettlementScene({ selected, onSelect, levels, slots, faction = 'roman' }: PaintedSettlementSceneProps) {
     const textureId = `city-terrain-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`;
     const plots = paintedCityLayout(levels, slots), palette = FACTIONS[faction];
-    return <div className="painted-settlement-scene" data-faction={faction} aria-label="Painted isometric village with selectable buildings and empty construction plots" style={{ '--city-road': color(palette.road), '--city-accent': color(palette.gold) } as CSSProperties}>
+    const [hidden, setHidden] = useState(false);
+    useEffect(() => {
+        const update = () => setHidden(document.hidden);
+        update(); document.addEventListener('visibilitychange', update);
+        return () => document.removeEventListener('visibilitychange', update);
+    }, []);
+    return <div className="painted-settlement-scene" data-hidden={hidden} data-faction={faction} data-city-shape={cityBoundary(faction).shape} aria-label="Painted isometric village with selectable buildings and empty construction plots" style={{ '--city-road': color(palette.road), '--city-accent': color(palette.gold) } as CSSProperties}>
         <VillageGround faction={faction} wallLevel={levels.wall ?? 0} plots={plots} textureId={textureId}/>
+        <svg className="painted-city-activity" viewBox="0 0 1000 680" aria-hidden="true" dangerouslySetInnerHTML={{ __html: villageActivitySvg(faction, plots) }}/>
         <div className="painted-city-plots" aria-label="Village buildings and construction plots">
             {[...plots].sort((a, b) => a.y - b.y).map(plot => {
                 const name = paintedPlotName(plot), description = details(plot);
