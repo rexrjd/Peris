@@ -216,17 +216,17 @@ test('paused 3D scenes redraw readiness and presentation changes without repeate
             updateFormation: () => { updated++; }, updateLabels: () => {}, captureFrame() { this.pendingFrame = { number: this.readyFrames + 1 }; }, remove: () => {},
         });
         scene.draw(1000); scene.draw(1016); scene.draw(1032);
-        assert.equal(rendered, 2); assert.equal(ready, 1, 'Both initial real frames still complete readiness');
+        assert.equal(rendered, 1); assert.equal(ready, 1, 'The completed image is ready without an identical redraw');
         const stableUpdates = updated;
         scene.draw(1048); assert.equal(updated, stableUpdates, 'Idle pause also skips formation uploads');
-        state.selectedIds = [own[1].id]; scene.draw(1064); assert.equal(rendered, 3);
-        view.rotate(.2); scene.draw(1080); assert.equal(rendered, 4);
-        scene.resize(); scene.draw(1096); assert.equal(rendered, 5);
+        state.selectedIds = [own[1].id]; scene.draw(1064); assert.equal(rendered, 2);
+        view.rotate(.2); scene.draw(1080); assert.equal(rendered, 3);
+        scene.resize(); scene.draw(1096); assert.equal(rendered, 4);
         // Domain snapshots mutate in place: object identity alone is insufficient.
-        own[0].x += 20; scene.draw(1112); assert.equal(rendered, 6);
-        own[0].soldiers = 0; scene.draw(1128); assert.equal(rendered, 7);
+        own[0].x += 20; scene.draw(1112); assert.equal(rendered, 5);
+        own[0].soldiers = 0; scene.draw(1128); assert.equal(rendered, 6);
         state.paused = false; scene.draw(1144); scene.draw(1160);
-        assert.equal(rendered, 9, 'Active animation keeps the existing frame cadence');
+        assert.equal(rendered, 8, 'Active animation keeps the existing frame cadence');
     } finally {
         if (savedFrame) Object.defineProperty(globalThis, 'requestAnimationFrame', savedFrame);
         else Reflect.deleteProperty(globalThis, 'requestAnimationFrame');
@@ -274,6 +274,7 @@ test('GPU pressure preserves paused input, labels and real-frame readiness acros
         const initialUpdates = first.metrics.updates;
         assert.equal(first.scene.hit(first.view.project(own[0].x, own[0].y, 8)), undefined, 'Picking waits for the first completed image');
         first.release(); first.scene.draw(1008);
+        assert.deepEqual([first.metrics.rendered, first.metrics.ready], [1, 1], 'The first completed image enables inspection without redundant drawing');
         const displayedPoint = first.view.project(own[0].x, own[0].y, 8);
         assert.equal(first.scene.hit(displayedPoint)?.id, own[0].id);
         const oldStyle = first.scene.formations.get(own[0].id).label.style.transform;
@@ -287,12 +288,13 @@ test('GPU pressure preserves paused input, labels and real-frame readiness acros
         own[0].x += 400; first.scene.draw(1032);
         assert.equal(first.scene.formations.get(own[0].id).pose.x, oldPose, 'Blocked frames retain the last submitted model pose');
         assert.equal(first.metrics.updates, initialUpdates * 2, 'No expensive formation updates accumulate behind a pending frame');
-        assert.equal(first.scene.readyFrames, 2); assert.equal(first.metrics.ready, 0, 'The second submitted frame has not completed yet');
+        assert.equal(first.scene.readyFrames, 2); assert.equal(first.metrics.ready, 1, 'Further pending frames never retract readiness of the displayed image');
 
         first.release(); first.scene.draw(1048);
         assert.equal(first.scene.formations.get(own[0].id).pose.x, own[0].x, 'Deferred presentation changes render when admission resumes');
         assert.deepEqual([first.metrics.rendered, first.metrics.submitted, first.metrics.ready], [3, 3, 1]);
-        assert.equal(first.scene.hit(displayedPoint)?.id, own[0].id, 'Pending model motion does not move the displayed pick box');
+        const rotatedPoint = first.view.project(oldPose, own[0].y, 8);
+        assert.equal(first.scene.hit(rotatedPoint)?.id, own[0].id, 'Pending model motion does not move the displayed pick box in the completed rotated image');
         state.selectedIds = [own[1].id]; first.scene.inspect(own[1].id); first.scene.draw(1064);
         assert.equal(first.view.inspecting, true);
         assert.equal(first.scene.formations.get(own[1].id).label.hidden, false);
@@ -316,9 +318,9 @@ test('GPU pressure preserves paused input, labels and real-frame readiness acros
         const recovered = createScene(); recovered.scene.draw(1200); recovered.scene.draw(1216);
         assert.equal(recovered.metrics.ready, 0); assert.equal(recovered.scene.readyFrames, 1);
         recovered.release(); recovered.scene.draw(1232);
-        assert.equal(recovered.metrics.ready, 0, 'Recovery still waits for the second frame to finish');
+        assert.equal(recovered.metrics.ready, 1, 'Recovery waits for its own first completed image');
         recovered.release(); recovered.scene.draw(1248);
-        assert.deepEqual([recovered.metrics.rendered, recovered.metrics.submitted, recovered.metrics.ready], [2, 2, 1]);
+        assert.deepEqual([recovered.metrics.rendered, recovered.metrics.submitted, recovered.metrics.ready], [1, 1, 1]);
         assert.match(recovered.scene.formations.get(own[1].id).label.className, /friendly selected/);
         recovered.scene.destroy(); assert.equal(recovered.metrics.budgetDisposed, 1);
     } finally {

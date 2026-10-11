@@ -53,5 +53,8 @@ active while model uploads and drawing wait for the previous frame. Slow frames
 reserve a short interval for application work, while fast hardware keeps its
 existing cadence and visual settings. Canvas targeting retains completed-frame
 cameras and pick geometry so deferred drawing cannot change the clicked target.
-Browser CI runs desktop and mobile projects on separate runners, retaining every
-case and publishing a separate report for each device.
+Battle inspection becomes available after the first completed image; it no longer
+waits for an identical second drawing. New online battles refresh faction metadata
+immediately instead of inheriting the peaceful map's ten-second refresh interval.
+Browser CI runs two shards per desktop/mobile project, retaining every case and
+publishing a separate report for each device and shard.

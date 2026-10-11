@@ -182,7 +182,10 @@ export class BattleScene {
         const completed = this.frameBudget?.completedFrames ?? this.readyFrames;
         if (!this.pendingFrame || completed < this.pendingFrame.number || this.pendingFrame.number <= this.displayedFrames) return;
         this.displayedFrame = this.pendingFrame; this.displayedFrames = this.pendingFrame.number;
-        if (!this.readyNotified && completed >= 2) { this.readyNotified = true; this.ready?.(); }
+        // Assets and formation uploads are already part of this completed image.
+        // A second identical draw can cost seconds on a software GPU without
+        // making the scene any more ready for inspection.
+        if (!this.readyNotified) { this.readyNotified = true; this.ready?.(); }
     }
     private draw(time: number) {
         if (!this.alive) return;
@@ -201,7 +204,7 @@ export class BattleScene {
             // Paused armies have no animation to redraw. Keep polling input and
             // mutable snapshots, but leave the last composited frame in place
             // until its camera, selection or visible formations actually change.
-            if (!gpuReady || (state.paused && this.readyFrames >= 2 && frameKey === this.pausedFrameKey)) {
+            if (!gpuReady || (state.paused && this.readyFrames >= 1 && frameKey === this.pausedFrameKey)) {
                 this.reportDiagnostics(time);
                 this.frame = requestAnimationFrame(next => this.draw(next));
                 return;
@@ -226,8 +229,8 @@ export class BattleScene {
             this.captureFrame();
             this.frameBudget?.submitted(time);
             this.pausedFrameKey = state.paused ? this.pausedKey(state, fs) : '';
-            // Initial readiness requires two completed frames, rather than
-            // queued commands whose image is still unavailable on a slow GPU.
+            // Readiness follows the first completed image, never queued drawing
+            // commands whose image is still unavailable on a slow GPU.
             this.readyFrames++;
             this.promoteFrame(); this.updateLabels(state, fs);
             this.metricFrames++;
