@@ -1,75 +1,70 @@
-PERIS — ARTIFACT PAINTINGS AND CAMP DIFFICULTY
-2026-10-11
+PERIS — INTEGRATED RALLY POINT, ARTIFACTS AND CAMPS
+2026-10-11 · compatible with main cc16233
 
 Compatibility
-Integrated with https://github.com/rexrjd/Peris main commit d82272e and the
-unified Rally Point. The normal Peris app includes artifact paintings, ten camp
-levels, nine troop roles, research, shared camp stock and farm lists together.
-Use the repository changes together; copying files from an older archive can
-remove mechanics added by the other developer.
+Use these repository changes together with the current main branch. The normal
+Peris game includes the Rally Point, recurring farms, nine troop roles, research,
+growing camps, worker and artifact paintings. Players need no separate Frontier
+server or side game. Existing accounts, cities, armies, research, ownership,
+inventory, XP, farm targets and report receipts are retained.
 
-What changes
-24 distinct original equipment paintings, one for every artifact ID.
-Duplicate copies of the same artifact use the same painting.
-12 new items: one Rare charm, six Epic items and five Legendary items.
-All four rarities cover weapons, armour, headgear, boots and charms.
-The 12 existing item IDs and their attribute bonuses are retained.
-Paintings appear in the backpack, equipped slots, selected item and victory receipt.
+Frontend
+Run npm ci and npm run build, then deploy the resulting frontend. All 24 original
+artifact paintings ship in public/art/artifacts/v1/. The build checks that every
+painting is present, distinct, transparent and the correct size. Copying SQL alone
+does not update artwork or the interface.
 
-Camps now have difficulty levels 1–10 and advertise the actual loot rarity:
-  Level 1–2   Easy      Common equipment / artifact tier 1
-  Level 3–5   Guarded   Rare equipment / artifact tier 2
-  Level 6–8   Hard      Epic equipment / artifact tier 3
-  Level 9–10  Deadly    Legendary equipment / artifact tier 4
-Every NPC victory grants one item from the advertised rarity, subject to the
-existing 200-item backpack limit. Reward rolls match solo and multiplayer.
-Reopening a report never generates a second reward.
-Higher camp levels have larger defender armies; high-level strongholds are scarce.
-Camp cards and raid preparation show the level, difficulty and loot rarity.
-The six story encounters now span levels 1, 4, 4, 6, 8 and 10.
+Reports
+The Reports navigation button displays the number of unread visible receipts and
+turns yellow while any remain unread. Opening a report through Reports, Rally
+Point or a camp marks it read, including reports whose battle has been pruned.
+Visiting the Reports tab alone does not clear the count. Quiet zero-loss farm
+receipts are excluded when their list enables losses-only reports.
+Read status survives reloads and is separate for each ruler and game mode in this
+browser. Other browsers and devices keep their own read status. This indicator
+needs no database migration.
+
+Artifacts and camps
+24 distinct paintings appear in the backpack, equipped slots, selected item and
+victory receipt. The 12 original IDs/bonuses are retained; 12 additional artifacts
+cover Rare, Epic and Legendary equipment.
+  Camp level 1–2   Easy      Common equipment / tier 1
+  Camp level 3–5   Guarded   Rare equipment / tier 2
+  Camp level 6–8   Hard      Epic equipment / tier 3
+  Camp level 9–10  Deadly    Legendary equipment / tier 4
+NPC victory grants one item of the advertised rarity within the existing backpack
+limit. Reopening reports never creates another reward. Camp IDs, coordinates and
+factions retain the existing 605-camp layout. Upgrades preserve casualties,
+stored resources and active encounters. All ten levels grow toward matching solo
+and multiplayer caps. Empty camps can be raided without invalid empty rosters.
+Private random recruitment deadlines remain hidden from players.
 
 Multiplayer installation
-An existing game database requires the regenerated supabase/UPGRADE_TO_V16.sql
-to install the complete Peris mechanics alongside the updated frontend.
-For a new database use supabase/FRESH_INSTALL_V16.sql.
-The focused supabase/UPDATE_ARTIFACTS_AND_CAMPS.sql updates artifact/camp metadata
-on older V13–V15 databases, but does not install research, camp stocks or the worker.
-It is not a substitute for the complete V16 upgrade.
-Migrations preserve camp IDs, coordinates, factions, current casualties, troop
-roles, stock, inventories, XP, receipts and farm targets. Busy camps retain their
-current difficulty until a later safe migration. Repeated upgrades are safe.
-Do not use a fresh-install script on an existing campaign.
-No production database changes or deployments were performed for this update.
+Existing databases: supabase/UPGRADE_TO_V17.sql.
+New databases only: supabase/FRESH_INSTALL_V17.sql.
+The V17 upgrade installs complete troop operations, farms, private statistics,
+economic receipts and safe retry commands alongside the frontend. It is safe to
+repeat and preserves existing game data. Never run a fresh install on a campaign.
+Review supabase/ENABLE_GAME_WORKER.sql separately to enable the background worker.
+Production database installation is a separate step; it was not performed here.
+
+The focused supabase/UPDATE_ARTIFACTS_AND_CAMPS.sql requires an existing V16 world.
+It installs compatible camp and artifact corrections, retains live state, and
+skips metadata changes for busy camps. It is not a replacement for the complete
+V17 mechanics and safe retry upgrade. Older databases need the complete upgrade.
 
 Solo saves
-Existing version-6 campaigns upgrade their known camp definitions once on load.
-Accounts, cities, armies, equipped items, progress and farm targets are retained.
-Active raids keep their existing defenders until a later safe load.
-The 605 generated camp IDs, coordinates and factions match the prior layout exactly.
-These mechanics are part of the main Peris game. Historical Frontier server files
-remain developer fixtures; players do not need a separate server or game.
+Existing version-6 campaigns retain accounts, cities, armies, equipped items,
+progress, ownership and farm targets. Known camp metadata upgrades once on load;
+active raids and current casualties are preserved.
 
-Artwork sources
-Generated using the built-in image-generation tool, one independent call per item,
-with transparent backgrounds. No existing game artwork is included.
-assets/artifacts-v1.json contains every complete prompt, item name and source path.
-assets/source/artifacts-v1/*.png are the untouched generated images.
-public/art/artifacts/v1/*.webp are the shipped 384px transparent UI paintings.
-Rebuild runtime artwork with npm run build:artifact-art.
-Rebuild SQL catalog with npm run build:artifact-catalog, then npm run build:sql.
-Rebuild the focused migration with npm run build:camp-artifact-upgrade.
-
-Validation
-379 unit tests passed; one existing optional test skipped.
-Production TypeScript/Vite build passed.
-Tooling tests and checks for all 46 registered GLB models passed.
-Artifact catalog, 605 camp definitions, focused migration and SQL bundle
-generation checks passed.
-Isolated hero-loot, world-battle, general database and fresh-install suites passed.
-Focused migration tests cover existing gear/XP, busy camps, repeat application
-and authenticated equip/unequip commands for all 24 items.
-Artwork checks cover unique content, transparent alpha and all 24 runtime paths.
-26 desktop/mobile browser scenarios passed across the initial run and targeted
-rerun: all paintings load, equipment persists after reload, loot receipts,
-camp difficulty/raid review, army markers, map activity and campaign marches.
-Desktop and mobile screenshots were inspected for equipment, rewards and camps.
+Maintenance
+Original prompts and sources: assets/artifacts-v1.json and assets/source/artifacts-v1/.
+Runtime paintings: public/art/artifacts/v1/*.webp (384px transparent images).
+Rebuild paintings: npm run build:artifact-art
+Rebuild catalog: npm run build:artifact-catalog
+Rebuild camps: npm run build:bandits
+Rebuild SQL: npm run build:sql
+Rebuild focused update: npm run build:camp-artifact-upgrade
+Verify paintings: npm run check:artifact-art
+See docs/frontier-wars.md for the integrated mechanics and installation details.

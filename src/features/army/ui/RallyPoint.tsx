@@ -27,11 +27,12 @@ function placeForCamp(camp: World['camps'][number]): RallyPlace {
 }
 
 /** One command surface over existing authoritative orders, stations and reports. */
-export function RallyPoint({ world, playerId, cityId, now, busy, run, onCity, onLocate, onMapArmy, onManageArmy, onReport }: {
+export function RallyPoint({ world, playerId, cityId, now, busy, run, onCity, onLocate, onMapArmy, onManageArmy, onReport, onReadReport }: {
     world: World; playerId: string; cityId: number; now: number; busy: boolean;
     run: (command: Command, message?: string) => void;
     onCity: (id: number) => void; onLocate: (place: RallyPlace) => void;
     onMapArmy: (id: number) => void; onManageArmy: (id: number) => void; onReport: (battle: Battle) => void;
+    onReadReport?: (battleId: number) => void;
 }) {
     const [tab, setTab] = useState<Tab>('overview');
     const [raid, setRaid] = useState<CampaignFarmTarget | null>(null), [editing, setEditing] = useState<CampaignFarmTarget | null>(null), [savedReport, setSavedReport] = useState<Report | null>(null);
@@ -50,6 +51,8 @@ export function RallyPoint({ world, playerId, cityId, now, busy, run, onCity, on
         event.currentTarget.parentElement?.querySelectorAll<HTMLButtonElement>('[role=tab]')[next]?.focus();
     };
     const openReport = (report: Report) => {
+        if (report.owner_id !== playerId) return;
+        onReadReport?.(report.battle_id);
         const battle = world.battles.find(battle => battle.id === report.battle_id);
         if (battle && reportSide(world, report, playerId)) onReport({ ...battle, result: report.result }); else setSavedReport(report);
     };

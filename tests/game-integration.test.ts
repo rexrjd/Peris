@@ -13,6 +13,7 @@ import { finishBattle } from '../src/features/battle/domain/resolution';
 import { settleBattle } from '../src/features/campaign/domain/battleSettlement';
 import { findMarchPath } from '../src/features/map/domain/pathfinding';
 import { advanceCampFarms } from '../src/features/campaign/domain/campEconomy';
+import { normalizeRealm } from '../src/features/empire/domain/normalization';
 import type { LocalCommandContext } from '../src/shared/model/commands';
 function fixture(){
  const world=createSolo('Integrated realm');let id=50000;
@@ -23,6 +24,14 @@ function fixture(){
  const camp=world.camps.filter(c=>c.bandit).sort((a,b)=>Math.hypot(a.x-position.x,a.y-position.y)-Math.hypot(b.x-position.x,b.y-position.y)).find(c=>findMarchPath(position,c))!;
  return {world,army,city,context,camp};
 }
+test('difficulty upgrades preserve growing camps, stored supplies and recruited defender roles',()=>{
+ const f=fixture(),at=Date.parse(f.context.now);accrueCamp(f.camp,at);
+ writeRoster(f.camp,{...emptyRoster(),infantry:7,scout:2});f.camp.resources={wood:24,stone:12,food:8,gold:3};
+ const before=structuredClone(f.camp);delete f.world.camp_balance_version;normalizeRealm(f.world);
+ assert.deepEqual(f.camp.unit_roster,before.unit_roster);assert.deepEqual(f.camp.resources,before.resources);
+ assert.equal(f.camp.stock_updated_at,before.stock_updated_at);assert.equal(f.camp.next_recruit_at,before.next_recruit_at);
+ assert.equal(f.camp.infantry,7);assert.equal(f.camp.cavalry,2);
+});
 test('advanced research and parallel buildings use existing cities and preserve roles through save reload',()=>{
  const f=fixture();assert.throws(()=>recruitSoldiers(f.context,{type:'recruit',item:'scout',quantity:2}),/research/i);
  researchUnit(f.context,{type:'researchUnit',item:'scout'});assert.equal(f.city.wood,4960);f.context.now=new Date(Date.parse(f.context.now)+31000).toISOString();

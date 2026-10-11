@@ -17,6 +17,9 @@ try {
     const oldItem=(await db.query('select id from public.peris_hero_artifacts where hero_id=$1',[hero.id])).rows[0].id;
     await admin(`update public.peris_camp_stock set resources='{"wood":12,"stone":8,"food":3,"gold":1}',recruit_sequence=19,next_recruit_at=now()+interval '1 hour'where camp_id=${camp.id}`);
     const savedStock=(await db.query('select resources,recruit_sequence,next_recruit_at from public.peris_camp_stock where camp_id=$1',[camp.id])).rows[0];
+    // Older V16 installations lack V17 economics helpers; the focused update must
+    // provide the dependencies of its replacement battle finish function privately.
+    await admin('drop function public.peris_roster_loss_cost(jsonb,jsonb);drop function public.peris_resource_difference(jsonb,jsonb)');
     const upgrade=await readFile('supabase/UPDATE_ARTIFACTS_AND_CAMPS.sql','utf8');
     await admin(upgrade);const busy=(await db.query('select tier,infantry from public.peris_camps where id=$1',[camp.id])).rows[0];assert.deepEqual(busy,{tier:1,infantry:8});
     await admin(`update public.armies set status='idle',raid_target_id=null where id=${army.id}`);await admin(upgrade);await admin(upgrade);
@@ -33,6 +36,12 @@ try {
         assert.equal(replenished.soldiers,rule.defenderCap);assert.deepEqual(replenished.resources,rule.capacity);
     }
     console.log('PASS · ten-level camp recruitment caps and resource production agree with the normal game domain');
+    await login();
+    await assert.rejects(()=>rpc('peris_roster_loss_cost',[{scout:3,catapult:2},{scout:2,catapult:1}]),/permission/);
+    await assert.rejects(()=>rpc('peris_resource_difference',[{wood:1},{wood:2}]),/permission/);
+    await admin('select 1');
+    assert.deepEqual(await rpc('peris_roster_loss_cost',[{scout:3,catapult:2},{scout:2,catapult:1}]),{wood:33,stone:25,food:27,gold:13});
+    console.log('PASS · focused V16 update installs its economics dependencies without exposing private helpers');
     for (const [id,item] of Object.entries(ARTIFACTS)) {
         await admin(`insert into public.peris_hero_artifacts(owner_id,artifact_id,slot)select '${owner}',id,slot from public.peris_artifact_catalog where id='${id}'`);
         const artifact=(await db.query('select max(id) as id from public.peris_hero_artifacts where artifact_id=$1',[id])).rows[0].id;

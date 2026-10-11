@@ -8,7 +8,7 @@
     "check:frontier": "tsc -p tsconfig.frontier.json",
     "test:frontier-server": "node --import tsx --test tests/frontier-server.test.mts tests/frontier-http.test.mts tests/frontier-vite.test.mts",
     "test:frontier-ui": "playwright test -c playwright.integration.config.ts tests/e2e/game-frontier-integration.spec.ts tests/e2e/command-retry.spec.ts",
-    "build": "tsc -p tsconfig.app.json && vite build",
+    "build": "npm run check:artifact-art && tsc -p tsconfig.app.json && vite build",
     "build:standalone": "npm run build && node scripts/standalone.mjs",
     "preview": "vite preview",
     "test": "node --import tsx --test tests/*.test.ts",
@@ -56,7 +56,8 @@
     "test:artifact-camps-db": "node --import tsx tests/artifact-camp-upgrade.test.mjs",
     "test:command-receipts-db": "node --import tsx tests/command-receipts-database.test.mts",
     "test:farm-parity-db": "node tests/campaign-farm-parity-database.test.mjs",
-    "test:army-parity-db": "node --import tsx tests/army-role-operations-database.test.mts"
+    "test:army-parity-db": "node --import tsx tests/army-role-operations-database.test.mts",
+    "check:artifact-art": "node --import tsx scripts/check-artifact-art.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.57.4",

@@ -29,6 +29,9 @@ jobs:
       - run: npm run assets:check
       - run: npm run check:world
       - run: npm run check:sql
+      - run: npm run check:bandits
+      - run: npm run check:artifact-catalog
+      - run: npm run check:camp-artifact-upgrade
       - run: npm run check:frontier
       - run: npm run test:frontier-server
       - run: npm run test:db
@@ -38,6 +41,7 @@ jobs:
       - run: npm run test:command-receipts-db
       - run: npm run test:farm-parity-db
       - run: npm run test:army-parity-db
+      - run: npm run test:artifact-camps-db
       - run: node --import tsx tests/march-orders-database.test.mjs
       - run: node --import tsx tests/garrisons-database.test.mjs
       - run: node --import tsx tests/campaign-farm-batch-database.test.mjs

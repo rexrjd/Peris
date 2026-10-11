@@ -43,7 +43,7 @@ import '../styles/atlas.css';
 import '../styles/territory.css';
 import '../styles/operations.css';
 type View = 'world' | 'settlement' | 'army' | 'chronicle';
-export function WorldView({ world, playerId, selection, setSelection, moveMode, setMoveMode, run, busy, now, navigate, clockOffset = 0, mapViewport, cityId, armyId, onCity, onArmy, onEmpire, farmOpen = false, onFarmClose }: {
+export function WorldView({ world, playerId, selection, setSelection, moveMode, setMoveMode, run, busy, now, navigate, clockOffset = 0, mapViewport, cityId, armyId, onCity, onArmy, onEmpire, farmOpen = false, onFarmClose, onReadReport }: {
     world: World;
     cityId?:number; armyId?:number; onCity?:(id:number)=>void; onArmy?:(id:number)=>void; onEmpire?:()=>void;
     playerId: string;
@@ -58,6 +58,7 @@ export function WorldView({ world, playerId, selection, setSelection, moveMode, 
     clockOffset?: number;
     mapViewport?: (bounds: { minX: number; minY: number; maxX: number; maxY: number }) => void;
     farmOpen?: boolean; onFarmClose?: () => void;
+    onReadReport?: (battleId: number) => void;
 }) {
     const [operationsOpen, setOperationsOpen] = useState(() => (typeof window === 'undefined' || window.matchMedia('(min-width: 901px)').matches) && world.armies.some(a => a.owner_id === playerId && a.status === 'moving'));
     useEffect(() => { if (selection) setOperationsOpen(false); }, [selection]);
@@ -229,7 +230,7 @@ export function WorldView({ world, playerId, selection, setSelection, moveMode, 
   </section>
   </div>
   {marchRequest && <MarchDialog world={world} playerId={playerId} now={now} busy={busy} initialArmyId={marchRequest.armyId} initialTroops={marchRequest.troops} destination={marchRequest.destination} run={run} onArmy={onArmy} onClose={() => setMarchRequest(null)} />}
-  {campReport && <SavedReportDialog world={world} playerId={playerId} report={campReport} onClose={() => setCampReport(null)}/>}
+  {campReport && <SavedReportDialog world={world} playerId={playerId} report={campReport} onReadReport={onReadReport} onClose={() => setCampReport(null)}/>}
   {farmRequest && (() => { const targetCamp = world.camps.find(camp => camp.id === farmRequest.campId); return targetCamp && <CampaignFarmTargetDialog world={world} playerId={playerId} busy={busy} run={run} camp={targetCamp} initialArmyId={army.id} target={farmRequest.target} onClose={() => setFarmRequest(null)} />; })()}
   {farmOpen && !farmRequest && <CampaignFarmLists world={world} playerId={playerId} busy={busy} now={now} run={run} onClose={() => onFarmClose?.()} onRaid={target => { onFarmClose?.(); setMarchRequest({ destination: { kind: 'raid', campId: target.camp_id }, armyId: target.army_id, troops: target.troops }); }} onEdit={target => setFarmRequest({ campId: target.camp_id, target })} onLocate={camp => { onFarmClose?.(); chooseCamp(camp.id); focusPoint(camp.x, camp.y, 1.7); }} />}
   {exploreOpen && <Modal title={`A world of ${fieldCount} fields`} className="atlas-explore-modal" onClose={() => setExploreOpen(false)}><span className="eyebrow">{WORLD_COLS} COLUMNS × {WORLD_ROWS} ROWS · X / Y {minCol} TO {maxCol}</span><p className="atlas-explore-intro">The six campaign landmarks surround your starting keep. Beyond them, one ancient continent reaches from forest kingdoms to snowfields and dark frontiers. Coastal islands lie across the surrounding sea. Choose a region to explore its fields.</p><div className="atlas-explore-regions">{WORLD_REGIONS.map(r => <button key={r.id} onClick={() => exploreRegion(r)}><i style={{ background: r.color }}/><span><strong>{r.name}</strong><small>{r.subtitle}</small></span><Icon name="arrow" size={15}/></button>)}</div><div className="atlas-terrain-legend"><span className="field-label">LANDSCAPES OF LAND & SEA</span><div>{(Object.keys(FIELD_COLORS) as FieldTerrain[]).map(terrain => <span key={terrain}><i style={{ background: FIELD_COLORS[terrain] }}/>{terrainName(terrain)}</span>)}</div></div><p className="atlas-explore-help">Drag to pan; scroll or pinch to zoom. Select a field to inspect its coordinates and terrain. Your legion follows connected land; sea crossings require ships. Home and Army return the camera to your own realm; World overview reveals the full map.</p></Modal>}

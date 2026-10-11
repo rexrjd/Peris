@@ -6,7 +6,7 @@ import { Icon } from '../../../shared/ui/Icons';
 import { clock } from '../../../shared/time/clock';
 import { UNITS } from '../../army/domain/units';
 import { Cost, Modal } from '../../../shared/ui/Shared';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { Report } from '../domain/types';
 import { reportIsReturning, reportSide, visibleReports } from '../domain/reportEconomics';
 import { ReportEconomics } from './ReportEconomics';
@@ -63,7 +63,10 @@ export function ResultBody({ result, won, draw = false, side = 'attacker', enemy
 }
 
 /** Saved receipts remain inspectable after their tactical records are pruned. */
-export function SavedReportDialog({ world, playerId, report, onClose }: { world: World; playerId: string; report: Report; onClose: () => void }) {
+export function SavedReportDialog({ world, playerId, report, onClose, onReadReport }: { world: World; playerId: string; report: Report; onClose: () => void; onReadReport?: (battleId: number) => void }) {
+    useEffect(() => {
+        if (report.owner_id === playerId) onReadReport?.(report.battle_id);
+    }, [report.battle_id, report.owner_id, playerId, onReadReport]);
     if (report.owner_id !== playerId) return null;
     const side = reportSide(world, report, playerId), battle = world.battles.find(row => row.id === report.battle_id);
     return <Modal title="Saved battle report" className="result-modal battle-rewards-modal rally-saved-report" onClose={onClose}>
@@ -75,16 +78,19 @@ export function SavedReportDialog({ world, playerId, report, onClose }: { world:
         <div className="result-actions"><button className="button gold" onClick={onClose}>Back to reports</button></div>
     </Modal>;
 }
-export function Chronicle({ world, playerId, onReport, run, onEnding }: {
+export function Chronicle({ world, playerId, onReport, run, onEnding, onReadReport }: {
     world: World;
     playerId: string;
     onReport: (b: Battle) => void;
     run?: (c: Command, m?: string) => void;
     onEnding?: () => void;
+    onReadReport?: (battleId: number) => void;
 }) {
     const [savedReport, setSavedReport] = useState<Report | null>(null);
     const player = world.players.find(p => p.id === playerId)!, done = conquered(world, playerId), reports = visibleReports(world, playerId);
     const openReport = (report: Report) => {
+        if (report.owner_id !== playerId) return;
+        onReadReport?.(report.battle_id);
         const battle = world.battles.find(row => row.id === report.battle_id);
         if (battle && reportSide(world, report, playerId)) onReport({ ...battle, result: report.result }); else setSavedReport(report);
     };
