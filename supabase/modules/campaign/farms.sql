@@ -23,9 +23,9 @@ alter table public.peris_campaign_farms enable row level security;
 revoke all on public.peris_campaign_farm_lists,public.peris_campaign_farms from public,anon,authenticated;
 grant select on public.peris_campaign_farm_lists,public.peris_campaign_farms to authenticated;
 drop policy if exists "own campaign farm lists" on public.peris_campaign_farm_lists;
-create policy "own campaign farm lists" on public.peris_campaign_farm_lists for select to authenticated using(owner_id=auth.uid());
+create policy "own campaign farm lists" on public.peris_campaign_farm_lists for select to authenticated using(owner_id=public.peris_player_id());
 drop policy if exists "own campaign farms" on public.peris_campaign_farms;
-create policy "own campaign farms" on public.peris_campaign_farms for select to authenticated using(owner_id=auth.uid());
+create policy "own campaign farms" on public.peris_campaign_farms for select to authenticated using(owner_id=public.peris_player_id());
 
 create or replace function public.peris_campaign_farm_troops(p_troops jsonb,p_allow_empty boolean)
 returns jsonb language plpgsql immutable set search_path='' as $$
@@ -45,7 +45,7 @@ end $$;
 create or replace function public.peris_campaign_farm_command(p_command jsonb)
 returns jsonb language plpgsql security definer set search_path='' as $$
 declare
- u uuid:=auth.uid();kind text:=p_command->>'type';v_entry_id bigint;v_list_id bigint;v_camp_id integer;v_army_id bigint;
+ u uuid:=public.peris_player_id();kind text:=p_command->>'type';v_entry_id bigint;v_list_id bigint;v_camp_id integer;v_army_id bigint;
  preset jsonb;list_name text;losses_only boolean;list public.peris_campaign_farm_lists;farm public.peris_campaign_farms;v_duplicate_id bigint;
  started integer:=0;skipped jsonb:='[]';batch_path jsonb;previous_army text;previous_city text;target_army public.armies%rowtype;
 begin

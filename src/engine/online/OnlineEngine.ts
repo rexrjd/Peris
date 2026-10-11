@@ -9,6 +9,9 @@ import { CELL_SIZE, WORLD_MAP_VERSION, WORLD_MAP_SEED, WORLD_COLS, WORLD_ROWS, W
 import { findMarchPath } from '../../features/map/domain/pathfinding';
 import { isWalkable } from '../../features/map/domain/worldGrid';
 import { supabase } from '../../platform/backend/supabase';
+import { loginAccount } from '../../platform/backend/accounts';
+import { expiredSession } from '../../platform/backend/accountLogin';
+import { rememberRuler } from '../../platform/backend/accountStorage';
 
 type MapBounds = { minX: number; minY: number; maxX: number; maxY: number };
 type PublicMapSnapshot = {
@@ -56,11 +59,16 @@ export class OnlineEngine implements GameEngine {
     private lastCorePoll = Date.now();
     private lastCoreSnapshotAt = Date.now();
     private ticking = false;
+    private reconnecting: Promise<void> | null = null;
+    private recoveryTimer: number | undefined;
+    private authSubscription: { unsubscribe: () => void };
+    private sessionId: string;
     error: string | null = null;
     connected = false;
 
-    constructor(playerId: string, snapshot: World) {
+    constructor(playerId: string, snapshot: World, sessionId: string = playerId) {
         this.playerId = playerId;
+        this.sessionId = sessionId;
         this.core = snapshot;
         this.snapshot = snapshot;
         const army = snapshot.armies.find(a => a.owner_id === playerId), town = snapshot.settlements.find(s => s.owner_id === playerId);
@@ -81,6 +89,14 @@ export class OnlineEngine implements GameEngine {
             const connected = status === 'SUBSCRIBED';
             if (this.connected !== connected) { this.connected = connected; this.publish(); }
         });
+        this.authSubscription = supabase.auth.onAuthStateChange((event, session) => {
+            if (!this.alive) return;
+            if (event === 'SIGNED_OUT' || (session && session.user.id !== this.sessionId)) {
+                // Auth callbacks run under the SDK lock. Recover outside it.
+                window.clearTimeout(this.recoveryTimer);
+                this.recoveryTimer = window.setTimeout(() => { this.recoveryTimer = undefined; void this.recoverAccount(); }, 0);
+            }
+        }).data.subscription;
         // Battles retain their 850ms authoritative cadence; peaceful state polls
         // every 2.55s. Public rivals are refreshed independently every five seconds.
         this.timer = window.setInterval(() => void this.tick(), 850);
@@ -96,10 +112,31 @@ export class OnlineEngine implements GameEngine {
         });
     }
     private async rpc(fn: string, args: Record<string, unknown> = {}) {
+        if (this.reconnecting) await this.reconnecting;
+        if (!this.alive) throw new Error('This realm session has ended.');
         const controller = new AbortController();
         this.requests.add(controller);
-        try { return await supabase.rpc(fn, args).abortSignal(controller.signal); }
+        try {
+            const result = await supabase.rpc(fn, args).abortSignal(controller.signal);
+            if (result.error && expiredSession(result.error)) void this.recoverAccount();
+            return result;
+        }
         finally { this.requests.delete(controller); }
+    }
+    private recoverAccount(): Promise<void> {
+        if (this.reconnecting) return this.reconnecting;
+        if (!this.alive) return Promise.resolve();
+        const name = this.core.players.find(player => player.id === this.playerId)?.display_name;
+        if (!name) return Promise.resolve();
+        this.coreError = 'Reconnecting to your realm…'; this.publish();
+        this.reconnecting = loginAccount(name).then(account => {
+            if (!this.alive) return;
+            if (account.ruler.player_id !== this.playerId) throw new Error('The server returned a different account. Re-enter your ruler name.');
+            this.sessionId = account.sessionId;
+            this.core = account.world; this.lastCoreSnapshotAt = Date.now(); this.coreError = null;
+            this.publish(); void this.refreshMap();
+        }).catch(error => { if (this.alive) { this.coreError = this.message(error); this.publish(); } }).finally(() => { this.reconnecting = null; });
+        return this.reconnecting;
     }
     private message(error: unknown) { return (error as { message?: string })?.message ?? 'Connection interrupted. Your realm is safe; reconnecting…'; }
     private clampBounds(bounds: MapBounds): MapBounds {
@@ -205,7 +242,12 @@ export class OnlineEngine implements GameEngine {
             if (error) throw error;
             if (this.alive) {
                 const hadMap = !!this.core.map;
-                this.core = data as World;
+                const next = data as World;
+                if (!next?.players?.some(player => player.id === this.playerId) || !next.settlements?.some(city => city.owner_id === this.playerId)) {
+                    void this.recoverAccount();
+                    return;
+                }
+                this.core = next;
                 void this.refreshArmyCultures();
                 this.lastCoreSnapshotAt = Date.now();
                 this.coreError = null;
@@ -292,31 +334,17 @@ export class OnlineEngine implements GameEngine {
     destroy = () => {
         if (!this.alive) return;
         this.alive = false;
+        this.authSubscription.unsubscribe();
         window.clearInterval(this.timer); window.clearInterval(this.mapTimer);
-        window.clearTimeout(this.realtimeTimer); window.clearTimeout(this.mapDebounce);
+        window.clearTimeout(this.realtimeTimer); window.clearTimeout(this.mapDebounce); window.clearTimeout(this.recoveryTimer);
         this.requests.forEach(controller => controller.abort()); this.requests.clear();
         void supabase.removeChannel(this.channel); this.listeners.clear();
     };
 }
 
 export async function enterOnline(name: string): Promise<OnlineEngine> {
-    let { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-        const result = await supabase.auth.signInAnonymously();
-        if (result.error) throw new Error(result.error.message);
-        session = result.data.session;
-    }
-    if (!session) throw new Error('The account could not be created. Try again.');
-    const { data: existing, error: checkError } = await supabase.from('players').select('id').eq('id', session.user.id).maybeSingle();
-    if (checkError) throw new Error(WORLD_UPGRADE);
-    if (!existing) {
-        if (!/^[A-Za-z0-9 _-]{2,20}$/.test(name.trim())) throw new Error('Choose 2–20 letters, numbers, spaces, _ or -.');
-        const { error } = await supabase.rpc('create_player', { p_display_name: name.trim() });
-        if (error) throw new Error(error.message);
-    }
-    const { data, error } = await supabase.rpc('peris_snapshot');
-    if (error) throw new Error(error.code === 'PGRST202' ? WORLD_UPGRADE : error.message);
-    const sync = await supabase.rpc('sync_my_state');
-    if (sync.error) throw new Error(sync.error.message);
-    return new OnlineEngine(session.user.id, data as World);
+    const account = await loginAccount(name);
+    const engine = new OnlineEngine(account.ruler.player_id, account.world, account.sessionId);
+    rememberRuler(account.ruler.display_name);
+    return engine;
 }

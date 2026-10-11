@@ -14,7 +14,7 @@ alter table public.peris_garrisons enable row level security;
 revoke all on public.peris_garrisons from public,anon,authenticated;
 grant select on public.peris_garrisons to authenticated;
 drop policy if exists "own garrisons" on public.peris_garrisons;
-create policy "own garrisons" on public.peris_garrisons for select to authenticated using(owner_id=auth.uid());
+create policy "own garrisons" on public.peris_garrisons for select to authenticated using(owner_id=public.peris_player_id());
 
 -- New legions keep the familiar offset without crossing their village's field edge.
 -- Existing saved coordinates are never relocated by this helper.
@@ -93,7 +93,7 @@ end $$;
 
 create or replace function public.peris_collect_garrison(p_army bigint,p_troops jsonb default null)
 returns jsonb language plpgsql security definer set search_path='' as $$
-declare u uuid:=auth.uid();
+declare u uuid:=public.peris_player_id();
 begin
  if u is null then raise exception 'Authentication required';end if;
  return public.peris_garrison_collect_for(u,p_army,p_troops);

@@ -1,5 +1,5 @@
 create or replace function public.peris_respond(p_id bigint,p_accept boolean)returns jsonb language plpgsql security definer set search_path='' as $$
-declare u uuid:=auth.uid();c public.peris_challenges%rowtype;a public.armies%rowtype;d public.armies%rowtype;bid bigint;
+declare u uuid:=public.peris_player_id();c public.peris_challenges%rowtype;a public.armies%rowtype;d public.armies%rowtype;bid bigint;
 begin
  select * into c from public.peris_challenges where id=p_id for update;
  if u is null or c.id is null or c.defender_owner_id<>u then raise exception 'Not your invitation';end if;

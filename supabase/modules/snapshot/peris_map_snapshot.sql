@@ -13,7 +13,7 @@ language sql immutable set search_path='' as $$
 $$;
 create or replace function public.peris_map_snapshot(p_min_x integer,p_min_y integer,p_max_x integer,p_max_y integer)
 returns jsonb language plpgsql security definer set search_path='' as $$
-declare u uuid:=auth.uid();min_x integer:=p_min_x;min_y integer:=p_min_y;max_x integer:=p_max_x;max_y integer:=p_max_y;result jsonb;
+declare u uuid:=public.peris_player_id();min_x integer:=p_min_x;min_y integer:=p_min_y;max_x integer:=p_max_x;max_y integer:=p_max_y;result jsonb;
 begin
  if u is null then raise exception 'Authentication required';end if;
  if min_x is null or min_y is null or max_x is null or max_y is null

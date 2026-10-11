@@ -20,6 +20,7 @@ drop table if exists public.armies cascade;
 drop table if exists public.buildings cascade;
 drop table if exists public.settlements cascade;
 drop table if exists public.spawn_points cascade;
+drop table if exists public.peris_account_sessions cascade;
 drop table if exists public.players cascade;
 
 drop function if exists public.create_peris_world_for_player() cascade;

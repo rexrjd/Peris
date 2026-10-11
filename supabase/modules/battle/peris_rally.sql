@@ -1,5 +1,5 @@
 create or replace function public.peris_rally(p_battle_id bigint) returns jsonb language plpgsql security definer set search_path='' as $$
-declare u uuid:=auth.uid();b public.battles%rowtype;side_name text;
+declare u uuid:=public.peris_player_id();b public.battles%rowtype;side_name text;
 begin
  select * into b from public.battles where id=p_battle_id for update;
  if u is null or b.id is null or (u is distinct from b.attacker_owner_id and u is distinct from b.defender_owner_id)then raise exception 'Not your battle';end if;
