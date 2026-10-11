@@ -5,7 +5,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { PAINTED_CITY, cityBoundary, paintedCityLayout } from '../src/features/city/rendering/paintedLayout';
 import { PaintedSettlementScene } from '../src/features/city/rendering/PaintedSettlementScene';
 import { BuildingPreview } from '../src/features/city/rendering/BuildingPreview';
-import { villageAtlasCell, VILLAGE_ATLAS_CELLS } from '../src/features/city/rendering/villageArtwork';
+import { villageAtlasCell, villageArtwork, VILLAGE_ATLAS_CELLS } from '../src/features/city/rendering/villageArtwork';
 import { FACTIONS } from '../src/features/factions/domain/factions';
 import type { CitySlot } from '../src/features/city/domain/slots';
 import { villageActivities, villageNpcSvg } from '../src/features/city/rendering/villageDecoration';
@@ -32,11 +32,11 @@ test('painted layout unlocks actual plots without moving earlier buildings', () 
 });
 
 test('resource sites stay clear of the city and sixteen ordinary plots stay inside', () => {
-    const { centerX, centerY, radiusX, radiusY, width, height } = PAINTED_CITY;
+    const { centerX, centerY, radiusX, radiusY, sceneWidth, sceneHeight, offsetX, offsetY } = PAINTED_CITY;
     const plots = paintedCityLayout({ market: 5 }, []);
     const distance = (x: number, y: number) => ((x - centerX) / radiusX) ** 2 + ((y - centerY) / radiusY) ** 2;
     for (const plot of plots) {
-        assert.ok(plot.x > 0 && plot.x < width && plot.y > 0 && plot.y < height);
+        assert.ok(plot.x+offsetX-plot.size/2 > 0 && plot.x+offsetX+plot.size/2 < sceneWidth && plot.y+offsetY-plot.size/2 > 0 && plot.y+offsetY+plot.size/2 < sceneHeight);
         if (plot.slot !== undefined && plot.slot < 16) assert.ok(distance(plot.x, plot.y) < .8, `${plot.key} touches perimeter`);
         if (['lumber', 'quarry', 'farm', 'fishery'].includes(plot.key)) assert.ok(distance(plot.x, plot.y) > 1, `${plot.key} belongs outside`);
     }
@@ -118,4 +118,26 @@ test('decorative activity follows completed buildings and leaves every clickable
     const unfinished=paintedCityLayout({market:1},slots.map(s=>({...s,level:0})));
     assert.ok(villageActivities(unfinished).every(a=>a.source==='market'));
     assert.equal(new Set(Object.keys(FACTIONS).map(f=>villageNpcSvg(f as keyof typeof FACTIONS,'patrol'))).size,11);
+});
+
+test('all four resource sites have working residents only after construction', () => {
+    const levels={market:5,lumber:3,quarry:3,farm:3,wall:3};
+    const slots:CitySlot[]=[{settlement_id:1,slot_index:16,building_type:'fishery',level:2}];
+    const plots=paintedCityLayout(levels,slots),before=structuredClone(plots);
+    const activities=villageActivities(plots);
+    for(const [source,kind] of Object.entries({lumber:'lumbering',quarry:'mining',farm:'harvesting',fishery:'fishing'})){
+        const workers=activities.filter(a=>a.source===source);
+        assert.equal(workers.length,1);assert.equal(workers[0].kind,kind);
+        for(const p of plots)assert.ok(Math.abs(workers[0].x-p.x)>p.size/2+10 || workers[0].y<p.y-p.size/2-3 || workers[0].y-24>p.y+p.size/2+3,`${source} worker covers ${p.key}`);
+    }
+    assert.deepEqual(plots,before);
+    assert.equal(villageActivities(paintedCityLayout({},[])).length,0);
+});
+
+test('human cultures select separate artwork in every building role', () => {
+    for(const role of VILLAGE_ATLAS_CELLS){
+        const urls=['roman','spartan','persian','egyptian'].map(f=>villageArtwork(role,f as keyof typeof FACTIONS)?.url);
+        assert.equal(new Set(urls).size,4);
+        assert.ok(urls.slice(1).every(url=>url?.includes('-v2.webp')));
+    }
 });

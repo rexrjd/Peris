@@ -6,6 +6,13 @@ import { fileURLToPath } from 'node:url';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const manifest=JSON.parse(await readFile(path.join(root,'assets/city-village-v1.json'),'utf8'));
 const size=400, gutter=24;
+if(manifest.landscape){
+  const source=path.join(root,manifest.landscape.sourceFile),output=path.join(root,manifest.landscape.file);
+  await mkdir(path.dirname(output),{recursive:true});
+  const scenery=await sharp(source).resize(1200,900).webp({quality:88,effort:5}).toBuffer();
+  await writeFile(output,scenery);
+  console.log('Countryside: approved soft-painted scenery, 1200×900');
+}
 for(const asset of manifest.assets){
   const source=path.join(root,asset.sourceFile), meta=await sharp(source).metadata();
   if(!meta.hasAlpha)throw new Error(`${asset.faction}: source must contain transparency`);
@@ -25,7 +32,7 @@ for(const asset of manifest.assets){
   await mkdir(path.dirname(output),{recursive:true});await writeFile(output,webp);
   if(process.argv.includes('--preview')){
     const preview=path.join(root,'artifacts/city-motion-preview');
-    await mkdir(preview,{recursive:true});await writeFile(path.join(preview,`${asset.faction}-soft-dark-v1.png`),png);
+    await mkdir(preview,{recursive:true});await writeFile(path.join(preview,`${asset.faction}-soft-dark-v${asset.revision ?? 1}.png`),png);
   }
   console.log(`${asset.faction}: 12 cells, 1200×1600, ${webp.length.toLocaleString()} bytes`);
 }

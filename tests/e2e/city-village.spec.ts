@@ -22,7 +22,7 @@ async function start(page: Page, world: World, reducedMotion = true) {
     if (page.viewportSize()!.width < 650) {
         const center = await page.locator('.village-center').boundingBox(), economy = await page.locator('.village-economy').boundingBox();
         const frame=await page.locator('.village-scene-frame').boundingBox();
-        expect(frame!.width/frame!.height).toBeCloseTo(1000/680,1);
+        expect(frame!.width/frame!.height).toBeCloseTo(1200/900,1);
         expect(center!.height).toBeGreaterThan(frame!.height);
         expect(economy!.y).toBeGreaterThanOrEqual(center!.y + center!.height);
         const population = page.getByRole('complementary', { name: 'Village resources and population' }).getByRole('button', { name: /residents$/ });
@@ -242,6 +242,7 @@ test('village patrols move, roads use the gate, and decorative residents preserv
     const world=createSolo('Village activity QA');
     for(const b of world.buildings) b.level=b.building_type==='market'?5:3;
     world.city_slots=Array.from({length:16},(_,slot_index)=>({settlement_id:1,slot_index,building_type:slot_index===0?'barracks' as const:'housing' as const,level:2}));
+    world.city_slots.push({settlement_id:1,slot_index:16,building_type:'fishery',level:2});
     refreshCityEconomy(world,1);
     await page.emulateMedia({reducedMotion:'no-preference'});
     await start(page,world,false);
@@ -249,6 +250,10 @@ test('village patrols move, roads use the gate, and decorative residents preserv
     await village.scrollIntoViewIfNeeded();
     await expect(village.locator('[data-city-activity=patrol]')).toHaveCount(2);
     await expect(village.locator('[data-city-activity=training]')).toHaveCount(2);
+    for(const kind of ['lumbering','mining','harvesting','fishing'])await expect(village.locator(`[data-city-activity=${kind}]`)).toHaveCount(1);
+    const wheel=village.locator('.city-work-wheel');
+    const angle=()=>wheel.evaluate(el=>getComputedStyle(el).transform);
+    const wheelBefore=await angle();await page.waitForTimeout(220);expect(await angle()).not.toEqual(wheelBefore);
     const guard=village.locator('.city-npc-travel').first();
     await expect(guard.locator('ellipse').first()).toBeVisible();
     const position=()=>guard.locator('ellipse').first().evaluate(el=>{const p=el.getBoundingClientRect();return [p.x,p.y]});
@@ -269,6 +274,7 @@ test('village patrols move, roads use the gate, and decorative residents preserv
     await expect(village).toHaveAttribute('data-hidden','true');
     await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
     const stopped=await position();await page.waitForTimeout(180);expect(await position()).toEqual(stopped);
+    const stoppedWheel=await angle();await page.waitForTimeout(150);expect(await angle()).toEqual(stoppedWheel);
     await page.emulateMedia({reducedMotion:'reduce'});
     await expect(village.locator('.painted-city-activity')).toBeHidden();
     expect((await save(page)).city_slots).toEqual(world.city_slots);

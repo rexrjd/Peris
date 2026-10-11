@@ -29,6 +29,8 @@ jobs:
       - run: npm run assets:check
       - run: npm run check:world
       - run: npm run check:sql
+      - run: npm run check:frontier
+      - run: npm run test:frontier-server
       - run: npm run test:db
       - run: npm run test:fresh
       - run: npm run test:empire-db
@@ -36,7 +38,7 @@ jobs:
 
   browser:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -53,4 +55,26 @@ jobs:
           path: |
             playwright-report/
             test-results/
+          retention-days: 7
+
+  frontier-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:frontier-ui
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: frontier-browser-report
+          include-hidden-files: true
+          path: |
+            .frontier-playwright-report/
+            .frontier-test-results/
           retention-days: 7

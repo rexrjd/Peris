@@ -1,5 +1,6 @@
-.painted-settlement-scene{position:relative;width:100%;aspect-ratio:1000/680;isolation:isolate;overflow:hidden;border-radius:8px;background:#95a578;box-shadow:inset 0 0 50px #233b2438}
-.game-shell .city-stage.village-screen .city-panel.village-scene-frame.is-painted{min-height:0;max-height:none;aspect-ratio:1000/680}
+.painted-settlement-scene{position:relative;width:100%;aspect-ratio:1200/900;isolation:isolate;overflow:hidden;border-radius:8px;background:#95a578;box-shadow:inset 0 0 50px #233b2438}
+.game-shell .city-stage.village-screen .city-panel.village-scene-frame.is-painted{min-height:0;max-height:none;aspect-ratio:1200/900}
+.painted-city-north-gate{position:absolute;left:50%;top:23.89%;width:8%;aspect-ratio:1;transform:translate(-50%,-50%);pointer-events:none;z-index:220}
 .painted-city-ground,.painted-city-plots{position:absolute;inset:0;width:100%;height:100%}
 .painted-city-plots{pointer-events:none}
 .painted-city-plot{position:absolute;aspect-ratio:1;transform:translate(-50%,-50%);border:0;padding:0;background:transparent;cursor:pointer;pointer-events:auto;isolation:isolate;-webkit-tap-highlight-color:transparent;outline:none;color:#f7e8bc}
@@ -26,11 +27,27 @@
 .city-artwork-placeholder{position:absolute;left:24%;right:24%;bottom:18%;height:48%;display:grid;place-items:center;border-radius:8px;background:#e0d4accc;color:#666442;border:1px solid #82795e7d;box-shadow:0 3px 3px #34412d30;pointer-events:none}
 .painted-city-water{animation:city-water 18s linear infinite}
 .painted-city-activity{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:600}
-.city-npc-travel{offset-rotate:0deg;animation:city-patrol 80s linear infinite;offset-distance:0%}
+.city-npc-travel{offset-rotate:0deg;animation:city-patrol 40s linear infinite alternate;offset-distance:0%}
 .city-npc-patrol .city-npc-leg{transform-box:fill-box;transform-origin:50% 0;animation:city-step .7s ease-in-out infinite alternate}
 .city-npc-patrol .city-npc-leg:nth-child(2){animation-delay:-.7s}
 .city-npc-training .city-npc-arm{transform-origin:4px -15px;animation:city-drill 3.4s ease-in-out infinite;animation-delay:var(--npc-delay)}
 .city-npc-gathering .city-npc-arm{transform-origin:4px -15px;animation:city-greet 7s ease-in-out infinite;animation-delay:var(--npc-delay)}
+.city-npc-lumbering .city-npc-arm{animation:city-saw 1.8s ease-in-out infinite alternate}
+.city-npc-mining .city-npc-arm{transform-origin:4px -15px;animation:city-pick 2.8s ease-in-out infinite}
+.city-npc-harvesting .city-npc-arm{transform-origin:4px -15px;animation:city-harvest 4.8s ease-in-out infinite}
+.city-npc-fishing .city-npc-arm{transform-origin:4px -15px;animation:city-fish 8s ease-in-out infinite}
+.city-work-wheel{animation:city-wheel 12s linear infinite;transform-origin:0 0}
+.city-work-wheat{animation:city-crop 4.5s ease-in-out infinite alternate;transform-origin:0 3px}
+.city-work-dust{animation:city-chip 2.8s ease-out infinite}
+.city-work-float{animation:city-bob 4s ease-in-out infinite alternate}
+@keyframes city-saw{to{transform:translateX(5px)}}
+@keyframes city-pick{0%,35%,100%{transform:rotate(0)}55%{transform:rotate(-45deg)}67%{transform:rotate(24deg)}}
+@keyframes city-harvest{0%,45%,100%{transform:rotate(0)}65%,78%{transform:rotate(35deg)}}
+@keyframes city-fish{0%,65%,100%{transform:rotate(0)}72%{transform:rotate(-15deg)}82%{transform:rotate(-5deg)}}
+@keyframes city-wheel{to{transform:rotate(360deg)}}
+@keyframes city-crop{to{transform:skewX(9deg)}}
+@keyframes city-chip{0%,63%,100%{opacity:0;transform:translateY(0)}67%{opacity:.8}87%{opacity:0;transform:translate(3px,-9px)}}
+@keyframes city-bob{to{transform:translateY(2px)}}
 .painted-settlement-scene[data-hidden=true] *{animation-play-state:paused!important}
 .reduced-motion .painted-city-activity{display:none}
 @keyframes city-patrol{to{offset-distance:100%}}

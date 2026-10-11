@@ -7,6 +7,7 @@ export const APPROVED_VILLAGE_ATLASES: readonly Faction[] = ['roman', 'spartan',
 /** Cell width / cell height, measured from the published atlas rather than the prompt. */
 export const VILLAGE_ATLAS_ASPECTS: Partial<Record<Faction, number>> = Object.fromEntries(APPROVED_VILLAGE_ATLASES.map(faction => [faction, 1]));
 export const VILLAGE_ATLAS_CELLS = ['market', 'lumber', 'quarry', 'farm', 'barracks', 'stables', 'smithy', 'warehouse', 'granary', 'fishery', 'mage_tower', 'housing'] as const;
+const CULTURE_REVISIONS: Partial<Record<Faction, number>> = { spartan: 2, persian: 2, egyptian: 2 };
 
 export function villageAtlasCell(type: BuildingType | SlotType) {
     const role = type === 'storehouse' ? 'granary' : type;
@@ -21,7 +22,8 @@ export function villageAtlasCell(type: BuildingType | SlotType) {
 export function villageArtwork(type: BuildingType | SlotType, faction: Faction) {
     const cell = villageAtlasCell(type);
     if (!cell || !APPROVED_VILLAGE_ATLASES.includes(faction)) return null;
-    return { url: `/art/city/village-v1/${faction}-atlas.webp`, aspectRatio: VILLAGE_ATLAS_ASPECTS[faction] ?? 1, ...cell };
+    const revision = CULTURE_REVISIONS[faction];
+    return { url: `/art/city/village-v1/${faction}-atlas${revision ? `-v${revision}` : ''}.webp`, aspectRatio: VILLAGE_ATLAS_ASPECTS[faction] ?? 1, ...cell };
 }
 
 const loaded = new Map<string, Promise<boolean>>();

@@ -13,7 +13,10 @@ export type PaintedCityPlot = {
     size: number;
 };
 
-export const PAINTED_CITY = { width: 1000, height: 680, centerX: 500, centerY: 345, radiusX: 360, radiusY: 280 } as const;
+export const PAINTED_CITY = {
+    width: 1000, height: 680, centerX: 500, centerY: 345, radiusX: 360, radiusY: 280,
+    sceneWidth: 1200, sceneHeight: 900, offsetX: 40, offsetY: 85,
+} as const;
 
 export type CityBoundary = { shape: 'square' | 'circle' | 'living' | 'hexagon' | 'rounded' | 'diamond' | 'octagon'; material: 'stone' | 'timber' | 'living' | 'bamboo' | 'bone' | 'obsidian'; path: string };
 const square = 'M220 65H780V625H220Z';
@@ -52,10 +55,10 @@ export function paintedCityLayout(levels: Record<string, number>, slots: CitySlo
     const fixed: PaintedCityPlot[] = [
         { key: 'market', type: 'market', level: levels.market ?? 0, x: 500, y: 345, size: 102 },
         { key: 'wall', type: 'wall', level: levels.wall ?? 0, x: 500, y: 625, size: 96 },
-        { key: 'lumber', type: 'lumber', level: levels.lumber ?? 0, x: 92, y: 220, size: 96 },
-        { key: 'quarry', type: 'quarry', level: levels.quarry ?? 0, x: 940, y: 265, size: 92 },
-        { key: 'farm', type: 'farm', level: levels.farm ?? 0, x: 100, y: 516, size: 102 },
-        { key: 'fishery', type: 'fishery', level: slots.find(slot => slot.slot_index === 16)?.level ?? 0, slot: 16, x: 932, y: 550, size: 96 },
+        { key: 'lumber', type: 'lumber', level: levels.lumber ?? 0, x: 145, y: 570, size: 96 },
+        { key: 'quarry', type: 'quarry', level: levels.quarry ?? 0, x: 1030, y: 315, size: 92 },
+        { key: 'farm', type: 'farm', level: levels.farm ?? 0, x: 560, y: -15, size: 102 },
+        { key: 'fishery', type: 'fishery', level: slots.find(slot => slot.slot_index === 16)?.level ?? 0, slot: 16, x: 1010, y: 635, size: 96 },
     ];
     return [...fixed, ...positions.slice(0, slotCount(levels.market ?? 0)).map((position, index) => {
         const slot = slots.find(item => item.slot_index === index);

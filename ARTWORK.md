@@ -7,6 +7,8 @@ eleven factions, generated with the built-in image tool on 2026-10-11. Soft pain
 materials, richer midtones and deeper natural shadows retain detail at small sizes.
 Each race has twelve building roles and distinct materials or silhouettes; the
 Dwarf and Gnome sets were revised to avoid resembling recoloured human buildings.
+Spartan, Persian and Egyptian revision-two atlases use independent stone halls,
+vaulted adobe/turquoise courts and mudbrick/reed architecture respectively.
 
 `assets/city-village-v1.json` records full prompts, role order and original ownership.
 Untouched generated sheets are preserved in `assets/source/city-village-v1/`.
@@ -24,14 +26,23 @@ These local city outlines never change ownership of fields on the global map.
 The Village tab and upgrade dialogs use these sprites. The existing live 3D city
 and model fallback remain available. Decorative water, chimney smoke, a gate
 standard and small magical glow respect system and in-game reduced-motion settings.
+The original simplified countryside painting is also recorded in the manifest and
+exported by the same script. Wheat lies above the enclosure, woodland surrounds
+the timber site, rocky heights back the quarry and a river inlet serves the fishery.
+The enclosure is offset onto dry land; this presentation never changes world fields.
 Raised wall faces, mortar, parapets, palisade posts and living foliage are original
-SVG geometry. Outside lanes meet below the enclosure and enter at its single gate;
-inside paths are clipped to the village boundary. Up to eight lightweight SVG NPCs
-use faction-specific proportions, faces, clothing and equipment: two outside guards,
-two barracks trainees and up to four gathering residents. These activities appear
-only beside completed buildings, avoid every building image, pause in hidden tabs
-and hide with either reduced-motion setting. Residents are decorative and do not
-represent stationed troop numbers. Carts and evening lighting remain preview studies.
+SVG geometry. Outside access uses north and south gates; inside paths are clipped
+to the boundary. The previous perimeter road loops are removed. A timber bridge
+connects the shore and completed fishery, with its fisherman standing on the deck.
+Up to twelve lightweight SVG NPCs use faction-specific proportions, soft lighting,
+faces, clothing and equipment: two guards, two trainees, up to four residents and
+four resource workers. Stone guards patrol parapets; other guards use cleared
+western lanes. Work pads, wheat and the dock provide explicit walkable surfaces.
+Saws, wheels, picks, crops and fishing props animate separately from the buildings.
+Activities appear only beside completed buildings, avoid building images, retain
+their animation timeline during economy updates, pause in hidden tabs and hide
+with either reduced-motion setting. Residents are decorative and do not represent
+stationed troop numbers. Evening lighting remains a preview study.
 No timing, production, combat or save rule depends on animation.
 
 The active strategic world uses original, code-generated low-poly 3D scenery. Earlier painted relief and the transparent terrain/landmark atlas remain under `public/art/map/` for the illustrated minimap and 2D compatibility renderer. See **MAP_ART.md** for those asset prompts and **MAP_WORLD.md** for the current controls and rendering architecture. Existing tactical troop atlases remain independent.

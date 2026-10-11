@@ -20,6 +20,7 @@ async function connect(context: BrowserContext) {
     });
 }
 async function login(page: Page, name: string) {
+    await page.bringToFront();
     await page.goto('/');
     await page.getByRole('button', { name: 'Shared world', exact: true }).click();
     await page.getByLabel('YOUR RULER NAME').fill(name);
@@ -27,6 +28,7 @@ async function login(page: Page, name: string) {
     await expect(page.getByLabel('Game menu')).toBeVisible();
 }
 async function ruler(page: Page, name: string) {
+    await page.bringToFront();
     await page.getByLabel('Game menu').click();
     await expect(page.locator('.game-menu-player strong')).toHaveText(name);
 }
@@ -57,7 +59,9 @@ test('two tabs can control different names without changing each other', async (
     await login(first, 'Tab Alpha');await ruler(first, 'Tab Alpha');
     await login(second, 'Tab Beta');await ruler(second, 'Tab Beta');
     await first.reload();await expect(first.getByLabel('Game menu')).toBeVisible();await ruler(first, 'Tab Alpha');
+    await second.bringToFront();
     await second.getByRole('button', { name: 'Switch ruler', exact: true }).click();await second.getByLabel('YOUR RULER NAME').fill('tab alpha');await second.getByRole('button', { name: 'Enter the shared world', exact: true }).click();await ruler(second, 'Tab Alpha');
+    await first.bringToFront();
     await first.getByLabel('Game menu').click();await ruler(first, 'Tab Alpha');
     await first.screenshot({ path: testInfo.outputPath('independent-tabs.png') });
 });

@@ -5,7 +5,7 @@ import { refreshCityEconomy } from '../../src/features/city/domain/slots';
 
 async function start(page: Page) {
     // Exercise the retained 3D model fallback independently of the painted atlas.
-    await page.route('**/art/city/village-v1/*-atlas.webp', route => route.abort());
+    await page.route('**/art/city/village-v1/*-atlas*.webp', route => route.abort());
     const world = createSolo('Preview QA');
     world.settlements[0].faction = 'dwarf';
     world.buildings.find(building => building.building_type === 'market')!.level = 5;
