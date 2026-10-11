@@ -53,6 +53,7 @@ export class BattleScene {
         private readonly state: () => RenderState, private readonly actions: () => RenderActions,
         private readonly unavailable: () => void, private readonly soldiers: SoldierVisualFactory = createLowPolySoldiers,
         private readonly quality: 'balanced' | 'ultra' = 'balanced', private readonly diagnostics?: (fps: number, calls: number, triangles: number) => void, private readonly ready?: () => void) {
+        delete canvas.dataset.framePaused;
         const terrain = state().battle!.terrain;
         this.view = new BattleCamera((x, y) => battlefieldHeight(terrain, x, y));
         try {
@@ -95,7 +96,10 @@ export class BattleScene {
         if (!this.alive || !this.renderer) return;
         const rect = this.canvas.parentElement!.getBoundingClientRect();
         const width = Math.max(1, rect.width), height = Math.max(1, rect.height);
-        if (width !== this.view.width || height !== this.view.height) this.displayedFrame = this.pendingFrame = null;
+        if (width !== this.view.width || height !== this.view.height) {
+            this.displayedFrame = this.pendingFrame = null;
+            delete this.canvas.dataset.framePaused;
+        }
         this.renderer.setSize(width, height, false); this.view.setSize(width, height);
         this.presentationRevision++;
     }
@@ -182,6 +186,10 @@ export class BattleScene {
         const completed = this.frameBudget?.completedFrames ?? this.readyFrames;
         if (!this.pendingFrame || completed < this.pendingFrame.number || this.pendingFrame.number <= this.displayedFrames) return;
         this.displayedFrame = this.pendingFrame; this.displayedFrames = this.pendingFrame.number;
+        // The pause command can arrive after initial readiness. Expose the
+        // completed image's state so inspection never assumes queued poses are
+        // already visible just because the simulation has stopped.
+        this.canvas.dataset.framePaused = String(this.displayedFrame.paused);
         // Assets and formation uploads are already part of this completed image.
         // A second identical draw can cost seconds on a software GPU without
         // making the scene any more ready for inspection.
@@ -309,6 +317,7 @@ export class BattleScene {
         cancelAnimationFrame(this.frame); this.observer?.disconnect(); this.input?.destroy(); this.canvas.removeEventListener('webglcontextlost', this.contextLost);
         this.frameBudget?.dispose(); this.frameBudget = null;
         this.displayedFrame = this.pendingFrame = null;
+        delete this.canvas.dataset.framePaused;
         for (const record of this.formations.values()) this.remove(record);
         for (const showcase of this.showcases) { showcase.userData.disposeShowcase?.(); this.scene.remove(showcase); }
         this.showcases.length = 0;

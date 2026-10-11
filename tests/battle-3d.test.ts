@@ -185,7 +185,7 @@ test('graphics interruption reports fallback exactly once and disposes scene res
         const showcase=new Group();showcase.userData.disposeShowcase=()=>showcaseDisposed++;rendered.add(showcase);
         rendered.traverse(object => { const material = (object as any).material; if (material) material.addEventListener('dispose', () => { materialDisposed++; }); });
         Object.assign(scene, { alive: true, frame: 1, scene: rendered, observer: { disconnect() { disconnected++; } },
-            input: { destroy() { inputDisposed++; } }, formations: new Map(), showcases:[showcase], canvas: { removeEventListener() { removedListener++; } },
+            input: { destroy() { inputDisposed++; } }, formations: new Map(), showcases:[showcase], canvas: { dataset: {}, removeEventListener() { removedListener++; } },
             sun: { shadow: { dispose() {} } }, renderer: { dispose() { rendererDisposed++; }, forceContextLoss() {} }, labels: { replaceChildren() {} },
             frameBudget: { dispose() { budgetDisposed++; } },
             unavailable: () => { fallback++; } });
@@ -211,7 +211,7 @@ test('paused 3D scenes redraw readiness and presentation changes without repeate
             displayedFrames: 0, pendingFrame: null, displayedFrame: null, readyNotified: false,
             inspectedId: null, metricFrames: 0, metricStart: 0, scene: new Scene(), zones: new Group(),
             renderer: { render() { rendered++; }, setSize() {}, info: { render: { calls: 20, triangles: 100000 } } },
-            canvas: { parentElement: { getBoundingClientRect: () => ({ width: 900, height: 650 }) } },
+            canvas: { dataset: {}, parentElement: { getBoundingClientRect: () => ({ width: 900, height: 650 }) } },
             ready: () => { ready++; }, create: (f: Formation) => ({ pose: { x: f.x, y: f.y, facing: f.facing } }),
             updateFormation: () => { updated++; }, updateLabels: () => {}, captureFrame() { this.pendingFrame = { number: this.readyFrames + 1, paused: state.paused }; }, remove: () => {},
         });
@@ -259,7 +259,7 @@ test('GPU pressure preserves paused input, labels and real-frame readiness acros
                     dispose() { metrics.budgetDisposed++; },
                 },
                 input: { update() { metrics.input++; if (rotate) { view.rotate(.2); rotate = false; } }, destroy() {} },
-                canvas: { parentElement: { getBoundingClientRect: () => ({ width: 900, height: 650 }) }, removeEventListener() {} }, labels: { append() {}, replaceChildren() {} },
+                canvas: { dataset: {}, parentElement: { getBoundingClientRect: () => ({ width: 900, height: 650 }) }, removeEventListener() {} }, labels: { append() {}, replaceChildren() {} },
                 sun: { shadow: { dispose() {} } }, ready: () => { metrics.ready++; }, unavailable: () => { metrics.fallback++; },
                 soldiers: (formation: Formation) => {
                     const visual = createLowPolySoldiers(formation), update = visual.update.bind(visual);
@@ -337,6 +337,23 @@ test('GPU pressure preserves paused input, labels and real-frame readiness acros
         assert.equal(interruptedLoad.metrics.rendered, 2, 'The completed paused image needs no duplicate drawing');
         assert.equal(interruptedLoad.scene.hit(interruptedLoad.view.project(own[0].x, own[0].y, 8))?.id, own[0].id);
         interruptedLoad.scene.destroy();
+
+        // Initial readiness can also precede the pause command. Its one-shot
+        // callback must not be mistaken for completion of this later image.
+        state.paused = false;
+        const laterPause = createScene(); laterPause.scene.draw(1400);
+        laterPause.release(); laterPause.scene.draw(1416);
+        assert.equal(laterPause.metrics.ready, 1);
+        assert.equal(laterPause.scene.canvas.dataset.framePaused, 'false');
+        state.paused = true; own[0].x += 35;
+        laterPause.release(); laterPause.scene.draw(1432);
+        assert.equal(laterPause.scene.canvas.dataset.framePaused, 'false', 'Queued paused poses are not yet displayed');
+        laterPause.release(); laterPause.scene.draw(1448);
+        assert.equal(laterPause.scene.canvas.dataset.framePaused, 'true');
+        assert.equal(laterPause.scene.hit(laterPause.view.project(own[0].x, own[0].y, 8))?.id, own[0].id);
+        assert.equal(laterPause.metrics.ready, 1, 'Initial readiness is still reported only once');
+        laterPause.scene.destroy();
+        assert.equal(laterPause.scene.canvas.dataset.framePaused, undefined, 'Rebuilt scenes cannot inherit a stale completed image');
     } finally {
         for (const [name, descriptor] of descriptors) {
             if (descriptor) Object.defineProperty(globalThis, name, descriptor); else Reflect.deleteProperty(globalThis, name);

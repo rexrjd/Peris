@@ -24,6 +24,9 @@ for (const terrain of ['Open country', 'Woodland', 'High country', 'River crossi
     const selection = await page.locator('.command-selection').innerText();
     await expect(page.getByRole('button', { name: 'Guard', exact: true })).toHaveCount(0);
     const field = page.locator('.battle-3d-canvas canvas');
+    // Loading may finish before Pause is clicked; the last active image can
+    // still be displayed while the paused poses are queued on a software GPU.
+    await expect(field).toHaveAttribute('data-frame-paused', 'true');
     const label = page.locator('.battle-3d-label.friendly.selected').first();
     await expect(field).toBeVisible();
     await expect(label).toBeVisible();
