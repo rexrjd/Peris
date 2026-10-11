@@ -168,7 +168,7 @@ export class MapRenderer {
             this.ring(camp.x, camp.y + 7, active, hover('camp', camp.id), camp.id === 6 ? 47 : 35);
             if (!camp.bandit || !drawCampSprite(c, camp.tier, camp.x - 34, camp.y - 46, 68)) drawLandmark(c, camp.x, camp.y, site.kind, cleared ? '#94b77c' : region.color);
             if (active || this.scale > .3) this.label(camp.x, camp.y + 29 * unit, site.title, active ? '#ffe5a6' : cleared ? '#c9dfb5' : '#eddfbd');
-            if (active || this.ctx.camera.zoom > 1.5) this.label(camp.x, camp.y + 46 * unit, `TIER ${camp.tier}${camp.bandit?' · BANDIT CAMP':cleared ? ' · STANDARD RECOVERED' : ' · HOSTILE HOLD'}`, '#c4c6ad', true);
+            if (active || this.ctx.camera.zoom > 1.5) this.label(camp.x, camp.y + 46 * unit, `LEVEL ${camp.tier}${camp.bandit?' · BANDIT CAMP':cleared ? ' · STANDARD RECOVERED' : ' · HOSTILE HOLD'}`, '#c4c6ad', true);
         }
         if (s.expansionRoute) {
             c.save(); c.strokeStyle = '#f9d79e'; c.lineWidth = 2 * unit;

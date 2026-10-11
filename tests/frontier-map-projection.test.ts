@@ -46,7 +46,7 @@ test('Frontier map projects faction villages and camp tiers without story sites 
     assert.deepEqual({ x: world.settlements[0].x, y: world.settlements[0].y }, from);
     assert.equal(world.camps.length, 1);
     assert.equal(world.camps[0].bandit, true);
-    assert.equal(world.camps[0].tier, 2);
+    assert.equal(world.camps[0].tier, 4);
     assert.equal(world.camps[0].faction, 'orc');
     assert.deepEqual([world.camps[0].infantry, world.camps[0].archers, world.camps[0].cavalry], [7, 7, 3]);
     assert.equal(world.battles.length, 0);

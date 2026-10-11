@@ -1,5 +1,3 @@
-import { RECRUIT_UNITS, RECRUIT_RULES, validateRoster, writeRoster, rosterTotal, readRoster } from '../../features/army/domain/roster';
-import { RESOURCES } from '../../shared/model/resources';
 import { BATTLE_TERRAINS } from '../../features/battle/domain/terrain';
 import { normalizeRealm } from '../../features/empire/domain/normalization';
 import { ARTIFACTS, HERO_CLASSES, HERO_STATS, heroPoints, heroThreshold, MAX_HERO_LEVEL } from '../../features/heroes/domain/heroes';
@@ -40,7 +38,7 @@ function validateLegacySave(data: unknown): World {
             invalid();
     if (w.settlements.length !== 1 || w.armies.length !== 1 || w.buildings.length !== 8 || w.camps.length < 6 || w.camps.length > 2000)
         invalid();
-    if(new Set(w.camps.map(c=>c.id)).size!==w.camps.length||w.camps.some(c=>!Number.isSafeInteger(c.id)||c.id<1||typeof c.name!=='string'||c.name.length>100||!Number.isFinite(c.x)||!Number.isFinite(c.y)||!BATTLE_TERRAINS.includes(c.terrain)||c.faction!==undefined&&!isFaction(c.faction)||c.bandit!==undefined&&typeof c.bandit!=='boolean'||[c.infantry,c.archers,c.cavalry].some(n=>!Number.isInteger(n)||n<0||n>1000)||!Number.isInteger(c.tier)||c.tier<1||c.tier>5))invalid();
+    if(new Set(w.camps.map(c=>c.id)).size!==w.camps.length||w.camps.some(c=>!Number.isSafeInteger(c.id)||c.id<1||typeof c.name!=='string'||c.name.length>100||!Number.isFinite(c.x)||!Number.isFinite(c.y)||!BATTLE_TERRAINS.includes(c.terrain)||c.faction!==undefined&&!isFaction(c.faction)||c.bandit!==undefined&&typeof c.bandit!=='boolean'||[c.infantry,c.archers,c.cavalry].some(n=>!Number.isInteger(n)||n<0||n>1000)||!Number.isInteger(c.tier)||c.tier<1||c.tier>10))invalid();
     if(w.debug_enabled!==undefined&&typeof w.debug_enabled!=='boolean')invalid();
     const town = w.settlements[0], army = w.armies[0], player = w.players[0];
     if(town.faction!==undefined&&!isFaction(town.faction))invalid();
@@ -151,7 +149,7 @@ function validateLegacySave(data: unknown): World {
             const plot = plots.find(plot => o.item === `field:${plot.col}:${plot.row}:${plot.building_type}`), key = plot && `${plot.col},${plot.row}`;
             if (!plot || !plot.building_type || plot.level >= TERRITORY_RULES.maxLevel || o.quantity !== 1 || fieldQueues.has(key!)) invalid();
             fieldQueues.add(key!);
-        } else if (!(o.kind === 'upgrade' ? ['lumber', 'quarry', 'farm', 'market', 'barracks', 'stables', 'wall', 'storehouse', ...(w.city_slots??[]).map(s=>`slot:${s.slot_index}:${s.building_type}`)] : RECRUIT_UNITS).includes(o.item)) invalid();
+        } else if (!(o.kind === 'upgrade' ? ['lumber', 'quarry', 'farm', 'market', 'barracks', 'stables', 'wall', 'storehouse', ...(w.city_slots??[]).map(s=>`slot:${s.slot_index}:${s.building_type}`)] : ['infantry', 'archers', 'cavalry']).includes(o.item)) invalid();
     }
     if (army.infantry + army.archers + army.cavalry + w.orders.filter(o => o.kind === 'recruit').reduce((n, o) => n + o.quantity, 0) > 1000)
         invalid();
@@ -182,38 +180,6 @@ export function validateSave(data: unknown): World {
     for(const key of ['settlements','armies','buildings','camps','orders','battles','formations','reports','progress','claims','challenges'] as const)
         if(!Array.isArray(w[key])||w[key].length>15000||w[key].some(r=>!r||typeof r!=='object'))invalid();
     if(w.settlements.length<1||w.settlements.length>10||w.armies.length<1||w.armies.length>20)invalid();
-    for (const force of [...w.armies, ...(w.garrisons ?? []), ...w.camps]) if (force.unit_roster != null) {
-        if (!validateRoster(force.unit_roster, 'owner_id' in force ? ('col' in force ? 20000 : 1000) : 1000)) invalid();
-        const copy = { ...force }; writeRoster(copy, force.unit_roster);
-        if (copy.infantry !== force.infantry || copy.archers !== force.archers || copy.cavalry !== force.cavalry) invalid();
-    }
-    for (const army of w.armies) if (army.carried_loot != null && RESOURCES.some(key => !Number.isFinite(army.carried_loot![key]) || army.carried_loot![key] < 0 || army.carried_loot![key] > 1e9)) invalid();
-    for (const camp of w.camps) {
-        if (camp.resources != null && RESOURCES.some(key => !Number.isFinite(camp.resources![key]) || camp.resources![key] < 0 || camp.resources![key] > 1e9)) invalid();
-        for (const key of ['stock_updated_at', 'next_recruit_at'] as const) if (camp[key] !== undefined && !Number.isFinite(Date.parse(camp[key]!))) invalid();
-        if (camp.recruit_sequence !== undefined && (!Number.isSafeInteger(camp.recruit_sequence) || camp.recruit_sequence < 0 || camp.recruit_sequence > 1e9)) invalid();
-    }
-    if (w.unit_research !== undefined) {
-        if (!Array.isArray(w.unit_research) || w.unit_research.length > 90) invalid();
-        const known = new Set<string>();
-        for (const research of w.unit_research) {
-            const key = `${research.settlement_id}:${research.unit}`;
-            if (!w.settlements.some(city => city.id === research.settlement_id) || !RECRUIT_UNITS.includes(research.unit) || known.has(key) || !Number.isFinite(Date.parse(research.completes_at))) invalid();
-            known.add(key);
-        }
-    }
-    for (const formation of w.formations) if (formation.recruit_unit !== undefined) {
-        const rule = Object.hasOwn(RECRUIT_RULES, formation.recruit_unit) ? RECRUIT_RULES[formation.recruit_unit] : undefined;
-        if (!rule || formation.unit_type !== rule.combatClass || formation.unit_attack !== undefined && formation.unit_attack !== rule.attack || formation.unit_defence !== undefined && formation.unit_defence !== rule.defence || formation.unit_speed !== undefined && (!Number.isFinite(formation.unit_speed) || Math.abs(formation.unit_speed - rule.speed / ({ infantry: 40, archers: 34, cavalry: 76 }[rule.combatClass])) > 1e-8)) invalid();
-    }
-    for (const entry of [...w.battles, ...w.reports]) if (entry.result) {
-        const result = entry.result;
-        for (const side of ['attacker', 'defender'] as const) {
-            const faction = result[`${side}_faction`]; if (faction !== undefined && !isFaction(faction)) invalid();
-            for (const suffix of ['roster', 'survivor_roster'] as const) { const roster = result[`${side}_${suffix}`]; if (roster !== undefined && !validateRoster(roster, 4000)) invalid(); }
-        }
-        for (const stock of [result.delivered, result.overflow]) if (stock != null && RESOURCES.some(key => !Number.isFinite(stock[key]) || stock[key] < 0 || stock[key] > 1e9)) invalid();
-    }
     const cities=new Map(w.settlements.map(s=>[s.id,s])), armies=new Map(w.armies.map(a=>[a.id,a]));
     if(cities.size!==w.settlements.length||armies.size!==w.armies.length||new Set(w.buildings.map(b=>b.id)).size!==w.buildings.length||new Set(w.orders.map(o=>o.id)).size!==w.orders.length)invalid();
     for(const city of w.settlements){
@@ -236,8 +202,9 @@ export function validateSave(data: unknown): World {
                 Date.parse(army.departure_at) !== deadline || Date.parse(army.arrival_at) <= deadline) invalid();
         }
         if (army.raid_reserve != null) {
-            const reserve = army.raid_reserve;
-            if (!validateRoster(reserve) || rosterTotal(reserve) + rosterTotal(readRoster(army)) > 1000 ||
+            const reserve = army.raid_reserve, types = ['infantry', 'archers', 'cavalry'] as const;
+            if (typeof reserve !== 'object' || Array.isArray(reserve) || types.some(type => !Number.isSafeInteger(reserve[type]) || reserve[type] < 0) ||
+                types.reduce((n, type) => n + reserve[type] + army[type], 0) > 1000 ||
                 army.raid_target_id === null && !w.battles.some(b => b.attacker_army_id === army.id && b.status === 'active')) invalid();
         }
     }

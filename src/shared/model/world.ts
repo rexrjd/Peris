@@ -21,7 +21,6 @@ export type Order = {
     finish_at: string;
 };
 export type World = {
-    unit_research?: { settlement_id: number; unit: import('../../features/army/domain/roster').RecruitUnit; completes_at: string }[];
     debug_enabled?: boolean;
     version: number;
     server_now: string;
@@ -36,6 +35,7 @@ export type World = {
     hero_artifacts?: HeroArtifact[];
     settler_expeditions?: SettlerExpedition[];
     gameplay_version?: number;
+    camp_balance_version?: number;
     camps: Camp[];
     orders: Order[];
     battles: Battle[];

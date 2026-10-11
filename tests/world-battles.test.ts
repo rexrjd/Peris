@@ -29,7 +29,7 @@ test('seeded camps span the realm with moderate density, all races and varied ar
  assert.ok(BANDIT_CAMPS.length>300&&BANDIT_CAMPS.length<650);
  assert.equal(new Set(BANDIT_CAMPS.map(c=>c.id)).size,BANDIT_CAMPS.length);
  assert.equal(new Set(BANDIT_CAMPS.map(c=>c.faction)).size,Object.keys(FACTIONS).length);
- assert.ok(BANDIT_CAMPS.filter(c=>c.tier<=2).length>BANDIT_CAMPS.length*.6);
+ assert.ok(BANDIT_CAMPS.filter(c=>c.tier<=3).length>BANDIT_CAMPS.length*.55);
  const positions=new Set<string>();
  for(const camp of BANDIT_CAMPS){const cell=wrapWorldCell(Math.floor(camp.x/CELL_SIZE),Math.floor(camp.y/CELL_SIZE));assert.notEqual(getCell(cell.col,cell.row).terrain,'water');assert.equal(isHistoricStartingField(cell.col,cell.row),false);assert.equal(camp.terrain,battleTerrainAtWorld(camp.x,camp.y));assert.ok(!positions.has(`${cell.col},${cell.row}`));positions.add(`${cell.col},${cell.row}`);assert.ok(camp.infantry>0&&camp.archers>0&&camp.cavalry>=0);}
  for(let i=0;i<BANDIT_CAMPS.length;i++)for(let j=i+1;j<BANDIT_CAMPS.length;j++){const a=BANDIT_CAMPS[i],b=BANDIT_CAMPS[j];assert.ok(wrappedCellDistance({col:Math.floor(a.x/128),row:Math.floor(a.y/128)},{col:Math.floor(b.x/128),row:Math.floor(b.y/128)})>=3);}
@@ -38,11 +38,11 @@ test('old six-site saves gain camps once and remain importable with battles in e
  const w=createSolo('Rex');w.camps=w.camps.filter(c=>!c.bandit);const before=structuredClone(w.settlements);normalizeRealm(w);const n=w.camps.length;normalizeRealm(w);assert.equal(w.camps.length,n);assert.deepEqual(w.settlements,before);
  for(const terrain of BATTLE_TERRAINS){const copy=structuredClone(w);beginRaid(copy,'solo-ruler',copy.camps.find(c=>c.bandit)!.id,()=>100);copy.battles[0].terrain=terrain;const imported=validateSave(copy);assert.equal(imported.battles[0].terrain,terrain);assert.ok(imported.camps.length>6);}
 });
-test('shared camp victories deplete defenders, grant hero XP once and preserve story standards',()=>{
+test('bandit victories grant hero XP once, regroup for ten minutes, and do not recover campaign standards',()=>{
  const w=createSolo('Rex'),camp=w.camps.find(c=>c.bandit)!,owner='solo-ruler';let id=10000;
  beginRaid(w,owner,camp.id,()=>++id);const b=w.battles[0];assert.equal(b.defender_faction,camp.faction);assert.equal(b.terrain,battleTerrainAtWorld(camp.x,camp.y));
  w.formations.filter(f=>f.side==='defender').forEach(f=>{f.soldiers=0;f.status='routed';});finishBattle(b,w.formations,'attacker','Army routed');
- settleBattle(w,b.id,owner,()=>++id);const xp=w.heroes![0].experience;assert.equal(xp,b.result!.defender_losses*2+50);assert.equal(camp.infantry+camp.archers+camp.cavalry,0);assert.equal(conquered(w,owner).size,0);assert.equal(nextCampaign(w,owner)?.id,1);assert.equal(w.progress.some(progress=>progress.camp_id===camp.id),false);assert.ok(readiness(w,owner,camp).ratio>0);
+ settleBattle(w,b.id,owner,()=>++id);const xp=w.heroes![0].experience;assert.equal(xp,(camp.infantry+camp.archers+camp.cavalry)*2+50);assert.equal(conquered(w,owner).size,0);assert.equal(nextCampaign(w,owner)?.id,1);assert.ok(Date.parse(w.progress[0].available_at)-Date.now()>599000);assert.ok(readiness(w,owner,camp).ratio>0);
  settleBattle(w,b.id,owner,()=>++id);assert.equal(w.heroes![0].experience,xp);assert.equal(w.reports.length,1);
 });
 test('ten original portraits ship and every faction marker resolves to its commander artwork',()=>{

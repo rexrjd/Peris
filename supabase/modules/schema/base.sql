@@ -40,11 +40,11 @@ create table if not exists public.peris_camps(
 );
 insert into public.peris_camps(id,name,x,y,tier,terrain,infantry,archers,cavalry,description) values
  (1,'The broken standard',305,405,1,'plains',48,18,0,'Deserters have claimed the old crossroads. An ideal first campaign.'),
- (2,'Oakwood raiders',460,155,2,'woods',90,45,12,'Bowmen hide beneath dense oak cover. Keep your cavalry out of the trees.'),
- (3,'The river watch',655,485,2,'river',100,40,15,'A fortified crossing. The shallows slow troops; use the stone bridge.'),
- (4,'Highland warband',790,160,3,'highlands',160,70,24,'Veteran spearmen defend the ridge. High ground favours their archers.'),
- (5,'Ashen legion',910,550,4,'plains',240,110,55,'A rebel legion controls the eastern road. You will need a larger host.'),
- (6,'The fallen capital',605,280,5,'highlands',340,160,80,'Break the last great host and restore the lost province of Peris.')
+ (2,'Oakwood raiders',460,155,4,'woods',90,45,12,'Bowmen hide beneath dense oak cover. Keep your cavalry out of the trees.'),
+ (3,'The river watch',655,485,4,'river',100,40,15,'A fortified crossing. The shallows slow troops; use the stone bridge.'),
+ (4,'Highland warband',790,160,6,'highlands',160,70,24,'Veteran spearmen defend the ridge. High ground favours their archers.'),
+ (5,'Ashen legion',910,550,8,'plains',240,110,55,'A rebel legion controls the eastern road. You will need a larger host.'),
+ (6,'The fallen capital',605,280,10,'highlands',340,160,80,'Break the last great host and restore the lost province of Peris.')
 on conflict(id) do update set name=excluded.name,x=excluded.x,y=excluded.y,tier=excluded.tier,terrain=excluded.terrain,
  infantry=excluded.infantry,archers=excluded.archers,cavalry=excluded.cavalry,description=excluded.description;
 

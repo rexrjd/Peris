@@ -1,6 +1,7 @@
 import {PGlite} from '@electric-sql/pglite';
 import {readFile} from 'node:fs/promises';
 import assert from 'node:assert/strict';
+import {ARTIFACTS} from '../src/features/heroes/domain/artifacts.ts';
 import {npcArtifactDrop} from '../src/features/heroes/domain/battleRewards.ts';
 const db=new PGlite(),u='11111111-1111-4111-8111-111111111111';
 const admin=async sql=>{await db.exec('reset role');return db.exec(sql);};
@@ -9,7 +10,11 @@ const rpc=async(name,args=[])=> (await db.query(`select public.${name}(${args.ma
 try{
  await db.exec(`create schema auth;create table auth.users(id uuid primary key);create role anon;create role authenticated;create role service_role;create function auth.uid()returns uuid language sql as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;grant usage on schema public,auth to authenticated,anon;grant execute on function auth.uid()to authenticated,anon;create publication supabase_realtime`);
  await db.exec(await readFile('supabase/FRESH_INSTALL_V13.sql','utf8'));
- for(const tier of [1,2,3,4,5])for(const camp of [1,1047,1221])for(const bid of [1,2,19,1000000034,1000000000001])assert.equal(await rpc('peris_npc_artifact',[tier,camp,bid]),npcArtifactDrop(tier,camp,bid));
+ for(const tier of [1,2,3,4,5,6,7,8,9,10])for(const camp of [1,1047,1221])for(const bid of [1,2,19,1000000034,1000000000001])assert.equal(await rpc('peris_npc_artifact',[tier,camp,bid]),npcArtifactDrop(tier,camp,bid));
+ for (const [id,item] of Object.entries(ARTIFACTS)) {
+  const row=(await db.query('select * from public.peris_artifact_catalog where id=$1',[id])).rows[0];
+  for(const key of ['attack','defence','power','knowledge','speed']) assert.equal(Number(row[key]),item[key]??0);
+ }
  console.log('PASS · local and online artifact rolls match across every tier and large battle ID');
  await admin(`insert into auth.users values('${u}')`);await login();await rpc('create_player',['Loot QA']);let w=await rpc('peris_snapshot');const army=w.armies[0],hero=w.heroes[0],camp=w.camps.find(c=>c.bandit);
  const win=async()=>{

@@ -2,6 +2,7 @@
   "schema/base.sql",
   "accounts/sessions.sql",
   "empire/schema.sql",
+  "heroes/artifact-catalog.sql",
   "city/city-slots.sql",
   "map/world-bounds.sql",
   "map/world-terrain.sql",
@@ -10,13 +11,11 @@
   "map/peris_army_position.sql",
   "magic/mage-tower.sql",
   "city/population.sql",
-  "army/roster.sql",
   "map/garrisons.sql",
   "map/march-orders.sql",
   "empire/gameplay.sql",
   "campaign/farms.sql",
   "map/bandits.sql",
-  "campaign/camp-schema.sql",
   "heroes/battle-rewards.sql",
   "city/peris_settle.sql",
   "battle/peris_add_formations.sql",
@@ -47,6 +46,5 @@
   "snapshot/peris_map_snapshot.sql",
   "battle/automatic.sql",
   "accounts/policies.sql",
-  "campaign/game-worker.sql",
   "security/permissions.sql"
 ]

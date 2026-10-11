@@ -1,4 +1,5 @@
 import { wrappedCellDistance,wrapWorldCell } from '../../map/domain/dimensions';
+import { CAMPS } from '../../map/domain/camps';
 import { BANDIT_CAMPS } from '../../map/domain/bandits';
 import { battleTerrainAtWorld } from '../../battle/domain/terrain';
 import type { World } from '../../../shared/model/world';
@@ -7,6 +8,17 @@ import { citySlots } from '../../city/domain/slots';
 /** Add new data without replacing existing cities, armies, orders, or saves. */
 export function normalizeRealm(world: World, now = world.server_now, associateOrders = true) {
     if(world.version===6){
+        if (world.camp_balance_version !== 1) {
+            const definitions = new Map([...CAMPS, ...BANDIT_CAMPS].map(camp => [camp.id, camp]));
+            let pending = false;
+            for (const camp of world.camps) {
+                const current = definitions.get(camp.id);
+                if (!current || current.x !== camp.x || current.y !== camp.y || !!current.bandit !== !!camp.bandit) continue;
+                if (world.battles.some(b => b.camp_id === camp.id && b.status === 'active') || world.armies.some(a => a.raid_target_id === camp.id && a.status === 'moving')) { pending = true; continue; }
+                Object.assign(camp, { tier: current.tier, name: current.name, description: current.description, infantry: current.infantry, archers: current.archers, cavalry: current.cavalry });
+            }
+            if (!pending) world.camp_balance_version = 1;
+        }
         const ids=new Set(world.camps.map(c=>c.id));
         for(const camp of BANDIT_CAMPS)if(!ids.has(camp.id)&&!world.settlements.some(s=>wrappedCellDistance(wrapWorldCell(Math.floor(s.x/128),Math.floor(s.y/128)),wrapWorldCell(Math.floor(camp.x/128),Math.floor(camp.y/128)))<=1)&&!world.map_plots?.some(p=>p.col===Math.floor(camp.x/128)&&p.row===Math.floor(camp.y/128)))world.camps.push({...camp});
         for(const camp of world.camps)camp.terrain=battleTerrainAtWorld(camp.x,camp.y);

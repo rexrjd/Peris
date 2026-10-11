@@ -2,14 +2,6 @@
 alter table public.peris_hero_artifacts add column if not exists source_battle_id bigint references public.battles(id) on delete set null;
 create unique index if not exists peris_hero_battle_drop on public.peris_hero_artifacts(owner_id,source_battle_id);
 
-create or replace function public.peris_npc_artifact(p_tier integer,p_camp integer,p_battle bigint)returns text
-language sql immutable set search_path='' as $$
- select pool[1+mod(abs(mod(p_battle,1000003))*17+abs(p_camp::bigint)*31,array_length(pool,1))::integer]
- from(select case when p_tier>=5 then array['warblade','runestaff','plate','windboots','warhelm','crown_seal']
- when p_tier>=3 then array['warblade','runestaff','plate','windboots','warhelm']
- else array['iron_sword','oak_staff','chainmail','circlet','boots','talisman','warhelm']end pool)roll
-$$;
-
 create or replace function public.peris_battle_hero_reward(p_army bigint,p_experience integer,p_camp integer,p_battle bigint)returns jsonb
 language plpgsql security definer set search_path='' as $$
 declare h public.peris_heroes%rowtype;after_xp integer;drop_id bigint;artifact text;tier integer;full_bag boolean:=false;items jsonb:='[]';existing jsonb;faction text;

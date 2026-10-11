@@ -1,9 +1,11 @@
 import type { World } from '../../../shared/model/world';
 import type { Army } from '../../army/domain/types';
+import { ARTIFACTS, type EquipmentSlot } from './artifacts';
+export { ARTIFACTS } from './artifacts';
+export type { EquipmentSlot } from './artifacts';
 
 export type HeroClass = 'knight' | 'ranger' | 'mage';
 export type HeroStat = 'attack' | 'defence' | 'power' | 'knowledge';
-export type EquipmentSlot = 'weapon' | 'armour' | 'head' | 'boots' | 'charm';
 export type Hero = {
     id: number; owner_id: string; army_id: number; name: string; class: HeroClass;
     experience: number; attack: number; defence: number; power: number; knowledge: number;
@@ -14,20 +16,6 @@ export const HERO_CLASSES = {
     ranger: { name: 'Ranger', description: 'Fast marches and balanced command.', attack: 2, defence: 1, power: 1, knowledge: 2 },
     mage: { name: 'Mage', description: 'More mana and stronger spells.', attack: 1, defence: 1, power: 3, knowledge: 2 },
 } as const;
-export const ARTIFACTS: Record<string, { name: string; slot: EquipmentSlot; description: string; attack?: number; defence?: number; power?: number; knowledge?: number; speed?: number }> = {
-    iron_sword: { name: 'Iron oath', slot: 'weapon', description: '+2 Attack', attack: 2 },
-    oak_staff: { name: 'Staff of embers', slot: 'weapon', description: '+2 Spell power', power: 2 },
-    warblade: { name: 'Dawnblade', slot: 'weapon', description: '+4 Attack', attack: 4 },
-    runestaff: { name: 'Staff of the archmage', slot: 'weapon', description: '+4 Spell power', power: 4 },
-    chainmail: { name: 'Guardian mail', slot: 'armour', description: '+2 Defence', defence: 2 },
-    plate: { name: 'Crownforged plate', slot: 'armour', description: '+4 Defence', defence: 4 },
-    circlet: { name: 'Scholar’s circlet', slot: 'head', description: '+2 Knowledge', knowledge: 2 },
-    warhelm: { name: 'Helm of command', slot: 'head', description: '+2 Attack, +1 Defence', attack: 2, defence: 1 },
-    boots: { name: 'Wayfarer’s boots', slot: 'boots', description: '+15% march speed', speed: .15 },
-    windboots: { name: 'Windwalkers', slot: 'boots', description: '+25% march speed', speed: .25 },
-    talisman: { name: 'Amber talisman', slot: 'charm', description: '+1 Spell power, +1 Knowledge', power: 1, knowledge: 1 },
-    crown_seal: { name: 'Seal of the lost crown', slot: 'charm', description: '+2 to all four attributes', attack: 2, defence: 2, power: 2, knowledge: 2 },
-};
 export const EQUIPMENT_SLOTS: EquipmentSlot[] = ['weapon', 'armour', 'head', 'boots', 'charm'];
 export const HERO_STATS: HeroStat[] = ['attack', 'defence', 'power', 'knowledge'];
 export const MAX_HERO_LEVEL = 20;

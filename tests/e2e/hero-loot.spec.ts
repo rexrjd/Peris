@@ -24,11 +24,13 @@ test('victory receipt shows actual rewards and opens the earned item for the cor
  const modal=page.getByRole('dialog',{name:'Battle result'});await expect(modal.getByRole('heading',{name:'Victory',exact:true})).toBeVisible();
  await expect(modal.locator('.result-xp-gain>b')).toHaveText('+'+reward.experience.toLocaleString('en-US'));
  await expect(modal.locator('.result-level-up')).toHaveText(`Level ${reward.level_before} → ${reward.level_after}`);
+ await expect(modal.locator('.result-artifact img')).toHaveAttribute('src',meta.image);
+ await expect.poll(()=>modal.locator('.result-artifact img').evaluate((img:HTMLImageElement)=>img.complete&&img.naturalWidth>0)).toBe(true);
  await expect(modal.locator('.result-artifact')).toContainText(meta.name);await expect(modal.locator('.result-artifact')).toContainText(meta.description);
- await expect(modal.locator('img')).toHaveAttribute('src',heroPortraitUrl('orc','knight',reward.hero_id));
- await expect.poll(()=>modal.locator('img').evaluate((img:HTMLImageElement)=>img.complete&&img.naturalWidth>0)).toBe(true);
+ await expect(modal.locator('.result-hero-line img')).toHaveAttribute('src',heroPortraitUrl('orc','knight',reward.hero_id));
+ await expect.poll(()=>modal.locator('.result-hero-line img').evaluate((img:HTMLImageElement)=>img.complete&&img.naturalWidth>0)).toBe(true);
  const bounds=await modal.boundingBox(),size=page.viewportSize()!;expect(bounds!.x).toBeGreaterThanOrEqual(0);expect(bounds!.x+bounds!.width).toBeLessThanOrEqual(size.width+1);
- await modal.locator('.result-breakdown > summary').click();await expect(modal.locator('.result-units')).toBeVisible();await modal.locator('.result-breakdown > summary').click();
+ await modal.locator('summary').click();await expect(modal.locator('.result-units')).toBeVisible();await modal.locator('summary').click();
  await page.screenshot({path:info.outputPath('victory-rewards.png')});await modal.getByRole('button',{name:'Open equipment',exact:true}).click();
  await expect(page.getByRole('region',{name:'Equipment management'})).toBeVisible();await expect(page.locator('.command-backpack')).toContainText(meta.name);
  await expect(page.locator('.command-artifact-grid>button[aria-pressed=true]')).toContainText(meta.name);

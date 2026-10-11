@@ -2,6 +2,7 @@ import type { World } from '../../../shared/model/world';
 import type { Army } from '../../army/domain/types';
 import type { Camp } from '../../map/domain/types';
 import type { Faction } from '../../factions/domain/factions';
+import { ARTIFACTS, ARTIFACT_POOLS, campLootRarity, type ArtifactRarity } from './artifacts';
 import { awardHeroExperience, heroForArmy, heroLevel, type HeroClass } from './heroes';
 
 export type HeroBattleReward = {
@@ -11,16 +12,10 @@ export type HeroBattleReward = {
     artifacts: { id: number; artifact_id: string }[]; inventory_full: boolean;
 };
 export const ARTIFACT_LIMIT = 200;
-export const ARTIFACT_RARITY = {
-    iron_sword: 'Common', oak_staff: 'Common', chainmail: 'Common', circlet: 'Common',
-    boots: 'Common', talisman: 'Common', warhelm: 'Common',
-    warblade: 'Rare', runestaff: 'Rare', plate: 'Rare', windboots: 'Rare', crown_seal: 'Legendary',
-} as const;
-const COMMON = ['iron_sword', 'oak_staff', 'chainmail', 'circlet', 'boots', 'talisman', 'warhelm'];
-const RARE = ['warblade', 'runestaff', 'plate', 'windboots', 'warhelm'];
+export const ARTIFACT_RARITY: Record<string, ArtifactRarity> = Object.fromEntries(Object.entries(ARTIFACTS).map(([id, item]) => [id, item.rarity]));
 /** Stable reward rolls match SQL and remain unchanged when a report is reopened. */
 export function npcArtifactDrop(tier: number, campId: number, battleId: number) {
-    const pool = tier >= 5 ? [...RARE, 'crown_seal'] : tier >= 3 ? RARE : COMMON;
+    const pool = ARTIFACT_POOLS[campLootRarity(tier)];
     const seed = Math.abs(battleId % 1000003) * 17 + Math.abs(campId) * 31;
     return pool[seed % pool.length];
 }
