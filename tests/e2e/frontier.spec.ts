@@ -113,7 +113,8 @@ test('frontier village recruits, raids, returns, saves farm presets, and survive
     const health = await request.get('/api/frontier/health');
     expect(health.ok()).toBeTruthy();
 
-    await page.goto('/?frontier=1');
+    await page.goto('/');
+    await page.getByRole('link', { name: 'Frontier Wars · Mercenary camps', exact: true }).click();
     const faction = testInfo.project.name.startsWith('mobile') ? 'elf' : 'persian';
     const footName = faction === 'elf' ? 'Leaf Guard' : 'Shield Bearer';
     const riderName = faction === 'elf' ? 'Glade Rider' : 'Steppe Rider';

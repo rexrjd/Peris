@@ -1,5 +1,5 @@
 create or replace function public.peris_challenge(p_defender uuid)returns jsonb language plpgsql security definer set search_path='' as $$
-declare u uuid:=auth.uid();
+declare u uuid:=public.peris_player_id();
 begin
  if u is null or p_defender is null or u=p_defender then raise exception 'Choose another ruler';end if;
  perform 1 from public.players where id in(u,p_defender) order by id for update;

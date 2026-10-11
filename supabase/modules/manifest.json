@@ -1,5 +1,6 @@
 [
   "schema/base.sql",
+  "accounts/sessions.sql",
   "empire/schema.sql",
   "city/city-slots.sql",
   "map/world-bounds.sql",
@@ -36,9 +37,11 @@
   "campaign/peris_claim.sql",
   "city/peris_rename.sql",
   "accounts/create_player.sql",
+  "accounts/login.sql",
   "factions/city-factions.sql",
   "snapshot/peris_snapshot.sql",
   "snapshot/peris_map_snapshot.sql",
   "battle/automatic.sql",
+  "accounts/policies.sql",
   "security/permissions.sql"
 ]

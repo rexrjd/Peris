@@ -20,6 +20,7 @@ drop table if exists public.armies cascade;
 drop table if exists public.buildings cascade;
 drop table if exists public.settlements cascade;
 drop table if exists public.spawn_points cascade;
+drop table if exists public.peris_account_sessions cascade;
 drop table if exists public.players cascade;
 
 drop function if exists public.create_peris_world_for_player() cascade;
@@ -986,7 +987,7 @@ begin
 exception when duplicate_object then null;
 end $$;
 
--- PERIS v7 · Empire prototype. Run this entire file in Supabase SQL Editor.
+-- PERIS v14 · Stable name-only ruler accounts. Run the complete generated file in Supabase SQL Editor.
 -- Requires the v5 schema. Preserves players, settlements, resources and armies.
 -- Safe to run again. No Auth users or campaign data are deleted.
 
@@ -1109,6 +1110,29 @@ create policy "challenge participants" on public.peris_challenges for select to 
 using(attacker_owner_id=auth.uid() or defender_owner_id=auth.uid());
 
 -- Internal helpers are revoked from ALL client roles at the end of the file.
+-- A ruler survives the anonymous browser identity that first created it.
+-- Preserve every existing player UUID and all gameplay foreign keys.
+do $$declare constraint_name text;begin
+ for constraint_name in select conname from pg_constraint
+  where conrelid='public.players'::regclass and contype='f' and confrelid='auth.users'::regclass
+ loop execute format('alter table public.players drop constraint %I',constraint_name);end loop;
+end $$;
+create table if not exists public.peris_account_sessions(
+ auth_id uuid primary key references auth.users(id) on delete cascade,
+ player_id uuid not null references public.players(id) on delete cascade,
+ created_at timestamptz not null default now()
+);
+create index if not exists peris_account_sessions_player on public.peris_account_sessions(player_id);
+alter table public.peris_account_sessions enable row level security;
+revoke all on public.peris_account_sessions from public,anon,authenticated;
+
+-- Legacy sessions keep their original ruler. New sessions resolve to the ruler
+-- explicitly selected by name; clients cannot read or write these bindings.
+create or replace function public.peris_player_id()returns uuid
+language sql stable security definer set search_path='' as $$
+ select coalesce((select player_id from public.peris_account_sessions where auth_id=auth.uid()),auth.uid())
+$$;
+
 -- Preserve the existing realm; permit additional independently owned cities/armies.
 alter table public.settlements drop constraint if exists settlements_owner_id_key;
 alter table public.armies drop constraint if exists armies_owner_id_key;
@@ -1201,7 +1225,7 @@ do $$declare t text;begin
  execute format('revoke all on public.%I from public,anon,authenticated',t);
  execute format('grant select on public.%I to authenticated',t);
  execute format('drop policy if exists "own gameplay data" on public.%I',t);
- execute format('create policy "own gameplay data" on public.%I for select to authenticated using(owner_id=auth.uid())',t);
+ execute format('create policy "own gameplay data" on public.%I for select to authenticated using(owner_id=public.peris_player_id())',t);
  end loop;
 end $$;
 alter table public.peris_artifact_catalog enable row level security;
@@ -1222,7 +1246,7 @@ create table if not exists public.peris_city_slots (
 );
 alter table public.peris_city_slots enable row level security;
 drop policy if exists "own city slots" on public.peris_city_slots;
-create policy "own city slots" on public.peris_city_slots for select to authenticated using(exists(select 1 from public.settlements s where s.id=settlement_id and s.owner_id=auth.uid()));
+create policy "own city slots" on public.peris_city_slots for select to authenticated using(exists(select 1 from public.settlements s where s.id=settlement_id and s.owner_id=public.peris_player_id()));
 revoke all on public.peris_city_slots from public,anon,authenticated;
 grant select on public.peris_city_slots to authenticated;
 create or replace function public.peris_city_economy(p_sid bigint) returns void language plpgsql security definer set search_path='' as $$
@@ -1258,7 +1282,7 @@ begin
  perform public.peris_city_economy(p_sid);
 end $$;
 create or replace function public.peris_queue_slot(p_slot integer,p_type text default null) returns jsonb language plpgsql security definer set search_path='' as $$
-declare u uuid:=auth.uid();s public.settlements%rowtype;l integer;main integer;t text;factor numeric;cw numeric;cs numeric;cf numeric;cg numeric;
+declare u uuid:=public.peris_player_id();s public.settlements%rowtype;l integer;main integer;t text;factor numeric;cw numeric;cs numeric;cf numeric;cg numeric;
 begin
  if u is null then raise exception 'Authentication required';end if;
  perform public.peris_settle(u);
@@ -1418,7 +1442,7 @@ create index if not exists peris_map_plots_settlement_idx on public.peris_map_pl
 create index if not exists peris_map_plots_bounds_idx on public.peris_map_plots(row,col);
 alter table public.peris_map_plots enable row level security;
 drop policy if exists "own map plots" on public.peris_map_plots;
-create policy "own map plots" on public.peris_map_plots for select to authenticated using(owner_id=auth.uid());
+create policy "own map plots" on public.peris_map_plots for select to authenticated using(owner_id=public.peris_player_id());
 revoke all on public.peris_map_plots from public,anon,authenticated;
 grant select on public.peris_map_plots to authenticated;
 alter table public.peris_orders drop constraint if exists peris_orders_kind_check;
@@ -1464,7 +1488,7 @@ end $$;
 
 create or replace function public.peris_claim_field(p_col integer,p_row integer) returns jsonb
 language plpgsql security definer set search_path='' as $$
-declare u uuid:=auth.uid();s public.settlements%rowtype;c integer;r integer;home_col integer;home_row integer;distance integer;owned integer;population integer;allowance integer;
+declare u uuid:=public.peris_player_id();s public.settlements%rowtype;c integer;r integer;home_col integer;home_row integer;distance integer;owned integer;population integer;allowance integer;
 begin
  if u is null then raise exception 'Authentication required';end if;
  if p_col is null or p_row is null then raise exception 'Choose whole field coordinates';end if;
@@ -1497,7 +1521,7 @@ end $$;
 
 create or replace function public.peris_queue_field(p_col integer,p_row integer,p_type text) returns jsonb
 language plpgsql security definer set search_path='' as $$
-declare u uuid:=auth.uid();s public.settlements%rowtype;p public.peris_map_plots%rowtype;c integer;r integer;factor numeric;cw numeric;cs numeric;cf numeric;cg numeric;
+declare u uuid:=public.peris_player_id();s public.settlements%rowtype;p public.peris_map_plots%rowtype;c integer;r integer;factor numeric;cw numeric;cs numeric;cf numeric;cg numeric;
 begin
  if u is null then raise exception 'Authentication required';end if;
  if p_col is null or p_row is null or p_type is null or p_type not in ('lumber','quarry','farm','market') then raise exception 'Choose a valid resource building and field';end if;
@@ -1605,11 +1629,11 @@ alter table public.peris_spell_research enable row level security;
 drop policy if exists "spell catalog" on public.peris_spell_catalog;
 create policy "spell catalog" on public.peris_spell_catalog for select to authenticated using(true);
 drop policy if exists "own researched spells" on public.peris_spell_research;
-create policy "own researched spells" on public.peris_spell_research for select to authenticated using(exists(select 1 from public.settlements s where s.id=settlement_id and s.owner_id=auth.uid()));
+create policy "own researched spells" on public.peris_spell_research for select to authenticated using(exists(select 1 from public.settlements s where s.id=settlement_id and s.owner_id=public.peris_player_id()));
 revoke all on public.peris_spell_catalog,public.peris_spell_research from public,anon,authenticated;
 grant select on public.peris_spell_catalog,public.peris_spell_research to authenticated;
 create or replace function public.peris_research_spell(p_spell text) returns jsonb language plpgsql security definer set search_path='' as $$
-declare u uuid:=auth.uid();s public.settlements%rowtype;sp public.peris_spell_catalog%rowtype;l integer;
+declare u uuid:=public.peris_player_id();s public.settlements%rowtype;sp public.peris_spell_catalog%rowtype;l integer;
 begin
  if u is null then raise exception 'Authentication required';end if;
  perform public.peris_settle(u);
@@ -1626,7 +1650,7 @@ begin
  return jsonb_build_object('ok',true);
 end $$;
 create or replace function public.peris_cast_spell(p_battle_id bigint,p_spell text,p_target bigint default null) returns jsonb language plpgsql security definer set search_path='' as $$
-declare u uuid:=auth.uid();b public.battles%rowtype;s public.settlements%rowtype;sp public.peris_spell_catalog%rowtype;f public.battle_formations%rowtype;t public.battle_formations%rowtype;
+declare u uuid:=public.peris_player_id();b public.battles%rowtype;s public.settlements%rowtype;sp public.peris_spell_catalog%rowtype;f public.battle_formations%rowtype;t public.battle_formations%rowtype;
  own_side text;friend boolean;single_target boolean;l integer;mana integer;ready numeric;idx integer:=0;cas integer;troops integer;mor numeric;alive_a boolean;alive_d boolean;hero_bonus jsonb;
 begin
  select * into b from public.battles where id=p_battle_id for update;
@@ -1778,7 +1802,7 @@ alter table public.peris_garrisons enable row level security;
 revoke all on public.peris_garrisons from public,anon,authenticated;
 grant select on public.peris_garrisons to authenticated;
 drop policy if exists "own garrisons" on public.peris_garrisons;
-create policy "own garrisons" on public.peris_garrisons for select to authenticated using(owner_id=auth.uid());
+create policy "own garrisons" on public.peris_garrisons for select to authenticated using(owner_id=public.peris_player_id());
 
 -- New legions keep the familiar offset without crossing their village's field edge.
 -- Existing saved coordinates are never relocated by this helper.
@@ -1857,7 +1881,7 @@ end $$;
 
 create or replace function public.peris_collect_garrison(p_army bigint,p_troops jsonb default null)
 returns jsonb language plpgsql security definer set search_path='' as $$
-declare u uuid:=auth.uid();
+declare u uuid:=public.peris_player_id();
 begin
  if u is null then raise exception 'Authentication required';end if;
  return public.peris_garrison_collect_for(u,p_army,p_troops);
@@ -1889,7 +1913,7 @@ $$;
 
 create or replace function public.peris_cancel_march(p_army bigint,p_sent_at timestamptz)returns jsonb
 language plpgsql security definer set search_path='' as $$
-declare u uuid:=auth.uid();a public.armies%rowtype;
+declare u uuid:=public.peris_player_id();a public.armies%rowtype;
 begin
  if u is null then raise exception 'Authentication required';end if;
  perform public.peris_settle(u);
@@ -1909,7 +1933,7 @@ end $$;
 
 create or replace function public.peris_prepare_raid(p_camp integer,p_path jsonb default null,p_troops jsonb default null)returns jsonb
 language plpgsql security definer set search_path='' as $$
-declare u uuid:=auth.uid();a public.armies%rowtype;c public.peris_camps%rowtype;inf integer;arc integer;cav integer;previous_target text;
+declare u uuid:=public.peris_player_id();a public.armies%rowtype;c public.peris_camps%rowtype;inf integer;arc integer;cav integer;previous_target text;
 begin
  if u is null then raise exception 'Authentication required';end if;
  perform public.peris_settle(u);
@@ -2056,7 +2080,7 @@ begin
 end $$;
 
 create or replace function public.peris_empire_command(p_command jsonb)returns jsonb language plpgsql security definer set search_path='' as $$
-declare u uuid:=auth.uid();command_kind text:=p_command->>'type';s public.settlements%rowtype;a public.armies%rowtype;t public.armies%rowtype;h public.peris_heroes%rowtype;item public.peris_hero_artifacts%rowtype;
+declare u uuid:=public.peris_player_id();command_kind text:=p_command->>'type';s public.settlements%rowtype;a public.armies%rowtype;t public.armies%rowtype;h public.peris_heroes%rowtype;item public.peris_hero_artifacts%rowtype;
  qty integer;main integer;count_cities integer;count_armies integer;cost integer;reason text;distance numeric;hero_class text;hero_name text;new_army_id bigint;stat text;inf integer;arc integer;cav integer;position jsonb;target jsonb;camp public.peris_camps%rowtype;
 begin
  if u is null then raise exception 'Authentication required';end if;
@@ -2191,9 +2215,9 @@ alter table public.peris_campaign_farms enable row level security;
 revoke all on public.peris_campaign_farm_lists,public.peris_campaign_farms from public,anon,authenticated;
 grant select on public.peris_campaign_farm_lists,public.peris_campaign_farms to authenticated;
 drop policy if exists "own campaign farm lists" on public.peris_campaign_farm_lists;
-create policy "own campaign farm lists" on public.peris_campaign_farm_lists for select to authenticated using(owner_id=auth.uid());
+create policy "own campaign farm lists" on public.peris_campaign_farm_lists for select to authenticated using(owner_id=public.peris_player_id());
 drop policy if exists "own campaign farms" on public.peris_campaign_farms;
-create policy "own campaign farms" on public.peris_campaign_farms for select to authenticated using(owner_id=auth.uid());
+create policy "own campaign farms" on public.peris_campaign_farms for select to authenticated using(owner_id=public.peris_player_id());
 
 create or replace function public.peris_campaign_farm_troops(p_troops jsonb,p_allow_empty boolean)
 returns jsonb language plpgsql immutable set search_path='' as $$
@@ -2213,7 +2237,7 @@ end $$;
 create or replace function public.peris_campaign_farm_command(p_command jsonb)
 returns jsonb language plpgsql security definer set search_path='' as $$
 declare
- u uuid:=auth.uid();kind text:=p_command->>'type';v_entry_id bigint;v_list_id bigint;v_camp_id integer;v_army_id bigint;
+ u uuid:=public.peris_player_id();kind text:=p_command->>'type';v_entry_id bigint;v_list_id bigint;v_camp_id integer;v_army_id bigint;
  preset jsonb;list_name text;losses_only boolean;list public.peris_campaign_farm_lists;farm public.peris_campaign_farms;v_duplicate_id bigint;
  started integer:=0;skipped jsonb:='[]';batch_path jsonb;previous_army text;previous_city text;target_army public.armies%rowtype;
 begin
@@ -3047,7 +3071,7 @@ begin
 end $$;
 
 create or replace function public.sync_my_state()returns jsonb language plpgsql security definer set search_path='' as $$
-declare u uuid:=auth.uid();a public.armies%rowtype;
+declare u uuid:=public.peris_player_id();a public.armies%rowtype;
 begin
  if u is null then raise exception 'Authentication required';end if;
  perform public.peris_settle(u);
@@ -3062,7 +3086,7 @@ begin
  return jsonb_build_object('ok',true);
 end $$;
 create or replace function public.peris_queue_upgrade(p_type text) returns jsonb language plpgsql security definer set search_path='' as $$
-declare u uuid:=auth.uid();s public.settlements%rowtype;l integer;factor numeric;cw numeric;cs numeric;cf numeric;cg numeric;
+declare u uuid:=public.peris_player_id();s public.settlements%rowtype;l integer;factor numeric;cw numeric;cs numeric;cf numeric;cg numeric;
 begin
  if u is null then raise exception 'Authentication required';end if;
  if p_type is null or p_type not in ('market','wall','lumber','quarry','farm') then raise exception 'Choose a building plot for this building';end if;
@@ -3085,7 +3109,7 @@ begin
 end $$;
 
 create or replace function public.peris_queue_recruit(p_type text,p_quantity integer) returns jsonb language plpgsql security definer set search_path='' as $$
-declare u uuid:=auth.uid();s public.settlements%rowtype;a public.armies%rowtype;l integer;at_time timestamptz;duration numeric;cw integer;cs integer;cf integer;cg integer;queued integer;home jsonb;
+declare u uuid:=public.peris_player_id();s public.settlements%rowtype;a public.armies%rowtype;l integer;at_time timestamptz;duration numeric;cw integer;cs integer;cf integer;cg integer;queued integer;home jsonb;
 begin
  if u is null then raise exception 'Authentication required';end if;
  if p_type is null or p_type not in ('infantry','archers','cavalry') or p_quantity is null or p_quantity<1 or p_quantity>200 then raise exception 'Choose between 1 and 200 soldiers';end if;
@@ -3113,7 +3137,7 @@ end $$;
 
 create or replace function public.peris_march(p_target_x integer,p_target_y integer,p_path jsonb)returns jsonb
 language plpgsql security definer set search_path='' as $$
-declare u uuid:=auth.uid();a public.armies%rowtype;position jsonb;point jsonb;route jsonb;
+declare u uuid:=public.peris_player_id();a public.armies%rowtype;position jsonb;point jsonb;route jsonb;
  tx integer:=public.peris_wrap_world(p_target_x);ty integer:=public.peris_wrap_world(p_target_y);
  x numeric;y numeric;px numeric;py numeric;cx integer;cy integer;pcx integer;pcy integer;
  distance numeric:=0;segment numeric;seconds numeric;count_points integer;ordinal integer:=0;raid_target integer:=nullif(current_setting('peris.raid_target',true),'')::integer;
@@ -3170,7 +3194,7 @@ end $$;
 -- field so all traversed cells are validated by the authoritative land marcher.
 create or replace function public.move_army(p_target_x integer,p_target_y integer)returns jsonb
 language plpgsql security definer set search_path='' as $$
-declare u uuid:=auth.uid();a public.armies%rowtype;position jsonb;route jsonb;x numeric;y numeric;
+declare u uuid:=public.peris_player_id();a public.armies%rowtype;position jsonb;route jsonb;x numeric;y numeric;
  tx integer:=greatest(-12736,least(12736,p_target_x));ty integer:=greatest(-12736,least(12736,p_target_y));steps integer;i integer;
 begin
  if u is null then raise exception 'Authentication required';end if;
@@ -3193,7 +3217,7 @@ begin
 end $$;
 
 create or replace function public.peris_ready(p_battle_id bigint) returns jsonb language plpgsql security definer set search_path='' as $$
-declare u uuid:=auth.uid();b public.battles%rowtype;
+declare u uuid:=public.peris_player_id();b public.battles%rowtype;
 begin
  select * into b from public.battles where id=p_battle_id for update;
  if u is null or b.id is null or (u is distinct from b.attacker_owner_id and u is distinct from b.defender_owner_id) then raise exception 'Not your battle';end if;
@@ -3201,7 +3225,7 @@ begin
  return jsonb_build_object('ok',true);
 end $$;
 create or replace function public.peris_order(p_battle_id bigint,p_order jsonb) returns jsonb language plpgsql security definer set search_path='' as $$
-declare u uuid:=auth.uid();b public.battles%rowtype;f public.battle_formations%rowtype;t public.battle_formations%rowtype;k text:=p_order->>'kind';px numeric;py numeric;n integer;i integer:=0;col integer;face numeric;cx numeric;cy numeric;spacing numeric;ang numeric;
+declare u uuid:=public.peris_player_id();b public.battles%rowtype;f public.battle_formations%rowtype;t public.battle_formations%rowtype;k text:=p_order->>'kind';px numeric;py numeric;n integer;i integer:=0;col integer;face numeric;cx numeric;cy numeric;spacing numeric;ang numeric;
 begin
  select * into b from public.battles where id=p_battle_id for update;
  if u is null or b.id is null or (u is distinct from b.attacker_owner_id and u is distinct from b.defender_owner_id) then raise exception 'Not your battle';end if;
@@ -3309,7 +3333,7 @@ begin
 end $$;
 
 create or replace function public.peris_tick(p_battle_id bigint)returns jsonb language plpgsql security definer set search_path='' as $$
-declare u uuid:=auth.uid();b public.battles%rowtype;f public.battle_formations%rowtype;t public.battle_formations%rowtype;threat public.battle_formations%rowtype;
+declare u uuid:=public.peris_player_id();b public.battles%rowtype;f public.battle_formations%rowtype;t public.battle_formations%rowtype;threat public.battle_formations%rowtype;
  bw numeric:=1200*sqrt(5);bh numeric:=700*sqrt(5);remain numeric;processed numeric;dt numeric;dx numeric;dy numeric;distance numeric;speed numeric;reach numeric;move_step numeric;direction numeric;turn numeric;contact numeric;minimum numeric;push numeric;interval_sec numeric;ranged boolean;
  gf jsonb;gt jsonb;snapshot jsonb;positions jsonb;correction jsonb;pending jsonb;entry jsonb;pair record;rate numeric;flank numeric;charge numeric;matchup numeric;stance_mult numeric;brace numeric;cover numeric;elevation numeric;melee_arc numeric;defence numeric;difficulty_mult numeric;relative numeric;damage numeric;cas integer;mor_loss numeric;alive_a integer;alive_d integer;strength_a integer;strength_d integer;own_side text;average numeric;
 begin
@@ -3427,7 +3451,7 @@ begin
  return jsonb_build_object('ok',true);
 end $$;
 create or replace function public.peris_rally(p_battle_id bigint) returns jsonb language plpgsql security definer set search_path='' as $$
-declare u uuid:=auth.uid();b public.battles%rowtype;side_name text;
+declare u uuid:=public.peris_player_id();b public.battles%rowtype;side_name text;
 begin
  select * into b from public.battles where id=p_battle_id for update;
  if u is null or b.id is null or (u is distinct from b.attacker_owner_id and u is distinct from b.defender_owner_id)then raise exception 'Not your battle';end if;
@@ -3441,7 +3465,7 @@ begin
 end $$;
 
 create or replace function public.retreat_from_battle(p_battle_id bigint)returns jsonb language plpgsql security definer set search_path='' as $$
-declare u uuid:=auth.uid();b public.battles%rowtype;
+declare u uuid:=public.peris_player_id();b public.battles%rowtype;
 begin
  select * into b from public.battles where id=p_battle_id for update;
  if u is null or b.id is null or (u is distinct from b.attacker_owner_id and u is distinct from b.defender_owner_id)then raise exception 'Not your battle';end if;
@@ -3450,7 +3474,7 @@ begin
 end $$;
 
 create or replace function public.peris_challenge(p_defender uuid)returns jsonb language plpgsql security definer set search_path='' as $$
-declare u uuid:=auth.uid();
+declare u uuid:=public.peris_player_id();
 begin
  if u is null or p_defender is null or u=p_defender then raise exception 'Choose another ruler';end if;
  perform 1 from public.players where id in(u,p_defender) order by id for update;
@@ -3462,7 +3486,7 @@ begin
 end $$;
 
 create or replace function public.peris_respond(p_id bigint,p_accept boolean)returns jsonb language plpgsql security definer set search_path='' as $$
-declare u uuid:=auth.uid();c public.peris_challenges%rowtype;a public.armies%rowtype;d public.armies%rowtype;bid bigint;
+declare u uuid:=public.peris_player_id();c public.peris_challenges%rowtype;a public.armies%rowtype;d public.armies%rowtype;bid bigint;
 begin
  select * into c from public.peris_challenges where id=p_id for update;
  if u is null or c.id is null or c.defender_owner_id<>u then raise exception 'Not your invitation';end if;
@@ -3487,7 +3511,7 @@ begin
 end $$;
 
 create or replace function public.peris_claim(p_quest_id text)returns jsonb language plpgsql security definer set search_path='' as $$
-declare u uuid:=auth.uid();p public.players%rowtype;cw integer;cs integer;cf integer;cg integer;
+declare u uuid:=public.peris_player_id();p public.players%rowtype;cw integer;cs integer;cf integer;cg integer;
 begin
  if u is null then raise exception 'Authentication required';end if;perform public.peris_settle(u);select * into p from public.players where id=u for update;
  if exists(select 1 from public.peris_claims where owner_id=u and quest_id=p_quest_id)then raise exception 'Reward already claimed';end if;
@@ -3502,9 +3526,9 @@ begin
 end $$;
 create or replace function public.peris_rename(p_name text)returns jsonb language plpgsql security definer set search_path='' as $$
 begin
- if auth.uid() is null then raise exception 'Authentication required';end if;
+ if public.peris_player_id() is null then raise exception 'Authentication required';end if;
  if p_name is null or length(btrim(p_name))<2 or length(btrim(p_name))>32 then raise exception 'Use a name of 2-32 characters';end if;
- update public.settlements set name=btrim(p_name)where id=public.peris_city_id(auth.uid());return jsonb_build_object('ok',true);
+ update public.settlements set name=btrim(p_name)where id=public.peris_city_id(public.peris_player_id());return jsonb_build_object('ok',true);
 end $$;
 
 -- New players receive all eight structures; existing players keep their existing troops.
@@ -3518,6 +3542,11 @@ create or replace function public.create_player(p_display_name text)returns json
 declare u uuid:=auth.uid();n text:=btrim(p_display_name);sp public.spawn_points%rowtype;candidate public.spawn_points%rowtype;sid bigint;land bytea;cx integer;cy integer;home jsonb;
 begin
  if u is null then raise exception 'Authentication required';end if;
+ -- Older clients may retry allocation after a name-based account recovery.
+ -- The guard also keeps the standalone V10-V13 signup hotfix compatible.
+ if to_regprocedure('public.peris_player_id()') is not null then
+  execute 'select public.peris_player_id()'into u;
+ end if;
  if exists(select 1 from public.players where id=u)then return jsonb_build_object('ok',true);end if;
  if n is null or n!~'^[A-Za-z0-9 _-]{2,20}$'then raise exception 'Use 2-20 letters, numbers, spaces, _ or -';end if;
  -- Try sites in ID order before running proximity checks. A single sorted
@@ -3557,6 +3586,38 @@ begin
 exception when unique_violation then raise exception 'That ruler name is already taken';
 end $$;
 
+-- Intentionally name-only: entering an existing name grants that ruler's control.
+create or replace function public.peris_login(p_display_name text)returns jsonb
+language plpgsql security definer set search_path='' as $$
+declare u uuid:=auth.uid();n text:=btrim(p_display_name);r public.players%rowtype;bound uuid;created boolean:=false;
+begin
+ if u is null then raise exception 'Authentication required' using errcode='42501';end if;
+ if n is null or n!~'^[A-Za-z0-9 _-]{2,20}$'then
+  raise exception 'Use 2-20 letters, numbers, spaces, _ or -' using errcode='22023';end if;
+ -- Serialize this browser identity first, then the requested name. Concurrent
+ -- first logins with the same name reuse one ruler and one starting estate.
+ perform pg_advisory_xact_lock(hashtextextended(u::text,72215));
+ select player_id into bound from public.peris_account_sessions where auth_id=u;
+ if bound is null and exists(select 1 from public.players where id=u)then bound:=u;end if;
+ if bound is not null then
+  select * into r from public.players where id=bound;
+  if lower(r.display_name)<>lower(n)then
+   raise exception 'Choose a fresh browser session to switch rulers' using errcode='PT409';end if;
+ else
+  perform pg_advisory_xact_lock(hashtextextended(lower(n),72214));
+  select * into r from public.players where lower(display_name)=lower(n);
+  if r.id is null then
+   perform public.create_player(n);
+   select * into r from public.players where id=u;
+   created:=true;
+  end if;
+ end if;
+ if r.id is null then raise exception 'The ruler account could not be opened';end if;
+ insert into public.peris_account_sessions(auth_id,player_id)values(u,r.id)
+ on conflict(auth_id)do nothing;
+ return jsonb_build_object('player_id',r.id,'display_name',r.display_name,'created',created);
+end $$;
+
 -- Low-poly city factions and explicit owner-scoped prototype debug controls.
 alter table public.settlements add column if not exists faction text not null default 'roman';
 alter table public.settlements drop constraint if exists settlements_faction_check;
@@ -3567,14 +3628,14 @@ alter table public.peris_debug_config enable row level security;
 revoke all on public.peris_debug_config from public,anon,authenticated;
 -- This admin-owned flag can disable instant cheats without disabling faction selection.
 create or replace function public.peris_set_faction(p_faction text)returns void language plpgsql security definer set search_path='' as $$
-declare u uuid:=auth.uid();
+declare u uuid:=public.peris_player_id();
 begin
  if u is null then raise exception 'Authentication required';end if;
  if p_faction is null or p_faction not in ('roman','spartan','persian','egyptian','orc','elf','dwarf','gnome','pandaren','undead','demon')then raise exception 'Unknown faction';end if;
  update public.settlements set faction=p_faction where id=public.peris_city_id(u);if not found then raise exception 'Settlement missing';end if;
 end $$;
 create or replace function public.peris_debug_city(p_action text,p_target text default null,p_value integer default null)returns void language plpgsql security definer set search_path='' as $$
-declare u uuid:=auth.uid();s public.settlements%rowtype;c public.peris_city_slots%rowtype;b public.buildings%rowtype;target_slot integer;l integer;max_level integer;lost_magic boolean:=false;count_slots integer;
+declare u uuid:=public.peris_player_id();s public.settlements%rowtype;c public.peris_city_slots%rowtype;b public.buildings%rowtype;target_slot integer;l integer;max_level integer;lost_magic boolean:=false;count_slots integer;
 begin
  if u is null then raise exception 'Authentication required';end if;
  if not coalesce((select enabled from public.peris_debug_config where id),false)then raise exception 'Debug tools are disabled';end if;
@@ -3621,7 +3682,7 @@ end $$;
 revoke all on function public.peris_set_faction(text),public.peris_debug_city(text,text,integer) from public,anon;
 grant execute on function public.peris_set_faction(text),public.peris_debug_city(text,text,integer) to authenticated;
 create or replace function public.peris_snapshot()returns jsonb language plpgsql security definer set search_path='' as $$
-declare u uuid:=auth.uid();result jsonb;
+declare u uuid:=public.peris_player_id();result jsonb;
 begin
  if u is null then raise exception 'Authentication required';end if;
  perform public.peris_city_migrate(s.id) from public.settlements s where s.owner_id=u;
@@ -3671,7 +3732,7 @@ language sql immutable set search_path='' as $$
 $$;
 create or replace function public.peris_map_snapshot(p_min_x integer,p_min_y integer,p_max_x integer,p_max_y integer)
 returns jsonb language plpgsql security definer set search_path='' as $$
-declare u uuid:=auth.uid();min_x integer:=p_min_x;min_y integer:=p_min_y;max_x integer:=p_max_x;max_y integer:=p_max_y;result jsonb;
+declare u uuid:=public.peris_player_id();min_x integer:=p_min_x;min_y integer:=p_min_y;max_x integer:=p_max_x;max_y integer:=p_max_y;result jsonb;
 begin
  if u is null then raise exception 'Authentication required';end if;
  if min_x is null or min_y is null or max_x is null or max_y is null
@@ -3845,6 +3906,28 @@ begin
  if choice is not null then perform public.peris_cast_spell_for(owner,b.id,choice,target_id);end if;
  end loop;
 end $$;
+-- Rewrite the existing ownership predicates, preserving every policy name,
+-- role, command and other condition. This includes the original battle policies
+-- on upgraded databases, not only policies declared in this release's modules.
+do $$declare p record;predicate text;check_predicate text;statement text;begin
+ for p in select pol.polname,ns.nspname,t.relname,
+  pg_get_expr(pol.polqual,pol.polrelid)as qual,
+  pg_get_expr(pol.polwithcheck,pol.polrelid)as check_qual
+  from pg_policy pol join pg_class t on t.oid=pol.polrelid
+  join pg_namespace ns on ns.oid=t.relnamespace where ns.nspname='public'
+  and (left(t.relname,6)='peris_' or t.relname in('players','spawn_points','settlements','buildings','armies','battles','battle_formations'))
+ loop
+  predicate:=replace(p.qual,'auth.uid()','public.peris_player_id()');
+  check_predicate:=replace(p.check_qual,'auth.uid()','public.peris_player_id()');
+  if predicate is distinct from p.qual or check_predicate is distinct from p.check_qual then
+   statement:=format('alter policy %I on %I.%I',p.polname,p.nspname,p.relname);
+   if predicate is not null then statement:=statement||' using ('||predicate||')';end if;
+   if check_predicate is not null then statement:=statement||' with check ('||check_predicate||')';end if;
+   execute statement;
+  end if;
+ end loop;
+end $$;
+
 -- Retire v4/v5 bypasses: clients cannot use instant upgrades, instant recruitment,
 -- unaccepted challenges, or the old tactical simulation to circumvent v6 rules.
 revoke all on function public.upgrade_building(text) from public,anon,authenticated;
@@ -3864,6 +3947,9 @@ grant execute on function public.create_player(text),public.sync_my_state(),publ
 grant execute on function public.peris_empire_command(jsonb)to authenticated;
 grant execute on function public.peris_campaign_farm_command(jsonb)to authenticated;
 grant execute on function public.peris_collect_garrison(bigint,jsonb)to authenticated;
+-- The argument-free identity helper is required by RLS; it exposes only the
+-- caller's current ruler UUID. Session bindings themselves remain inaccessible.
+grant execute on function public.peris_player_id(),public.peris_login(text)to authenticated;
 grant execute on function public.peris_claim_field(integer,integer),public.peris_queue_field(integer,integer,text),public.peris_set_faction(text),public.peris_debug_city(text,text,integer),public.peris_snapshot(),public.peris_map_snapshot(integer,integer,integer,integer),public.peris_march(integer,integer,jsonb),public.peris_queue_upgrade(text),public.peris_queue_slot(integer,text),public.peris_research_spell(text),public.peris_cast_spell(bigint,text,bigint),public.peris_queue_recruit(text,integer),public.peris_raid(integer),public.peris_ready(bigint),
  public.peris_order(bigint,jsonb),public.peris_tick(bigint),public.peris_rally(bigint),public.peris_challenge(uuid),public.peris_respond(bigint,boolean),public.peris_claim(text),public.peris_rename(text)to authenticated;
 
@@ -3872,5 +3958,6 @@ do $$declare t text;begin
  begin execute format('alter publication supabase_realtime add table public.%I',t);exception when duplicate_object then null;end;
  end loop;
 end $$;
+notify pgrst,'reload schema';
 
 commit;

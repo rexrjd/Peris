@@ -1,6 +1,6 @@
 create or replace function public.peris_march(p_target_x integer,p_target_y integer,p_path jsonb)returns jsonb
 language plpgsql security definer set search_path='' as $$
-declare u uuid:=auth.uid();a public.armies%rowtype;position jsonb;point jsonb;route jsonb;
+declare u uuid:=public.peris_player_id();a public.armies%rowtype;position jsonb;point jsonb;route jsonb;
  tx integer:=public.peris_wrap_world(p_target_x);ty integer:=public.peris_wrap_world(p_target_y);
  x numeric;y numeric;px numeric;py numeric;cx integer;cy integer;pcx integer;pcy integer;
  distance numeric:=0;segment numeric;seconds numeric;count_points integer;ordinal integer:=0;raid_target integer:=nullif(current_setting('peris.raid_target',true),'')::integer;

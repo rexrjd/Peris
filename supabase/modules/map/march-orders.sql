@@ -14,7 +14,7 @@ $$;
 
 create or replace function public.peris_cancel_march(p_army bigint,p_sent_at timestamptz)returns jsonb
 language plpgsql security definer set search_path='' as $$
-declare u uuid:=auth.uid();a public.armies%rowtype;
+declare u uuid:=public.peris_player_id();a public.armies%rowtype;
 begin
  if u is null then raise exception 'Authentication required';end if;
  perform public.peris_settle(u);
@@ -34,7 +34,7 @@ end $$;
 
 create or replace function public.peris_prepare_raid(p_camp integer,p_path jsonb default null,p_troops jsonb default null)returns jsonb
 language plpgsql security definer set search_path='' as $$
-declare u uuid:=auth.uid();a public.armies%rowtype;c public.peris_camps%rowtype;inf integer;arc integer;cav integer;previous_target text;
+declare u uuid:=public.peris_player_id();a public.armies%rowtype;c public.peris_camps%rowtype;inf integer;arc integer;cav integer;previous_target text;
 begin
  if u is null then raise exception 'Authentication required';end if;
  perform public.peris_settle(u);

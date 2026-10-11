@@ -2,7 +2,7 @@
 -- field so all traversed cells are validated by the authoritative land marcher.
 create or replace function public.move_army(p_target_x integer,p_target_y integer)returns jsonb
 language plpgsql security definer set search_path='' as $$
-declare u uuid:=auth.uid();a public.armies%rowtype;position jsonb;route jsonb;x numeric;y numeric;
+declare u uuid:=public.peris_player_id();a public.armies%rowtype;position jsonb;route jsonb;x numeric;y numeric;
  tx integer:=greatest(-12736,least(12736,p_target_x));ty integer:=greatest(-12736,least(12736,p_target_y));steps integer;i integer;
 begin
  if u is null then raise exception 'Authentication required';end if;

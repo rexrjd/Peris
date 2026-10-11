@@ -1,5 +1,5 @@
 create or replace function public.peris_snapshot()returns jsonb language plpgsql security definer set search_path='' as $$
-declare u uuid:=auth.uid();result jsonb;
+declare u uuid:=public.peris_player_id();result jsonb;
 begin
  if u is null then raise exception 'Authentication required';end if;
  perform public.peris_city_migrate(s.id) from public.settlements s where s.owner_id=u;

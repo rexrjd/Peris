@@ -8,14 +8,14 @@ alter table public.peris_debug_config enable row level security;
 revoke all on public.peris_debug_config from public,anon,authenticated;
 -- This admin-owned flag can disable instant cheats without disabling faction selection.
 create or replace function public.peris_set_faction(p_faction text)returns void language plpgsql security definer set search_path='' as $$
-declare u uuid:=auth.uid();
+declare u uuid:=public.peris_player_id();
 begin
  if u is null then raise exception 'Authentication required';end if;
  if p_faction is null or p_faction not in ('roman','spartan','persian','egyptian','orc','elf','dwarf','gnome','pandaren','undead','demon')then raise exception 'Unknown faction';end if;
  update public.settlements set faction=p_faction where id=public.peris_city_id(u);if not found then raise exception 'Settlement missing';end if;
 end $$;
 create or replace function public.peris_debug_city(p_action text,p_target text default null,p_value integer default null)returns void language plpgsql security definer set search_path='' as $$
-declare u uuid:=auth.uid();s public.settlements%rowtype;c public.peris_city_slots%rowtype;b public.buildings%rowtype;target_slot integer;l integer;max_level integer;lost_magic boolean:=false;count_slots integer;
+declare u uuid:=public.peris_player_id();s public.settlements%rowtype;c public.peris_city_slots%rowtype;b public.buildings%rowtype;target_slot integer;l integer;max_level integer;lost_magic boolean:=false;count_slots integer;
 begin
  if u is null then raise exception 'Authentication required';end if;
  if not coalesce((select enabled from public.peris_debug_config where id),false)then raise exception 'Debug tools are disabled';end if;
