@@ -21,6 +21,8 @@ export function addRosters(a: ArmyTroops, b: ArmyTroops, sign = 1): UnitRoster {
 }
 export function validateRoster(roster: ArmyTroops, limit = 1000, allowEmpty = true) {
     return !!roster && typeof roster === 'object' && !Array.isArray(roster) &&
+        // A command/save roster is a flat count map. Force metadata belongs to its parent.
+        !('unit_roster' in roster) &&
         RECRUIT_UNITS.every(unit => Number.isSafeInteger(roster[unit] ?? 0) && (roster[unit] ?? 0) >= 0) &&
         rosterTotal(roster) <= limit && (allowEmpty || rosterTotal(roster) > 0);
 }

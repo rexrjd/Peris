@@ -42,12 +42,15 @@ export type World = {
     battles: Battle[];
     formations: Formation[];
     reports: Report[];
+    report_count?: number;
+    hidden_report_count?: number;
     progress: CampProgress[];
     claims: QuestClaim[];
     challenges: Challenge[];
     /** Private saved campaign parties; these never refer to Frontier camp IDs. */
     campaign_farm_lists?: CampaignFarmList[];
     campaign_farms?: CampaignFarmTarget[];
+    campaign_farm_stats?: import('../../features/campaign/domain/types').CampaignFarmStats[];
     garrisons?: Garrison[];
     /** Server geography format; version 3 uses the persistent 200 × 200 world. */
     map?: {

@@ -2,8 +2,12 @@ import { useState } from 'react';
 import type { World } from '../../../shared/model/world';
 import type { Army } from '../domain/types';
 import type { Command } from '../../../shared/model/commands';
-import { soldierTotal, UNIT_TYPES } from '../domain/units';
-import { armyOverview, cityDistance, rebaseReason, transferReason, UNIT_ROLES, count } from '../domain/commandRoom';
+import { soldierTotal } from '../domain/units';
+import { armyOverview, cityDistance, rebaseReason, transferReason, count } from '../domain/commandRoom';
+import { emptyRoster, readRoster, rosterTotal, RECRUIT_UNITS, type UnitRoster } from '../domain/roster';
+import { armyFaction } from '../domain/faction';
+import { TroopIcon } from '../../frontier/ui/TroopIcon';
+import { factionTroopName } from '../../frontier/ui/roster';
 import { heroForArmy } from '../../heroes/domain/heroes';
 import { HeroPortrait } from '../../heroes/ui/HeroPortrait';
 import { Icon } from '../../../shared/ui/Icons';
@@ -13,19 +17,21 @@ import { homeArmyPosition } from '../../map/domain/garrisons';
 
 export function ArmyLogistics({ world, army, cityId, now, run, busy, onMap }: { world: World; army: Army; cityId: number; now: number; run: (c: Command, message?: string) => void; busy: boolean; onMap?: (id: number, orders?: boolean) => void }) {
     const others = world.armies.filter(a => a.owner_id === army.owner_id && a.id !== army.id);
-    const initial = others.find(a => transferReason(world, army, a, { infantry: 0, archers: 0, cavalry: 0 }, now) === 'Choose how many soldiers to transfer.' && soldierTotal(a) < 1000) ?? others[0];
+    const initial = others.find(a => transferReason(world, army, a, emptyRoster(), now, true) === 'Choose how many soldiers to transfer.' && soldierTotal(a) < 1000) ?? others[0];
     const [targetId, setTarget] = useState(initial?.id), [baseId, setBase] = useState(cityId);
-    const [troops, setTroops] = useState({ infantry: 0, archers: 0, cavalry: 0 });
+    const [troops, setTroops] = useState<UnitRoster>(emptyRoster);
     const target = others.find(a => a.id === targetId) ?? others[0];
-    const selected = { infantry: Math.min(troops.infantry, army.infantry), archers: Math.min(troops.archers, army.archers), cavalry: Math.min(troops.cavalry, army.cavalry) };
-    const reason = transferReason(world, army, target, selected, now), total = soldierTotal(selected), info = armyOverview(world, army, now);
+    const available = readRoster(army), received = target ? readRoster(target) : emptyRoster(), faction = armyFaction(world, army);
+    const selected = Object.fromEntries(RECRUIT_UNITS.map(unit => [unit, Math.min(troops[unit], available[unit])])) as UnitRoster;
+    const reason = transferReason(world, army, target, selected, now, true), total = rosterTotal(selected), info = armyOverview(world, army, now);
     const cities = world.settlements.filter(s => s.owner_id === army.owner_id), city = cities.find(s => s.id === baseId) ?? cities[0], baseReason = city ? rebaseReason(world, army, city, now) : 'Choose a home city.';
     const sourceHero = heroForArmy(world, army.id), targetHero = target ? heroForArmy(world, target.id) : undefined;
     return <div className="army-logistics-layout"><section className="command-panel command-transfer"><div className="command-section-heading"><div><span className="command-kicker">Redistribute your forces</span><h2>Transfer troops</h2></div><Icon name="transfer" size={24}/></div>
-        {others.length ? <><label className="command-label">Receiving army<select aria-label="Army to receive troops" value={target?.id ?? ''} onChange={event => { setTarget(Number(event.target.value)); setTroops({ infantry: 0, archers: 0, cavalry: 0 }); }}>{others.map(a => <option key={a.id} value={a.id}>{a.name} · {soldierTotal(a)} soldiers · {armyOverview(world, a, now).state}</option>)}</select></label>
+        {others.length ? <><label className="command-label">Receiving army<select aria-label="Army to receive troops" value={target?.id ?? ''} onChange={event => { setTarget(Number(event.target.value)); setTroops(emptyRoster()); }}>{others.map(a => <option key={a.id} value={a.id}>{a.name} · {soldierTotal(a)} soldiers · {armyOverview(world, a, now).state}</option>)}</select></label>
         <div className="transfer-army-pair"><div><HeroPortrait compact heroId={sourceHero?.id} heroClass={sourceHero?.class} faction={info.home?.faction}/><span><small>From</small><strong>{sourceHero?.name ?? army.name}</strong><b>{count(info.total)} → {count(info.total - total)}</b></span></div><Icon name="arrow"/><div><HeroPortrait compact heroId={targetHero?.id} heroClass={targetHero?.class} faction={world.settlements.find(s => s.id === target?.home_settlement_id)?.faction}/><span><small>To</small><strong>{targetHero?.name ?? target?.name}</strong><b>{count(target ? soldierTotal(target) : 0)} → {count((target ? soldierTotal(target) : 0) + total)}</b></span></div></div>
-        <div className="transfer-table"><div className="transfer-table-head"><span>Unit</span><span>Keep</span><span>Send</span><span>Receiver after</span></div>{UNIT_TYPES.map(type => <div key={type}><span><Icon name={UNIT_ROLES[type].icon} size={17}/>{UNIT_ROLES[type].name}</span><b>{army[type] - selected[type]}</b><input aria-label={`${UNIT_ROLES[type].name} to transfer`} type="number" min={0} max={army[type]} value={selected[type]} onChange={event => setTroops(previous => ({ ...previous, [type]: Math.max(0, Math.min(army[type], Math.floor(Number(event.target.value) || 0))) }))}/><b>{(target?.[type] ?? 0) + selected[type]}</b></div>)}</div>
-        <div className="command-transfer-footer"><div><strong>{count(total)} soldiers selected</strong><small>{target ? `${1000 - soldierTotal(target)} spaces in receiving army` : ''}</small></div><button className="command-button primary" disabled={busy || !!reason} onClick={() => { if (!target || reason) return; run({ type: 'transferTroops', armyId: army.id, targetArmyId: target.id, ...selected }, `${total} soldiers transferred to ${target.name}`); setTroops({ infantry: 0, archers: 0, cavalry: 0 }); }}>Transfer troops<Icon name="transfer" size={16}/></button></div>
+        <div className="transfer-table"><div className="transfer-table-head"><span>Unit</span><span>Keep</span><span>Send</span><span>Receiver after</span></div>{RECRUIT_UNITS.map(unit => <div key={unit}><span title={`${factionTroopName(faction, unit)} · ${available[unit]} available in this legion`}><TroopIcon faction={faction} unit={unit}/>{factionTroopName(faction, unit)}</span><b>{available[unit] - selected[unit]}</b><input aria-label={`${factionTroopName(faction, unit)} to transfer`} type="number" min={0} max={available[unit]} value={selected[unit]} onChange={event => setTroops(previous => ({ ...previous, [unit]: Math.max(0, Math.min(available[unit], Math.floor(Number(event.target.value) || 0))) }))}/><b>{received[unit] + selected[unit]}</b></div>)}</div>
+        <p className="command-muted">Choose each recruited troop type. Transfers keep its research identity and battle statistics.</p>
+        <div className="command-transfer-footer"><div><strong>{count(total)} soldiers selected</strong><small>{target ? `${1000 - soldierTotal(target)} spaces in receiving army` : ''}</small></div><button className="command-button primary" disabled={busy || !!reason} onClick={() => { if (!target || reason) return; run({ type: 'transferTroops', armyId: army.id, targetArmyId: target.id, infantry: 0, archers: 0, cavalry: 0, troops: selected }, `${total} soldiers transferred to ${target.name}`); setTroops(emptyRoster()); }}>Transfer troops<Icon name="transfer" size={16}/></button></div>
         <div className="command-note"><Icon name={reason ? 'help' : 'check'} size={18}/><p>{reason ?? 'Both armies are together and ready to transfer.'}</p>{reason && onMap && <button className="command-text-button" onClick={() => onMap(army.id)}>View on map<Icon name="arrow" size={15}/></button>}</div>
         {reason === 'Bring these two armies together on the map.' && target && <button className="command-button secondary" disabled={busy || !!info.orders.length || !!armyOverview(world, target, now).orders.length} onClick={() => { const destination = armyPosition(target, now); run({ type: 'move', armyId: army.id, ...destination }, `${army.name} is marching to meet ${target.name}`); }}>March to meet {targetHero?.name ?? target.name}<Icon name="horse" size={17}/></button>}
         </> : <div className="command-empty"><Icon name="army" size={34}/><h3>Your first army stands alone.</h3><p>Raise another army to move soldiers between commanders. Both armies need to be together, stopped, and finished training.</p></div>}

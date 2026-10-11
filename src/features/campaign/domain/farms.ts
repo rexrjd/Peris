@@ -15,7 +15,7 @@ function validTroops(troops: unknown, allowEmpty: boolean): troops is CampaignFa
 }
 const validName = (name: unknown): name is string => typeof name === 'string' && name.trim().length >= 2 && name.trim().length <= CAMPAIGN_FARM_LIMITS.nameLength;
 const copyTroops = (troops: CampaignFarmTroops): CampaignFarmTroops => ({ ...troops });
-type FarmCommand = Extract<Command, { type: 'saveCampaignFarmList' | 'saveCampaignFarm' | 'deleteCampaignFarmList' | 'deleteCampaignFarm' | 'startCampaignFarmList' }>;
+type FarmCommand = Extract<Command, { type: 'saveCampaignFarmList' | 'saveCampaignFarm' | 'deleteCampaignFarmList' | 'deleteCampaignFarm' | 'startCampaignFarmList' | 'manageCampaignFarmTargets' | 'setCampaignFarmListEnabled' | 'applyCampaignFarmListTroops' }>;
 export type CampaignFarmBatchResult = { started: number; skipped: { targetId: number; reason: string }[] };
 
 /** One manual batch, in saved target order. Existing raid rules spend each available legion once. */
@@ -24,7 +24,7 @@ export function startCampaignFarmList(ctx: LocalCommandContext, id: number): Cam
     const result: CampaignFarmBatchResult = { started: 0, skipped: [] };
     const targets = (ctx.world.campaign_farms ?? []).filter(farm => farm.list_id === id && farm.owner_id === ctx.playerId).slice().sort((a, b) => a.id - b.id);
     const active = ctx.world.battles.some(battle => battle.status === 'active' && (battle.attacker_owner_id === ctx.playerId || battle.defender_owner_id === ctx.playerId));
-    const statuses = targets.map(farm => farm.last_status);
+    const statuses = targets.map(farm => ({ last_status: farm.last_status, sent: farm.sent, skipped: farm.skipped }));
     for (const farm of targets) {
         try {
             if (active) throw new Error('Finish the current battle first.');
@@ -32,22 +32,45 @@ export function startCampaignFarmList(ctx: LocalCommandContext, id: number): Cam
             if (!validTroops(farm.troops, false)) throw new Error('Choose a saved party of 1–1,000 soldiers.');
             marchArmy({ ...ctx, armyId: farm.army_id }, { type: 'raid', campId: farm.camp_id, troops: copyTroops(farm.troops) });
             const legion = ctx.world.armies.find(a => a.id === farm.army_id)!; legion.farm_list_id = farm.list_id;
-            farm.last_status = 'Raid preparing'; result.started++;
+            farm.last_status = 'Raid preparing'; farm.sent = (farm.sent ?? 0) + 1; result.started++;
         } catch (error) {
             farm.last_status = error instanceof Error ? error.message : 'Target unavailable';
+            farm.skipped = (farm.skipped ?? 0) + 1;
             result.skipped.push({ targetId: farm.id, reason: error instanceof Error ? error.message : 'This target is unavailable.' });
         }
     }
-    if (!result.started) { targets.forEach((farm, i) => { if (statuses[i] === undefined) delete farm.last_status; else farm.last_status = statuses[i]; }); throw new Error(`No raids started. ${result.skipped[0]?.reason ?? 'Add camp targets to this list first.'}`); }
+    if (!result.started) { targets.forEach((farm, i) => { for (const key of ['last_status','sent','skipped'] as const) { if (statuses[i][key] === undefined) delete farm[key]; else Object.assign(farm, { [key]: statuses[i][key] }); } }); throw new Error(`No raids started. ${result.skipped[0]?.reason ?? 'Add camp targets to this list first.'}`); }
     return result;
 }
 
 /** Plans remain metadata until the player explicitly starts their list. */
 export function commandCampaignFarm(ctx: LocalCommandContext, cmd: FarmCommand): CampaignFarmBatchResult | void {
     const world = ctx.world, lists = world.campaign_farm_lists ?? [], farms = world.campaign_farms ?? [], owner = ctx.playerId;
-    if (cmd.id !== undefined && !validId(cmd.id)) throw new Error('Choose a valid saved farm.');
+    if ('id' in cmd && cmd.id !== undefined && !validId(cmd.id)) throw new Error('Choose a valid saved farm.');
     if (cmd.type === 'startCampaignFarmList') return startCampaignFarmList(ctx, cmd.id);
-    if (cmd.type === 'saveCampaignFarmList') {
+    if (cmd.type === 'manageCampaignFarmTargets') {
+        if (!Array.isArray(cmd.ids) || !cmd.ids.length || cmd.ids.length > CAMPAIGN_FARM_LIMITS.targetsPerList || new Set(cmd.ids).size !== cmd.ids.length || !cmd.ids.every(validId) || !['move','delete'].includes(cmd.action)) throw new Error('Choose up to 100 of your saved targets.');
+        const selected = farms.filter(farm => cmd.ids.includes(farm.id) && farm.owner_id === owner);
+        if (selected.length !== cmd.ids.length) throw new Error('Choose your own saved targets.');
+        if (cmd.action === 'delete') world.campaign_farms = farms.filter(farm => !cmd.ids.includes(farm.id));
+        else {
+            if (!validId(cmd.listId) || !lists.some(list => list.id === cmd.listId && list.owner_id === owner)) throw new Error('Choose your own destination farm list.');
+            const existing = farms.filter(farm => farm.list_id === cmd.listId && !cmd.ids.includes(farm.id));
+            if (existing.length + selected.length > CAMPAIGN_FARM_LIMITS.targetsPerList) throw new Error('A campaign farm list holds up to 100 targets.');
+            const camps = [...existing, ...selected].map(farm => farm.camp_id);
+            if (new Set(camps).size !== camps.length) throw new Error('A selected camp is already in the destination list.');
+            selected.forEach(farm => { farm.list_id = cmd.listId!; });
+        }
+    } else if (cmd.type === 'setCampaignFarmListEnabled' || cmd.type === 'applyCampaignFarmListTroops') {
+        const list = lists.find(list => list.id === cmd.id && list.owner_id === owner);
+        if (!list) throw new Error('Choose your own farm list.');
+        if (cmd.type === 'setCampaignFarmListEnabled' && typeof cmd.enabled !== 'boolean') throw new Error('Choose a repeat preference.');
+        if (cmd.type === 'applyCampaignFarmListTroops' && !validTroops(list.troops, false)) throw new Error('Save a list preset of 1–1,000 soldiers first.');
+        for (const farm of farms.filter(farm => farm.list_id === list.id && farm.owner_id === owner)) {
+            if (cmd.type === 'applyCampaignFarmListTroops') farm.troops = copyTroops(list.troops);
+            else if (farm.enabled !== cmd.enabled) { farm.enabled = cmd.enabled; farm.next_at = cmd.enabled ? new Date(Date.parse(ctx.now) + (farm.interval_seconds ?? 300) * 1000).toISOString() : null; farm.last_status = cmd.enabled ? 'Scheduled' : 'Paused'; }
+        }
+    } else if (cmd.type === 'saveCampaignFarmList') {
         if (!validName(cmd.name)) throw new Error('Use a farm list name of 2–40 characters.');
         if (!validTroops(cmd.troops, true) || typeof cmd.casualtiesOnly !== 'boolean') throw new Error('Choose a troop preset of up to 1,000 soldiers and a report preference.');
         const list = cmd.id === undefined ? undefined : lists.find(list => list.id === cmd.id && list.owner_id === owner);
@@ -96,9 +119,17 @@ export function validateCampaignFarms(world: World): void {
     for (const farm of farms) {
         if (!farm || !validId(farm.id) || farmIds.has(farm.id) || !owners.has(farm.owner_id) || !lists.some(list => list.id === farm.list_id && list.owner_id === farm.owner_id) || !world.camps.some(camp => camp.id === farm.camp_id && camp.bandit === true) || !world.armies.some(army => army.id === farm.army_id && army.owner_id === farm.owner_id) || !validTroops(farm.troops, false) || typeof farm.created_at !== 'string' || !Number.isFinite(Date.parse(farm.created_at))) invalid();
         if (farm.enabled !== undefined && typeof farm.enabled !== 'boolean' || farm.interval_seconds !== undefined && (!Number.isSafeInteger(farm.interval_seconds) || farm.interval_seconds < 60 || farm.interval_seconds > 86400) || farm.next_at != null && !Number.isFinite(Date.parse(farm.next_at))) invalid();
+        if ([farm.sent, farm.skipped].some(count => count !== undefined && (!Number.isSafeInteger(count) || count < 0))) invalid();
         const key = `${farm.list_id}:${farm.camp_id}`;
         if (targets.has(key)) invalid();
         targets.add(key); farmIds.add(farm.id);
     }
     for (const list of lists) if (farms.filter(farm => farm.list_id === list.id).length > CAMPAIGN_FARM_LIMITS.targetsPerList) invalid();
+    if (world.campaign_farm_stats !== undefined && !Array.isArray(world.campaign_farm_stats)) invalid();
+    const stats = world.campaign_farm_stats ?? [], statsKeys = new Set<string>();
+    if (stats.length > owners.size * world.camps.length) invalid();
+    for (const stat of stats) {
+        if (!stat || !owners.has(stat.owner_id) || !world.camps.some(camp => camp.id === stat.camp_id && camp.bandit) || !Number.isSafeInteger(stat.raids) || stat.raids < 1 || !Number.isSafeInteger(stat.last_losses) || stat.last_losses < 0 || stat.last_losses > 1000 || ![stat.last_loot,stat.total_loot].every(amount => Number.isFinite(amount) && amount >= 0 && amount <= Number.MAX_SAFE_INTEGER) || stat.total_loot < stat.last_loot || !['attacker','defender','draw'].includes(stat.last_result) || typeof stat.last_raid_at !== 'string' || !Number.isFinite(Date.parse(stat.last_raid_at))) invalid();
+        const key = `${stat.owner_id}:${stat.camp_id}`; if (statsKeys.has(key)) invalid(); statsKeys.add(key);
+    }
 }

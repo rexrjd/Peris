@@ -128,10 +128,12 @@ function Realm({ engine, onExit, onLoad, onRetry, onUnitPreview }: {
     onUnitPreview: (faction: Faction) => void;
 }) {
     const world = useSyncExternalStore(engine.subscribe, () => engine.snapshot);
-    const [view, setView] = useState<View>('world'), [selection, setSelection] = useState<MapSelection>(null), [moveMode, setMoveMode] = useState(false), [busy, setBusy] = useState(false), [notice, setNotice] = useState<{
+    const [view, setView] = useState<View>('world'), [selection, setSelection] = useState<MapSelection>(null), [moveMode, setMoveMode] = useState(false), [sending, setBusy] = useState(false), [notice, setNotice] = useState<{
         text: string;
         error: boolean;
     } | null>(null), [help, setHelp] = useState(false), [settings, setSettings] = useState(false), [report, setReport] = useState<Battle | null>(null), [ending, setEnding] = useState(false), [resource, setResource] = useState<typeof RESOURCES[number] | null>(null), [time, setTime] = useState(Date.now());
+    const busy = sending || !!engine.pendingCommand;
+    const sendLock = useRef(false);
     const menuRef = useRef<HTMLDetailsElement>(null);
     useEffect(() => {
         const outside = (event: PointerEvent) => { const menu=menuRef.current; if(menu?.open && event.target instanceof Node && !menu.contains(event.target)) menu.open=false; };
@@ -186,8 +188,9 @@ function Realm({ engine, onExit, onLoad, onRetry, onUnitPreview }: {
         knownOrders.current = new Map(world.orders.filter(o => o.owner_id === engine.playerId).map(o => [o.id, o]));
     }, [world, active?.id]);
     const run = async (cmd: Command, message?: string) => {
-        if (busy && cmd.type !== 'order')
+        if ((busy || sendLock.current) && cmd.type !== 'order')
             return;
+        sendLock.current = true;
         if (cmd.type !== 'order')
             setBusy(true);
         try {
@@ -201,11 +204,19 @@ function Realm({ engine, onExit, onLoad, onRetry, onUnitPreview }: {
             tone('error');
         }
         finally {
+            sendLock.current = false;
             if (cmd.type !== 'order')
                 setBusy(false);
         }
     };
     const dispatch = (c: Command, m?: string) => void run(c, m);
+    const retryOrder = async () => {
+        if (sending || sendLock.current || !engine.retryCommand) return;
+        sendLock.current = true; setBusy(true);
+        try { await engine.retryCommand(); setNotice({ text: 'Order confirmed.', error: false }); }
+        catch (error) { setNotice({ text: error instanceof Error ? error.message : 'Order status remains unconfirmed.', error: true }); }
+        finally { sendLock.current = false; setBusy(false); }
+    };
     const navigate = (v: View) => { if(v === 'army'){setArmyTab('army');setArmyLootItem(undefined);} setView(v); setMoveMode(false); tone('select'); };
     const openBuilding = (type: SlotType|'market') => {
         setEmpireOpen(false);
@@ -245,10 +256,11 @@ function Realm({ engine, onExit, onLoad, onRetry, onUnitPreview }: {
   </div>}
   {notice && <div className={`toast ${notice.error ? 'error' : ''}`} role="status"><Icon name={notice.error ? 'shield' : 'check'}/>{notice.text}<button aria-label="Dismiss notification" onClick={() => setNotice(null)}>×</button></div>}
   {engine instanceof OnlineEngine && engine.error && <div className="connection-warning"><Icon name="world" size={17}/>{engine.error}</div>}
+  {engine.pendingCommand && <div className="pending-order-warning" role="alert"><Icon name="time" size={18}/><div><strong>{sending ? 'Confirming order…' : 'Order status unconfirmed'}</strong><span>Your original order is saved. Confirm it before sending another.</span></div><button className="button gold" disabled={sending} onClick={() => void retryOrder()}>Retry same order</button></div>}
   {engine instanceof LocalEngine && engine.saveError && engine.mode === 'solo' && <div className="connection-warning">This browser could not save your realm.<button onClick={() => setSettings(true)}>Export a backup</button></div>}
   {!active && incoming.length > 0 && <div className="challenge-banner"><Icon name="army"/><span>{world.players.find(p => p.id === incoming[0].attacker_owner_id)?.display_name ?? 'A rival'} challenges your legion.<small>Accept to deploy together. Campaign casualties are permanent.</small></span><button className="button gold" disabled={busy} onClick={() => dispatch({ type: 'respond', id: incoming[0].id, accept: true })}>Accept battle</button><button className="button outline" disabled={busy} onClick={() => dispatch({ type: 'respond', id: incoming[0].id, accept: false })}>Decline</button></div>}
   {!active && outgoing.length > 0 && <div className="outgoing-challenge"><Icon name="flag" size={16}/>Your invitation awaits a reply · {Math.ceil((Date.parse(outgoing[0].expires_at) - now) / 1000)}s</div>}
-  {report?.result && <Modal title="Battle result" className="result-modal battle-rewards-modal" heading={false} onClose={() => closeReport(view === 'rally' ? 'rally' : 'world')}><ResultBody result={report.result} won={report.winner_owner_id === engine.playerId} draw={report.winner_side === 'draw'} side={mySide(report, engine.playerId)} enemyName={report.enemy_name} formations={world.formations.filter(f => f.battle_id === report.id && f.owner_id === engine.playerId)} practice={engine.mode === 'practice'}/><div className="result-actions"><button className="button gold" onClick={() => closeReport(view === 'rally' ? 'rally' : 'world')}>{engine.mode === 'practice' ? 'Return to main menu' : view === 'rally' ? 'Back to Rally Point' : 'Back to map'}<Icon name="arrow"/></button>{engine.mode === 'practice' ? <button className="button outline" onClick={onRetry}>Fight again</button> : <button className="button outline" onClick={() => closeReport('army',!!report.result?.hero_reward?.artifacts.length)}>{report.result.hero_reward?.artifacts.length ? 'Open equipment' : 'Manage army'}</button>}</div></Modal>}
+  {report?.result && <Modal title="Battle result" className="result-modal battle-rewards-modal" heading={false} onClose={() => closeReport(view === 'rally' ? 'rally' : view === 'chronicle' ? 'chronicle' : 'world')}><ResultBody returning={world.armies.some(army => army.owner_id === engine.playerId && army.loot_report_id === report.id && !!army.carried_loot)} result={report.result} won={report.winner_owner_id === engine.playerId} draw={report.winner_side === 'draw'} side={mySide(report, engine.playerId)} enemyName={report.enemy_name} formations={world.formations.filter(f => f.battle_id === report.id && f.owner_id === engine.playerId)} practice={engine.mode === 'practice'}/><div className="result-actions"><button className="button gold" onClick={() => closeReport(view === 'rally' ? 'rally' : view === 'chronicle' ? 'chronicle' : 'world')}>{engine.mode === 'practice' ? 'Return to main menu' : view === 'rally' ? 'Back to Rally Point' : view === 'chronicle' ? 'Back to reports' : 'Back to map'}<Icon name="arrow"/></button>{engine.mode === 'practice' ? <button className="button outline" onClick={onRetry}>Fight again</button> : <button className="button outline" onClick={() => closeReport('army',!!report.result?.hero_reward?.artifacts.length)}>{report.result.hero_reward?.artifacts.length ? 'Open equipment' : 'Manage army'}</button>}</div></Modal>}
   {welcome && <Welcome name={player.display_name} onClose={() => { writeFlag(welcomeKey); setWelcome(false); }}/>}
   {ending && !report && <CampaignEnding world={world} playerId={engine.playerId} onClose={closeEnding}/>}
   {!active && empireOpen && <EmpirePanel world={world} owner={engine.playerId} cityId={town.id} onCity={chooseCity} onOpenCity={id=>{chooseCity(id);navigate('settlement');closeEmpire();}} onClose={closeEmpire} run={dispatch} now={now} busy={busy} clockOffset={offset} mapViewport={engine.setMapViewport?.bind(engine)} target={empireTarget}/>}

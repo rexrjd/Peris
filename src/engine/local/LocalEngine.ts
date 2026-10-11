@@ -136,7 +136,7 @@ export class LocalEngine implements GameEngine {
             throw new Error('Finish the current battle first.');
         const context: LocalCommandContext = { world: this.snapshot, playerId: this.playerId, settlementId: cmd.settlementId, armyId: cmd.armyId, nextId: () => this.nextId = Math.max(this.nextId + 1, nextEntityId(this.snapshot)), active, now: new Date().toISOString(), paused: value => { this.paused = value; }, finalize: id => this.finalize(id) };
         switch (cmd.type) {
-            case 'saveCampaignFarmList': case 'saveCampaignFarm': case 'deleteCampaignFarm': case 'deleteCampaignFarmList': case 'startCampaignFarmList':
+            case 'saveCampaignFarmList': case 'saveCampaignFarm': case 'deleteCampaignFarm': case 'deleteCampaignFarmList': case 'startCampaignFarmList': case 'manageCampaignFarmTargets': case 'setCampaignFarmListEnabled': case 'applyCampaignFarmListTroops':
                 commandCampaignFarm(context, cmd); break;
             case 'trainSettlers': trainSettlers(context, cmd.quantity); break;
             case 'foundCity': sendSettlers(context, cmd.col, cmd.row, cmd.name); break;

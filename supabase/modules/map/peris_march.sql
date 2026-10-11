@@ -1,3 +1,11 @@
+-- Catalog pace applies only when accepting a new journey; saved journey deadlines remain unchanged.
+create or replace function public.peris_march_speed(p_army bigint,p_troops jsonb default null)returns numeric
+language sql stable security definer set search_path='' as $$
+ select 22*coalesce((select min(c.speed)from public.peris_unit_catalog c where coalesce((coalesce(p_troops,public.peris_roster(to_jsonb(a)))->>c.unit)::integer,0)>0),40)/40::numeric*(public.peris_hero_bonuses(a.id)->>'speed')::numeric
+ from public.armies a where a.id=p_army
+$$;
+revoke all on function public.peris_march_speed(bigint,jsonb)from public,anon,authenticated;
+
 create or replace function public.peris_march_for(p_owner uuid,p_army bigint,p_target_x integer,p_target_y integer,p_path jsonb,p_raid integer default null)returns jsonb
 language plpgsql security definer set search_path='' as $$
 declare u uuid:=p_owner;a public.armies%rowtype;position jsonb;point jsonb;route jsonb;
@@ -45,7 +53,7 @@ begin
   px:=x;py:=y;pcx:=cx;pcy:=cy;
  end loop;
  if px<>tx or py<>ty then raise exception 'Route must end at the chosen destination';end if;
- seconds:=greatest(2,distance/(22*(public.peris_hero_bonuses(a.id)->>'speed')::numeric));
+ seconds:=greatest(2,distance/public.peris_march_speed(a.id));
  update public.armies set start_x=round((position->>'x')::numeric),start_y=round((position->>'y')::numeric),target_x=tx,target_y=ty,
   march_path=route,march_distance=distance,march_map_version=4,march_sent_at=now(),march_cancel_until=now()+interval '30 seconds',
   march_origin=jsonb_build_object('col',floor((position->>'x')::numeric/128),'row',floor((position->>'y')::numeric/128),'x',round((position->>'x')::numeric),'y',round((position->>'y')::numeric)),march_returning=false,

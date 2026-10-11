@@ -1,5 +1,5 @@
 import type { World } from '../../../shared/model/world';
-import type { Army, UnitType } from './types';
+import type { Army, ArmyTroops } from './types';
 import type { Settlement } from '../../city/domain/types';
 import { liveResources, affordable } from '../../city/domain/economy';
 import { armyAttack, slotLevels } from '../../city/domain/slots';
@@ -10,7 +10,7 @@ import { UNIT_TYPES, soldierTotal } from './units';
 import { multiply, RESOURCES } from '../../../shared/model/resources';
 import { heroBonuses } from '../../heroes/domain/heroes';
 import { recruitSeconds } from './recruitment';
-import { RECRUIT_RULES, type RecruitUnit } from './roster';
+import { RECRUIT_RULES, RECRUIT_UNITS, readRoster, rosterTotal, validateRoster, type RecruitUnit } from './roster';
 
 export const ARMY_CAPACITY = 1000;
 export const STAT_NAMES = { attack: 'Attack', defence: 'Defence', power: 'Spell power', knowledge: 'Knowledge' } as const;
@@ -46,14 +46,15 @@ export function recruitmentPlan(world: World, army: Army, city: Settlement, type
     const seconds = recruitSeconds(type, quantity, Math.max(1, level)), start = Math.max(now, ...world.orders.filter(o => o.kind === 'recruit' && o.settlement_id === city.id && RECRUIT_RULES[o.item as RecruitUnit]?.building === building).map(o => Date.parse(o.finish_at)));
     return { orders, queued, free, resources, cost, building, level, near, max, reason, seconds, finishSeconds: (start - now) / 1000 + seconds };
 }
-export function transferReason(world: World, source: Army, target: Army | undefined, troops: Pick<Army, UnitType>, now: number) {
+export function transferReason(world: World, source: Army, target: Army | undefined, troops: ArmyTroops, now: number, exactRoles = false) {
     if (!target || target.id === source.id || target.owner_id !== source.owner_id) return 'Choose another army from your roster.';
     if (source.status !== 'idle' || target.status !== 'idle') return 'Both armies must be stopped before transferring.';
+    if (source.raid_target_id !== null || target.raid_target_id !== null || source.raid_reserve || target.raid_reserve || world.battles.some(battle => battle.status === 'active' && [source.id, target.id].some(id => battle.attacker_army_id === id || battle.defender_army_id === id))) return 'Finish both legions’ battles before transferring.';
     const a = armyPosition(source, now), b = armyPosition(target, now);
     if (Math.hypot(wrappedWorldDelta(a.x, b.x), wrappedWorldDelta(a.y, b.y)) > 90) return 'Bring these two armies together on the map.';
     if (trainingOrders(world, source).length || trainingOrders(world, target).length) return 'Finish both training queues before transferring.';
-    if (UNIT_TYPES.some(type => !Number.isInteger(troops[type]) || troops[type] < 0 || troops[type] > source[type])) return 'Choose troops available in the source army.';
-    const total = soldierTotal(troops);
+    if (exactRoles ? !validateRoster(troops) || RECRUIT_UNITS.some(unit => (troops[unit] ?? 0) > readRoster(source)[unit]) : UNIT_TYPES.some(type => !Number.isInteger(troops[type]) || troops[type] < 0 || troops[type] > source[type])) return 'Choose troops available in the source army.';
+    const total = exactRoles ? rosterTotal(troops) : soldierTotal(troops);
     if (!total) return 'Choose how many soldiers to transfer.';
     if (soldierTotal(target) + total > ARMY_CAPACITY) return `The receiving army has room for ${ARMY_CAPACITY - soldierTotal(target)} soldiers.`;
     return null;

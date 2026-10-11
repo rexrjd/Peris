@@ -21,7 +21,7 @@ See `assets/city-village-v1.json` and `ARTWORK.md` for sources and export instru
 
 These mechanics are integrated into the existing game. Run `npm ci` and `npm run dev`, then open the URL Vite prints. Old `?frontier=1` bookmarks open normal Peris. Use your existing campaign or shared-world account, cities, resources, legions and reports.
 
-**Army → Recruitment** has Barracks, Stables and Workshop tabs for nine faction-named troop roles. Advanced units require research in the selected city. Buildings have independent queues; training still uses the existing legion capacity and city resources. Small faction troop icons appear in recruitment, camp inspection, raid reviews, farms and reports.
+**Army → Recruitment**, also available inside Barracks, Stables and Workshop building windows, trains nine faction-named troop roles. Advanced units require research in the selected city. Buildings have independent queues; training still uses the existing legion capacity and city resources. Small faction troop icons appear in recruitment, camp inspection, raid reviews, farms and reports.
 
 Roaming camps now accumulate shared resource stocks and grow defenders at private, unpredictable intervals. The six story sites retain their progression and cooldowns. Raids use Peris's existing automatic formation battles. Survivors carry limited loot back to the departure station; resources are credited to the legion's home city on return, with storage overflow recorded in the report. Camps keep depleted stocks and casualties until production and recruitment replenish them.
 
@@ -29,7 +29,9 @@ Roaming camps now accumulate shared resource stocks and grow defenders at privat
 
 Repeats are optional and use a player-chosen interval. Shared-world schedules need a successful manual launch to record the validated route; busy or unavailable targets skip that interval. Solo catch-up resumes when the campaign opens. Shared-world offline processing uses the prepared database worker, not a second game or Node service.
 
-The integration preserves main's account directory, compact floating map controls and full-width world. The activity panel shows exact owned troop identities and ongoing unit research. Fetch and review current `main` before pushing changes. Code publication does not install production database updates. Existing databases need the reviewed `supabase/UPGRADE_TO_V16.sql`; empty installations use `FRESH_INSTALL_V16.sql`. Offline processing additionally needs the separately reviewed `ENABLE_GAME_WORKER.sql` job. Do not apply either automatically.
+**Rally Point** brings together owned stations, incoming/outgoing legions, farm lists and reports. Farm controls include bulk move/delete, pause/enable, presets, reverse sorting, sent/skipped counters and all-time delivered bounty. Camp reports show casualties, replacement costs and delivered profit. Orders review exact troop parties and travel at the slowest selected unit's speed. Lost shared-world responses retain the original request for a safe retry after reload.
+
+The integration preserves main's account directory, compact floating map controls, artifact artwork, ten camp levels and full-width world. Fetch and review current `main` before pushing changes. Code publication does not install production database updates. Existing databases need the reviewed `supabase/UPGRADE_TO_V17.sql`; empty installations use `FRESH_INSTALL_V17.sql`. Offline processing additionally needs the separately reviewed `ENABLE_GAME_WORKER.sql` job. Do not apply either automatically.
 
 See [integrated camps and farming](docs/frontier-wars.md) for behavior, migration boundaries and verification.
 
@@ -105,6 +107,6 @@ Shared world now has separate **Log in** and **Create account** screens. Browse 
 
 Creation requires an unused name and one of the eleven races, including the four human cultures. The first city and its army/hero appearance use that race immediately. Login does not create a missing account; creation does not overwrite an occupied name. Lost-response retries reuse the same creation request and estate. Name-based control, independent tabs and session recovery remain as in V14.
 
-Run the entire **`supabase/UPGRADE_TO_V15.sql`** before deploying this frontend. Use `FRESH_INSTALL_V15.sql` only for an empty project. Camp economy and full troop recruitment are integrated into the main game; the current release uses the V16 upgrade described above. See [account entry and stability](docs/name-only-accounts.md).
+Run the entire **`supabase/UPGRADE_TO_V15.sql`** before deploying this frontend. Use `FRESH_INSTALL_V15.sql` only for an empty project. Camp economy and full troop recruitment are integrated into the main game; the current release uses the V17 upgrade described above. See [account entry and stability](docs/name-only-accounts.md).
 
 The revised V15 overlay targets main `3ebbb81` and keeps the painted faction villages, private garrisons, thirty-second march cancellation, farm lists and current Frontier authority. `npm run test:account-compatibility-db` verifies migration from that exact main snapshot, including live orders and troop conservation.

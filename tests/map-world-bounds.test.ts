@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createSolo } from '../src/features/campaign/domain/newRealm';
-import { marchArmy } from '../src/features/map/domain/commands';
+import { marchArmy, marchSpeed } from '../src/features/map/domain/commands';
 import { validateSave } from '../src/platform/storage/saves';
 import { type LocalCommandContext } from '../src/shared/model/commands';
 import { findMarchPath } from '../src/features/map/domain/pathfinding';
@@ -29,7 +29,7 @@ test('strategic marching accepts equivalent wrapped destinations and rejects act
     marchArmy(context, { type: 'move', x: destination.x + WORLD_W, y: destination.y - WORLD_W });
     assert.equal(army.target_x, destination.x); assert.equal(army.target_y, destination.y);
     assert.ok(army.march_path && army.march_path.length > 2);
-    assert.equal(Date.parse(army.arrival_at) - Date.parse(context.now), 30000 + Math.floor(Math.max(2, army.march_distance! / 22) * 1000));
+    assert.equal(Date.parse(army.arrival_at) - Date.parse(context.now), 30000 + Math.floor(Math.max(2, army.march_distance! / marchSpeed(world,army)) * 1000));
     assert.throws(() => marchArmy(context, { type: 'move', x: NaN, y: 0 }), /destination/);
 });
 

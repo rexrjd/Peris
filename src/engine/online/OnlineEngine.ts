@@ -1,6 +1,7 @@
 import { readArmyCultures } from './armyCultures';
 import type { Faction } from '../../features/factions/domain/factions';
 import { rpcCommand } from './rpcCommands';
+import { MutationJournal } from './mutationJournal';
 import { type GameEngine } from '../contracts';
 import { type Command } from '../../shared/model/commands';
 import { type World } from '../../shared/model/world';
@@ -67,12 +68,20 @@ export class OnlineEngine implements GameEngine {
     private sessionId: string;
     error: string | null = null;
     connected = false;
+    private mutations: MutationJournal;
+    get pendingCommand() { return this.mutations?.pending ?? null; }
 
     constructor(playerId: string, snapshot: World, sessionId: string = playerId) {
         this.playerId = playerId;
         this.sessionId = sessionId;
         this.core = snapshot;
         this.snapshot = snapshot;
+        const pendingKey = `peris-pending-command:${playerId}`;
+        this.mutations = new MutationJournal({
+            read: () => { try { return JSON.parse(sessionStorage.getItem(pendingKey) ?? 'null'); } catch { return null; } },
+            write: intent => { if (intent) sessionStorage.setItem(pendingKey, JSON.stringify(intent)); else sessionStorage.removeItem(pendingKey); },
+        }, intent => this.rpc('peris_submit_command', { p_request_id: intent.requestId, p_function: intent.fn, p_args: intent.args }),
+        () => crypto.randomUUID(), () => this.publish());
         const army = snapshot.armies.find(a => a.owner_id === playerId), town = snapshot.settlements.find(s => s.owner_id === playerId);
         const origin = army ? armyPosition(army, Date.parse(snapshot.server_now)) : town ?? { x: 0, y: 0 };
         this.viewport = this.clampBounds({ minX: origin.x - 1200, minY: origin.y - 1200, maxX: origin.x + 1200, maxY: origin.y + 1200 });
@@ -334,8 +343,13 @@ export class OnlineEngine implements GameEngine {
         }
         if ((cmd.type === 'claimField' || cmd.type === 'buildField') && !currentMap(this.core.map)) throw new Error(WORLD_UPGRADE);
         if(cmd.type==='foundCity'){const city=this.core.settlements.find(s=>s.owner_id===this.playerId&&(cmd.settlementId===undefined||s.id===cmd.settlementId));if(!city)throw new Error('Choose your city.');const route=findMarchPath(city,{x:((cmd.col+100)%200+200)%200*128-12800+64,y:((cmd.row+100)%200+200)%200*128-12800+64});if(!route)throw new Error('No connected land route reaches this site.');prepared={...cmd,route:route.path};}
-        const { fn, args } = rpcCommand(prepared), { error } = await this.rpc(fn, args);
-        if (error) throw new Error(error.code==='PGRST202'&&fn==='peris_empire_command'?'Install supabase/UPGRADE_TO_V10.sql to enable cities, settlers and hero-led armies.':error.message);
+        const { fn, args } = rpcCommand(prepared);
+        await this.mutations.send(fn, args);
+        await this.refresh();
+    };
+    retryCommand = async () => {
+        if (!this.alive) throw new Error('This realm session has ended.');
+        await this.mutations.retry();
         await this.refresh();
     };
     destroy = () => {

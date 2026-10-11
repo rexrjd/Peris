@@ -1,4 +1,19 @@
-WORLD BATTLES, BANDIT CAMPS AND HERO PORTRAITS — START HERE
+PERIS COMBINED GAME UPDATE — START HERE
+
+There is one game. Frontier mechanics share existing Peris accounts, villages,
+legions, resources and reports. No extra Node game server is required.
+Review and run supabase/UPGRADE_TO_V17.sql for an EXISTING database before
+deploying this frontend. Use FRESH_INSTALL_V17.sql only for an EMPTY project.
+Offline processing additionally requires pg_cron and ENABLE_GAME_WORKER.sql.
+Publishing source code does not install these production database updates.
+
+Rally Point combines owned stations, incoming/outgoing troops, farm lists and
+grouped reports. Recruitment also opens in Barracks, Stables and Workshop
+building windows. All marches review troop allocations and have a 30-second
+cancellation window. Lost responses can retry the original order safely after
+reload using private command receipts. Read docs/frontier-wars.md for details.
+
+The notes below describe the earlier V12 release. Use V17 for current gameplay.
 
 Replace the included files at matching repository paths.
 For an existing Supabase world, run the corrected supabase/UPGRADE_TO_V12.sql

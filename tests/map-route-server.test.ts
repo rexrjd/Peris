@@ -3,6 +3,8 @@ import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 import { PGlite } from '@electric-sql/pglite';
 import { findMarchPath } from '../src/features/map/domain/pathfinding';
+import { marchSpeed } from '../src/features/map/domain/commands';
+import type { World } from '../src/shared/model/world';
 
 test('the authoritative server accepts a long client-planned coastal land route with identical distance', async () => {
     const db = new PGlite(), owner = '11111111-1111-4111-8111-111111111111';
@@ -16,10 +18,10 @@ test('the authoritative server accepts a long client-planned coastal land route 
         // A distant owned outpost exercises the route without permitting troops to stop on neutral land.
         await db.exec(`reset role;insert into public.peris_map_plots(owner_id,settlement_id,col,row,building_type,level)select '${owner}',id,-79,23,null,0 from public.settlements where owner_id='${owner}';set role authenticated;`);
         await db.query('select public.peris_march($1,$2,$3::jsonb)', [-10000, 3000, JSON.stringify(route.path)]);
-        const army = (await db.query<{ world: { armies: { march_path: [number, number][]; march_distance: number; departure_at: string; arrival_at: string }[] } }>('select public.peris_snapshot() as world')).rows[0].world.armies[0];
+        const world = (await db.query<{ world: World }>('select public.peris_snapshot() as world')).rows[0].world,army=world.armies[0];
         assert.deepEqual(army.march_path, route.path);
         assert.ok(Math.abs(Number(army.march_distance) - route.distance) < .000001);
-        assert.ok(Math.abs((Date.parse(army.arrival_at) - Date.parse(army.departure_at)) / 1000 - route.distance / 22) < .002);
+        assert.ok(Math.abs((Date.parse(army.arrival_at) - Date.parse(army.departure_at)) / 1000 - route.distance / marchSpeed(world,army)) < .002);
     } finally {
         await db.close();
     }

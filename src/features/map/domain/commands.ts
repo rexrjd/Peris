@@ -6,10 +6,16 @@ import { armyPosition } from './movement';
 import { CELL_SIZE, WORLD_MAP_VERSION, wrapWorldPoint } from './dimensions';
 import { findMarchPath } from './pathfinding';
 import { isWalkable } from './worldGrid';
-import type { Army } from '../../army/domain/types';
+import type { Army, ArmyTroops } from '../../army/domain/types';
 import { addStationGarrison, mergeStationGarrison, ownedStation, stationCell } from './garrisons';
-import { readRoster, writeRoster, addRosters, RECRUIT_UNITS, rosterTotal, validateRoster } from '../../army/domain/roster';
+import { readRoster, writeRoster, addRosters, RECRUIT_UNITS, RECRUIT_RULES, rosterTotal, validateRoster } from '../../army/domain/roster';
 export const MARCH_CANCEL_MS = 30_000;
+/** A party travels together at its slowest recruited role; infantry retains the original 22-unit pace. */
+export function marchSpeed(world: LocalCommandContext['world'], army: Army, troops: ArmyTroops = readRoster(army)) {
+    const present = RECRUIT_UNITS.filter(unit => (troops[unit] ?? 0) > 0);
+    const pace = present.length ? Math.min(...present.map(unit => RECRUIT_RULES[unit].speed)) : RECRUIT_RULES.infantry.speed;
+    return 22 * pace / RECRUIT_RULES.infantry.speed * heroBonuses(world, army).speed;
+}
 export function canCancelMarch(army: Army, now = Date.now()) {
     return army.status === 'moving' && !!army.march_sent_at && !!army.march_cancel_until &&
         now >= Date.parse(army.march_sent_at) && now < Date.parse(army.march_cancel_until);
@@ -30,7 +36,7 @@ export function startRaidReturn(world: LocalCommandContext['world'], army: Army,
     army.target_x = origin.x; army.target_y = origin.y;
     army.march_path = path.slice().reverse(); army.march_returning = true; army.status = 'moving';
     army.departure_at = new Date(clock).toISOString();
-    army.arrival_at = new Date(clock + Math.max(2, distance / (22 * heroBonuses(world, army).speed)) * 1000).toISOString();
+    army.arrival_at = new Date(clock + Math.max(2, distance / marchSpeed(world, army)) * 1000).toISOString();
     army.updated_at = army.departure_at;
     return true;
 }
@@ -76,8 +82,8 @@ export function marchArmy(context: LocalCommandContext, cmd: Extract<Command, {
     if (a.status !== 'idle' || a.raid_target_id !== null || a.raid_reserve)
         throw new Error('This legion already has a march or raid. Cancel within 30 seconds or wait for its return.');
     const available = readRoster(a);
-    const troops = cmd.type === 'raid' ? cmd.troops : undefined;
-    if (cmd.type === 'raid' && cmd.troops !== undefined && (!troops || typeof troops !== 'object' || Array.isArray(troops)))
+    const troops = cmd.troops;
+    if (cmd.troops !== undefined && (!troops || typeof troops !== 'object' || Array.isArray(troops)))
         throw new Error('Choose troops currently available in this legion.');
     if (troops && (!validateRoster(troops) || RECRUIT_UNITS.some(unit => (troops[unit] ?? 0) > available[unit])))
         throw new Error('Choose troops currently available in this legion.');
@@ -87,14 +93,16 @@ export function marchArmy(context: LocalCommandContext, cmd: Extract<Command, {
     // Legacy saves may already have an army resting on neutral land. Let it
     // travel back to an owned station, without allowing a new raid from there.
     if (cmd.type === 'raid' && !ownedStation(w, context.playerId, pos)) throw new Error('Depart from one of your own villages or claimed fields.');
+    if (troops && rosterTotal(troops) < rosterTotal(available) && !ownedStation(w, context.playerId, pos)) throw new Error('Leave reinforcements only at your own village or field.');
     if (cmd.type === 'move' && !ownedStation(w, context.playerId, { x, y })) throw new Error('Troops can only station in your own villages and fields.');
     const route = findMarchPath(pos, { x, y });
     if (!route) throw new Error('No connected land route reaches this destination.');
-    const seconds = Math.max(2, route.distance / (22 * heroBonuses(w, a).speed));
+    const seconds = Math.max(2, route.distance / marchSpeed(w, a, troops ?? available));
     // Every guard and route calculation succeeds before the existing army changes.
     a.raid_target_id = raidTargetId;
     if (troops) {
-        addStationGarrison(w, context.playerId, pos, addRosters(available, troops, -1));
+        const leftBehind = addRosters(available, troops, -1);
+        if (rosterTotal(leftBehind)) addStationGarrison(w, context.playerId, pos, leftBehind);
         writeRoster(a, troops);
     }
     a.march_origin = { ...stationCell(pos), ...pos }; a.march_returning = false; a.farm_list_id = null;

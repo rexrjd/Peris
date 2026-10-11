@@ -41,12 +41,12 @@ try {
     const marching = await snapshot(), sent = marching.armies[0];
     assert.equal(Date.parse(sent.march_cancel_until) - Date.parse(sent.march_sent_at), 30000);
     assert.ok(marching.garrisons.length);
-    const before = await persisted(), upgrade = await readFile('supabase/UPGRADE_TO_V16.sql', 'utf8');
+    const before = await persisted(), upgrade = await readFile('supabase/UPGRADE_TO_V17.sql', 'utf8');
     // Preserve every legacy value and assert exact defaults for the new fields.
     const additions = {
         armies: { unit_roster: null, carried_loot: null, farm_list_id: null, loot_report_id: null },
         peris_garrisons: { unit_roster: null },
-        peris_campaign_farms: { route: null, enabled: false, interval_seconds: 300, next_at: null, last_status: null },
+        peris_campaign_farms: { route: null, enabled: false, interval_seconds: 300, next_at: null, last_status: null, sent: 0, skipped: 0 },
     };
     for (const [table, defaults] of Object.entries(additions)) {
         for (const row of before[table]) Object.assign(row.record, defaults);
@@ -55,7 +55,7 @@ try {
     }
     await admin(upgrade); await admin(upgrade);
     assert.deepEqual(await persisted(), before, 'every existing game row survives the combined migration twice');
-    console.log('PASS · latest main → V16 preserves all legacy values and validates new troop, loot and repeat defaults');
+    console.log('PASS · prior main → V17 preserves all legacy values and validates new troop, loot, repeat and counter defaults');
 
     await connect(3);
     const recovered = await rpc('peris_enter_account', [' LATEST ruler ', 'login', null, null]);

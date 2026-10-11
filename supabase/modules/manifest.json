@@ -49,5 +49,6 @@
   "battle/automatic.sql",
   "accounts/policies.sql",
   "campaign/game-worker.sql",
+  "security/command-receipts.sql",
   "security/permissions.sql"
 ]

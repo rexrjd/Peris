@@ -7,6 +7,12 @@ import type { RecruitUnit } from '../../features/army/domain/roster';
 import type { Battle, BattleOrder } from '../../features/battle/domain/types';
 import type { World } from './world';
 type BaseCommand = {type:'setFaction';faction:Faction} | {type:'debugCity';action:'resources'|'demolish'|'finish'|'level'|'population'|'culture';target?:string;value?:number} | {type:'researchSpell';spell:string;} | {type:'castSpell';battleId:number;spell:string;target?:number;} | {
+    type: 'manageCampaignFarmTargets'; ids: number[]; action: 'move' | 'delete'; listId?: number;
+} | {
+    type: 'setCampaignFarmListEnabled'; id: number; enabled: boolean;
+} | {
+    type: 'applyCampaignFarmListTroops'; id: number;
+} | {
     type: 'saveCampaignFarmList'; id?: number; name: string; troops: ArmyTroops; casualtiesOnly: boolean;
 } | {
     type: 'saveCampaignFarm'; id?: number; listId: number; campId: number; armyId: number; troops: ArmyTroops; intervalSeconds?: number; enabled?: boolean;
@@ -38,6 +44,7 @@ type BaseCommand = {type:'setFaction';faction:Faction} | {type:'debugCity';actio
     x: number;
     y: number;
     route?: [number, number][];
+    troops?: ArmyTroops;
 } | {
     type: 'raid';
     campId: number;
@@ -75,7 +82,7 @@ type BaseCommand = {type:'setFaction';faction:Faction} | {type:'debugCity';actio
     type: 'respond';
     id: number;
     accept: boolean;
-} | { type: 'trainSettlers'; quantity: number } | { type: 'foundCity'; col: number; row: number; name: string; route?: [number, number][] } | { type: 'recruitHero'; name: string; heroClass: 'knight' | 'ranger' | 'mage' } | { type: 'heroSkill'; heroId: number; stat: 'attack' | 'defence' | 'power' | 'knowledge' } | { type: 'equipArtifact'; heroId: number; artifactId: number; equip: boolean } | { type: 'transferTroops'; targetArmyId: number; infantry: number; archers: number; cavalry: number } | { type: 'rebaseArmy' };
+} | { type: 'trainSettlers'; quantity: number } | { type: 'foundCity'; col: number; row: number; name: string; route?: [number, number][] } | { type: 'recruitHero'; name: string; heroClass: 'knight' | 'ranger' | 'mage' } | { type: 'heroSkill'; heroId: number; stat: 'attack' | 'defence' | 'power' | 'knowledge' } | { type: 'equipArtifact'; heroId: number; artifactId: number; equip: boolean } | { type: 'transferTroops'; targetArmyId: number; infantry: number; archers: number; cavalry: number; troops?: ArmyTroops } | { type: 'rebaseArmy' };
 export type Command = BaseCommand & { settlementId?: number; armyId?: number };
 export type LocalCommandContext = {
     world: World;

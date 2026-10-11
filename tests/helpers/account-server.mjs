@@ -35,7 +35,7 @@ export async function accountServer(){
     if(path.startsWith('/rest/v1/rpc/')){
      const name=path.split('/').at(-1);
      // Only existing named test RPCs, with parameters bound as values.
-     const args={peris_login:['p_display_name'],peris_enter_account:['p_display_name','p_mode','p_faction','p_creation_id'],peris_account_directory:['p_search','p_faction','p_activity','p_sort','p_offset','p_limit'],peris_snapshot:[],sync_my_state:[],peris_map_snapshot:['p_min_x','p_min_y','p_max_x','p_max_y'],peris_rename:['p_name']};
+     const args={peris_login:['p_display_name'],peris_enter_account:['p_display_name','p_mode','p_faction','p_creation_id'],peris_account_directory:['p_search','p_faction','p_activity','p_sort','p_offset','p_limit'],peris_snapshot:[],sync_my_state:[],peris_map_snapshot:['p_min_x','p_min_y','p_max_x','p_max_y'],peris_rename:['p_name'],peris_submit_command:['p_request_id','p_function','p_args']};
      if(!Object.hasOwn(args,name))return result(400,{message:'Unexpected test RPC: '+name});
      const values=args[name].map(k=>body[k]);
      const rows=await tx.query(`select public.${name}(${values.map((_,i)=>'$'+(i+1)).join(',')}) result`,values);

@@ -35,6 +35,9 @@ jobs:
       - run: npm run test:fresh
       - run: npm run test:empire-db
       - run: npm run test:integration-db
+      - run: npm run test:command-receipts-db
+      - run: npm run test:farm-parity-db
+      - run: npm run test:army-parity-db
       - run: npm run test:accounts-db
       - run: npm run test:account-directory-db
       - run: npm run test:account-compatibility-db

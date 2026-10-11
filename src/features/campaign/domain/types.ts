@@ -8,6 +8,12 @@ export type CampaignFarmTarget = {
     id: number; owner_id: string; list_id: number; camp_id: number; army_id: number;
     troops: CampaignFarmTroops; created_at: string;
     enabled?: boolean; interval_seconds?: number; next_at?: string | null; last_status?: string;
+    sent?: number; skipped?: number;
+};
+/** Private completed deliveries, independent of visible report pages/preferences. */
+export type CampaignFarmStats = {
+    owner_id: string; camp_id: number; raids: number; last_raid_at: string;
+    last_loot: number; total_loot: number; last_result: 'attacker' | 'defender' | 'draw'; last_losses: number;
 };
 export type Player = {
     id: string;

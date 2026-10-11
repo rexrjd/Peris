@@ -2,11 +2,12 @@ import { useState, type KeyboardEvent } from 'react';
 import type { World } from '../../../shared/model/world';
 import type { Command } from '../../../shared/model/commands';
 import { Icon } from '../../../shared/ui/Icons';
-import { Cost, Modal } from '../../../shared/ui/Shared';
+import { Cost } from '../../../shared/ui/Shared';
 import { clock } from '../../../shared/time/clock';
 import type { Battle } from '../../battle/domain/types';
-import { mySide } from '../../battle/domain/ownership';
-import { ResultBody } from '../../campaign/ui/Chronicle';
+import { SavedReportDialog } from '../../campaign/ui/Chronicle';
+import { ReportLedger } from '../../campaign/ui/ReportLedger';
+import { reportSide, visibleReports } from '../../campaign/domain/reportEconomics';
 import { CampaignFarmLists, CampaignFarmTargetDialog } from '../../campaign/ui/CampaignFarmLists';
 import type { CampaignFarmTarget, Report } from '../../campaign/domain/types';
 import { MarchDialog } from '../../map/ui/MarchDialog';
@@ -37,8 +38,7 @@ export function RallyPoint({ world, playerId, cityId, now, busy, run, onCity, on
     const state = rallyPointState(world, playerId, cityId, now);
     const cities = world.settlements.filter(city => city.owner_id === playerId);
     const lists = (world.campaign_farm_lists ?? []).filter(list => list.owner_id === playerId);
-    const reports = world.reports.filter(report => report.owner_id === playerId && (report.result.attacker_losses > 0 || !lists.some(list => list.id === report.farm_list_id && list.casualties_only)))
-        .sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at));
+    const reports = visibleReports(world, playerId);
     const tabs: { id: Tab; label: string; icon: string; count?: number }[] = [
         { id: 'overview', label: 'Overview', icon: 'town' }, { id: 'incoming', label: 'Incoming', icon: 'shield', count: state.incoming.length },
         { id: 'outgoing', label: 'Outgoing', icon: 'army', count: state.outgoing.length }, { id: 'farms', label: 'Farm lists', icon: 'flag' }, { id: 'reports', label: 'Reports', icon: 'report' },
@@ -51,7 +51,7 @@ export function RallyPoint({ world, playerId, cityId, now, busy, run, onCity, on
     };
     const openReport = (report: Report) => {
         const battle = world.battles.find(battle => battle.id === report.battle_id);
-        if (battle) onReport({ ...battle, result: report.result }); else setSavedReport(report);
+        if (battle && reportSide(world, report, playerId)) onReport({ ...battle, result: report.result }); else setSavedReport(report);
     };
     const locationButton = (place: RallyPlace) => <button className="rally-location" title={`Locate ${place.name}${place.kind === 'field' ? '' : ` ${coordinates(place)}`} on the world map`} onClick={() => onLocate(place)}><span>{place.name}</span>{place.kind !== 'field' && <small>{coordinates(place)}</small>}<Icon name="focus" size={13}/></button>;
     return <section className="rally-point" aria-label="Rally Point">
@@ -89,16 +89,10 @@ export function RallyPoint({ world, playerId, cityId, now, busy, run, onCity, on
                 {!(tab === 'incoming' ? state.incoming : state.outgoing).length && <div className="rally-empty"><Icon name={tab === 'incoming' ? 'shield' : 'army'} size={34}/><h3>No {tab} movements</h3><p>{tab === 'incoming' ? 'Returning legions and reinforcements appear here when they are heading to this city or one of its fields.' : 'Send a confirmed raid from a farm list or the map to track its departure here.'}</p></div>}
             </>}
             {tab === 'farms' && <><div className="rally-section-heading"><h2>Farm lists</h2><span>Across your empire</span></div><p className="rally-note">Choose a list to review and start a batch, or prepare an individual raid. Each target keeps its own legion and troop preset.</p><CampaignFarmLists embedded world={world} playerId={playerId} now={now} busy={busy} run={run} onClose={() => setTab('overview')} onRaid={setRaid} onEdit={setEditing} onLocate={camp => onLocate(placeForCamp(camp))}/></>}
-            {tab === 'reports' && <><div className="rally-section-heading"><h2>Battle reports</h2><span>Across your empire · {reports.length}</span></div><p className="rally-note">All your battle reports, newest first. Farm lists set to show only losses keep that filter here.</p><div className="rally-reports">{reports.map(report => {
-                const battle = world.battles.find(battle => battle.id === report.battle_id), side = battle ? mySide(battle, playerId) : report.camp_id !== undefined ? 'attacker' : null;
-                const camp = world.camps.find(camp => camp.id === (report.camp_id ?? battle?.camp_id));
-                return <article key={report.id}><button className="rally-report-open" title="Open the full battle report" onClick={() => openReport(report)}><span className={`rally-result ${report.won ? 'won' : ''}`}><Icon name={report.won ? 'check' : 'shield'} size={20}/></span><div><strong>{report.title}</strong><small>{dateTime(Date.parse(report.created_at))}</small></div><span><b>{battle?.winner_side === 'draw' ? 'Stalemate' : report.won ? 'Victory' : battle ? 'Defeat' : 'No victory'}</b><small>{side ? `${side === 'attacker' ? report.result.attacker_losses : report.result.defender_losses} lost` : `${report.result.attacker_losses} attacking · ${report.result.defender_losses} defending lost`}</small></span><Icon name="arrow" size={16}/></button>{camp && <div className="rally-report-meta">{locationButton(placeForCamp(camp))}<Cost cost={report.result.loot} compact/></div>}</article>;
-            })}</div>{!reports.length && <div className="rally-empty"><Icon name="report" size={34}/><h3>No reports yet</h3><p>Completed battles appear here with troop losses and earned spoils.</p></div>}</>}
+            {tab === 'reports' && <><div className="rally-section-heading"><h2>Battle reports</h2><span>Across your empire · {reports.length}</span></div><ReportLedger world={world} playerId={playerId} onOpen={openReport} onLocateCamp={camp => onLocate(placeForCamp(camp))}/></>}
         </div>
         {raid && <MarchDialog world={world} playerId={playerId} now={now} busy={busy} initialArmyId={raid.army_id} initialTroops={raid.troops} destination={{ kind: 'raid', campId: raid.camp_id }} run={run} onClose={() => setRaid(null)}/>} 
         {editing && world.camps.find(camp => camp.id === editing.camp_id) && <CampaignFarmTargetDialog world={world} playerId={playerId} busy={busy} run={run} initialArmyId={editing.army_id} target={editing} camp={world.camps.find(camp => camp.id === editing.camp_id)!} onClose={() => setEditing(null)}/>} 
-        {savedReport && <Modal title="Saved battle report" className="result-modal battle-rewards-modal rally-saved-report" onClose={() => setSavedReport(null)}>{savedReport.camp_id !== undefined ? <ResultBody result={savedReport.result} won={savedReport.won} side="attacker" enemyName={savedReport.title}/> : <><h3>{savedReport.title}</h3><p>{dateTime(Date.parse(savedReport.created_at))} · {savedReport.won ? 'Victory' : 'No victory'} · {clock(savedReport.result.duration)}</p><p>{savedReport.result.reason}</p>
-            {(['attacker', 'defender'] as const).map(side => <section key={side} aria-label={side === 'attacker' ? 'Attacking forces' : 'Defending forces'}><h3>{side === 'attacker' ? 'Attacking forces' : 'Defending forces'}</h3><dl><div><dt>Sent</dt><dd>{savedReport.result[`${side}_initial`]}</dd></div><div><dt>Survived</dt><dd>{savedReport.result[`${side}_survivors`]}</dd></div><div><dt>Lost</dt><dd>{savedReport.result[`${side}_losses`]}</dd></div></dl>{savedReport.result[`${side}_survivor_roster`] && <TroopSummary troops={savedReport.result[`${side}_survivor_roster`]!} faction={savedReport.result[`${side}_faction`]}/>}</section>)}
-            <section><h3>Resource spoils</h3><Cost cost={savedReport.result.loot} compact showZero/></section><p className="rally-note">This saved receipt no longer has its original battle record. Forces are labelled by battle side.</p></>}<div className="result-actions"><button className="button gold" onClick={() => setSavedReport(null)}>Back to reports</button></div></Modal>}
+        {savedReport && <SavedReportDialog world={world} playerId={playerId} report={savedReport} onClose={() => setSavedReport(null)}/>}
     </section>;
 }

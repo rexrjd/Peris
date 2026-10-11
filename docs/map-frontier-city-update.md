@@ -9,15 +9,12 @@
 - Cities gain resource/population/production, home-troop, movement and construction ledgers, hover details and centered building dialogs. Sixteen ordinary plots plus the Main building preserve existing unlocks and saves; the original 3D view remains available.
 - All eleven factions have original painted buildings, race-specific enclosures, gates and residents. The latest city scenery places wheat above, woodland by the timber yard, rocks by the quarry and a fishing inlet with a bridge. Walls stay dry, outside loop roads are removed, workers use safe surfaces, and subtle animations respect reduced motion and hidden tabs.
 
-The combined branch includes main's Frontier Wars milestone and V14 name-only
-account/session work. Frontier's local realm and campaign/Supabase saves remain
-separate. Strategic allied reinforcement, public Frontier hosting/account recovery,
-dedicated scouting and siege damage remain future work.
-
-For the shared world, apply `supabase/UPGRADE_TO_V14.sql` before deploying the new
-frontend; use `FRESH_INSTALL_V14.sql` only for an empty database. Frontier starts
-with `npm run dev:frontier`. Preparing this update does not deploy SQL or publish
-the application.
+Frontier mechanics now share Peris's existing campaign, shared-world account,
+villages, armies and reports. Old Frontier bookmarks open the same game.
+See [integrated camps and farming](frontier-wars.md) for the current release,
+Rally Point, restored controls and the V17 database installation requirements.
+Allied reinforcement, dedicated scouting intelligence and structural siege damage
+remain future work. The validation notes below record earlier development stages.
 
 Initial combined-update validation on 2026-10-11 with Windows and headless Edge: 348 unit tests passed
 (one intentional skip), four tooling tests passed, and the production build,

@@ -23,8 +23,8 @@ begin
      if farm.route is null then raise exception 'Start this target manually once to establish its land route';end if;
      perform public.peris_prepare_raid_for(owner,farm.army_id,farm.camp_id,farm.route,farm.troops);
      update public.armies set farm_list_id=farm.list_id where id=farm.army_id;
-     update public.peris_campaign_farms set last_status='Raid preparing'where id=farm.id;
-    exception when others then update public.peris_campaign_farms set last_status=sqlerrm where id=farm.id;end;
+     update public.peris_campaign_farms set last_status='Raid preparing',sent=sent+1 where id=farm.id;
+    exception when others then update public.peris_campaign_farms set last_status=sqlerrm,skipped=skipped+1 where id=farm.id;end;
     update public.peris_campaign_farms set next_at=now()+make_interval(secs=>farm.interval_seconds)where id=farm.id;
    end loop;
    perform public.peris_sync_owner(owner);
