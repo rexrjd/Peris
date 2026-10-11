@@ -1,61 +1,47 @@
-PERIS — MAP PANEL AND LIVE ACTIVITY UPDATE
+PERIS — COMPACT MAP UI
 11 October 2026
 
-Compatible baseline
-Repository: https://github.com/rexrjd/Peris
-Latest main checked: 0c92070e35b469a815fbe09db25f849858b4042d
-This baseline already includes the preceding account/login compatibility update.
+Baseline: rexrjd/Peris main, 84fe77b75332d7fdba783b52fb00b014b7509cbf.
+This supersedes the previous map panel design.
 
-Installation
-This is a changed-files package. Copy src/ and tests/ into the root of the
-Peris checkout, preserving their paths. The package does not replace the
-whole repository. Alternatively, apply map-ui-activity.patch to the stated
-baseline with git apply; use either copying or the patch, not both.
-Run npm run build, then your normal frontend deployment workflow.
-No dependencies, SQL migrations or save conversions are needed.
+Install
+Copy src/ and tests/ from this ZIP into the root of the current Peris checkout,
+preserving their paths. Alternatively, use git apply map-ui-minimal.patch
+against the stated baseline. Choose one installation method.
+Run npm run build and deploy the frontend normally.
+No dependencies, SQL migrations or save conversions are required.
 
-What changed
-- A compact slate right panel replaces the oversized selected-location UI.
-- Selected armies show their commander, level, troop composition and status,
-  with contextual March / Follow army / Manage actions.
-- Camps, cities and fields retain their existing actions with compact styling.
-- Activity includes outbound raids, returning troops, reinforcement marches,
-  active battles, construction, field improvements, recruitment, settler
-  training and travelling settlers from every owned city and army.
-- All / Armies / Cities filters, arrival countdowns, progress and destinations.
-- Click an event to focus its location and select the correct city/commander.
-- Departure cancellation uses the existing persisted token and real deadline.
-- Battle reports are available directly from the panel.
-- Mobile uses a collapsible bottom sheet with an Activity jump button.
-  Collapse it to return to the full map and army-switching dock.
+Design
+The map keeps its full width and height when events or details are opened.
+A small floating Events button replaces the permanent sidebar.
+The movement preview has at most three single-line rows: type, army and timer.
+All events opens the complete list with All / Armies / Cities filters.
+Selecting an event opens the relevant compact action card instead of the list.
+Camp strength and raid/farm actions remain visible; troop breakdown, loot and
+explanations are under Details. City statistics and field building options
+are also shown on demand.
+Mobile uses the same small floating controls, with no large bottom sheet.
+The army-switching dock remains available.
 
-Compatibility
-The activity list reads authoritative existing state. It neither changes
-travel, combat or queue rules nor exposes rival private queues. Late events
-remain visible until normal engine/server settlement. Returns describe their
-actual departure station rather than assuming their army's home city.
-Both Three.js and Canvas map paths are preserved.
+Gameplay
+All existing owned activity is retained: raids, returns, marches, battles,
+building/field work, recruitment and settlers. Existing cancellation tokens,
+timing, save compatibility and private-data boundaries are preserved.
+The coordinate search closes after Go so it does not cover the selected card.
+City founding remains available through the field card's Settle action.
 
-Verification
-- npm test: 374 passed, one existing test skipped.
-- npm run test:tooling: four passed.
-- npm run assets:check: 46 registered models passed.
-- npm run build: passed; existing large-chunk warning remains.
-- npm run check:sql and git diff --check: passed.
-- Desktop/mobile browser checks: activity, filters, commander selection,
-  cancellation/reload, map clicks, camp selection, farm lists, reinforcement
-  review, saved returning troops and quiet automatic bandit farming.
-- Screenshots inspected on desktop and Pixel 7 layouts; Chromium used a
-  software graphics renderer. No hardware frame-rate claim is made.
+Reference patterns
+Travian: small map movement indicators.
+https://support.travian.com/en/articles/135-travian-plus-membership-map-incoming-and-outgoing-troop-movements
+Total War: army and province panels opened through selection.
+https://academy.totalwar.com/total-war-rome-2-campaign-controls/
+These are interaction references; no game artwork has been copied.
 
-Package contents
-src/features/map/domain/activity.ts
-src/features/map/styles/operations.css
-src/features/map/ui/MapArmyDetails.tsx
-src/features/map/ui/MapOperations.tsx
-src/features/map/ui/WorldView.tsx
-tests/map-activity.test.ts
-tests/e2e/map-activity.spec.ts
-tests/e2e/campaign-marches.spec.ts
-MAP_ACTIVITY_README.txt
-map-ui-activity.patch (source/test changes only)
+Validation
+Production build and SQL bundle consistency passed. Unit tests: 374 passed
+(one existing skip); tooling: 4 passed; models: 46 passed. All 16 desktop and
+Pixel 7 browser scenarios passed. They cover full map
+size, bounded overlay size, filters, correct commander selection, real map
+clicks, departure cancellation/reload, camp and farm actions, reinforcement
+restrictions, returning-troop settlement and quiet automatic battle results.
+Browser screenshots are internal QA; software graphics were used.
