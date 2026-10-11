@@ -58,6 +58,7 @@ test('two tabs can control different names without changing each other', async (
     await connect(context); const first = await context.newPage(), second = await context.newPage();
     await login(first, 'Tab Alpha');await ruler(first, 'Tab Alpha');
     await login(second, 'Tab Beta');await ruler(second, 'Tab Beta');
+    await first.bringToFront();
     await first.reload();await expect(first.getByLabel('Game menu')).toBeVisible();await ruler(first, 'Tab Alpha');
     await second.bringToFront();
     await second.getByRole('button', { name: 'Switch ruler', exact: true }).click();await second.getByLabel('YOUR RULER NAME').fill('tab alpha');await second.getByRole('button', { name: 'Enter the shared world', exact: true }).click();await ruler(second, 'Tab Alpha');
