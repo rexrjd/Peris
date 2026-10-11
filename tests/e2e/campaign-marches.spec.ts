@@ -149,7 +149,9 @@ test('reinforcement review blocks neutral fields and shows saved returning troop
         march_returning: true, march_origin: { col: Math.floor(origin.x / 128), row: Math.floor(origin.y / 128), ...origin }, march_sent_at: null, march_cancel_until: null,
         march_path: [[origin.x + 128, origin.y], [origin.x, origin.y]], march_distance: 128 });
     returning.garrisons = [{ owner_id: army.owner_id, col: Math.floor(origin.x / 128), row: Math.floor(origin.y / 128), infantry: 110, archers: 50, cavalry: 16 }];
-    await page.evaluate(w => localStorage.setItem('peris-campaign-v6', JSON.stringify(w)), returning);
+    // Seed at navigation startup so the old live engine cannot overwrite the imported fixture.
+    await page.evaluate(w => sessionStorage.setItem('peris-test-return-fixture', JSON.stringify(w)), returning);
+    await page.addInitScript(() => { const next = sessionStorage.getItem('peris-test-return-fixture'); if (next) { localStorage.setItem('peris-campaign-v6', next); sessionStorage.removeItem('peris-test-return-fixture'); } });
     await page.reload(); await page.getByRole('button', { name: 'Continue campaign', exact: true }).click();
     await expect.poll(async () => (await save(page)).armies[0].infantry).toBe(116);
     let settled = await save(page); expect(settled.garrisons).toEqual([]); expect(settled.armies[0].status).toBe('idle');
