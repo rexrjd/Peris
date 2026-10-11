@@ -46,7 +46,7 @@ insert into public.peris_camps(id,name,x,y,tier,terrain,infantry,archers,cavalry
  (5,'Ashen legion',910,550,8,'plains',240,110,55,'A rebel legion controls the eastern road. You will need a larger host.'),
  (6,'The fallen capital',605,280,10,'highlands',340,160,80,'Break the last great host and restore the lost province of Peris.')
 on conflict(id) do update set name=excluded.name,x=excluded.x,y=excluded.y,tier=excluded.tier,terrain=excluded.terrain,
- infantry=excluded.infantry,archers=excluded.archers,cavalry=excluded.cavalry,description=excluded.description;
+ description=excluded.description;
 
 alter table public.armies add column if not exists raid_target_id integer references public.peris_camps(id);
 alter table public.battles alter column defender_owner_id drop not null;

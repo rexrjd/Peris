@@ -1,3 +1,6 @@
+import { TroopSummary } from '../../army/ui/TroopSummary';
+import { RECRUIT_UNITS } from '../../army/domain/roster';
+import { factionTroopName } from '../../frontier/ui/roster';
 import { type Battle, type BattleResult, type Formation } from '../../battle/domain/types';
 import { Icon } from '../../../shared/ui/Icons';
 import { clock } from '../../../shared/time/clock';
@@ -24,6 +27,7 @@ export function ResultBody({ result, won, draw = false, side = 'attacker', enemy
     practice?: boolean;
 }) {
     const loss = side === 'attacker' ? result.attacker_losses : result.defender_losses, enemyLoss = side === 'attacker' ? result.defender_losses : result.attacker_losses, survivors = side === 'attacker' ? result.attacker_survivors : result.defender_survivors;
+    const initialRoster = side === 'attacker' ? result.attacker_roster : result.defender_roster, survivorRoster = side === 'attacker' ? result.attacker_survivor_roster : result.defender_survivor_roster, rosterFaction = side === 'attacker' ? result.attacker_faction : result.defender_faction;
     const title = draw ? 'Stalemate' : won ? 'Victory' : 'Defeat';
     const reward = !practice ? result.hero_reward : undefined;
     const levelled = reward && reward.level_after > reward.level_before;
@@ -43,6 +47,8 @@ export function ResultBody({ result, won, draw = false, side = 'attacker', enemy
             <p>{reward.inventory_full ? 'Backpack full (200 items). No equipment was added.' : reward.artifacts.length ? 'Added to your shared backpack. Equip it from the army screen.' : 'No equipment received.'}</p>
         </section>}
         {won && Object.values(result.loot ?? {}).some(n => n > 0) && <section className="result-supplies" aria-label="Resource spoils"><h3>Resource spoils</h3><Cost cost={result.loot} compact/></section>}
+        {survivorRoster && <section aria-label="Returned troops"><h3>Surviving troops</h3><TroopSummary troops={survivorRoster} faction={rosterFaction}/>{initialRoster && <details><summary>Losses by troop</summary>{RECRUIT_UNITS.filter(unit=>initialRoster![unit]>0).map(unit=><p key={unit}>{factionTroopName(rosterFaction??'roman',unit)}: {initialRoster![unit]-(survivorRoster[unit]??0)} lost</p>)}</details>}</section>}
+        {result.delivered ? <section aria-label="Delivered spoils"><h3>Delivered to your home city</h3><Cost cost={result.delivered} compact/>{Object.values(result.overflow??{}).some(amount=>amount>0)&&<p>Storage overflow discarded<Cost cost={result.overflow!} compact/></p>}</section> : result.attacker_roster && Object.values(result.loot??{}).some(amount=>amount>0) && <p>Spoils are travelling home with the legion.</p>}
         <dl className="result-battle-totals"><div><dt>Survived</dt><dd>{count(survivors)}</dd></div><div className="result-losses"><dt>Your losses</dt><dd>{count(loss)}</dd></div><div><dt>Enemy losses</dt><dd>{count(enemyLoss)}</dd></div></dl>
         {formations.length > 0 && <details className="result-breakdown"><summary>Troop breakdown<Icon name="chevron" size={14}/></summary><div className="result-units">{(['infantry', 'archers', 'cavalry'] as const).filter(t => formations.some(f => f.unit_type === t)).map(t => {const list = formations.filter(f => f.unit_type === t);return <div key={t}><Icon name={t === 'infantry' ? 'shield' : t === 'archers' ? 'bow' : 'horse'} size={17}/><span><strong>{UNITS[t].name}</strong><small>{count(list.reduce((n,f)=>n+f.soldiers,0))} returned</small></span><b>{count(list.reduce((n,f)=>n+f.initial_soldiers-f.soldiers,0))}<small>lost</small></b></div>;})}</div></details>}
         {practice && <p className="result-practice-note">Practice battle · Your campaign is unaffected.</p>}
@@ -56,7 +62,7 @@ export function Chronicle({ world, playerId, onReport, run, onEnding }: {
     run?: (c: Command, m?: string) => void;
     onEnding?: () => void;
 }) {
-    const player = world.players.find(p => p.id === playerId)!, done = conquered(world, playerId), reports = world.reports.filter(r => r.owner_id === playerId);
+    const player = world.players.find(p => p.id === playerId)!, done = conquered(world, playerId), reports = world.reports.filter(r => r.owner_id === playerId && (r.result.attacker_losses > 0 || !world.campaign_farm_lists?.some(list => list.id === r.farm_list_id && list.casualties_only)));
     return <section className="chronicle"><div className="view-heading"><div><span className="eyebrow">THE CHRONICLE</span><h1>A name remembered</h1><p>{campaignRank(done.size)}. The record of a realm you built and the fields you commanded.</p></div><span className="tag">{player.prestige} prestige</span></div>
  {done.size === 6 && <div className="restored-banner"><Icon name="crown" size={42}/><div><span className="eyebrow">THE CAMPAIGN IS COMPLETE</span><h2>Peris restored</h2><p>All six standards have returned to your keeping.</p></div><button className="button gold" onClick={onEnding}>Relive the triumph <Icon name="arrow"/></button></div>}
  <div className="chronicle-metrics"><div><Icon name="crown"/><b>{player.victories}</b><span>Victories</span></div><div><Icon name="army"/><b>{player.recruits}</b><span>Soldiers trained</span></div><div><Icon name="town"/><b>{player.upgrades}</b><span>City upgrades</span></div><div><Icon name="flag"/><b>{done.size} / 6</b><span>Standards recovered</span></div></div>

@@ -20,7 +20,7 @@ export function generateBanditCamps(seed=WORLD_MAP_SEED): Camp[] {
             const total=Math.round(([0,30,50,80,120,180,260,360,480,610,720][tier])*(.92+rng()*.16));
             const archers=Math.floor(total*(.15+rng()*.25)),cavalry=Math.floor(total*rng()*(tier<=2?.1:.3));
             const x=(c+.5)*CELL_SIZE,y=(r+.5)*CELL_SIZE;
-            camps.push({id,bandit:true,faction,name:`${FACTIONS[faction].name} ${['outpost','raider camp','war camp','stronghold'][tier<=2?0:tier<=5?1:tier<=8?2:3]}`,x,y,tier,terrain:battleTerrainAtWorld(x,y),infantry:total-archers-cavalry,archers,cavalry,description:`Level ${tier} camp. Defeat its defenders to earn an artifact, resources and hero experience. It regroups after ten minutes.`});break;
+            camps.push({id,bandit:true,faction,name:`${FACTIONS[faction].name} ${['outpost','raider camp','war camp','stronghold'][tier<=2?0:tier<=5?1:tier<=8?2:3]}`,x,y,tier,terrain:battleTerrainAtWorld(x,y),infantry:total-archers-cavalry,archers,cavalry,description:`Level ${tier} camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.`});break;
         }
     }
     return camps;

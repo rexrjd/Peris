@@ -30,7 +30,7 @@ test('victory receipt shows actual rewards and opens the earned item for the cor
  await expect(modal.locator('.result-hero-line img')).toHaveAttribute('src',heroPortraitUrl('orc','knight',reward.hero_id));
  await expect.poll(()=>modal.locator('.result-hero-line img').evaluate((img:HTMLImageElement)=>img.complete&&img.naturalWidth>0)).toBe(true);
  const bounds=await modal.boundingBox(),size=page.viewportSize()!;expect(bounds!.x).toBeGreaterThanOrEqual(0);expect(bounds!.x+bounds!.width).toBeLessThanOrEqual(size.width+1);
- await modal.locator('summary').click();await expect(modal.locator('.result-units')).toBeVisible();await modal.locator('summary').click();
+ await modal.locator('.result-breakdown > summary').click();await expect(modal.locator('.result-units')).toBeVisible();await modal.locator('.result-breakdown > summary').click();
  await page.screenshot({path:info.outputPath('victory-rewards.png')});await modal.getByRole('button',{name:'Open equipment',exact:true}).click();
  await expect(page.getByRole('region',{name:'Equipment management'})).toBeVisible();await expect(page.locator('.command-backpack')).toContainText(meta.name);
  await expect(page.locator('.command-artifact-grid>button[aria-pressed=true]')).toContainText(meta.name);

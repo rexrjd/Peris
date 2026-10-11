@@ -181,6 +181,16 @@ test('embedded farm lists keep edits, moving targets and a reviewed manual batch
     await lists.getByRole('button', { name: /Cancel raid/ }).click();
     await expect.poll(async () => (await saved(page)).armies[0].status).toBe('idle');
     expect(readRoster((await saved(page)).armies[0]).scout).toBe(4);
+    const targetName = `${f.camp.name} (${Math.floor(f.camp.x / 128)} | ${Math.floor(f.camp.y / 128)})`;
+    await lists.getByRole('button', { name: targetName, exact: true }).click();
+    await expect(page.locator('canvas[aria-label^="Interactive 200 by 200"]')).toBeVisible();
+    await expect(page.locator('.atlas-inspector')).toContainText(f.camp.name);
+    await capture(page, info, 'rally-farm-locate');
+    await page.getByRole('navigation', { name: 'Game navigation' }).getByRole('button', { name: 'Rally Point', exact: true }).click();
+    await page.getByRole('tab', { name: 'Farm lists', exact: true }).click();
+    await expect(lists.locator('.campaign-farm-list').filter({ hasText: 'Reserve farms' }).getByRole('button', { name: targetName, exact: true })).toBeVisible();
+    expect((await saved(page)).campaign_farms?.[0].list_id).toBe(2);
+    expect((await saved(page)).campaign_farms?.[0].camp_id).toBe(f.camp.id);
     expect(errors).toEqual([]);
 });
 

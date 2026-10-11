@@ -2,12 +2,11 @@ PERIS — ARTIFACT PAINTINGS AND CAMP DIFFICULTY
 2026-10-11
 
 Compatibility
-Built against https://github.com/rexrjd/Peris main commit
-779715281b71418d4d3b02bf12066c8ecbe69645.
-Main was fetched again after implementation and still matches this baseline.
-The preceding compact map UI is already included in that baseline.
-This archive contains changed and new files with their repository paths.
-Copy them over that version, keeping the directory structure.
+Integrated with https://github.com/rexrjd/Peris main commit d82272e and the
+unified Rally Point. The normal Peris app includes artifact paintings, ten camp
+levels, nine troop roles, research, shared camp stock and farm lists together.
+Use the repository changes together; copying files from an older archive can
+remove mechanics added by the other developer.
 
 What changes
 24 distinct original equipment paintings, one for every artifact ID.
@@ -30,16 +29,15 @@ Camp cards and raid preparation show the level, difficulty and loot rarity.
 The six story encounters now span levels 1, 4, 4, 6, 8 and 10.
 
 Multiplayer installation
-For an existing V13–V15 database with hero battle rewards, run ONLY the included
-supabase/UPDATE_ARTIFACTS_AND_CAMPS.sql in the SQL editor as the database owner.
-Apply this together with the updated frontend, so the UI and server agree.
-This focused transaction adds the catalog entries and updates loot/raid functions
-and camp defenders. It does not rebuild tables or recreate accounts.
-It preserves camp IDs, coordinates, factions, inventories, XP, receipts and farming
-targets. Camps targeted by moving armies or active battles are skipped;
-rerun the same focused SQL after those raids finish to update the skipped camps.
-The operation can be repeated safely.
-Regenerated full-install and upgrade bundles are included for source consistency.
+An existing game database requires the regenerated supabase/UPGRADE_TO_V16.sql
+to install the complete Peris mechanics alongside the updated frontend.
+For a new database use supabase/FRESH_INSTALL_V16.sql.
+The focused supabase/UPDATE_ARTIFACTS_AND_CAMPS.sql updates artifact/camp metadata
+on older V13–V15 databases, but does not install research, camp stocks or the worker.
+It is not a substitute for the complete V16 upgrade.
+Migrations preserve camp IDs, coordinates, factions, current casualties, troop
+roles, stock, inventories, XP, receipts and farm targets. Busy camps retain their
+current difficulty until a later safe migration. Repeated upgrades are safe.
 Do not use a fresh-install script on an existing campaign.
 No production database changes or deployments were performed for this update.
 
@@ -48,7 +46,8 @@ Existing version-6 campaigns upgrade their known camp definitions once on load.
 Accounts, cities, armies, equipped items, progress and farm targets are retained.
 Active raids keep their existing defenders until a later safe load.
 The 605 generated camp IDs, coordinates and factions match the prior layout exactly.
-Frontier server gameplay and its separate low/medium/high encounter rules are intact.
+These mechanics are part of the main Peris game. Historical Frontier server files
+remain developer fixtures; players do not need a separate server or game.
 
 Artwork sources
 Generated using the built-in image-generation tool, one independent call per item,

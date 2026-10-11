@@ -25,8 +25,9 @@ begin
  select * into c from public.peris_camps where id=p_camp and bandit for update;if c.id is null then return;end if;
  select * into s from public.peris_camp_stock where camp_id=p_camp for update;
  if s.camp_id is null then return;end if;
- rates:=case when c.tier>=4 then array[24,15,15,6]when c.tier<=2 then array[3,2,2,1]else array[9,6,6,3]end;
- cap:=case when c.tier>=4 then 250 when c.tier<=2 then 30 else 100 end;batch_min:=case when c.tier>=4 then 4 when c.tier<=2 then 1 else 2 end;batch_max:=case when c.tier>=4 then 10 when c.tier<=2 then 3 else 6 end;
+ rates:=case when c.tier>=6 then array[24,15,15,6]when c.tier<=2 then array[3,2,2,1]else array[9,6,6,3]end;
+ cap:=greatest(case when c.tier>=6 then 250 when c.tier<=2 then 30 else 100 end,ceil((array[30,50,80,120,180,260,360,480,610,720])[least(10,greatest(1,c.tier))]*1.08)::integer);
+ batch_min:=case when c.tier>=6 then 4 when c.tier<=2 then 1 else 2 end;batch_max:=case when c.tier>=6 then 10 when c.tier<=2 then 3 else 6 end;
  if s.engaged_battle_id is null then
   while s.next_recruit_at<=p_until and steps<1024 loop
    steps:=steps+1;

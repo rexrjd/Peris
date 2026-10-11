@@ -21,6 +21,7 @@ export type Order = {
     finish_at: string;
 };
 export type World = {
+    unit_research?: { settlement_id: number; unit: import('../../features/army/domain/roster').RecruitUnit; completes_at: string }[];
     debug_enabled?: boolean;
     version: number;
     server_now: string;
