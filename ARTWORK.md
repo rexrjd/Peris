@@ -16,6 +16,12 @@ Three.js is the rendering library, distributed under the MIT license copied to `
 
 The standalone `/?unit-gallery=1` viewer inspects the same textured GLBs used by `/?battle-preview=1&unit-prototypes=1`. Eleven factions each have four infantry looks, three mounted looks including a scout, and two siege studies. The 77 troop appearances use the existing infantry, archer and cavalry simulation. The 22 siege appearances are inspection studies; Academy research, Workshop recruitment and dedicated siege combat are not implemented by this art work.
 
+Frontier Wars separately implements recruitment and research for these nine roles.
+Its mini icons and recruitment portraits reuse the existing nine-cell PNG atlases
+through `TroopIcon.tsx`; no atlas or model is modified. Frontier siege units use
+automatic class combat, with building destruction still deferred. The campaign
+and model viewers retain the behavior described above.
+
 Models have separate humanoid and mount skeletons, embedded color/normal/metal-roughness surfaces, and idle/walk/attack clips. The battle renderer instances their geometry and uses a shared 48-sample animation palette. Carried shields target 60% of their bearer’s bare body height, excluding mounts, weapons and helmet ornaments. Dwarves use a mechanical catapult with a geared winch instead of a rock-throwing giant.
 
 The current mount direction uses great antlered stags for all three Elf cavalry roles, shaggy mountain rams for Dwarves, and huge rats for Gnomes. Heavy ram armor follows the supplied dark navy and gold direction; scouts keep an exposed wool coat. These new ram and rat silhouettes use adapted quadruped motion rigs and refitted seated riders. They remain visual prototypes requiring animation and art review. Elf metal armor is gilded. Persian troops have fitted gold lamellar, silk trim and rank ornaments; the Cataphract has an enclosed visor, gloves and articulated horse barding. Demon heavy cavalry and the Stonehurler have an additional fitted armor and surface pass.
@@ -58,3 +64,22 @@ All were generated specifically for Peris. Sprite cropping, team tinting, animat
 `heroes/domain/portraits.ts` selects a stable portrait from the hero ID and faction, preserving the face through class changes, renames, level gains and reloads. Commander dossiers, army rosters, victory receipts and world-map markers use the same selection. WebGL uses accessible face buttons above the actual army, preserving published faction models underneath. Canvas uses cached circular portrait images, with own armies readable even in the realm overview. Bandit camps use lightweight original tent and campfire meshes with faction colours.
 
 The battlefield is five times its original area. Forest instances, rocky ground, snowy and sandy palettes, river shallows and a stone bridge use the same scaled footprints as authoritative terrain rules. Troop sizes and weapon ranges remain unchanged.
+
+## Frontier camp silhouettes
+
+Three original transparent camp sprites distinguish low (open tent outpost), medium
+(timber enclosure) and hard (fortified war camp) from all player villages. Generated
+with the built-in image tool on 2026-10-10. Full prompts and provenance are recorded
+in assets/frontier-camps-v1.json. Originals are preserved under
+assets/source/frontier-camps-v1; 384px WebP runtime files with alpha live in
+public/art/map/camps-v1. No Travian assets are included.
+
+The strategic 3D map now uses original static camp geometry from
+`three/models.ts`: beige tent outpost, ochre palisade camp, and red stockade with
+a timber watchtower. Faction color paints the standard. Each model fits within a
+field and merges its parts into seven material batches. Frontier uses these same
+models on the existing landscape, reading actual server camps and raid positions.
+Campaign story landmarks retain their models. The Canvas compatibility terrain
+uses small original vector trees, rocks and furrows on quiet ground; the earlier
+full-cell painted atlas is preserved as an asset, but is no longer repeated
+across its close map view.

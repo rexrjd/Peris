@@ -8,6 +8,7 @@ import { armyPosition } from '../../map/domain/movement';
 import { UNITS, soldierTotal } from './units';
 import { recruitSeconds } from './recruitment';
 import { slotLevels } from '../../city/domain/slots';
+import { homeArmyPosition } from '../../map/domain/garrisons';
 export function recruitSoldiers(context: LocalCommandContext, cmd: Extract<Command, {
     type: 'recruit';
 }>) {
@@ -15,7 +16,7 @@ export function recruitSoldiers(context: LocalCommandContext, cmd: Extract<Comma
     const spend = (cost: ReturnType<typeof buildingCost>) => { if (!affordable(s, cost))
         throw new Error('Your stores cannot cover this cost.'); for (const key of RESOURCES)
         s[key] -= cost[key]; };
-    if (a.status === 'moving' || dist(armyPosition(a, Date.parse(now)), { x: s.x + 40, y: s.y + 30 }) > 90)
+    if (a.status === 'moving' || a.raid_target_id !== null || a.raid_reserve || dist(armyPosition(a, Date.parse(now)), homeArmyPosition(s)) > 90)
         throw new Error('Bring your army home to recruit.');
     if (!Number.isInteger(cmd.quantity) || cmd.quantity < 1 || cmd.quantity > 200)
         throw new Error('Choose between 1 and 200 soldiers.');

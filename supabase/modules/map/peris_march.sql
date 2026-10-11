@@ -3,7 +3,7 @@ language plpgsql security definer set search_path='' as $$
 declare u uuid:=public.peris_player_id();a public.armies%rowtype;position jsonb;point jsonb;route jsonb;
  tx integer:=public.peris_wrap_world(p_target_x);ty integer:=public.peris_wrap_world(p_target_y);
  x numeric;y numeric;px numeric;py numeric;cx integer;cy integer;pcx integer;pcy integer;
- distance numeric:=0;segment numeric;seconds numeric;count_points integer;ordinal integer:=0;
+ distance numeric:=0;segment numeric;seconds numeric;count_points integer;ordinal integer:=0;raid_target integer:=nullif(current_setting('peris.raid_target',true),'')::integer;
 begin
  if u is null then raise exception 'Authentication required';end if;
  if p_target_x is null or p_target_y is null then raise exception 'Choose a destination';end if;
@@ -15,8 +15,11 @@ begin
  if exists(select 1 from public.peris_orders where owner_id=u and army_id=public.peris_army_id(u) and kind='recruit') then raise exception 'Let training finish before marching';end if;
  select * into a from public.armies where id=public.peris_army_id(u) for update;
  if a.id is null then raise exception 'Army not found';end if;
+ if a.status<>'idle' or a.raid_target_id is not null or a.raid_reserve is not null then raise exception 'This legion already has a march or raid. Cancel within 30 seconds or wait for its return';end if;
  position:=public.peris_army_position(a);
  px:=(position->>'x')::numeric;py:=(position->>'y')::numeric;
+ if raid_target is not null and not public.peris_station_owned(u,floor(px/128)::integer,floor(py/128)::integer)then raise exception 'Depart from one of your own villages or claimed fields';end if;
+ if not public.peris_station_owned(u,floor(tx/128.0)::integer,floor(ty/128.0)::integer) and not exists(select 1 from public.peris_camps c where c.id=raid_target and c.x=tx and c.y=ty)then raise exception 'Troops can only station in your own villages and fields';end if;
  if not public.peris_world_walkable(px,py) then raise exception 'The army must start on land';end if;
  pcx:=floor(px/128)::integer;pcy:=floor(py/128)::integer;
  route:=jsonb_build_array(jsonb_build_array(px,py));
@@ -44,7 +47,9 @@ begin
  if px<>tx or py<>ty then raise exception 'Route must end at the chosen destination';end if;
  seconds:=greatest(2,distance/(22*(public.peris_hero_bonuses(a.id)->>'speed')::numeric));
  update public.armies set start_x=round((position->>'x')::numeric),start_y=round((position->>'y')::numeric),target_x=tx,target_y=ty,
-  march_path=route,march_distance=distance,march_map_version=4,departure_at=now(),arrival_at=now()+make_interval(secs=>seconds::double precision),
+  march_path=route,march_distance=distance,march_map_version=4,march_sent_at=now(),march_cancel_until=now()+interval '30 seconds',
+  march_origin=jsonb_build_object('col',floor((position->>'x')::numeric/128),'row',floor((position->>'y')::numeric/128),'x',round((position->>'x')::numeric),'y',round((position->>'y')::numeric)),march_returning=false,
+  departure_at=now()+interval '30 seconds',arrival_at=now()+interval '30 seconds'+make_interval(secs=>seconds::double precision),
   status='moving',raid_target_id=null,updated_at=now() where id=a.id;
  return jsonb_build_object('ok',true);
 end $$;

@@ -18,18 +18,45 @@ Costs scale by 1.55 per completed level. Duration is 15 + 10 × current level se
 
 ## Controls and rendering
 
-- Drag/arrows pan; wheel/pinch zoom; Q/E rotate the 3D view. Home/Army focus owned entities; World frames one canonical realm.
+- Left or middle drag/arrows pan, including while choosing a march destination; a drag never issues a march. Click to inspect or confirm the destination.
+- Wheel/pinch zoom; Q/E rotate the 3D view. Home/Army focus owned entities; World frames one canonical realm.
 - Edge navigation, claims, selection, routes and minimap footprints wrap consistently. Field search accepts whole-number aliases.
 - Choose land highlights eligible fields. Claim a selected field in its inspector, then construct separately. Ineligible fields explain the restriction.
-- Layers offer subtle grid lines and contextual names/resource potential. The square minimap uses actual geography and splits seam-crossing camera footprints.
+- Subtle field grid lines are enabled by default, matching the Frontier map. Layers can hide them or show contextual names/resource potential. The square minimap uses actual geography and splits seam-crossing camera footprints.
 
 Native terrain and instanced scenery share assets across a bounded 3 × 3 display. A material-batched cache shares faction/stage models. Nearby owned villages remain detailed; other villages have a 48-model detail budget. Field compounds have a 96-visible-image budget, selected first, owned next and then nearest. Other completed fields use up to 2,048 pickable instanced markers with screen-space thinning. Wider views use markers; distant scenery hides by scale. Entity removal preserves borrowed cache assets; scene teardown frees them once. WebGL context restoration resumes the existing resources. The Canvas 2D fallback also supports wrapped navigation, fields, selection and routes. Tactical battle drawing retains its existing rules and art.
+
+Frontier Wars reuses this landscape for its server-owned resource camps, with
+three static military silhouettes and an optional compact Classic map. A separate
+read-only adapter keeps Frontier raids/economy out of campaign saves. Campaign
+bandit models use the same tier silhouettes; the six story sites and their saved
+progress remain unchanged. The Canvas fallback uses quieter vector terrain.
+New full Frontier realms balance camp density and difficulty across eligible
+10 × 10 sectors; existing stored camp positions and targets are preserved.
 
 ## Server rules and compatibility
 
 Private snapshots include all owned plots. Public viewport pages cap rivals at 600 villages, 600 armies and 2,000 fields, preserve seam visibility and report truncation. Fields include faction and completed level; city records contain presentation metadata only. Own rows use filtered realtime invalidation; rival pages refresh independently. No rival resource balances or construction queues are public.
 
 New marches use wrapped eight-neighbour A* with land validation and corner protection. The server validates geometry, overrides the start, computes distance/arrival and tags accepted routes with map version four. Previous untagged/version-three routes retain linear interpolation. Claims and pending jobs persist through validated save import/export. Campaign encounters and real-time battles retain their rules.
+
+Marching and attacking require a review before dispatch. New orders reserve the
+chosen troops immediately and stage for 30 seconds, with a persisted cancellation
+deadline. Cancellation checks the original send token and refunds once. After the
+deadline, the order cannot be redirected or cancelled. Ordinary movement must end
+at an owned village or field. Raids must depart from an owned station; legacy
+neutral-position armies can relocate to owned land without discarding their saves.
+Strategic alliances are not available yet, so allied reinforcement is not enabled.
+
+Partial raids leave unused troops in a private location garrison. Other idle,
+non-training legions at the same owned station can collect them. Raid survivors
+return along their route to the recorded departure station and merge on arrival,
+up to 1,000 soldiers; excess remains stationed. Campaign farm lists persist real
+bandit IDs, legions and presets. Start list dispatches available legions once in
+saved target order, skipping invalid or unavailable rows. These campaign targets
+retain existing campaign combat/rewards; Frontier owns the separate shared-stock
+economy and repeat schedules. Bandit battles run quietly; the six story encounters
+retain their battle screens.
 
 Thousands of candidate spawn sites exist. New accounts require a dry 3 × 3 ring, no neighbouring claims and safe village spacing. Existing IDs and positions remain intact. Empire gameplay supports up to ten cities; each city adds capacity for two hero-led armies, up to twenty armies across the empire. See `docs/empire-and-heroes.md` for founding and ownership rules. Alliances, trade, conquest, ships and autonomous battle workers are future work. Thousands of simultaneous players have not been load tested.
 

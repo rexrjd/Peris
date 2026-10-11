@@ -16,7 +16,7 @@ import { type Difficulty, type Terrain } from '../../features/battle/domain/type
 import { settleBattle } from '../../features/campaign/domain/battleSettlement';
 import { upgradeBuilding } from '../../features/city/domain/commands';
 import { recruitSoldiers } from '../../features/army/domain/commands';
-import { marchArmy } from '../../features/map/domain/commands';
+import { cancelMarch, marchArmy, restoreRaidReserve, startRaidReturn } from '../../features/map/domain/commands';
 import { commandBattle } from '../../features/battle/domain/commands';
 import { claimObjective } from '../../features/campaign/domain/commands';
 import { renameCity } from '../../features/city/domain/rename';
@@ -24,6 +24,8 @@ import { queueSlot } from '../../features/city/domain/slotCommands';
 import { citySlots, refreshCityEconomy } from '../../features/city/domain/slots';
 import {researchSpell} from '../../features/magic/domain/commands';
 import { claimMapField, queueMapField } from '../../features/map/domain/territory';
+import { commandCampaignFarm } from '../../features/campaign/domain/farms';
+import { collectGarrison } from '../../features/map/domain/garrisons';
 export class LocalEngine implements GameEngine {
     readonly playerId = 'solo-ruler';
     readonly mode: 'solo' | 'practice';
@@ -97,7 +99,7 @@ export class LocalEngine implements GameEngine {
                 if (camp && !this.snapshot.progress.some(p=>p.owner_id===this.playerId&&p.camp_id===camp.id&&Date.parse(p.available_at)>Date.now())) {
                     army.raid_target_id = null;
                     this.beginRaid(camp.id, army.id);
-                } else army.raid_target_id=null;
+                } else { restoreRaidReserve(army); startRaidReturn(this.snapshot, army); }
             }
             this.publish();
         }
@@ -125,6 +127,8 @@ export class LocalEngine implements GameEngine {
             throw new Error('Finish the current battle first.');
         const context: LocalCommandContext = { world: this.snapshot, playerId: this.playerId, settlementId: cmd.settlementId, armyId: cmd.armyId, nextId: () => this.nextId = Math.max(this.nextId + 1, nextEntityId(this.snapshot)), active, now: new Date().toISOString(), paused: value => { this.paused = value; }, finalize: id => this.finalize(id) };
         switch (cmd.type) {
+            case 'saveCampaignFarmList': case 'saveCampaignFarm': case 'deleteCampaignFarm': case 'deleteCampaignFarmList': case 'startCampaignFarmList':
+                commandCampaignFarm(context, cmd); break;
             case 'trainSettlers': trainSettlers(context, cmd.quantity); break;
             case 'foundCity': sendSettlers(context, cmd.col, cmd.row, cmd.name); break;
             case 'recruitHero': recruitHero(context, cmd); break;
@@ -150,6 +154,8 @@ export class LocalEngine implements GameEngine {
             case 'raid':
                 marchArmy(context, cmd);
                 break;
+            case 'cancelMarch': cancelMarch(context, cmd); break;
+            case 'collectGarrison': collectGarrison(context, cmd); break;
             case 'ready':
             case 'order':
             case 'rally':

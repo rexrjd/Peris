@@ -15,6 +15,8 @@ end $$;
 revoke all on function public.create_player(text),public.sync_my_state(),public.move_army(integer,integer),public.retreat_from_battle(bigint)from public,anon;
 grant execute on function public.create_player(text),public.sync_my_state(),public.move_army(integer,integer),public.retreat_from_battle(bigint)to authenticated;
 grant execute on function public.peris_empire_command(jsonb)to authenticated;
+grant execute on function public.peris_campaign_farm_command(jsonb)to authenticated;
+grant execute on function public.peris_collect_garrison(bigint,jsonb)to authenticated;
 -- The argument-free identity helper is required by RLS; it exposes only the
 -- caller's current ruler UUID. Session bindings themselves remain inaccessible.
 grant execute on function public.peris_player_id(),public.peris_login(text)to authenticated;
@@ -22,7 +24,7 @@ grant execute on function public.peris_claim_field(integer,integer),public.peris
  public.peris_order(bigint,jsonb),public.peris_tick(bigint),public.peris_rally(bigint),public.peris_challenge(uuid),public.peris_respond(bigint,boolean),public.peris_claim(text),public.peris_rename(text)to authenticated;
 
 do $$declare t text;begin
- foreach t in array array['peris_map_plots','peris_orders','peris_reports','peris_challenges']loop
+ foreach t in array array['peris_map_plots','peris_orders','peris_reports','peris_challenges','peris_campaign_farm_lists','peris_campaign_farms','peris_garrisons']loop
  begin execute format('alter publication supabase_realtime add table public.%I',t);exception when duplicate_object then null;end;
  end loop;
 end $$;

@@ -5,11 +5,12 @@ import { Cost } from '../../../shared/ui/Shared';
 import { affordable } from '../domain/economy';
 import { SLOT_BUILDINGS, slotCost, type SlotType } from '../domain/slots';
 
-export function BuildingPicker({ slot, resources, hasTower, busy, building, run }: {
+export function BuildingPicker({ slot, resources, hasTower, busy, building, run, initialChoice = 'housing' }: {
   slot: number; resources: Resources; hasTower: boolean; busy: boolean; building: boolean;
   run: (command: Command, message?: string) => void;
+  initialChoice?: SlotType;
 }) {
-  const [choice, setChoice] = useState<SlotType>('housing');
+  const [choice, setChoice] = useState<SlotType>(initialChoice);
   const item = SLOT_BUILDINGS[choice], cost = slotCost(choice, 0);
   const reason = choice === 'mage_tower' && hasTower ? 'One mage tower per city'
     : building ? 'Builders are working' : busy ? 'Issuing orders…'

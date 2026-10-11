@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url';
 import { setTimeout as delay } from 'node:timers/promises';
 import { battleWorker } from '../server/frontier/worker';
 import { resolveRaidCombat } from '../src/features/frontier/domain/combat';
-import { troopCost } from '../src/features/frontier/domain/balance';
+import { RAID_CANCEL_WINDOW_MS, troopCost } from '../src/features/frontier/domain/balance';
 import { RESOURCES } from '../src/shared/model/resources';
 import type { FrontierSnapshot } from '../src/features/frontier/domain/types';
 
@@ -117,6 +117,7 @@ test('local HTTP authority enforces sessions, origins, ownership, validation, an
     assert.equal(authenticated.body.authenticated, true);
     assert.equal(authenticated.headers['set-cookie'], undefined, 'An existing valid token should remain stable');
     const initial = await api<FrontierSnapshot>(port, 'state', { cookie, origin });
+    assert.doesNotMatch(JSON.stringify(initial.body), /nextRecruitAt|recruitSequence|recruitMinMs|recruitMaxMs|"seed"/);
     assert.equal(initial.status, 200); assert.equal(initial.body.village.name, 'Protocol ruler');
     assert.equal(initial.body.campCount, 14);
     assert.deepEqual(initial.body.village.troops, { infantry: 0, archers: 0, cavalry: 0 });
@@ -160,6 +161,55 @@ test('local HTTP authority enforces sessions, origins, ownership, validation, an
     assert.notEqual(other.village.id, after.village.id); assert.equal(other.training.length, 0);
     assert.ok(!JSON.stringify(other).includes(after.village.id), 'Another owner must not receive private village or queue data');
     assert.equal((await api(port, 'command', { method: 'POST', cookie: otherCookie, body: { requestId, command: { ...command, count: 1 } } })).status, 200, 'Request IDs are scoped to each owner');
+    const trainingDeadline = Date.now() + 15000;
+    let ready = (await api<FrontierSnapshot>(port, 'state', { cookie: otherCookie })).body;
+    while (ready.village.troops.infantry !== 1) {
+        assert.ok(Date.now() < trainingDeadline, 'The second ruler must finish real troop training');
+        await delay(100);
+        ready = (await api<FrontierSnapshot>(port, 'state', { cookie: otherCookie })).body;
+    }
+    const camp = ready.camps.find(target => target.distance !== null)!;
+    const raidRequest = { requestId: 'protocol-raid-001', command: { type: 'raid', campId: camp.id, troops: { infantry: 1, archers: 0, cavalry: 0 }, ownerId: initial.body.village.id, sentAt: 0, cancelUntil: 1e15 } };
+    assert.equal((await api(port, 'command', { method: 'POST', cookie: otherCookie, body: raidRequest })).status, 200);
+    const launched = (await api<FrontierSnapshot>(port, 'state', { cookie: otherCookie })).body;
+    const raid = launched.raids[0];
+    assert.equal(raid.ownerId, ready.village.id);
+    assert.ok(raid.sentAt! >= ready.now && raid.sentAt! <= launched.now);
+    assert.equal(raid.cancelUntil! - raid.sentAt!, RAID_CANCEL_WINDOW_MS);
+    assert.equal(raid.departedAt, raid.cancelUntil);
+    assert.equal(raid.arrivesAt, raid.departedAt + raid.travelMs);
+    assert.equal(launched.village.troops.infantry, 0);
+    assert.ok(!JSON.stringify((await api<FrontierSnapshot>(port, 'state', { cookie })).body).includes(raid.id), 'Another owner must not see a private cancellation window');
+    assert.equal((await api(port, 'command', { method: 'POST', cookie, body: { requestId: 'foreign-raid-cancel', command: { type: 'cancelRaid', id: raid.id } } })).status, 400);
+    const cancellation = { requestId: 'protocol-cancel-001', command: { type: 'cancelRaid', id: raid.id, now: 0, cancelUntil: 1e15 } };
+    const canceled = await Promise.all([
+        api(port, 'command', { method: 'POST', cookie: otherCookie, body: cancellation }),
+        api(port, 'command', { method: 'POST', cookie: otherCookie, body: cancellation }),
+    ]);
+    canceled.forEach(reply => assert.equal(reply.status, 200, JSON.stringify(reply.body)));
+    assert.equal((await api(port, 'command', { method: 'POST', cookie: otherCookie, body: raidRequest })).status, 200, 'A retried send must not resurrect the canceled raid');
+    const restored = (await api<FrontierSnapshot>(port, 'state', { cookie: otherCookie })).body;
+    assert.equal(restored.village.troops.infantry, 1); assert.equal(restored.raids.length, 0); assert.equal(restored.reportCount, 0);
+    for (const resource of RESOURCES) {
+        const expected = ready.village.resources[resource] + ready.config.villageRates[resource] * (restored.now - ready.now) / 60000;
+        assert.ok(Math.abs(restored.village.resources[resource] - expected) < 1e-6, 'Canceled raids must not generate loot or resources');
+    }
+    assert.equal((await api(port, 'command', { method: 'POST', cookie: otherCookie, body: { requestId: 'http-batch-list', command: { type: 'saveFarmList', name: 'Protocol batch', casualtiesOnly: true } } })).status, 200);
+    const list = (await api<FrontierSnapshot>(port, 'state', { cookie: otherCookie })).body.farmLists[0];
+    assert.equal((await api(port, 'command', { method: 'POST', cookie: otherCookie, body: { requestId: 'http-batch-target', command: { type: 'saveFarm', campId: camp.id, troops: { infantry: 1, archers: 0, cavalry: 0 }, intervalMs: 60000, enabled: false, listId: list.id } } })).status, 200);
+    assert.equal((await api(port, 'command', { method: 'POST', cookie, body: { requestId: 'http-foreign-batch', command: { type: 'startFarmList', id: list.id } } })).status, 400);
+    const batch = { requestId: 'http-start-batch', command: { type: 'startFarmList', id: list.id } };
+    const batchReplies = await Promise.all([
+        api(port, 'command', { method: 'POST', cookie: otherCookie, body: batch }),
+        api(port, 'command', { method: 'POST', cookie: otherCookie, body: batch }),
+    ]);
+    batchReplies.forEach(reply => assert.equal(reply.status, 200, JSON.stringify(reply.body)));
+    const batched = (await api<FrontierSnapshot>(port, 'state', { cookie: otherCookie })).body;
+    assert.equal(batched.raids.length, 1); assert.equal(batched.raids[0].farmListId, list.id);
+    assert.equal(batched.farms[0].sent, 1); assert.equal(batched.farms[0].skipped, 0);
+    assert.equal(batched.farms[0].enabled, false); assert.equal(batched.farms[0].nextRunAt, null);
+    assert.equal(batched.village.troops.infantry, 0);
+    assert.equal((await api(port, 'command', { method: 'POST', cookie: otherCookie, body: { requestId: 'http-cancel-batch', command: { type: 'cancelRaid', id: batched.raids[0].id } } })).status, 200);
     assert.equal((await api(port, 'missing', { cookie })).status, 404);
     assert.ok(!logs.includes('Frontier request failed:'), logs);
 });

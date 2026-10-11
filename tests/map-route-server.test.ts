@@ -13,6 +13,8 @@ test('the authoritative server accepts a long client-planned coastal land route 
         const initial = (await db.query<{ world: { armies: { target_x: number; target_y: number }[] } }>('select public.peris_snapshot() as world')).rows[0].world.armies[0];
         const route = findMarchPath({ x: initial.target_x, y: initial.target_y }, { x: -10000, y: 3000 });
         assert.ok(route); assert.ok(route.path.length > 70);
+        // A distant owned outpost exercises the route without permitting troops to stop on neutral land.
+        await db.exec(`reset role;insert into public.peris_map_plots(owner_id,settlement_id,col,row,building_type,level)select '${owner}',id,-79,23,null,0 from public.settlements where owner_id='${owner}';set role authenticated;`);
         await db.query('select public.peris_march($1,$2,$3::jsonb)', [-10000, 3000, JSON.stringify(route.path)]);
         const army = (await db.query<{ world: { armies: { march_path: [number, number][]; march_distance: number; departure_at: string; arrival_at: string }[] } }>('select public.peris_snapshot() as world')).rows[0].world.armies[0];
         assert.deepEqual(army.march_path, route.path);

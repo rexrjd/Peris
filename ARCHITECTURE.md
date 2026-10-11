@@ -44,6 +44,8 @@ See `docs/frontier-wars.md` for the transaction and migration boundary.
 | Hero levels, equipment and combat bonuses | `src/features/heroes/domain/heroes.ts`, `commands.ts` |
 | Strategic travel interpolation and arrival | `src/features/map/domain/movement.ts` |
 | Marching/raid destination and travel duration | `src/features/map/domain/commands.ts` |
+| Owned stations, private troop pools and merging | `src/features/map/domain/garrisons.ts` |
+| Saved campaign farm targets and manual batch dispatch | `src/features/campaign/domain/farms.ts` |
 | Formation creation and display footprint | `src/features/battle/domain/formations.ts` |
 | Deployment, target and stance orders | `src/features/battle/domain/orders.ts` |
 | Formation movement, speed, facing, stamina | `src/features/battle/domain/movement.ts` |

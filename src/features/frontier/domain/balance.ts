@@ -1,8 +1,11 @@
-import { UNITS, UNIT_TYPES } from '../../army/domain/units';
+import { FRONTIER_UNITS, FRONTIER_UNIT_TYPES as UNIT_TYPES } from './units';
 import { emptyResources, RESOURCES, type Resources } from '../../../shared/model/resources';
 import type { CampTier, FrontierConfig, Troops } from './types';
 
 export const FULL_CAMP_COUNTS: Record<CampTier, number> = { low: 1750, medium: 1250, hard: 1000 };
+
+/** Every newly sent raid reserves troops for thirty seconds before travelling. */
+export const RAID_CANCEL_WINDOW_MS = 30_000;
 
 /** Rates are resources per minute; camp storage holds thirty minutes of production. */
 export const DEFAULT_CONFIG: FrontierConfig = {
@@ -51,26 +54,26 @@ export function emptyTroops(): Troops {
     return { infantry: 0, archers: 0, cavalry: 0 };
 }
 
-function count(value: number): number {
-    return Number.isFinite(value) ? Math.min(Number.MAX_SAFE_INTEGER, Math.max(0, Math.floor(value))) : 0;
+function count(value: number | undefined): number {
+    return typeof value === 'number' && Number.isFinite(value) ? Math.min(Number.MAX_SAFE_INTEGER, Math.max(0, Math.floor(value))) : 0;
 }
 
 export function troopCost(troops: Troops): Resources {
     const cost = emptyResources();
     for (const unit of UNIT_TYPES) {
         const soldiers = count(troops[unit]);
-        for (const resource of RESOURCES) cost[resource] += soldiers * UNITS[unit].cost[resource];
+        for (const resource of RESOURCES) cost[resource] += soldiers * FRONTIER_UNITS[unit].cost[resource];
     }
     return cost;
 }
 
-export function carryingCapacity(troops: Troops, config: FrontierConfig = DEFAULT_CONFIG): number {
-    return UNIT_TYPES.reduce((total, unit) => total + count(troops[unit]) * count(config.carrying[unit]), 0);
+export function carryingCapacity(troops: Troops, config: Pick<FrontierConfig, 'carrying'> = DEFAULT_CONFIG): number {
+    return UNIT_TYPES.reduce((total, unit) => total + count(troops[unit]) * count(config.carrying[unit] ?? FRONTIER_UNITS[unit].carry), 0);
 }
 
 /** Distance is the existing pathfinder's logical world distance. The slowest unit sets the pace. */
-export function travelTimeMs(distance: number, troops: Troops, config: FrontierConfig = DEFAULT_CONFIG): number {
-    const speeds = UNIT_TYPES.filter(unit => count(troops[unit]) > 0).map(unit => UNITS[unit].speed);
+export function travelTimeMs(distance: number, troops: Troops, config: Pick<FrontierConfig, 'marchSpeed' | 'minimumTravelMs'> = DEFAULT_CONFIG): number {
+    const speeds = UNIT_TYPES.filter(unit => count(troops[unit]) > 0).map(unit => FRONTIER_UNITS[unit].speed);
     const slowest = speeds.length ? Math.min(...speeds) : 40;
     const baseline = Number.isFinite(config.marchSpeed) && config.marchSpeed > 0 ? config.marchSpeed : 22;
     const validDistance = Number.isFinite(distance) ? Math.max(0, distance) : 0;

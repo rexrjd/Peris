@@ -24,7 +24,11 @@ try{
  await admin(`insert into public.buildings(settlement_id,building_type,level)select ${second.id},t,0 from unnest(array['lumber','quarry','farm','market','barracks','stables','wall','storehouse'])t;insert into public.armies(owner_id,home_settlement_id,name,start_x,start_y,target_x,target_y)values('${uid(1)}',${second.id},'Second host',${second.x},${second.y},${second.x},${second.y});select public.peris_city_economy(${second.id})`);
  // Finish the original V13 city's normal bootstrap before testing preservation.
  await connect(1);await rpc('peris_snapshot');
- const before=await persisted();const upgrade=await readFile('supabase/UPGRADE_TO_V14.sql','utf8');await admin(upgrade);await admin(upgrade);assert.deepEqual(await persisted(),before);
+ const before=await persisted();
+ // The combined migration adds cancellation/return fields to V13 armies.
+ // Require their neutral defaults while comparing every existing value exactly.
+ for(const host of before.armies)Object.assign(host.record,{march_sent_at:null,march_cancel_until:null,raid_reserve:null,march_origin:null,march_returning:false});
+ const upgrade=await readFile('supabase/UPGRADE_TO_V14.sql','utf8');await admin(upgrade);await admin(upgrade);assert.deepEqual(await persisted(),before);
  console.log('PASS · V13 upgraded twice without changing player IDs, multiple cities/armies, commanders, XP, equipment, queues or camp progress');
  assert.equal((await db.query("select count(*) n from pg_policies where schemaname='public' and tablename<>'unrelated_notes' and (qual like '%auth.uid()%' or with_check like '%auth.uid()%')")).rows[0].n,0);
  assert.ok((await db.query("select qual from pg_policies where tablename='unrelated_notes'")).rows[0].qual.includes('auth.uid()'));
@@ -44,6 +48,24 @@ try{
  await connect(1);assert.equal((await rpc('peris_login',['Alpha'])).player_id,uid(1));
  await connect(2);assert.equal((await rpc('peris_login',['Beta'])).player_id,uid(2));
  console.log('PASS · same name across fresh devices, case/space variants and old browser sessions controls exactly the original ruler; rival actions and session writes remain blocked');
+ // The raid/farm branch must use the recovered ruler identity too, rather than
+ // treating the new browser Auth UUID as a new troop or farm owner.
+ await connect(4);
+ const list=await rpc('peris_campaign_farm_command',[{type:'saveCampaignFarmList',name:'Recovered farms',troops:{infantry:2,archers:0,cavalry:0},casualtiesOnly:true}]);
+ assert.equal(list.owner_id,uid(1));assert.equal((await db.query('select id from public.peris_campaign_farm_lists')).rows.length,1);
+ a=await rpc('peris_snapshot');const originalHost=a.armies.find(host=>host.id!==army.id);
+ const col=Math.floor(originalHost.target_x/128),row=Math.floor(originalHost.target_y/128);
+ await admin(`select public.peris_garrison_add('${uid(1)}',${col},${row},'{"infantry":5,"archers":0,"cavalry":0}'::jsonb)`);await connect(4);
+ await rpc('peris_collect_garrison',[originalHost.id,{infantry:5,archers:0,cavalry:0}]);
+ const collected=(await rpc('peris_snapshot')).armies.find(host=>host.id===originalHost.id);assert.equal(collected.infantry,originalHost.infantry+5);
+ await rpc('peris_empire_command',[{type:'raid',armyId:originalHost.id,campId:2,troops:{infantry:2,archers:0,cavalry:0}}]);
+ const travelling=(await rpc('peris_snapshot')).armies.find(host=>host.id===originalHost.id);assert.equal(travelling.infantry,2);assert.ok(travelling.march_cancel_until);
+ await connect(2);assert.equal((await db.query('select id from public.peris_campaign_farm_lists')).rows.length,0);
+ await assert.rejects(()=>rpc('peris_collect_garrison',[originalHost.id,{infantry:1,archers:0,cavalry:0}]),/own armies|own legion|Choose/i);
+ await assert.rejects(()=>rpc('peris_empire_command',[{type:'cancelMarch',armyId:originalHost.id,sentAt:travelling.march_sent_at}]),/own armies|own legion|Choose/i);
+ await connect(4);await rpc('peris_empire_command',[{type:'cancelMarch',armyId:originalHost.id,sentAt:travelling.march_sent_at}]);
+ assert.equal((await rpc('peris_snapshot')).armies.find(host=>host.id===originalHost.id).infantry,collected.infantry);
+ console.log('PASS · recovered ruler farm lists, partial raids, cancellation and garrison collection preserve troop ownership; rival sessions remain blocked');
  await connect(4);const reserve=a.armies.find(host=>host.home_settlement_id===second.id);
  await admin(`update public.armies set infantry=40,archers=10,cavalry=0 where id=${reserve.id}`);await connect(4);
  await rpc('peris_empire_command',[{type:'challenge',armyId:reserve.id,ownerId:uid(2)}]);

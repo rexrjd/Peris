@@ -15,7 +15,7 @@ export type RenderState = {
     mapLayers?: { grid: boolean; regions: boolean; resources: boolean };
     clockOffset?: number;
     mapFocus?: { x: number; y: number; key: number; zoom?: number };
-    mapPurpose?: 'colonies';
+    mapPurpose?: 'colonies' | 'frontier';
     expansionRoute?: { path: [number, number][]; key: string };
     touchOrder?: 'select' | 'move' | 'attack';
     paused?: boolean;
@@ -30,4 +30,5 @@ export type RenderActions = {
     menu?: () => void;
     cancelMove?: () => void;
     mapViewport?: (bounds: { minX: number; minY: number; maxX: number; maxY: number }) => void;
+    mapCenter?: (point: { x: number; y: number }) => void;
 };

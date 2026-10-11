@@ -1,0 +1,54 @@
+import { PGlite } from '@electric-sql/pglite';
+import { readFile } from 'node:fs/promises';
+import assert from 'node:assert/strict';
+const db = new PGlite(), u = '11111111-1111-4111-8111-111111111111', v = '22222222-2222-4222-8222-222222222222';
+const admin = async sql => { await db.exec('reset role'); return db.exec(sql); };
+const login = (id = u) => db.exec(`reset role;set role authenticated;select set_config('request.jwt.claim.sub','${id}',false)`);
+const rpc = async (name, args = []) => (await db.query(`select public.${name}(${args.map((_, i) => '$' + (i + 1)).join(',')}) result`, args)).rows[0].result;
+const snapshot = () => rpc('peris_snapshot');
+const collect = (army, troops = null) => rpc('peris_collect_garrison', [army, troops && JSON.stringify(troops)]);
+const sum = w => [...w.armies, ...w.garrisons].reduce((sum, a) => sum + a.infantry + a.archers + a.cavalry, 0);
+const manifest = JSON.parse(await readFile('supabase/modules/manifest.json', 'utf8'));
+const upgrade = (await Promise.all(manifest.map(file => readFile('supabase/modules/' + file, 'utf8')))).join('').replace(/^begin;\s*$/gm, '').replace(/^commit;\s*$/gm, '');
+const fresh = await readFile('supabase/modules/install/fresh-base.sql', 'utf8') + upgrade + await readFile('supabase/modules/install/fresh-tail.sql', 'utf8');
+try {
+    await db.exec(`create schema auth;create table auth.users(id uuid primary key);create role anon;create role authenticated;create role service_role;create function auth.uid()returns uuid language sql as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;grant usage on schema public,auth to authenticated,anon;grant execute on function auth.uid()to authenticated,anon;create publication supabase_realtime`);
+    await db.exec(fresh); await admin(`insert into auth.users values('${u}'),('${v}')`);
+    await login(); await rpc('create_player', ['Ruler']); let w = await snapshot();
+    const first = w.armies[0], city = w.settlements[0], col = Math.floor(city.x / 128), row = Math.floor(city.y / 128);
+    await rpc('peris_empire_command', [JSON.stringify({ type: 'recruitHero', name: 'Second', heroClass: 'knight', settlementId: city.id })]);
+    const second = (await snapshot()).armies.find(a => a.id !== first.id);
+    await admin(`select public.peris_garrison_add('${u}',${col},${row},'{"infantry":1000,"archers":0,"cavalry":0}');select public.peris_garrison_add('${u}',${col},${row},'{"infantry":1000,"archers":0,"cavalry":0}')`);
+    await login(); const total = sum(await snapshot());
+    const picked = await collect(first.id); assert.equal(picked.infantry, 814);
+    assert.equal(sum(await snapshot()), total); assert.equal((await snapshot()).garrisons[0].infantry, 1186);
+    assert.deepEqual(await collect(first.id), { infantry: 0, archers: 0, cavalry: 0 });
+    await collect(second.id, { infantry: 20, archers: 0, cavalry: 0 });
+    assert.equal((await snapshot()).armies.find(a => a.id === second.id).infantry, 20);
+    const stable = await snapshot();
+    for (const troops of [{ infantry: 981, archers: 0, cavalry: 0 }, { infantry: 1.5, archers: 0, cavalry: 0 }, { infantry: '1', archers: 0, cavalry: 0 }, { infantry: -1, archers: 0, cavalry: 0 }]) await assert.rejects(() => collect(second.id, troops));
+    assert.deepEqual((await snapshot()).garrisons, stable.garrisons); assert.deepEqual((await snapshot()).armies, stable.armies);
+    await collect(second.id); assert.equal(sum(await snapshot()), total); assert.equal((await snapshot()).garrisons[0].infantry, 186);
+    await login(v); await rpc('create_player', ['Other']); const foreign = (await snapshot()).armies[0];
+    assert.deepEqual((await snapshot()).garrisons, []); assert.equal((await db.query('select * from public.peris_garrisons')).rows.length, 0);
+    await assert.rejects(() => collect(first.id), /your armies/);
+    await assert.rejects(() => rpc('peris_garrison_add', [u, col, row, JSON.stringify({ infantry: 1, archers: 0, cavalry: 0 })]), /permission denied/);
+    await assert.rejects(() => db.exec(`update public.peris_garrisons set infantry=999 where owner_id='${u}'`), /permission denied/);
+    await admin(`update public.armies set target_x=${city.x},target_y=${city.y} where id=${foreign.id}`); await login(v);
+    await assert.rejects(() => collect(foreign.id), /own villages and fields/);
+    await admin(`insert into public.peris_map_plots(owner_id,settlement_id,col,row,building_type,level)values('${u}',${city.id},${col + 1},${row},null,0);select public.peris_garrison_add('${u}',${col + 1},${row},'{"infantry":0,"archers":0,"cavalry":3}')`);
+    await login(); const map = await rpc('peris_map_snapshot', [-12800, -12800, 12800, 12800]); assert.equal(Object.hasOwn(map, 'garrisons'), false);
+    // Numeric division must floor negative positions before wrapping (-64 is cell -1).
+    await admin(`begin;insert into public.peris_map_plots(owner_id,settlement_id,col,row,building_type,level)values('${u}',${city.id},-1,-2,null,0);update public.armies set infantry=0,archers=0,cavalry=0,target_x=-64,target_y=-192 where id=${second.id};select public.peris_garrison_add('${u}',-1,-2,'{"infantry":0,"archers":5,"cavalry":0}')`);
+    await admin(`insert into public.peris_orders(owner_id,kind,item,quantity,started_at,finish_at,settlement_id,army_id)values('${u}','recruit','infantry',1,now(),now()+interval '1 hour',${city.id},${second.id})`);
+    await db.exec('savepoint training_guard');
+    await login(); await assert.rejects(() => collect(second.id), /Finish training/);
+    await db.exec('rollback to savepoint training_guard');
+    await admin(`delete from public.peris_orders where owner_id='${u}' and army_id=${second.id}`);
+    await login(); assert.deepEqual(await collect(second.id), { infantry: 0, archers: 5, cavalry: 0 });
+    await admin('rollback'); await login();
+    const saved = (await snapshot()).garrisons;
+    await admin(upgrade); await admin(upgrade); await login(); assert.deepEqual((await snapshot()).garrisons, saved);
+    console.log('PASS · private shared location pools, two legions, explicit/automatic collection, capacity overflow, troop conservation, atomic rejection, ownership and migration preservation');
+} catch (e) { console.error(e.message, e.where ?? '', e.detail ?? '', e.stack); process.exitCode = 1; }
+finally { await db.close(); }

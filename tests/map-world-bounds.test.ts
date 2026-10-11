@@ -16,7 +16,7 @@ function fixture(now = '2030-01-01T00:00:00.000Z') {
 }
 
 test('strategic marching accepts equivalent wrapped destinations and rejects actual sea without mutation', () => {
-    const { context, army } = fixture();
+    const { world, context, army } = fixture();
     const prior = JSON.stringify(army);
     let sea: { x: number; y: number } | undefined;
     for (let row = -100; row < 100 && !sea; row++) for (let col = -100; col < 100; col++) if (!isWalkable(col, row)) { sea = cellCenter(col,row); break; }
@@ -25,23 +25,21 @@ test('strategic marching accepts equivalent wrapped destinations and rejects act
     assert.throws(() => marchArmy(context, { type: 'move', x: sea.x + WORLD_W, y: sea.y - WORLD_W }), /sea/);
     assert.equal(JSON.stringify(army), prior);
     const destination = cellCenter(-46,-39);
+    world.map_plots = [{ col: -46, row: -39, owner_id: context.playerId, settlement_id: world.settlements[0].id, building_type: null, level: 0 }];
     marchArmy(context, { type: 'move', x: destination.x + WORLD_W, y: destination.y - WORLD_W });
     assert.equal(army.target_x, destination.x); assert.equal(army.target_y, destination.y);
     assert.ok(army.march_path && army.march_path.length > 2);
-    assert.equal(Date.parse(army.arrival_at) - Date.parse(context.now), Math.floor(Math.max(2, army.march_distance! / 22) * 1000));
+    assert.equal(Date.parse(army.arrival_at) - Date.parse(context.now), 30000 + Math.floor(Math.max(2, army.march_distance! / 22) * 1000));
     assert.throws(() => marchArmy(context, { type: 'move', x: NaN, y: 0 }), /destination/);
 });
 
-test('rerouted marches interpolate and schedule arrival using the command clock at unchanged speed', () => {
+test('an active march cannot be retargeted to bypass its cancellation deadline', () => {
     const { context, army } = fixture();
     const clock = Date.parse(context.now);
     Object.assign(army, { status: 'moving', start_x: -1000, start_y: 0, target_x: 1000, target_y: 0, departure_at: new Date(clock - 5000).toISOString(), arrival_at: new Date(clock + 5000).toISOString() });
-    marchArmy(context, { type: 'move', x: 220, y: 0 });
-    assert.equal(army.start_x, 0); assert.equal(army.start_y, 0);
-    assert.equal(army.departure_at, context.now);
-    assert.equal(Date.parse(army.arrival_at) - clock, 10000);
-    marchArmy(context, { type: 'move', x: 0, y: 0 });
-    assert.equal(Date.parse(army.arrival_at) - clock, 2000);
+    const before = structuredClone(army);
+    assert.throws(() => marchArmy(context, { type: 'move', x: 220, y: 0 }), /already has a march/);
+    assert.deepEqual(army, before);
 });
 
 test('legacy raids keep exact camp coordinates and existing training and cooldown guards', () => {

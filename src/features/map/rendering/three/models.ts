@@ -193,6 +193,123 @@ export function createArmyModel(color = 0x345e48): THREE.Group {
     return bakeModel(group);
 }
 
+export type MercenaryCampTier = 'low' | 'medium' | 'hard';
+
+/** Original static camp silhouettes. Tier changes the compound; faction changes its standard. */
+export function createMercenaryCampModel(tier: MercenaryCampTier, color = 0x345e48): THREE.Group {
+    const group = new THREE.Group();
+    group.name = `Peris ${tier} mercenary camp`;
+    group.userData.campTier = tier;
+    const material = (hex: number, extra: THREE.MeshStandardMaterialParameters = {}) =>
+        new THREE.MeshStandardMaterial({ color: hex, roughness: 1, flatShading: true, ...extra });
+    const cloth = material(tier === 'low' ? 0xc8b98f : tier === 'medium' ? 0xb1874a : 0x943f32);
+    const wood = material(tier === 'hard' ? 0x594536 : 0x796047);
+    const dark = material(0x302f27);
+    const stone = material(0x898575);
+    const earth = material(0x8e8059);
+    const standard = material(color);
+    const fire = material(0xe9a448, { emissive: 0xb0441e, emissiveIntensity: .35 });
+    // Allocate primitives only when used. bakeModel merges them by material and frees the originals.
+    const primitives = new Map<string, THREE.BufferGeometry>();
+    const primitive = (key: string, make: () => THREE.BufferGeometry) => {
+        let geometry = primitives.get(key);
+        if (!geometry) { geometry = make(); primitives.set(key, geometry); }
+        return geometry;
+    };
+    const mesh = (geometry: THREE.BufferGeometry, surface: THREE.Material, x: number, bottom: number, z: number, w: number, h: number, d: number, angle = 0) => {
+        const object = new THREE.Mesh(geometry, surface);
+        object.position.set(x, bottom + h / 2, z); object.scale.set(w, h, d); object.rotation.y = angle;
+        group.add(object); return object;
+    };
+    const box = (w: number, h: number, d: number, x: number, bottom: number, z: number, surface: THREE.Material, angle = 0) =>
+        mesh(primitive('box', () => new THREE.BoxGeometry(1, 1, 1)), surface, x, bottom, z, w, h, d, angle);
+    const cylinder = (radius: number, h: number, x: number, bottom: number, z: number, surface: THREE.Material) =>
+        mesh(primitive('cylinder', () => new THREE.CylinderGeometry(1, 1, 1, 6)), surface, x, bottom, z, radius, h, radius);
+    const cone = (radius: number, h: number, x: number, bottom: number, z: number, surface: THREE.Material) =>
+        mesh(primitive('cone', () => new THREE.ConeGeometry(1, 1, 6)), surface, x, bottom, z, radius, h, radius);
+    const tent = (x: number, z: number, w: number, d: number, h: number, angle = 0, bottom = 0) => {
+        const geometry = primitive('tent', () => {
+            const shape = new THREE.Shape();
+            shape.moveTo(-.5, -.5); shape.lineTo(.5, -.5); shape.lineTo(0, .5); shape.closePath();
+            const result = new THREE.ExtrudeGeometry(shape, { depth: 1, steps: 1, bevelEnabled: false });
+            result.translate(0, 0, -.5); return result;
+        });
+        mesh(geometry, cloth, x, bottom, z, w, h, d, angle);
+        // A dark triangular opening makes these read as canvas tents rather than village roofs.
+        const opening = primitive('opening', () => {
+            const shape = new THREE.Shape();
+            shape.moveTo(-.5, -.5); shape.lineTo(.5, -.5); shape.lineTo(0, .5); shape.closePath();
+            return new THREE.ShapeGeometry(shape);
+        });
+        mesh(opening, dark, x + Math.sin(angle) * (d / 2 + .001), bottom,
+            z + Math.cos(angle) * (d / 2 + .001), w * .35, h * .68, 1, angle);
+    };
+    const hearth = (x: number, z: number) => {
+        cylinder(.06, .015, x, 0, z, stone);
+        cylinder(.044, .017, x, .001, z, dark);
+        box(.064, .018, .018, x, .017, z, wood, .45);
+        cone(.027, .052, x, .018, z, fire);
+    };
+    const flag = (x: number, z: number, height: number) => {
+        cylinder(.006, height, x, 0, z, wood);
+        box(.095, .072, .006, x + .042, height - .084, z, standard);
+    };
+    const fence = (half: number, height: number) => {
+        const stake = (x: number, z: number) => {
+            cylinder(.022, height, x, 0, z, wood);
+            cone(.022, .046, x, height, z, wood);
+        };
+        const count = 12;
+        for (let i = 0; i <= count; i++) {
+            const position = -half + i * half * 2 / count;
+            stake(position, -half);
+            if (Math.abs(position) > .105) stake(position, half);
+            if (i !== 0 && i !== count) { stake(-half, position); stake(half, position); }
+        }
+        // A visible gate gap and horizontal braces keep the small enclosure easy to read.
+        box(half * 2, .023, .025, 0, height * .58, -half, wood);
+        for (const side of [-1, 1]) {
+            box(.025, .023, half * 2, side * half, height * .58, 0, wood);
+            box(half - .11, .023, .025, side * (half + .11) / 2, height * .58, half, wood);
+        }
+    };
+    cylinder(tier === 'low' ? .31 : tier === 'medium' ? .36 : .4, .006, 0, 0, 0, earth);
+    if (tier === 'low') {
+        tent(-.12, -.08, .24, .26, .17, -.1);
+        tent(.15, -.08, .16, .2, .13, .16);
+        hearth(.015, .14);
+        box(.057, .047, .05, -.2, .006, .16, wood);
+        flag(.23, .15, .31);
+    } else if (tier === 'medium') {
+        fence(.32, .155);
+        tent(-.16, -.12, .18, .21, .16, -.08);
+        tent(.14, -.12, .2, .23, .17, .08);
+        tent(-.18, .14, .14, .17, .13, -.22);
+        hearth(.01, .075);
+        box(.075, .055, .06, .19, .006, .19, wood);
+        flag(.29, .22, .37);
+    } else {
+        fence(.36, .215);
+        tent(.12, -.16, .25, .25, .205, .06);
+        tent(-.17, .03, .17, .2, .155, -.18);
+        tent(.19, .16, .16, .19, .15, .12);
+        hearth(.02, .12);
+        // The timber lookout is deliberately different from a masonry village or keep tower.
+        const towerX = -.22, towerZ = -.23, floor = .35;
+        for (const x of [-1, 1]) for (const z of [-1, 1])
+            box(.022, floor, .022, towerX + x * .07, 0, towerZ + z * .07, wood);
+        box(.19, .027, .19, towerX, floor, towerZ, wood);
+        for (const side of [-1, 1]) {
+            box(.018, .065, .19, towerX + side * .084, floor + .025, towerZ, wood);
+            box(.19, .065, .018, towerX, floor + .025, towerZ + side * .084, wood);
+        }
+        tent(towerX, towerZ, .225, .225, .09, 0, floor + .092);
+        flag(.29, .27, .46);
+        box(.075, .06, .065, -.18, .006, .2, wood);
+    }
+    return bakeModel(group);
+}
+
 /** Safely disposes primitive resources shared inside a returned model. */
 export function disposeModel(group: THREE.Object3D): void {
     const geometries = new Set<THREE.BufferGeometry>(), materials = new Set<THREE.Material>();

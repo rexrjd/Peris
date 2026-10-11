@@ -1,4 +1,13 @@
 import { type BattleResult } from '../../battle/domain/types';
+import type { ArmyTroops } from '../../army/domain/types';
+export type CampaignFarmTroops = ArmyTroops;
+export type CampaignFarmList = {
+    id: number; owner_id: string; name: string; troops: CampaignFarmTroops; casualties_only: boolean;
+};
+export type CampaignFarmTarget = {
+    id: number; owner_id: string; list_id: number; camp_id: number; army_id: number;
+    troops: CampaignFarmTroops; created_at: string;
+};
 export type Player = {
     id: string;
     display_name: string;

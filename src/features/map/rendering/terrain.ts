@@ -1,7 +1,7 @@
 import { ellipse, path } from '../../../shared/rendering/primitives';
 import { seeded } from '../../../shared/math/random';
 import { WORLD_COLS, WORLD_ROWS, WORLD_MAP_VERSION } from '../domain/dimensions';
-import { FIELD_COLORS, getCell, type WorldCell } from '../domain/worldGrid';
+import { FIELD_COLORS, getCell, type FieldTerrain, type WorldCell } from '../domain/worldGrid';
 import { continentalArt, drawMapSprite, mapArtReady, mapOverviewReady } from './mapArt';
 
 type Point = [number, number];
@@ -49,40 +49,35 @@ function reeds(c: CanvasRenderingContext2D, x: number, y: number, count: number)
     }
 }
 
-/** One repeatable field miniature; caller draws only visible cells/chunks. */
+// The compatibility map needs quiet ground beneath its selectable fields.
+// Keep this palette local to presentation; it never changes world geography.
+export const COMPATIBILITY_GROUND: Record<FieldTerrain, string> = {
+    grassland: '#a8b87d', forest: '#99ac78', mountain: '#adb59a', farmland: '#b9ba83',
+    desert: '#d3bc89', snow: '#d7dfd0', marsh: '#9db3a0', river: '#91b8b6',
+    water: '#719ba7', coast: '#c5c19b', darkland: '#929987',
+};
+
+/** Small, deterministic terrain features leave most of each field open. */
 export function drawCell(c: CanvasRenderingContext2D, cell: WorldCell, x: number, y: number, size: number, detail: boolean) {
     c.save(); c.translate(x, y); c.scale(size / 128, size / 128);
-    c.fillStyle = cell.region === 'ashen' && cell.terrain === 'grassland' ? '#b7a17b' : FIELD_COLORS[cell.terrain];
+    c.fillStyle = cell.region === 'ashen' && cell.terrain === 'grassland' ? '#b7b08a' : COMPATIBILITY_GROUND[cell.terrain];
     c.fillRect(0, 0, 128, 128);
     if (cell.terrain === 'water') {
         if (detail) {
-            const wash = c.createLinearGradient(0, 0, 128, 128); wash.addColorStop(0, '#6a999d32'); wash.addColorStop(1, '#05252f55'); c.fillStyle = wash; c.fillRect(0, 0, 128, 128);
-            c.strokeStyle = '#abd1c922'; c.lineWidth = .7;
-            for (let i = 0; i < 9; i++) { const yy = i * 17 + cell.variant; c.beginPath(); c.moveTo(0, yy); c.bezierCurveTo(32, yy - 4, 94, yy + 4, 128, yy); c.stroke(); }
+            c.strokeStyle = '#d7e9df35'; c.lineWidth = .7;
+            for (let i = 0; i < 3; i++) { const yy = 25 + i * 37 + cell.variant; c.beginPath(); c.moveTo(20, yy); c.bezierCurveTo(42, yy - 2, 74, yy + 2, 98, yy); c.stroke(); }
         }
         c.restore(); return;
-    }
-    if (detail && mapArtReady()) {
-        const sprite = cell.terrain === 'forest' ? (cell.region === 'crownspine' || cell.variant > 9 ? 1 : 0) : cell.terrain === 'farmland' ? 2 : cell.terrain === 'mountain' ? (cell.region === 'crownspine' || cell.region === 'snow' ? 4 : 5) : cell.terrain === 'snow' ? 4 : cell.terrain === 'desert' ? (cell.variant === 7 ? 14 : 6) : cell.terrain === 'marsh' ? 7 : cell.terrain === 'river' ? 7 : cell.terrain === 'darkland' ? 12 : cell.terrain === 'coast' ? 15 : 3;
-            const shade = c.createLinearGradient(0, 0, 128, 128); shade.addColorStop(0, '#fce2a311'); shade.addColorStop(1, '#0c241f25'); c.fillStyle = shade; c.fillRect(0, 0, 128, 128);
-            c.save();
-            if (cell.variant % 3 === 0 && cell.terrain !== 'coast') { c.translate(128, 0); c.scale(-1, 1); }
-            drawMapSprite(c, sprite, -1, -1, 130);
-            c.restore();
-            c.restore(); return;
     }
     if (!detail) { c.restore(); return; }
     c.beginPath(); c.rect(0, 0, 128, 128); c.clip();
     const rng = seeded(Math.imul(cell.col, 374761393) ^ Math.imul(cell.row, 668265263) ^ 98213);
-    const wash = c.createLinearGradient(0, 0, 110, 128);
-    wash.addColorStop(0, '#f3ecc02c'); wash.addColorStop(.48, '#fff5cf05'); wash.addColorStop(1, '#354e3420');
-    c.fillStyle = wash; c.fillRect(0, 0, 128, 128);
-    for (let i = 0; i < 62; i++) {
-        c.fillStyle = i % 3 ? '#344c3010' : '#ffefbe32'; c.fillRect(rng() * 128, rng() * 128, 1 + rng() * 2, .7);
+    for (let i = 0; i < 9; i++) {
+        c.fillStyle = i % 3 ? '#52663816' : '#f3ecc02a'; c.fillRect(rng() * 128, rng() * 128, 1 + rng() * 2, .7);
     }
     if (cell.terrain === 'farmland') {
         // Irrigated strips, furrows and narrow paths express a worked field.
-        c.save(); c.translate(64, 65); c.rotate(cell.variant % 2 ? -.19 : .15);
+        c.save(); c.translate(64, 65); c.rotate(cell.variant % 2 ? -.19 : .15); c.scale(.5, .5);
         for (let strip = 0; strip < 3; strip++) {
             const left = -55 + strip * 39, top = -46 + strip % 2 * 7;
             c.fillStyle = ['#d6c17e', '#aab075', '#c7af6d'][(strip + cell.variant) % 3]; c.fillRect(left, top, 32, 91);
@@ -93,66 +88,61 @@ export function drawCell(c: CanvasRenderingContext2D, cell: WorldCell, x: number
             }
         }
         path(c, [[-62, 51], [62, 51]], 5, '#ddc99c'); path(c, [[-62, 54], [62, 54]], 1, '#847d555a'); c.restore();
-        for (let i = 0; i < 4; i++) ellipse(c, 13 + i * 4, 110, 3, 2, '#738251');
+        for (let i = 0; i < 3; i++) ellipse(c, 25 + i * 3, 98, 2, 1.5, '#738251');
     } else if (cell.terrain === 'forest') {
         const trees: [number, number, number][] = [];
-        for (let i = 0; i < 14; i++) trees.push([12 + rng() * 104, 36 + rng() * 83, 13 + rng() * 10]);
+        for (let i = 0; i < 5 + cell.variant % 3; i++) trees.push([38 + rng() * 49, 50 + rng() * 39, 9 + rng() * 5]);
         trees.sort((a, b) => a[1] - b[1]);
         for (const [tx, ty, scale] of trees) tree(c, tx, ty, scale, cell.region === 'crownspine' || cell.variant > 9, cell.variant === 7);
-        path(c, [[0, 118], [29, 110], [48, 113]], 2, '#c6c49735');
     } else if (cell.terrain === 'mountain') {
         const snow = cell.region === 'crownspine' || cell.region === 'snow' || cell.variant % 3 === 0;
-        mountain(c, 39, 66, 27 + cell.variant % 5, snow);
-        mountain(c, 84, 82, 34 + cell.variant % 6, snow);
-        mountain(c, 36, 110, 23, false);
-        for (let i = 0; i < 5; i++) stone(c, 70 + rng() * 48, 101 + rng() * 20, 2 + rng() * 4, snow);
+        mountain(c, 52, 77, 20 + cell.variant % 5, snow);
+        mountain(c, 78, 86, 16 + cell.variant % 4, snow);
+        stone(c, 40, 94, 4, snow);
     } else if (cell.terrain === 'snow') {
-        for (let i = 0; i < 7; i++) {
+        for (let i = 0; i < 3; i++) {
             const sx = rng() * 128, sy = rng() * 128;
             ellipse(c, sx, sy, 13 + rng() * 18, 4 + rng() * 3, '#e9ebd865');
             c.strokeStyle = '#8fa7a05c'; c.lineWidth = .8; c.beginPath(); c.ellipse(sx, sy, 20, 5, -.2, 0, Math.PI); c.stroke();
         }
-        stone(c, 88, 82, 10, true); stone(c, 101, 88, 6, true);
-        if (cell.variant % 2) tree(c, 29, 65, 15, true, false);
+        stone(c, 80, 78, 6, true);
+        if (cell.variant % 2) tree(c, 49, 73, 10, true, false);
     } else if (cell.terrain === 'desert') {
-        for (let i = 0; i < 7; i++) {
+        for (let i = 0; i < 3; i++) {
             const dx = rng() * 128, dy = rng() * 128;
             c.strokeStyle = '#ad865951'; c.lineWidth = 1;
             c.beginPath(); c.ellipse(dx, dy, 18 + rng() * 22, 5, -.22, Math.PI, Math.PI * 2); c.stroke();
             path(c, [[dx - 7, dy + 3], [dx + 6, dy + 1], [dx + 12, dy + 5]], .6, '#f3d4a87d');
         }
-        for (let i = 0; i < 4; i++) stone(c, 15 + rng() * 100, 25 + rng() * 88, 2 + rng() * 5);
+        for (let i = 0; i < 2; i++) stone(c, 25 + rng() * 75, 25 + rng() * 75, 2 + rng() * 3);
         path(c, [[81, 111], [79, 94], [84, 99]], 1.7, '#807352'); path(c, [[79, 105], [74, 99]], 1.3, '#807352');
     } else if (cell.terrain === 'marsh') {
-        for (let i = 0; i < 5; i++) {
-            const mx = 10 + rng() * 108, my = 20 + rng() * 95, width = 11 + rng() * 17;
+        for (let i = 0; i < 2; i++) {
+            const mx = 38 + rng() * 44, my = 50 + rng() * 32, width = 8 + rng() * 8;
             ellipse(c, mx, my, width + 2, 9, '#5e8c8170'); ellipse(c, mx, my, width, 6, '#8fb0ab');
             path(c, [[mx - width * .6, my - 1], [mx + width * .4, my - 1]], .8, '#d1d6b875');
             reeds(c, mx - width, my, 5);
         }
-        reeds(c, 96, 119, 6);
     } else if (cell.terrain === 'river') {
-        for (let i = 0; i < 10; i++) {
+        for (let i = 0; i < 4; i++) {
             const rx = rng() * 128, ry = rng() * 128;
             path(c, [[rx - 7, ry], [rx, ry + 1], [rx + 9, ry - 1]], .85, '#dce7d778');
         }
-        ellipse(c, 14, 26, 19, 9, '#a5b88b'); ellipse(c, 111, 110, 23, 10, '#a5b88b');
-        reeds(c, 14, 26, 5); reeds(c, 110, 111, 7);
+        reeds(c, 28, 36, 4); reeds(c, 97, 99, 4);
         // Stepping stones identify the river as a traversable shallow ford.
-        for (let i = 0; i < 5; i++) stone(c, 28 + i * 17, 63 + Math.sin(i) * 4, 4 + i % 2);
+        for (let i = 0; i < 5; i++) stone(c, 40 + i * 12, 63 + Math.sin(i) * 4, 3 + i % 2);
+    } else if (cell.terrain === 'darkland') {
+        for (let i = 0; i < 4; i++) stone(c, 42 + rng() * 43, 48 + rng() * 35, 3 + rng() * 6);
+        path(c, [[49, 86], [58, 81], [62, 88], [73, 83]], 1, '#5b605451');
     } else {
-        for (let i = 0; i < 18; i++) {
+        for (let i = 0; i < 5; i++) {
             const gx = rng() * 128, gy = rng() * 128;
             path(c, [[gx - 2, gy], [gx - 1, gy - 3]], .7, '#637f4778');
             path(c, [[gx, gy], [gx + 1, gy - 4]], .7, '#69834b78');
             if (i % 5 === 0) { ellipse(c, gx + 2, gy - 3, 1, 1, '#e3d18bb5'); }
         }
-        for (let i = 0; i < 3; i++) {
-            const gx = rng() * 128, gy = rng() * 128;
-            c.strokeStyle = '#56744922'; c.lineWidth = .8; c.beginPath(); c.ellipse(gx, gy, 18 + rng() * 20, 7, -.15, Math.PI, Math.PI * 2); c.stroke();
-        }
-        if (cell.variant % 4 === 0) tree(c, 88, 92, 15, false, cell.region === 'ashen');
-        if (cell.variant % 3 === 0) stone(c, 31, 48, 4);
+        if (cell.variant % 4 === 0) tree(c, 88, 92, 7, false, cell.region === 'ashen');
+        if (cell.variant % 3 === 0) stone(c, 31, 48, 3);
     }
     c.restore();
 }

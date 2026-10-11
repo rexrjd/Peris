@@ -2,10 +2,20 @@ import type {Faction} from '../../features/factions/domain/factions';
 import type { BuildingType } from '../../features/city/domain/types';
 import type { SlotType } from '../../features/city/domain/slots';
 import type { FieldBuilding } from '../../features/map/domain/territory';
-import type { UnitType } from '../../features/army/domain/types';
+import type { ArmyTroops, UnitType } from '../../features/army/domain/types';
 import type { Battle, BattleOrder } from '../../features/battle/domain/types';
 import type { World } from './world';
 type BaseCommand = {type:'setFaction';faction:Faction} | {type:'debugCity';action:'resources'|'demolish'|'finish'|'level'|'population'|'culture';target?:string;value?:number} | {type:'researchSpell';spell:string;} | {type:'castSpell';battleId:number;spell:string;target?:number;} | {
+    type: 'saveCampaignFarmList'; id?: number; name: string; troops: ArmyTroops; casualtiesOnly: boolean;
+} | {
+    type: 'saveCampaignFarm'; id?: number; listId: number; campId: number; armyId: number; troops: ArmyTroops;
+} | {
+    type: 'deleteCampaignFarm'; id: number;
+} | {
+    type: 'deleteCampaignFarmList'; id: number;
+} | {
+    type: 'startCampaignFarmList'; id: number; routes?: { targetId: number; path: [number, number][] }[];
+} | {
     type: 'claimField'; col: number; row: number;
 } | {
     type: 'buildField'; col: number; row: number; item: FieldBuilding;
@@ -29,6 +39,13 @@ type BaseCommand = {type:'setFaction';faction:Faction} | {type:'debugCity';actio
     type: 'raid';
     campId: number;
     route?: [number, number][];
+    troops?: ArmyTroops;
+} | {
+    type: 'cancelMarch';
+    armyId: number;
+    sentAt: string;
+} | {
+    type: 'collectGarrison'; armyId: number; troops?: ArmyTroops;
 } | {
     type: 'ready';
     battleId: number;

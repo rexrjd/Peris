@@ -5,6 +5,7 @@ import { liveResources, affordable } from '../../city/domain/economy';
 import { armyAttack, slotLevels } from '../../city/domain/slots';
 import { armyPosition } from '../../map/domain/movement';
 import { wrappedWorldDelta } from '../../map/domain/dimensions';
+import { homeArmyPosition } from '../../map/domain/garrisons';
 import { UNITS, UNIT_TYPES, soldierTotal } from './units';
 import { multiply, RESOURCES } from '../../../shared/model/resources';
 import { heroBonuses } from '../../heroes/domain/heroes';
@@ -20,7 +21,7 @@ export function trainingOrders(world: World, army: Army) {
     return world.orders.filter(o => o.owner_id === army.owner_id && o.kind === 'recruit' && (o.army_id ?? world.armies[0]?.id) === army.id).sort((a, b) => Date.parse(a.started_at) - Date.parse(b.started_at));
 }
 export function cityDistance(army: Army, city: Settlement, now: number, wrapped = false) {
-    const pos = armyPosition(army, now), x = city.x + 40, y = city.y + 30;
+    const pos = armyPosition(army, now), { x, y } = homeArmyPosition(city);
     return Math.hypot(wrapped ? wrappedWorldDelta(pos.x, x) : x - pos.x, wrapped ? wrappedWorldDelta(pos.y, y) : y - pos.y);
 }
 /** Recruitment uses the same distance check as the local and SQL commands. */

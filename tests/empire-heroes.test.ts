@@ -10,7 +10,7 @@ import { recruitHero, improveHero, equipArtifact, transferTroops, rebaseArmy } f
 import { heroBonuses, heroLevel, heroPoints } from '../src/features/heroes/domain/heroes';
 import { recruitSoldiers } from '../src/features/army/domain/commands';
 import { marchArmy } from '../src/features/map/domain/commands';
-import { mapClaimReason } from '../src/features/map/domain/territory';
+import { claimMapField, mapClaimReason } from '../src/features/map/domain/territory';
 import { cellCenter } from '../src/features/map/domain/worldGrid';
 import { findMarchPath } from '../src/features/map/domain/pathfinding';
 import { upgradeBuilding } from '../src/features/city/domain/commands';
@@ -115,6 +115,7 @@ test('recruitment, marching and transfers target individual armies and conserve 
     f.world.city_slots!.push({ settlement_id: f.city.id, slot_index: 0, building_type: 'barracks', level: 1 });
     recruitSoldiers(f.context, { type: 'recruit', item: 'infantry', quantity: 5 });
     f.context.armyId = other.id;
+    claimMapField(f.context, Math.floor(f.city.x / 128) + 1, Math.floor(f.city.y / 128));
     marchArmy(f.context, { type: 'move', ...cellCenter(Math.floor(f.city.x / 128) + 1, Math.floor(f.city.y / 128)) });
     assert.equal(f.army.status, 'idle'); assert.equal(other.status, 'moving');
     f.context.armyId = f.army.id;
@@ -146,6 +147,7 @@ test('hero XP grants allocated skill points; equipment has one item per slot and
     equipArtifact(f.context, hero.id, 902, true); close(heroBonuses(f.world, other).speed, 1.25); assert.equal(heroBonuses(f.world, other).attack, 7);
     assert.throws(() => equipArtifact(f.context, f.world.heroes![0].id, 901, true), /Unequip/);
     f.context.armyId = other.id; const target = cellCenter(Math.floor(f.city.x / 128) + 1, Math.floor(f.city.y / 128));
+    claimMapField(f.context, Math.floor(target.x / 128), Math.floor(target.y / 128));
     marchArmy(f.context, { type: 'move', ...target });
     close((Date.parse(other.arrival_at) - Date.parse(other.departure_at)) / 1000, Math.floor(other.march_distance! / (22 * 1.25) * 1000) / 1000);
 });

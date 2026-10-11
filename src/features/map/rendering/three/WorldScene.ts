@@ -1,4 +1,3 @@
-import { createBanditCampModel } from './banditModel';
 import { heroPortraitUrl } from '../../../heroes/domain/portraits';
 import { heroForArmy } from '../../../heroes/domain/heroes';
 import { MapArmyModels } from './armyModels';
@@ -18,10 +17,10 @@ import { findMarchPath } from '../../domain/pathfinding';
 import { preferences } from '../../../../platform/preferences/preferences';
 import { PreviewCamera } from '../../preview/PreviewCamera';
 import { createLandscape, sampleHeight } from './landscape';
-import { createArmyModel, createSettlementModel } from './models';
+import { createArmyModel, createSettlementModel, createMercenaryCampModel } from './models';
 
 type EntityKind = 'army' | 'settlement' | 'camp';
-type Entity = { kind: EntityKind; id: number; x: number; y: number; title: string; mine: boolean; model: THREE.Group; detail: boolean; faction?:Faction; development?:number; composition?:string;bandit?:boolean };
+type Entity = { kind: EntityKind; id: number; x: number; y: number; title: string; mine: boolean; model: THREE.Group; detail: boolean; faction?:Faction; development?:number; composition?:string;bandit?:boolean; tier?:number };
 type Label = { key: string; text: string; x: number; y: number; selection?: MapSelection; portrait?:string; mine?:boolean };
 export const FIELD_DETAIL_BUDGET = 96;
 export const FIELD_MARKER_BUDGET = 2048;
@@ -42,7 +41,9 @@ export class WorldScene {
     private readonly fieldCopies = new Map<string, THREE.Group[]>();
     private fieldKey = '';
     private shadowKey = '';
-    private settlementRecords: RenderState['world']['settlements'] | null = null;
+    private clearingKey = '';
+    private clearingTowns: RenderState['world']['settlements'] | null = null;
+    private clearingCamps: RenderState['world']['camps'] | null = null;
     private readonly pickingRay = new THREE.Raycaster();
     private readonly hittableImages = new Map<string, {x:number;y:number}[]>();
     private readonly hittable = new Set<string>();
@@ -65,11 +66,12 @@ export class WorldScene {
     private readonly touches = new Map<number, { x: number; y: number }>();
     private pinch: { distance: number; x: number; y: number } | null = null;
     private pointer: { x: number; y: number } | null = null;
-    private down: { x: number; y: number; lastX: number; lastY: number; button: number; mini: boolean } | null = null;
+    private down: { x: number; y: number; lastX: number; lastY: number; button: number; mini: boolean; moved: boolean } | null = null;
     private hover: MapSelection = null;
     private frame = 0; private lastTime = 0; private running = true;
     private focusKey: number | undefined; private routeKey = ''; private gridKey = ''; private selectionKey = ''; private viewportKey = ''; private overview: HTMLCanvasElement | null = null;
     private labels = new Map<string, HTMLButtonElement>();
+    private centerKey = '';
     constructor(private readonly canvas: HTMLCanvasElement, private readonly mini: HTMLCanvasElement, private readonly labelRoot: HTMLDivElement,
         private readonly state: () => RenderState, private readonly actions: () => RenderActions, private readonly hoverText: (text: string) => void) {
         this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false, powerPreference: 'high-performance' });
@@ -111,12 +113,17 @@ export class WorldScene {
     }
     private syncEntities() {
         const s = this.state(), now = this.now(), active = new Set<string>();
-        if(this.settlementRecords!==s.world.settlements){this.settlementRecords=s.world.settlements;this.landscape.setSettlementCells(s.world.settlements.map(town => ({ x: town.x / CELL_SIZE, z: town.y / CELL_SIZE })));this.shadowKey='';}
+        if (this.clearingTowns !== s.world.settlements || this.clearingCamps !== s.world.camps) {
+            this.clearingTowns = s.world.settlements; this.clearingCamps = s.world.camps;
+            const centers = [...s.world.settlements, ...s.world.camps.filter(camp => camp.bandit)].map(site => ({ x: site.x / CELL_SIZE, z: site.y / CELL_SIZE }));
+            const key = centers.map(center => `${center.x}:${center.z}`).sort().join('|');
+            if (key !== this.clearingKey) { this.clearingKey = key; this.landscape.setSettlementCells(centers); this.shadowKey = ''; }
+        }
         this.hittable.clear();
         this.hittableImages.clear();
-        const records: { kind: EntityKind; id: number; x: number; y: number; title: string; mine: boolean;faction?:Faction;development?:number; composition?:string;bandit?:boolean }[] = [
+        const records: { kind: EntityKind; id: number; x: number; y: number; title: string; mine: boolean;faction?:Faction;development?:number; composition?:string;bandit?:boolean; tier?:number }[] = [
             ...s.world.settlements.map(t => ({ kind: 'settlement' as const, id: t.id, x: t.x, y: t.y, title: t.name, mine: t.owner_id === s.playerId,faction:factionOf(t.faction), development:mapSettlementDevelopment(t.map_development??settlementMapDevelopment(s.world.buildings,t.id,s.world.city_slots)) })),
-            ...s.world.camps.map(t => ({ kind: 'camp' as const, id: t.id, x: t.x, y: t.y, title: t.bandit?t.name:siteFor(t.id).title, mine: false,bandit:t.bandit,faction:t.faction })),
+            ...s.world.camps.map(t => ({ kind: 'camp' as const, id: t.id, x: t.x, y: t.y, title: t.bandit?t.name:siteFor(t.id).title, mine: false,bandit:t.bandit,faction:t.faction,tier:t.tier })),
             ...s.world.armies.map(t => ({ kind: 'army' as const, id: t.id, ...armyPosition(t, now), title: t.name, mine: t.owner_id === s.playerId, faction: armyFaction(s.world, t), composition: `${t.infantry > 0 ? 'i' : ''}${t.archers > 0 ? 'a' : ''}${t.cavalry > 0 ? 'c' : ''}` })),
         ];
         const priority = (record: typeof records[number]) => record.mine || s.selection?.kind !== 'cell' && s.selection?.kind === record.kind && s.selection?.id === record.id ? 0 : 1;
@@ -134,13 +141,13 @@ export class WorldScene {
                 const model = new THREE.Group();
                 e = { ...record, model, detail: false }; this.entities.set(key, e); this.scene.add(model);
             }
-            if(e.faction!==record.faction || e.development!==record.development || e.composition!==record.composition || e.kind==='army' && this.armyModels.ready(factionOf(record.faction)) && !e.model.userData.publishedArmy){this.removeCopies(key);this.disposeGroup(e.model);e.detail=false;}
+            if(e.faction!==record.faction || e.development!==record.development || e.composition!==record.composition || e.tier!==record.tier || e.kind==='army' && this.armyModels.ready(factionOf(record.faction)) && !e.model.userData.publishedArmy){this.removeCopies(key);this.disposeGroup(e.model);e.detail=false;}
             Object.assign(e, record);
             const images = this.visibleImages(e.x, e.y);
             const detailed = this.view.span < 36 && images.length > 0 && (priority(e) === 0 || detailCount++ < 48);
             if (detailed && !e.detail) {
                 const kind = e.kind === 'settlement' ? 'village' : e.id === 6 ? 'ruins' : e.id === 2 ? 'sanctuary' : e.id === 5 ? 'volcano' : e.id === 3 ? 'crossing' : e.id === 4 ? 'keep' : 'village';
-                e.model.add(e.kind === 'army' ? this.armyModels.create(factionOf(e.faction), e.composition ?? 'i', e.mine ? 0x345e48 : 0x749cb1) ?? createArmyModel(e.mine ? 0x345e48 : 0x749cb1) : e.kind==='settlement'?this.settlementModels.get(factionOf(e.faction),e.development):e.bandit?createBanditCampModel(factionOf(e.faction)):createSettlementModel(kind)); e.detail = true;
+                e.model.add(e.kind === 'army' ? this.armyModels.create(factionOf(e.faction), e.composition ?? 'i', e.mine ? 0x345e48 : 0x749cb1) ?? createArmyModel(e.mine ? 0x345e48 : 0x749cb1) : e.kind==='settlement'?this.settlementModels.get(factionOf(e.faction),e.development):e.bandit?createMercenaryCampModel((e.tier ?? 1) <= 1 ? 'low' : e.tier === 2 ? 'medium' : 'hard',FACTIONS[factionOf(e.faction)].roof):createSettlementModel(kind)); e.detail = true;
                 e.model.userData.publishedArmy = e.kind === 'army' && !!e.model.children[0]?.userData.publishedArmy;
                 this.shadowKey='';
             }
@@ -352,8 +359,8 @@ export class WorldScene {
         for (const [key, e] of this.entities) {
             const selected = s.selection && s.selection.kind !== 'cell' && s.selection.kind === e.kind && s.selection.id === e.id;
             if(e.kind==='army'&&(e.mine||selected||this.view.span<70)) {
-                const hero=heroForArmy(s.world,e.id);labels.push({key,text:hero?.name??e.title,x:e.x,y:e.y,selection:{kind:'army',id:e.id},portrait:heroPortraitUrl(e.faction,hero?.class,hero?.id),mine:e.mine});
-            } else if (selected || e.mine && e.kind === 'settlement' && this.view.span < 25) labels.push({ key, text: e.title, x: e.x, y: e.y, selection: { kind: e.kind, id: e.id } });
+                const hero=heroForArmy(s.world,e.id);labels.push({key,text:hero?.name??e.title,x:e.x,y:e.y,selection:{kind:'army',id:e.id},portrait:s.mapPurpose === 'frontier' ? undefined : heroPortraitUrl(e.faction,hero?.class,hero?.id),mine:e.mine});
+            } else if (selected || this.hover?.kind === e.kind && this.hover.id === e.id || e.mine && e.kind === 'settlement' && this.view.span < 25) labels.push({ key, text: e.title, x: e.x, y: e.y, selection: { kind: e.kind, id: e.id } });
         }
         if (s.mapLayers?.regions) for (const r of WORLD_REGIONS) labels.push({ key: `region:${r.id}`, text: r.name, ...r.label });
         if (s.mapLayers?.resources && this.view.span < 24) {
@@ -363,11 +370,12 @@ export class WorldScene {
                 if (['forest', 'mountain', 'farmland', 'desert'].includes(cell.terrain)) labels.push({ key: `resource:${col}:${row}`, text: cell.resource, ...p, selection: { kind: 'cell', col, row } });
             }
         }
-        labels.sort((a,b)=>(a.portrait?-1:0)-(b.portrait?-1:0));
+        const labelPriority = (label: Label) => s.selection && label.selection && s.selection.kind !== 'cell' && label.selection.kind === s.selection.kind && 'id' in label.selection && label.selection.id === s.selection.id ? -2 : label.portrait ? -1 : 0;
+        labels.sort((a,b)=>labelPriority(a)-labelPriority(b));
         const active = new Set<string>(), placed: { x: number; y: number; width: number }[] = [];
         for (const label of labels) {
             const image = this.imagePoint(label.x, label.y); label.x = image.x; label.y = image.y;
-            const p = this.view.project(label.x, label.y, .7); const width = label.portrait?44:label.text.length * 6 + 18;
+            const p = this.view.project(label.x, label.y, .7); const width = label.portrait?44:label.text.length * (this.view.width < 600 ? 5 : 6) + 18;
             if (!p.visible || p.x < width / 2 || p.x > this.view.width - width / 2 || p.y < 12 || p.y > this.view.height - 80) continue;
             if (placed.some(a => Math.abs(a.y - p.y) < 26 && Math.abs(a.x - p.x) < (a.width + width) / 2)) continue;
             const entity = this.entities.get(label.key);
@@ -413,6 +421,9 @@ export class WorldScene {
         c.restore();
     }
     private publishViewport() {
+        const center = wrapWorldPoint({ x: this.view.target.x * CELL_SIZE, y: this.view.target.z * CELL_SIZE });
+        const centerKey = `${center.x.toFixed(3)}:${center.y.toFixed(3)}`;
+        if (centerKey !== this.centerKey) { this.centerKey = centerKey; this.actions().mapCenter?.(center); }
         const points = [[0, 0], [this.view.width, 0], [this.view.width, this.view.height], [0, this.view.height]].map(([x, y]) => this.view.ground(x, y)).filter((p): p is { x: number; y: number } => !!p);
         if (!points.length) return;
         const margin = CELL_SIZE * 3, snap = CELL_SIZE * 2;
@@ -433,7 +444,7 @@ export class WorldScene {
         if (this.keys.has('e')) this.view.azimuth += dt * .7;
         this.view.update(); this.landscape.setWrapVisible(!this.view.isOverview); this.landscape.setView(this.view.span); this.syncEntities(); this.syncFields();
         if (this.pointer && !this.down) this.hover = this.hit(this.pointer.x, this.pointer.y);
-        this.canvas.style.cursor = s.moveMode ? 'crosshair' : this.down ? 'grabbing' : this.hover ? 'pointer' : 'grab';
+        this.canvas.style.cursor = this.down?.moved ? 'grabbing' : s.moveMode ? 'crosshair' : this.down ? 'grabbing' : this.hover ? 'pointer' : 'grab';
         const target = this.view.target, shadowSpan = Math.min(28, this.view.span * 1.4);
         const shadowKey=`${Math.round(target.x*4)}:${Math.round(target.z*4)}:${Math.round(this.view.span*3)}:${Math.round(this.view.azimuth*50)}:${this.view.wrapRevision}:${s.world.armies.some(army=>army.status==='moving')?Math.floor(this.now()/200):''}`;
         if(shadowKey!==this.shadowKey){this.shadowKey=shadowKey;this.sun.position.set(target.x - 18, target.y + 32, target.z + 14); this.sun.target.position.copy(target);
@@ -452,12 +463,16 @@ export class WorldScene {
         this.on(this.canvas, 'contextmenu', e => e.preventDefault());
         this.on(this.canvas, 'pointerdown', ((e: PointerEvent) => { e.preventDefault(); this.canvas.focus(); this.canvas.setPointerCapture(e.pointerId); const p = this.coordinates(e); this.pointer = p; this.touches.set(e.pointerId, p);
             if (this.touches.size === 2) { const [a, b] = [...this.touches.values()]; this.pinch = { distance: Math.max(1, Math.hypot(a.x - b.x, a.y - b.y)), x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }; this.down = null; return; }
-            this.down = { ...p, lastX: p.x, lastY: p.y, button: e.button, mini: false }; }) as EventListener);
+            this.down = { ...p, lastX: p.x, lastY: p.y, button: e.button, mini: false, moved: false }; }) as EventListener);
         this.on(this.canvas, 'pointermove', ((e: PointerEvent) => { const p = this.coordinates(e); this.pointer = p; if (this.touches.has(e.pointerId)) this.touches.set(e.pointerId, p);
             if (this.pinch && this.touches.size >= 2) { const [a, b] = [...this.touches.values()], distance = Math.max(1, Math.hypot(a.x - b.x, a.y - b.y)), x = (a.x + b.x) / 2, y = (a.y + b.y) / 2; this.view.zoom(distance / this.pinch.distance, { x: this.pinch.x, y: this.pinch.y }); this.view.pan(x - this.pinch.x, y - this.pinch.y); this.pinch = { distance, x, y }; return; }
-            if (this.down) { if (!this.state().moveMode || this.down.button === 1) this.view.pan(p.x - this.down.lastX, p.y - this.down.lastY); this.down.lastX = p.x; this.down.lastY = p.y; } }) as EventListener);
+            if (this.down) {
+                this.down.moved ||= Math.hypot(p.x - this.down.x, p.y - this.down.y) > 7;
+                if (this.down.moved && (this.down.button === 0 || this.down.button === 1)) this.view.pan(p.x - this.down.lastX, p.y - this.down.lastY);
+                this.down.lastX = p.x; this.down.lastY = p.y;
+            } }) as EventListener);
         this.on(this.canvas, 'pointerup', ((e: PointerEvent) => { this.touches.delete(e.pointerId); if (this.pinch) { if (!this.touches.size) this.pinch = null; return; }
-            const down = this.down; this.down = null; if (!down) return; const p = this.coordinates(e); if (Math.hypot(p.x - down.x, p.y - down.y) > 7 || e.button === 1) return;
+            const down = this.down; this.down = null; if (!down) return; const p = this.coordinates(e); if (down.moved || Math.hypot(p.x - down.x, p.y - down.y) > 7 || e.button === 1) return;
             if (this.state().moveMode) { const point = this.view.ground(p.x, p.y); if (point) this.marchAt(point.x, point.y); }
             else this.actions().selectMap(this.hit(p.x, p.y)); }) as EventListener);
         this.on(this.canvas, 'pointercancel', () => { this.down = null; this.touches.clear(); this.pinch = null; });

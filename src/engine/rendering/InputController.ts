@@ -5,6 +5,7 @@ import { clamp } from '../../shared/math/geometry';
 import { tone } from '../../platform/audio/audio';
 import { cellAt, cellCenter, isWalkable } from '../../features/map/domain/worldGrid';
 export class InputController {
+    private dragged = false;
     private cleanup: (() => void)[] = [];
     private touches = new Map<number, { x: number; y: number }>();
     private pinch: { distance: number; zoom: number; anchor: { x: number; y: number } } | null = null;
@@ -29,6 +30,7 @@ export class InputController {
                     return;
                 }
             }
+            this.dragged = false;
             this.ctx.down = { ...p, wx: wp.x, wy: wp.y, button: e.button, shift: e.shiftKey };
             const mini = this.ctx.miniBounds();
             if (p.x >= mini.x && p.x <= mini.x + mini.w && p.y >= mini.y && p.y <= mini.y + mini.h) {
@@ -53,7 +55,8 @@ export class InputController {
                 this.ctx.pointer = p;
                 return;
             }
-            if (this.ctx.down && (this.ctx.down.button === 1 || ((s.mode === 'battle' || !s.moveMode) && this.ctx.down.button === 0))) {
+            if (this.ctx.down) this.dragged ||= Math.hypot(p.x - this.ctx.down.x, p.y - this.ctx.down.y) > 7;
+            if (this.ctx.down && this.dragged && (this.ctx.down.button === 1 || this.ctx.down.button === 0)) {
                 const scale = this.ctx.zoomBase * this.ctx.camera.zoom;
                 this.ctx.camera.x -= (p.x - this.ctx.pointer.x) / scale;
                 this.ctx.camera.y -= (p.y - this.ctx.pointer.y) / scale;
@@ -76,6 +79,7 @@ export class InputController {
                 return;
             }
             if (s.mode === 'world') {
+                if (this.dragged || drag > 7 || e.button === 1) return;
                 if (s.moveMode && (e.button === 0 || e.button === 2)) {
                     const cell = cellAt(wp.x, wp.y), destination = cellCenter(cell.col, cell.row);
                     if(!isWalkable(cell.col,cell.row))return;
@@ -90,7 +94,7 @@ export class InputController {
             }
             const formations = s.world.formations.filter(f => f.battle_id === s.battle?.id);
             const hit = this.battle.hit(wp.x, wp.y, formations);
-            if(e.button===0&&drag<8){a.selectUnits(hit?[hit.id]:[]);if(hit)tone('select');}
+            if(e.button===0&&!this.dragged&&drag<8){a.selectUnits(hit?[hit.id]:[]);if(hit)tone('select');}
         }) as EventListener);
         this.on(this.ctx.canvas, 'pointercancel', () => { this.ctx.down = null; this.ctx.minimapDrag = false; this.touches.clear(); this.pinch = null; });
         this.on(this.ctx.canvas, 'wheel', ((e: WheelEvent) => {

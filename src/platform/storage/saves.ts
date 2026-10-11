@@ -10,6 +10,9 @@ import { type World } from '../../shared/model/world';
 import { CELL_SIZE, WORLD_COLS, WORLD_ROWS, WORLD_MAP_VERSION, WORLD_MIN_X, WORLD_MAX_X, wrappedWorldDelta, wrappedCellDistance, wrapWorldCell } from '../../features/map/domain/dimensions';
 import { isWalkable, isVersion3Walkable, isLegacyWalkable } from '../../features/map/domain/worldGrid';
 import { FIELD_BUILDINGS, TERRITORY_RULES, territoryAllowance, territoryPopulation } from '../../features/map/domain/territory';
+import { MARCH_CANCEL_MS } from '../../features/map/domain/commands';
+import { validateCampaignFarms } from '../../features/campaign/domain/farms';
+import { ownedStation, stationCell } from '../../features/map/domain/garrisons';
 // v6 campaigns predate the 200-field map. Keep every legacy position and route
 // unchanged on import/export; new movement uses the canonical periodic geography.
 const SAVE_MIN = -25600, SAVE_MAX = 25600;
@@ -185,12 +188,44 @@ export function validateSave(data: unknown): World {
         if(city.development_points!==undefined&&(!Number.isInteger(city.development_points)||city.development_points<0||city.development_points>1e9))invalid();
     }
     for(const army of w.armies)if(!Number.isSafeInteger(army.id)||army.id<1||army.owner_id!=='solo-ruler'||!cities.has(army.home_settlement_id)||typeof army.name!=='string'||army.name.length>80)invalid();
+    for (const army of w.armies) {
+        if (army.march_returning !== undefined && typeof army.march_returning !== 'boolean') invalid();
+        if (army.march_origin != null) {
+            const origin = army.march_origin;
+            if (!Number.isFinite(origin.x) || !Number.isFinite(origin.y) || origin.x < WORLD_MIN_X || origin.x >= WORLD_MAX_X || origin.y < WORLD_MIN_X || origin.y >= WORLD_MAX_X ||
+                !Number.isInteger(origin.col) || !Number.isInteger(origin.row) || stationCell(origin).col !== origin.col || stationCell(origin).row !== origin.row) invalid();
+        }
+        if ((army.march_sent_at == null) !== (army.march_cancel_until == null)) invalid();
+        if (army.march_sent_at != null && army.march_cancel_until != null) {
+            const sent = Date.parse(army.march_sent_at), deadline = Date.parse(army.march_cancel_until);
+            if (!Number.isFinite(sent) || !Number.isFinite(deadline) || deadline - sent !== MARCH_CANCEL_MS ||
+                Date.parse(army.departure_at) !== deadline || Date.parse(army.arrival_at) <= deadline) invalid();
+        }
+        if (army.raid_reserve != null) {
+            const reserve = army.raid_reserve, types = ['infantry', 'archers', 'cavalry'] as const;
+            if (typeof reserve !== 'object' || Array.isArray(reserve) || types.some(type => !Number.isSafeInteger(reserve[type]) || reserve[type] < 0) ||
+                types.reduce((n, type) => n + reserve[type] + army[type], 0) > 1000 ||
+                army.raid_target_id === null && !w.battles.some(b => b.attacker_army_id === army.id && b.status === 'active')) invalid();
+        }
+    }
+    if (w.garrisons !== undefined && (!Array.isArray(w.garrisons) || w.garrisons.length > 20000)) invalid();
+    const stationKeys = new Set<string>();
+    for (const garrison of w.garrisons ?? []) {
+        const key = `${garrison?.owner_id}:${garrison?.col}:${garrison?.row}`;
+        if (!garrison || garrison.owner_id !== 'solo-ruler' || !Number.isInteger(garrison.col) || garrison.col < -100 || garrison.col >= 100 ||
+            !Number.isInteger(garrison.row) || garrison.row < -100 || garrison.row >= 100 || stationKeys.has(key) ||
+            (['infantry', 'archers', 'cavalry'] as const).some(type => !Number.isSafeInteger(garrison[type]) || garrison[type] < 0 || garrison[type] > 20000)) invalid();
+        stationKeys.add(key);
+    }
+    validateCampaignFarms(w);
     for(const building of w.buildings)if(!cities.has(building.settlement_id))invalid();
     for(const key of ['city_slots','spell_research','map_plots','heroes','hero_artifacts','settler_expeditions'] as const)if(w[key]!==undefined&&!Array.isArray(w[key]))invalid();
     for(const slot of w.city_slots??[])if(!cities.has(slot.settlement_id))invalid();
     for(const research of w.spell_research??[])if(!cities.has(research.settlement_id))invalid();
     const plotCells=new Set<string>();
     for(const plot of w.map_plots??[]){const key=`${plot.col},${plot.row}`;if(!cities.has(plot.settlement_id)||plotCells.has(key))invalid();plotCells.add(key);}
+    for (const garrison of w.garrisons ?? [])
+        if (!ownedStation(w, garrison.owner_id, { x: garrison.col * CELL_SIZE + CELL_SIZE / 2, y: garrison.row * CELL_SIZE + CELL_SIZE / 2 })) invalid();
     const firstCity=w.settlements[0].id, firstArmy=w.armies[0].id;
     for(const order of w.orders){
         if(!cities.has(order.settlement_id??firstCity))invalid();

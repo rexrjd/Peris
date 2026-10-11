@@ -8,6 +8,43 @@ loot home, and save repeating farm targets. The local server persists the realm
 and continues processing with the browser closed. Existing campaign and Shared
 world modes remain available. Use `npm.cmd` in PowerShell if needed.
 
+**Quick access** in both game interfaces opens frequently used screens. Frontier
+has named farm lists with an independent **reports only when my troops are lost**
+checkbox, automatic report-only raids, and Outbound/Returning movement filters.
+The campaign's **Farm lists** shortcut opens its saved camp targets; **Frontier
+farm lists** opens the separate Frontier village.
+
+Each farm list has **Start list** for a manual batch. Review the saved troop
+presets and confirm; unavailable targets are skipped without spending troops.
+Frontier batches draw from the village garrison and keep repeat schedules unchanged.
+Campaign batches use their saved legions, with one raid per available legion.
+
+Campaign **March and engage** now opens a legion and troop review. Unsent troops
+stay at the departure village or owned field as a shared garrison; another idle
+legion there can collect them. Returning survivors merge with troops still at that
+station, up to the 1,000-soldier legion capacity. Ordinary marches can finish only
+at owned villages or fields. Alliances are not implemented yet, so rival villages
+cannot receive reinforcements. Older armies on neutral land can still march home.
+All new raid/march orders wait 30 seconds before departure and can be cancelled
+only during that window. The deadline persists through reloads and is enforced by
+the authority. Bandit farming resolves quietly into Reports; story battles remain
+available. The global map shares the camp map's subtle grid and starting camera.
+
+Frontier recruitment now has **Barracks / Stables / Workshop** tabs with nine
+faction-named units, research unlocks, separate building queues and reusable troop
+icons. Each farm list can save a default troop mix and apply it to its targets.
+Existing campaign troop rules remain unchanged; see the Frontier guide for scope.
+
+The Frontier overview shows hourly production, troops at home and army arrivals.
+Click a camp on the map or a farm's name and coordinates to open its details,
+including a defender roster and recent reports. Farm targets have an add/edit
+window and can be sorted, moved between lists or removed in batches. The default
+map reuses the existing Peris 3D landscape with three distinct mercenary compounds;
+**Classic map** keeps the compact illustrated view. Grab and drag to pan; scroll
+to zoom. New full realms distribute camps and difficulties across eligible land
+with a reproducible seed; existing realms keep their saved targets. Camp
+recruitment deadlines stay private on the server.
+
 See [Frontier Wars](docs/frontier-wars.md) for play instructions, balance assumptions,
 saved data, configuration, tests, server architecture, and the next milestone.
 

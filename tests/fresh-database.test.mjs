@@ -26,7 +26,7 @@ try{
   select -1,(col+.5)*128,(row_index+.5)*128 from generate_series(-100,99) as columns(col) cross join generate_series(-100,99) as rows(row_index) where public.peris_world_walkable((col+.5)*128,(row_index+.5)*128)
    and exists(select 1 from generate_series(-1,1) dx cross join generate_series(-1,1) dy where not public.peris_world_walkable((col+.5+dx)*128,(row_index+.5+dy)*128)) limit 1;`);
  assert.equal((await db.query('select count(*) as n from public.spawn_points where id<0')).rows[0].n,2,'Both unsafe spawning fixtures exist');
- await db.exec(`insert into auth.users values('11111111-1111-4111-8111-111111111111');set role authenticated;select set_config('request.jwt.claim.sub','11111111-1111-4111-8111-111111111111',false);select public.create_player('Rex');select public.move_army(-64,320);`);
+ await db.exec(`insert into auth.users values('11111111-1111-4111-8111-111111111111');set role authenticated;select set_config('request.jwt.claim.sub','11111111-1111-4111-8111-111111111111',false);select public.create_player('Rex');reset role;insert into public.peris_map_plots(owner_id,settlement_id,col,row,building_type,level)select owner_id,id,-1,2,null,0 from public.settlements where owner_id='11111111-1111-4111-8111-111111111111';set role authenticated;select public.move_army(-64,320);`);
  const world=(await db.query('select public.peris_snapshot() as world')).rows[0].world;
  assert.equal(world.map.version,4);assert.equal(world.map.seed,1346720329);assert.equal(world.map.total_players,1);assert.equal(world.buildings.length,8);
  assert.deepEqual([world.armies[0].target_x,world.armies[0].target_y],[-64,320]);
