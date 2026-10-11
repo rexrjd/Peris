@@ -38,6 +38,9 @@ jobs:
       - run: npm run test:command-receipts-db
       - run: npm run test:farm-parity-db
       - run: npm run test:army-parity-db
+      - run: node --import tsx tests/march-orders-database.test.mjs
+      - run: node --import tsx tests/garrisons-database.test.mjs
+      - run: node --import tsx tests/campaign-farm-batch-database.test.mjs
       - run: npm run test:accounts-db
       - run: npm run test:account-directory-db
       - run: npm run test:account-compatibility-db

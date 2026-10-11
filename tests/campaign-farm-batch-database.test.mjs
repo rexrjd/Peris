@@ -47,8 +47,10 @@ try {
     w = await snapshot(); assert.equal(w.armies.find(a => a.id === first.id).raid_target_id, camps[1].id); assert.equal(w.armies.find(a => a.id === second.id).status, 'idle'); assert.equal(total(w), before);
     await rpc('peris_empire_command', [JSON.stringify({ type: 'cancelMarch', armyId: first.id, sentAt: w.armies.find(a => a.id === first.id).march_sent_at })]);
     await admin(`insert into public.peris_progress(owner_id,camp_id,available_at)values('${u}',${camps[0].id},now()+interval '1 hour')`); await login();
-    const cooling = await command({ type: 'startCampaignFarmList', id: list.id }); assert.equal(cooling.started, 2); assert.match(cooling.skipped[0].reason, /regrouping/);
-    assert.equal((await snapshot()).armies.find(a => a.id === first.id).raid_target_id, camps[1].id); assert.equal(total(await snapshot()), before);
-    console.log('PASS · authoritative manual farm batches, deterministic one-order legions, partial skips, 30s staging, duplicate starts, ownership, cooldowns and troop conservation');
+    // Resource camps regrow defenders rather than using the old story cooldown.
+    // A stale pre-integration progress row cannot block their manual farm target.
+    const regrowing = await command({ type: 'startCampaignFarmList', id: list.id }); assert.equal(regrowing.started, 2); assert.match(regrowing.skipped[0].reason, /march or raid/);
+    assert.equal((await snapshot()).armies.find(a => a.id === first.id).raid_target_id, camps[0].id); assert.equal(total(await snapshot()), before);
+    console.log('PASS · authoritative manual farm batches, deterministic one-order legions, partial skips, 30s staging, duplicate starts, ownership, resource-camp regrowth and troop conservation');
 } catch (e) { console.error(e.message, e.where ?? '', e.detail ?? '', e.stack); process.exitCode = 1; }
 finally { await db.close(); }
