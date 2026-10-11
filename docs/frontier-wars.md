@@ -55,15 +55,16 @@ routes skip with a visible status. Missed intervals never flood a batch. Solo
 schedules resume when the campaign opens. Shared-world schedules continue through
 the private worker when the optional scheduler is installed.
 
-## Deployment hold and compatibility
+## Deployment and compatibility
 
-This local branch includes main's account directory and map activity updates.
+The integration includes main's account directory and compact map activity controls.
 The map panel shows exact owned troop roles and active research; rival armies
 retain their public aggregate information. Existing accounts, garrisons, farms
 and cancellation tokens are checked against frozen pre-upgrade databases.
-No production changes are authorized yet. Fetch and review further main changes
-before publication. Review and apply V16
-manually only after integration and tests. The optional `ENABLE_GAME_WORKER.sql`
+Code publication and database installation are separate steps. Fetch and review
+current main before pushing changes. Review and apply `UPGRADE_TO_V16.sql`
+to an existing production database before enabling the updated frontend; use
+`FRESH_INSTALL_V16.sql` only for an empty project. The optional `ENABLE_GAME_WORKER.sql`
 uses pg_cron and is kept separate so installing gameplay SQL does not silently
 start a background job. It is safe to rerun the V16 upgrade: existing cities,
 story progress, active raids, unit research, rosters, camps and reports remain.
