@@ -1,0 +1,118 @@
+import type { World, Order } from '../../../shared/model/world';
+import type { MapSelection } from './types';
+import { armyPosition } from './movement';
+import { CELL_SIZE, wrapWorldCell } from './dimensions';
+import { cellCenter } from './worldGrid';
+import { soldierTotal } from '../../army/domain/units';
+import { BUILDINGS } from '../../city/domain/buildings';
+import { SLOT_BUILDINGS } from '../../city/domain/slots';
+import { FIELD_BUILDINGS } from './territory';
+
+export type ActivityKind = 'raid' | 'return' | 'march' | 'battle' | 'construction' | 'recruitment' | 'settlers';
+export type MapActivity = {
+    id: string; kind: ActivityKind; category: 'armies' | 'cities'; title: string; detail: string;
+    destination?: string; troops?: number; armyId?: number; cityId?: number;
+    startedAt: number | null; endsAt: number | null; live?: boolean;
+    selection: Exclude<MapSelection, null>; point: { x: number; y: number };
+    cancel?: { armyId: number; sentAt: string; until: number };
+};
+const timestamp = (value?: string | null) => {
+    const n = value ? Date.parse(value) : NaN;
+    return Number.isFinite(n) ? n : null;
+};
+export const activityField = (point: { x: number; y: number }) => wrapWorldCell(Math.floor(point.x / CELL_SIZE), Math.floor(point.y / CELL_SIZE));
+const fieldLabel = (point: { x: number; y: number }) => {
+    const cell = activityField(point); return 'Field (' + cell.col + ' | ' + cell.row + ')';
+};
+function placeName(world: World, point: { x: number; y: number }) {
+    const cell = activityField(point);
+    return world.settlements.find(s => {
+        const other = activityField(s); return cell.col === other.col && cell.row === other.row;
+    })?.name ?? fieldLabel(point);
+}
+function constructionTitle(world: World, order: Order, cityId: number) {
+    if (order.item.startsWith('slot:')) {
+        const [, index, type] = order.item.split(':');
+        const slot = world.city_slots?.find(s => s.settlement_id === cityId && s.slot_index === Number(index));
+        const name = SLOT_BUILDINGS[(slot?.building_type ?? type) as keyof typeof SLOT_BUILDINGS]?.name ?? 'Building';
+        return name + ' · Lv. ' + ((slot?.level ?? 0) + 1);
+    }
+    const building = world.buildings.find(b => b.settlement_id === cityId && b.building_type === order.item);
+    return (BUILDINGS[order.item as keyof typeof BUILDINGS]?.name ?? 'Building') + ' · Lv. ' + ((building?.level ?? 0) + 1);
+}
+
+/** Read-only presentation of authoritative queues, including all owned cities/armies.
+ * A passed deadline remains visible until the engine/server settles that event. */
+export function mapActivity(world: World, owner: string, now: number): MapActivity[] {
+    const events: MapActivity[] = [], fighting = new Set<number>();
+    const cities = world.settlements.filter(s => s.owner_id === owner);
+    const armies = world.armies.filter(a => a.owner_id === owner);
+    for (const battle of world.battles) {
+        if (battle.status !== 'active' || (battle.attacker_owner_id !== owner && battle.defender_owner_id !== owner)) continue;
+        const armyId = battle.attacker_owner_id === owner ? battle.attacker_army_id : battle.defender_army_id;
+        const army = armies.find(a => a.id === armyId);
+        if (!army) continue;
+        fighting.add(army.id);
+        const camp = world.camps.find(c => c.id === battle.camp_id);
+        const formations = world.formations.filter(f => f.battle_id === battle.id && f.owner_id === owner);
+        events.push({ id: 'battle:' + battle.id, kind: 'battle', category: 'armies', title: army.name,
+            detail: battle.mode === 'pvp' ? 'Live duel' : 'Automatic battle', destination: camp?.name ?? battle.enemy_name,
+            troops: formations.length ? formations.reduce((n, f) => n + f.soldiers, 0) : soldierTotal(army),
+            armyId: army.id, cityId: army.home_settlement_id, startedAt: timestamp(battle.started_at), endsAt: null, live: true,
+            selection: { kind: 'army', id: army.id }, point: camp ?? armyPosition(army, now) });
+    }
+    for (const army of armies) {
+        if (army.status !== 'moving' || fighting.has(army.id)) continue;
+        const destination = { x: army.target_x, y: army.target_y };
+        const returning = !!army.march_returning;
+        const camp = world.camps.find(c => c.id === army.raid_target_id);
+        const until = timestamp(army.march_cancel_until);
+        const staged = !returning && !!army.march_sent_at && until !== null && now < until;
+        events.push({ id: 'army:' + army.id, kind: returning ? 'return' : army.raid_target_id != null ? 'raid' : 'march',
+            category: 'armies', title: army.name, detail: staged ? 'Preparing departure' : soldierTotal(army).toLocaleString('en-US') + ' soldiers',
+            destination: returning ? placeName(world, destination) : camp?.name ?? placeName(world, destination),
+            troops: soldierTotal(army), armyId: army.id, cityId: army.home_settlement_id,
+            startedAt: timestamp(army.departure_at), endsAt: timestamp(army.arrival_at),
+            selection: { kind: 'army', id: army.id }, point: armyPosition(army, now),
+            ...(staged ? { cancel: { armyId: army.id, sentAt: army.march_sent_at!, until: until! } } : {}) });
+    }
+    for (const order of world.orders) {
+        if (order.owner_id !== owner) continue;
+        const city = cities.find(s => s.id === (order.settlement_id ?? cities[0]?.id));
+        if (!city) continue;
+        const base = { id: 'order:' + order.id, cityId: city.id, startedAt: timestamp(order.started_at), endsAt: timestamp(order.finish_at), point: { x: city.x, y: city.y } };
+        if (order.kind === 'recruit') {
+            const army = armies.find(a => a.id === (order.army_id ?? armies[0]?.id));
+            const unit = ({ infantry: 'infantry', archers: 'archers', cavalry: 'cavalry' } as Record<string, string>)[order.item] ?? 'soldiers';
+            events.push({ ...base, kind: 'recruitment', category: 'cities', title: order.quantity + ' ' + unit, detail: city.name,
+                destination: army?.name, armyId: army?.id, selection: { kind: 'settlement', id: city.id } });
+        } else if (order.kind === 'settler') {
+            events.push({ ...base, kind: 'settlers', category: 'cities', title: order.quantity + (order.quantity === 1 ? ' settler' : ' settlers'),
+                detail: city.name, selection: { kind: 'settlement', id: city.id } });
+        } else if (order.kind === 'field') {
+            const [, colText, rowText, type] = order.item.split(':');
+            const col = Number(colText), row = Number(rowText);
+            if (!Number.isSafeInteger(col) || !Number.isSafeInteger(row)) continue;
+            const cell = wrapWorldCell(col, row), plot = world.map_plots?.find(p => p.owner_id === owner && p.col === cell.col && p.row === cell.row);
+            const name = FIELD_BUILDINGS[type as keyof typeof FIELD_BUILDINGS]?.name ?? 'Field building';
+            events.push({ ...base, kind: 'construction', category: 'cities', title: name + ' · Lv. ' + ((plot?.level ?? 0) + 1), detail: city.name,
+                destination: fieldLabel(cellCenter(cell.col, cell.row)), selection: { kind: 'cell', ...cell }, point: cellCenter(cell.col, cell.row) });
+        } else {
+            events.push({ ...base, kind: 'construction', category: 'cities', title: constructionTitle(world, order, city.id), detail: city.name,
+                selection: { kind: 'settlement', id: city.id } });
+        }
+    }
+    for (const expedition of world.settler_expeditions ?? []) {
+        if (expedition.owner_id !== owner || expedition.status !== 'travelling') continue;
+        const point = cellCenter(expedition.col, expedition.row);
+        events.push({ id: 'expedition:' + expedition.id, kind: 'settlers', category: 'cities', title: expedition.name,
+            detail: 'Founding a new city', destination: fieldLabel(point), cityId: expedition.origin_settlement_id,
+            startedAt: timestamp(expedition.departure_at), endsAt: timestamp(expedition.arrival_at),
+            selection: { kind: 'cell', ...activityField(point) }, point });
+    }
+    return events.sort((a, b) => Number(!!b.live) - Number(!!a.live) || (a.endsAt ?? Infinity) - (b.endsAt ?? Infinity) || a.id.localeCompare(b.id));
+}
+export function activityProgress(event: MapActivity, now: number) {
+    if (event.startedAt === null || event.endsAt === null) return 0;
+    return Math.max(0, Math.min(1, (now - event.startedAt) / Math.max(1, event.endsAt - event.startedAt)));
+}
