@@ -29,7 +29,7 @@ Roaming camps now accumulate shared resource stocks and grow defenders at privat
 
 Repeats are optional and use a player-chosen interval. Shared-world schedules need a successful manual launch to record the validated route; busy or unavailable targets skip that interval. Solo catch-up resumes when the campaign opens. Shared-world offline processing uses the prepared database worker, not a second game or Node service.
 
-This integration is **local review work**. Nothing has been pushed, merged or applied to production. Before publication, integrate the other developer's current `main` and rerun affected checks. Existing databases need the reviewed `supabase/UPGRADE_TO_V16.sql`; empty installations use `FRESH_INSTALL_V16.sql`. Offline processing additionally needs the separately reviewed `ENABLE_GAME_WORKER.sql` job. Do not apply either automatically.
+This integration is **local review work**. Nothing has been pushed, merged into `main` or applied to production. The other developer's account directory and map activity updates from `main` are included on the local integration branch. The activity panel preserves advanced troop identities and includes ongoing unit research. Fetch and review any further `main` changes before publication. Existing databases need the reviewed `supabase/UPGRADE_TO_V16.sql`; empty installations use `FRESH_INSTALL_V16.sql`. Offline processing additionally needs the separately reviewed `ENABLE_GAME_WORKER.sql` job. Do not apply either automatically.
 
 See [integrated camps and farming](docs/frontier-wars.md) for behavior, migration boundaries and verification.
 

@@ -1,0 +1,155 @@
+/* Map-only command and activity panel. Terrain and the global shell are unchanged. */
+.realm-shell.game-shell .atlas-stage.scene-stage .atlas-workspace.operations-workspace{display:grid;grid-template-columns:minmax(0,1fr) 312px;overflow:hidden;min-height:0;gap:0}
+.realm-shell.game-shell .atlas-stage.scene-stage .atlas-workspace.operations-workspace.ops-collapsed{grid-template-columns:minmax(0,1fr) 56px}
+.map-operations{--ops-line:#ffffff0e;--ops-muted:#929cac;--ops-accent:#c8b796;--ops-text:#eeeef2;display:flex;flex-direction:column;min-width:0;min-height:0;background:#171b22;border-left:1px solid #ffffff14;color:var(--ops-text);font:12px/1.5 'Open Sans',Arial,sans-serif;z-index:8}
+.map-operations button{font:inherit;cursor:pointer}
+.map-operations button:focus-visible{outline:2px solid #b4c4ee;outline-offset:-2px}
+.map-operations .ops-header{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 16px;height:53px;min-height:53px;border-bottom:1px solid var(--ops-line)}
+.ops-header-title{display:flex;align-items:center;gap:8px;font-size:12px;letter-spacing:-.01em}
+.ops-header-title>svg{color:var(--ops-accent)}
+.map-operations .ops-activity-jump{display:none}
+.map-operations .ops-toggle{display:flex;align-items:center;justify-content:center;gap:8px;width:28px;height:28px;padding:0;border:0;border-radius:6px;background:transparent;color:var(--ops-muted)}
+.map-operations .ops-toggle:hover{background:#ffffff08;color:var(--ops-text)}
+.map-operations.is-open .ops-toggle>svg{transform:rotate(-90deg)}
+.map-operations .ops-content{display:flex;flex-direction:column;flex:1;min-height:0;overflow:hidden}
+.map-operations .ops-content[hidden]{display:none}
+.map-operations .ops-selection{flex:0 1 auto;min-height:0;max-height:52%;overflow:auto;overscroll-behavior:contain;border-bottom:1px solid var(--ops-line);scrollbar-width:thin;scrollbar-color:#ffffff24 transparent}
+.realm-shell.game-shell .atlas-stage.scene-stage .map-operations .map-inspector.atlas-inspector{position:relative;inset:auto;display:block;width:100%;min-height:0;max-height:none;padding:14px 16px 18px;overflow:visible;border:0;border-radius:0;background:transparent;box-shadow:none;color:var(--ops-text)}
+.map-operations .ops-context-tools{display:flex;align-items:center;justify-content:space-between;margin:-4px 0 12px;color:var(--ops-muted);font-size:10px}
+.ops-context-tools>div{display:flex;gap:3px}
+.realm-shell.game-shell .map-operations .ops-context-tools button{position:static;display:grid;place-items:center;width:27px;height:27px;min-height:27px;border:0;border-radius:5px;background:transparent;color:var(--ops-muted);padding:0;font-size:21px}
+.realm-shell.game-shell .map-operations .ops-context-tools button:hover{background:#ffffff08;color:var(--ops-text)}
+.realm-shell.game-shell .map-operations .ops-kicker,.realm-shell.game-shell .map-operations .eyebrow{display:block;font-size:9px;letter-spacing:.09em;color:var(--ops-muted);margin:0 0 5px;font-weight:600}
+.realm-shell.game-shell .map-operations h2{color:var(--ops-text);font-size:19px;line-height:1.35;letter-spacing:-.025em;margin:4px 0 7px}
+.realm-shell.game-shell .map-operations h3{color:var(--ops-text);font-size:18px;margin:6px 0 10px;letter-spacing:-.025em}
+.realm-shell.game-shell .map-operations p,.realm-shell.game-shell .map-operations small{color:var(--ops-muted);font-size:11px;line-height:1.6}
+.realm-shell.game-shell .map-operations p{margin:0 0 12px}
+.realm-shell.game-shell .map-operations .button{position:static;display:flex;align-items:center;justify-content:center;gap:8px;min-height:37px;padding:8px 11px;font-size:11px;border-radius:7px;box-shadow:none;margin-top:10px;font-weight:600}
+.realm-shell.game-shell .map-operations .button.gold{background:#b9c8ed;border-color:#b9c8ed;color:#192237}
+.realm-shell.game-shell .map-operations .button.gold:hover:not(:disabled){background:#d0dcf5}
+.realm-shell.game-shell .map-operations .button.outline{background:transparent;border-color:#ffffff20;color:#c1cad8}
+.realm-shell.game-shell .map-operations .button.outline:hover:not(:disabled){background:#ffffff06;border-color:#ffffff40}
+.map-operations .ops-identity{display:flex;align-items:center;gap:11px;min-width:0}
+.map-operations .ops-identity>.command-portrait{width:47px;height:59px;min-width:47px;margin:0;object-fit:cover;border-radius:8px;border:1px solid #ffffff20;background:#222731}
+.ops-identity>div{min-width:0}
+.realm-shell.game-shell .map-operations .ops-identity h2{font-size:18px;margin:0 0 4px;overflow-wrap:anywhere}
+.realm-shell.game-shell .map-operations .ops-identity p{margin:0;font-size:10px}
+.map-operations .ops-army-state{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:14px 0 12px;font-size:10px;color:var(--ops-muted)}
+.ops-army-state>span{display:flex;align-items:center;gap:6px}
+.ops-army-state i{display:block;width:5px;height:5px;border-radius:50%;background:#aab5c7}
+.ops-army-state>span.active{color:#b9c8ed}
+.ops-army-state>span.active i{background:#b9c8ed}
+.map-operations .ops-troops{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;padding-block:11px;border-block:1px solid var(--ops-line)}
+.ops-troops>span{display:grid;grid-template-columns:24px auto;align-items:center;gap:3px 6px;min-width:0}
+.ops-troops svg{color:var(--ops-accent)}
+.ops-troops strong{font-size:14px;font-variant-numeric:tabular-nums}
+.realm-shell.game-shell .map-operations .ops-troops small{grid-column:1/3;font-size:9px}
+.map-operations .ops-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.realm-shell.game-shell .map-operations .ops-actions .button{width:100%;margin:12px 0 0}
+.realm-shell.game-shell .map-operations .ops-army-arrival{font-size:10px;margin:9px 0 0}
+.map-operations .ops-realm{padding:19px 16px 17px;border-bottom:1px solid var(--ops-line)}
+.map-operations .ops-realm>div{display:flex;gap:17px;margin-top:15px;font-size:11px;color:#c2cad7}
+.ops-realm>div>span{display:flex;align-items:center;gap:6px}
+.ops-realm>div svg{color:var(--ops-accent)}
+.map-operations .ops-activity{display:flex;flex:1;flex-direction:column;min-height:155px;padding:17px 0 0;overflow:hidden}
+.ops-activity>header{display:flex;align-items:center;justify-content:space-between;padding:0 16px;gap:8px}
+.realm-shell.game-shell .map-operations .ops-activity h2{display:flex;align-items:center;gap:7px;font-size:13px;letter-spacing:0;margin:0;font-weight:600}
+.ops-activity h2>span{display:grid;place-items:center;min-width:19px;height:19px;padding:0 5px;border-radius:5px;background:#ffffff07;color:var(--ops-muted);font-size:10px;font-weight:400}
+.realm-shell.game-shell .map-operations .ops-activity>header>small{display:flex;align-items:center;gap:5px;font-size:9px;color:#8e99aa}
+.ops-activity>header>small>i{width:4px;height:4px;background:#a2b4db;border-radius:50%}
+.map-operations .ops-filters{display:flex;gap:5px;margin:13px 16px 12px;border-bottom:1px solid var(--ops-line)}
+.map-operations .ops-filters button{display:flex;align-items:center;gap:6px;min-height:32px;padding:5px 7px 9px;border:0;border-bottom:2px solid transparent;border-radius:0;background:transparent;color:var(--ops-muted);font-size:10px}
+.map-operations .ops-filters button:first-child{padding-left:0;padding-right:10px}
+.ops-filters button span{font-size:9px;opacity:.6}
+.map-operations .ops-filters button[aria-pressed=true]{color:#eceff6;border-bottom-color:var(--ops-accent)}
+.map-operations .ops-filters button:hover{color:var(--ops-text)}
+.map-operations .ops-event-scroll{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#ffffff24 transparent;padding:0 16px 8px}
+.map-operations .ops-events{list-style:none;margin:0;padding:0}
+.map-operations .ops-event{--event-color:#bda988;position:relative;padding:10px 0 13px;border-bottom:1px solid var(--ops-line)}
+.map-operations .ops-event:first-child{padding-top:0}
+.map-operations .event-return{--event-color:#9cb9e7}
+.map-operations .event-battle,.map-operations .event-raid{--event-color:#deae99}
+.map-operations .event-settlers{--event-color:#b8abd6}
+.map-operations .ops-event-main{display:flex;align-items:center;gap:9px;text-align:left;width:100%;padding:4px 0;border:0;border-radius:5px;background:transparent;color:var(--ops-text)}
+.ops-event-main:hover{background:#ffffff04}
+.ops-event-icon{display:grid;place-items:center;width:33px;height:37px;flex:none;border:1px solid #ffffff0c;border-radius:6px;background:#ffffff04;color:var(--event-color);overflow:hidden}
+.map-operations .ops-event-icon .command-portrait{width:100%;height:100%;min-width:0;border:0;border-radius:0;margin:0;object-fit:cover}
+.ops-event-copy{display:block;flex:1;min-width:0}
+.map-operations .ops-event-kind{display:flex;gap:6px;align-items:center;font-size:9px;line-height:1.35;color:var(--event-color)}
+.ops-event-kind em{font-size:8px;font-style:normal;color:var(--ops-muted)}
+.ops-event-copy>strong{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;line-height:1.6;font-weight:600;margin:2px 0 0}
+.realm-shell.game-shell .map-operations .ops-event-copy>small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:9px;color:var(--ops-muted)}
+.map-operations .ops-event-time{display:block;text-align:right;flex:none;min-width:40px}
+.ops-event-time>b{display:block;color:#dce3ef;font-size:11px;font-weight:500;font-variant-numeric:tabular-nums;white-space:nowrap}
+.realm-shell.game-shell .map-operations .ops-event-time>small{display:block;font-size:8px;color:#808b9c}
+.map-operations .ops-event-destination{display:flex;align-items:center;gap:6px;padding:4px 0 0 42px;color:#9aa7bb;font-size:9px;min-width:0}
+.ops-event-destination>svg{flex:none;color:var(--event-color)}
+.ops-event-destination>span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.map-operations .ops-event-progress{height:2px;border-radius:2px;background:#ffffff08;margin:9px 0 0 42px;overflow:hidden}
+.ops-event-progress>i{display:block;height:100%;background:var(--event-color);opacity:.7}
+.map-operations .ops-event-cancel{display:flex;justify-content:space-between;align-items:center;width:calc(100% - 42px);min-height:27px;margin:7px 0 0 42px;padding:4px 7px;border:1px solid #deae9924;border-radius:4px;background:#deae9908;color:#c6a896;font-size:9px}
+.ops-event-cancel>span{font-variant-numeric:tabular-nums}
+.ops-event-cancel:hover:not(:disabled){background:#deae9912}
+.map-operations .ops-empty{display:flex;align-items:center;flex-direction:column;text-align:center;padding:28px 10px 20px;color:#a9b6ca}
+.ops-empty>svg{margin-bottom:12px;color:#7d8ca4}
+.ops-empty>strong{font-size:12px;font-weight:500}
+.realm-shell.game-shell .map-operations .ops-empty p{max-width:230px;font-size:10px;line-height:1.7;margin:7px 0 0}
+.map-operations .ops-reports{display:flex;align-items:center;gap:9px;width:100%;min-height:46px;padding:11px 16px;border:0;border-top:1px solid var(--ops-line);border-radius:0;background:transparent;color:var(--ops-muted);font-size:10px;flex:none}
+.ops-reports>svg:last-child{margin-left:auto}
+.ops-reports:hover{background:#ffffff04;color:var(--ops-text)}
+.map-operations.is-closed .ops-header{height:100%;align-items:flex-start;padding:10px;border:0}
+.map-operations.is-closed .ops-header-title{display:none}
+.map-operations.is-closed .ops-toggle{flex-direction:column;width:35px;height:auto;padding:10px 0;gap:10px}
+.map-operations.is-closed .ops-toggle>span{writing-mode:vertical-rl;font-size:10px;letter-spacing:.04em}
+.map-operations.is-closed .ops-toggle>b{font-size:10px;padding:0 5px;background:#ffffff07;border-radius:4px;font-weight:400}
+/* Compact selected camp/city/field controls retain their existing commands. */
+.realm-shell.game-shell .map-operations .camp-force{padding:10px 0;margin:10px 0;border-block:1px solid var(--ops-line);gap:7px}
+.realm-shell.game-shell .map-operations .camp-force>span{font-size:8px;color:var(--ops-muted)}
+.realm-shell.game-shell .map-operations .camp-force b{font-size:15px}
+.realm-shell.game-shell .map-operations .readiness-note{border:0;padding:4px 0 0;color:#b0bfd9}
+.realm-shell.game-shell .map-operations .readiness-note strong{font-size:10px}
+.realm-shell.game-shell .map-operations .readiness-note span{font-size:9px;margin-top:3px}
+.realm-shell.game-shell .map-operations .field-label{font-size:9px;letter-spacing:.04em;margin:12px 0 7px;color:var(--ops-muted)}
+.realm-shell.game-shell .map-operations .cost,.realm-shell.game-shell .map-operations .cost b{font-size:10px;gap:10px;color:#c3cddd}
+.realm-shell.game-shell .map-operations .cost svg{width:13px;height:13px}
+.realm-shell.game-shell .map-operations .atlas-site-lore h2{font-size:18px;margin:6px 0}
+.realm-shell.game-shell .map-operations .briefing-button{font-size:10px;min-height:32px;padding:5px 0;background:none;border:0;color:#b9c8ed}
+.realm-shell.game-shell .map-operations .atlas-inspector>small{font-size:9px;line-height:1.6;margin-top:10px}
+.realm-shell.game-shell .map-operations .territory-inspector{padding:0 0 12px;margin:0 0 12px;border-color:var(--ops-line)}
+.realm-shell.game-shell .map-operations .territory-inspector h2{font-size:18px}
+.realm-shell.game-shell .map-operations .territory-inspector .field-coordinates{font-size:10px}
+.realm-shell.game-shell .map-operations .territory-buildings{gap:6px}
+.realm-shell.game-shell .map-operations .territory-buildings article{padding:10px;border:1px solid var(--ops-line);border-radius:7px;background:#ffffff03}
+.realm-shell.game-shell .map-operations .territory-buildings strong{font-size:11px}
+.realm-shell.game-shell .map-operations .territory-buildings .bonus{color:#b3c8e7}
+.realm-shell.game-shell .map-operations .territory-buildings .penalty{color:#dfae9c}
+.realm-shell.game-shell .map-operations .territory-buildings button{border:1px solid #ffffff20;border-radius:5px;background:#ffffff05;color:#c6d2e5;font-size:10px;min-height:33px}
+.realm-shell.game-shell .map-operations .field-details summary,.realm-shell.game-shell .map-operations .campaign-lore summary{font-size:10px;color:#b9c8ed}
+.realm-shell.game-shell .map-operations .town-summary{font-size:10px;color:var(--ops-muted);padding:12px 0;border-block:1px solid var(--ops-line)}
+@media(max-width:1100px) and (min-width:901px){.realm-shell.game-shell .atlas-stage.scene-stage .atlas-workspace.operations-workspace.ops-expanded{grid-template-columns:minmax(0,1fr) 290px}}
+@media(max-width:900px){
+ .realm-shell.game-shell .atlas-stage.scene-stage .atlas-workspace.operations-workspace{display:block;position:relative;height:100%;min-height:0}
+ .realm-shell.game-shell .operations-workspace>.world-map-wrap{height:100%;width:100%}
+ .realm-shell.game-shell .operations-workspace.ops-expanded>.world-map-wrap{height:40%}
+ .realm-shell.game-shell .scene-stage:has(.operations-workspace.ops-expanded)>.army-map-dock{display:none}
+ .map-operations{position:absolute;z-index:12;right:0;bottom:0;width:100%;height:60%;border:0;border-top:1px solid #ffffff25;border-radius:13px 13px 0 0;box-shadow:0 -7px 28px #0003}
+ .map-operations .ops-header{height:45px;min-height:45px;padding:8px 16px}
+ .map-operations .ops-activity-jump{display:flex;align-items:center;gap:6px;margin-left:auto;padding:5px 7px;border:0;border-radius:5px;background:#ffffff06;color:#b5bfd0;font-size:10px}
+ .ops-activity-jump b{font-weight:400;color:#d1d9e7}
+ .map-operations .ops-content{overflow:auto;scrollbar-width:thin}
+ .map-operations .ops-selection{flex:none;max-height:none;overflow:visible}
+ .map-operations .ops-activity{flex:none;min-height:190px;overflow:visible}
+ .map-operations .ops-event-scroll{overflow:visible;flex:none;padding-bottom:12px}
+ .map-operations .ops-event{padding-block:10px}
+ .map-operations .ops-reports{min-height:42px}
+ .map-operations .ops-empty{padding:18px 10px 22px}
+ .map-operations .ops-realm{padding-block:13px}
+ .realm-shell.game-shell .map-operations .ops-realm h2{font-size:17px}
+ .map-operations.is-closed{top:114px;right:12px;bottom:auto;width:auto;height:39px;border:1px solid #ffffff22;border-radius:9px;box-shadow:0 3px 14px #0003;background:#171b22f5}
+ .map-operations.is-closed .ops-header{height:100%;padding:0}
+ .map-operations.is-closed .ops-toggle{flex-direction:row;height:100%;width:auto;padding:7px 11px;gap:7px}
+ .map-operations.is-closed .ops-toggle>span{writing-mode:horizontal-tb;font-size:11px;letter-spacing:0}
+ .map-operations.is-closed .ops-toggle>b{font-size:9px;padding:0 5px}
+ .realm-shell.game-shell .map-operations .map-inspector.atlas-inspector{padding-top:12px}
+}
+@media(max-width:900px) and (max-height:550px){.realm-shell.game-shell .operations-workspace.ops-expanded>.world-map-wrap{height:30%}.map-operations{height:70%}.map-operations.is-closed{height:35px;top:64px;right:12px}}

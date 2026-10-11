@@ -58,7 +58,23 @@ test('one game farm lists edit, move, review and cancel nine-role parties',async
  await expect.poll(async()=>(await saved(page)).armies[0].status).toBe('moving');let party=await saved(page);expect(readRoster(party.armies[0]).scout).toBe(3);expect(readRoster(party.garrisons![0]).scout).toBe(1);
  dialog=page.getByRole('dialog',{name:'Farm lists',exact:true});await dialog.getByRole('button',{name:/Cancel raid/}).click();await expect.poll(async()=>readRoster((await saved(page)).armies[0]).scout).toBe(4);expect((await saved(page)).garrisons).toEqual([]);
  await dialog.getByRole('button',{name:new RegExp(camp.name)}).click();await expect(page.locator('.atlas-inspector')).toContainText(camp.name);await expect(page.locator('.atlas-inspector')).toContainText('CURRENT CAMP STOCK');await expect(page.locator('.atlas-inspector')).not.toContainText(/Next recruit|Recruitment in/);
+ await expect(page.locator('.camp-stock .cost > span')).toHaveCount(4);
  await page.screenshot({path:info.outputPath('integrated-main-map-camp.png')});await page.getByRole('button',{name:'Add to farm list',exact:true}).click();dialog=page.getByRole('dialog',{name:'Add to farm list',exact:true});await expect(dialog.getByLabel(scout+' farm quantity')).toHaveValue('2');await page.keyboard.press('Escape');
  dialog=await lists(page);await dialog.getByRole('button',{name:'Remove',exact:true}).click();await expect.poll(async()=>(await saved(page)).campaign_farms?.length).toBe(0);expect(requests).toEqual([]);
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+});
+
+test('main map activity preserves advanced troop identities and shows owned research',async({page},info)=>{
+ const {world}=fixture(),city=world.settlements[0];
+ world.unit_research=[{settlement_id:city.id,unit:'heavyCavalry',completes_at:new Date(Date.now()+600000).toISOString()}];
+ await start(page,world);await page.getByRole('button',{name:'Inspect your legion',exact:true}).click();
+ const panel=page.getByRole('complementary',{name:'Map overview and activity'}),details=panel.locator('.ops-army-details');
+ await expect(details.locator('[data-troop=scout] strong')).toHaveText('4');
+ await expect(details.locator('[data-troop=catapult] strong')).toHaveText('1');
+ await expect(details.locator('[data-troop=cavalry] strong')).toHaveText('16');
+ await expect(details.getByRole('img',{name:factionTroopName('roman','scout'),exact:true})).toBeVisible();
+ await expect(panel.locator('.event-research')).toContainText('Research heavy cavalry');
+ await page.screenshot({path:info.outputPath('integrated-map-nine-role-army.png')});
+ expect(readRoster((await saved(page)).armies[0]).scout).toBe(4);
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
 });

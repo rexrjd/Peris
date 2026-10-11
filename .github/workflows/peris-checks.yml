@@ -38,6 +38,8 @@ jobs:
       - run: npm run test:accounts-db
       - run: npm run test:account-directory-db
       - run: npm run test:account-compatibility-db
+      - run: npm run test:world-battles-ui
+      - run: npm run test:hero-loot-ui
       - run: npm run build
 
   browser:

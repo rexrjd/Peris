@@ -1,0 +1,756 @@
+diff --git a/src/features/map/domain/activity.ts b/src/features/map/domain/activity.ts
+new file mode 100644
+index 0000000..2e81cb2
+--- /dev/null
++++ b/src/features/map/domain/activity.ts
+@@ -0,0 +1,118 @@
++import type { World, Order } from '../../../shared/model/world';
++import type { MapSelection } from './types';
++import { armyPosition } from './movement';
++import { CELL_SIZE, wrapWorldCell } from './dimensions';
++import { cellCenter } from './worldGrid';
++import { soldierTotal } from '../../army/domain/units';
++import { BUILDINGS } from '../../city/domain/buildings';
++import { SLOT_BUILDINGS } from '../../city/domain/slots';
++import { FIELD_BUILDINGS } from './territory';
++
++export type ActivityKind = 'raid' | 'return' | 'march' | 'battle' | 'construction' | 'recruitment' | 'settlers';
++export type MapActivity = {
++    id: string; kind: ActivityKind; category: 'armies' | 'cities'; title: string; detail: string;
++    destination?: string; troops?: number; armyId?: number; cityId?: number;
++    startedAt: number | null; endsAt: number | null; live?: boolean;
++    selection: Exclude<MapSelection, null>; point: { x: number; y: number };
++    cancel?: { armyId: number; sentAt: string; until: number };
++};
++const timestamp = (value?: string | null) => {
++    const n = value ? Date.parse(value) : NaN;
++    return Number.isFinite(n) ? n : null;
++};
++export const activityField = (point: { x: number; y: number }) => wrapWorldCell(Math.floor(point.x / CELL_SIZE), Math.floor(point.y / CELL_SIZE));
++const fieldLabel = (point: { x: number; y: number }) => {
++    const cell = activityField(point); return 'Field (' + cell.col + ' | ' + cell.row + ')';
++};
++function placeName(world: World, point: { x: number; y: number }) {
++    const cell = activityField(point);
++    return world.settlements.find(s => {
++        const other = activityField(s); return cell.col === other.col && cell.row === other.row;
++    })?.name ?? fieldLabel(point);
++}
++function constructionTitle(world: World, order: Order, cityId: number) {
++    if (order.item.startsWith('slot:')) {
++        const [, index, type] = order.item.split(':');
++        const slot = world.city_slots?.find(s => s.settlement_id === cityId && s.slot_index === Number(index));
++        const name = SLOT_BUILDINGS[(slot?.building_type ?? type) as keyof typeof SLOT_BUILDINGS]?.name ?? 'Building';
++        return name + ' · Lv. ' + ((slot?.level ?? 0) + 1);
++    }
++    const building = world.buildings.find(b => b.settlement_id === cityId && b.building_type === order.item);
++    return (BUILDINGS[order.item as keyof typeof BUILDINGS]?.name ?? 'Building') + ' · Lv. ' + ((building?.level ?? 0) + 1);
++}
++
++/** Read-only presentation of authoritative queues, including all owned cities/armies.
++ * A passed deadline remains visible until the engine/server settles that event. */
++export function mapActivity(world: World, owner: string, now: number): MapActivity[] {
++    const events: MapActivity[] = [], fighting = new Set<number>();
++    const cities = world.settlements.filter(s => s.owner_id === owner);
++    const armies = world.armies.filter(a => a.owner_id === owner);
++    for (const battle of world.battles) {
++        if (battle.status !== 'active' || (battle.attacker_owner_id !== owner && battle.defender_owner_id !== owner)) continue;
++        const armyId = battle.attacker_owner_id === owner ? battle.attacker_army_id : battle.defender_army_id;
++        const army = armies.find(a => a.id === armyId);
++        if (!army) continue;
++        fighting.add(army.id);
++        const camp = world.camps.find(c => c.id === battle.camp_id);
++        const formations = world.formations.filter(f => f.battle_id === battle.id && f.owner_id === owner);
++        events.push({ id: 'battle:' + battle.id, kind: 'battle', category: 'armies', title: army.name,
++            detail: battle.mode === 'pvp' ? 'Live duel' : 'Automatic battle', destination: camp?.name ?? battle.enemy_name,
++            troops: formations.length ? formations.reduce((n, f) => n + f.soldiers, 0) : soldierTotal(army),
++            armyId: army.id, cityId: army.home_settlement_id, startedAt: timestamp(battle.started_at), endsAt: null, live: true,
++            selection: { kind: 'army', id: army.id }, point: camp ?? armyPosition(army, now) });
++    }
++    for (const army of armies) {
++        if (army.status !== 'moving' || fighting.has(army.id)) continue;
++        const destination = { x: army.target_x, y: army.target_y };
++        const returning = !!army.march_returning;
++        const camp = world.camps.find(c => c.id === army.raid_target_id);
++        const until = timestamp(army.march_cancel_until);
++        const staged = !returning && !!army.march_sent_at && until !== null && now < until;
++        events.push({ id: 'army:' + army.id, kind: returning ? 'return' : army.raid_target_id != null ? 'raid' : 'march',
++            category: 'armies', title: army.name, detail: staged ? 'Preparing departure' : soldierTotal(army).toLocaleString('en-US') + ' soldiers',
++            destination: returning ? placeName(world, destination) : camp?.name ?? placeName(world, destination),
++            troops: soldierTotal(army), armyId: army.id, cityId: army.home_settlement_id,
++            startedAt: timestamp(army.departure_at), endsAt: timestamp(army.arrival_at),
++            selection: { kind: 'army', id: army.id }, point: armyPosition(army, now),
++            ...(staged ? { cancel: { armyId: army.id, sentAt: army.march_sent_at!, until: until! } } : {}) });
++    }
++    for (const order of world.orders) {
++        if (order.owner_id !== owner) continue;
++        const city = cities.find(s => s.id === (order.settlement_id ?? cities[0]?.id));
++        if (!city) continue;
++        const base = { id: 'order:' + order.id, cityId: city.id, startedAt: timestamp(order.started_at), endsAt: timestamp(order.finish_at), point: { x: city.x, y: city.y } };
++        if (order.kind === 'recruit') {
++            const army = armies.find(a => a.id === (order.army_id ?? armies[0]?.id));
++            const unit = ({ infantry: 'infantry', archers: 'archers', cavalry: 'cavalry' } as Record<string, string>)[order.item] ?? 'soldiers';
++            events.push({ ...base, kind: 'recruitment', category: 'cities', title: order.quantity + ' ' + unit, detail: city.name,
++                destination: army?.name, armyId: army?.id, selection: { kind: 'settlement', id: city.id } });
++        } else if (order.kind === 'settler') {
++            events.push({ ...base, kind: 'settlers', category: 'cities', title: order.quantity + (order.quantity === 1 ? ' settler' : ' settlers'),
++                detail: city.name, selection: { kind: 'settlement', id: city.id } });
++        } else if (order.kind === 'field') {
++            const [, colText, rowText, type] = order.item.split(':');
++            const col = Number(colText), row = Number(rowText);
++            if (!Number.isSafeInteger(col) || !Number.isSafeInteger(row)) continue;
++            const cell = wrapWorldCell(col, row), plot = world.map_plots?.find(p => p.owner_id === owner && p.col === cell.col && p.row === cell.row);
++            const name = FIELD_BUILDINGS[type as keyof typeof FIELD_BUILDINGS]?.name ?? 'Field building';
++            events.push({ ...base, kind: 'construction', category: 'cities', title: name + ' · Lv. ' + ((plot?.level ?? 0) + 1), detail: city.name,
++                destination: fieldLabel(cellCenter(cell.col, cell.row)), selection: { kind: 'cell', ...cell }, point: cellCenter(cell.col, cell.row) });
++        } else {
++            events.push({ ...base, kind: 'construction', category: 'cities', title: constructionTitle(world, order, city.id), detail: city.name,
++                selection: { kind: 'settlement', id: city.id } });
++        }
++    }
++    for (const expedition of world.settler_expeditions ?? []) {
++        if (expedition.owner_id !== owner || expedition.status !== 'travelling') continue;
++        const point = cellCenter(expedition.col, expedition.row);
++        events.push({ id: 'expedition:' + expedition.id, kind: 'settlers', category: 'cities', title: expedition.name,
++            detail: 'Founding a new city', destination: fieldLabel(point), cityId: expedition.origin_settlement_id,
++            startedAt: timestamp(expedition.departure_at), endsAt: timestamp(expedition.arrival_at),
++            selection: { kind: 'cell', ...activityField(point) }, point });
++    }
++    return events.sort((a, b) => Number(!!b.live) - Number(!!a.live) || (a.endsAt ?? Infinity) - (b.endsAt ?? Infinity) || a.id.localeCompare(b.id));
++}
++export function activityProgress(event: MapActivity, now: number) {
++    if (event.startedAt === null || event.endsAt === null) return 0;
++    return Math.max(0, Math.min(1, (now - event.startedAt) / Math.max(1, event.endsAt - event.startedAt)));
++}
+diff --git a/src/features/map/styles/operations.css b/src/features/map/styles/operations.css
+new file mode 100644
+index 0000000..b9dcbc5
+--- /dev/null
++++ b/src/features/map/styles/operations.css
+@@ -0,0 +1,155 @@
++/* Map-only command and activity panel. Terrain and the global shell are unchanged. */
++.realm-shell.game-shell .atlas-stage.scene-stage .atlas-workspace.operations-workspace{display:grid;grid-template-columns:minmax(0,1fr) 312px;overflow:hidden;min-height:0;gap:0}
++.realm-shell.game-shell .atlas-stage.scene-stage .atlas-workspace.operations-workspace.ops-collapsed{grid-template-columns:minmax(0,1fr) 56px}
++.map-operations{--ops-line:#ffffff0e;--ops-muted:#929cac;--ops-accent:#c8b796;--ops-text:#eeeef2;display:flex;flex-direction:column;min-width:0;min-height:0;background:#171b22;border-left:1px solid #ffffff14;color:var(--ops-text);font:12px/1.5 'Open Sans',Arial,sans-serif;z-index:8}
++.map-operations button{font:inherit;cursor:pointer}
++.map-operations button:focus-visible{outline:2px solid #b4c4ee;outline-offset:-2px}
++.map-operations .ops-header{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 16px;height:53px;min-height:53px;border-bottom:1px solid var(--ops-line)}
++.ops-header-title{display:flex;align-items:center;gap:8px;font-size:12px;letter-spacing:-.01em}
++.ops-header-title>svg{color:var(--ops-accent)}
++.map-operations .ops-activity-jump{display:none}
++.map-operations .ops-toggle{display:flex;align-items:center;justify-content:center;gap:8px;width:28px;height:28px;padding:0;border:0;border-radius:6px;background:transparent;color:var(--ops-muted)}
++.map-operations .ops-toggle:hover{background:#ffffff08;color:var(--ops-text)}
++.map-operations.is-open .ops-toggle>svg{transform:rotate(-90deg)}
++.map-operations .ops-content{display:flex;flex-direction:column;flex:1;min-height:0;overflow:hidden}
++.map-operations .ops-content[hidden]{display:none}
++.map-operations .ops-selection{flex:0 1 auto;min-height:0;max-height:52%;overflow:auto;overscroll-behavior:contain;border-bottom:1px solid var(--ops-line);scrollbar-width:thin;scrollbar-color:#ffffff24 transparent}
++.realm-shell.game-shell .atlas-stage.scene-stage .map-operations .map-inspector.atlas-inspector{position:relative;inset:auto;display:block;width:100%;min-height:0;max-height:none;padding:14px 16px 18px;overflow:visible;border:0;border-radius:0;background:transparent;box-shadow:none;color:var(--ops-text)}
++.map-operations .ops-context-tools{display:flex;align-items:center;justify-content:space-between;margin:-4px 0 12px;color:var(--ops-muted);font-size:10px}
++.ops-context-tools>div{display:flex;gap:3px}
++.realm-shell.game-shell .map-operations .ops-context-tools button{position:static;display:grid;place-items:center;width:27px;height:27px;min-height:27px;border:0;border-radius:5px;background:transparent;color:var(--ops-muted);padding:0;font-size:21px}
++.realm-shell.game-shell .map-operations .ops-context-tools button:hover{background:#ffffff08;color:var(--ops-text)}
++.realm-shell.game-shell .map-operations .ops-kicker,.realm-shell.game-shell .map-operations .eyebrow{display:block;font-size:9px;letter-spacing:.09em;color:var(--ops-muted);margin:0 0 5px;font-weight:600}
++.realm-shell.game-shell .map-operations h2{color:var(--ops-text);font-size:19px;line-height:1.35;letter-spacing:-.025em;margin:4px 0 7px}
++.realm-shell.game-shell .map-operations h3{font-size:18px;margin:6px 0 10px;letter-spacing:-.025em}
++.realm-shell.game-shell .map-operations p,.realm-shell.game-shell .map-operations small{color:var(--ops-muted);font-size:11px;line-height:1.6}
++.realm-shell.game-shell .map-operations p{margin:0 0 12px}
++.realm-shell.game-shell .map-operations .button{position:static;display:flex;align-items:center;justify-content:center;gap:8px;min-height:37px;padding:8px 11px;font-size:11px;border-radius:7px;box-shadow:none;margin-top:10px;font-weight:600}
++.realm-shell.game-shell .map-operations .button.gold{background:#b9c8ed;border-color:#b9c8ed;color:#192237}
++.realm-shell.game-shell .map-operations .button.gold:hover:not(:disabled){background:#d0dcf5}
++.realm-shell.game-shell .map-operations .button.outline{background:transparent;border-color:#ffffff20;color:#c1cad8}
++.realm-shell.game-shell .map-operations .button.outline:hover:not(:disabled){background:#ffffff06;border-color:#ffffff40}
++.map-operations .ops-identity{display:flex;align-items:center;gap:11px;min-width:0}
++.map-operations .ops-identity>.command-portrait{width:47px;height:59px;min-width:47px;margin:0;object-fit:cover;border-radius:8px;border:1px solid #ffffff20;background:#222731}
++.ops-identity>div{min-width:0}
++.realm-shell.game-shell .map-operations .ops-identity h2{font-size:18px;margin:0 0 4px;overflow-wrap:anywhere}
++.realm-shell.game-shell .map-operations .ops-identity p{margin:0;font-size:10px}
++.map-operations .ops-army-state{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:14px 0 12px;font-size:10px;color:var(--ops-muted)}
++.ops-army-state>span{display:flex;align-items:center;gap:6px}
++.ops-army-state i{display:block;width:5px;height:5px;border-radius:50%;background:#aab5c7}
++.ops-army-state>span.active{color:#b9c8ed}
++.ops-army-state>span.active i{background:#b9c8ed}
++.map-operations .ops-troops{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;padding-block:11px;border-block:1px solid var(--ops-line)}
++.ops-troops>span{display:grid;grid-template-columns:17px auto;align-items:center;gap:3px 6px;min-width:0}
++.ops-troops svg{color:var(--ops-accent)}
++.ops-troops strong{font-size:14px;font-variant-numeric:tabular-nums}
++.realm-shell.game-shell .map-operations .ops-troops small{grid-column:1/3;font-size:9px}
++.map-operations .ops-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
++.realm-shell.game-shell .map-operations .ops-actions .button{width:100%;margin:12px 0 0}
++.realm-shell.game-shell .map-operations .ops-army-arrival{font-size:10px;margin:9px 0 0}
++.map-operations .ops-realm{padding:19px 16px 17px;border-bottom:1px solid var(--ops-line)}
++.map-operations .ops-realm>div{display:flex;gap:17px;margin-top:15px;font-size:11px;color:#c2cad7}
++.ops-realm>div>span{display:flex;align-items:center;gap:6px}
++.ops-realm>div svg{color:var(--ops-accent)}
++.map-operations .ops-activity{display:flex;flex:1;flex-direction:column;min-height:155px;padding:17px 0 0;overflow:hidden}
++.ops-activity>header{display:flex;align-items:center;justify-content:space-between;padding:0 16px;gap:8px}
++.realm-shell.game-shell .map-operations .ops-activity h2{display:flex;align-items:center;gap:7px;font-size:13px;letter-spacing:0;margin:0;font-weight:600}
++.ops-activity h2>span{display:grid;place-items:center;min-width:19px;height:19px;padding:0 5px;border-radius:5px;background:#ffffff07;color:var(--ops-muted);font-size:10px;font-weight:400}
++.realm-shell.game-shell .map-operations .ops-activity>header>small{display:flex;align-items:center;gap:5px;font-size:9px;color:#8e99aa}
++.ops-activity>header>small>i{width:4px;height:4px;background:#a2b4db;border-radius:50%}
++.map-operations .ops-filters{display:flex;gap:5px;margin:13px 16px 12px;border-bottom:1px solid var(--ops-line)}
++.map-operations .ops-filters button{display:flex;align-items:center;gap:6px;min-height:32px;padding:5px 7px 9px;border:0;border-bottom:2px solid transparent;border-radius:0;background:transparent;color:var(--ops-muted);font-size:10px}
++.map-operations .ops-filters button:first-child{padding-left:0;padding-right:10px}
++.ops-filters button span{font-size:9px;opacity:.6}
++.map-operations .ops-filters button[aria-pressed=true]{color:#eceff6;border-bottom-color:var(--ops-accent)}
++.map-operations .ops-filters button:hover{color:var(--ops-text)}
++.map-operations .ops-event-scroll{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#ffffff24 transparent;padding:0 16px 8px}
++.map-operations .ops-events{list-style:none;margin:0;padding:0}
++.map-operations .ops-event{--event-color:#bda988;position:relative;padding:10px 0 13px;border-bottom:1px solid var(--ops-line)}
++.map-operations .ops-event:first-child{padding-top:0}
++.map-operations .event-return{--event-color:#9cb9e7}
++.map-operations .event-battle,.map-operations .event-raid{--event-color:#deae99}
++.map-operations .event-settlers{--event-color:#b8abd6}
++.map-operations .ops-event-main{display:flex;align-items:center;gap:9px;text-align:left;width:100%;padding:4px 0;border:0;border-radius:5px;background:transparent;color:var(--ops-text)}
++.ops-event-main:hover{background:#ffffff04}
++.ops-event-icon{display:grid;place-items:center;width:33px;height:37px;flex:none;border:1px solid #ffffff0c;border-radius:6px;background:#ffffff04;color:var(--event-color);overflow:hidden}
++.map-operations .ops-event-icon .command-portrait{width:100%;height:100%;min-width:0;border:0;border-radius:0;margin:0;object-fit:cover}
++.ops-event-copy{display:block;flex:1;min-width:0}
++.map-operations .ops-event-kind{display:flex;gap:6px;align-items:center;font-size:9px;line-height:1.35;color:var(--event-color)}
++.ops-event-kind em{font-size:8px;font-style:normal;color:var(--ops-muted)}
++.ops-event-copy>strong{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;line-height:1.6;font-weight:600;margin:2px 0 0}
++.realm-shell.game-shell .map-operations .ops-event-copy>small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:9px;color:var(--ops-muted)}
++.map-operations .ops-event-time{display:block;text-align:right;flex:none;min-width:40px}
++.ops-event-time>b{display:block;color:#dce3ef;font-size:11px;font-weight:500;font-variant-numeric:tabular-nums;white-space:nowrap}
++.realm-shell.game-shell .map-operations .ops-event-time>small{display:block;font-size:8px;color:#808b9c}
++.map-operations .ops-event-destination{display:flex;align-items:center;gap:6px;padding:4px 0 0 42px;color:#9aa7bb;font-size:9px;min-width:0}
++.ops-event-destination>svg{flex:none;color:var(--event-color)}
++.ops-event-destination>span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
++.map-operations .ops-event-progress{height:2px;border-radius:2px;background:#ffffff08;margin:9px 0 0 42px;overflow:hidden}
++.ops-event-progress>i{display:block;height:100%;background:var(--event-color);opacity:.7}
++.map-operations .ops-event-cancel{display:flex;justify-content:space-between;align-items:center;width:calc(100% - 42px);min-height:27px;margin:7px 0 0 42px;padding:4px 7px;border:1px solid #deae9924;border-radius:4px;background:#deae9908;color:#c6a896;font-size:9px}
++.ops-event-cancel>span{font-variant-numeric:tabular-nums}
++.ops-event-cancel:hover:not(:disabled){background:#deae9912}
++.map-operations .ops-empty{display:flex;align-items:center;flex-direction:column;text-align:center;padding:28px 10px 20px;color:#a9b6ca}
++.ops-empty>svg{margin-bottom:12px;color:#7d8ca4}
++.ops-empty>strong{font-size:12px;font-weight:500}
++.realm-shell.game-shell .map-operations .ops-empty p{max-width:230px;font-size:10px;line-height:1.7;margin:7px 0 0}
++.map-operations .ops-reports{display:flex;align-items:center;gap:9px;width:100%;min-height:46px;padding:11px 16px;border:0;border-top:1px solid var(--ops-line);border-radius:0;background:transparent;color:var(--ops-muted);font-size:10px;flex:none}
++.ops-reports>svg:last-child{margin-left:auto}
++.ops-reports:hover{background:#ffffff04;color:var(--ops-text)}
++.map-operations.is-closed .ops-header{height:100%;align-items:flex-start;padding:10px;border:0}
++.map-operations.is-closed .ops-header-title{display:none}
++.map-operations.is-closed .ops-toggle{flex-direction:column;width:35px;height:auto;padding:10px 0;gap:10px}
++.map-operations.is-closed .ops-toggle>span{writing-mode:vertical-rl;font-size:10px;letter-spacing:.04em}
++.map-operations.is-closed .ops-toggle>b{font-size:10px;padding:0 5px;background:#ffffff07;border-radius:4px;font-weight:400}
++/* Compact selected camp/city/field controls retain their existing commands. */
++.realm-shell.game-shell .map-operations .camp-force{padding:10px 0;margin:10px 0;border-block:1px solid var(--ops-line);gap:7px}
++.realm-shell.game-shell .map-operations .camp-force>span{font-size:8px;color:var(--ops-muted)}
++.realm-shell.game-shell .map-operations .camp-force b{font-size:15px}
++.realm-shell.game-shell .map-operations .readiness-note{border:0;padding:4px 0 0;color:#b0bfd9}
++.realm-shell.game-shell .map-operations .readiness-note strong{font-size:10px}
++.realm-shell.game-shell .map-operations .readiness-note span{font-size:9px;margin-top:3px}
++.realm-shell.game-shell .map-operations .field-label{font-size:9px;letter-spacing:.04em;margin:12px 0 7px;color:var(--ops-muted)}
++.realm-shell.game-shell .map-operations .cost,.realm-shell.game-shell .map-operations .cost b{font-size:10px;gap:10px;color:#c3cddd}
++.realm-shell.game-shell .map-operations .cost svg{width:13px;height:13px}
++.realm-shell.game-shell .map-operations .atlas-site-lore h2{font-size:18px;margin:6px 0}
++.realm-shell.game-shell .map-operations .briefing-button{font-size:10px;min-height:32px;padding:5px 0;background:none;border:0;color:#b9c8ed}
++.realm-shell.game-shell .map-operations .atlas-inspector>small{font-size:9px;line-height:1.6;margin-top:10px}
++.realm-shell.game-shell .map-operations .territory-inspector{padding:0 0 12px;margin:0 0 12px;border-color:var(--ops-line)}
++.realm-shell.game-shell .map-operations .territory-inspector h2{font-size:18px}
++.realm-shell.game-shell .map-operations .territory-inspector .field-coordinates{font-size:10px}
++.realm-shell.game-shell .map-operations .territory-buildings{gap:6px}
++.realm-shell.game-shell .map-operations .territory-buildings article{padding:10px;border:1px solid var(--ops-line);border-radius:7px;background:#ffffff03}
++.realm-shell.game-shell .map-operations .territory-buildings strong{font-size:11px}
++.realm-shell.game-shell .map-operations .territory-buildings .bonus{color:#b3c8e7}
++.realm-shell.game-shell .map-operations .territory-buildings .penalty{color:#dfae9c}
++.realm-shell.game-shell .map-operations .territory-buildings button{border:1px solid #ffffff20;border-radius:5px;background:#ffffff05;color:#c6d2e5;font-size:10px;min-height:33px}
++.realm-shell.game-shell .map-operations .field-details summary,.realm-shell.game-shell .map-operations .campaign-lore summary{font-size:10px;color:#b9c8ed}
++.realm-shell.game-shell .map-operations .town-summary{font-size:10px;color:var(--ops-muted);padding:12px 0;border-block:1px solid var(--ops-line)}
++@media(max-width:1100px) and (min-width:901px){.realm-shell.game-shell .atlas-stage.scene-stage .atlas-workspace.operations-workspace.ops-expanded{grid-template-columns:minmax(0,1fr) 290px}}
++@media(max-width:900px){
++ .realm-shell.game-shell .atlas-stage.scene-stage .atlas-workspace.operations-workspace{display:block;position:relative;height:100%;min-height:0}
++ .realm-shell.game-shell .operations-workspace>.world-map-wrap{height:100%;width:100%}
++ .realm-shell.game-shell .operations-workspace.ops-expanded>.world-map-wrap{height:40%}
++ .realm-shell.game-shell .scene-stage:has(.operations-workspace.ops-expanded)>.army-map-dock{display:none}
++ .map-operations{position:absolute;z-index:12;right:0;bottom:0;width:100%;height:60%;border:0;border-top:1px solid #ffffff25;border-radius:13px 13px 0 0;box-shadow:0 -7px 28px #0003}
++ .map-operations .ops-header{height:45px;min-height:45px;padding:8px 16px}
++ .map-operations .ops-activity-jump{display:flex;align-items:center;gap:6px;margin-left:auto;padding:5px 7px;border:0;border-radius:5px;background:#ffffff06;color:#b5bfd0;font-size:10px}
++ .ops-activity-jump b{font-weight:400;color:#d1d9e7}
++ .map-operations .ops-content{overflow:auto;scrollbar-width:thin}
++ .map-operations .ops-selection{flex:none;max-height:none;overflow:visible}
++ .map-operations .ops-activity{flex:none;min-height:190px;overflow:visible}
++ .map-operations .ops-event-scroll{overflow:visible;flex:none;padding-bottom:12px}
++ .map-operations .ops-event{padding-block:10px}
++ .map-operations .ops-reports{min-height:42px}
++ .map-operations .ops-empty{padding:18px 10px 22px}
++ .map-operations .ops-realm{padding-block:13px}
++ .realm-shell.game-shell .map-operations .ops-realm h2{font-size:17px}
++ .map-operations.is-closed{top:114px;right:12px;bottom:auto;width:auto;height:39px;border:1px solid #ffffff22;border-radius:9px;box-shadow:0 3px 14px #0003;background:#171b22f5}
++ .map-operations.is-closed .ops-header{height:100%;padding:0}
++ .map-operations.is-closed .ops-toggle{flex-direction:row;height:100%;width:auto;padding:7px 11px;gap:7px}
++ .map-operations.is-closed .ops-toggle>span{writing-mode:horizontal-tb;font-size:11px;letter-spacing:0}
++ .map-operations.is-closed .ops-toggle>b{font-size:9px;padding:0 5px}
++ .realm-shell.game-shell .map-operations .map-inspector.atlas-inspector{padding-top:12px}
++}
++@media(max-width:900px) and (max-height:550px){.realm-shell.game-shell .operations-workspace.ops-expanded>.world-map-wrap{height:30%}.map-operations{height:70%}.map-operations.is-closed{height:35px;top:64px;right:12px}}
+diff --git a/src/features/map/ui/MapArmyDetails.tsx b/src/features/map/ui/MapArmyDetails.tsx
+new file mode 100644
+index 0000000..da015fc
+--- /dev/null
++++ b/src/features/map/ui/MapArmyDetails.tsx
+@@ -0,0 +1,38 @@
++import type { World } from '../../../shared/model/world';
++import type { Army } from '../../army/domain/types';
++import { heroForArmy, heroLevel } from '../../heroes/domain/heroes';
++import { HeroPortrait } from '../../heroes/ui/HeroPortrait';
++import { UNIT_ROLES, trainingOrders } from '../../army/domain/commandRoom';
++import { UNIT_TYPES } from '../../army/domain/units';
++import { Icon } from '../../../shared/ui/Icons';
++import { clock } from '../../../shared/time/clock';
++import { playerName } from '../../campaign/domain/players';
++import { armyPosition } from '../domain/movement';
++import { activityField } from '../domain/activity';
++
++export function MapArmyDetails({ world, army, playerId, now, busy, outgoing, onMarch, onManage, onLocate, onChallenge }: {
++    world: World; army: Army; playerId: string; now: number; busy: boolean; outgoing: boolean;
++    onMarch: () => void; onManage: () => void; onLocate: () => void; onChallenge: () => void;
++}) {
++    const own = army.owner_id === playerId, hero = heroForArmy(world, army.id);
++    const home = world.settlements.find(s => s.id === army.home_settlement_id);
++    const fighting = world.battles.some(b => b.status === 'active' && (b.attacker_army_id === army.id || b.defender_army_id === army.id));
++    const training = own ? trainingOrders(world, army).length : 0;
++    const position = activityField(armyPosition(army, now));
++    const moving = army.status === 'moving';
++    const arrival = Date.parse(army.arrival_at);
++    const status = fighting ? 'In battle' : moving ? army.march_returning ? 'Returning' : army.raid_target_id != null ? 'Raiding' : 'Marching' : training ? 'Training' : 'Ready for orders';
++    return <div className="ops-army-details">
++        <div className="ops-identity"><HeroPortrait compact heroId={hero?.id} heroClass={hero?.class} faction={army.faction ?? home?.faction}/>
++            <div><span className="ops-kicker">{own ? 'YOUR LEGION' : 'RIVAL LEGION'}</span><h2>{army.name}</h2><p>{hero ? hero.name + ' · Level ' + heroLevel(hero) : playerName(world.players, army.owner_id)}</p></div>
++        </div>
++        <div className="ops-army-state"><span className={moving || fighting ? 'active' : ''}><i/>{status}</span><small>({position.col} | {position.row})</small></div>
++        <div className="ops-troops" aria-label="Army troop composition">{UNIT_TYPES.map(type => <span key={type}><Icon name={UNIT_ROLES[type].icon} size={16}/><strong>{army[type].toLocaleString('en-US')}</strong><small>{UNIT_ROLES[type].name}</small></span>)}</div>
++        {own ? <div className="ops-actions">
++            <button className="button gold" type="button" disabled={busy || !!training || fighting} onClick={moving ? onLocate : onMarch} aria-label={moving ? 'Locate moving army' : 'Give marching orders'}><Icon name={moving ? 'focus' : 'flag'} size={15}/>{moving ? 'Follow army' : 'March'}</button>
++            <button className="button outline" type="button" onClick={onManage} aria-label="Manage troops">Manage<Icon name="arrow" size={14}/></button>
++        </div> : <button className="button outline" disabled={busy || outgoing} onClick={onChallenge}>Invite to a live duel</button>}
++        {moving && <p className="ops-army-arrival">{!Number.isFinite(arrival) ? 'Waiting for arrival details.' : arrival <= now ? 'Arriving at its destination…' : <>{army.march_returning ? 'Back at its departure station' : 'Reaches its destination'} in <b>{clock((arrival - now) / 1000)}</b>.</>}</p>}
++        {!!training && <p className="ops-army-arrival">Finish training before giving marching orders.</p>}
++    </div>;
++}
+diff --git a/src/features/map/ui/MapOperations.tsx b/src/features/map/ui/MapOperations.tsx
+new file mode 100644
+index 0000000..3f20f7b
+--- /dev/null
++++ b/src/features/map/ui/MapOperations.tsx
+@@ -0,0 +1,85 @@
++import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
++import type { World } from '../../../shared/model/world';
++import type { Command } from '../../../shared/model/commands';
++import { Icon } from '../../../shared/ui/Icons';
++import { clock } from '../../../shared/time/clock';
++import { HeroPortrait } from '../../heroes/ui/HeroPortrait';
++import { heroForArmy } from '../../heroes/domain/heroes';
++import { activityProgress, mapActivity, type MapActivity, type ActivityKind } from '../domain/activity';
++
++const labels: Record<ActivityKind, { name: string; icon: string }> = {
++    raid: { name: 'Raiding', icon: 'army' }, return: { name: 'Returning', icon: 'transfer' }, march: { name: 'Marching', icon: 'flag' },
++    battle: { name: 'In battle', icon: 'army' }, construction: { name: 'Building', icon: 'town' },
++    recruitment: { name: 'Recruiting', icon: 'shield' }, settlers: { name: 'Settlers', icon: 'people' },
++};
++function remaining(event: MapActivity, now: number) {
++    if (event.live) return 'Live';
++    if (event.endsAt === null) return 'Pending';
++    if (event.endsAt <= now) return event.category === 'armies' ? 'Arriving' : 'Finishing';
++    const seconds = Math.ceil((event.endsAt - now) / 1000);
++    return seconds >= 3600 ? Math.floor(seconds / 3600) + 'h ' + Math.floor(seconds % 3600 / 60) + 'm' : clock(seconds);
++}
++export function MapOperations({ world, playerId, now, busy, run, open, onToggle, onLocate, onReports, selectionKey, children }: {
++    world: World; playerId: string; now: number; busy: boolean; run: (command: Command, message?: string) => void;
++    open: boolean; onToggle: () => void; onLocate: (event: MapActivity) => void; onReports: () => void; selectionKey: string; children?: ReactNode;
++}) {
++    const [filter, setFilter] = useState<'all' | 'armies' | 'cities'>('all');
++    const contentRef = useRef<HTMLDivElement>(null), selectionRef = useRef<HTMLDivElement>(null), activityRef = useRef<HTMLElement>(null);
++    useEffect(() => {
++        if (contentRef.current) contentRef.current.scrollTop = 0;
++        if (selectionRef.current) selectionRef.current.scrollTop = 0;
++    }, [selectionKey]);
++    const events = useMemo(() => mapActivity(world, playerId, now), [world, playerId, now]);
++    const visible = events.filter(e => filter === 'all' || e.category === filter);
++    const military = events.filter(e => e.category === 'armies').length;
++    const cities = world.settlements.filter(s => s.owner_id === playerId).length;
++    const armies = world.armies.filter(a => a.owner_id === playerId).length;
++    const showActivity = () => {
++        const content = contentRef.current, activity = activityRef.current;
++        if (content && activity) content.scrollTop += activity.getBoundingClientRect().top - content.getBoundingClientRect().top;
++    };
++    return <aside className={'map-operations ' + (open ? 'is-open' : 'is-closed')} aria-label="Map overview and activity">
++        <header className="ops-header">
++            <span className="ops-header-title"><Icon name="world" size={17}/><strong>Map overview</strong></span>
++            {open && <button type="button" className="ops-activity-jump" onClick={showActivity} aria-label="Jump to map activity">Activity <b>{events.length}</b></button>}
++            <button className="ops-toggle" type="button" aria-expanded={open} aria-controls="map-operations-content" aria-label={open ? 'Collapse map panel' : 'Open map activity'} onClick={onToggle}>
++                <Icon name={open ? 'chevron' : 'time'} size={16}/>{!open && <><span>Activity</span><b>{events.length}</b></>}
++            </button>
++        </header>
++        <div id="map-operations-content" className="ops-content" hidden={!open} ref={contentRef}>
++            {children ? <div className="ops-selection" ref={selectionRef}>{children}</div> : <div className="ops-realm">
++                <span className="ops-kicker">YOUR REALM</span><h2>Realm overview</h2>
++                <p>Select an army, city or field to give orders.</p>
++                <div><span><Icon name="town" size={14}/>{cities} {cities === 1 ? 'city' : 'cities'}</span><span><Icon name="army" size={14}/>{armies} {armies === 1 ? 'army' : 'armies'}</span></div>
++            </div>}
++            <section className="ops-activity" aria-label="Live realm activity" ref={activityRef}>
++                <header><h2>Activity <span>{events.length}</span></h2><small><i/>Live</small></header>
++                <div className="ops-filters" role="group" aria-label="Filter map activity">
++                    {(['all', 'armies', 'cities'] as const).map(value => <button type="button" key={value} aria-pressed={filter === value} onClick={() => setFilter(value)}>
++                        {value === 'all' ? 'All' : value === 'armies' ? 'Armies' : 'Cities'}<span>{value === 'all' ? events.length : value === 'armies' ? military : events.length - military}</span>
++                    </button>)}
++                </div>
++                <div className="ops-event-scroll">
++                    {visible.length ? <ol className="ops-events">{visible.map(event => {
++                        const hero = event.armyId ? heroForArmy(world, event.armyId) : undefined;
++                        const home = world.settlements.find(s => s.id === event.cityId);
++                        const queued = event.category === 'cities' && event.startedAt !== null && now < event.startedAt;
++                        return <li key={event.id} className={'ops-event event-' + event.kind}>
++                            <button type="button" className="ops-event-main" onClick={() => onLocate(event)} aria-label={'View ' + labels[event.kind].name.toLowerCase() + ': ' + event.title}>
++                                <span className="ops-event-icon">{hero && event.category === 'armies' ? <HeroPortrait compact heroId={hero.id} heroClass={hero.class} faction={home?.faction}/> : <Icon name={labels[event.kind].icon} size={17}/>}</span>
++                                <span className="ops-event-copy"><span className="ops-event-kind">{labels[event.kind].name}{queued && <em>Queued</em>}</span><strong>{event.title}</strong><small>{event.detail}</small></span>
++                                <span className="ops-event-time"><b>{remaining(event, now)}</b><small>{event.live ? 'automatic' : event.category === 'armies' ? 'arrival' : 'complete'}</small></span>
++                            </button>
++                            {event.destination && <div className="ops-event-destination"><Icon name={event.kind === 'return' ? 'transfer' : 'arrow'} size={12}/><span title={event.destination}>{event.destination}</span></div>}
++                            {!event.live && <div className="ops-event-progress" aria-hidden="true"><i style={{ width: activityProgress(event, now) * 100 + '%' }}/></div>}
++                            {event.cancel && <button type="button" className="ops-event-cancel" disabled={busy} onClick={() => run({ type: 'cancelMarch', armyId: event.cancel!.armyId, sentAt: event.cancel!.sentAt }, 'March cancelled. Troops remain at their departure station.')}>
++                                Cancel departure<span>{clock((event.cancel.until - now) / 1000)}</span>
++                            </button>}
++                        </li>;
++                    })}</ol> : <div className="ops-empty"><Icon name={filter === 'all' ? 'check' : labels[filter === 'armies' ? 'march' : 'construction'].icon} size={22}/><strong>{filter === 'all' ? 'All quiet for now' : filter === 'armies' ? 'No armies on the move' : 'No city work queued'}</strong><p>{filter === 'all' ? 'Raids, returns, training and construction appear here as they begin.' : 'Choose All to see the rest of your realm’s activity.'}</p></div>}
++                </div>
++            </section>
++            <button className="ops-reports" type="button" onClick={onReports}><Icon name="report" size={15}/><span>Battle reports</span><Icon name="arrow" size={14}/></button>
++        </div>
++    </aside>;
++}
+diff --git a/src/features/map/ui/WorldView.tsx b/src/features/map/ui/WorldView.tsx
+index 7d9d89c..ac6f193 100644
+--- a/src/features/map/ui/WorldView.tsx
++++ b/src/features/map/ui/WorldView.tsx
+@@ -2,7 +2,7 @@ import { recommendedHost } from '../domain/bandits';
+ import { FACTIONS } from '../../factions/domain/factions';
+ import { ArmyMapPicker } from '../../army/ui/ArmyMapPicker';
+ import { heroBonuses } from '../../heroes/domain/heroes';
+-import { useMemo, useState, type FormEvent } from 'react';
++import { useEffect, useMemo, useState, type FormEvent } from 'react';
+ import { type World } from '../../../shared/model/world';
+ import { type MapSelection } from '../domain/types';
+ import { type Command } from '../../../shared/model/commands';
+@@ -23,6 +23,9 @@ import { findMarchPath } from '../domain/pathfinding';
+ import { CELL_SIZE, WORLD_COLS, WORLD_ROWS, wrapWorldCell } from '../domain/dimensions';
+ import { territoryAllowance, territoryPopulation } from '../domain/territory';
+ import { FieldInspector } from './FieldInspector';
++import { MapOperations } from './MapOperations';
++import { MapArmyDetails } from './MapArmyDetails';
++import type { MapActivity } from '../domain/activity';
+ import { MarchDialog, type MarchDestination } from './MarchDialog';
+ import { CampaignFarmLists, CampaignFarmTargetDialog } from '../../campaign/ui/CampaignFarmLists';
+ import type { CampaignFarmTarget } from '../../campaign/domain/types';
+@@ -30,6 +33,7 @@ import type { ArmyTroops } from '../../army/domain/types';
+ import { garrisonAt } from '../domain/garrisons';
+ import '../styles/atlas.css';
+ import '../styles/territory.css';
++import '../styles/operations.css';
+ type View = 'world' | 'settlement' | 'army' | 'chronicle';
+ export function WorldView({ world, playerId, selection, setSelection, moveMode, setMoveMode, run, busy, now, navigate, clockOffset = 0, mapViewport, cityId, armyId, onCity, onArmy, onEmpire, farmOpen = false, onFarmClose }: {
+     world: World;
+@@ -47,6 +51,8 @@ export function WorldView({ world, playerId, selection, setSelection, moveMode,
+     mapViewport?: (bounds: { minX: number; minY: number; maxX: number; maxY: number }) => void;
+     farmOpen?: boolean; onFarmClose?: () => void;
+ }) {
++    const [operationsOpen, setOperationsOpen] = useState(() => window.matchMedia('(min-width: 901px)').matches);
++    useEffect(() => { if (selection) setOperationsOpen(true); }, [selection]);
+     const [briefing, setBriefing] = useState<number | null>(null);
+     const [mapFocus, setMapFocus] = useState<{ x: number; y: number; key: number; zoom?: number } | undefined>(() => {
+         const selected = selection?.kind === 'army' ? world.armies.find(a => a.id === selection.id && a.owner_id === playerId) : undefined;
+@@ -105,6 +111,12 @@ export function WorldView({ world, playerId, selection, setSelection, moveMode,
+         const point = camp ?? selectedTown ?? (selectedArmy ? armyPosition(selectedArmy, now) : cell ? cellCenter(cell.col, cell.row) : null);
+         if (point) focusPoint(point.x, point.y, 1.7);
+     };
++    const locateActivity = (event: MapActivity) => {
++        setMoveMode(false); setMapClaimMode(false); setOperationsOpen(true);
++        if (event.cityId) onCity?.(event.cityId);
++        if (event.armyId) onArmy?.(event.armyId);
++        setSelection(event.selection); focusPoint(event.point.x, event.point.y, 1.7);
++    };
+     return <>
+   <div className={`scene-world ${campaignOpen ? 'campaign-open' : ''}`}>
+   {campaignOpen && <aside id="map-campaign-panel" className="campaign-sidebar atlas-sidebar" aria-label="Starting campaign and world regions"><div className="province-title"><span className="eyebrow">PERIS · THE WIDER WORLD</span><h1>The Hollow<br/>Crown</h1><p>{fieldCount} fields beyond the keep.<br/>Your story begins at the frontier.</p><div className="atlas-world-count"><strong>{WORLD_COLS} × {WORLD_ROWS}</strong><span>FIELDS TO EXPLORE</span></div><div className="campaign-progress"><div><i style={{ width: `${done.size / 6 * 100}%` }}/></div><span>{done.size} of 6 standards home · {campaignRank(done.size)}</span></div></div>
+@@ -116,7 +128,7 @@ export function WorldView({ world, playerId, selection, setSelection, moveMode,
+    {player.upgrades === 0 && <div className="first-orders"><span className="eyebrow">ESTABLISH YOUR REALM</span><button onClick={() => navigate('settlement')}><Icon name={upgrade ? 'time' : 'town'} size={17}/><span>{upgrade ? `Construction · ${clock((Date.parse(upgrade.finish_at) - now) / 1000)}` : 'Begin your first city upgrade'}</span><Icon name="arrow" size={13}/></button>{player.recruits < 20 && <button onClick={() => navigate('army')}><Icon name="army" size={17}/><span>Train 20 new legionaries</span><Icon name="arrow" size={13}/></button>}</div>}
+   </aside>}
+   <section className="world-stage atlas-stage scene-stage" aria-label={`Interactive ${WORLD_COLS} by ${WORLD_ROWS} world map`}>
+-   <div className={`atlas-workspace ${selection ? 'has-selection' : ''}`}>
++   <div className={`atlas-workspace operations-workspace ${operationsOpen ? 'ops-expanded' : 'ops-collapsed'} ${selection ? 'has-selection' : ''}`}>
+    <div className="world-map-wrap">
+     <div className="map-hud" role="group" aria-label="Map controls">
+      <button className="map-land-control" aria-pressed={mapClaimMode} aria-label={mapClaimMode ? 'Finish choosing land' : `Choose land: ${plotCount} of ${allowance} fields claimed`} title={`${town.name} · ${plotCount} of ${allowance} fields claimed · Expansion ${population}. ${plotCount < 4 ? 'Start with four fields next to your city.' : 'Upgrade buildings to unlock more connected land.'}`} onClick={() => { setMapClaimMode(!mapClaimMode); setMoveMode(false); setLayersOpen(false); setFindOpen(false); if (!mapClaimMode) { setSelection(null); focusPoint(town.x, town.y, 1.7); } }}>
+@@ -153,15 +165,20 @@ export function WorldView({ world, playerId, selection, setSelection, moveMode,
+     {canCancel && <aside className="march-cancel-panel" aria-label="Cancellable march"><strong>{army.name} · Preparing departure</strong><small>Cancellation closes in {clock((cancelUntil - now) / 1000)}</small><button className="button outline" disabled={busy} onClick={() => run({ type: 'cancelMarch', armyId: army.id, sentAt: army.march_sent_at! }, 'March cancelled. Troops remain at their departure station.')}>Cancel march ({Math.ceil((cancelUntil - now) / 1000)}s)</button></aside>}
+     {station && soldierTotal(station) > 0 && army.status === 'idle' && <div className="station-reinforcement-panel"><span>{soldierTotal(station)} stationed troops at this location</span><button className="button outline" disabled={busy || training.length > 0 || soldierTotal(army) >= 1000} onClick={() => run({ type: 'collectGarrison', armyId: army.id }, 'Stationed troops joined this legion.')}>Merge into {army.name}</button></div>}
+    </div>
+-    {selection && !(moveMode && selectedArmy) && <aside className="map-inspector atlas-inspector" aria-label="Selected map landmark"><button className="inspector-close" aria-label="Close map details" onClick={() => setSelection(null)}>×</button>
++    <MapOperations world={world} playerId={playerId} now={now} busy={busy} run={run} open={operationsOpen} onToggle={() => setOperationsOpen(!operationsOpen)} onLocate={locateActivity} onReports={() => navigate('chronicle')} selectionKey={!selection ? 'realm' : selection.kind === 'cell' ? `cell:${selection.col}:${selection.row}` : `${selection.kind}:${selection.id}`}>
++    {selection && !(moveMode && selectedArmy) && <section className="map-inspector atlas-inspector" aria-label="Selected map landmark">
++     <header className="ops-context-tools"><span>{camp ? 'Selected camp' : selectedArmy ? 'Selected army' : selectedTown ? 'Selected city' : 'Selected field'}</span><div><button type="button" aria-label="Locate on the map" title="Locate on the map" onClick={focusSelection}><Icon name="focus" size={15}/></button><button type="button" className="inspector-close" aria-label="Close map details" onClick={() => setSelection(null)}>×</button></div></header>
+      {camp && !camp.bandit && <div className="atlas-site-lore"><span className="eyebrow">{regionFor(camp.id).name.toUpperCase()} · {regionFor(camp.id).subtitle}</span><h2>{siteFor(camp.id).title}</h2><details className="campaign-lore"><summary>About this landmark</summary><p className="atlas-site-story">{siteFor(camp.id).lore}</p><p className="atlas-significance"><Icon name="crown" size={15}/>{siteFor(camp.id).significance}</p></details></div>}
+-     {(camp || selectedTown || selectedArmy || cell) && <button className="atlas-locate" onClick={focusSelection}><Icon name="focus" size={15}/>Locate on the map<Icon name="arrow" size={13}/></button>}
+      {cell && <FieldInspector world={world} playerId={playerId} cityId={town.id} onEmpire={onEmpire} col={cell.col} row={cell.row} now={now} busy={busy} run={run}/>}
+      {cell && cellRegion && <><details className="field-details"><summary>Terrain &amp; travel details</summary><div className="atlas-cell-heading"><span className="eyebrow">WORLD FIELD · X {cell.col} / Y {cell.row}</span><h2>{cell.name}</h2><p>{cellRegion.name} · {cellRegion.subtitle}</p></div><div className="atlas-cell-facts"><div><i style={{ background: FIELD_COLORS[cell.terrain] }}/><span>LANDSCAPE<strong>{terrainName(cell.terrain)}</strong></span></div><div><Icon name={cell.resource === 'Timber' ? 'wood' : cell.resource === 'Grain' ? 'food' : cell.resource === 'Fish' ? 'food' : 'stone'} size={20}/><span>RESOURCE POTENTIAL<strong>{cell.resource}</strong></span></div></div><p className="atlas-resource-note">Terrain changes building efficiency. Claim land, then construct improvements to add production.</p>{!cellWalkable && <p className="atlas-cell-note">Open water separates these shores. Your legion needs ships to reach them.</p>}{cell.terrain === 'river' && <p className="atlas-cell-note">A ford carries the road through this river field. Your legion can cross here.</p>}<div className="atlas-cell-occupants"><span className="field-label">ON THIS FIELD</span>{cellCamps.map(c => <button key={`camp-${c.id}`} onClick={() => chooseCamp(c.id)}><Icon name="flag" size={16}/><span>{c.bandit?c.name:siteFor(c.id).title}<small>{c.bandit?'Bandit camp':`Campaign ${c.id}`} · view defenders and raid</small></span><Icon name="arrow" size={13}/></button>)}{cellTowns.map(s => <button key={`town-${s.id}`} onClick={() => setSelection({ kind: 'settlement', id: s.id })}><Icon name="town" size={16}/><span>{s.name}<small>{s.owner_id === playerId ? 'Your settlement' : 'Rival settlement'}</small></span><Icon name="arrow" size={13}/></button>)}{cellArmies.map(a => <button key={`army-${a.id}`} onClick={() => setSelection({ kind: 'army', id: a.id })}><Icon name="army" size={16}/><span>{a.name}<small>{soldierTotal(a)} soldiers · {a.status === 'moving' ? 'passing through' : 'encamped'}</small></span><Icon name="arrow" size={13}/></button>)}{cellCamps.length + cellTowns.length + cellArmies.length === 0 && <p>No visible armies or settlements on this field.</p>}</div>{world.map?.settlements_truncated && <p className="atlas-cell-note">Zoom in to load local settlements.</p>}{cellRoute && <div className="atlas-route-estimate"><Icon name="time" size={19}/><div><span>OVERLAND JOURNEY</span><strong>About {clock(cellRoute.distance / (22 * heroBonuses(world, army).speed))}</strong><small>Follows connected land · minutes:seconds</small></div></div>}<small>Your legion follows connected land. Long journeys continue while you explore the world.</small></details><button className="button gold" disabled={marchBlocked || !cellWalkable || !cellRoute} onClick={() => { if (!cellWalkable || !cellRoute || marchBlocked) return; const point = cellCenter(cell.col, cell.row); setMoveMode(false); setMarchRequest({ destination: { kind: 'move', ...point, label: `Field (${cell.col} | ${cell.row})` }, armyId: army.id }); }}>{!cellWalkable ? 'Sea requires ships' : !cellRoute ? 'No connected land route' : busy ? 'Issuing orders…' : training.length > 0 ? 'Training must finish' : moving ? 'Redirect legion here' : 'March to this field'}<Icon name="arrow" size={16}/></button></>}
+      {camp && <><span className="eyebrow">{camp.bandit ? `BANDIT CAMP · TIER ${camp.tier} · ${FACTIONS[camp.faction??'roman'].name.toUpperCase()}` : done.has(camp.id) ? 'A STANDARD RECOVERED' : `CAMPAIGN ${camp.id} OF 6`}</span><h3 className="atlas-field-title">{camp.name}</h3><p>{camp.description}</p><div className="camp-force"><span><Icon name="shield" size={15}/><b>{camp.infantry}</b> Infantry</span><span><Icon name="bow" size={15}/><b>{camp.archers}</b> Archers</span><span><Icon name="horse" size={15}/><b>{camp.cavalry}</b> Cavalry</span></div><div className={`readiness-note ${readiness(world, playerId, camp, army.id).className}`}><Icon name="army" size={16}/><div><strong>{readiness(world, playerId, camp, army.id).label}</strong><span>{soldierTotal(army)} in your host · {(BRIEFINGS[camp.id]?.recommended??recommendedHost(camp))} advised</span></div></div>{!camp.bandit && <button className="briefing-button" onClick={() => setBriefing(camp.id)}><Icon name="book" size={15}/>Read the campaign briefing <Icon name="arrow" size={13}/></button>}<label className="field-label">VICTORY SPOILS</label><Cost cost={lootFor(camp.tier)} compact/><button className="button gold" disabled={busy || cooling} onClick={() => setMarchRequest({ destination: { kind: 'raid', campId: camp.id }, armyId: army.id })}>{cooling ? `Regroups in ${clock((Date.parse(cooldown!.available_at) - now) / 1000)}` : 'March and engage'}<Icon name="arrow" size={16}/></button>{camp.bandit && <button className="button outline" onClick={() => setFarmRequest({ campId: camp.id })}><Icon name="flag" size={16}/>Add to farm list</button>}<small>Your hero earns 2 XP per defeated soldier, plus 50 XP for victory. Combat is automatic; survivors return to their departure station.</small></>}
+-     {selectedTown && <><span className="eyebrow">{selectedTown.owner_id === playerId ? 'YOUR CITY' : 'A RIVAL REALM'}</span><h2>{selectedTown.name}</h2><p>Ruled by {playerName(world.players, selectedTown.owner_id)}.</p>{selectedTown.owner_id === playerId ? <><div className="town-summary"><span>{world.buildings.filter(b => b.settlement_id === town.id).reduce((n, b) => n + b.level, 0)} development</span><span>{soldierTotal(army)} soldiers</span></div><button className="button gold" onClick={() => {onCity?.(selectedTown.id);navigate('settlement');}}>Enter the city<Icon name="arrow" size={16}/></button></> : <button className="button outline" disabled={busy || outgoing} onClick={() => run({ type: 'challenge', ownerId: selectedTown.owner_id }, 'Battle invitation sent')}>Invite to a live duel</button>}</>}
+-     {selectedArmy && <><span className="eyebrow">{selectedArmy.owner_id === playerId ? 'YOUR LEGION' : 'RIVAL LEGION'}</span><h2>{selectedArmy.name}</h2><p>{soldierTotal(selectedArmy)} soldiers under {playerName(world.players, selectedArmy.owner_id)}.</p>{selectedArmy.owner_id === playerId ? <><button className="button gold" disabled={marchBlocked} onClick={() => { setMoveMode(true); setMapClaimMode(false); setFindOpen(false); setSelection(null); }}>Give marching orders<Icon name="arrow" size={16}/></button><button className="button outline" onClick={() => navigate('army')}>Manage troops</button></> : <button className="button outline" disabled={busy || outgoing} onClick={() => run({ type: 'challenge', ownerId: selectedArmy.owner_id }, 'Battle invitation sent')}>Invite to a live duel</button>}</>}
+-    </aside>}
++     {selectedTown && <><span className="eyebrow">{selectedTown.owner_id === playerId ? 'YOUR CITY' : 'A RIVAL REALM'}</span><h2>{selectedTown.name}</h2><p>Ruled by {playerName(world.players, selectedTown.owner_id)}.</p>{selectedTown.owner_id === playerId ? <><div className="town-summary"><span>{world.buildings.filter(b => b.settlement_id === selectedTown.id).reduce((n, b) => n + b.level, 0)} development</span><span>{world.armies.filter(a => a.home_settlement_id === selectedTown.id && a.owner_id === playerId).reduce((n, a) => n + soldierTotal(a), 0)} soldiers</span></div><button className="button gold" onClick={() => {onCity?.(selectedTown.id);navigate('settlement');}}>Enter the city<Icon name="arrow" size={16}/></button></> : <button className="button outline" disabled={busy || outgoing} onClick={() => run({ type: 'challenge', ownerId: selectedTown.owner_id }, 'Battle invitation sent')}>Invite to a live duel</button>}</>}
++     {selectedArmy && <MapArmyDetails world={world} army={selectedArmy} playerId={playerId} now={now} busy={busy} outgoing={outgoing} onLocate={focusSelection}
++      onMarch={() => { onArmy?.(selectedArmy.id); setMoveMode(true); setMapClaimMode(false); setFindOpen(false); setSelection(null); }}
++      onManage={() => { onArmy?.(selectedArmy.id); navigate('army'); }}
++      onChallenge={() => run({ type: 'challenge', ownerId: selectedArmy.owner_id }, 'Battle invitation sent')}/>}
++    </section>}
++    </MapOperations>
+    </div>
+    <footer className="march-status army-map-dock" aria-label="Army command panel">
+     <ArmyMapPicker world={world} army={army} now={now}
+diff --git a/tests/e2e/campaign-marches.spec.ts b/tests/e2e/campaign-marches.spec.ts
+index aaa1439..9b7185e 100644
+--- a/tests/e2e/campaign-marches.spec.ts
++++ b/tests/e2e/campaign-marches.spec.ts
+@@ -32,6 +32,11 @@ async function openLists(page: Page) {
+     await page.getByRole('navigation', { name: 'Quick access shortcuts' }).getByRole('button', { name: /^Farm lists/ }).click();
+     await expect(page.getByRole('dialog', { name: 'Farm lists', exact: true })).toBeVisible();
+ }
++async function showArmyDock(page: Page) {
++    const dock = page.locator('.army-map-dock');
++    if (!await dock.isVisible()) await page.getByRole('button', { name: 'Collapse map panel', exact: true }).click();
++    await expect(dock).toBeVisible();
++}
+ async function capture(page: Page, info: TestInfo, name: string) {
+     const path = info.outputPath(name + '.png');
+     await page.screenshot({ path });
+@@ -78,12 +83,16 @@ test('campaign raids require troop review, persist cancellation and leave reusab
+     await dialog.getByLabel('Sagittarius to send', { exact: true }).fill('0');
+     await dialog.getByLabel('Equites to send', { exact: true }).fill('0');
+     await dialog.getByRole('button', { name: 'Confirm raid', exact: true }).click();
++    await showArmyDock(page);
+     await page.getByLabel(/Choose army. Active commander/).click();
+     await page.getByRole('group', { name: 'Choose army', exact: true }).getByRole('button', { name: /Legio II/ }).click();
++    await showArmyDock(page);
+     await page.getByRole('button', { name: 'Merge into Legio II · The Watch', exact: true }).click();
+     await expect.poll(async () => (await save(page)).armies[1].infantry).toBe(111);
++    await showArmyDock(page);
+     await page.getByLabel(/Choose army. Active commander/).click();
+     await page.getByRole('group', { name: 'Choose army', exact: true }).getByRole('button', { name: /Legio I · The Dawn/ }).click();
++    await showArmyDock(page);
+     await page.getByRole('complementary', { name: 'Cancellable march' }).getByRole('button', { name: /Cancel march/ }).click();
+     const final = await save(page);
+     expect(final.armies.map(a => [a.infantry, a.archers, a.cavalry])).toEqual([[10, 0, 0], [111, 50, 16]]);
+diff --git a/tests/e2e/map-activity.spec.ts b/tests/e2e/map-activity.spec.ts
+new file mode 100644
+index 0000000..ec42e63
+--- /dev/null
++++ b/tests/e2e/map-activity.spec.ts
+@@ -0,0 +1,123 @@
++import { test, expect, type Page, type TestInfo } from '@playwright/test';
++import { createSolo } from '../../src/features/campaign/domain/newRealm';
++import { marchArmy, startRaidReturn } from '../../src/features/map/domain/commands';
++import { findMarchPath } from '../../src/features/map/domain/pathfinding';
++import { cellCenter, isWalkable } from '../../src/features/map/domain/worldGrid';
++import { refreshCityEconomy } from '../../src/features/city/domain/slots';
++import { validateSave } from '../../src/platform/storage/saves';
++import type { World } from '../../src/shared/model/world';
++import type { LocalCommandContext } from '../../src/shared/model/commands';
++
++async function start(page: Page, world: World, canvas = false) {
++    await page.addInitScript(({ w, fallback }) => {
++        if (!localStorage.getItem('peris-campaign-v6')) localStorage.setItem('peris-campaign-v6', JSON.stringify(w));
++        localStorage.setItem('peris-settings', JSON.stringify({ sound: false, music: false, reducedMotion: true }));
++        localStorage.setItem(`peris-welcome:${w.players[0].id}:${w.players[0].created_at}`, 'yes');
++        if (fallback) {
++            const get = HTMLCanvasElement.prototype.getContext;
++            HTMLCanvasElement.prototype.getContext = function(kind: string, ...args: unknown[]) {
++                if (kind.startsWith('webgl')) return null;
++                return get.call(this, kind as '2d', ...args);
++            } as typeof get;
++        }
++    }, { w: world, fallback: canvas });
++    await page.goto('/'); await page.getByRole('button', { name: 'Continue campaign', exact: true }).click();
++    await expect(page.locator('canvas[aria-label^="Interactive 200 by 200"]')).toBeVisible();
++    if (await page.getByRole('button', { name: 'Open map activity', exact: true }).isVisible()) await page.getByRole('button', { name: 'Open map activity', exact: true }).click();
++}
++const saved = async (page: Page): Promise<World> => page.evaluate(() => JSON.parse(localStorage.getItem('peris-campaign-v6')!));
++async function capture(page: Page, info: TestInfo, name: string) {
++    const path = info.outputPath(name + '.png'); await page.screenshot({ path }); await info.attach(name, { path, contentType: 'image/png' });
++    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
++}
++function richWorld() {
++    const world = createSolo('Aurelian'), army = world.armies[0], city = world.settlements[0], at = Date.parse(world.server_now);
++    city.name = 'Stonehaven'; city.faction = 'orc';
++    world.buildings.forEach(b => b.level = b.building_type === 'market' ? 3 : 2);
++    const second = [[15, 3], [12, 2], [18, 6]].map(([col, row]) => cellCenter(col, row)).find(p => isWalkable(Math.floor(p.x / 128), Math.floor(p.y / 128)) && findMarchPath(city, p))!;
++    world.settlements.push({ ...city, id: 2, name: 'Dawnwatch', ...second, faction: 'persian' });
++    world.buildings.push(...world.buildings.slice().map(b => ({ ...b, id: b.id + 1000, settlement_id: 2 })));
++    world.city_slots = [{ settlement_id: 1, slot_index: 4, building_type: 'smithy', level: 2 }];
++    for (const [id, name] of [[200, 'Ashguard'], [300, 'River watch'], [400, 'Eastern patrol']] as const) {
++        world.armies.push({ ...army, id, name, infantry: id === 200 ? 76 : 42, archers: 12, cavalry: 4 });
++        world.heroes!.push({ ...world.heroes![0], id: id + 1, army_id: id, name: id === 200 ? 'Grak' : id === 300 ? 'Kara' : 'Darius', experience: 450 });
++    }
++    const camp = world.camps.filter(c => c.bandit && Math.hypot(c.x - city.x, c.y - city.y) > 2500 && Math.hypot(c.x - city.x, c.y - city.y) < 7000).find(c => findMarchPath({ x: army.start_x, y: army.start_y }, c))!;
++    let id = 9000;
++    const ctx: LocalCommandContext = { world, playerId: army.owner_id, armyId: 200, now: world.server_now, nextId: () => ++id, active: undefined, paused: () => {}, finalize: () => {} };
++    marchArmy(ctx, { type: 'raid', campId: camp.id });
++    ctx.armyId = 300; marchArmy(ctx, { type: 'raid', campId: camp.id }); startRaidReturn(world, world.armies.find(a => a.id === 300)!, at);
++    ctx.armyId = 400; marchArmy(ctx, { type: 'move', ...second });
++    const sc = { col: Math.floor(second.x / 128), row: Math.floor(second.y / 128) };
++    const field = [[1, 0], [0, 1], [-1, 0]].map(([x, y]) => ({ col: sc.col + x, row: sc.row + y })).find(p => isWalkable(p.col, p.row))!;
++    world.map_plots = [{ ...field, owner_id: army.owner_id, settlement_id: 2, building_type: 'farm', level: 1 }];
++    const queue = (id: number, kind: World['orders'][0]['kind'], item: string, cityId: number, seconds: number, quantity = 1) => ({ id, owner_id: army.owner_id, kind, item, settlement_id: cityId, army_id: 1, quantity, started_at: world.server_now, finish_at: new Date(at + seconds * 1000).toISOString() });
++    world.orders = [queue(101, 'upgrade', 'slot:4:smithy', 1, 210), queue(102, 'recruit', 'cavalry', 1, 270, 12), queue(103, 'field', `field:${field.col}:${field.row}:farm`, 2, 240), queue(104, 'settler', 'settlers', 2, 300, 3)];
++    const frontier = [[30, 12], [25, 15], [40, 20]].map(([col, row]) => ({ col, row, route: findMarchPath(second, cellCenter(col, row)) })).find(p => p.route)!;
++    world.settler_expeditions = [{ id: 105, owner_id: army.owner_id, origin_settlement_id: 2, col: frontier.col, row: frontier.row, name: 'New frontier', culture_cost: 300, departure_at: world.server_now, arrival_at: new Date(at + 600000).toISOString(), march_path: frontier.route!.path, status: 'travelling' }];
++    refreshCityEconomy(world, 1); refreshCityEconomy(world, 2);
++    validateSave(world);
++    return world;
++}
++
++test('realm activity shows every army/city, filters cleanly and selects the correct commander', async ({ page }, info) => {
++    const errors: string[] = []; page.on('pageerror', error => errors.push(error.message));
++    await start(page, richWorld());
++    const panel = page.getByRole('complementary', { name: 'Map overview and activity' }), list = panel.locator('.ops-events');
++    await expect(list.locator('li')).toHaveCount(8);
++    await expect(list).toContainText('Raiding'); await expect(list).toContainText('Returning'); await expect(list).toContainText('Marching');
++    await expect(list).toContainText('Smithy · Lv. 3'); await expect(list).toContainText('12 cavalry'); await expect(list).toContainText('New frontier');
++    await capture(page, info, 'map-activity-overview');
++    await panel.getByRole('button', { name: /^Armies/ }).click(); await expect(list.locator('li')).toHaveCount(3);
++    await panel.getByRole('button', { name: 'View returning: River watch', exact: true }).click();
++    await expect(panel.locator('.ops-army-details')).toContainText('River watch'); await expect(panel.locator('.ops-army-details')).toContainText('Returning');
++    await expect(panel.locator('.ops-army-details')).toContainText('Kara');
++    await expect(panel.locator('.ops-identity h2')).toBeInViewport();
++    await capture(page, info, 'map-activity-returning-army');
++    if (info.project.name === 'mobile-chromium') {
++        await panel.getByRole('button', { name: 'Jump to map activity', exact: true }).click();
++        await expect(panel.locator('.ops-activity h2')).toBeInViewport();
++        await panel.getByRole('button', { name: 'View marching: Eastern patrol', exact: true }).click();
++        await expect(panel.locator('.ops-identity h2')).toBeInViewport();
++        await panel.getByRole('button', { name: 'Jump to map activity', exact: true }).click();
++        await panel.getByRole('button', { name: 'View returning: River watch', exact: true }).click();
++        await expect(panel.locator('.ops-identity h2')).toBeInViewport();
++    }
++    await panel.getByRole('button', { name: 'Manage troops', exact: true }).click();
++    await expect(page.locator('.army-selected-banner')).toContainText('River watch');
++    expect((await saved(page)).armies.find(a => a.id === 300)!.march_returning).toBe(true);
++    expect(errors).toEqual([]);
++});
++
++test('a listed staged raid can be cancelled once with its real persisted order token', async ({ page }, info) => {
++    const world = createSolo('Cancel QA'), army = world.armies[0]; let id = 9000;
++    const ctx: LocalCommandContext = { world, playerId: army.owner_id, armyId: army.id, now: world.server_now, nextId: () => ++id, active: undefined, paused: () => {}, finalize: () => {} };
++    marchArmy(ctx, { type: 'raid', campId: 1, troops: { infantry: 7, archers: 2, cavalry: 1 } });
++    await start(page, world, true);
++    const panel = page.getByRole('complementary', { name: 'Map overview and activity' });
++    await expect(panel.locator('.ops-events')).toContainText('Preparing departure');
++    await capture(page, info, 'map-activity-staged-raid');
++    await panel.getByRole('button', { name: /^Cancel departure/ }).click();
++    await expect(panel.getByText('All quiet for now', { exact: true })).toBeVisible();
++    const result = await saved(page); expect(result.armies[0].status).toBe('idle');
++    expect([result.armies[0].infantry, result.armies[0].archers, result.armies[0].cavalry]).toEqual([120, 50, 16]);
++    await page.reload(); await page.getByRole('button', { name: 'Continue campaign', exact: true }).click();
++    expect((await saved(page)).armies[0].status).toBe('idle');
++});
++
++test('empty activity can fold away, real map clicks open details, and clearing details keeps the activity panel', async ({ page }, info) => {
++    await start(page, createSolo('Explore QA'));
++    const panel = page.getByRole('complementary', { name: 'Map overview and activity' });
++    await expect(panel.getByText('All quiet for now', { exact: true })).toBeVisible();
++    await panel.getByRole('button', { name: 'Collapse map panel', exact: true }).click();
++    await expect(panel.getByRole('button', { name: 'Open map activity', exact: true })).toBeVisible();
++    const canvas = page.locator('canvas[aria-label^="Interactive 200 by 200"]');
++    await canvas.click({ position: { x: 90, y: 175 } });
++    await expect(panel.getByRole('region', { name: 'Selected map landmark' })).toBeVisible();
++    await capture(page, info, 'map-activity-field-details');
++    await panel.getByRole('button', { name: 'Close map details', exact: true }).click();
++    await expect(panel.getByRole('region', { name: 'Selected map landmark' })).toHaveCount(0);
++    await expect(panel.getByRole('region', { name: 'Live realm activity' })).toBeVisible();
++    await panel.getByRole('button', { name: 'Battle reports', exact: true }).click();
++    await expect(page.locator('.chronicle')).toBeVisible();
++});
+diff --git a/tests/map-activity.test.ts b/tests/map-activity.test.ts
+new file mode 100644
+index 0000000..c26ca97
+--- /dev/null
++++ b/tests/map-activity.test.ts
+@@ -0,0 +1,80 @@
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import { createSolo } from '../src/features/campaign/domain/newRealm';
++import { marchArmy, startRaidReturn } from '../src/features/map/domain/commands';
++import { mapActivity, activityProgress } from '../src/features/map/domain/activity';
++import { beginRaid } from '../src/features/campaign/domain/raids';
++import type { LocalCommandContext } from '../src/shared/model/commands';
++
++function fixture() {
++    const world = createSolo('Activity QA'), owner = world.players[0].id, now = Date.parse(world.server_now);
++    let id = 9000;
++    const ctx: LocalCommandContext = { world, playerId: owner, armyId: world.armies[0].id, now: world.server_now, nextId: () => ++id, active: undefined, paused: () => {}, finalize: () => {} };
++    return { world, owner, now, ctx, camp: world.camps.find(c => c.id === 1)! };
++}
++test('activity follows a partial raid, its cancellation window and its actual return station', () => {
++    const f = fixture(), army = f.world.armies[0];
++    marchArmy(f.ctx, { type: 'raid', campId: f.camp.id, troops: { infantry: 7, archers: 2, cavalry: 1 } });
++    let event = mapActivity(f.world, f.owner, f.now)[0];
++    assert.equal(event.kind, 'raid'); assert.equal(event.troops, 10); assert.equal(event.destination, f.camp.name);
++    assert.deepEqual(event.cancel, { armyId: army.id, sentAt: army.march_sent_at, until: Date.parse(army.march_cancel_until!) });
++    assert.equal(activityProgress(event, f.now), 0);
++    event = mapActivity(f.world, f.owner, f.now + 30000)[0];
++    assert.equal(event.cancel, undefined); assert.equal(event.kind, 'raid');
++    const origin = { ...army.march_origin! };
++    assert.ok(startRaidReturn(f.world, army, Date.parse(army.arrival_at)));
++    // The home city may change; the return must still describe the departure station.
++    army.home_settlement_id = 999;
++    event = mapActivity(f.world, f.owner, Date.parse(army.departure_at))[0];
++    assert.equal(event.kind, 'return'); assert.equal(event.cancel, undefined);
++    assert.equal(event.destination, f.world.settlements[0].name);
++    assert.deepEqual([army.target_x, army.target_y], [origin.x, origin.y]);
++});
++test('all owned cities and armies are included, rival private queues never enter the list, and reads do not mutate the campaign', () => {
++    const f = fixture(), city = f.world.settlements[0], army = f.world.armies[0];
++    f.world.settlements.unshift({ ...city, id: 40, owner_id: 'rival', name: 'Private rival' });
++    f.world.armies.unshift({ ...army, id: 40, owner_id: 'rival' });
++    f.world.settlements.push({ ...city, id: 2, name: 'Second city' });
++    f.world.armies.push({ ...army, id: 2, home_settlement_id: 2 });
++    f.world.city_slots!.push({ settlement_id: 2, slot_index: 4, building_type: 'smithy', level: 2 });
++    f.world.orders.push(
++        { id: 1, owner_id: f.owner, kind: 'upgrade', settlement_id: 2, item: 'slot:4:smithy', quantity: 1, started_at: new Date(f.now).toISOString(), finish_at: new Date(f.now + 5000).toISOString() },
++        { id: 2, owner_id: f.owner, kind: 'recruit', item: 'archers', quantity: 12, started_at: new Date(f.now + 5000).toISOString(), finish_at: new Date(f.now + 9000).toISOString() },
++        { id: 3, owner_id: 'rival', kind: 'upgrade', settlement_id: 40, item: 'wall', quantity: 1, started_at: new Date(f.now).toISOString(), finish_at: new Date(f.now + 1000).toISOString() });
++    const before = JSON.stringify(f.world), events = mapActivity(f.world, f.owner, f.now);
++    assert.equal(JSON.stringify(f.world), before);
++    assert.deepEqual(events.map(e => e.title), ['Smithy · Lv. 3', '12 archers']);
++    assert.equal(events[0].cityId, 2); assert.equal(events[1].cityId, 1); assert.equal(events[1].armyId, 1);
++    assert.equal(activityProgress(events[1], f.now), 0);
++});
++test('field work and travelling settlers link to canonical map fields; completed expeditions disappear', () => {
++    const f = fixture();
++    f.world.map_plots = [{ col: 2, row: 3, owner_id: f.owner, settlement_id: 1, building_type: 'farm', level: 2 }];
++    f.world.orders.push({ id: 1, owner_id: f.owner, settlement_id: 1, kind: 'field', item: 'field:2:3:farm', quantity: 1, started_at: new Date(f.now).toISOString(), finish_at: new Date(f.now + 10000).toISOString() });
++    f.world.settler_expeditions = [{ id: 2, owner_id: f.owner, origin_settlement_id: 1, col: 10, row: -3, name: 'New frontier', departure_at: new Date(f.now).toISOString(), arrival_at: new Date(f.now + 20000).toISOString(), culture_cost: 300, march_path: [], status: 'travelling' }];
++    const events = mapActivity(f.world, f.owner, f.now);
++    assert.equal(events[0].title, 'Farm · Lv. 3');
++    assert.deepEqual(events[0].selection, { kind: 'cell', col: 2, row: 3 });
++    assert.deepEqual(events[1].selection, { kind: 'cell', col: 10, row: -3 });
++    f.world.settler_expeditions[0].status = 'founded';
++    assert.equal(mapActivity(f.world, f.owner, f.now).length, 1);
++});
++test('live battles replace the same army’s travel entry and never invent an end time', () => {
++    const f = fixture();
++    marchArmy(f.ctx, { type: 'raid', campId: f.camp.id });
++    beginRaid(f.world, f.owner, f.camp.id, f.ctx.nextId, f.world.armies[0].id);
++    const events = mapActivity(f.world, f.owner, f.now);
++    assert.equal(events.length, 1); assert.equal(events[0].kind, 'battle');
++    assert.equal(events[0].live, true); assert.equal(events[0].endsAt, null); assert.equal(events[0].cancel, undefined);
++    assert.equal(activityProgress(events[0], f.now), 0);
++});
++test('a late authoritative event stays visible until settlement, without negative progress or invalid time arithmetic', () => {
++    const f = fixture();
++    Object.assign(f.world.armies[0], { status: 'moving', departure_at: new Date(f.now - 5000).toISOString(), arrival_at: new Date(f.now - 1000).toISOString() });
++    let event = mapActivity(f.world, f.owner, f.now)[0];
++    assert.equal(event.kind, 'march'); assert.equal(activityProgress(event, f.now), 1);
++    f.world.armies[0].arrival_at = 'unavailable';
++    event = mapActivity(f.world, f.owner, f.now)[0];
++    assert.equal(event.endsAt, null); assert.equal(activityProgress(event, f.now), 0);
++    f.world.armies[0].status = 'idle'; assert.deepEqual(mapActivity(f.world, f.owner, f.now), []);
++});

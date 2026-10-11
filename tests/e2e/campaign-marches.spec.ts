@@ -33,6 +33,11 @@ async function openLists(page: Page) {
     await page.getByRole('navigation', { name: 'Quick access shortcuts' }).getByRole('button', { name: /^Farm lists/ }).click();
     await expect(page.getByRole('dialog', { name: 'Farm lists', exact: true })).toBeVisible();
 }
+async function showArmyDock(page: Page) {
+    const dock = page.locator('.army-map-dock');
+    if (!await dock.isVisible()) await page.getByRole('button', { name: 'Collapse map panel', exact: true }).click();
+    await expect(dock).toBeVisible();
+}
 async function capture(page: Page, info: TestInfo, name: string) {
     const path = info.outputPath(name + '.png');
     await page.screenshot({ path });
@@ -79,12 +84,16 @@ test('campaign raids require troop review, persist cancellation and leave reusab
     await dialog.getByLabel('Sagittarius to send', { exact: true }).fill('0');
     await dialog.getByLabel('Equites to send', { exact: true }).fill('0');
     await dialog.getByRole('button', { name: 'Confirm raid', exact: true }).click();
+    await showArmyDock(page);
     await page.getByLabel(/Choose army. Active commander/).click();
     await page.getByRole('group', { name: 'Choose army', exact: true }).getByRole('button', { name: /Legio II/ }).click();
+    await showArmyDock(page);
     await page.getByRole('button', { name: 'Merge into Legio II · The Watch', exact: true }).click();
     await expect.poll(async () => (await save(page)).armies[1].infantry).toBe(111);
+    await showArmyDock(page);
     await page.getByLabel(/Choose army. Active commander/).click();
     await page.getByRole('group', { name: 'Choose army', exact: true }).getByRole('button', { name: /Legio I · The Dawn/ }).click();
+    await showArmyDock(page);
     await page.getByRole('complementary', { name: 'Cancellable march' }).getByRole('button', { name: /Cancel march/ }).click();
     const final = await save(page);
     expect(final.armies.map(a => [a.infantry, a.archers, a.cavalry])).toEqual([[10, 0, 0], [111, 50, 16]]);

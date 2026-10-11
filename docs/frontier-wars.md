@@ -57,8 +57,12 @@ the private worker when the optional scheduler is installed.
 
 ## Deployment hold and compatibility
 
-This branch is local work awaiting compatibility with the other developer's
-current main. No production changes are authorized yet. Review and apply V16
+This local branch includes main's account directory and map activity updates.
+The map panel shows exact owned troop roles and active research; rival armies
+retain their public aggregate information. Existing accounts, garrisons, farms
+and cancellation tokens are checked against frozen pre-upgrade databases.
+No production changes are authorized yet. Fetch and review further main changes
+before publication. Review and apply V16
 manually only after integration and tests. The optional `ENABLE_GAME_WORKER.sql`
 uses pg_cron and is kept separate so installing gameplay SQL does not silently
 start a background job. It is safe to rerun the V16 upgrade: existing cities,
