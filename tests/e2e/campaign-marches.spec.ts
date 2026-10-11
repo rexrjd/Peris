@@ -3,6 +3,7 @@ import { createSolo } from '../../src/features/campaign/domain/newRealm';
 import type { World } from '../../src/shared/model/world';
 import type { Camp } from '../../src/features/map/domain/types';
 import { getCell, isWalkable } from '../../src/features/map/domain/worldGrid';
+import { emptyRoster } from '../../src/features/army/domain/roster';
 import { beginRaid } from '../../src/features/campaign/domain/raids';
 
 async function start(page: Page, world: World) {
@@ -120,7 +121,8 @@ test('camp targets save and reload, and Start list reviews a manual batch before
     await expect(manager).toContainText('Nearby camps'); await expect(manager).toContainText(camp.name);
     await manager.getByRole('button', { name: 'Start list', exact: true }).click();
     const review = page.getByRole('dialog', { name: 'Start farm list: Nearby camps', exact: true });
-    await expect(review).toContainText('10 infantry / 0 archers / 0 cavalry');
+    await expect(review.getByRole('img', {name:'Legionary',exact:true})).toBeVisible();
+    await expect(review.locator('.game-troop-summary')).toHaveText('10');
     expect((await save(page)).armies[0].status).toBe('idle');
     await capture(page, info, 'campaign-batch-review');
     await review.getByRole('button', { name: 'Confirm batch', exact: true }).click();
@@ -129,7 +131,7 @@ test('camp targets save and reload, and Start list reviews a manual batch before
     await manager.getByRole('button', { name: /Cancel raid/ }).click();
     await expect.poll(async () => (await save(page)).armies[0].infantry).toBe(120);
     await page.keyboard.press('Escape');
-    expect((await save(page)).campaign_farms?.[0].troops).toEqual({ infantry: 10, archers: 0, cavalry: 0 });
+    expect((await save(page)).campaign_farms?.[0].troops).toEqual({ ...emptyRoster(), infantry: 10 });
 });
 
 test('reinforcement review blocks neutral fields and shows saved returning troops merging once', async ({ page }, info) => {
@@ -156,7 +158,9 @@ test('reinforcement review blocks neutral fields and shows saved returning troop
         march_returning: true, march_origin: { col: Math.floor(origin.x / 128), row: Math.floor(origin.y / 128), ...origin }, march_sent_at: null, march_cancel_until: null,
         march_path: [[origin.x + 128, origin.y], [origin.x, origin.y]], march_distance: 128 });
     returning.garrisons = [{ owner_id: army.owner_id, col: Math.floor(origin.x / 128), row: Math.floor(origin.y / 128), infantry: 110, archers: 50, cavalry: 16 }];
-    await page.evaluate(w => localStorage.setItem('peris-campaign-v6', JSON.stringify(w)), returning);
+    // Seed at navigation startup so the old live engine cannot overwrite the imported fixture.
+    await page.evaluate(w => sessionStorage.setItem('peris-test-return-fixture', JSON.stringify(w)), returning);
+    await page.addInitScript(() => { const next = sessionStorage.getItem('peris-test-return-fixture'); if (next) { localStorage.setItem('peris-campaign-v6', next); sessionStorage.removeItem('peris-test-return-fixture'); } });
     await page.reload(); await page.getByRole('button', { name: 'Continue campaign', exact: true }).click();
     await expect.poll(async () => (await save(page)).armies[0].infantry).toBe(116);
     let settled = await save(page); expect(settled.garrisons).toEqual([]); expect(settled.armies[0].status).toBe('idle');

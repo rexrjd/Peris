@@ -4,12 +4,13 @@ import type { Resources } from '../../../shared/model/resources';
 import { multiply } from '../../../shared/model/resources';
 import { externalFieldRates } from '../../map/domain/fieldProduction';
 
-export type SlotType = 'barracks' | 'stables' | 'smithy' | 'warehouse' | 'granary' | 'fishery' | 'mage_tower' | 'housing';
+export type SlotType = 'barracks' | 'stables' | 'workshop' | 'smithy' | 'warehouse' | 'granary' | 'fishery' | 'mage_tower' | 'housing';
 export type CitySlot = { settlement_id: number; slot_index: number; building_type: SlotType; level: number };
 export const SLOT_BUILDINGS: Record<SlotType, { name: string; description: string; effect: string; cost: Resources }> = {
     housing:{name:'Housing',description:'Homes for the civilians who work in your city. Each level adds room for thirty residents.',effect:'+30 population capacity per level. Housing can be repeated.',cost:{wood:140,stone:110,food:60,gold:20}},
     barracks: { name: 'Barracks', description: 'Train infantry and archers.', effect: 'Each level improves training speed.', cost: { wood:180, stone:160, food:100, gold:30 } },
     stables: { name: 'Stables', description: 'Raise cavalry.', effect: 'Each level improves cavalry training speed.', cost: { wood:200, stone:120, food:180, gold:45 } },
+    workshop: { name: 'Workshop', description: 'Research and train rams and catapults.', effect: 'Each level improves siege training speed.', cost: { wood: 260, stone: 220, food: 120, gold: 60 } },
     smithy: { name: 'Smithy', description: 'Forge stronger weapons for your soldiers.', effect: '+4% army damage per level, up to +60% across smithies.', cost: { wood:180, stone:220, food:80, gold:60 } },
     warehouse: { name: 'Warehouse', description: 'Store timber, stone and gold.', effect: '+2,500 capacity per level. Warehouses stack.', cost: { wood:200, stone:150, food:90, gold:20 } },
     granary: { name: 'Granary', description: 'Keep your food supplies safe.', effect: '+2,500 food capacity per level. Granaries stack.', cost: { wood:160, stone:120, food:100, gold:15 } },

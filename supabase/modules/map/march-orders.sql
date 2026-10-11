@@ -4,13 +4,11 @@ alter table public.armies add column if not exists march_cancel_until timestampt
 alter table public.armies add column if not exists raid_reserve jsonb;
 
 create or replace function public.peris_restore_raid_reserve(p_army bigint)returns void
-language sql security definer set search_path='' as $$
- update public.armies set
- infantry=infantry+coalesce((raid_reserve->>'infantry')::integer,0),
- archers=archers+coalesce((raid_reserve->>'archers')::integer,0),
- cavalry=cavalry+coalesce((raid_reserve->>'cavalry')::integer,0),raid_reserve=null
- where id=p_army and raid_reserve is not null
-$$;
+language plpgsql security definer set search_path='' as $$
+declare a public.armies%rowtype;
+begin select * into a from public.armies where id=p_army for update;
+ if a.raid_reserve is not null then perform public.peris_write_roster(a.id,public.peris_roster_add(public.peris_roster(to_jsonb(a)),a.raid_reserve));update public.armies set raid_reserve=null where id=a.id;end if;
+end $$;
 
 create or replace function public.peris_cancel_march(p_army bigint,p_sent_at timestamptz)returns jsonb
 language plpgsql security definer set search_path='' as $$
@@ -32,34 +30,47 @@ begin
  return jsonb_build_object('ok',true);
 end $$;
 
-create or replace function public.peris_prepare_raid(p_camp integer,p_path jsonb default null,p_troops jsonb default null)returns jsonb
+create or replace function public.peris_prepare_raid_for(p_owner uuid,p_army bigint,p_camp integer,p_path jsonb default null,p_troops jsonb default null)returns jsonb
 language plpgsql security definer set search_path='' as $$
-declare u uuid:=public.peris_player_id();a public.armies%rowtype;c public.peris_camps%rowtype;inf integer;arc integer;cav integer;previous_target text;
+declare u uuid:=p_owner;a public.armies%rowtype;c public.peris_camps%rowtype;inf integer;arc integer;cav integer;route jsonb;steps integer;i integer;available jsonb;preset jsonb;unit_name text;
 begin
  if u is null then raise exception 'Authentication required';end if;
  perform public.peris_settle(u);
- select * into a from public.armies where id=public.peris_army_id(u) for update;
+ select * into a from public.armies where id=p_army and owner_id=u for update;
  select * into c from public.peris_camps where id=p_camp;
  if c.id is null then raise exception 'Camp not found';end if;
  if a.id is null or a.infantry+a.archers+a.cavalry=0 then raise exception 'Recruit soldiers before starting a raid';end if;
  if a.status<>'idle' or a.raid_target_id is not null or a.raid_reserve is not null then raise exception 'This legion already has a march or raid';end if;
- if exists(select 1 from public.peris_progress where owner_id=u and camp_id=p_camp and available_at>now())then raise exception 'The camp is still regrouping';end if;
+ if not c.bandit and exists(select 1 from public.peris_progress where owner_id=u and camp_id=p_camp and available_at>now())then raise exception 'The camp is still regrouping';end if;
  if p_troops is not null then
   if jsonb_typeof(p_troops)<>'object' then raise exception 'Choose troops currently available in this legion';end if;
-  inf:=(p_troops->>'infantry')::integer;arc:=(p_troops->>'archers')::integer;cav:=(p_troops->>'cavalry')::integer;
-  if inf is null or arc is null or cav is null or inf<0 or arc<0 or cav<0 or inf>a.infantry or arc>a.archers or cav>a.cavalry then raise exception 'Choose troops currently available in this legion';end if;
-  if inf+arc+cav=0 then raise exception 'Send at least one soldier';end if;
+  available:=public.peris_roster(to_jsonb(a));preset:=public.peris_garrison_troops(p_troops);
+  foreach unit_name in array array['infantry','spearmen','archers','elite','cavalry','scout','heavyCavalry','ram','catapult']loop
+   if (preset->>unit_name)::integer>(available->>unit_name)::integer then raise exception 'Choose troops currently available in this legion';end if;
+  end loop;
+  if public.peris_roster_total(preset)=0 then raise exception 'Send at least one soldier';end if;
  end if;
- previous_target:=current_setting('peris.raid_target',true);perform set_config('peris.raid_target',c.id::text,true);
- if p_path is null then perform public.move_army(c.x,c.y);else perform public.peris_march(c.x,c.y,p_path);end if;
- perform set_config('peris.raid_target',coalesce(previous_target,''),true);
+ route:=p_path;
+ if route is null then
+  steps:=greatest(1,ceil(greatest(abs(public.peris_wrapped_delta(a.target_x,c.x)),abs(public.peris_wrapped_delta(a.target_y,c.y)))/64)::integer);
+  route:=jsonb_build_array(jsonb_build_array(a.target_x,a.target_y));
+  for i in 1..steps loop route:=route||jsonb_build_array(jsonb_build_array(public.peris_wrap_world(round(a.target_x+public.peris_wrapped_delta(a.target_x,c.x)*i/steps)::integer),public.peris_wrap_world(round(a.target_y+public.peris_wrapped_delta(a.target_y,c.y)*i/steps)::integer)));end loop;
+ end if;
+ perform public.peris_march_for(u,a.id,c.x,c.y,route,c.id);
  update public.armies set raid_target_id=c.id where id=a.id;
  if p_troops is not null then
-  perform public.peris_garrison_add(u,floor(a.target_x/128.0)::integer,floor(a.target_y/128.0)::integer,
-   jsonb_build_object('infantry',a.infantry-inf,'archers',a.archers-arc,'cavalry',a.cavalry-cav));
-  update public.armies set infantry=inf,archers=arc,cavalry=cav where id=a.id;
+  perform public.peris_garrison_add(u,floor(a.target_x/128.0)::integer,floor(a.target_y/128.0)::integer,public.peris_roster_add(available,preset,-1));
+  perform public.peris_write_roster(a.id,preset);
  end if;
  return jsonb_build_object('ok',true);
+end $$;
+
+create or replace function public.peris_prepare_raid(p_camp integer,p_path jsonb default null,p_troops jsonb default null)returns jsonb
+language plpgsql security definer set search_path='' as $$
+declare u uuid:=public.peris_player_id();
+begin
+ if u is null then raise exception 'Authentication required';end if;
+ return public.peris_prepare_raid_for(u,public.peris_army_id(u),p_camp,p_path,p_troops);
 end $$;
 
 create or replace function public.peris_return_raid(p_army bigint)returns boolean

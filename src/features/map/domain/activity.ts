@@ -7,8 +7,11 @@ import { soldierTotal } from '../../army/domain/units';
 import { BUILDINGS } from '../../city/domain/buildings';
 import { SLOT_BUILDINGS } from '../../city/domain/slots';
 import { FIELD_BUILDINGS } from './territory';
+import { RECRUIT_RULES, RECRUIT_UNITS, type RecruitUnit } from '../../army/domain/roster';
 
-export type ActivityKind = 'raid' | 'return' | 'march' | 'battle' | 'construction' | 'recruitment' | 'settlers';
+export type ActivityKind = 'raid' | 'return' | 'march' | 'battle' | 'construction' | 'recruitment' | 'research' | 'settlers';
+const unitNames: Record<RecruitUnit, string> = { infantry: 'infantry', spearmen: 'spearmen', archers: 'archers', elite: 'elite soldiers', cavalry: 'cavalry', scout: 'scouts', heavyCavalry: 'heavy cavalry', ram: 'rams', catapult: 'catapults' };
+const unitName = (unit: string) => RECRUIT_UNITS.includes(unit as RecruitUnit) ? unitNames[unit as RecruitUnit] : 'soldiers';
 export type MapActivity = {
     id: string; kind: ActivityKind; category: 'armies' | 'cities'; title: string; detail: string;
     destination?: string; troops?: number; armyId?: number; cityId?: number;
@@ -83,7 +86,7 @@ export function mapActivity(world: World, owner: string, now: number): MapActivi
         const base = { id: 'order:' + order.id, cityId: city.id, startedAt: timestamp(order.started_at), endsAt: timestamp(order.finish_at), point: { x: city.x, y: city.y } };
         if (order.kind === 'recruit') {
             const army = armies.find(a => a.id === (order.army_id ?? armies[0]?.id));
-            const unit = ({ infantry: 'infantry', archers: 'archers', cavalry: 'cavalry' } as Record<string, string>)[order.item] ?? 'soldiers';
+            const unit = unitName(order.item);
             events.push({ ...base, kind: 'recruitment', category: 'cities', title: order.quantity + ' ' + unit, detail: city.name,
                 destination: army?.name, armyId: army?.id, selection: { kind: 'settlement', id: city.id } });
         } else if (order.kind === 'settler') {
@@ -101,6 +104,14 @@ export function mapActivity(world: World, owner: string, now: number): MapActivi
             events.push({ ...base, kind: 'construction', category: 'cities', title: constructionTitle(world, order, city.id), detail: city.name,
                 selection: { kind: 'settlement', id: city.id } });
         }
+    }
+    for (const research of world.unit_research ?? []) {
+        const city = cities.find(s => s.id === research.settlement_id), endsAt = timestamp(research.completes_at);
+        if (!city || endsAt === null || endsAt <= now || !RECRUIT_UNITS.includes(research.unit)) continue;
+        events.push({ id: 'research:' + city.id + ':' + research.unit, kind: 'research', category: 'cities',
+            title: 'Research ' + unitName(research.unit), detail: city.name, cityId: city.id,
+            startedAt: endsAt - RECRUIT_RULES[research.unit].researchSeconds * 1000, endsAt,
+            selection: { kind: 'settlement', id: city.id }, point: { x: city.x, y: city.y } });
     }
     for (const expedition of world.settler_expeditions ?? []) {
         if (expedition.owner_id !== owner || expedition.status !== 'travelling') continue;

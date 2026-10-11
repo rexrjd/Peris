@@ -5,11 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "dev:frontier": "node scripts/dev-frontier.mjs",
-    "server:frontier": "node --import tsx server/frontier/index.ts",
     "check:frontier": "tsc -p tsconfig.frontier.json",
     "test:frontier-server": "node --import tsx --test tests/frontier-server.test.mts tests/frontier-http.test.mts tests/frontier-vite.test.mts",
-    "test:frontier-ui": "playwright test -c playwright.frontier.config.ts",
+    "test:frontier-ui": "playwright test -c playwright.integration.config.ts tests/e2e/game-frontier-integration.spec.ts",
     "build": "tsc -p tsconfig.app.json && vite build",
     "build:standalone": "npm run build && node scripts/standalone.mjs",
     "preview": "vite preview",
@@ -47,6 +45,7 @@
     "test:hero-loot-ui": "node tests/hero-loot-ui-render.test.mjs",
     "test:signup-db": "node tests/signup-database.test.mjs",
     "test:accounts-db": "node tests/accounts-database.test.mjs",
+    "test:integration-db": "node --import tsx tests/game-integration-database.test.mts",
     "test:account-directory-db": "node tests/account-directory-database.test.mjs",
     "test:account-compatibility-db": "node --import tsx tests/account-compatibility-database.test.mjs"
   },

@@ -8,7 +8,7 @@ import { mapActivity, type MapActivity, type ActivityKind } from '../domain/acti
 const labels: Record<ActivityKind, { name: string; short: string; icon: string }> = {
     raid: { name: 'Raiding', short: 'Raid', icon: 'army' }, return: { name: 'Returning', short: 'Return', icon: 'transfer' }, march: { name: 'Marching', short: 'March', icon: 'flag' },
     battle: { name: 'In battle', short: 'Battle', icon: 'army' }, construction: { name: 'Building', short: 'Build', icon: 'town' },
-    recruitment: { name: 'Recruiting', short: 'Train', icon: 'shield' }, settlers: { name: 'Settlers', short: 'Settle', icon: 'people' },
+    recruitment: { name: 'Recruiting', short: 'Train', icon: 'shield' }, research: { name: 'Researching', short: 'Research', icon: 'book' }, settlers: { name: 'Settlers', short: 'Settle', icon: 'people' },
 };
 function remaining(event: MapActivity, now: number) {
     if (event.live) return 'Live';

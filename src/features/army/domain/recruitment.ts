@@ -1,9 +1,10 @@
 import type { Army } from './types';
 import type { Player } from '../../campaign/domain/types';
 import type { Order } from '../../../shared/model/world';
-import { type UnitType } from './types';
-export function recruitSeconds(type: UnitType, count: number, level: number) { return Math.max(5, Math.ceil(count * (type === 'cavalry' ? 5 : 2) / (1 + (level - 1) * .18))); }
+import { readRoster, writeRoster, RECRUIT_RULES, type RecruitUnit } from './roster';
+export function recruitSeconds(type: RecruitUnit, count: number, level: number) { return Math.max(5, Math.ceil(count * RECRUIT_RULES[type].trainSeconds / (1 + (level - 1) * .18))); }
 export function completeRecruit(a: Army, p: Player, o: Order) {
-    a[o.item as UnitType] += o.quantity;
+    const unit = o.item as RecruitUnit, roster = readRoster(a);
+    roster[unit] += o.quantity; writeRoster(a, roster);
     p.recruits += o.quantity;
 }

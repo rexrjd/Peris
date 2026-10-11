@@ -27,7 +27,7 @@ try{
  const before=await persisted();
  // The combined migration adds cancellation/return fields to V13 armies.
  // Require their neutral defaults while comparing every existing value exactly.
- for(const host of before.armies)Object.assign(host.record,{march_sent_at:null,march_cancel_until:null,raid_reserve:null,march_origin:null,march_returning:false});
+ for(const host of before.armies)Object.assign(host.record,{march_sent_at:null,march_cancel_until:null,raid_reserve:null,march_origin:null,march_returning:false,unit_roster:null,carried_loot:null,farm_list_id:null,loot_report_id:null});
  const upgrade=await readFile('supabase/UPGRADE_TO_V14.sql','utf8');await admin(upgrade);await admin(upgrade);assert.deepEqual(await persisted(),before);
  console.log('PASS · V13 upgraded twice without changing player IDs, multiple cities/armies, commanders, XP, equipment, queues or camp progress');
  assert.equal((await db.query("select count(*) n from pg_policies where schemaname='public' and tablename<>'unrelated_notes' and (qual like '%auth.uid()%' or with_check like '%auth.uid()%')")).rows[0].n,0);

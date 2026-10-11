@@ -17,53 +17,21 @@ Every outside road enters through the gate. Activity stays clear of building con
 pauses in hidden tabs, and respects game and system reduced-motion settings.
 See `assets/city-village-v1.json` and `ARTWORK.md` for sources and export instructions.
 
-## Frontier Wars — local playable slice
+## Camps, recruitment and farming in Peris
 
-Run `npm ci` then `npm run dev:frontier`, and open **http://127.0.0.1:5174/?frontier=1**.
-Recruit troops, raid shared resource-producing mercenary camps, bring survivors and
-loot home, and save repeating farm targets. The local server persists the realm
-and continues processing with the browser closed. Existing campaign and Shared
-world modes remain available. Use `npm.cmd` in PowerShell if needed.
+These mechanics are integrated into the existing game. Run `npm ci` and `npm run dev`, then open the URL Vite prints. Old `?frontier=1` bookmarks open normal Peris. Use your existing campaign or shared-world account, cities, resources, legions and reports.
 
-**Quick access** in both game interfaces opens frequently used screens. Frontier
-has named farm lists with an independent **reports only when my troops are lost**
-checkbox, automatic report-only raids, and Outbound/Returning movement filters.
-The campaign's **Farm lists** shortcut opens its saved camp targets; **Frontier
-farm lists** opens the separate Frontier village.
+**Army → Recruitment** has Barracks, Stables and Workshop tabs for nine faction-named troop roles. Advanced units require research in the selected city. Buildings have independent queues; training still uses the existing legion capacity and city resources. Small faction troop icons appear in recruitment, camp inspection, raid reviews, farms and reports.
 
-Each farm list has **Start list** for a manual batch. Review the saved troop
-presets and confirm; unavailable targets are skipped without spending troops.
-Frontier batches draw from the village garrison and keep repeat schedules unchanged.
-Campaign batches use their saved legions, with one raid per available legion.
+Roaming camps now accumulate shared resource stocks and grow defenders at private, unpredictable intervals. The six story sites retain their progression and cooldowns. Raids use Peris's existing automatic formation battles. Survivors carry limited loot back to the departure station; resources are credited to the legion's home city on return, with storage overflow recorded in the report. Camps keep depleted stocks and casualties until production and recruitment replenish them.
 
-Campaign **March and engage** now opens a legion and troop review. Unsent troops
-stay at the departure village or owned field as a shared garrison; another idle
-legion there can collect them. Returning survivors merge with troops still at that
-station, up to the 1,000-soldier legion capacity. Ordinary marches can finish only
-at owned villages or fields. Alliances are not implemented yet, so rival villages
-cannot receive reinforcements. Older armies on neutral land can still march home.
-All new raid/march orders wait 30 seconds before departure and can be cancelled
-only during that window. The deadline persists through reloads and is enforced by
-the authority. Bandit farming resolves quietly into Reports; story battles remain
-available. The global map shares the camp map's subtle grid and starting camera.
+**Quick access → Farm lists** provides editable default troop presets, target editing, moving between lists, sorting and removal. **Start list** reviews a manual batch before confirming. One available legion can launch one party; unsent soldiers remain as a garrison at an owned village or field. Returning survivors merge with that station's remaining troops up to 1,000; overflow remains stationed. New orders allow cancellation during the first 30 seconds. Reinforcement destinations must currently be owned; alliances remain a future feature.
 
-Frontier recruitment now has **Barracks / Stables / Workshop** tabs with nine
-faction-named units, research unlocks, separate building queues and reusable troop
-icons. Each farm list can save a default troop mix and apply it to its targets.
-Existing campaign troop rules remain unchanged; see the Frontier guide for scope.
+Repeats are optional and use a player-chosen interval. Shared-world schedules need a successful manual launch to record the validated route; busy or unavailable targets skip that interval. Solo catch-up resumes when the campaign opens. Shared-world offline processing uses the prepared database worker, not a second game or Node service.
 
-The Frontier overview shows hourly production, troops at home and army arrivals.
-Click a camp on the map or a farm's name and coordinates to open its details,
-including a defender roster and recent reports. Farm targets have an add/edit
-window and can be sorted, moved between lists or removed in batches. The default
-map reuses the existing Peris 3D landscape with three distinct mercenary compounds;
-**Classic map** keeps the compact illustrated view. Grab and drag to pan; scroll
-to zoom. New full realms distribute camps and difficulties across eligible land
-with a reproducible seed; existing realms keep their saved targets. Camp
-recruitment deadlines stay private on the server.
+The integration preserves main's account directory, compact floating map controls and full-width world. The activity panel shows exact owned troop identities and ongoing unit research. Fetch and review current `main` before pushing changes. Code publication does not install production database updates. Existing databases need the reviewed `supabase/UPGRADE_TO_V16.sql`; empty installations use `FRESH_INSTALL_V16.sql`. Offline processing additionally needs the separately reviewed `ENABLE_GAME_WORKER.sql` job. Do not apply either automatically.
 
-See [Frontier Wars](docs/frontier-wars.md) for play instructions, balance assumptions,
-saved data, configuration, tests, server architecture, and the next milestone.
+See [integrated camps and farming](docs/frontier-wars.md) for behavior, migration boundaries and verification.
 
 Development tools: see **docs/DEV_TOOLS.md** for Codex/Blender/Playwright setup and **docs/GRAPHICS_PIPELINE.md** for model export and the next 3D battle milestone. On Windows, `START-PERIS-TOOLS.cmd` prepares the local checkout after Node.js is installed.
 
@@ -99,9 +67,9 @@ Open **Menu → Cities & expansion** or the city dock to train settlers and foun
 
 Quick Battle, campaign battles and multiplayer duels now open with the published faction GLB troops in **3D units** view. The command panel also offers **2D**, with automatic fallback if WebGL or model loading fails. Army models use their home city's faction, including multiplayer armies with homes outside the visible map. Strategic maps use the published distance models at close zoom and retain lightweight markers in overview.
 
-Open **Unit preview** from the launcher or the in-game **Menu** to inspect every faction's nine models, rotate them and review animations. Quick Battle lets you choose both factions and displays four foot formations and three mounted formations for each host. The seven troop appearances retain infantry, archer and cavalry combat rules; the two siege models remain inspection studies. Academy unlocks and Workshop siege production are not implemented in this visual update. Source credits are in `public/licenses/peris-faction-rosters.txt`.
+Open **Unit preview** from the launcher or the in-game **Menu** to inspect every faction's nine models, rotate them and review animations. Quick Battle lets you choose both factions and displays four foot formations and three mounted formations for each host. Campaign and shared-world recruitment now preserve all nine roles, with research and Workshop production as described above. Siege units participate in formation combat; structural siege damage is still a future mechanic. Source credits are in `public/licenses/peris-faction-rosters.txt`.
 
-Campaign: develop eight buildings, collect four resources, recruit infantry/archers/cavalry, march to six camps, deploy, fight and rebuild. Strategic income/queues/travel use timestamps and continue while away. Troop casualties persist. Quick battle supports four terrains, three difficulties and three army doctrines. Settings include sound/music, display/order options and campaign export/import/backup.
+Campaign: develop sixteen city plots and outside resource sites, collect four resources, recruit faction troops, raid roaming camps and advance through six story locations. Strategic income/queues/travel use timestamps and continue while away. Troop casualties persist. Quick battle supports four terrains, three difficulties and three army doctrines. Settings include sound/music, display/order options and campaign export/import/backup.
 
 Select formations by click, Shift-click or selection drag. Right-click moves/attacks; right-drag sets frontage/facing. Simple left-click orders and touch Move/Attack modes are also available. A selects all; H halts, G guards, R rallies, F focuses, Escape opens the battle menu and Space pauses local combat. The minimap and camera controls navigate the field.
 
@@ -137,6 +105,6 @@ Shared world now has separate **Log in** and **Create account** screens. Browse 
 
 Creation requires an unused name and one of the eleven races, including the four human cultures. The first city and its army/hero appearance use that race immediately. Login does not create a missing account; creation does not overwrite an occupied name. Lost-response retries reuse the same creation request and estate. Name-based control, independent tabs and session recovery remain as in V14.
 
-Run the entire **`supabase/UPGRADE_TO_V15.sql`** before deploying this frontend. Use `FRESH_INSTALL_V15.sql` only for an empty project. Frontier Wars remains a separate local mode. See [account entry and stability](docs/name-only-accounts.md).
+Run the entire **`supabase/UPGRADE_TO_V15.sql`** before deploying this frontend. Use `FRESH_INSTALL_V15.sql` only for an empty project. Camp economy and full troop recruitment are integrated into the main game; the current release uses the V16 upgrade described above. See [account entry and stability](docs/name-only-accounts.md).
 
 The revised V15 overlay targets main `3ebbb81` and keeps the painted faction villages, private garrisons, thirty-second march cancellation, farm lists and current Frontier authority. `npm run test:account-compatibility-db` verifies migration from that exact main snapshot, including live orders and troop conservation.

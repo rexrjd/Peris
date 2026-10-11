@@ -108,3 +108,12 @@
  .realm-shell.game-shell .operations-workspace>.world-map-wrap>.map-city-select{top:114px;width:min(180px,calc(100% - 152px));left:12px}
 }
 @media(max-height:550px){.map-operations{top:66px;max-height:calc(100% - 92px)}.map-operations .ops-selection{max-height:calc(100dvh - 190px)}.map-operations .ops-event-scroll{max-height:110px}}
+
+/* Nine recruited roles share the current compact map control layout. */
+.map-operations .ops-troops{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px 6px}
+.map-operations .ops-troops>span{display:grid;grid-template-columns:20px minmax(0,1fr);gap:3px 4px;min-width:0}
+.map-operations .ops-troops .fw-troop-icon{width:20px;height:20px;flex-basis:20px}
+.map-operations .ops-troops small{grid-column:1/-1;min-width:0;font-size:9px;overflow-wrap:anywhere}
+.realm-shell.game-shell .map-operations h3{color:var(--ops-text)}
+.realm-shell.game-shell .map-operations .camp-force .game-troop-summary{width:100%;gap:6px}
+.realm-shell.game-shell .map-operations .camp-force .game-troop-summary>span{font-size:10px;min-width:0}

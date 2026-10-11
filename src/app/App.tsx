@@ -228,7 +228,6 @@ function Realm({ engine, onExit, onLoad, onRetry, onUnitPreview }: {
    <ResourceHud resources={resources} capacity={storage} rate={rate} onSelect={setResource}/>
    <QuickAccess items={[
        { label:'Farm lists', icon:'flag', description:'Saved camp targets and legion troop presets', onSelect:()=>{setEmpireOpen(false);navigate('world');setFarmOpen(true);} },
-       { label:'Frontier farm lists', icon:'world', description:'Repeating farms in your Frontier village', href:'/?frontier=1#fw-farms-title' },
        { label:'Barracks', icon:'shield', description:`Manage barracks in ${town.name}`, onSelect:()=>openBuilding('barracks') },
        { label:'Stables', icon:'horse', description:'Manage cavalry training buildings', onSelect:()=>openBuilding('stables') },
        { label:'Warehouse', icon:'town', description:'Material storage and upgrades', onSelect:()=>openBuilding('warehouse') },

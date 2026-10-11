@@ -8,8 +8,8 @@ import { CityReport, type CityReportTab } from './CityReport';
 import { CityConstructionQueue, constructionTarget } from './CityConstructionQueue';
 import { cityLayout } from '../rendering/three/layout';
 import { citySlots } from '../domain/slots';
-import { UNIT_TYPES, UNITS, soldierTotal } from '../../army/domain/units';
-import type { ArmyTroops, UnitType } from '../../army/domain/types';
+import { soldierTotal } from '../../army/domain/units';
+import { RECRUIT_UNITS as UNIT_TYPES, RECRUIT_RULES, emptyRoster, readRoster, rosterTotal, type RecruitUnit, type UnitRoster } from '../../army/domain/roster';
 import { armyFaction } from '../../army/domain/faction';
 import { FACTIONS, factionOf, type Faction } from '../../factions/domain/factions';
 import { factionTroopName } from '../../frontier/ui/roster';
@@ -22,8 +22,8 @@ const sameStation = (a: { x: number; y: number }, b: { x: number; y: number }) =
     const first = stationCell(a), second = stationCell(b);
     return first.col === second.col && first.row === second.row;
 };
-function VillageTroopIcon({ unit, faction }: { unit: UnitType; faction: Faction }) {
-    const cell = { infantry: 0, archers: 2, cavalry: 5 }[unit];
+function VillageTroopIcon({ unit, faction }: { unit: RecruitUnit; faction: Faction }) {
+    const cell = ['line_infantry','spear_guard','archer','elite','scout','light_cavalry','heavy_cavalry','ram','catapult'].indexOf(RECRUIT_RULES[unit].role);
     return <span className="village-troop-icon" aria-hidden="true" style={{ backgroundImage: `url(/art/battle/roster/${faction}.png)`, backgroundPosition: `${cell % 3 * 50}% ${Math.floor(cell / 3) * 50}%` }}/>;
 }
 
@@ -61,29 +61,29 @@ export function CityArmySummary({ world, sid, owner, now, onSelect }: {
     const own = world.armies.filter(army => army.owner_id === owner);
     const activeBattle = new Set(world.battles.filter(battle => battle.status === 'active').flatMap(battle => [battle.attacker_army_id, battle.defender_army_id]));
     const stationed = own.filter(army => army.status === 'idle' && army.raid_target_id === null && !army.raid_reserve && !activeBattle.has(army.id) && sameStation(armyPosition(army, now), town));
-    const pool = garrisonAt(world, owner, town), troopsByFaction = new Map<Faction, ArmyTroops>();
-    // Unassigned garrisons store troop classes only; stationed legions retain their home culture.
-    if (pool && soldierTotal(pool) > 0) troopsByFaction.set(faction, { infantry: pool.infantry, archers: pool.archers, cavalry: pool.cavalry });
+    const pool = garrisonAt(world, owner, town), troopsByFaction = new Map<Faction, UnitRoster>();
+    // Actual roles are preserved; unassigned pools use the station culture.
+    if (pool && soldierTotal(pool) > 0) troopsByFaction.set(faction, readRoster(pool));
     for (const army of stationed) {
-        const culture = armyFaction(world, army), troops = troopsByFaction.get(culture) ?? { infantry: 0, archers: 0, cavalry: 0 };
-        for (const type of UNIT_TYPES) troops[type] += army[type];
+        const culture = armyFaction(world, army), troops = troopsByFaction.get(culture) ?? emptyRoster();
+        for (const type of UNIT_TYPES) troops[type] += readRoster(army)[type];
         troopsByFaction.set(culture, troops);
     }
-    if (!troopsByFaction.size) troopsByFaction.set(faction, { infantry: 0, archers: 0, cavalry: 0 });
-    const totals: ArmyTroops = { infantry: 0, archers: 0, cavalry: 0 };
+    if (!troopsByFaction.size) troopsByFaction.set(faction, emptyRoster());
+    const totals = emptyRoster();
     for (const troops of troopsByFaction.values()) for (const type of UNIT_TYPES) totals[type] += troops[type];
     // Older saves keep an unsent party reserved by its busy legion until return.
     const legacyReserves = own.filter(army => army.raid_reserve && sameStation(army.march_origin ?? { x: army.start_x, y: army.start_y }, town));
-    const reserved = legacyReserves.reduce((sum, army) => sum + soldierTotal(army.raid_reserve!), 0);
+    const reserved = legacyReserves.reduce((sum, army) => sum + rosterTotal(army.raid_reserve!), 0);
     const training = world.orders.filter(order => order.kind === 'recruit' && order.owner_id === owner && (order.settlement_id ?? world.settlements[0].id) === sid).sort((a, b) => Date.parse(a.finish_at) - Date.parse(b.finish_at));
     const movements = own.filter(army => army.status === 'moving' && (sameStation({ x: army.start_x, y: army.start_y }, town) || sameStation({ x: army.target_x, y: army.target_y }, town))).sort((a, b) => Date.parse(a.arrival_at) - Date.parse(b.arrival_at));
     const recruitmentPlot = citySlots(world, sid).find(slot => slot.building_type === 'barracks' && slot.level > 0);
-    return <aside className="village-rail village-army" aria-label="Village troops and movements"><section><h3><Icon name="shield" size={16}/>Army at home <b>{soldierTotal(totals).toLocaleString()}</b></h3><p className="village-muted">Ready troops in this village</p><div className="village-troops" aria-label="Troops stationed in this village">{[...troopsByFaction].flatMap(([culture, troops]) => UNIT_TYPES.map(type => <div key={`${culture}:${type}`} data-faction={culture} title={`${FACTIONS[culture].name} · ${factionTroopName(culture, type)} · ${UNITS[type].role}. Includes legions and unassigned troops physically stationed here. Travelling and unfinished training are excluded.`}><VillageTroopIcon faction={culture} unit={type}/><span>{factionTroopName(culture, type)}</span><strong data-troop={type}>{troops[type].toLocaleString()}</strong></div>))}</div>
+    return <aside className="village-rail village-army" aria-label="Village troops and movements"><section><h3><Icon name="shield" size={16}/>Army at home <b>{rosterTotal(totals).toLocaleString()}</b></h3><p className="village-muted">Ready troops in this village</p><div className="village-troops" aria-label="Troops stationed in this village">{[...troopsByFaction].flatMap(([culture, troops]) => UNIT_TYPES.filter(type => ['infantry','archers','cavalry'].includes(type) || troops[type] > 0).map(type => <div key={`${culture}:${type}`} data-faction={culture} title={`${FACTIONS[culture].name} · ${factionTroopName(culture, type)} · ${RECRUIT_RULES[type].building} · Carry ${RECRUIT_RULES[type].carry} each. Includes legions and unassigned troops physically stationed here. Travelling and unfinished training are excluded.`}><VillageTroopIcon faction={culture} unit={type}/><span>{factionTroopName(culture, type)}</span><strong data-troop={type}>{troops[type].toLocaleString()}</strong></div>))}</div>
         {pool && soldierTotal(pool) > 0 && <small className="village-pool-note" title="These troops can join an idle legion here. A returning legion automatically collects available stationed troops within its 1,000 soldier capacity.">{soldierTotal(pool).toLocaleString()} troops awaiting a legion</small>}
         {reserved > 0 && <small className="village-pool-note" title="These unsent troops belong to a busy legion in an older save. They become available when that legion returns and are excluded from ready troop counts.">{reserved.toLocaleString()} troops reserved until their legion returns</small>}
         <details className="village-legions"><summary>{stationed.length} {stationed.length === 1 ? 'legion' : 'legions'} stationed here</summary>{stationed.map(army => <div key={army.id}><span>{army.name}</span><b>{soldierTotal(army).toLocaleString()}</b></div>)}{!stationed.length && <p>No legion is currently stationed here.</p>}</details>
         <button className="village-ledger-link" onClick={() => onSelect(recruitmentPlot ? `slot:${recruitmentPlot.slot_index}` : 'market')} title={recruitmentPlot ? 'Open barracks building details. Use Armies in the main navigation to recruit troops.' : 'Manage the main building or use an empty plot to build barracks.'}><Icon name="barracks" size={15}/>{recruitmentPlot ? 'Open barracks' : 'Develop the village'}<Icon name="arrow" size={13}/></button>
-    </section><section className="village-training"><h3><Icon name="time" size={15}/>In training <b>{training.reduce((sum, order) => sum + order.quantity, 0)}</b></h3>{training.length ? training.map(order => { const army = own.find(army => army.id === (order.army_id ?? world.armies[0]?.id)); return <div className="village-timed-order" key={order.id} title={`Training for ${army?.name ?? 'your legion'}. Completes ${new Date(order.finish_at).toLocaleString()}; these troops are not ready until then.`}><span>{order.quantity} {factionTroopName(armyFaction(world, army), order.item as UnitType)}<small>{Date.parse(order.started_at) > now ? 'Queued' : 'Training'} · {army?.name ?? 'Your legion'}</small></span><b>{clock(Math.max(0, (Date.parse(order.finish_at) - now) / 1000))}</b></div>; }) : <p className="village-muted">No troops in training.</p>}</section>
+    </section><section className="village-training"><h3><Icon name="time" size={15}/>In training <b>{training.reduce((sum, order) => sum + order.quantity, 0)}</b></h3>{training.length ? training.map(order => { const army = own.find(army => army.id === (order.army_id ?? world.armies[0]?.id)); return <div className="village-timed-order" key={order.id} title={`Training for ${army?.name ?? 'your legion'}. Completes ${new Date(order.finish_at).toLocaleString()}; these troops are not ready until then.`}><span>{order.quantity} {factionTroopName(armyFaction(world, army), order.item as RecruitUnit)}<small>{Date.parse(order.started_at) > now ? 'Queued' : 'Training'} · {army?.name ?? 'Your legion'}</small></span><b>{clock(Math.max(0, (Date.parse(order.finish_at) - now) / 1000))}</b></div>; }) : <p className="village-muted">No troops in training.</p>}</section>
         <section className="village-movements"><h3><Icon name="flag" size={15}/>Troop movements <b>{movements.length}</b></h3>{movements.length ? movements.map(army => {
             const preparing = now < Date.parse(army.departure_at), arriving = sameStation({ x: army.target_x, y: army.target_y }, town);
             const state = preparing ? 'Preparing departure' : arriving ? army.march_returning ? 'Returning home' : 'Arriving reinforcement' : army.raid_target_id ? 'Outgoing raid' : 'Outgoing march';

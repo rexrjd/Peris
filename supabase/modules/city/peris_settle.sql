@@ -31,10 +31,7 @@ begin
   update public.players set upgrades=upgrades+1 where id=p_owner;update public.settlements set development_points=development_points+1 where id=s.id;perform public.peris_city_economy(s.id);
  elsif o.kind='settler'then update public.settlements set settlers=settlers+o.quantity where id=s.id;
  elsif o.kind='recruit' then
-  update public.armies set infantry=infantry+case when o.item='infantry' then o.quantity else 0 end,
-  archers=archers+case when o.item='archers' then o.quantity else 0 end,cavalry=cavalry+case when o.item='cavalry' then o.quantity else 0 end,updated_at=o.finish_at
-  where owner_id=p_owner and id=coalesce(o.army_id,(select min(id)from public.armies where owner_id=p_owner));
-  if not found then raise exception 'The army for this training order is missing';end if;
+  perform public.peris_recruit_complete(coalesce(o.army_id,(select min(id)from public.armies where owner_id=p_owner)),o.item,o.quantity);
   update public.players set recruits=recruits+o.quantity where id=p_owner;
  end if;
  delete from public.peris_orders where id=o.id;
@@ -42,6 +39,7 @@ begin
  perform public.peris_culture_accrue(p_owner,p_until);
  for s in select * from public.settlements where owner_id=p_owner order by id loop perform public.peris_population_accrue(s.id,p_until);end loop;
  for arriving_army in select id from public.armies where owner_id=p_owner and status='moving' and raid_target_id is null and arrival_at<=p_until order by id for update loop
+  perform public.peris_deliver_loot(arriving_army);
   update public.armies set status='idle',start_x=target_x,start_y=target_y,march_path=null,march_distance=null,
    march_sent_at=null,march_cancel_until=null,march_origin=null,march_returning=false,updated_at=p_until where id=arriving_army;
   perform public.peris_garrison_merge(arriving_army);

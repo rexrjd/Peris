@@ -35,7 +35,6 @@ export function Login({ onSolo, onOnline, onPractice, onSettings, onCodex, onUni
    <div className="launcher-extras">
    <button className="quick-battle-link" onClick={() => setSetup(true)} disabled={busy}><Icon name="army"/>Quick battle <span>Take the field immediately <Icon name="arrow" size={14}/></span></button>
    <button className="menu-secondary" disabled={busy} onClick={() => onUnitPreview(faction)}>Unit preview · Browse all factions</button>
-   {!standalone && <a className="menu-secondary" href="?frontier=1" style={{ display: 'block', textAlign: 'center', textDecoration: 'none' }}>Frontier Wars · Mercenary camps</a>}
    <a className="menu-secondary" href="?map-preview=1" style={{ display: 'block', textAlign: 'center', textDecoration: 'none' }}>Explore the world map sample</a>
    </div>
    {mode === 'solo' && error && <div className="alert error" role="alert">{error}</div>}{busy && <div className="loading-bar" aria-label="Connecting to the shared world"><i /></div>}

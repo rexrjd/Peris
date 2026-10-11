@@ -22,6 +22,7 @@ try {
     for (const army of previous.armies) Object.assign(army, {
         march_sent_at: null, march_cancel_until: null, raid_reserve: null,
         march_origin: null, march_returning: false,
+        unit_roster: null, carried_loot: null, farm_list_id: null, loot_report_id: null,
     });
     const upgrade = await readFile('supabase/UPGRADE_TO_V15.sql', 'utf8');
     await admin(upgrade); await admin(upgrade);

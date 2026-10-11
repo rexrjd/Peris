@@ -78,3 +78,23 @@ test('a late authoritative event stays visible until settlement, without negativ
     assert.equal(event.endsAt, null); assert.equal(activityProgress(event, f.now), 0);
     f.world.armies[0].status = 'idle'; assert.deepEqual(mapActivity(f.world, f.owner, f.now), []);
 });
+
+test('advanced recruitment and research retain their roles and exclude completed or rival research', () => {
+    const f = fixture(), city = f.world.settlements[0], army = f.world.armies[0];
+    f.world.settlements.push({ ...city, id: 90, owner_id: 'rival' });
+    f.world.orders.push({ id: 1, owner_id: f.owner, settlement_id: city.id, army_id: army.id, kind: 'recruit', item: 'scout', quantity: 3, started_at: f.world.server_now, finish_at: new Date(f.now + 10000).toISOString() });
+    f.world.unit_research = [
+        { settlement_id: city.id, unit: 'ram', completes_at: new Date(f.now + 40000).toISOString() },
+        { settlement_id: city.id, unit: 'catapult', completes_at: new Date(f.now - 1000).toISOString() },
+        { settlement_id: 90, unit: 'scout', completes_at: new Date(f.now + 30000).toISOString() },
+    ];
+    const before = JSON.stringify(f.world), events = mapActivity(f.world, f.owner, f.now);
+    assert.equal(events.length, 2);
+    assert.equal(events[0].title, '3 scouts');
+    assert.equal(events[1].title, 'Research rams');
+    assert.equal(events[1].kind, 'research');
+    assert.deepEqual(events[1].selection, { kind: 'settlement', id: city.id });
+    assert.ok(activityProgress(events[1], f.now) > 0);
+    assert.equal(JSON.stringify(f.world), before);
+    assert.equal(mapActivity(f.world, f.owner, f.now + 50000).filter(e => e.kind === 'research').length, 0);
+});

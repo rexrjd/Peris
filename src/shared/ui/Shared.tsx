@@ -2,12 +2,13 @@ import { useEffect } from 'react';
 import { useRef } from 'react';
 import { RESOURCES, type Resources } from '../model/resources';
 import { Icon } from './Icons';
-export function Cost({ cost, resources, compact = false }: {
+export function Cost({ cost, resources, compact = false, showZero = false }: {
     cost: Resources;
     resources?: Resources;
     compact?: boolean;
+    showZero?: boolean;
 }) {
-    return <div className={`cost ${compact ? 'compact' : ''}`}>{RESOURCES.filter(k => cost[k] > 0).map(k => <span key={k} className={resources && resources[k] < cost[k] ? 'short' : ''} title={`${k}: ${cost[k]}`}><Icon name={k} size={compact ? 13 : 17}/><b>{cost[k].toLocaleString()}</b></span>)}</div>;
+    return <div className={`cost ${compact ? 'compact' : ''}`}>{RESOURCES.filter(k => showZero || cost[k] > 0).map(k => <span key={k} className={resources && resources[k] < cost[k] ? 'short' : ''} title={`${k}: ${cost[k]}`}><Icon name={k} size={compact ? 13 : 17}/><b>{cost[k].toLocaleString()}</b></span>)}</div>;
 }
 export function Modal({ title, children, onClose, className = '', heading = true }: {
     title: string;

@@ -81,11 +81,11 @@ test('a manual farm batch launches at most one raid per available legion and rep
     const sent = structuredClone(f.world); assert.throws(() => startCampaignFarmList(f.ctx, list.id), /No raids started/); assert.deepEqual(f.world, sent); assert.equal(total(), before);
 });
 
-test('a cooling first farm skips to the next available target for the same legion', () => {
+test('old per-player cooldowns do not block shared camp stock raids', () => {
     const f = fixture(), list = f.create(), camps = f.world.camps.filter(c => c.bandit).sort((a, b) => Math.hypot(wrappedWorldDelta(f.army.start_x, a.x), wrappedWorldDelta(f.army.start_y, a.y)) - Math.hypot(wrappedWorldDelta(f.army.start_x, b.x), wrappedWorldDelta(f.army.start_y, b.y)));
     for (const camp of camps.slice(0, 2)) commandCampaignFarm(f.ctx, { type: 'saveCampaignFarm', listId: list.id, campId: camp.id, armyId: f.army.id, troops });
     f.world.progress.push({ owner_id: f.ctx.playerId, camp_id: camps[0].id, defeated: 1, available_at: new Date(Date.parse(f.ctx.now) + 60000).toISOString() });
-    const result = startCampaignFarmList(f.ctx, list.id); assert.equal(result.started, 1); assert.match(result.skipped[0].reason, /regrouping/); assert.equal(f.army.raid_target_id, camps[1].id);
+    const result = startCampaignFarmList(f.ctx, list.id); assert.equal(result.started, 1); assert.match(result.skipped[0].reason, /march or raid/); assert.equal(f.army.raid_target_id, camps[0].id);
 });
 
 test('invalid ownership, empty lists and unavailable presets reject starts without creating orders or troops', () => {

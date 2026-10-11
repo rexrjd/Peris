@@ -1,9 +1,9 @@
-create or replace function public.peris_march(p_target_x integer,p_target_y integer,p_path jsonb)returns jsonb
+create or replace function public.peris_march_for(p_owner uuid,p_army bigint,p_target_x integer,p_target_y integer,p_path jsonb,p_raid integer default null)returns jsonb
 language plpgsql security definer set search_path='' as $$
-declare u uuid:=public.peris_player_id();a public.armies%rowtype;position jsonb;point jsonb;route jsonb;
+declare u uuid:=p_owner;a public.armies%rowtype;position jsonb;point jsonb;route jsonb;
  tx integer:=public.peris_wrap_world(p_target_x);ty integer:=public.peris_wrap_world(p_target_y);
  x numeric;y numeric;px numeric;py numeric;cx integer;cy integer;pcx integer;pcy integer;
- distance numeric:=0;segment numeric;seconds numeric;count_points integer;ordinal integer:=0;raid_target integer:=nullif(current_setting('peris.raid_target',true),'')::integer;
+ distance numeric:=0;segment numeric;seconds numeric;count_points integer;ordinal integer:=0;raid_target integer:=p_raid;
 begin
  if u is null then raise exception 'Authentication required';end if;
  if p_target_x is null or p_target_y is null then raise exception 'Choose a destination';end if;
@@ -12,8 +12,8 @@ begin
  if count_points<2 or count_points>2000 then raise exception 'A march needs 2-2000 route points';end if;
  perform public.peris_settle(u);
  if exists(select 1 from public.battles where status='active' and (attacker_owner_id=u or defender_owner_id=u)) then raise exception 'Finish the current battle first';end if;
- if exists(select 1 from public.peris_orders where owner_id=u and army_id=public.peris_army_id(u) and kind='recruit') then raise exception 'Let training finish before marching';end if;
- select * into a from public.armies where id=public.peris_army_id(u) for update;
+ if exists(select 1 from public.peris_orders where owner_id=u and army_id=p_army and kind='recruit') then raise exception 'Let training finish before marching';end if;
+ select * into a from public.armies where id=p_army and owner_id=u for update;
  if a.id is null then raise exception 'Army not found';end if;
  if a.status<>'idle' or a.raid_target_id is not null or a.raid_reserve is not null then raise exception 'This legion already has a march or raid. Cancel within 30 seconds or wait for its return';end if;
  position:=public.peris_army_position(a);
@@ -50,6 +50,14 @@ begin
   march_path=route,march_distance=distance,march_map_version=4,march_sent_at=now(),march_cancel_until=now()+interval '30 seconds',
   march_origin=jsonb_build_object('col',floor((position->>'x')::numeric/128),'row',floor((position->>'y')::numeric/128),'x',round((position->>'x')::numeric),'y',round((position->>'y')::numeric)),march_returning=false,
   departure_at=now()+interval '30 seconds',arrival_at=now()+interval '30 seconds'+make_interval(secs=>seconds::double precision),
-  status='moving',raid_target_id=null,updated_at=now() where id=a.id;
+  status='moving',raid_target_id=null,farm_list_id=null,updated_at=now() where id=a.id;
  return jsonb_build_object('ok',true);
+end $$;
+
+create or replace function public.peris_march(p_target_x integer,p_target_y integer,p_path jsonb)returns jsonb
+language plpgsql security definer set search_path='' as $$
+declare u uuid:=public.peris_player_id();
+begin
+ if u is null then raise exception 'Authentication required';end if;
+ return public.peris_march_for(u,public.peris_army_id(u),p_target_x,p_target_y,p_path,nullif(current_setting('peris.raid_target',true),'')::integer);
 end $$;

@@ -41,7 +41,7 @@ async function beginCampaign(page: Page) {
   await expect(page.locator('canvas[aria-label^="Interactive 200 by 200"]')).toBeVisible();
 }
 
-test('quick access opens campaign buildings and links to Frontier farm lists', async ({ page }, testInfo) => {
+test('quick access opens campaign buildings and farm lists inside Peris', async ({ page }, testInfo) => {
   test.setTimeout(120_000);
   const errors: string[] = [];
   page.on('pageerror', error => errors.push(error.message));
@@ -49,7 +49,8 @@ test('quick access opens campaign buildings and links to Frontier farm lists', a
   const quick = page.getByRole('button', { name: 'Quick access', exact: true });
   const shortcuts = page.getByRole('navigation', { name: 'Quick access shortcuts' });
   await quick.click();
-  await expect(shortcuts.getByRole('link', { name: /^Frontier farm lists/ })).toHaveAttribute('href', '/?frontier=1#fw-farms-title');
+  await expect(shortcuts.getByRole('button', { name: /^Farm lists/ })).toBeVisible();
+  await expect(shortcuts.getByRole('link', { name: /^Frontier farm lists/ })).toHaveCount(0);
   await capture(page, testInfo, 'campaign-quick-access');
   await page.keyboard.press('Escape');
   await expect(quick).toBeFocused();

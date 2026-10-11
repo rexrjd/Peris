@@ -10,7 +10,7 @@ export const VILLAGE_ATLAS_CELLS = ['market', 'lumber', 'quarry', 'farm', 'barra
 const CULTURE_REVISIONS: Partial<Record<Faction, number>> = { spartan: 2, persian: 2, egyptian: 2 };
 
 export function villageAtlasCell(type: BuildingType | SlotType) {
-    const role = type === 'storehouse' ? 'granary' : type;
+    const role = type === 'storehouse' ? 'granary' : type === 'workshop' ? 'smithy' : type;
     const index = VILLAGE_ATLAS_CELLS.findIndex(cell => cell === role);
     if (index < 0) return null;
     return {

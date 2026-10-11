@@ -34,7 +34,7 @@ export function moveFormations(b:Battle,fs:Formation[],_byId:Map<number,Formatio
         const ground=terrainAt(b.terrain,f.x,f.y);
         if(moving){
             const turn=Math.abs(angleDiff(desired,f.facing));
-            const speed=UNITS[f.unit_type].speed*(f.magic_speed??1)*ground.speed*(f.unit_type==='cavalry'&&ground.kind==='Forest'?.65:1)*(f.running&&f.stamina>8?1.35:1)*(f.stamina<15?.75:1)*(turn>75?.25:turn>40?.65:1);
+            const speed=UNITS[f.unit_type].speed*(f.unit_speed??1)*(f.magic_speed??1)*ground.speed*(f.unit_type==='cavalry'&&ground.kind==='Forest'?.65:1)*(f.running&&f.stamina>8?1.35:1)*(f.stamina<15?.75:1)*(turn>75?.25:turn>40?.65:1);
             const step=Math.min(speed*dt,Math.max(0,d-reach));
             f.x=clamp(f.x+dx/d*step,35,FIELD_W-35);f.y=clamp(f.y+dy/d*step,45,FIELD_H-45);f.status='moving';
             f.stamina=clamp(f.stamina-(f.running?1.4:.1)*dt,0,100);
