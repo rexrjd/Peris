@@ -3,6 +3,7 @@ import { type BuildingType } from '../features/city/domain/types';
 import { type UnitType } from '../features/army/domain/types';
 import { type Battle, type BattleOrder } from '../features/battle/domain/types';
 import { type World } from '../shared/model/world';
+import type { Report } from '../features/campaign/domain/types';
 export interface GameEngine {
     readonly playerId: string;
     readonly mode: 'solo' | 'online' | 'practice';
@@ -15,4 +16,6 @@ export interface GameEngine {
     destroy: () => void;
     /** Online adapters may page public rivals as the strategic camera moves. */
     setMapViewport?: (bounds: { minX: number; minY: number; maxX: number; maxY: number }) => void;
+    /** Private older receipts; each page is scoped to the signed-in ruler. */
+    reportPage?: (beforeId: number) => Promise<Report[]>;
 }

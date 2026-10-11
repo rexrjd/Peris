@@ -2,8 +2,8 @@
 
 ## Compact command header
 
-Seven original transparent low-poly pictures depict the map, city, armies,
-timber, stone, food and gold. Generated individually with the built-in image tool
+Eight original transparent low-poly pictures depict the map, city, armies,
+Rally Point, timber, stone, food and gold. Generated individually with the built-in image tool
 on 2026-10-11, they use simple sandstone, ivory and slate-blue facets that remain
 readable at small sizes. `assets/ui-low-poly-v1.json` records the complete prompts
 and file mapping. Untouched PNG sources live in `assets/source/ui-low-poly-v1/`.

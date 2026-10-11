@@ -35,7 +35,7 @@ export async function accountServer(){
     if(path.startsWith('/rest/v1/rpc/')){
      const name=path.split('/').at(-1);
      // Only existing named test RPCs, with parameters bound as values.
-     const args={peris_login:['p_display_name'],peris_enter_account:['p_display_name','p_mode','p_faction','p_creation_id'],peris_account_directory:['p_search','p_faction','p_activity','p_sort','p_offset','p_limit'],peris_snapshot:[],peris_read_reports:['p_report_ids'],sync_my_state:[],peris_map_snapshot:['p_min_x','p_min_y','p_max_x','p_max_y'],peris_rename:['p_name'],peris_submit_command:['p_request_id','p_function','p_args']};
+     const args={peris_login:['p_display_name'],peris_enter_account:['p_display_name','p_mode','p_faction','p_creation_id'],peris_account_directory:['p_search','p_faction','p_activity','p_sort','p_offset','p_limit'],peris_snapshot:[],peris_read_reports:['p_report_ids'],peris_read_all_reports:[],peris_report_page:['p_before_id'],sync_my_state:[],peris_map_snapshot:['p_min_x','p_min_y','p_max_x','p_max_y'],peris_rename:['p_name'],peris_submit_command:['p_request_id','p_function','p_args']};
      if(!Object.hasOwn(args,name))return result(400,{message:'Unexpected test RPC: '+name});
      const values=args[name].map(k=>body[k]);
      const rows=await tx.query(`select public.${name}(${values.map((_,i)=>'$'+(i+1)).join(',')}) result`,values);
@@ -49,10 +49,10 @@ export async function accountServer(){
    });
   }catch(error){return result(/^PT\d{3}$/.test(error.code??'')?Number(error.code.slice(2)):400,{code:error.code,message:error.message});}
  }
- return {request,logins,async seedReports(owner){
+ return {request,logins,async seedReports(owner,quantity=2){
   const army=(await db.query('select id from public.armies where owner_id=$1 order by id limit 1',[owner])).rows[0].id;
   const result={attacker_initial:20,defender_initial:10,attacker_survivors:20,defender_survivors:0,attacker_losses:0,defender_losses:10,loot:{wood:0,stone:0,food:0,gold:0},duration:12,reason:'Army routed'};
-  for(let i=0;i<2;i++){
+  for(let i=0;i<quantity;i++){
    const battle=(await db.query("insert into public.battles(attacker_owner_id,attacker_army_id,status,mode,phase,terrain,difficulty,enemy_name,result,camp_id,winner_owner_id,winner_side)values($1,$2,'resolved','pve','combat','plains','easy','Read QA',$3,1,$1,'attacker') returning id",[owner,army,JSON.stringify(result)])).rows[0].id;
    await db.query("insert into public.peris_reports(owner_id,battle_id,title,won,result)values($1,$2,$3,true,$4)",[owner,battle,'Camp report '+(i+1),JSON.stringify(result)]);
   }

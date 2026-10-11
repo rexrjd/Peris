@@ -182,7 +182,7 @@ export function validateSave(data: unknown): World {
     for(const key of ['settlements','armies','buildings','camps','orders','battles','formations','reports','progress','claims','challenges'] as const)
         if(!Array.isArray(w[key])||w[key].length>15000||w[key].some(r=>!r||typeof r!=='object'))invalid();
     if(w.settlements.length<1||w.settlements.length>10||w.armies.length<1||w.armies.length>20)invalid();
-    for (const count of [w.report_count, w.hidden_report_count]) if (count !== undefined && (!Number.isSafeInteger(count) || count < 0)) invalid();
+    for (const count of [w.report_count, w.hidden_report_count, w.unread_report_count]) if (count !== undefined && (!Number.isSafeInteger(count) || count < 0)) invalid();
     for (const report of w.reports) if (report.read_at != null && (typeof report.read_at !== 'string' || !Number.isFinite(Date.parse(report.read_at)))) invalid();
     for (const force of [...w.armies, ...(w.garrisons ?? []), ...w.camps]) if (force.unit_roster != null) {
         if (!validateRoster(force.unit_roster, 'owner_id' in force ? ('col' in force ? 20000 : 1000) : 1000)) invalid();

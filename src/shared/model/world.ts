@@ -44,6 +44,7 @@ export type World = {
     reports: Report[];
     report_count?: number;
     hidden_report_count?: number;
+    unread_report_count?: number;
     progress: CampProgress[];
     claims: QuestClaim[];
     challenges: Challenge[];

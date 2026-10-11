@@ -8,12 +8,12 @@ import { UNITS } from '../../army/domain/units';
 import { Cost, Modal } from '../../../shared/ui/Shared';
 import { useEffect, useState } from 'react';
 import type { Report } from '../domain/types';
-import { reportIsReturning, reportSide, visibleReports } from '../domain/reportEconomics';
+import { reportIsReturning, reportSide } from '../domain/reportEconomics';
 import { ReportEconomics } from './ReportEconomics';
-import { ReportLedger } from './ReportLedger';
+import { ReportInbox } from './ReportInbox';
 import { type World } from '../../../shared/model/world';
 import { type Command } from '../../../shared/model/commands';
-import { campaignRank, conquered } from '../domain/progression';
+import { conquered } from '../domain/progression';
 import { QUESTS } from '../domain/quests';
 import { ARTIFACTS, HERO_CLASSES, heroThreshold, MAX_HERO_LEVEL } from '../../heroes/domain/heroes';
 import { ARTIFACT_RARITY } from '../../heroes/domain/battleRewards';
@@ -78,26 +78,26 @@ export function SavedReportDialog({ world, playerId, report, onClose, onReadRepo
         <div className="result-actions"><button className="button gold" onClick={onClose}>Back to reports</button></div>
     </Modal>;
 }
-export function Chronicle({ world, playerId, onReport, run, onEnding, onReadReport }: {
+export function Chronicle({ world, playerId, run, onEnding, onReadReport, onReadAll, unreadReports = 0, loadReports, onLocateCamp }: {
     world: World;
     playerId: string;
     onReport: (b: Battle) => void;
     run?: (c: Command, m?: string) => void;
     onEnding?: () => void;
-    onReadReport?: (battleId: number) => void;
+    onReadReport?: (battleId: number, reportId?: number) => Promise<boolean> | void;
+    onReadAll?: () => Promise<boolean>;
+    unreadReports?: number;
+    loadReports?: (beforeId: number) => Promise<Report[]>;
+    onLocateCamp?: (camp: World['camps'][number]) => void;
 }) {
-    const [savedReport, setSavedReport] = useState<Report | null>(null);
-    const player = world.players.find(p => p.id === playerId)!, done = conquered(world, playerId), reports = visibleReports(world, playerId);
-    const openReport = (report: Report) => {
-        if (report.owner_id !== playerId) return;
-        onReadReport?.(report.battle_id);
-        const battle = world.battles.find(row => row.id === report.battle_id);
-        if (battle && reportSide(world, report, playerId)) onReport({ ...battle, result: report.result }); else setSavedReport(report);
-    };
-    return <section className="chronicle"><div className="view-heading"><div><span className="eyebrow">THE CHRONICLE</span><h1>A name remembered</h1><p>{campaignRank(done.size)}. The record of a realm you built and the fields you commanded.</p></div><span className="tag">{player.prestige} prestige</span></div>
+    const [tab, setTab] = useState<'reports' | 'milestones'>('reports');
+    const player = world.players.find(p => p.id === playerId)!, done = conquered(world, playerId);
+    const available = QUESTS.filter(q => player[q.stat] >= q.target && !world.claims.some(c => c.owner_id === playerId && c.quest_id === q.id)).length;
+    return <section className="chronicle reports-page"><header className="reports-page-heading"><div><h1>Reports</h1><p>{unreadReports ? `${unreadReports} unread` : 'Your battle history'}</p></div><div className="reports-page-tabs" role="tablist" aria-label="Reports sections"><button role="tab" aria-selected={tab==='reports'} onClick={()=>setTab('reports')}>Battle reports</button><button role="tab" aria-label="Milestones" aria-selected={tab==='milestones'} onClick={()=>setTab('milestones')}>Milestones{available>0&&<span aria-hidden="true">{available}</span>}</button></div></header>
+    {tab==='reports' ? <ReportInbox world={world} playerId={playerId} unreadCount={unreadReports} onRead={onReadReport} onReadAll={onReadAll} loadReports={loadReports} onLocate={onLocateCamp}/> : <div className="reports-milestones">
  {done.size === 6 && <div className="restored-banner"><Icon name="crown" size={42}/><div><span className="eyebrow">THE CAMPAIGN IS COMPLETE</span><h2>Peris restored</h2><p>All six standards have returned to your keeping.</p></div><button className="button gold" onClick={onEnding}>Relive the triumph <Icon name="arrow"/></button></div>}
  <div className="chronicle-metrics"><div><Icon name="crown"/><b>{player.victories}</b><span>Victories</span></div><div><Icon name="army"/><b>{player.recruits}</b><span>Soldiers trained</span></div><div><Icon name="town"/><b>{player.upgrades}</b><span>City upgrades</span></div><div><Icon name="flag"/><b>{done.size} / 6</b><span>Standards recovered</span></div></div>
  <div className="chronicle-objectives"><div className="reports-heading"><h3>Rewards for your realm</h3><span>Milestones</span></div><div className="milestone-grid">{QUESTS.map(q => { const claimed = world.claims.some(c => c.owner_id === playerId && c.quest_id === q.id), complete = player[q.stat] >= q.target; return <article key={q.id} className={claimed ? 'claimed' : complete ? 'claimable' : ''}><Icon name={claimed ? 'check' : q.id === 'builder' ? 'town' : q.id === 'recruiter' ? 'army' : 'crown'} size={26}/><h3>{q.title}</h3><p>{q.description}</p><div className="progress-track"><i style={{ width: `${Math.min(100, player[q.stat] / q.target * 100)}%` }}/></div><div className="milestone-meta"><span>{Math.min(q.target, player[q.stat])} / {q.target}</span><span>{claimed ? 'Collected' : `+${q.reward.gold} gold`}</span></div>{complete && !claimed && run && <button className="button gold" onClick={() => run({ type: 'claim', questId: q.id }, 'Milestone supplies collected')}>Collect supplies</button>}</article>; })}</div></div>
- <div className="reports-heading"><h3>Fields of battle</h3><span>{reports.length} reports</span></div><ReportLedger world={world} playerId={playerId} onOpen={openReport}/>{savedReport && <SavedReportDialog world={world} playerId={playerId} report={savedReport} onClose={() => setSavedReport(null)}/>}
+ </div>}
  </section>;
 }

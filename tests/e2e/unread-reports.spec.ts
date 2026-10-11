@@ -56,7 +56,7 @@ test('pruned receipts opened through Reports and Rally clear the same private pe
     await nav.getByRole('button', { name: 'Reports, 2 unread', exact: true }).click();
     await expect(page.getByRole('button', { name: /Quiet farm receipt|Private rival receipt/ })).toHaveCount(0);
     await page.getByRole('button', { name: /Pruned Chronicle receipt/ }).click();
-    let dialog = page.getByRole('dialog', { name: 'Saved battle report', exact: true });
+    let dialog = page.getByRole('region', { name: 'Report details', exact: true });
     await expect(dialog).toBeVisible();
     await expect(nav.getByRole('button', { name: 'Reports, 1 unread', exact: true })).toHaveClass('has-unread');
     await dialog.getByRole('button', { name: 'Back to reports', exact: true }).click();
@@ -98,14 +98,14 @@ test('unread reports highlight only Reports, decrease when opened and persist af
     await page.mouse.move(0, 0);
     await expect(reports).toHaveCSS('background-color', 'rgb(232, 198, 108)');
     await page.screenshot({ path:info.outputPath('unread-reports.png') });
-    await page.locator('.report-ledger-open').first().click();
-    await expect(page.getByRole('dialog', { name:'Battle result' })).toBeVisible();
+    await page.locator('.report-row').first().click();
+    await expect(page.getByRole('region', {name:'Report details'})).toContainText('Victory');
     await expect(nav.getByRole('button', { name:'Reports, 1 unread', exact:true })).toHaveClass('has-unread');
     await page.getByRole('button', { name:'Back to reports', exact:true }).click();
     await page.reload(); await page.getByRole('button', { name:'Continue campaign', exact:true }).click();
     await nav.getByRole('button', { name:'Reports, 1 unread', exact:true }).click();
-    await page.locator('.report-ledger-open').nth(1).click();
-    await expect(page.getByRole('dialog', { name:'Battle result' })).toBeVisible();
+    await page.locator('.report-row').nth(1).click();
+    await expect(page.getByRole('region', {name:'Report details'})).toContainText('Victory');
     await expect(nav.getByRole('button', { name:/^Reports/ })).not.toHaveClass('has-unread');
     await page.getByRole('button', { name:'Back to reports', exact:true }).click();
     await page.reload(); await page.getByRole('button', { name:'Continue campaign', exact:true }).click();

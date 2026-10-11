@@ -14,13 +14,20 @@ test('compact command header keeps the scene clear and all controls usable', asy
     await expect(header.locator('.game-brand')).toHaveCount(0);
     await expect(header.locator('.game-menu-player')).not.toBeVisible();
     expect((await header.boundingBox())!.height).toBe(44);
+    await expect(header).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+    if(info.project.name.includes('desktop')) {
+        const left=(await nav.boundingBox())!, right=(await page.locator('.game-header-actions').boundingBox())!;
+        expect(right.x-left.x-left.width).toBeGreaterThan(100);
+        expect(await page.evaluate(({x,y})=>document.elementFromPoint(x,y)?.tagName,{x:(left.x+left.width+right.x)/2,y:left.y+left.height/2})).toBe('CANVAS');
+    }
     await expect(header.locator('.hud-stock').first()).toHaveCSS('font-size', info.project.name.includes('desktop') ? '12px' : '11px');
-    await expect(header.locator('.hud-picture')).toHaveCount(7);
+    await expect(header.locator('.hud-picture')).toHaveCount(8);
     await expect(page.getByLabel('Game menu')).toBeInViewport();
     for (const button of await nav.getByRole('button').all()) await expect(button).toBeInViewport();
     for (const img of await header.locator('.hud-picture').all())
         await expect.poll(() => img.evaluate((el:HTMLImageElement) => el.complete && el.naturalWidth === 96)).toBe(true);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    await page.getByRole('button',{name:'Focus your settlement',exact:true}).click();
     await page.screenshot({path:info.outputPath('compact-map-header.png')});
     await header.getByRole('button', {name:/^Timber:/}).click();
     const supplies = page.getByRole('dialog', {name:'Timber supplies'});

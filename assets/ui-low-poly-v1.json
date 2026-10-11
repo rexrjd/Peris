@@ -4,6 +4,12 @@
   "method": "Built-in image generation, one original transparent painting per icon",
   "assets": [
     {
+        "id": "rally",
+        "prompt": "Use case: stylized-concept. Asset type: tiny strategy game UI icon, square transparent PNG. Create one minimal low-poly isometric RALLY POINT picture: a short sturdy wooden flagpole with a large simple slate-blue swallowtail pennant, planted in a compact pale sandstone footing. One clear chunky silhouette with the flag as the main shape. Original fantasy game style, flat faceted geometry, soft lighting, readable at 24px. Restrained sand ivory slate blue palette matching a folded parchment map, sandstone citadel and silver helmet navigation set. No soldiers, no scenery, no tiny details, no outline, no text, no symbols, no frame, no base tile, no cast shadow outside the object. Centered object occupies 80% of the square. Genuinely transparent background. A polished small low-poly game object, not a line glyph.",
+        "source": "assets/source/ui-low-poly-v1/rally.png",
+        "image": "/art/ui/low-poly-v1/rally.webp"
+    },
+    {
       "id": "map",
       "prompt": "Use case: stylized-concept. Asset type: tiny strategy game navigation icon, square transparent PNG. Create one minimal low-poly isometric MAP icon: a folded parchment map with just three broad angular folds, a simple blue river stripe and two tan land patches. Original fantasy game style, restrained sand ivory slate blue palette, flat faceted geometry, soft lighting, crisp chunky silhouette readable at 24px, no tiny details, no outline, no text, no frame, no base tile, no cast shadow outside the object. Centered object occupies 80% of the square. Genuinely transparent background. A polished small low-poly game object, not a line glyph.",
       "source": "assets/source/ui-low-poly-v1/map.png",

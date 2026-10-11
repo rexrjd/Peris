@@ -32,7 +32,7 @@ test('only unread reports highlight navigation, even when rewards are available'
   assert.ok(!render(0).includes('Rewards available'));
   assert.equal((render(2).match(/class="has-unread"/g) ?? []).length, 1);
   assert.ok(render(2).includes('Reports, 2 unread'));
-  for (const name of ['map', 'city', 'army']) assert.ok(render(0).includes(`/art/ui/low-poly-v1/${name}.webp`));
+  for (const name of ['map', 'city', 'army', 'rally']) assert.ok(render(0).includes(`/art/ui/low-poly-v1/${name}.webp`));
 });
 
 test('compact economy signals a negative food balance without opening its details', () => {

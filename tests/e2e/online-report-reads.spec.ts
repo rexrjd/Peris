@@ -4,7 +4,7 @@ import {accountServer} from '../helpers/account-server.mjs';
 
 test('shared-world report reads persist in PostgreSQL after browser receipts are cleared', async ({page, context}, info) => {
     test.setTimeout(120000);
-    const server = await accountServer(), errors: string[] = [];
+    const server = await accountServer(), errors: string[] = []; let failBulkRead = true;
     page.on('pageerror', error => errors.push(error.stack ?? error.message));
     try {
         await context.addInitScript(() => {
@@ -17,6 +17,9 @@ test('shared-world report reads persist in PostgreSQL after browser receipts are
         });
         await context.route('**/*.supabase.co/**', async route => {
             const request = route.request();
+            if(request.url().endsWith('/rpc/peris_read_all_reports')&&failBulkRead){
+                failBulkRead=false;await route.fulfill({status:400,contentType:'application/json',body:JSON.stringify({message:'Test read failure'})});return;
+            }
             const response = await server.request(request.url(), request.method(), request.headers(), request.postDataJSON() ?? {});
             await route.fulfill({status:response.status, headers:response.headers, body:response.data == null ? '' : JSON.stringify(response.data)});
         });
@@ -29,18 +32,33 @@ test('shared-world report reads persist in PostgreSQL after browser receipts are
         await server.seedReports(owner); await page.reload();
         const nav = page.getByRole('navigation', {name:'Game navigation'});
         await nav.getByRole('button', {name:'Reports, 2 unread',exact:true}).click();
-        await expect(page.locator('.report-ledger-group>article.is-unread .report-ledger-open')).toHaveCount(2);
-        await page.locator('.report-ledger-open').first().click();
-        await expect(page.getByRole('dialog', {name:'Battle result'})).toBeVisible();
+        await expect(page.locator('.report-row.is-unread')).toHaveCount(2);
+        await page.locator('.report-row').first().click();
+        await expect(page.getByRole('region', {name:'Report details'})).toContainText('Victory');
         await expect.poll(async () => (await server.reports(owner)).filter((r: {read_at:string|null}) => r.read_at).length).toBe(1);
         await expect(nav.getByRole('button', {name:'Reports, 1 unread',exact:true})).toBeVisible();
         await page.getByRole('button', {name:'Back to reports',exact:true}).click();
         await page.evaluate(() => { for (const key of Object.keys(localStorage)) if (key.startsWith('peris-read-reports:')) localStorage.removeItem(key); });
         await page.reload(); await nav.getByRole('button', {name:'Reports, 1 unread',exact:true}).click();
-        await expect(page.locator('.report-ledger-group>article.is-unread .report-ledger-open')).toHaveCount(1);
-        await page.locator('.report-ledger-group>article.is-unread .report-ledger-open').click();
+        await expect(page.locator('.report-row.is-unread')).toHaveCount(1);
+        await page.locator('.report-row.is-unread').click();
         await expect.poll(async () => (await server.reports(owner)).every((r: {read_at:string|null}) => r.read_at)).toBe(true);
         await expect(nav.locator('button.has-unread')).toHaveCount(0);
+        await server.seedReports(owner,60); await page.reload();
+        await nav.getByRole('button',{name:'Reports, 60 unread',exact:true}).click();
+        await expect(page.locator('.report-row')).toHaveCount(50);
+        await page.getByRole('button',{name:'Load older reports',exact:true}).click();
+        await expect(page.locator('.report-row')).toHaveCount(62);
+        await page.getByRole('button',{name:'Read all',exact:true}).click();
+        await expect(page.getByRole('status')).toContainText('Could not save report read status');
+        await expect(nav.getByRole('button',{name:'Reports, 60 unread',exact:true})).toBeVisible();
+        expect((await server.reports(owner)).filter((r:{read_at:string|null})=>!r.read_at)).toHaveLength(60);
+        await page.getByRole('button',{name:'Read all',exact:true}).click();
+        await expect.poll(async()=>(await server.reports(owner)).every((r:{read_at:string|null})=>r.read_at)).toBe(true);
+        await expect(nav.locator('button.has-unread')).toHaveCount(0);
+        await page.reload(); await nav.getByRole('button',{name:'Reports',exact:true}).click();
+        await expect(page.locator('.report-row.is-unread')).toHaveCount(0);
+        await expect(page.getByRole('button',{name:'Read all',exact:true})).toBeDisabled();
         await page.screenshot({path:info.outputPath('server-read-reports.png')});
         expect(errors).toEqual([]);
     } finally { await server.close(); }

@@ -12,6 +12,7 @@ import { isWalkable } from '../../features/map/domain/worldGrid';
 import { supabase } from '../../platform/backend/supabase';
 import { loginAccount } from '../../platform/backend/accounts';
 import type { AccountEntry } from '../../platform/backend/accountLogin';
+import type { Report } from '../../features/campaign/domain/types';
 import { expiredSession } from '../../platform/backend/accountLogin';
 import { rememberRuler } from '../../platform/backend/accountStorage';
 
@@ -295,10 +296,17 @@ export class OnlineEngine implements GameEngine {
             if (this.alive) { this.coreError = this.message(e); this.publish(); }
         } finally { this.ticking = false; }
     }
+    reportPage = async (beforeId: number): Promise<Report[]> => {
+        if (!this.alive) throw new Error('This realm session has ended.');
+        const {data, error} = await this.rpc('peris_report_page', {p_before_id: beforeId});
+        if (error) throw new Error(error.message);
+        if (!Array.isArray(data)) throw new Error('Could not load report history.');
+        return data.filter((report: Report) => report.owner_id === this.playerId);
+    };
     command = async (cmd: Command) => {
         if (!this.alive) throw new Error('This realm session has ended.');
         // Read receipts are already idempotent and never replace a pending troop order.
-        if (cmd.type === 'readReports') {
+        if (cmd.type === 'readReports' || cmd.type === 'readAllReports') {
             const {fn, args} = rpcCommand(cmd), {error} = await this.rpc(fn, args);
             if (error) throw new Error(error.message);
             await this.refresh(); return;
