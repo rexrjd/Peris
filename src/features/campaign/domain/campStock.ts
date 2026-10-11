@@ -4,8 +4,12 @@ import { DEFAULT_CONFIG } from '../../frontier/domain/balance';
 import { recruitDelay } from '../../frontier/domain/camps';
 import { accrue } from '../../frontier/domain/economy';
 import { readRoster, writeRoster, rosterTotal } from '../../army/domain/roster';
-export const campTier = (camp: Camp) => camp.tier >= 4 ? 'hard' : camp.tier <= 2 ? 'low' : 'medium';
-export const campRules = (camp: Camp) => DEFAULT_CONFIG.tiers[campTier(camp)];
+import { CAMP_BASE_DEFENDERS } from '../../map/domain/campDifficulty';
+export const campTier = (camp: Camp) => camp.tier >= 6 ? 'hard' : camp.tier <= 2 ? 'low' : 'medium';
+export const campRules = (camp: Camp) => {
+    const rule = DEFAULT_CONFIG.tiers[campTier(camp)];
+    return { ...rule, defenderCap: Math.max(rule.defenderCap, Math.ceil((CAMP_BASE_DEFENDERS[camp.tier] ?? 720) * 1.08)) };
+};
 /** Old camps retain IDs, sites and soldiers. Stock begins when this mechanic is installed. */
 export function accrueCamp(camp: Camp, until: number, engaged = false) {
     if (!camp.bandit) return;

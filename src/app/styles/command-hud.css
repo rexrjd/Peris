@@ -7,6 +7,10 @@
 .game-navigation{display:flex;align-self:stretch;gap:3px;flex:none;align-items:stretch}
 .game-navigation button{position:relative;display:flex;align-items:center;justify-content:center;gap:7px;min-width:75px;padding:0 10px;min-height:44px;background:transparent;color:#9fa8b9;font-size:12px;border:0;border-radius:0;white-space:nowrap}
 .game-navigation button:hover{color:#f0f2f7;background:#ffffff04}
+.game-navigation button.has-unread,.game-navigation button.has-unread[aria-current=page]{color:#251d0b;background:#e8c66c;border-radius:5px}
+.game-navigation button.has-unread:hover{color:#251d0b;background:#f1d583}
+.game-navigation .nav-label{display:inline-flex;align-items:center;gap:6px}
+.game-navigation .nav-count{font-weight:800;min-width:12px;font-variant-numeric:tabular-nums}
 .game-navigation button[aria-current=page]{color:#ead7b6;background:transparent}
 .game-navigation button[aria-current=page]:after{content:'';position:absolute;bottom:0;left:13px;right:13px;height:2px;background:#d7bd90;border-radius:2px}
 .game-shell .game-navigation .nav-dot{right:4px;top:12px;width:4px;height:4px;background:#d7bd90;box-shadow:none}

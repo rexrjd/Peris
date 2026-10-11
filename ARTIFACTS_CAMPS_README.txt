@@ -1,76 +1,84 @@
-PERIS — ARTIFACT PAINTINGS AND CAMP DIFFICULTY
-2026-10-11
+PERIS — ARTIFACT PAINTINGS, CAMP LEVELS AND UNREAD REPORTS
+2026-10-11 · corrected compatibility edition
 
-Compatibility
-Built against https://github.com/rexrjd/Peris main commit
-779715281b71418d4d3b02bf12066c8ecbe69645.
-Main was fetched again after implementation and still matches this baseline.
-The preceding compact map UI is already included in that baseline.
-This archive contains changed and new files with their repository paths.
-Copy them over that version, keeping the directory structure.
+Install the frontend
+This archive contains updated files with their repository paths, plus all 24
+original artwork sources and all 24 runtime paintings. Apply it to the current
+https://github.com/rexrjd/Peris main, checked at commit
+ d82272ea6a79d7dc8fab0fef8c9d59b6cfeed6ad.
+Keep the directory structure. Run npm ci, then npm run build and deploy the
+resulting frontend. Reload the deployed game after the deployment completes.
+The supplied screenshot shows the older generic-icon equipment renderer; the
+current renderer has been verified against every artifact image. Copying SQL
+alone cannot change that screen. Paintings ship from public/art/artifacts/v1/.
+A build now fails clearly if an artifact painting is missing or invalid.
+No live deployment or production database changes were performed.
 
-What changes
-24 distinct original equipment paintings, one for every artifact ID.
-Duplicate copies of the same artifact use the same painting.
-12 new items: one Rare charm, six Epic items and five Legendary items.
-All four rarities cover weapons, armour, headgear, boots and charms.
-The 12 existing item IDs and their attribute bonuses are retained.
-Paintings appear in the backpack, equipped slots, selected item and victory receipt.
+Reports
+The top Reports button displays the unread count: Reports 1, Reports 2, etc.
+Only that button turns yellow while reports remain unread. Opening a battle
+report marks it read; visiting the Reports tab alone does not clear the count.
+Read status survives reloads and is separate for each ruler and game mode in
+this browser. Other browsers/devices keep their own read status.
+The pictures and unread indicator need no database migration.
 
-Camps now have difficulty levels 1–10 and advertise the actual loot rarity:
-  Level 1–2   Easy      Common equipment / artifact tier 1
-  Level 3–5   Guarded   Rare equipment / artifact tier 2
-  Level 6–8   Hard      Epic equipment / artifact tier 3
-  Level 9–10  Deadly    Legendary equipment / artifact tier 4
-Every NPC victory grants one item from the advertised rarity, subject to the
-existing 200-item backpack limit. Reward rolls match solo and multiplayer.
-Reopening a report never generates a second reward.
-Higher camp levels have larger defender armies; high-level strongholds are scarce.
-Camp cards and raid preparation show the level, difficulty and loot rarity.
-The six story encounters now span levels 1, 4, 4, 6, 8 and 10.
+Compatibility fixes
+The earlier ZIP was based on commit 7797152, before the friend's V16 integration.
+This edition preserves its workshop/siege troops, nine recruitment roles, unit
+research bonuses, parallel recruitment, growing camp stock, recurring farm lists
+and background battle worker. Save import retains those new fields and roles.
+Camp upgrades preserve live defenders, advanced troop rosters and stored stock.
+Levels 1–10 now grow toward caps matching their actual starting strength, with
+matching solo/server rules. Busy camps keep their current encounter state.
+Empty defender forces no longer cause a "Choose whole troop counts" SQL error
+when finishing a repeat raid. Existing input validation remains strict.
 
-Multiplayer installation
-For an existing V13–V15 database with hero battle rewards, run ONLY the included
-supabase/UPDATE_ARTIFACTS_AND_CAMPS.sql in the SQL editor as the database owner.
-Apply this together with the updated frontend, so the UI and server agree.
-This focused transaction adds the catalog entries and updates loot/raid functions
-and camp defenders. It does not rebuild tables or recreate accounts.
-It preserves camp IDs, coordinates, factions, inventories, XP, receipts and farming
-targets. Camps targeted by moving armies or active battles are skipped;
-rerun the same focused SQL after those raids finish to update the skipped camps.
-The operation can be repeated safely.
-Regenerated full-install and upgrade bundles are included for source consistency.
-Do not use a fresh-install script on an existing campaign.
-No production database changes or deployments were performed for this update.
+Artifacts and camp difficulty
+24 distinct original paintings, one for every artifact ID. Duplicate copies of
+an item share its painting. Artwork appears in the backpack, equipped slots,
+selected item and victory receipt. The 12 original item IDs/bonuses are retained;
+12 additional artifacts cover Rare, Epic and Legendary equipment.
+  Camp level 1–2   Easy      Common equipment / tier 1
+  Camp level 3–5   Guarded   Rare equipment / tier 2
+  Camp level 6–8   Hard      Epic equipment / tier 3
+  Camp level 9–10  Deadly    Legendary equipment / tier 4
+NPC victory grants one item of the advertised rarity, subject to the existing
+200-item backpack limit. Reopening a report never rolls another reward.
+Camp IDs, coordinates and factions retain the existing 605-camp layout.
 
-Solo saves
-Existing version-6 campaigns upgrade their known camp definitions once on load.
-Accounts, cities, armies, equipped items, progress and farm targets are retained.
-Active raids keep their existing defenders until a later safe load.
-The 605 generated camp IDs, coordinates and factions match the prior layout exactly.
-Frontier server gameplay and its separate low/medium/high encounter rules are intact.
+Optional multiplayer gameplay SQL
+If your database has not received the friend's V16 integration, apply the included
+supabase/UPGRADE_TO_V16.sql first, as the database owner in the SQL editor.
+It contains this edition's catalog, camp rules and compatible functions.
+For an already upgraded V16 world, apply
+supabase/UPDATE_ARTIFACTS_AND_CAMPS.sql for the focused gameplay corrections.
+That transaction updates catalog entries and functions without rebuilding tables;
+it retains accounts, inventories, XP, receipts, cities, armies and farm targets.
+Camps involved in moving raids or active battles are skipped for metadata updates;
+rerun the focused file after those encounters end. It is repeatable.
+Never use a fresh-install script on an existing campaign.
 
-Artwork sources
-Generated using the built-in image-generation tool, one independent call per item,
-with transparent backgrounds. No existing game artwork is included.
-assets/artifacts-v1.json contains every complete prompt, item name and source path.
-assets/source/artifacts-v1/*.png are the untouched generated images.
-public/art/artifacts/v1/*.webp are the shipped 384px transparent UI paintings.
-Rebuild runtime artwork with npm run build:artifact-art.
-Rebuild SQL catalog with npm run build:artifact-catalog, then npm run build:sql.
-Rebuild the focused migration with npm run build:camp-artifact-upgrade.
+Artwork and maintenance
+assets/artifacts-v1.json records complete image-generation prompts and source paths.
+assets/source/artifacts-v1/*.png are the untouched original generated paintings.
+public/art/artifacts/v1/*.webp are the 384px transparent runtime images.
+No existing game artwork was copied. The paintings use the project's original
+fantasy art direction.
+Rebuild paintings: npm run build:artifact-art
+Rebuild catalog: npm run build:artifact-catalog
+Rebuild camp SQL: npm run build:bandits
+Regenerate bundles: npm run build:sql
+Regenerate focused update: npm run build:camp-artifact-upgrade
+Verify runtime paintings: npm run check:artifact-art
 
 Validation
-379 unit tests passed; one existing optional test skipped.
-Production TypeScript/Vite build passed.
-Tooling tests and checks for all 46 registered GLB models passed.
-Artifact catalog, 605 camp definitions, focused migration and SQL bundle
-generation checks passed.
-Isolated hero-loot, world-battle, general database and fresh-install suites passed.
-Focused migration tests cover existing gear/XP, busy camps, repeat application
-and authenticated equip/unequip commands for all 24 items.
-Artwork checks cover unique content, transparent alpha and all 24 runtime paths.
-26 desktop/mobile browser scenarios passed across the initial run and targeted
-rerun: all paintings load, equipment persists after reload, loot receipts,
-camp difficulty/raid review, army markers, map activity and campaign marches.
-Desktop and mobile screenshots were inspected for equipment, rewards and camps.
+387 unit tests passed; one existing optional test skipped.
+Production TypeScript/Vite build, tooling tests and all 46 registered model
+checks passed. Catalog, camp definitions, focused upgrade and SQL generation
+checks passed. Isolated V16 integration, hero-loot, world-battle and focused
+upgrade database suites passed. Coverage includes all ten camp growth caps,
+repeat migrations, live defender preservation, nine-role parties, account/city
+compatibility, research, recurring farms, empty camps, and all 24 equipped items.
+Desktop/mobile browser validation covers painting loads, equipment persistence,
+loot receipts, camp difficulty, unread counts and the new recruitment/farm flows.
+See UPDATE_FILES.txt for the complete archive file list.

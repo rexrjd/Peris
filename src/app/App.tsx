@@ -15,6 +15,7 @@ import { type Doctrine, Login } from '../features/menu/ui/Login';
 import { setAudioScene, tone, unlockAudio } from '../platform/audio/audio';
 import { readSolo } from '../platform/storage/solo';
 import { backupSolo, validateSave } from '../platform/storage/saves';
+import { readReportIds, storeReadReportIds } from '../platform/storage/reports';
 import { LocalEngine } from '../engine/local/LocalEngine';
 import { createSolo } from '../features/campaign/domain/newRealm';
 import { type World } from '../shared/model/world';
@@ -154,6 +155,16 @@ function Realm({ engine, onExit, onLoad, onRetry, onUnitPreview }: {
     const quietCampBattle = (battle: Battle) => battle.mode === 'pve' && world.camps.some(camp => camp.id === battle.camp_id && camp.bandit);
     const visibleBattle = active && !quietCampBattle(active) ? active : undefined;
     const identity = `${player.id}:${player.created_at}`, welcomeKey = `peris-welcome:${identity}`, endingKey = `peris-ending:${identity}`;
+    const reportReadKey = `peris-read-reports:${engine.mode}:${identity}`;
+    const [readReports, setReadReports] = useState(() => readReportIds(reportReadKey));
+    const unreadReports = world.reports.filter(r => r.owner_id === engine.playerId && !readReports.has(r.battle_id)).length;
+    useEffect(() => {
+        if (!report?.result || engine.mode === 'practice') return;
+        setReadReports(current => {
+            if (current.has(report.id)) return current;
+            const next = new Set(current); next.add(report.id); storeReadReportIds(reportReadKey, next); return next;
+        });
+    }, [report?.id, reportReadKey, engine.mode]);
     const [welcome, setWelcome] = useState(() => engine.mode === 'solo' && !readFlag(welcomeKey) && player.victories === 0 && player.upgrades === 0 && player.recruits === 0), [endingSeen, setEndingSeen] = useState(() => readFlag(endingKey)), [seenReports] = useState(() => new Set(world.battles.filter(b => b.status === 'resolved').map(b => b.id)));
     const offset = useMemo(() => Date.parse(world.server_now) - Date.now(), [world.server_now]), now = time + offset, resources = liveResources(town, now), projectedTown=projectSettlement(town,now), storage=(key:string)=>key==='food'?town.food_capacity??town.capacity:town.capacity, rate=(key:typeof RESOURCES[number])=>{const value=projectedTown[`${key}_rate`];return `${value>=0?'+':''}${value.toLocaleString(undefined,{maximumFractionDigits:1})}`;};
     useEffect(() => { const t = window.setInterval(() => setTime(Date.now()), 250); return () => window.clearInterval(t); }, []);
@@ -224,7 +235,7 @@ function Realm({ engine, onExit, onLoad, onRetry, onUnitPreview }: {
     return <>
   {visibleBattle ? <BattleView world={world} battle={visibleBattle} engine={engine} run={run} onHelp={() => setHelp(true)} onSettings={() => setSettings(true)}/> : <div className="realm-shell game-shell">
    <header className="realm-topbar game-header"><button className="game-brand" aria-label="Peris world map" onClick={()=>navigate('world')}>PERIS</button>
-   <GameNavigation view={view} rewards={QUESTS.some(q=>player[q.stat]>=q.target&&!world.claims.some(c=>c.quest_id===q.id&&c.owner_id===engine.playerId))} onNavigate={navigate}/>
+   <GameNavigation view={view} unreadReports={unreadReports} rewards={QUESTS.some(q=>player[q.stat]>=q.target&&!world.claims.some(c=>c.quest_id===q.id&&c.owner_id===engine.playerId))} onNavigate={navigate}/>
    <ResourceHud resources={resources} capacity={storage} rate={rate} onSelect={setResource}/>
    <QuickAccess items={[
        { label:'Farm lists', icon:'flag', description:'Saved camp targets and legion troop presets', onSelect:()=>{setEmpireOpen(false);navigate('world');setFarmOpen(true);} },

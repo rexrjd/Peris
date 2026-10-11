@@ -1,3 +1,7 @@
+PERIS corrected compatibility edition
+Baseline: d82272ea6a79d7dc8fab0fef8c9d59b6cfeed6ad
+All entries below are current repository files; no historical SQL/source files are copied from the old ZIP.
+
 .gitignore
 ARTIFACTS_CAMPS_README.txt
 ARTWORK.md
@@ -55,7 +59,11 @@ scripts/build-artifact-art.mjs
 scripts/build-artifact-catalog.mjs
 scripts/build-bandits.mjs
 scripts/build-camp-artifact-upgrade.mjs
+scripts/check-artifact-art.mjs
+src/app/App.tsx
+src/app/styles/command-hud.css
 src/app/styles/index.css
+src/features/campaign/domain/campStock.ts
 src/features/campaign/domain/raids.ts
 src/features/campaign/ui/Chronicle.tsx
 src/features/empire/domain/normalization.ts
@@ -75,14 +83,17 @@ src/features/map/rendering/mapArt.ts
 src/features/map/rendering/three/WorldScene.ts
 src/features/map/ui/MarchDialog.tsx
 src/features/map/ui/WorldView.tsx
+src/platform/storage/reports.ts
 src/platform/storage/saves.ts
 src/shared/model/world.ts
+src/shared/ui/GameNavigation.tsx
 supabase/FRESH_INSTALL_V10.sql
 supabase/FRESH_INSTALL_V11.sql
 supabase/FRESH_INSTALL_V12.sql
 supabase/FRESH_INSTALL_V13.sql
 supabase/FRESH_INSTALL_V14.sql
 supabase/FRESH_INSTALL_V15.sql
+supabase/FRESH_INSTALL_V16.sql
 supabase/FRESH_INSTALL_V6.sql
 supabase/FRESH_INSTALL_V7.sql
 supabase/FRESH_INSTALL_V8.sql
@@ -94,10 +105,13 @@ supabase/UPGRADE_TO_V12.sql
 supabase/UPGRADE_TO_V13.sql
 supabase/UPGRADE_TO_V14.sql
 supabase/UPGRADE_TO_V15.sql
+supabase/UPGRADE_TO_V16.sql
 supabase/UPGRADE_TO_V7.sql
 supabase/UPGRADE_TO_V8.sql
 supabase/UPGRADE_TO_V9.sql
 supabase/UPGRADE_V5_TO_V6.sql
+supabase/modules/battle/peris_finish.sql
+supabase/modules/campaign/camp-schema.sql
 supabase/modules/campaign/peris_start_raid.sql
 supabase/modules/heroes/artifact-catalog.sql
 supabase/modules/heroes/battle-rewards.sql
@@ -110,8 +124,11 @@ tests/artifact-camp-progression.test.ts
 tests/artifact-camp-upgrade.test.mjs
 tests/e2e/artifact-camp-levels.spec.ts
 tests/e2e/hero-loot.spec.ts
+tests/e2e/unread-reports.spec.ts
 tests/e2e/world-battles.spec.ts
 tests/frontier-map-projection.test.ts
+tests/game-integration.test.ts
 tests/hero-loot-database.test.mjs
 tests/hero-loot.test.ts
 tests/world-battles.test.ts
+UPDATE_FILES.txt

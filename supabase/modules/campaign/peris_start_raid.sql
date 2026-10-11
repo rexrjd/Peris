@@ -3,13 +3,18 @@ language plpgsql security definer set search_path='' as $$
 declare a public.armies%rowtype;c public.peris_camps%rowtype;bid bigint;mor numeric;
 begin
  select * into a from public.armies where id=public.peris_army_id(p_owner) for update;
- select * into c from public.peris_camps where id=p_camp;
+ if exists(select 1 from public.peris_camps where id=p_camp and bandit)then
+  perform public.peris_camp_accrue(p_camp);
+  if exists(select 1 from public.peris_camp_stock where camp_id=p_camp and engaged_battle_id is not null)then return null;end if;
+ end if;
+ select * into c from public.peris_camps where id=p_camp for update;
  if c.id is null or a.id is null then raise exception 'Army or camp not found';end if;
  if a.infantry+a.archers+a.cavalry=0 then raise exception 'Your army has no soldiers';end if;
  if exists(select 1 from public.battles where status='active' and (attacker_owner_id=p_owner or defender_owner_id=p_owner)) then raise exception 'Finish the current battle first';end if;
- if exists(select 1 from public.peris_progress where owner_id=p_owner and camp_id=p_camp and available_at>now()) then raise exception 'The camp is still regrouping';end if;
+ if not c.bandit and exists(select 1 from public.peris_progress where owner_id=p_owner and camp_id=p_camp and available_at>now()) then raise exception 'The camp is still regrouping';end if;
  insert into public.battles(attacker_owner_id,defender_owner_id,attacker_army_id,defender_army_id,mode,phase,camp_id,terrain,difficulty,enemy_name,defender_ready,defender_faction)
  values(p_owner,null,a.id,null,'pve','combat',c.id,public.peris_battle_terrain(c.x,c.y),case when c.tier>=6 then 'hard' when c.tier<=2 then 'easy' else 'normal' end,c.name,true,c.faction) returning id into bid;
+ if c.bandit then update public.peris_camp_stock set engaged_battle_id=bid where camp_id=c.id;end if;
  select 90+2*level into mor from public.buildings where settlement_id=a.home_settlement_id and building_type='wall';
  perform public.peris_add_formations(bid,p_owner,'attacker',a.infantry,a.archers,a.cavalry,coalesce(mor,92));
  perform public.peris_add_formations(bid,null,'defender',c.infantry,c.archers,c.cavalry,case when c.tier>=6 then 100 when c.tier<=2 then 78 else 90 end);

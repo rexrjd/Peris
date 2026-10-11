@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises';
 import assert from 'node:assert/strict';
 import { ARTIFACTS } from '../src/features/heroes/domain/artifacts.ts';
 import { BANDIT_CAMPS } from '../src/features/map/domain/bandits.ts';
+import { campRules } from '../src/features/campaign/domain/campStock.ts';
 const db=new PGlite(),owner='11111111-1111-4111-8111-111111111111';
 const admin=async sql=>{await db.exec('reset role');return db.exec(sql);};
 const login=()=>db.exec(`reset role;set role authenticated;select set_config('request.jwt.claim.sub','${owner}',false)`);
@@ -18,10 +19,17 @@ try {
     await admin(upgrade);const busy=(await db.query('select tier,infantry from public.peris_camps where id=$1',[camp.id])).rows[0];assert.deepEqual(busy,{tier:1,infantry:8});
     await admin(`update public.armies set status='idle',raid_target_id=null where id=${army.id}`);await admin(upgrade);await admin(upgrade);
     const restored=(await db.query('select tier,x,y,infantry,archers,cavalry from public.peris_camps where id=$1',[camp.id])).rows[0];
-    assert.deepEqual(restored,{tier:camp.tier,x:camp.x,y:camp.y,infantry:camp.infantry,archers:camp.archers,cavalry:camp.cavalry});
+    assert.deepEqual(restored,{tier:camp.tier,x:camp.x,y:camp.y,infantry:8,archers:2,cavalry:0});
     assert.equal((await db.query('select experience from public.peris_heroes where id=$1',[hero.id])).rows[0].experience,730);
     assert.equal((await db.query('select hero_id from public.peris_hero_artifacts where id=$1',[oldItem])).rows[0].hero_id,hero.id);
-    console.log('PASS · focused upgrade waits for busy camps, preserves old equipment and XP, and is repeatable');
+    console.log('PASS · focused upgrade waits for busy camps, preserves live defenders, old equipment and XP, and is repeatable');
+    for (let level=1;level<=10;level++) {
+        const target=(await db.query('select * from public.peris_camps where bandit and tier=$1 order by id limit 1',[level])).rows[0];
+        await admin(`update public.peris_camps set infantry=0,archers=0,cavalry=0 where id=${target.id};update public.peris_camp_stock set next_recruit_at=now()-interval '2 days',stock_updated_at=now()-interval '2 days',engaged_battle_id=null where camp_id=${target.id};select public.peris_camp_accrue(${target.id});`);
+        const force=(await db.query('select infantry+archers+cavalry as total from public.peris_camps where id=$1',[target.id])).rows[0];
+        assert.equal(force.total,campRules(target).defenderCap);
+    }
+    console.log('PASS · all ten difficulty levels regrow to the same defender caps in solo and multiplayer');
     for (const [id,item] of Object.entries(ARTIFACTS)) {
         await admin(`insert into public.peris_hero_artifacts(owner_id,artifact_id,slot)select '${owner}',id,slot from public.peris_artifact_catalog where id='${id}'`);
         const artifact=(await db.query('select max(id) as id from public.peris_hero_artifacts where artifact_id=$1',[id])).rows[0].id;
