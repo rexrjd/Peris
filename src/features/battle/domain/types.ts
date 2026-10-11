@@ -35,6 +35,7 @@ export type Battle = {
 };
 export type FormationStatus = 'idle' | 'moving' | 'engaged' | 'routed';
 export type Formation = {
+    recruit_unit?: import('../../army/domain/roster').RecruitUnit; unit_attack?: number; unit_defence?: number; unit_speed?: number;
     id: number;
     battle_id: number;
     owner_id: string | null;
@@ -69,6 +70,9 @@ export type Formation = {
     updated_at: string;
 };
 export type BattleResult = {
+    defender_roster?: import('../../army/domain/roster').UnitRoster; defender_survivor_roster?: import('../../army/domain/roster').UnitRoster; defender_faction?: Faction;
+    attacker_roster?: import('../../army/domain/roster').UnitRoster; attacker_survivor_roster?: import('../../army/domain/roster').UnitRoster; attacker_faction?: Faction;
+    delivered?: Resources; overflow?: Resources;
     /** Actual settled NPC rewards; absent in old reports and practice battles. */
     hero_reward?: import('../../heroes/domain/battleRewards').HeroBattleReward;
     attacker_initial: number;

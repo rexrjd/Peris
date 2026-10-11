@@ -38,11 +38,11 @@ test('old six-site saves gain camps once and remain importable with battles in e
  const w=createSolo('Rex');w.camps=w.camps.filter(c=>!c.bandit);const before=structuredClone(w.settlements);normalizeRealm(w);const n=w.camps.length;normalizeRealm(w);assert.equal(w.camps.length,n);assert.deepEqual(w.settlements,before);
  for(const terrain of BATTLE_TERRAINS){const copy=structuredClone(w);beginRaid(copy,'solo-ruler',copy.camps.find(c=>c.bandit)!.id,()=>100);copy.battles[0].terrain=terrain;const imported=validateSave(copy);assert.equal(imported.battles[0].terrain,terrain);assert.ok(imported.camps.length>6);}
 });
-test('bandit victories grant hero XP once, regroup for ten minutes, and do not recover campaign standards',()=>{
+test('shared camp victories deplete defenders, grant hero XP once and preserve story standards',()=>{
  const w=createSolo('Rex'),camp=w.camps.find(c=>c.bandit)!,owner='solo-ruler';let id=10000;
  beginRaid(w,owner,camp.id,()=>++id);const b=w.battles[0];assert.equal(b.defender_faction,camp.faction);assert.equal(b.terrain,battleTerrainAtWorld(camp.x,camp.y));
  w.formations.filter(f=>f.side==='defender').forEach(f=>{f.soldiers=0;f.status='routed';});finishBattle(b,w.formations,'attacker','Army routed');
- settleBattle(w,b.id,owner,()=>++id);const xp=w.heroes![0].experience;assert.equal(xp,(camp.infantry+camp.archers+camp.cavalry)*2+50);assert.equal(conquered(w,owner).size,0);assert.equal(nextCampaign(w,owner)?.id,1);assert.ok(Date.parse(w.progress[0].available_at)-Date.now()>599000);assert.ok(readiness(w,owner,camp).ratio>0);
+ settleBattle(w,b.id,owner,()=>++id);const xp=w.heroes![0].experience;assert.equal(xp,b.result!.defender_losses*2+50);assert.equal(camp.infantry+camp.archers+camp.cavalry,0);assert.equal(conquered(w,owner).size,0);assert.equal(nextCampaign(w,owner)?.id,1);assert.equal(w.progress.some(progress=>progress.camp_id===camp.id),false);assert.ok(readiness(w,owner,camp).ratio>0);
  settleBattle(w,b.id,owner,()=>++id);assert.equal(w.heroes![0].experience,xp);assert.equal(w.reports.length,1);
 });
 test('ten original portraits ship and every faction marker resolves to its commander artwork',()=>{

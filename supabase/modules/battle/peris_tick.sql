@@ -1,5 +1,5 @@
-create or replace function public.peris_tick(p_battle_id bigint)returns jsonb language plpgsql security definer set search_path='' as $$
-declare u uuid:=public.peris_player_id();b public.battles%rowtype;f public.battle_formations%rowtype;t public.battle_formations%rowtype;threat public.battle_formations%rowtype;
+create or replace function public.peris_tick_for(p_battle_id bigint,p_owner uuid)returns jsonb language plpgsql security definer set search_path='' as $$
+declare u uuid:=p_owner;b public.battles%rowtype;f public.battle_formations%rowtype;t public.battle_formations%rowtype;threat public.battle_formations%rowtype;
  bw numeric:=1200*sqrt(5);bh numeric:=700*sqrt(5);remain numeric;processed numeric;dt numeric;dx numeric;dy numeric;distance numeric;speed numeric;reach numeric;move_step numeric;direction numeric;turn numeric;contact numeric;minimum numeric;push numeric;interval_sec numeric;ranged boolean;
  gf jsonb;gt jsonb;snapshot jsonb;positions jsonb;correction jsonb;pending jsonb;entry jsonb;pair record;rate numeric;flank numeric;charge numeric;matchup numeric;stance_mult numeric;brace numeric;cover numeric;elevation numeric;melee_arc numeric;defence numeric;difficulty_mult numeric;relative numeric;damage numeric;cas integer;mor_loss numeric;alive_a integer;alive_d integer;strength_a integer;strength_d integer;own_side text;average numeric;
 begin
@@ -38,7 +38,7 @@ begin
  gf:=public.peris_ground(b.terrain,f.x,f.y);
  if distance>reach+2 then
  turn:=direction-f.facing;turn:=abs(turn-360*floor((turn+180)/360));
- speed:=(case f.unit_type when 'cavalry'then 76 when 'archers'then 34 else 40 end)*f.magic_speed*(gf->>'speed')::numeric*(case when f.unit_type='cavalry'and gf->>'kind'='Forest'then .65 else 1 end)*(case when f.running and f.stamina>8 then 1.35 else 1 end)*(case when f.stamina<15 then .75 else 1 end)*(case when turn>75 then .25 when turn>40 then .65 else 1 end);
+ speed:=(case f.unit_type when 'cavalry'then 76 when 'archers'then 34 else 40 end)*f.unit_speed*f.magic_speed*(gf->>'speed')::numeric*(case when f.unit_type='cavalry'and gf->>'kind'='Forest'then .65 else 1 end)*(case when f.running and f.stamina>8 then 1.35 else 1 end)*(case when f.stamina<15 then .75 else 1 end)*(case when turn>75 then .25 when turn>40 then .65 else 1 end);
  move_step:=least(speed*dt,greatest(0,distance-reach));f.x:=greatest(35,least(bw-35,f.x+dx/distance*move_step));f.y:=greatest(45,least(bh-45,f.y+dy/distance*move_step));f.status:='moving';f.stamina:=greatest(0,least(100,f.stamina-case when f.running then 1.4 else .1 end*dt));
  if f.unit_type='cavalry'and f.running and gf->>'kind'<>'Forest'and turn<40 then f.charge_distance:=f.charge_distance+move_step;if f.charge_distance>=100 and f.stamina>35 then f.charge_ready:=true;end if;end if;
  else f.status:='engaged';f.running:=false;f.stamina:=greatest(0,least(100,f.stamina-case when f.unit_type='archers'then .12 else .3 end*dt));end if;
@@ -84,8 +84,8 @@ begin
  melee_arc:=case when f.unit_type='archers'and not ranged then 0.28 else 1 end;
  difficulty_mult:=1;
  rate:=case f.unit_type when 'infantry' then 0.020 when 'archers' then 0.012 else 0.031 end;
- damage:=f.damage_pool+f.soldiers*f.attack_multiplier*f.magic_attack*(1-t.magic_defence)*rate*matchup*stance_mult*defence*brace*flank*charge*cover*elevation*melee_arc*difficulty_mult*(0.55+f.stamina/220)*interval_sec/t.defence_multiplier;
- if charge>1 then damage:=damage+f.soldiers*0.06*brace*flank*(1-t.magic_defence)/t.defence_multiplier;end if;
+ damage:=f.damage_pool+f.soldiers*f.unit_attack*f.attack_multiplier*f.magic_attack*(1-t.magic_defence)*rate*matchup*stance_mult*defence*brace*flank*charge*cover*elevation*melee_arc*difficulty_mult*(0.55+f.stamina/220)*interval_sec/(t.unit_defence*t.defence_multiplier);
+ if charge>1 then damage:=damage+f.soldiers*0.06*brace*flank*(1-t.magic_defence)/(t.unit_defence*t.defence_multiplier);end if;
  cas:=least(greatest(0,t.soldiers-coalesce((pending->t.id::text->>'loss')::integer,0)),floor(damage)::integer);mor_loss:=cas::numeric/greatest(1,t.initial_soldiers)*125+case when flank>1 then cas::numeric/greatest(1,t.initial_soldiers)*35 else 0 end+case when charge>1 then 8 else 0 end;
  update public.battle_formations set damage_pool=mod(damage-cas,1),damage_target_id=t.id,attack_ready_at=b.elapsed+interval_sec,kills=kills+cas,charge_distance=case when charge>1 then 0 else charge_distance end,charge_ready=case when charge>1 then false else charge_ready end,
  stamina=case when charge>1 then greatest(0,stamina-12) else stamina end where id=f.id;
@@ -116,3 +116,6 @@ begin
  end loop;
  return jsonb_build_object('ok',true);
 end $$;
+
+create or replace function public.peris_tick(p_battle_id bigint)returns jsonb language plpgsql security definer set search_path='' as $$
+begin return public.peris_tick_for(p_battle_id,public.peris_player_id());end $$;

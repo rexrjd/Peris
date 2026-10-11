@@ -1,5 +1,6 @@
 import type { Command } from '../../shared/model/commands';
 export function rpcCommand(cmd: Command) {
+    if (cmd.type === 'researchUnit') return { fn: 'peris_research_unit', args: { p_city: cmd.settlementId, p_unit: cmd.item } };
     if (cmd.type === 'collectGarrison') return { fn: 'peris_collect_garrison', args: { p_army: cmd.armyId, p_troops: cmd.troops ?? null } };
     if (['saveCampaignFarmList', 'saveCampaignFarm', 'deleteCampaignFarm', 'deleteCampaignFarmList', 'startCampaignFarmList'].includes(cmd.type))
         return { fn: 'peris_campaign_farm_command', args: { p_command: cmd } };

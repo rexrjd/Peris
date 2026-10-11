@@ -3,6 +3,7 @@ import { createSolo } from '../../src/features/campaign/domain/newRealm';
 import type { World } from '../../src/shared/model/world';
 import type { Camp } from '../../src/features/map/domain/types';
 import { getCell, isWalkable } from '../../src/features/map/domain/worldGrid';
+import { emptyRoster } from '../../src/features/army/domain/roster';
 import { beginRaid } from '../../src/features/campaign/domain/raids';
 
 async function start(page: Page, world: World) {
@@ -111,7 +112,8 @@ test('camp targets save and reload, and Start list reviews a manual batch before
     await expect(manager).toContainText('Nearby camps'); await expect(manager).toContainText(camp.name);
     await manager.getByRole('button', { name: 'Start list', exact: true }).click();
     const review = page.getByRole('dialog', { name: 'Start farm list: Nearby camps', exact: true });
-    await expect(review).toContainText('10 infantry / 0 archers / 0 cavalry');
+    await expect(review.getByRole('img', {name:'Legionary',exact:true})).toBeVisible();
+    await expect(review.locator('.game-troop-summary')).toHaveText('10');
     expect((await save(page)).armies[0].status).toBe('idle');
     await capture(page, info, 'campaign-batch-review');
     await review.getByRole('button', { name: 'Confirm batch', exact: true }).click();
@@ -120,7 +122,7 @@ test('camp targets save and reload, and Start list reviews a manual batch before
     await manager.getByRole('button', { name: /Cancel raid/ }).click();
     await expect.poll(async () => (await save(page)).armies[0].infantry).toBe(120);
     await page.keyboard.press('Escape');
-    expect((await save(page)).campaign_farms?.[0].troops).toEqual({ infantry: 10, archers: 0, cavalry: 0 });
+    expect((await save(page)).campaign_farms?.[0].troops).toEqual({ ...emptyRoster(), infantry: 10 });
 });
 
 test('reinforcement review blocks neutral fields and shows saved returning troops merging once', async ({ page }, info) => {

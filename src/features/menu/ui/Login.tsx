@@ -32,7 +32,6 @@ export function Login({ onSolo, onOnline, onPractice, onSettings, onCodex, onUni
             <form onSubmit={e => { e.preventDefault(); if (!busy) onOnline(name); }}><label className="field-label" htmlFor="ruler-name">YOUR RULER NAME</label><input id="ruler-name" value={name} onChange={e => setName(e.target.value)} minLength={2} maxLength={20} required autoComplete="off" autoCapitalize="none" spellCheck={false} disabled={busy}/><button className="button gold launch-cta" disabled={busy}>{busy ? 'Opening your realm…' : 'Enter the shared world'}<Icon name="arrow"/></button><p className="mode-description">Same name, same realm on any device. New name, new account. Names are case-insensitive.</p></form>}
    <button className="quick-battle-link" onClick={() => setSetup(true)} disabled={busy}><Icon name="army"/>Quick battle <span>Take the field immediately <Icon name="arrow" size={14}/></span></button>
    <button className="menu-secondary" disabled={busy} onClick={() => onUnitPreview(faction)}>Unit preview · Browse all factions</button>
-   {!standalone && <a className="menu-secondary" href="?frontier=1" style={{ display: 'block', textAlign: 'center', textDecoration: 'none' }}>Frontier Wars · Mercenary camps</a>}
    <a className="menu-secondary" href="?map-preview=1" style={{ display: 'block', textAlign: 'center', textDecoration: 'none' }}>Explore the world map sample</a>
    {error && <div className="alert error" role="alert">{error}</div>}{busy && <div className="loading-bar" aria-label="Connecting to the shared world"><i /></div>}
   </section>

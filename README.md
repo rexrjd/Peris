@@ -17,53 +17,21 @@ Every outside road enters through the gate. Activity stays clear of building con
 pauses in hidden tabs, and respects game and system reduced-motion settings.
 See `assets/city-village-v1.json` and `ARTWORK.md` for sources and export instructions.
 
-## Frontier Wars — local playable slice
+## Camps, recruitment and farming in Peris
 
-Run `npm ci` then `npm run dev:frontier`, and open **http://127.0.0.1:5174/?frontier=1**.
-Recruit troops, raid shared resource-producing mercenary camps, bring survivors and
-loot home, and save repeating farm targets. The local server persists the realm
-and continues processing with the browser closed. Existing campaign and Shared
-world modes remain available. Use `npm.cmd` in PowerShell if needed.
+These mechanics are integrated into the existing game. Run `npm ci` and `npm run dev`, then open the URL Vite prints. Old `?frontier=1` bookmarks open normal Peris. Use your existing campaign or shared-world account, cities, resources, legions and reports.
 
-**Quick access** in both game interfaces opens frequently used screens. Frontier
-has named farm lists with an independent **reports only when my troops are lost**
-checkbox, automatic report-only raids, and Outbound/Returning movement filters.
-The campaign's **Farm lists** shortcut opens its saved camp targets; **Frontier
-farm lists** opens the separate Frontier village.
+**Army → Recruitment** has Barracks, Stables and Workshop tabs for nine faction-named troop roles. Advanced units require research in the selected city. Buildings have independent queues; training still uses the existing legion capacity and city resources. Small faction troop icons appear in recruitment, camp inspection, raid reviews, farms and reports.
 
-Each farm list has **Start list** for a manual batch. Review the saved troop
-presets and confirm; unavailable targets are skipped without spending troops.
-Frontier batches draw from the village garrison and keep repeat schedules unchanged.
-Campaign batches use their saved legions, with one raid per available legion.
+Roaming camps now accumulate shared resource stocks and grow defenders at private, unpredictable intervals. The six story sites retain their progression and cooldowns. Raids use Peris's existing automatic formation battles. Survivors carry limited loot back to the departure station; resources are credited to the legion's home city on return, with storage overflow recorded in the report. Camps keep depleted stocks and casualties until production and recruitment replenish them.
 
-Campaign **March and engage** now opens a legion and troop review. Unsent troops
-stay at the departure village or owned field as a shared garrison; another idle
-legion there can collect them. Returning survivors merge with troops still at that
-station, up to the 1,000-soldier legion capacity. Ordinary marches can finish only
-at owned villages or fields. Alliances are not implemented yet, so rival villages
-cannot receive reinforcements. Older armies on neutral land can still march home.
-All new raid/march orders wait 30 seconds before departure and can be cancelled
-only during that window. The deadline persists through reloads and is enforced by
-the authority. Bandit farming resolves quietly into Reports; story battles remain
-available. The global map shares the camp map's subtle grid and starting camera.
+**Quick access → Farm lists** provides editable default troop presets, target editing, moving between lists, sorting and removal. **Start list** reviews a manual batch before confirming. One available legion can launch one party; unsent soldiers remain as a garrison at an owned village or field. Returning survivors merge with that station's remaining troops up to 1,000; overflow remains stationed. New orders allow cancellation during the first 30 seconds. Reinforcement destinations must currently be owned; alliances remain a future feature.
 
-Frontier recruitment now has **Barracks / Stables / Workshop** tabs with nine
-faction-named units, research unlocks, separate building queues and reusable troop
-icons. Each farm list can save a default troop mix and apply it to its targets.
-Existing campaign troop rules remain unchanged; see the Frontier guide for scope.
+Repeats are optional and use a player-chosen interval. Shared-world schedules need a successful manual launch to record the validated route; busy or unavailable targets skip that interval. Solo catch-up resumes when the campaign opens. Shared-world offline processing uses the prepared database worker, not a second game or Node service.
 
-The Frontier overview shows hourly production, troops at home and army arrivals.
-Click a camp on the map or a farm's name and coordinates to open its details,
-including a defender roster and recent reports. Farm targets have an add/edit
-window and can be sorted, moved between lists or removed in batches. The default
-map reuses the existing Peris 3D landscape with three distinct mercenary compounds;
-**Classic map** keeps the compact illustrated view. Grab and drag to pan; scroll
-to zoom. New full realms distribute camps and difficulties across eligible land
-with a reproducible seed; existing realms keep their saved targets. Camp
-recruitment deadlines stay private on the server.
+This integration is **local review work**. Nothing has been pushed, merged or applied to production. Before publication, integrate the other developer's current `main` and rerun affected checks. Existing databases need the reviewed `supabase/UPGRADE_TO_V16.sql`; empty installations use `FRESH_INSTALL_V16.sql`. Offline processing additionally needs the separately reviewed `ENABLE_GAME_WORKER.sql` job. Do not apply either automatically.
 
-See [Frontier Wars](docs/frontier-wars.md) for play instructions, balance assumptions,
-saved data, configuration, tests, server architecture, and the next milestone.
+See [integrated camps and farming](docs/frontier-wars.md) for behavior, migration boundaries and verification.
 
 Development tools: see **docs/DEV_TOOLS.md** for Codex/Blender/Playwright setup and **docs/GRAPHICS_PIPELINE.md** for model export and the next 3D battle milestone. On Windows, `START-PERIS-TOOLS.cmd` prepares the local checkout after Node.js is installed.
 

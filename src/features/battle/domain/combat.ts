@@ -38,7 +38,7 @@ export function resolveCombat(b: Battle, fs: Formation[], byId: Map<number, Form
         const meleeArcher = f.unit_type === 'archers' && !ranged ? .28 : 1;
         const defence = t.stance === 'guard' ? .8 : t.stance === 'aggressive' ? 1.15 : 1;
         const difficulty=1; // Composition and morale define NPC difficulty, not hidden ownership damage.
-        f.damage_pool += (f.soldiers * (f.attack_multiplier ?? 1) * (f.magic_attack??1) * (1-(t.magic_defence??0)) * UNITS[f.unit_type].rate * matchup * stance * defence * brace * flank * charge * cover * elevation * meleeArcher * difficulty * (.55 + f.stamina / 220) * interval + (charge > 1 ? f.soldiers * .06 * brace * flank * (1-(t.magic_defence??0)) : 0)) / (t.defence_multiplier??1);
+        f.damage_pool += (f.soldiers * (f.unit_attack ?? 1) * (f.attack_multiplier ?? 1) * (f.magic_attack??1) * (1-(t.magic_defence??0)) * UNITS[f.unit_type].rate * matchup * stance * defence * brace * flank * charge * cover * elevation * meleeArcher * difficulty * (.55 + f.stamina / 220) * interval + (charge > 1 ? f.soldiers * .06 * brace * flank * (1-(t.magic_defence??0)) : 0)) / ((t.unit_defence ?? 1) * (t.defence_multiplier??1));
         const casualties = Math.min(Math.max(0, t.soldiers - (pending.get(t.id)?.loss ?? 0)), Math.floor(f.damage_pool));
         if (casualties > 0 || charge > 1) {
             f.damage_pool-=casualties;

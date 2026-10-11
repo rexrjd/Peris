@@ -8,6 +8,7 @@ import { findMarchPath } from './pathfinding';
 import { isWalkable } from './worldGrid';
 import type { Army } from '../../army/domain/types';
 import { addStationGarrison, mergeStationGarrison, ownedStation, stationCell } from './garrisons';
+import { readRoster, writeRoster, addRosters, RECRUIT_UNITS, rosterTotal, validateRoster } from '../../army/domain/roster';
 export const MARCH_CANCEL_MS = 30_000;
 export function canCancelMarch(army: Army, now = Date.now()) {
     return army.status === 'moving' && !!army.march_sent_at && !!army.march_cancel_until &&
@@ -16,7 +17,7 @@ export function canCancelMarch(army: Army, now = Date.now()) {
 /** Reserved troops were never sent or exposed to battle losses. Consume the reserve once. */
 export function restoreRaidReserve(army: Army) {
     if (!army.raid_reserve) return;
-    for (const type of ['infantry', 'archers', 'cavalry'] as const) army[type] += army.raid_reserve[type];
+    writeRoster(army, addRosters(readRoster(army), army.raid_reserve));
     army.raid_reserve = null;
 }
 /** A raid's return is an existing journey, without another cancellation window. */
@@ -44,13 +45,14 @@ export function cancelMarch(context: LocalCommandContext, cmd: Extract<Command, 
     army.departure_at = context.now; army.arrival_at = context.now;
     army.march_path = null; army.march_distance = null;
     army.march_sent_at = null; army.march_cancel_until = null;
-    army.march_origin = null; army.march_returning = false;
+    army.march_origin = null; army.march_returning = false; army.farm_list_id = null;
     army.updated_at = context.now;
 }
 export function marchArmy(context: LocalCommandContext, cmd: Extract<Command, {
     type: 'move' | 'raid';
 }>) {
     const w = context.world, a = commandArmy(context), now = context.now, clock = Date.parse(now);
+    if (w.battles.some(battle => battle.status === 'active' && (battle.attacker_owner_id === context.playerId || battle.defender_owner_id === context.playerId))) throw new Error('Finish the current battle first.');
     if (w.orders.some(o => o.kind === 'recruit' && (o.army_id ?? w.armies[0].id) === a.id))
         throw new Error('Let the training queue finish before marching.');
     let x: number, y: number, raidTargetId: number | null = null;
@@ -58,7 +60,7 @@ export function marchArmy(context: LocalCommandContext, cmd: Extract<Command, {
         const c = w.camps.find(c => c.id === cmd.campId);
         if (!c)
             throw new Error('Camp not found.');
-        if (w.progress.some(t => t.owner_id === context.playerId && t.camp_id === c.id && Date.parse(t.available_at) > clock))
+        if (!c.bandit && w.progress.some(t => t.owner_id === context.playerId && t.camp_id === c.id && Date.parse(t.available_at) > clock))
             throw new Error('The camp is still regrouping.');
         if (!soldierTotal(a))
             throw new Error('Recruit soldiers before starting a raid.');
@@ -73,12 +75,13 @@ export function marchArmy(context: LocalCommandContext, cmd: Extract<Command, {
     }
     if (a.status !== 'idle' || a.raid_target_id !== null || a.raid_reserve)
         throw new Error('This legion already has a march or raid. Cancel within 30 seconds or wait for its return.');
+    const available = readRoster(a);
     const troops = cmd.type === 'raid' ? cmd.troops : undefined;
     if (cmd.type === 'raid' && cmd.troops !== undefined && (!troops || typeof troops !== 'object' || Array.isArray(troops)))
         throw new Error('Choose troops currently available in this legion.');
-    if (troops && (['infantry', 'archers', 'cavalry'] as const).some(type => !Number.isSafeInteger(troops[type]) || troops[type] < 0 || troops[type] > a[type]))
+    if (troops && (!validateRoster(troops) || RECRUIT_UNITS.some(unit => (troops[unit] ?? 0) > available[unit])))
         throw new Error('Choose troops currently available in this legion.');
-    if (troops && !soldierTotal(troops)) throw new Error('Send at least one soldier.');
+    if (troops && !rosterTotal(troops)) throw new Error('Send at least one soldier.');
     if (!isWalkable(Math.floor(x / CELL_SIZE), Math.floor(y / CELL_SIZE))) throw new Error('Land armies cannot march across the sea.');
     const pos = wrapWorldPoint(armyPosition(a, clock));
     // Legacy saves may already have an army resting on neutral land. Let it
@@ -91,10 +94,10 @@ export function marchArmy(context: LocalCommandContext, cmd: Extract<Command, {
     // Every guard and route calculation succeeds before the existing army changes.
     a.raid_target_id = raidTargetId;
     if (troops) {
-        addStationGarrison(w, context.playerId, pos, { infantry: a.infantry - troops.infantry, archers: a.archers - troops.archers, cavalry: a.cavalry - troops.cavalry });
-        for (const type of ['infantry', 'archers', 'cavalry'] as const) a[type] = troops[type];
+        addStationGarrison(w, context.playerId, pos, addRosters(available, troops, -1));
+        writeRoster(a, troops);
     }
-    a.march_origin = { ...stationCell(pos), ...pos }; a.march_returning = false;
+    a.march_origin = { ...stationCell(pos), ...pos }; a.march_returning = false; a.farm_list_id = null;
     a.march_path = route.path;
     a.march_distance = route.distance;
     a.march_map_version = WORLD_MAP_VERSION;

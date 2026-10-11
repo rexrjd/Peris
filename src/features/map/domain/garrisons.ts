@@ -4,7 +4,8 @@ import type { World } from '../../../shared/model/world';
 import { CELL_SIZE, wrapWorldPoint } from './dimensions';
 import { armyPosition } from './movement';
 
-export type Garrison = ArmyTroops & { owner_id: string; col: number; row: number };
+import { readRoster, writeRoster, addRosters, emptyRoster, RECRUIT_UNITS, rosterTotal, validateRoster } from '../../army/domain/roster';
+export type Garrison = ArmyTroops & { unit_roster?: ArmyTroops | null } & { owner_id: string; col: number; row: number };
 export function stationCell(point: { x: number; y: number }) {
     const wrapped = wrapWorldPoint(point);
     return { col: Math.floor(wrapped.x / CELL_SIZE), row: Math.floor(wrapped.y / CELL_SIZE) };
@@ -26,10 +27,11 @@ export function garrisonAt(world: World, owner: string, point: { x: number; y: n
 }
 export function addStationGarrison(world: World, owner: string, point: { x: number; y: number }, troops: ArmyTroops) {
     if (!ownedStation(world, owner, point)) throw new Error('Troops can only station in your own villages and fields.');
-    if (!troops.infantry && !troops.archers && !troops.cavalry) return;
+    if (!validateRoster(troops)) throw new Error('Choose whole troop counts.');
+    if (!rosterTotal(troops)) return;
     let garrison = garrisonAt(world, owner, point);
     if (!garrison) { garrison = { owner_id: owner, ...stationCell(point), infantry: 0, archers: 0, cavalry: 0 }; (world.garrisons ??= []).push(garrison); }
-    for (const type of ['infantry', 'archers', 'cavalry'] as const) garrison[type] += troops[type];
+    writeRoster(garrison, addRosters(readRoster(garrison), troops));
 }
 /** Merge up to the legion capacity; an overflowing station keeps its remaining troops. */
 export function mergeStationGarrison(world: World, army: Army, troops?: ArmyTroops) {
@@ -37,18 +39,15 @@ export function mergeStationGarrison(world: World, army: Army, troops?: ArmyTroo
     if (!ownedStation(world, army.owner_id, point)) return;
     const garrison = garrisonAt(world, army.owner_id, point);
     if (!garrison) {
-        if (troops && troops.infantry + troops.archers + troops.cavalry > 0) throw new Error('No stationed troops are available here.');
+        if (troops && rosterTotal(troops) > 0) throw new Error('No stationed troops are available here.');
         return;
     }
-    const types = ['infantry', 'archers', 'cavalry'] as const;
-    let capacity = Math.max(0, 1000 - army.infantry - army.archers - army.cavalry);
-    if (troops && (types.some(type => !Number.isSafeInteger(troops[type]) || troops[type] < 0 || troops[type] > garrison[type]) ||
-        troops.infantry + troops.archers + troops.cavalry > capacity)) throw new Error('Choose available stationed troops within the legion capacity.');
-    for (const type of types) {
-        const quantity = troops ? troops[type] : Math.min(capacity, garrison[type]);
-        army[type] += quantity; garrison[type] -= quantity; capacity -= quantity;
-    }
-    if (!garrison.infantry && !garrison.archers && !garrison.cavalry) world.garrisons = world.garrisons?.filter(row => row !== garrison);
+    const available = readRoster(garrison), legion = readRoster(army), selected = emptyRoster();
+    let capacity = Math.max(0, 1000 - rosterTotal(legion));
+    if (troops && (!validateRoster(troops) || RECRUIT_UNITS.some(unit => (troops[unit] ?? 0) > available[unit]) || rosterTotal(troops) > capacity)) throw new Error('Choose available stationed troops within the legion capacity.');
+    for (const unit of RECRUIT_UNITS) { selected[unit] = troops ? troops[unit] ?? 0 : Math.min(capacity, available[unit]); capacity -= selected[unit]; }
+    writeRoster(army, addRosters(legion, selected)); writeRoster(garrison, addRosters(available, selected, -1));
+    if (!rosterTotal(readRoster(garrison))) world.garrisons = world.garrisons?.filter(row => row !== garrison);
 }
 export function collectGarrison(context: LocalCommandContext, cmd: Extract<Command, { type: 'collectGarrison' }>) {
     const army = context.world.armies.find(row => row.id === cmd.armyId && row.owner_id === context.playerId);

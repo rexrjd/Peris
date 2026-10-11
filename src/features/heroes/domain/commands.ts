@@ -4,6 +4,7 @@ import { ARTIFACTS, HERO_CLASSES, HERO_COST, HERO_STATS, armyLimit, heroPoints }
 import { armyPosition } from '../../map/domain/movement';
 import { wrappedWorldDelta } from '../../map/domain/dimensions';
 import { soldierTotal } from '../../army/domain/units';
+import { readRoster, writeRoster, addRosters, takeClasses } from '../../army/domain/roster';
 import { homeArmyPosition } from '../../map/domain/garrisons';
 
 export function recruitHero(ctx: LocalCommandContext, cmd: Extract<Command, { type: 'recruitHero' }>) {
@@ -41,7 +42,9 @@ export function transferTroops(ctx: LocalCommandContext, cmd: Extract<Command, {
     for (const type of types) if (!Number.isInteger(cmd[type]) || cmd[type] < 0 || cmd[type] > source[type]) throw new Error('Choose soldiers available in the source army.');
     const total = types.reduce((n, type) => n + cmd[type], 0);
     if (!total || soldierTotal(target) + total > 1000) throw new Error('Transfer at least one soldier and stay within the 1,000 soldier capacity.');
-    for (const type of types) { source[type] -= cmd[type]; target[type] += cmd[type]; }
+    const selected = takeClasses(readRoster(source), cmd);
+    writeRoster(source, addRosters(readRoster(source), selected, -1));
+    writeRoster(target, addRosters(readRoster(target), selected));
 }
 export function rebaseArmy(ctx: LocalCommandContext) {
     const army = commandArmy(ctx), city = commandCity(ctx), point = armyPosition(army, Date.parse(ctx.now)), home = homeArmyPosition(city);

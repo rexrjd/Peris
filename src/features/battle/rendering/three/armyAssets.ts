@@ -211,6 +211,7 @@ export function overlayArmyRolesPair(baseNear: Army, baseFar: Army, roles: reado
 }
 
 export function armyRole(f: Formation, formations: readonly Formation[]): ArmyRole {
+    if (f.recruit_unit) return ({ infantry: 'line_infantry', spearmen: 'spear_guard', elite: 'elite', archers: 'archer', cavalry: 'light_cavalry', scout: 'scout', heavyCavalry: 'heavy_cavalry', ram: 'ram', catapult: 'catapult' } as const)[f.recruit_unit];
     const peers = formations.filter(other => other.owner_id === f.owner_id && other.unit_type === f.unit_type && other.battle_id === f.battle_id).sort((a, b) => a.id - b.id);
     const index = peers.findIndex(other => other.id === f.id);
     return f.unit_type === 'archers' ? 'archer' : f.unit_type === 'cavalry' ? (['scout','light_cavalry','heavy_cavalry'] as const)[Math.max(0,index)%3] : (['line_infantry','spear_guard','elite'] as const)[Math.max(0,index)%3];

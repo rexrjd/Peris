@@ -12,8 +12,8 @@ This release organizes the existing game by feature and responsibility. It prese
 | `src/features/city` | Buildings, production, capacity, construction, rename command, city layout and UI |
 | `src/features/empire` | Culture, city founding, settlers, ownership context and save normalization |
 | `src/features/heroes` | Commander classes, XP/attributes, artifacts, troop transfer and home-city changes |
-| `src/features/frontier` | Frontier camp balance/generation, stock and combat adapter, raid/farm/report UI |
-| `server/frontier` | Local persistent Frontier authority, sessions, transactional commands and indexed event processing |
+| `src/features/frontier` | Reusable camp balance, stock arithmetic, nine-role catalog and faction icons; historical prototype UI is not a player entry point |
+| `server/frontier` | Historical developer prototype and regression fixtures; not required by Peris |
 | `src/features/army` | Unit definitions, troop counts, recruitment, training completion and UI |
 | `src/features/campaign` | New realm, quests, rewards, progression, raid creation, strategic queue orchestration and battle settlement |
 | `src/features/menu`, `settings`, `codex` | Their own screen components and styles |
@@ -28,13 +28,23 @@ This release organizes the existing game by feature and responsibility. It prese
 
 Features contain `domain`, `ui`, `rendering` and `styles` only where needed. Domain code uses plain state and types. Rendering reads state and emits commands; it does not apply damage, spend resources or persist campaigns. The local engine coordinates feature systems. The online adapter asks authoritative database functions to perform mutations.
 
-Frontier Wars is a separate local realm reached through `/?frontier=1`. Its Node
-authority reuses the existing pure troop, pathfinding and automatic-combat domains.
-`src/platform/frontier.ts` sends same-origin commands; it does not simulate outcomes.
-The server owns a disk PGlite database and a bounded chronological event queue.
-Its schema source is `supabase/modules/frontier/local.sql`, generated separately
-as `supabase/FRONTIER_LOCAL.sql`; it is not included in existing Supabase installers.
-See `docs/frontier-wars.md` for the transaction and migration boundary.
+Camps and farming are part of the existing Peris realm. `src/main.tsx` redirects
+old Frontier bookmarks into the same application. `unit_roster` preserves nine
+recruited identities while legacy infantry/archer/cavalry totals remain combat
+classes. Formations carry the actual recruited role and separate unit statistics;
+hero/magic multipliers remain unchanged. Garrisons, recruitment, transfers,
+cancellation, settlement and save validation preserve those identities.
+
+Local camp production and repeat dispatch use `campaign/domain/campStock.ts` and
+`campEconomy.ts`; they feed the existing travel and automatic battle systems.
+Shared worlds use the normal RPC adapter and generated V16 Supabase modules.
+Private `peris_game_tick` performs bounded, fair owner processing through existing
+settlement, travel and battle functions, plus camp accrual. Only service-role
+execution is granted; an optional database scheduler runs it independently of
+browsers. NPC growth deadlines are never exposed in public snapshots.
+The old local Frontier server remains a development reference, not a second
+player account, production service or navigation route.
+See `docs/frontier-wars.md` for the migration and publication boundary.
 
 ## Where gameplay changes belong
 
@@ -87,7 +97,7 @@ Feature-specific rules live in each feature's `styles` folder. Shared controls/t
 
 Edit the relevant function under `supabase/modules`. The ordered `manifest.json` composes schema, gameplay functions and final permissions into the deployment scripts. These fragments are source files, not individually runnable migrations.
 
-Run `npm run build:sql` after editing server source. Then `npm run check:sql`, `npm run test:db` and `npm run test:fresh`. Generated `UPGRADE_TO_V11.sql` and `FRESH_INSTALL_V11.sql` are complete files for Supabase SQL Editor. Historical v6/v7/v8/v9 bundle names remain generated compatibility aliases. Never manually edit those bundles or the existing-world protection in the fresh installer.
+Run `npm run build:sql` after editing server source. Then `npm run check:sql`, `npm run test:db` and `npm run test:fresh`. Generated `UPGRADE_TO_V16.sql` and `FRESH_INSTALL_V16.sql` are complete files for Supabase SQL Editor. Historical v6/v7/v8/v9 bundle names remain generated compatibility aliases. Never manually edit those bundles or the existing-world protection in the fresh installer.
 
 ## Updating an existing repository
 

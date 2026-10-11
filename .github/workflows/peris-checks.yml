@@ -34,6 +34,7 @@ jobs:
       - run: npm run test:db
       - run: npm run test:fresh
       - run: npm run test:empire-db
+      - run: npm run test:integration-db
       - run: npm run build
 
   browser:
@@ -62,7 +63,7 @@ jobs:
             test-results/
           retention-days: 7
 
-  frontier-browser:
+  game-integration-browser:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -77,9 +78,9 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: frontier-browser-report
+          name: game-integration-browser-report
           include-hidden-files: true
           path: |
-            .frontier-playwright-report/
-            .frontier-test-results/
+            playwright-report/
+            test-results/
           retention-days: 7

@@ -7,6 +7,7 @@ export type CampaignFarmList = {
 export type CampaignFarmTarget = {
     id: number; owner_id: string; list_id: number; camp_id: number; army_id: number;
     troops: CampaignFarmTroops; created_at: string;
+    enabled?: boolean; interval_seconds?: number; next_at?: string | null; last_status?: string;
 };
 export type Player = {
     id: string;
@@ -20,6 +21,7 @@ export type Player = {
     culture_updated_at?: string;
 };
 export type Report = {
+    camp_id?: number; farm_list_id?: number | null;
     id: number;
     owner_id: string;
     battle_id: number;

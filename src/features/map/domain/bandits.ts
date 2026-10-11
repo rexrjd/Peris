@@ -20,7 +20,7 @@ export function generateBanditCamps(seed=WORLD_MAP_SEED): Camp[] {
             const total=Math.round(([0,40,85,150,240][tier])*(.8+rng()*.4));
             const archers=Math.floor(total*(.15+rng()*.25)),cavalry=Math.floor(total*rng()*(tier===1?.1:.3));
             const x=(c+.5)*CELL_SIZE,y=(r+.5)*CELL_SIZE;
-            camps.push({id,bandit:true,faction,name:`${FACTIONS[faction].name} ${['outlaws','raiders','warband','marauders'][tier-1]}`,x,y,tier,terrain:battleTerrainAtWorld(x,y),infantry:total-archers-cavalry,archers,cavalry,description:'A roaming warband has built a camp here. Defeat its defenders for resources and commander experience. It regroups after ten minutes.'});break;
+            camps.push({id,bandit:true,faction,name:`${FACTIONS[faction].name} ${['outlaws','raiders','warband','marauders'][tier-1]}`,x,y,tier,terrain:battleTerrainAtWorld(x,y),infantry:total-archers-cavalry,archers,cavalry,description:'A roaming warband has built a camp here. Raid its stored supplies and earn commander experience. Its stock and defenders grow over time.'});break;
         }
     }
     return camps;

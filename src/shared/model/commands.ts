@@ -2,13 +2,14 @@ import type {Faction} from '../../features/factions/domain/factions';
 import type { BuildingType } from '../../features/city/domain/types';
 import type { SlotType } from '../../features/city/domain/slots';
 import type { FieldBuilding } from '../../features/map/domain/territory';
-import type { ArmyTroops, UnitType } from '../../features/army/domain/types';
+import type { ArmyTroops } from '../../features/army/domain/types';
+import type { RecruitUnit } from '../../features/army/domain/roster';
 import type { Battle, BattleOrder } from '../../features/battle/domain/types';
 import type { World } from './world';
 type BaseCommand = {type:'setFaction';faction:Faction} | {type:'debugCity';action:'resources'|'demolish'|'finish'|'level'|'population'|'culture';target?:string;value?:number} | {type:'researchSpell';spell:string;} | {type:'castSpell';battleId:number;spell:string;target?:number;} | {
     type: 'saveCampaignFarmList'; id?: number; name: string; troops: ArmyTroops; casualtiesOnly: boolean;
 } | {
-    type: 'saveCampaignFarm'; id?: number; listId: number; campId: number; armyId: number; troops: ArmyTroops;
+    type: 'saveCampaignFarm'; id?: number; listId: number; campId: number; armyId: number; troops: ArmyTroops; intervalSeconds?: number; enabled?: boolean;
 } | {
     type: 'deleteCampaignFarm'; id: number;
 } | {
@@ -28,8 +29,10 @@ type BaseCommand = {type:'setFaction';faction:Faction} | {type:'debugCity';actio
     item: BuildingType;
 } | {
     type: 'recruit';
-    item: UnitType;
+    item: RecruitUnit;
     quantity: number;
+} | {
+    type: 'researchUnit'; item: RecruitUnit;
 } | {
     type: 'move';
     x: number;

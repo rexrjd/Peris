@@ -38,7 +38,7 @@ test('command room has a horizontal owned army roster and one focused management
         assert.ok(!html.includes('hero-workspace'));
         assert.ok(!html.includes('Raise another army'));
     }
-    assert.ok(f.render().includes('Recruit infantry'));
+    assert.ok(f.render().includes('Recruitment'));
     assert.ok(!f.render().includes('Four paths. Your choice.'));
     assert.ok(f.render('logistics').includes('Receiver after'));
     f.other.target_x += 500;

@@ -1,35 +1,47 @@
 import { useState } from 'react';
+import { armyFaction } from '../domain/faction';
 import type { World } from '../../../shared/model/world';
 import type { Command } from '../../../shared/model/commands';
-import type { Army, UnitType } from '../domain/types';
+import type { Army } from '../domain/types';
 import type { Settlement } from '../../city/domain/types';
-import { UNIT_TYPES } from '../domain/units';
-import { armyOverview, recruitmentPlan, UNIT_ROLES, count, percent } from '../domain/commandRoom';
-import { Icon } from '../../../shared/ui/Icons';
+import { RECRUIT_UNITS, RECRUIT_RULES, readRoster, type RecruitUnit } from '../domain/roster';
+import { armyOverview, recruitmentPlan } from '../domain/commandRoom';
+import { TroopIcon } from '../../frontier/ui/TroopIcon';
+import { factionTroopName } from '../../frontier/ui/roster';
 import { Cost } from '../../../shared/ui/Shared';
 import { clock } from '../../../shared/time/clock';
+import { affordable, liveResources } from '../../city/domain/economy';
+import { slotLevels } from '../../city/domain/slots';
 import { homeArmyPosition } from '../../map/domain/garrisons';
 
 export function RecruitmentPanel({ world, army, city, run, busy, now, onCity, onOpenCity, onLogistics }: { world: World; army: Army; city: Settlement; run: (c: Command, message?: string) => void; busy: boolean; now: number; onCity?: (id: number) => void; onOpenCity?: (id: number) => void; onLogistics: () => void }) {
-    const [type, setType] = useState<UnitType>('infantry'), [quantity, setQuantity] = useState(20);
-    const overview = armyOverview(world, army, now), plan = recruitmentPlan(world, army, city, type, quantity, now), meta = UNIT_ROLES[type];
-    const cities = world.settlements.filter(s => s.owner_id === army.owner_id);
-    const changeQuantity = (n: number) => setQuantity(Math.max(1, Math.min(200, Math.floor(n || 1))));
-    return <div className="army-recruit-layout"><div className="army-composition"><section className="command-panel"><div className="command-section-heading"><div><span className="command-kicker">The soldiers under your banner</span><h2>Army composition</h2></div><span className="command-pill">{count(overview.total)} / 1,000</span></div>
-        <div className="command-unit-cards">{UNIT_TYPES.map(key => <button key={key} className={`command-unit-card unit-${key}`} aria-pressed={type === key} onClick={() => setType(key)}><div className="unit-card-banner"><Icon name={UNIT_ROLES[key].icon} size={38}/><span>{UNIT_ROLES[key].role}</span></div><strong>{count(army[key])}</strong><h3>{UNIT_ROLES[key].name}</h3><div className="command-meter"><i style={{ width: `${overview.total ? army[key] / overview.total * 100 : 0}%` }}/></div><small>{overview.total ? percent(army[key] / overview.total) : '0%'} of your army</small><span className="unit-card-select">{type === key ? 'Selected for recruiting' : 'Recruit this unit'}<Icon name="plus" size={14}/></span></button>)}</div>
-        <div className="army-capacity-line"><span>{count(overview.free)} spaces available</span><span>{overview.queued ? `${overview.queued} soldiers in training` : 'Select a unit to recruit'}</span></div>
-        {overview.total === 0 && <div className="command-note"><Icon name="flag"/><p>A commander needs soldiers. Recruit here or bring in troops from another army.</p><button className="command-text-button" onClick={onLogistics}>Transfer troops<Icon name="arrow" size={15}/></button></div>}
-    </section><section className="command-panel command-training"><div className="command-section-heading"><div><span className="command-kicker">Reinforcements on the way</span><h2>Training queue</h2></div><span className="command-pill">{plan.orders.length} / 3 slots</span></div>
-        {plan.orders.length ? <ol className="command-queue-list">{plan.orders.map((order, index) => { const waiting = now < Date.parse(order.started_at), progress = Math.min(100, Math.max(0, (now - Date.parse(order.started_at)) / Math.max(1, Date.parse(order.finish_at) - Date.parse(order.started_at)) * 100)); const origin = world.settlements.find(s => s.id === order.settlement_id); return <li key={order.id}><span className="queue-number">{index + 1}</span><Icon name={UNIT_ROLES[order.item as UnitType]?.icon ?? 'army'}/><div><strong>{order.quantity} {UNIT_ROLES[order.item as UnitType]?.name.toLowerCase() ?? order.item}</strong><small>{waiting ? 'Queued' : 'Training'}{origin ? ` in ${origin.name}` : ''} · Ready in {clock(Math.max(0, (Date.parse(order.finish_at) - now) / 1000))}</small><div className="command-meter"><i style={{ width: `${progress}%` }}/></div></div></li>; })}</ol> : <div className="command-queue-empty"><Icon name="time"/><p>No troops in training.<small>Add a batch from the recruitment panel.</small></p></div>}
-        <small className="command-muted">This army stays in place until all training is complete.</small>
-    </section></div>
-    <section className="command-panel command-recruit-form"><div className="command-section-heading"><div><span className="command-kicker">Add to this army</span><h2>Recruit {meta.name.toLowerCase()}</h2></div><Icon name={meta.icon} size={27}/></div><p className="command-muted">{meta.detail}</p>
-        <label className="command-label">Training city<select aria-label="Training city" value={city.id} onChange={event => onCity?.(Number(event.target.value))}>{cities.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}</select></label>
-        <div className="recruit-site-status"><span className={plan.near ? 'available' : ''}><Icon name={plan.near ? 'check' : 'flag'} size={14}/>{plan.near ? 'Army is here' : army.status === 'moving' ? 'Army is marching' : 'Army is elsewhere'}</span><span>{plan.level ? `${plan.building === 'stables' ? 'Stables' : 'Barracks'} Lv. ${plan.level}` : `${plan.building === 'stables' ? 'Stables' : 'Barracks'} required`}</span></div>
-        <label className="command-label" htmlFor="recruit-quantity">Soldiers to train</label><div className="command-quantity"><button aria-label="Train fewer soldiers" onClick={() => changeQuantity(quantity - 5)}>−</button><input id="recruit-quantity" type="number" min={1} max={200} value={quantity} onChange={event => changeQuantity(Number(event.target.value))}/><button aria-label="Train more soldiers" onClick={() => changeQuantity(quantity + 5)}>+</button></div><div className="recruit-presets">{[10, 25, 50].map(n => <button key={n} aria-pressed={quantity === n} onClick={() => changeQuantity(n)}>{n}</button>)}<button disabled={!plan.max} onClick={() => changeQuantity(plan.max)}>Max {plan.max}</button></div>
-        <div className="recruit-cost-heading"><span>Total supplies</span><small>From {city.name}</small></div><Cost cost={plan.cost} resources={plan.resources} compact/>
-        <div className="recruit-timing"><span>Training time<b>{clock(plan.seconds)}</b></span><span>Ready in, with queue<b>{clock(plan.finishSeconds)}</b></span></div>
-        <button className="command-button primary" disabled={busy || !!plan.reason} onClick={() => run({ type: 'recruit', armyId: army.id, settlementId: city.id, item: type, quantity }, `${quantity} ${meta.name.toLowerCase()} added to ${army.name}’s training`)}>Train {quantity} {meta.name.toLowerCase()}<Icon name="plus" size={16}/></button>
-        {plan.reason && <div className="recruit-blocked"><p>{plan.reason}</p>{!plan.near && !plan.orders.length && <button className="command-text-button" disabled={busy} onClick={() => run({ type: 'move', armyId: army.id, settlementId: city.id, ...homeArmyPosition(city) }, `${army.name} is marching to ${city.name}`)}>March to {city.name}<Icon name="arrow" size={15}/></button>}{!plan.level && onOpenCity && <button className="command-text-button" onClick={() => onOpenCity(city.id)}>Develop this city<Icon name="arrow" size={15}/></button>}</div>}
-    </section></div>;
+ const [type, setType] = useState<RecruitUnit>('infantry'), [quantity, setQuantity] = useState(20);
+ const [building, setBuilding] = useState<'barracks' | 'stables' | 'workshop'>('barracks');
+ const rule = RECRUIT_RULES[type], roster = readRoster(army), faction = armyFaction(world, army);
+ const name = factionTroopName(faction, type), overview = armyOverview(world, army, now), plan = recruitmentPlan(world, army, city, type, quantity, now);
+ const research = world.unit_research?.find(entry => entry.settlement_id === city.id && entry.unit === type);
+ const researched = !rule.researchSeconds || !!research && Date.parse(research.completes_at) <= now;
+ const changeQuantity = (n: number) => setQuantity(Math.max(1, Math.min(200, Math.floor(n || 1))));
+ return <div className="army-recruit-layout"><div className="army-composition">
+  <section className="command-panel"><div className="command-section-heading"><h2>Army composition</h2><span className="command-pill">{overview.total} / 1,000</span></div>
+   <div className="game-unit-roster">{RECRUIT_UNITS.map(unit => <button key={unit} title={`${factionTroopName(faction, unit)} · ${roster[unit]} in this legion · Carry ${RECRUIT_RULES[unit].carry} each`} onClick={() => { setType(unit); setBuilding(RECRUIT_RULES[unit].building); }}><TroopIcon faction={faction} unit={unit}/><span>{factionTroopName(faction, unit)}</span><strong>{roster[unit]}</strong></button>)}</div>
+   <small className="command-muted">{overview.free} spaces available · {overview.queued} in training</small>{!overview.total && <button className="command-text-button" onClick={onLogistics}>Transfer troops</button>}
+  </section>
+  <section className="command-panel command-training"><h2>Training queue</h2>{overview.orders.length ? <ol className="command-queue-list">{overview.orders.map(order => <li key={order.id}><TroopIcon faction={faction} unit={order.item as RecruitUnit}/><div><strong>{order.quantity} {factionTroopName(faction, order.item as RecruitUnit)}</strong><small>{now < Date.parse(order.started_at) ? 'Queued' : 'Training'} · Ready in {clock(Math.max(0, (Date.parse(order.finish_at) - now) / 1000))}</small></div></li>)}</ol> : <p>No troops in training.</p>}<small className="command-muted">The legion stays here until training finishes. Each building has its own queue.</small></section>
+ </div><section className="command-panel command-recruit-form">
+  <h2>Recruitment</h2><label className="command-label">Training city<select aria-label="Training city" value={city.id} onChange={event => onCity?.(Number(event.target.value))}>{world.settlements.filter(s => s.owner_id === army.owner_id).map(s => <option key={s.id} value={s.id}>{s.name}</option>)}</select></label>
+  <nav className="army-command-tabs" aria-label="Recruitment buildings">{(['barracks', 'stables', 'workshop'] as const).map(site => <button key={site} aria-pressed={building === site} onClick={() => { setBuilding(site); setType(RECRUIT_UNITS.find(unit => RECRUIT_RULES[unit].building === site)!); }}>{site === 'barracks' ? 'Barracks' : site === 'stables' ? 'Stables' : 'Workshop'}<small> Lv. {slotLevels(world, city.id, site)}</small></button>)}</nav>
+  <div className="game-unit-choices">{RECRUIT_UNITS.filter(unit => RECRUIT_RULES[unit].building === building).map(unit => {
+   const entry = world.unit_research?.find(r => r.settlement_id === city.id && r.unit === unit), ready = !RECRUIT_RULES[unit].researchSeconds || !!entry && Date.parse(entry.completes_at) <= now;
+   return <button key={unit} aria-pressed={type === unit} title={`${factionTroopName(faction, unit)} · ${ready ? 'Ready to recruit' : entry ? 'Research in progress' : 'Research required'}`} onClick={() => setType(unit)}><TroopIcon faction={faction} unit={unit}/><span>{factionTroopName(faction, unit)}<small>{ready ? 'Ready to recruit' : entry ? 'Researching' : 'Research required'}</small></span></button>;
+  })}</div>
+  <h3>{name}</h3><p className="command-muted" title="Statistics used by automatic combat and loot rules">Attack ×{rule.attack} · Defence ×{rule.defence} · Carry {rule.carry} · Speed {rule.speed}</p>
+  {!researched ? <><Cost cost={rule.researchCost} resources={liveResources(city, now)} compact/>{research ? <p role="status">Research completes in {clock(Math.max(0, (Date.parse(research.completes_at) - now) / 1000))}</p> : <button className="command-button primary" disabled={busy || !slotLevels(world, city.id, building) || !affordable(liveResources(city, now), rule.researchCost)} onClick={() => run({ type: 'researchUnit', settlementId: city.id, item: type }, `${name} research queued.`)}>Research {name} · {clock(rule.researchSeconds)}</button>}</> : <>
+   <label className="command-label" htmlFor="recruit-quantity">Soldiers to train</label><div className="command-quantity"><button aria-label="Train fewer soldiers" onClick={() => changeQuantity(quantity - 5)}>−</button><input id="recruit-quantity" type="number" min={1} max={200} value={quantity} onChange={event => changeQuantity(Number(event.target.value))}/><button aria-label="Train more soldiers" onClick={() => changeQuantity(quantity + 5)}>+</button></div>
+   <div className="recruit-presets">{[10, 25, 50].map(n => <button key={n} aria-pressed={quantity === n} onClick={() => changeQuantity(n)}>{n}</button>)}<button disabled={!plan.max} onClick={() => changeQuantity(plan.max)}>Max {plan.max}</button></div><Cost cost={plan.cost} resources={plan.resources} compact/>
+   <div className="recruit-timing"><span>Training time<b>{clock(plan.seconds)}</b></span><span>Ready with queue<b>{clock(plan.finishSeconds)}</b></span></div>
+   <button className="command-button primary" disabled={busy || !!plan.reason} onClick={() => run({ type: 'recruit', armyId: army.id, settlementId: city.id, item: type, quantity }, `${quantity} ${name} added to ${army.name}’s training`)}>Train {quantity} {name}</button>{plan.reason && <p className="recruit-blocked" role="status">{plan.reason}</p>}
+  </>}
+  {!plan.near && <button className="command-button secondary" disabled={busy || army.status !== 'idle'} onClick={() => run({ type: 'move', armyId: army.id, ...homeArmyPosition(city) })}>Bring army to {city.name}</button>}{!plan.level && <button className="command-text-button" onClick={() => onOpenCity?.(city.id)}>Open village buildings</button>}
+ </section></div>;
 }

@@ -5,7 +5,8 @@ import { affordable } from '../../city/domain/economy';
 import { RESOURCES, multiply } from '../../../shared/model/resources';
 import { dist } from '../../../shared/math/geometry';
 import { armyPosition } from '../../map/domain/movement';
-import { UNITS, soldierTotal } from './units';
+import { soldierTotal } from './units';
+import { RECRUIT_RULES, RECRUIT_UNITS } from './roster';
 import { recruitSeconds } from './recruitment';
 import { slotLevels } from '../../city/domain/slots';
 import { homeArmyPosition } from '../../map/domain/garrisons';
@@ -13,6 +14,9 @@ export function recruitSoldiers(context: LocalCommandContext, cmd: Extract<Comma
     type: 'recruit';
 }>) {
     const w = context.world, s = commandCity(context), a = commandArmy(context), now = context.now;
+    if (!RECRUIT_UNITS.includes(cmd.item)) throw new Error('Choose a known unit.');
+    const rule = RECRUIT_RULES[cmd.item];
+    if (rule.researchSeconds && !w.unit_research?.some(r => r.settlement_id === s.id && r.unit === cmd.item && Date.parse(r.completes_at) <= Date.parse(now))) throw new Error('Research this unit in this village first.');
     const spend = (cost: ReturnType<typeof buildingCost>) => { if (!affordable(s, cost))
         throw new Error('Your stores cannot cover this cost.'); for (const key of RESOURCES)
         s[key] -= cost[key]; };
@@ -24,9 +28,9 @@ export function recruitSoldiers(context: LocalCommandContext, cmd: Extract<Comma
         throw new Error('Army capacity is 1,000 soldiers.');
     if (w.orders.filter(o => o.kind === 'recruit' && (o.army_id ?? w.armies[0].id) === a.id).length >= 3)
         throw new Error('Training queue is full.');
-    const level = slotLevels(w,s.id,cmd.item === 'cavalry' ? 'stables' : 'barracks');
-    if (!level) throw new Error(`Build ${cmd.item==='cavalry'?'stables':'barracks'} first.`);
-    spend(multiply(UNITS[cmd.item].cost, cmd.quantity));
-    const start = Math.max(Date.parse(now), ...w.orders.filter(o => o.kind === 'recruit' && (o.army_id ?? w.armies[0].id) === a.id).map(o => Date.parse(o.finish_at)));
+    const level = slotLevels(w,s.id,rule.building);
+    if (!level) throw new Error(`Build ${rule.building} first.`);
+    spend(multiply(rule.cost, cmd.quantity));
+    const start = Math.max(Date.parse(now), ...w.orders.filter(o => o.kind === 'recruit' && o.settlement_id === s.id && RECRUIT_RULES[o.item as keyof typeof RECRUIT_RULES]?.building === rule.building).map(o => Date.parse(o.finish_at)));
     w.orders.push({ id: context.nextId(), owner_id: context.playerId, settlement_id: s.id, army_id: a.id, kind: 'recruit', item: cmd.item, quantity: cmd.quantity, started_at: new Date(start).toISOString(), finish_at: new Date(start + recruitSeconds(cmd.item, cmd.quantity, level) * 1000).toISOString() });
 }

@@ -16,6 +16,7 @@ revoke all on function public.create_player(text),public.sync_my_state(),public.
 grant execute on function public.create_player(text),public.sync_my_state(),public.move_army(integer,integer),public.retreat_from_battle(bigint)to authenticated;
 grant execute on function public.peris_empire_command(jsonb)to authenticated;
 grant execute on function public.peris_campaign_farm_command(jsonb)to authenticated;
+grant execute on function public.peris_research_unit(bigint,text)to authenticated;
 grant execute on function public.peris_collect_garrison(bigint,jsonb)to authenticated;
 -- The argument-free identity helper is required by RLS; it exposes only the
 -- caller's current ruler UUID. Session bindings themselves remain inaccessible.
@@ -28,5 +29,6 @@ do $$declare t text;begin
  begin execute format('alter publication supabase_realtime add table public.%I',t);exception when duplicate_object then null;end;
  end loop;
 end $$;
+grant execute on function public.peris_game_tick(integer)to service_role;
 notify pgrst,'reload schema';
 commit;

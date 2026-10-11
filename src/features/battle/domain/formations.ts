@@ -1,9 +1,25 @@
 import { type Formation } from './types';
 import { type Army } from '../../army/domain/types';
 import { FIELD_W, FIELD_H } from './dimensions';
+import { RECRUIT_UNITS, RECRUIT_RULES, readRoster } from '../../army/domain/roster';
 import { UNITS, UNIT_TYPES } from '../../army/domain/units';
 export function formationSize(f: Formation) { const cols = Math.min(f.columns, Math.max(1, f.soldiers)); return { width: cols * 8 + 12, depth: Math.ceil(Math.min(f.soldiers, 120) / cols) * 8 + 12 }; }
-export function makeFormations(battleId: number, army: Pick<Army, 'infantry' | 'archers' | 'cavalry'>, owner: string | null, side: 'attacker' | 'defender', morale = 90, counts?: Partial<Record<'infantry' | 'archers' | 'cavalry', number>>): Formation[] {
+export function makeFormations(battleId: number, army: Pick<Army, 'infantry' | 'archers' | 'cavalry' | 'unit_roster'>, owner: string | null, side: 'attacker' | 'defender', morale = 90, counts?: Partial<Record<'infantry' | 'archers' | 'cavalry', number>>): Formation[] {
+    const roster = readRoster(army);
+    if (army.unit_roster && RECRUIT_UNITS.some(unit => !UNIT_TYPES.includes(unit as typeof UNIT_TYPES[number]) && roster[unit] > 0)) {
+        const result: Formation[] = [];
+        for (const unit of RECRUIT_UNITS) {
+            const rule = RECRUIT_RULES[unit]; if (!roster[unit]) continue;
+            const force = { infantry: 0, archers: 0, cavalry: 0, [rule.combatClass]: roster[unit] };
+            for (const f of makeFormations(battleId, force, owner, side, morale)) {
+                f.id = battleId * 1000 + (side === 'attacker' ? 0 : 500) + result.length + 1;
+                f.recruit_unit = unit; f.label = unit; f.unit_attack = rule.attack; f.unit_defence = rule.defence;
+                f.unit_speed = rule.speed / UNITS[rule.combatClass].speed; result.push(f);
+            }
+        }
+        for (const type of UNIT_TYPES) { const peers = result.filter(f => f.unit_type === type); peers.forEach((f, i) => { f.y = f.target_y = FIELD_H / 2 + (i - (peers.length - 1) / 2) * Math.min(105, 490 / Math.max(1, peers.length - 1)); }); }
+        return result;
+    }
     let index = 0;
     const result: Formation[] = [];
     for (const type of UNIT_TYPES) {

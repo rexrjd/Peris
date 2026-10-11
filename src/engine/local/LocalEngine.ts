@@ -15,6 +15,7 @@ import { startPractice } from '../../features/battle/domain/practice';
 import { type Difficulty, type Terrain } from '../../features/battle/domain/types';
 import { settleBattle } from '../../features/campaign/domain/battleSettlement';
 import { upgradeBuilding } from '../../features/city/domain/commands';
+import { researchUnit } from '../../features/army/domain/research';
 import { recruitSoldiers } from '../../features/army/domain/commands';
 import { cancelMarch, marchArmy, restoreRaidReserve, startRaidReturn } from '../../features/map/domain/commands';
 import { commandBattle } from '../../features/battle/domain/commands';
@@ -25,6 +26,7 @@ import { citySlots, refreshCityEconomy } from '../../features/city/domain/slots'
 import {researchSpell} from '../../features/magic/domain/commands';
 import { claimMapField, queueMapField } from '../../features/map/domain/territory';
 import { commandCampaignFarm } from '../../features/campaign/domain/farms';
+import { advanceCampFarms } from '../../features/campaign/domain/campEconomy';
 import { collectGarrison } from '../../features/map/domain/garrisons';
 export class LocalEngine implements GameEngine {
     readonly playerId = 'solo-ruler';
@@ -61,6 +63,7 @@ export class LocalEngine implements GameEngine {
         const resumed=this.active();
         if(resumed?.phase==='combat')this.battleDebt=Math.min(900,Math.max(0,(Date.now()-Date.parse(resumed.last_tick_at))/1000));
         settleLocal(world, this.playerId);
+        this.advanceFarms();
         this.timer = window.setInterval(() => this.tick(), 50);
         this.save();
     }
@@ -94,9 +97,10 @@ export class LocalEngine implements GameEngine {
         if(!b||this.paused)this.battleDebt=0;
         if (Math.floor(now / 250) !== Math.floor((now - dt * 1000) / 250)) {
             settleLocal(this.snapshot, this.playerId);
+            this.advanceFarms();
             for (const army of this.snapshot.armies.filter(a => a.owner_id === this.playerId)) if (!this.active() && army.raid_target_id && army.status === 'idle') {
                 const camp = this.snapshot.camps.find(c => c.id === army.raid_target_id);
-                if (camp && !this.snapshot.progress.some(p=>p.owner_id===this.playerId&&p.camp_id===camp.id&&Date.parse(p.available_at)>Date.now())) {
+                if (camp && (camp.bandit || !this.snapshot.progress.some(p=>p.owner_id===this.playerId&&p.camp_id===camp.id&&Date.parse(p.available_at)>Date.now()))) {
                     army.raid_target_id = null;
                     this.beginRaid(camp.id, army.id);
                 } else { restoreRaidReserve(army); startRaidReturn(this.snapshot, army); }
@@ -107,6 +111,10 @@ export class LocalEngine implements GameEngine {
             this.nextSave = now + 2000;
             this.save();
         }
+    }
+    private advanceFarms() {
+        if (this.mode === 'practice') return;
+        advanceCampFarms({ world: this.snapshot, playerId: this.playerId, nextId: () => ++this.nextId, active: this.active(), now: new Date().toISOString(), paused: () => {}, finalize: id => this.finalize(id) }, Date.now());
     }
     private beginRaid(campId: number, armyId?: number) { beginRaid(this.snapshot, this.playerId, campId, () => ++this.nextId, armyId); }
     startPractice(terrain: Terrain, difficulty: Difficulty, doctrine: 'balanced' | 'infantry' | 'cavalry' = 'balanced', faction: Faction = 'roman', enemy: Faction = 'orc') { startPractice(this.snapshot, this.playerId, () => ++this.nextId, terrain, difficulty, doctrine, faction, enemy); this.publish(); }
@@ -122,8 +130,9 @@ export class LocalEngine implements GameEngine {
     }
     command = async (cmd: Command) => {
         settleLocal(this.snapshot, this.playerId);
+        this.advanceFarms();
         const active = this.active();
-        if (['claimField', 'buildField', 'researchSpell', 'upgrade', 'buildSlot', 'upgradeSlot', 'recruit', 'move', 'raid', 'trainSettlers', 'foundCity', 'recruitHero', 'heroSkill', 'equipArtifact', 'transferTroops', 'rebaseArmy'].includes(cmd.type) && active)
+        if (['claimField', 'buildField', 'researchSpell', 'upgrade', 'buildSlot', 'upgradeSlot', 'recruit', 'researchUnit', 'move', 'raid', 'trainSettlers', 'foundCity', 'recruitHero', 'heroSkill', 'equipArtifact', 'transferTroops', 'rebaseArmy'].includes(cmd.type) && active)
             throw new Error('Finish the current battle first.');
         const context: LocalCommandContext = { world: this.snapshot, playerId: this.playerId, settlementId: cmd.settlementId, armyId: cmd.armyId, nextId: () => this.nextId = Math.max(this.nextId + 1, nextEntityId(this.snapshot)), active, now: new Date().toISOString(), paused: value => { this.paused = value; }, finalize: id => this.finalize(id) };
         switch (cmd.type) {
@@ -147,6 +156,7 @@ export class LocalEngine implements GameEngine {
             case 'upgrade':
                 upgradeBuilding(context, cmd);
                 break;
+            case 'researchUnit': researchUnit(context, cmd); break;
             case 'recruit':
                 recruitSoldiers(context, cmd);
                 break;

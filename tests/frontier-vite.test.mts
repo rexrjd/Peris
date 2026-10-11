@@ -77,7 +77,8 @@ test('the real Vite configuration blocks Frontier data through file and raw-impo
     const client = await get(address.port, '/src/main.tsx');
     assert.equal(client.status, 200);
     assert.match(client.body, /createRoot/);
-    assert.match(client.body, /FrontierApp/);
+    assert.match(client.body, /features\/.*App|app\/App/);
+    assert.doesNotMatch(client.body, /import\(.*FrontierApp/);
     assert.ok(!client.body.includes(probe));
 });
 
