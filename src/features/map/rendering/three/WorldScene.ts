@@ -170,7 +170,7 @@ export class WorldScene {
             const detailed = this.view.span < 36 && images.length > 0 && (priority(e) === 0 || detailCount++ < 48);
             if (detailed && !e.detail) {
                 const kind = e.kind === 'settlement' ? 'village' : e.id === 6 ? 'ruins' : e.id === 2 ? 'sanctuary' : e.id === 5 ? 'volcano' : e.id === 3 ? 'crossing' : e.id === 4 ? 'keep' : 'village';
-                e.model.add(e.kind === 'army' ? this.armyModels.create(factionOf(e.faction), e.composition ?? 'i', e.mine ? 0x345e48 : 0x749cb1) ?? createArmyModel(e.mine ? 0x345e48 : 0x749cb1) : e.kind==='settlement'?this.settlementModels.get(factionOf(e.faction),e.development):e.bandit?createMercenaryCampModel((e.tier ?? 1) <= 1 ? 'low' : e.tier === 2 ? 'medium' : 'hard',FACTIONS[factionOf(e.faction)].roof):createSettlementModel(kind)); e.detail = true;
+                e.model.add(e.kind === 'army' ? this.armyModels.create(factionOf(e.faction), e.composition ?? 'i', e.mine ? 0x345e48 : 0x749cb1) ?? createArmyModel(e.mine ? 0x345e48 : 0x749cb1) : e.kind==='settlement'?this.settlementModels.get(factionOf(e.faction),e.development):e.bandit?createMercenaryCampModel((e.tier ?? 1) <= 2 ? 'low' : (e.tier ?? 1) <= 5 ? 'medium' : 'hard',FACTIONS[factionOf(e.faction)].roof):createSettlementModel(kind)); e.detail = true;
                 e.model.userData.publishedArmy = e.kind === 'army' && !!e.model.children[0]?.userData.publishedArmy;
                 this.shadowKey='';
             }

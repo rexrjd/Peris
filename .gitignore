@@ -37,6 +37,8 @@ assets/source/battle/roster-*/history/
 assets/source/battle/exports/
 assets/source/battle/peris-*-army.blend
 artifacts/
+!public/art/artifacts/
+!public/art/artifacts/**
 
 # Local reference viewer captures retain their creators' source metadata.
 assets/references/units/sketchfab/**/*.jpg

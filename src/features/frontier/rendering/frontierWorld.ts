@@ -78,7 +78,7 @@ export function projectFrontierWorld({ village, camps, raids = [], now = village
                 return {
                     id: frontierMapCampId(camp), bandit: true, faction: camp.faction,
                     name: `${camp.name} (${camp.col} | ${camp.row})`, ...point,
-                    tier: camp.tier === 'low' ? 1 : camp.tier === 'medium' ? 2 : 3,
+                    tier: camp.tier === 'low' ? 1 : camp.tier === 'medium' ? 4 : 7,
                     terrain: battleTerrainAtWorld(point.x, point.y), ...classes(camp.defenders),
                     description: `${camp.tier} resource-producing mercenary camp`,
                 };

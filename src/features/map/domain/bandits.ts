@@ -16,11 +16,11 @@ export function generateBanditCamps(seed=WORLD_MAP_SEED): Camp[] {
             const c=-100+col*8+Math.floor(rng()*8),r=-100+row*8+Math.floor(rng()*8);
             const cm=(c+298)%4,rm=(r+298)%4;
             if((cm!==2&&rm!==2)||getCell(c,r).terrain==='water'||isHistoricStartingField(c,r)||historic.some(h=>wrappedCellDistance(h,{col:c,row:r})<=2)||camps.some(h=>wrappedCellDistance({col:Math.floor(h.x/CELL_SIZE),row:Math.floor(h.y/CELL_SIZE)},{col:c,row:r})<3))continue;
-            const faction=races[Math.floor(rng()*races.length)],roll=rng(),tier=roll<.35?1:roll<.7?2:roll<.92?3:4;
-            const total=Math.round(([0,40,85,150,240][tier])*(.8+rng()*.4));
-            const archers=Math.floor(total*(.15+rng()*.25)),cavalry=Math.floor(total*rng()*(tier===1?.1:.3));
+            const faction=races[Math.floor(rng()*races.length)],roll=rng(),tier=1+[.25,.45,.60,.72,.82,.88,.93,.96,.985].filter(n=>roll>=n).length;
+            const total=Math.round(([0,30,50,80,120,180,260,360,480,610,720][tier])*(.92+rng()*.16));
+            const archers=Math.floor(total*(.15+rng()*.25)),cavalry=Math.floor(total*rng()*(tier<=2?.1:.3));
             const x=(c+.5)*CELL_SIZE,y=(r+.5)*CELL_SIZE;
-            camps.push({id,bandit:true,faction,name:`${FACTIONS[faction].name} ${['outlaws','raiders','warband','marauders'][tier-1]}`,x,y,tier,terrain:battleTerrainAtWorld(x,y),infantry:total-archers-cavalry,archers,cavalry,description:'A roaming warband has built a camp here. Raid its stored supplies and earn commander experience. Its stock and defenders grow over time.'});break;
+            camps.push({id,bandit:true,faction,name:`${FACTIONS[faction].name} ${['outpost','raider camp','war camp','stronghold'][tier<=2?0:tier<=5?1:tier<=8?2:3]}`,x,y,tier,terrain:battleTerrainAtWorld(x,y),infantry:total-archers-cavalry,archers,cavalry,description:`Level ${tier} camp. Defeat its defenders to earn an artifact, resources and hero experience. It regroups after ten minutes.`});break;
         }
     }
     return camps;

@@ -128,3 +128,17 @@ Campaign story landmarks retain their models. The Canvas compatibility terrain
 uses small original vector trees, rocks and furrows on quiet ground; the earlier
 full-cell painted atlas is preserved as an asset, but is no longer repeated
 across its close map view.
+
+## Artifact paintings
+
+Twenty-four original individual equipment paintings were generated with the built-in
+image tool on 2026-10-11. Each catalog ID has its own image; duplicate inventory
+instances share that item's painting. The twelve existing IDs and their attribute
+bonuses remain intact. Six Epic items, five new Legendary items and one Rare charm
+complete the higher-tier loadouts. Empty slots retain the original SVG glyphs.
+
+`assets/artifacts-v1.json` records full prompts and provenance. Untouched PNGs live
+in `assets/source/artifacts-v1/`; `npm run build:artifact-art` trims transparent
+padding and exports 384px WebP icons into `public/art/artifacts/v1/` without
+redrawing them. Backpack cards, equipped slots and victory receipts use the same
+item ID, painting and rarity. No other game's equipment artwork is included.

@@ -64,10 +64,15 @@ test('defeats grant only earned XP while max-level and full-backpack receipts st
     assert.equal(max.experience, 0); assert.equal(max.level_after, 20); assert.equal(max.inventory_full, true);
     assert.deepEqual(max.artifacts, []); assert.equal(f.world.hero_artifacts.length, 200);
 });
-test('easy camps cannot roll rare or legendary gear and high tiers can roll the full rare pool', () => {
-    for (let bid = 1; bid <= 200; bid++) for (const tier of [1,2]) assert.equal(ARTIFACT_RARITY[npcArtifactDrop(tier, 1047, bid) as keyof typeof ARTIFACT_RARITY], 'Common');
-    assert.ok(Array.from({length:50}, (_,i) => npcArtifactDrop(5, 1010, i)).includes('crown_seal'));
+test('camp difficulty guarantees its advertised rarity and reaches every item in each pool', () => {
+    const expected = ['Common','Common','Rare','Rare','Rare','Epic','Epic','Epic','Legendary','Legendary'];
+    for (let level = 1; level <= 10; level++) {
+        const found = new Set(Array.from({length:60}, (_,i) => npcArtifactDrop(level,1047,i)));
+        assert.equal(found.size,6);
+        for (const id of found) assert.equal(ARTIFACT_RARITY[id],expected[level-1]);
+    }
 });
+
 test('save imports reject malformed reward receipts while keeping legacy reports readable', () => {
     const f=fixture();f.battle();
     const corrupt=JSON.parse(JSON.stringify(f.world));corrupt.reports[0].result.hero_reward.artifacts={};

@@ -1,0 +1,201 @@
+{
+  "version": 1,
+  "date": "2026-10-11",
+  "generation": "Built-in image generation, one independent painting per artifact.",
+  "ownership": "Original artwork generated specifically for Peris; no third-party game artwork.",
+  "shared_prompt": "Use case: stylized-concept. Asset type: an individual equipment icon for the original fantasy strategy game Peris. Create ONE polished hand-painted fantasy inventory illustration of the described item. Three-quarter view, whole object fully visible, centered on a genuinely transparent background. Rich material texture, soft painterly edges, crisp readable silhouette at 64 pixels, jewel-like highlights, gentle upper-left studio lighting and deep natural shadows within the object. Item occupies about 78% of a square canvas, clear transparent padding all around. Style: sophisticated 1990s fantasy strategy inventory painting with modern clarity, coherent with soft-painted hero portraits. No person, hand, scenery, floor, frame, border, text, labels, numbers, watermark or extra props. Do not copy existing game items. Transparent alpha, no checkerboard painted into the picture.",
+  "artifacts": [
+    {
+      "id": "iron_sword",
+      "name": "Iron oath",
+      "rarity": "Common",
+      "source": "assets/source/artifacts-v1/iron_sword.png",
+      "file": "public/art/artifacts/v1/iron_sword.webp",
+      "prompt": "Use case: stylized-concept. Asset type: an individual equipment icon for the original fantasy strategy game Peris. Create ONE polished hand-painted fantasy inventory illustration of the described item. Three-quarter view, whole object fully visible, centered on a genuinely transparent background. Rich material texture, soft painterly edges, crisp readable silhouette at 64 pixels, jewel-like highlights, gentle upper-left studio lighting and deep natural shadows within the object. Item occupies about 78% of a square canvas, clear transparent padding all around. Style: sophisticated 1990s fantasy strategy inventory painting with modern clarity, coherent with soft-painted hero portraits. No person, hand, scenery, floor, frame, border, text, labels, numbers, watermark or extra props. Do not copy existing game items. Transparent alpha, no checkerboard painted into the picture. Item: A practical straight iron longsword with a brown leather grip, simple squared crossguard and worn steel blade; point angled toward lower left."
+    },
+    {
+      "id": "oak_staff",
+      "name": "Staff of embers",
+      "rarity": "Common",
+      "source": "assets/source/artifacts-v1/oak_staff.png",
+      "file": "public/art/artifacts/v1/oak_staff.webp",
+      "prompt": "Use case: stylized-concept. Asset type: an individual equipment icon for the original fantasy strategy game Peris. Create ONE polished hand-painted fantasy inventory illustration of the described item. Three-quarter view, whole object fully visible, centered on a genuinely transparent background. Rich material texture, soft painterly edges, crisp readable silhouette at 64 pixels, jewel-like highlights, gentle upper-left studio lighting and deep natural shadows within the object. Item occupies about 78% of a square canvas, clear transparent padding all around. Style: sophisticated 1990s fantasy strategy inventory painting with modern clarity, coherent with soft-painted hero portraits. No person, hand, scenery, floor, frame, border, text, labels, numbers, watermark or extra props. Do not copy existing game items. Transparent alpha, no checkerboard painted into the picture. Item: A knotted oak walking staff with a small warm ember held in a forked wooden tip, bark texture and copper wire binding."
+    },
+    {
+      "id": "chainmail",
+      "name": "Guardian mail",
+      "rarity": "Common",
+      "source": "assets/source/artifacts-v1/chainmail.png",
+      "file": "public/art/artifacts/v1/chainmail.webp",
+      "prompt": "Use case: stylized-concept. Asset type: an individual equipment icon for the original fantasy strategy game Peris. Create ONE polished hand-painted fantasy inventory illustration of the described item. Three-quarter view, whole object fully visible, centered on a genuinely transparent background. Rich material texture, soft painterly edges, crisp readable silhouette at 64 pixels, jewel-like highlights, gentle upper-left studio lighting and deep natural shadows within the object. Item occupies about 78% of a square canvas, clear transparent padding all around. Style: sophisticated 1990s fantasy strategy inventory painting with modern clarity, coherent with soft-painted hero portraits. No person, hand, scenery, floor, frame, border, text, labels, numbers, watermark or extra props. Do not copy existing game items. Transparent alpha, no checkerboard painted into the picture. Item: A short-sleeved iron chainmail shirt with a thick tan leather collar, individual interlocked rings and plain leather straps."
+    },
+    {
+      "id": "circlet",
+      "name": "Scholar’s circlet",
+      "rarity": "Common",
+      "source": "assets/source/artifacts-v1/circlet.png",
+      "file": "public/art/artifacts/v1/circlet.webp",
+      "prompt": "Use case: stylized-concept. Asset type: an individual equipment icon for the original fantasy strategy game Peris. Create ONE polished hand-painted fantasy inventory illustration of the described item. Three-quarter view, whole object fully visible, centered on a genuinely transparent background. Rich material texture, soft painterly edges, crisp readable silhouette at 64 pixels, jewel-like highlights, gentle upper-left studio lighting and deep natural shadows within the object. Item occupies about 78% of a square canvas, clear transparent padding all around. Style: sophisticated 1990s fantasy strategy inventory painting with modern clarity, coherent with soft-painted hero portraits. No person, hand, scenery, floor, frame, border, text, labels, numbers, watermark or extra props. Do not copy existing game items. Transparent alpha, no checkerboard painted into the picture. Item: A narrow silver scholar's circlet with a single small blue oval stone, understated engraved star marks and delicate open band."
+    },
+    {
+      "id": "boots",
+      "name": "Wayfarer’s boots",
+      "rarity": "Common",
+      "source": "assets/source/artifacts-v1/boots.png",
+      "file": "public/art/artifacts/v1/boots.webp",
+      "prompt": "Use case: stylized-concept. Asset type: an individual equipment icon for the original fantasy strategy game Peris. Create ONE polished hand-painted fantasy inventory illustration of the described item. Three-quarter view, whole object fully visible, centered on a genuinely transparent background. Rich material texture, soft painterly edges, crisp readable silhouette at 64 pixels, jewel-like highlights, gentle upper-left studio lighting and deep natural shadows within the object. Item occupies about 78% of a square canvas, clear transparent padding all around. Style: sophisticated 1990s fantasy strategy inventory painting with modern clarity, coherent with soft-painted hero portraits. No person, hand, scenery, floor, frame, border, text, labels, numbers, watermark or extra props. Do not copy existing game items. Transparent alpha, no checkerboard painted into the picture. Item: A pair of sturdy worn brown leather travel boots with folded cuffs, dark soles and two simple brass buckles."
+    },
+    {
+      "id": "talisman",
+      "name": "Amber talisman",
+      "rarity": "Common",
+      "source": "assets/source/artifacts-v1/talisman.png",
+      "file": "public/art/artifacts/v1/talisman.webp",
+      "prompt": "Use case: stylized-concept. Asset type: an individual equipment icon for the original fantasy strategy game Peris. Create ONE polished hand-painted fantasy inventory illustration of the described item. Three-quarter view, whole object fully visible, centered on a genuinely transparent background. Rich material texture, soft painterly edges, crisp readable silhouette at 64 pixels, jewel-like highlights, gentle upper-left studio lighting and deep natural shadows within the object. Item occupies about 78% of a square canvas, clear transparent padding all around. Style: sophisticated 1990s fantasy strategy inventory painting with modern clarity, coherent with soft-painted hero portraits. No person, hand, scenery, floor, frame, border, text, labels, numbers, watermark or extra props. Do not copy existing game items. Transparent alpha, no checkerboard painted into the picture. Item: A honey-amber teardrop pendant with a tiny dark leaf trapped inside, rough copper setting and thin braided cord."
+    },
+    {
+      "id": "warblade",
+      "name": "Dawnblade",
+      "rarity": "Rare",
+      "source": "assets/source/artifacts-v1/warblade.png",
+      "file": "public/art/artifacts/v1/warblade.webp",
+      "prompt": "Use case: stylized-concept. Asset type: an individual equipment icon for the original fantasy strategy game Peris. Create ONE polished hand-painted fantasy inventory illustration of the described item. Three-quarter view, whole object fully visible, centered on a genuinely transparent background. Rich material texture, soft painterly edges, crisp readable silhouette at 64 pixels, jewel-like highlights, gentle upper-left studio lighting and deep natural shadows within the object. Item occupies about 78% of a square canvas, clear transparent padding all around. Style: sophisticated 1990s fantasy strategy inventory painting with modern clarity, coherent with soft-painted hero portraits. No person, hand, scenery, floor, frame, border, text, labels, numbers, watermark or extra props. Do not copy existing game items. Transparent alpha, no checkerboard painted into the picture. Item: A broad elegant curved steel falchion with a warm gold sunburst guard, cream grip and orange sunrise reflection along the blade."
+    },
+    {
+      "id": "runestaff",
+      "name": "Staff of the archmage",
+      "rarity": "Rare",
+      "source": "assets/source/artifacts-v1/runestaff.png",
+      "file": "public/art/artifacts/v1/runestaff.webp",
+      "prompt": "Use case: stylized-concept. Asset type: an individual equipment icon for the original fantasy strategy game Peris. Create ONE polished hand-painted fantasy inventory illustration of the described item. Three-quarter view, whole object fully visible, centered on a genuinely transparent background. Rich material texture, soft painterly edges, crisp readable silhouette at 64 pixels, jewel-like highlights, gentle upper-left studio lighting and deep natural shadows within the object. Item occupies about 78% of a square canvas, clear transparent padding all around. Style: sophisticated 1990s fantasy strategy inventory painting with modern clarity, coherent with soft-painted hero portraits. No person, hand, scenery, floor, frame, border, text, labels, numbers, watermark or extra props. Do not copy existing game items. Transparent alpha, no checkerboard painted into the picture. Item: A tall silver and midnight-blue staff with a faceted sapphire hovering inside an open three-pronged metal crown, subtle blue magical light."
+    },
+    {
+      "id": "plate",
+      "name": "Crownforged plate",
+      "rarity": "Rare",
+      "source": "assets/source/artifacts-v1/plate.png",
+      "file": "public/art/artifacts/v1/plate.webp",
+      "prompt": "Use case: stylized-concept. Asset type: an individual equipment icon for the original fantasy strategy game Peris. Create ONE polished hand-painted fantasy inventory illustration of the described item. Three-quarter view, whole object fully visible, centered on a genuinely transparent background. Rich material texture, soft painterly edges, crisp readable silhouette at 64 pixels, jewel-like highlights, gentle upper-left studio lighting and deep natural shadows within the object. Item occupies about 78% of a square canvas, clear transparent padding all around. Style: sophisticated 1990s fantasy strategy inventory painting with modern clarity, coherent with soft-painted hero portraits. No person, hand, scenery, floor, frame, border, text, labels, numbers, watermark or extra props. Do not copy existing game items. Transparent alpha, no checkerboard painted into the picture. Item: A polished steel breastplate with raised brass edging, a small crown motif embossed on the chest and articulated shoulder plates."
+    },
+    {
+      "id": "warhelm",
+      "name": "Helm of command",
+      "rarity": "Rare",
+      "source": "assets/source/artifacts-v1/warhelm.png",
+      "file": "public/art/artifacts/v1/warhelm.webp",
+      "prompt": "Use case: stylized-concept. Asset type: an individual equipment icon for the original fantasy strategy game Peris. Create ONE polished hand-painted fantasy inventory illustration of the described item. Three-quarter view, whole object fully visible, centered on a genuinely transparent background. Rich material texture, soft painterly edges, crisp readable silhouette at 64 pixels, jewel-like highlights, gentle upper-left studio lighting and deep natural shadows within the object. Item occupies about 78% of a square canvas, clear transparent padding all around. Style: sophisticated 1990s fantasy strategy inventory painting with modern clarity, coherent with soft-painted hero portraits. No person, hand, scenery, floor, frame, border, text, labels, numbers, watermark or extra props. Do not copy existing game items. Transparent alpha, no checkerboard painted into the picture. Item: A heavy bronze commander helmet with cheek guards, a dark red horsehair crest and a confident angular face opening."
+    },
+    {
+      "id": "windboots",
+      "name": "Windwalkers",
+      "rarity": "Rare",
+      "source": "assets/source/artifacts-v1/windboots.png",
+      "file": "public/art/artifacts/v1/windboots.webp",
+      "prompt": "Use case: stylized-concept. Asset type: an individual equipment icon for the original fantasy strategy game Peris. Create ONE polished hand-painted fantasy inventory illustration of the described item. Three-quarter view, whole object fully visible, centered on a genuinely transparent background. Rich material texture, soft painterly edges, crisp readable silhouette at 64 pixels, jewel-like highlights, gentle upper-left studio lighting and deep natural shadows within the object. Item occupies about 78% of a square canvas, clear transparent padding all around. Style: sophisticated 1990s fantasy strategy inventory painting with modern clarity, coherent with soft-painted hero portraits. No person, hand, scenery, floor, frame, border, text, labels, numbers, watermark or extra props. Do not copy existing game items. Transparent alpha, no checkerboard painted into the picture. Item: A pair of sleek deep-blue leather boots with silver wing clasps at the ankles, pale stitched seams and an elegant pointed silhouette."
+    },
+    {
+      "id": "runic_amulet",
+      "name": "Runic amulet",
+      "rarity": "Rare",
+      "source": "assets/source/artifacts-v1/runic_amulet.png",
+      "file": "public/art/artifacts/v1/runic_amulet.webp",
+      "prompt": "Use case: stylized-concept. Asset type: an individual equipment icon for the original fantasy strategy game Peris. Create ONE polished hand-painted fantasy inventory illustration of the described item. Three-quarter view, whole object fully visible, centered on a genuinely transparent background. Rich material texture, soft painterly edges, crisp readable silhouette at 64 pixels, jewel-like highlights, gentle upper-left studio lighting and deep natural shadows within the object. Item occupies about 78% of a square canvas, clear transparent padding all around. Style: sophisticated 1990s fantasy strategy inventory painting with modern clarity, coherent with soft-painted hero portraits. No person, hand, scenery, floor, frame, border, text, labels, numbers, watermark or extra props. Do not copy existing game items. Transparent alpha, no checkerboard painted into the picture. Item: A hexagonal silver pendant around a turquoise crystal, six tiny engraved abstract rune shapes and a dark blue cord."
+    },
+    {
+      "id": "sunblade",
+      "name": "Sunfire edge",
+      "rarity": "Epic",
+      "source": "assets/source/artifacts-v1/sunblade.png",
+      "file": "public/art/artifacts/v1/sunblade.webp",
+      "prompt": "Use case: stylized-concept. Asset type: an individual equipment icon for the original fantasy strategy game Peris. Create ONE polished hand-painted fantasy inventory illustration of the described item. Three-quarter view, whole object fully visible, centered on a genuinely transparent background. Rich material texture, soft painterly edges, crisp readable silhouette at 64 pixels, jewel-like highlights, gentle upper-left studio lighting and deep natural shadows within the object. Item occupies about 78% of a square canvas, clear transparent padding all around. Style: sophisticated 1990s fantasy strategy inventory painting with modern clarity, coherent with soft-painted hero portraits. No person, hand, scenery, floor, frame, border, text, labels, numbers, watermark or extra props. Do not copy existing game items. Transparent alpha, no checkerboard painted into the picture. Item: A long black-steel sword with a sweeping forked gold guard and a narrow glowing molten amber channel running through its blade, refined not oversized."
+    },
+    {
+      "id": "astral_staff",
+      "name": "Astral staff",
+      "rarity": "Epic",
+      "source": "assets/source/artifacts-v1/astral_staff.png",
+      "file": "public/art/artifacts/v1/astral_staff.webp",
+      "prompt": "Use case: stylized-concept. Asset type: an individual equipment icon for the original fantasy strategy game Peris. Create ONE polished hand-painted fantasy inventory illustration of the described item. Three-quarter view, whole object fully visible, centered on a genuinely transparent background. Rich material texture, soft painterly edges, crisp readable silhouette at 64 pixels, jewel-like highlights, gentle upper-left studio lighting and deep natural shadows within the object. Item occupies about 78% of a square canvas, clear transparent padding all around. Style: sophisticated 1990s fantasy strategy inventory painting with modern clarity, coherent with soft-painted hero portraits. No person, hand, scenery, floor, frame, border, text, labels, numbers, watermark or extra props. Do not copy existing game items. Transparent alpha, no checkerboard painted into the picture. Item: A sculpted ivory staff with a crescent of purple metal holding a luminous violet orb and three tiny orbiting star-like motes."
+    },
+    {
+      "id": "phoenix_mail",
+      "name": "Phoenix mantle",
+      "rarity": "Epic",
+      "source": "assets/source/artifacts-v1/phoenix_mail.png",
+      "file": "public/art/artifacts/v1/phoenix_mail.webp",
+      "prompt": "Use case: stylized-concept. Asset type: an individual equipment icon for the original fantasy strategy game Peris. Create ONE polished hand-painted fantasy inventory illustration of the described item. Three-quarter view, whole object fully visible, centered on a genuinely transparent background. Rich material texture, soft painterly edges, crisp readable silhouette at 64 pixels, jewel-like highlights, gentle upper-left studio lighting and deep natural shadows within the object. Item occupies about 78% of a square canvas, clear transparent padding all around. Style: sophisticated 1990s fantasy strategy inventory painting with modern clarity, coherent with soft-painted hero portraits. No person, hand, scenery, floor, frame, border, text, labels, numbers, watermark or extra props. Do not copy existing game items. Transparent alpha, no checkerboard painted into the picture. Item: A crimson scale-armour cuirass with layered feather-shaped copper plates and two outward-pointing phoenix wing shoulder guards."
+    },
+    {
+      "id": "oracle_crown",
+      "name": "Oracle’s crown",
+      "rarity": "Epic",
+      "source": "assets/source/artifacts-v1/oracle_crown.png",
+      "file": "public/art/artifacts/v1/oracle_crown.webp",
+      "prompt": "Use case: stylized-concept. Asset type: an individual equipment icon for the original fantasy strategy game Peris. Create ONE polished hand-painted fantasy inventory illustration of the described item. Three-quarter view, whole object fully visible, centered on a genuinely transparent background. Rich material texture, soft painterly edges, crisp readable silhouette at 64 pixels, jewel-like highlights, gentle upper-left studio lighting and deep natural shadows within the object. Item occupies about 78% of a square canvas, clear transparent padding all around. Style: sophisticated 1990s fantasy strategy inventory painting with modern clarity, coherent with soft-painted hero portraits. No person, hand, scenery, floor, frame, border, text, labels, numbers, watermark or extra props. Do not copy existing game items. Transparent alpha, no checkerboard painted into the picture. Item: An open crown of dark silver with five slender amethyst points, an eye-shaped pale violet central gem and fine crescent filigree."
+    },
+    {
+      "id": "stormstride",
+      "name": "Stormstriders",
+      "rarity": "Epic",
+      "source": "assets/source/artifacts-v1/stormstride.png",
+      "file": "public/art/artifacts/v1/stormstride.webp",
+      "prompt": "Use case: stylized-concept. Asset type: an individual equipment icon for the original fantasy strategy game Peris. Create ONE polished hand-painted fantasy inventory illustration of the described item. Three-quarter view, whole object fully visible, centered on a genuinely transparent background. Rich material texture, soft painterly edges, crisp readable silhouette at 64 pixels, jewel-like highlights, gentle upper-left studio lighting and deep natural shadows within the object. Item occupies about 78% of a square canvas, clear transparent padding all around. Style: sophisticated 1990s fantasy strategy inventory painting with modern clarity, coherent with soft-painted hero portraits. No person, hand, scenery, floor, frame, border, text, labels, numbers, watermark or extra props. Do not copy existing game items. Transparent alpha, no checkerboard painted into the picture. Item: A pair of charcoal leather and silver greaves with jagged electric-blue crystal heels and subtle lightning-shaped trim."
+    },
+    {
+      "id": "moonstone_heart",
+      "name": "Heart of the moon",
+      "rarity": "Epic",
+      "source": "assets/source/artifacts-v1/moonstone_heart.png",
+      "file": "public/art/artifacts/v1/moonstone_heart.webp",
+      "prompt": "Use case: stylized-concept. Asset type: an individual equipment icon for the original fantasy strategy game Peris. Create ONE polished hand-painted fantasy inventory illustration of the described item. Three-quarter view, whole object fully visible, centered on a genuinely transparent background. Rich material texture, soft painterly edges, crisp readable silhouette at 64 pixels, jewel-like highlights, gentle upper-left studio lighting and deep natural shadows within the object. Item occupies about 78% of a square canvas, clear transparent padding all around. Style: sophisticated 1990s fantasy strategy inventory painting with modern clarity, coherent with soft-painted hero portraits. No person, hand, scenery, floor, frame, border, text, labels, numbers, watermark or extra props. Do not copy existing game items. Transparent alpha, no checkerboard painted into the picture. Item: An asymmetric heart-shaped milky moonstone pendant cradled by a silver crescent, soft pearly violet sheen and fine silver chain."
+    },
+    {
+      "id": "lionheart_blade",
+      "name": "Lionheart",
+      "rarity": "Legendary",
+      "source": "assets/source/artifacts-v1/lionheart_blade.png",
+      "file": "public/art/artifacts/v1/lionheart_blade.webp",
+      "prompt": "Use case: stylized-concept. Asset type: an individual equipment icon for the original fantasy strategy game Peris. Create ONE polished hand-painted fantasy inventory illustration of the described item. Three-quarter view, whole object fully visible, centered on a genuinely transparent background. Rich material texture, soft painterly edges, crisp readable silhouette at 64 pixels, jewel-like highlights, gentle upper-left studio lighting and deep natural shadows within the object. Item occupies about 78% of a square canvas, clear transparent padding all around. Style: sophisticated 1990s fantasy strategy inventory painting with modern clarity, coherent with soft-painted hero portraits. No person, hand, scenery, floor, frame, border, text, labels, numbers, watermark or extra props. Do not copy existing game items. Transparent alpha, no checkerboard painted into the picture. Item: A regal broad golden sword with a sculpted lion-head pommel, warm white steel blade, red ruby at the guard and rich detailed sun engraving."
+    },
+    {
+      "id": "celestial_staff",
+      "name": "Celestial spire",
+      "rarity": "Legendary",
+      "source": "assets/source/artifacts-v1/celestial_staff.png",
+      "file": "public/art/artifacts/v1/celestial_staff.webp",
+      "prompt": "Use case: stylized-concept. Asset type: an individual equipment icon for the original fantasy strategy game Peris. Create ONE polished hand-painted fantasy inventory illustration of the described item. Three-quarter view, whole object fully visible, centered on a genuinely transparent background. Rich material texture, soft painterly edges, crisp readable silhouette at 64 pixels, jewel-like highlights, gentle upper-left studio lighting and deep natural shadows within the object. Item occupies about 78% of a square canvas, clear transparent padding all around. Style: sophisticated 1990s fantasy strategy inventory painting with modern clarity, coherent with soft-painted hero portraits. No person, hand, scenery, floor, frame, border, text, labels, numbers, watermark or extra props. Do not copy existing game items. Transparent alpha, no checkerboard painted into the picture. Item: A luminous white-gold staff whose head is an intricate spherical astrolabe enclosing a brilliant blue-white star, dark indigo shaft with gold bands."
+    },
+    {
+      "id": "aegis_plate",
+      "name": "Aegis of the dawn",
+      "rarity": "Legendary",
+      "source": "assets/source/artifacts-v1/aegis_plate.png",
+      "file": "public/art/artifacts/v1/aegis_plate.webp",
+      "prompt": "Use case: stylized-concept. Asset type: an individual equipment icon for the original fantasy strategy game Peris. Create ONE polished hand-painted fantasy inventory illustration of the described item. Three-quarter view, whole object fully visible, centered on a genuinely transparent background. Rich material texture, soft painterly edges, crisp readable silhouette at 64 pixels, jewel-like highlights, gentle upper-left studio lighting and deep natural shadows within the object. Item occupies about 78% of a square canvas, clear transparent padding all around. Style: sophisticated 1990s fantasy strategy inventory painting with modern clarity, coherent with soft-painted hero portraits. No person, hand, scenery, floor, frame, border, text, labels, numbers, watermark or extra props. Do not copy existing game items. Transparent alpha, no checkerboard painted into the picture. Item: An imposing pearl-white and gold breastplate with a radiant round amber gem at its centre, beautifully layered wing-shaped shoulders and faint warm halo behind the metal edges."
+    },
+    {
+      "id": "sovereign_crown",
+      "name": "Sovereign’s crown",
+      "rarity": "Legendary",
+      "source": "assets/source/artifacts-v1/sovereign_crown.png",
+      "file": "public/art/artifacts/v1/sovereign_crown.webp",
+      "prompt": "Use case: stylized-concept. Asset type: an individual equipment icon for the original fantasy strategy game Peris. Create ONE polished hand-painted fantasy inventory illustration of the described item. Three-quarter view, whole object fully visible, centered on a genuinely transparent background. Rich material texture, soft painterly edges, crisp readable silhouette at 64 pixels, jewel-like highlights, gentle upper-left studio lighting and deep natural shadows within the object. Item occupies about 78% of a square canvas, clear transparent padding all around. Style: sophisticated 1990s fantasy strategy inventory painting with modern clarity, coherent with soft-painted hero portraits. No person, hand, scenery, floor, frame, border, text, labels, numbers, watermark or extra props. Do not copy existing game items. Transparent alpha, no checkerboard painted into the picture. Item: A tall royal gold crown with alternating sapphire and ruby stones, rounded arches and a single glowing white gem at its apex, distinct from a circlet."
+    },
+    {
+      "id": "horizon_boots",
+      "name": "Horizon treads",
+      "rarity": "Legendary",
+      "source": "assets/source/artifacts-v1/horizon_boots.png",
+      "file": "public/art/artifacts/v1/horizon_boots.webp",
+      "prompt": "Use case: stylized-concept. Asset type: an individual equipment icon for the original fantasy strategy game Peris. Create ONE polished hand-painted fantasy inventory illustration of the described item. Three-quarter view, whole object fully visible, centered on a genuinely transparent background. Rich material texture, soft painterly edges, crisp readable silhouette at 64 pixels, jewel-like highlights, gentle upper-left studio lighting and deep natural shadows within the object. Item occupies about 78% of a square canvas, clear transparent padding all around. Style: sophisticated 1990s fantasy strategy inventory painting with modern clarity, coherent with soft-painted hero portraits. No person, hand, scenery, floor, frame, border, text, labels, numbers, watermark or extra props. Do not copy existing game items. Transparent alpha, no checkerboard painted into the picture. Item: A pair of white leather high boots with flowing gold feather-shaped ankle armour, luminous pale cyan soles and small floating gold curls near the heels."
+    },
+    {
+      "id": "crown_seal",
+      "name": "Seal of the lost crown",
+      "rarity": "Legendary",
+      "source": "assets/source/artifacts-v1/crown_seal.png",
+      "file": "public/art/artifacts/v1/crown_seal.webp",
+      "prompt": "Use case: stylized-concept. Asset type: an individual equipment icon for the original fantasy strategy game Peris. Create ONE polished hand-painted fantasy inventory illustration of the described item. Three-quarter view, whole object fully visible, centered on a genuinely transparent background. Rich material texture, soft painterly edges, crisp readable silhouette at 64 pixels, jewel-like highlights, gentle upper-left studio lighting and deep natural shadows within the object. Item occupies about 78% of a square canvas, clear transparent padding all around. Style: sophisticated 1990s fantasy strategy inventory painting with modern clarity, coherent with soft-painted hero portraits. No person, hand, scenery, floor, frame, border, text, labels, numbers, watermark or extra props. Do not copy existing game items. Transparent alpha, no checkerboard painted into the picture. Item: An ancient circular gold royal seal pendant with a raised broken-crown emblem, dark red enamel, a suspended ruby teardrop and a short heavy gold chain."
+    }
+  ]
+}
