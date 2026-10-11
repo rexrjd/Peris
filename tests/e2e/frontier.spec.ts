@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import sharp from 'sharp';
 import type { FrontierSnapshot } from '../../src/features/frontier/domain/types';
 
 test('Frontier 3D landscape selects real camp tiers and preserves drag, zoom and map choice', async ({ page }, testInfo) => {
@@ -12,12 +13,15 @@ test('Frontier 3D landscape selects real camp tiers and preserves drag, zoom and
     await map.scrollIntoViewIfNeeded();
     await expect(map.locator('.scene-compatibility')).toHaveCount(0);
     await expect(canvas).toBeVisible();
-    await expect.poll(() => canvas.evaluate((element: HTMLCanvasElement) => new Promise<boolean>(resolve => requestAnimationFrame(() => {
-        const gl = element.getContext('webgl2'); if (!gl) { resolve(false); return; }
-        const pixels = new Uint8Array(64);
-        gl.readPixels(Math.floor(element.width / 2), Math.floor(element.height / 2), 4, 4, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
-        resolve(pixels.some((value, index) => index % 4 !== 3 && value > 0));
-    })))).toBe(true);
+    await expect.poll(() => canvas.evaluate((element: HTMLCanvasElement) => !!element.getContext('webgl2'))).toBe(true);
+    // Inspect the displayed frame: between submissions WebGL may legally clear
+    // its drawing buffer, even though the compositor retains the visible map.
+    await expect.poll(async () => {
+        const image = sharp(await canvas.screenshot()), { width = 0, height = 0 } = await image.metadata();
+        if (width < 4 || height < 4) return false;
+        const pixels = await image.extract({ left: Math.floor((width - 4) / 2), top: Math.floor((height - 4) / 2), width: 4, height: 4 }).removeAlpha().raw().toBuffer();
+        return pixels.some(value => value > 0);
+    }).toBe(true);
     for (const tier of ['low', 'medium', 'hard']) {
         await page.getByRole('button', { name: new RegExp(`^${tier}$`, 'i') }).click();
         const target = page.locator('.fw-camp-row').first();

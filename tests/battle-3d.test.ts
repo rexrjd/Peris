@@ -178,7 +178,7 @@ test('large mount silhouettes keep their visual picking and inspection inside th
 
 test('graphics interruption reports fallback exactly once and disposes scene resources and listeners', () => {
     const savedCancel = Object.getOwnPropertyDescriptor(globalThis, 'cancelAnimationFrame');
-    let cancelled = 0, disconnected = 0, inputDisposed = 0, rendererDisposed = 0, removedListener = 0, fallback = 0, materialDisposed = 0, showcaseDisposed=0;
+    let cancelled = 0, disconnected = 0, inputDisposed = 0, rendererDisposed = 0, removedListener = 0, fallback = 0, materialDisposed = 0, showcaseDisposed=0, budgetDisposed=0;
     Object.defineProperty(globalThis, 'cancelAnimationFrame', { configurable: true, value: () => { cancelled++; } });
     try {
         const scene = Object.create(BattleScene.prototype), rendered = createBattlefield('plains');
@@ -187,9 +187,11 @@ test('graphics interruption reports fallback exactly once and disposes scene res
         Object.assign(scene, { alive: true, frame: 1, scene: rendered, observer: { disconnect() { disconnected++; } },
             input: { destroy() { inputDisposed++; } }, formations: new Map(), showcases:[showcase], canvas: { removeEventListener() { removedListener++; } },
             sun: { shadow: { dispose() {} } }, renderer: { dispose() { rendererDisposed++; }, forceContextLoss() {} }, labels: { replaceChildren() {} },
+            frameBudget: { dispose() { budgetDisposed++; } },
             unavailable: () => { fallback++; } });
         scene.fail(); scene.fail(); scene.destroy();
         assert.deepEqual([cancelled, disconnected, inputDisposed, rendererDisposed, removedListener, fallback, materialDisposed,showcaseDisposed], [1, 1, 1, 1, 1, 1, 1,1]);
+        assert.equal(budgetDisposed, 1, 'Context interruption releases pending GPU work exactly once');
     } finally {
         if (savedCancel) Object.defineProperty(globalThis, 'cancelAnimationFrame', savedCancel); else Reflect.deleteProperty(globalThis, 'cancelAnimationFrame');
     }
@@ -206,11 +208,12 @@ test('paused 3D scenes redraw readiness and presentation changes without repeate
         Object.assign(scene, {
             alive: true, state: () => state, view, formations: new Map(), input: null,
             visualTime: 0, last: 0, shadowSpan: 0, readyFrames: 0, pausedFrameKey: '', presentationRevision: 0,
+            displayedFrames: 0, pendingFrame: null, displayedFrame: null, readyNotified: false,
             inspectedId: null, metricFrames: 0, metricStart: 0, scene: new Scene(), zones: new Group(),
             renderer: { render() { rendered++; }, setSize() {}, info: { render: { calls: 20, triangles: 100000 } } },
             canvas: { parentElement: { getBoundingClientRect: () => ({ width: 900, height: 650 }) } },
             ready: () => { ready++; }, create: (f: Formation) => ({ pose: { x: f.x, y: f.y, facing: f.facing } }),
-            updateFormation: () => { updated++; }, remove: () => {},
+            updateFormation: () => { updated++; }, updateLabels: () => {}, captureFrame() { this.pendingFrame = { number: this.readyFrames + 1 }; }, remove: () => {},
         });
         scene.draw(1000); scene.draw(1016); scene.draw(1032);
         assert.equal(rendered, 2); assert.equal(ready, 1, 'Both initial real frames still complete readiness');
@@ -227,5 +230,100 @@ test('paused 3D scenes redraw readiness and presentation changes without repeate
     } finally {
         if (savedFrame) Object.defineProperty(globalThis, 'requestAnimationFrame', savedFrame);
         else Reflect.deleteProperty(globalThis, 'requestAnimationFrame');
+    }
+});
+
+test('GPU pressure preserves paused input, labels and real-frame readiness across graphics interruption and rebuild', () => {
+    const descriptors = ['document', 'requestAnimationFrame', 'cancelAnimationFrame'].map(name => [name, Object.getOwnPropertyDescriptor(globalThis, name)] as const);
+    Object.defineProperty(globalThis, 'document', { configurable: true, value: {
+        createElement: () => ({ dataset: {}, style: {}, hidden: false, textContent: '', remove() {} }),
+    } });
+    Object.defineProperty(globalThis, 'requestAnimationFrame', { configurable: true, value: () => 1 });
+    Object.defineProperty(globalThis, 'cancelAnimationFrame', { configurable: true, value: () => {} });
+    try {
+        const { state, own, enemy } = setup(); state.paused = true;
+        const createScene = () => {
+            const view = new BattleCamera(() => 0); view.setSize(1200, 700); view.center();
+            const metrics = { rendered: 0, submitted: 0, ready: 0, input: 0, updates: 0, fallback: 0, budgetDisposed: 0, rendererDisposed: 0 };
+            let available = true, rotate = false, completedFrames = 0;
+            const scene = Object.create(BattleScene.prototype);
+            Object.assign(scene, {
+                alive: true, state: () => state, view, formations: new Map(), showcases: [],
+                visualTime: 0, last: 0, shadowSpan: 0, readyFrames: 0, pausedFrameKey: '', presentationRevision: 0,
+                inspectedId: null, metricFrames: 0, metricStart: 0, scene: new Scene(), zones: new Group(),
+                displayedFrame: null, pendingFrame: null, displayedFrames: 0, readyNotified: false, ray: new Raycaster(),
+                renderer: { render() { scene.scene.updateMatrixWorld(true); metrics.rendered++; }, setSize() {}, dispose() { metrics.rendererDisposed++; }, info: { render: { calls: 20, triangles: 100000 } } },
+                frameBudget: {
+                    get completedFrames() { return completedFrames; },
+                    ready() { return available; }, submitted() { metrics.submitted++; available = false; },
+                    dispose() { metrics.budgetDisposed++; },
+                },
+                input: { update() { metrics.input++; if (rotate) { view.rotate(.2); rotate = false; } }, destroy() {} },
+                canvas: { parentElement: { getBoundingClientRect: () => ({ width: 900, height: 650 }) }, removeEventListener() {} }, labels: { append() {}, replaceChildren() {} },
+                sun: { shadow: { dispose() {} } }, ready: () => { metrics.ready++; }, unavailable: () => { metrics.fallback++; },
+                soldiers: (formation: Formation) => {
+                    const visual = createLowPolySoldiers(formation), update = visual.update.bind(visual);
+                    visual.update = frame => { metrics.updates++; update(frame); };
+                    return visual;
+                },
+            });
+            return { scene, view, metrics, release: () => { completedFrames = metrics.submitted; available = true; }, rotate: () => { rotate = true; } };
+        };
+        const first = createScene(); first.scene.draw(1000);
+        assert.deepEqual([first.metrics.rendered, first.metrics.submitted, first.metrics.ready], [1, 1, 0]);
+        const initialUpdates = first.metrics.updates;
+        assert.equal(first.scene.hit(first.view.project(own[0].x, own[0].y, 8)), undefined, 'Picking waits for the first completed image');
+        first.release(); first.scene.draw(1008);
+        const displayedPoint = first.view.project(own[0].x, own[0].y, 8);
+        assert.equal(first.scene.hit(displayedPoint)?.id, own[0].id);
+        const oldStyle = first.scene.formations.get(own[0].id).label.style.transform;
+        const oldPose = first.scene.formations.get(own[0].id).pose.x;
+        state.selectedIds = [enemy.id]; first.rotate(); first.scene.draw(1016);
+        assert.equal(first.metrics.input, 3, 'Input runs while GPU admission is blocked');
+        assert.equal(first.view.yaw, .2, 'Camera input is accepted without another GPU submission');
+        assert.equal(first.scene.formations.get(own[0].id).label.style.transform, oldStyle, 'Labels remain aligned with the completed army image');
+        assert.equal(first.scene.hit(displayedPoint)?.id, own[0].id, 'Canvas picking retains the displayed camera while the live camera advances');
+        assert.match(first.scene.formations.get(enemy.id).label.className, /hostile selected/);
+        own[0].x += 400; first.scene.draw(1032);
+        assert.equal(first.scene.formations.get(own[0].id).pose.x, oldPose, 'Blocked frames retain the last submitted model pose');
+        assert.equal(first.metrics.updates, initialUpdates * 2, 'No expensive formation updates accumulate behind a pending frame');
+        assert.equal(first.scene.readyFrames, 2); assert.equal(first.metrics.ready, 0, 'The second submitted frame has not completed yet');
+
+        first.release(); first.scene.draw(1048);
+        assert.equal(first.scene.formations.get(own[0].id).pose.x, own[0].x, 'Deferred presentation changes render when admission resumes');
+        assert.deepEqual([first.metrics.rendered, first.metrics.submitted, first.metrics.ready], [3, 3, 1]);
+        assert.equal(first.scene.hit(displayedPoint)?.id, own[0].id, 'Pending model motion does not move the displayed pick box');
+        state.selectedIds = [own[1].id]; first.scene.inspect(own[1].id); first.scene.draw(1064);
+        assert.equal(first.view.inspecting, true);
+        assert.equal(first.scene.formations.get(own[1].id).label.hidden, false);
+        assert.equal(first.scene.formations.get(enemy.id).label.hidden, true);
+        assert.equal(first.metrics.rendered, 3, 'Inspection input does not bypass the GPU budget');
+        first.release(); first.scene.draw(1080);
+        assert.deepEqual([first.metrics.rendered, first.metrics.submitted, first.metrics.ready], [4, 4, 1]);
+        first.scene.resize(); assert.equal(first.scene.hit(displayedPoint), undefined, 'A resized drawing buffer cannot use an older image for picking');
+        first.release(); first.scene.draw(1096);
+        assert.equal(first.scene.hit(displayedPoint), undefined, 'Completion of the old-size frame cannot promote the new pending image');
+        first.release(); first.scene.draw(1112);
+        assert.equal(first.scene.hit(first.view.project(own[1].x, own[1].y, 8))?.id, own[1].id, 'Picking resumes when the resized image completes');
+        const authoritative = structuredClone(state.world.formations);
+        first.scene.fail(); first.scene.fail(); first.scene.draw(1128);
+        assert.deepEqual([first.metrics.budgetDisposed, first.metrics.rendererDisposed, first.metrics.fallback], [1, 1, 1]);
+        assert.deepEqual(state.world.formations, authoritative);
+        assert.deepEqual(state.selectedIds, [own[1].id]); assert.equal(state.paused, true);
+
+        // A replacement 3D scene must complete its own submitted frames rather
+        // than inheriting readiness or the lost context's pending fence.
+        const recovered = createScene(); recovered.scene.draw(1200); recovered.scene.draw(1216);
+        assert.equal(recovered.metrics.ready, 0); assert.equal(recovered.scene.readyFrames, 1);
+        recovered.release(); recovered.scene.draw(1232);
+        assert.equal(recovered.metrics.ready, 0, 'Recovery still waits for the second frame to finish');
+        recovered.release(); recovered.scene.draw(1248);
+        assert.deepEqual([recovered.metrics.rendered, recovered.metrics.submitted, recovered.metrics.ready], [2, 2, 1]);
+        assert.match(recovered.scene.formations.get(own[1].id).label.className, /friendly selected/);
+        recovered.scene.destroy(); assert.equal(recovered.metrics.budgetDisposed, 1);
+    } finally {
+        for (const [name, descriptor] of descriptors) {
+            if (descriptor) Object.defineProperty(globalThis, name, descriptor); else Reflect.deleteProperty(globalThis, name);
+        }
     }
 });

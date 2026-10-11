@@ -46,3 +46,12 @@ tests, asset validation and the production build. Headless Edge passed all 24
 city/account cases, all ten Frontier cases, and all twelve focused desktop/mobile
 battle-renderer and world-map cases. Battle picking checks use the rendered camera
 projection and pause before model loading so narrow-screen selections stay reliable.
+
+The software-renderer follow-up bounds unfinished WebGL work in world maps and
+battles. Fence polling never blocks the UI thread; camera input and overlays stay
+active while model uploads and drawing wait for the previous frame. Slow frames
+reserve a short interval for application work, while fast hardware keeps its
+existing cadence and visual settings. Canvas targeting retains completed-frame
+cameras and pick geometry so deferred drawing cannot change the clicked target.
+Browser CI runs desktop and mobile projects on separate runners, retaining every
+case and publishing a separate report for each device.
