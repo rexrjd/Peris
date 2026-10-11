@@ -4,6 +4,31 @@ import { beginRaid } from '../../src/features/campaign/domain/raids';
 import { finishBattle } from '../../src/features/battle/domain/resolution';
 import { settleBattle } from '../../src/features/campaign/domain/battleSettlement';
 
+test('legacy read receipts migrate beyond one RPC batch without reading fresh reports', async ({ page }) => {
+    const world = createSolo('Legacy report QA'), owner = world.players[0].id; let id = 90000;
+    beginRaid(world, owner, world.camps.find(camp => camp.bandit)!.id, () => ++id);
+    const battle = world.battles.at(-1)!, formations = world.formations.filter(row => row.battle_id === battle.id);
+    formations.filter(row => row.side === 'defender').forEach(row => { row.soldiers = 0; row.status = 'routed'; });
+    finishBattle(battle, formations, 'attacker', 'Army routed'); settleBattle(world, battle.id, owner, () => ++id);
+    const source = world.reports[0];
+    world.reports = Array.from({ length: 56 }, (_, index) => ({ ...source, id: ++id, battle_id: ++id, title: `Saved report ${index + 1}` }));
+    world.battles = []; world.formations = [];
+    await page.addInitScript(w => {
+        if (!localStorage.getItem('peris-campaign-v6')) {
+            localStorage.setItem('peris-campaign-v6', JSON.stringify(w));
+            localStorage.setItem(`peris-read-reports:solo:${w.players[0].id}:${w.players[0].created_at}`, JSON.stringify(w.reports.slice(0, 55).map(report => report.battle_id)));
+        }
+        localStorage.setItem('peris-settings', JSON.stringify({ sound: false, music: false, reducedMotion: true }));
+        localStorage.setItem(`peris-welcome:${w.players[0].id}:${w.players[0].created_at}`, 'yes');
+    }, world);
+    await page.goto('/'); await page.getByRole('button', { name: 'Continue campaign', exact: true }).click();
+    const nav = page.getByRole('navigation', { name: 'Game navigation' });
+    await expect(nav.getByRole('button', { name: 'Reports, 1 unread', exact: true })).toBeVisible();
+    const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('peris-campaign-v6')!));
+    expect(saved.reports.filter((report: { read_at?: string }) => report.read_at)).toHaveLength(55);
+    expect(saved.reports[55].read_at).toBeFalsy();
+});
+
 test('pruned receipts opened through Reports and Rally clear the same private persisted badge', async ({ page }) => {
     const world = createSolo('Pruned report QA'), owner = world.players[0].id; let id = 70000;
     for (const camp of world.camps.filter(c => c.bandit).slice(0, 2)) {
@@ -85,5 +110,7 @@ test('unread reports highlight only Reports, decrease when opened and persist af
     await page.getByRole('button', { name:'Back to reports', exact:true }).click();
     await page.reload(); await page.getByRole('button', { name:'Continue campaign', exact:true }).click();
     await expect(nav.locator('button.has-unread')).toHaveCount(0);
+    const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('peris-campaign-v6')!));
+    expect(saved.reports.every((r:{read_at?:string|null}) => r.read_at)).toBe(true);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });

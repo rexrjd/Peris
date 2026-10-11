@@ -1,20 +1,297 @@
 {
-  "baseline": "Peris_world_battles_bandits_and_heroes.zip on a82e532f9e0c2d4a8834e3571c9f427bce3d9e76",
+  "base_commit": "d239ffcc9eb45aad5007852cc7fb2d1070909977",
   "files": [
     {
-      "path": "src/features/army/ui/ArmyMapPicker.tsx",
-      "sha256": "d69af746ab131ef9316bc70029965de22f6c03cc0e4775ec8e4a568514ee55f0",
-      "previous_sha256": "b791d786ced3df38fcad7435d1f545a53a3d8707d5eecf799798243454a803d6"
+      "path": "ARTWORK.md",
+      "sha256": "1e9c27bde12fcd838426e2a718b26833c6fd07872ddff0eff823fbed7c9d464f"
     },
     {
-      "path": "src/features/army/styles/command-room.css",
-      "sha256": "ab7589664586b8695d96737c3ec8fccf63dd5f1a7428fcd3a62fa0999b639778",
-      "previous_sha256": "0d9e8b69346921ec45afa83038cbd2dfabd62227e91d3661235e6c7f96f3a601"
+      "path": "COMPACT_HEADER_UPDATE.md",
+      "sha256": "f66a272812366177d5dade7280a206d5ba558efaa413e24d81dc17d163a33f79"
     },
     {
-      "path": "src/features/map/ui/WorldView.tsx",
-      "sha256": "35a2265584ea4bac13497941904c1e5c6becb7b1427ad268fdba435b5a5c172c",
-      "previous_sha256": "e2466af1421832ca10bb2f0e4acb7bffee1907468571d3ed0492acebacec8b1b"
+      "path": "assets/source/ui-low-poly-v1/army.png",
+      "sha256": "52fc8dc89a0853c53c9b9fea1145f8263531ea3b18386265be9d1f26bbb36e9c"
+    },
+    {
+      "path": "assets/source/ui-low-poly-v1/city.png",
+      "sha256": "31048d3e8543bf6a9f5a6a7b306df3ba77fa9c8b8388777c9da11ac92689dd7f"
+    },
+    {
+      "path": "assets/source/ui-low-poly-v1/food.png",
+      "sha256": "5afbf7754c7175013ca8e44a405e65abfe26c95e25530b4b0a3f451e1cbc86fd"
+    },
+    {
+      "path": "assets/source/ui-low-poly-v1/gold.png",
+      "sha256": "dd5c54748eb856728189f135824801b94e422fa891f168230d33de98f5bf3305"
+    },
+    {
+      "path": "assets/source/ui-low-poly-v1/map.png",
+      "sha256": "00835854ce93d700745370b318122a63e42204e8c686bf23b3aa7dec39867a56"
+    },
+    {
+      "path": "assets/source/ui-low-poly-v1/stone.png",
+      "sha256": "89e5e430afcb50bf645cce138ddeb4230e0539d7078f84e6dcb8f153078b7134"
+    },
+    {
+      "path": "assets/source/ui-low-poly-v1/wood.png",
+      "sha256": "46be3d514a1b7af20258679bc7cbe954c7ea4fdb5ff77e02d0f27260d1f9ccf2"
+    },
+    {
+      "path": "assets/ui-low-poly-v1.json",
+      "sha256": "fa6fd23289e2a61d3822745bbb297e6cb5ed1b0126ed662a7e707bed72082d60"
+    },
+    {
+      "path": "package.json",
+      "sha256": "9c540ccb0ff79d1be249640864a95a2f03801c309b380fa59c6af001980dd339"
+    },
+    {
+      "path": "public/art/ui/low-poly-v1/army.webp",
+      "sha256": "5291f59a8bdfdbb2d2f9da132041e3e471c9aea27fa8f1be3927344a82710320"
+    },
+    {
+      "path": "public/art/ui/low-poly-v1/city.webp",
+      "sha256": "e3e9958506843b333277fa40809d50d539ce42b4ef849b7a651a030f0ac020a4"
+    },
+    {
+      "path": "public/art/ui/low-poly-v1/food.webp",
+      "sha256": "3dfc6e1fcf87ab1a48d0cf661d66e562b176d2d7679066951793478bd76a0e89"
+    },
+    {
+      "path": "public/art/ui/low-poly-v1/gold.webp",
+      "sha256": "e6a05b2e7749851bdc28fe7a904a677b323ea694f361e342a1a36b432568e04b"
+    },
+    {
+      "path": "public/art/ui/low-poly-v1/map.webp",
+      "sha256": "9b7a0f093ed484017c4029f01aca50c8c0813874269406211cb94e49b82d3e2d"
+    },
+    {
+      "path": "public/art/ui/low-poly-v1/stone.webp",
+      "sha256": "5945abf35afe6e06f6442420295b5e327cd0033c2ee6891c937bbf9bad8d5708"
+    },
+    {
+      "path": "public/art/ui/low-poly-v1/wood.webp",
+      "sha256": "fd27acb5e0e9c5826c7b59126e33e7b06ff1996f15c04ea7d89332e1ddb3e931"
+    },
+    {
+      "path": "scripts/build-report-read-upgrade.mjs",
+      "sha256": "8e5e3130bcb18ad364fbae1f7aaaf6ba5ee34adda92afb885de140ff843f6e31"
+    },
+    {
+      "path": "scripts/build-ui-icons.mjs",
+      "sha256": "d46a75e27ec488aab6431d4d24e6ca1c05da995b466066c6798b87d21752b869"
+    },
+    {
+      "path": "src/app/App.tsx",
+      "sha256": "6fe3594b3909c3c59727097a749e5eb0e4894f5d9f839c7e510ce3a420c7e396"
+    },
+    {
+      "path": "src/app/styles/compact-header.css",
+      "sha256": "e18ce90492e305ecad1b6a4fe9f011e233a9f04ebb17cd51e6208b6e6fe7ebe2"
+    },
+    {
+      "path": "src/app/styles/index.css",
+      "sha256": "d8f8ddbebf6e06a5a579e83e47827a9612362d019acd2bd7e534eeecebb91c39"
+    },
+    {
+      "path": "src/engine/local/LocalEngine.ts",
+      "sha256": "c00ac323af9b769db7c5792e07399a61005d37e718fe823b285d731cd1719964"
+    },
+    {
+      "path": "src/engine/online/OnlineEngine.ts",
+      "sha256": "97f4640da70b47093e3b7a6e3fe8a218f8d585fb84b97753a41dc867ad934287"
+    },
+    {
+      "path": "src/engine/online/rpcCommands.ts",
+      "sha256": "f17a1cb6ba280b08f9b079ac75794e7568d64e6d3c4735fc8a8443bbec0522e9"
+    },
+    {
+      "path": "src/features/army/ui/TroopSummary.tsx",
+      "sha256": "d0c3067eef7da16bc5786e43fcd9bdabc5607538e784812439ae879fda9ddc4f"
+    },
+    {
+      "path": "src/features/campaign/domain/reports.ts",
+      "sha256": "4add8546d7f7f42161be6e7717028428fb9b15f9add18cb33036556563eec23c"
+    },
+    {
+      "path": "src/features/campaign/domain/types.ts",
+      "sha256": "2bccc7e507e8cfce59511f3dc171fddb0fe2205e3d2829d6fc5e7006ee7c15ec"
+    },
+    {
+      "path": "src/features/campaign/ui/ReportLedger.tsx",
+      "sha256": "e043751968808413e3bfb80fae6977d322c3ebe255363675093e51572a8b8422"
+    },
+    {
+      "path": "src/features/campaign/ui/useReportReads.ts",
+      "sha256": "bee61bcfb42cdc78d32a4d769d51c0794c836b891e9b25f4c392678c0b49cd50"
+    },
+    {
+      "path": "src/platform/storage/saves.ts",
+      "sha256": "2170f94e5f946577f305cf66f4cb60607204386ed2cc9febed6558f783bd5bbe"
+    },
+    {
+      "path": "src/shared/model/commands.ts",
+      "sha256": "e76829dde380d7317b436413525c046e47767cf8f383f57fb804331929678d08"
+    },
+    {
+      "path": "src/shared/ui/GameNavigation.tsx",
+      "sha256": "0d14e168ba99d3384e8303197ccdc6d8f0d2d920386bc522d224b9b0358e9585"
+    },
+    {
+      "path": "src/shared/ui/LowPolyIcon.tsx",
+      "sha256": "ed40fd7b2e8e32ff9efd6f70e8119a92ca44ced6fb2159e6da583df26c194c7b"
+    },
+    {
+      "path": "src/shared/ui/ResourceHud.tsx",
+      "sha256": "5f89caa0db099502077a73627feaff4bcfd1476a850f705456f5c3f9eb64d198"
+    },
+    {
+      "path": "supabase/FRESH_INSTALL_V10.sql",
+      "sha256": "19f37ede9fe5ab827c753db57823e6f9af8e4daebdb67f3e94c959300599170b"
+    },
+    {
+      "path": "supabase/FRESH_INSTALL_V11.sql",
+      "sha256": "19f37ede9fe5ab827c753db57823e6f9af8e4daebdb67f3e94c959300599170b"
+    },
+    {
+      "path": "supabase/FRESH_INSTALL_V12.sql",
+      "sha256": "19f37ede9fe5ab827c753db57823e6f9af8e4daebdb67f3e94c959300599170b"
+    },
+    {
+      "path": "supabase/FRESH_INSTALL_V13.sql",
+      "sha256": "19f37ede9fe5ab827c753db57823e6f9af8e4daebdb67f3e94c959300599170b"
+    },
+    {
+      "path": "supabase/FRESH_INSTALL_V14.sql",
+      "sha256": "19f37ede9fe5ab827c753db57823e6f9af8e4daebdb67f3e94c959300599170b"
+    },
+    {
+      "path": "supabase/FRESH_INSTALL_V15.sql",
+      "sha256": "19f37ede9fe5ab827c753db57823e6f9af8e4daebdb67f3e94c959300599170b"
+    },
+    {
+      "path": "supabase/FRESH_INSTALL_V16.sql",
+      "sha256": "19f37ede9fe5ab827c753db57823e6f9af8e4daebdb67f3e94c959300599170b"
+    },
+    {
+      "path": "supabase/FRESH_INSTALL_V17.sql",
+      "sha256": "19f37ede9fe5ab827c753db57823e6f9af8e4daebdb67f3e94c959300599170b"
+    },
+    {
+      "path": "supabase/FRESH_INSTALL_V6.sql",
+      "sha256": "19f37ede9fe5ab827c753db57823e6f9af8e4daebdb67f3e94c959300599170b"
+    },
+    {
+      "path": "supabase/FRESH_INSTALL_V7.sql",
+      "sha256": "19f37ede9fe5ab827c753db57823e6f9af8e4daebdb67f3e94c959300599170b"
+    },
+    {
+      "path": "supabase/FRESH_INSTALL_V8.sql",
+      "sha256": "19f37ede9fe5ab827c753db57823e6f9af8e4daebdb67f3e94c959300599170b"
+    },
+    {
+      "path": "supabase/FRESH_INSTALL_V9.sql",
+      "sha256": "19f37ede9fe5ab827c753db57823e6f9af8e4daebdb67f3e94c959300599170b"
+    },
+    {
+      "path": "supabase/UPDATE_REPORT_READ_STATUS.sql",
+      "sha256": "6cc99dd96c7e3ed5becf4fd70b88c26ab3beecbcfc1785b190ffcd1333c5f2ed"
+    },
+    {
+      "path": "supabase/UPGRADE_TO_V10.sql",
+      "sha256": "c108954c6457f7e5d02c76a4d942b2f502cea579c2417c6b6b0efd228603e24d"
+    },
+    {
+      "path": "supabase/UPGRADE_TO_V11.sql",
+      "sha256": "c108954c6457f7e5d02c76a4d942b2f502cea579c2417c6b6b0efd228603e24d"
+    },
+    {
+      "path": "supabase/UPGRADE_TO_V12.sql",
+      "sha256": "c108954c6457f7e5d02c76a4d942b2f502cea579c2417c6b6b0efd228603e24d"
+    },
+    {
+      "path": "supabase/UPGRADE_TO_V13.sql",
+      "sha256": "c108954c6457f7e5d02c76a4d942b2f502cea579c2417c6b6b0efd228603e24d"
+    },
+    {
+      "path": "supabase/UPGRADE_TO_V14.sql",
+      "sha256": "c108954c6457f7e5d02c76a4d942b2f502cea579c2417c6b6b0efd228603e24d"
+    },
+    {
+      "path": "supabase/UPGRADE_TO_V15.sql",
+      "sha256": "c108954c6457f7e5d02c76a4d942b2f502cea579c2417c6b6b0efd228603e24d"
+    },
+    {
+      "path": "supabase/UPGRADE_TO_V16.sql",
+      "sha256": "c108954c6457f7e5d02c76a4d942b2f502cea579c2417c6b6b0efd228603e24d"
+    },
+    {
+      "path": "supabase/UPGRADE_TO_V17.sql",
+      "sha256": "c108954c6457f7e5d02c76a4d942b2f502cea579c2417c6b6b0efd228603e24d"
+    },
+    {
+      "path": "supabase/UPGRADE_TO_V7.sql",
+      "sha256": "c108954c6457f7e5d02c76a4d942b2f502cea579c2417c6b6b0efd228603e24d"
+    },
+    {
+      "path": "supabase/UPGRADE_TO_V8.sql",
+      "sha256": "c108954c6457f7e5d02c76a4d942b2f502cea579c2417c6b6b0efd228603e24d"
+    },
+    {
+      "path": "supabase/UPGRADE_TO_V9.sql",
+      "sha256": "c108954c6457f7e5d02c76a4d942b2f502cea579c2417c6b6b0efd228603e24d"
+    },
+    {
+      "path": "supabase/UPGRADE_V5_TO_V6.sql",
+      "sha256": "c108954c6457f7e5d02c76a4d942b2f502cea579c2417c6b6b0efd228603e24d"
+    },
+    {
+      "path": "supabase/modules/campaign/report-reads.sql",
+      "sha256": "8977e1a027e8e83f407bf49a3d3e272a00b88a6c29783d9585f9243f318fb55e"
+    },
+    {
+      "path": "supabase/modules/manifest.json",
+      "sha256": "ba9298a9d264fd2b22e84914d05093941862e34d937deec88e1136c0f2866320"
+    },
+    {
+      "path": "supabase/modules/security/permissions.sql",
+      "sha256": "8e9b81a8f98cdb6b75fa62409882df7d7ebfee1ac8c842a0ba5691aee6c97c96"
+    },
+    {
+      "path": "supabase/schema.sql",
+      "sha256": "c108954c6457f7e5d02c76a4d942b2f502cea579c2417c6b6b0efd228603e24d"
+    },
+    {
+      "path": "tests/e2e/compact-header.spec.ts",
+      "sha256": "b7e9535b902b170001e766d3a79b97ddc26714e667f584c92cf4badff1d04959"
+    },
+    {
+      "path": "tests/e2e/online-report-reads.spec.ts",
+      "sha256": "897b1416e07954689f54926488aa776749e996d01a57fa9990b633a5ca8add68"
+    },
+    {
+      "path": "tests/e2e/unread-reports.spec.ts",
+      "sha256": "db7b92fcd7eb4cfa163fcad618ed6d1c1d0985da2e12d78e7ff79d618f9fb1ee"
+    },
+    {
+      "path": "tests/game-navigation.test.ts",
+      "sha256": "703850a3262269b577683b5cea8270dd08f4700281fc7d3afc3d3282665a033e"
+    },
+    {
+      "path": "tests/helpers/account-server.mjs",
+      "sha256": "db4afc8b9c73983d9672cc689e533c2a9194e1ec91aaeb55395f14e2a7a74bad"
+    },
+    {
+      "path": "tests/report-reads-database.test.mjs",
+      "sha256": "a479d17195acecd369a6f854ffad9b0c41cbbc8a5b0469ce1314eb1d29907c77"
+    },
+    {
+      "path": "tests/reports.test.ts",
+      "sha256": "3c917c46a0400a772bc142daaae85c8231df99bdcc9bfe7653be785cb5e62e15"
+    },
+    {
+      "path": "tests/resource-hud.test.ts",
+      "sha256": "5dca800370dab1da1783a93e44d68a269df9414b033680b7663f701fd94f4dce"
     }
   ]
 }

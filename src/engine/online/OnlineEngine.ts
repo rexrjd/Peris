@@ -297,6 +297,12 @@ export class OnlineEngine implements GameEngine {
     }
     command = async (cmd: Command) => {
         if (!this.alive) throw new Error('This realm session has ended.');
+        // Read receipts are already idempotent and never replace a pending troop order.
+        if (cmd.type === 'readReports') {
+            const {fn, args} = rpcCommand(cmd), {error} = await this.rpc(fn, args);
+            if (error) throw new Error(error.message);
+            await this.refresh(); return;
+        }
         if(['order','rally','castSpell'].includes(cmd.type))throw new Error('Both armies and their spells are controlled automatically.');
         if (cmd.type === 'move' && (!Number.isFinite(cmd.x) || !Number.isFinite(cmd.y))) throw new Error('Choose valid world coordinates.');
         // An old server silently clamps marches to its 1,200px map. Reject before

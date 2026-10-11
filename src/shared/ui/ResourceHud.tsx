@@ -1,6 +1,13 @@
 import type { Resources } from '../model/resources';
 import { RESOURCES } from '../model/resources';
-import { Icon } from './Icons';
+import { LowPolyIcon } from './LowPolyIcon';
+
+export function compactResource(stock: number) {
+  const value = Math.max(0, Math.floor(stock));
+  if (value < 1000) return String(value);
+  const scale = value >= 1e6 ? 1e6 : 1000;
+  return `${Math.floor(value / scale * 10) / 10}${scale === 1e6 ? 'm' : 'k'}`;
+}
 
 export function ResourceHud({ resources, capacity, rate, onSelect }: {
   resources: Resources;
@@ -15,12 +22,8 @@ export function ResourceHud({ resources, capacity, rate, onSelect }: {
       const name = resource === 'wood' ? 'Timber' : resource[0].toUpperCase() + resource.slice(1);
       const detail = `${name}: ${stock.toLocaleString()} of ${limit.toLocaleString()} stored${full ? ', storage full' : ''}; ${income} per minute. Open supplies.`;
       return <button key={resource} className={`resource resource-${resource}${full ? ' full' : ''}${shortage ? ' shortage' : ''}`} title={detail} aria-label={detail} onClick={() => onSelect(resource)}>
-        <span className="resource-symbol" aria-hidden="true"><Icon name={resource} size={26}/></span>
-        <span className="resource-readout">
-          <span className="resource-caption"><span>{name}</span><span className="resource-income">{income}/m</span></span>
-          <span className="resource-amount"><strong>{stock.toLocaleString()}</strong><span>/ {limit.toLocaleString()}</span></span>
-          <span className="resource-capacity" aria-hidden="true"><i style={{ width: `${Math.max(0, Math.min(100, stock / Math.max(1, limit) * 100))}%` }}/></span>
-        </span>
+        <LowPolyIcon name={resource}/><strong className="hud-stock">{compactResource(stock)}</strong>
+        {(full || shortage) && <i className="hud-stock-alert" aria-hidden="true"/>}
       </button>;
     })}
   </div>;

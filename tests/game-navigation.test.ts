@@ -6,8 +6,15 @@ import { GameNavigation, type GameView } from '../src/shared/ui/GameNavigation';
 import { CityOverview } from '../src/features/city/ui/CityOverview';
 import { SettlementView } from '../src/features/city/ui/SettlementView';
 import { createSolo } from '../src/features/campaign/domain/newRealm';
+import { TroopSummary } from '../src/features/army/ui/TroopSummary';
 
 (globalThis as any).React = React;
+
+test('legacy online camps with null culture still show their troop names and pictures', () => {
+  const html = renderToStaticMarkup(React.createElement(TroopSummary, {troops:{infantry:12,archers:0,cavalry:0},faction:null}));
+  assert.ok(html.includes('12'));
+  assert.ok(html.includes('/art/battle/roster/roman.png'));
+});
 
 test('horizontal navigation exposes all destinations and exactly one current page', () => {
   for (const view of ['world', 'settlement', 'rally', 'army', 'chronicle'] as GameView[]) {
@@ -19,10 +26,13 @@ test('horizontal navigation exposes all destinations and exactly one current pag
   }
 });
 
-test('uncollected rewards have a labeled report indicator', () => {
-  const render = (rewards: boolean) => renderToStaticMarkup(React.createElement(GameNavigation, { view: 'world', rewards, onNavigate: () => {} }));
-  assert.ok(render(true).includes('Rewards available'));
-  assert.ok(!render(false).includes('Rewards available'));
+test('only unread reports highlight navigation, even when rewards are available', () => {
+  const render = (unreadReports: number) => renderToStaticMarkup(React.createElement(GameNavigation, { view: 'world', rewards: true, unreadReports, onNavigate: () => {} }));
+  assert.ok(!render(0).includes('has-unread'));
+  assert.ok(!render(0).includes('Rewards available'));
+  assert.equal((render(2).match(/class="has-unread"/g) ?? []).length, 1);
+  assert.ok(render(2).includes('Reports, 2 unread'));
+  for (const name of ['map', 'city', 'army']) assert.ok(render(0).includes(`/art/ui/low-poly-v1/${name}.webp`));
 });
 
 test('compact economy signals a negative food balance without opening its details', () => {

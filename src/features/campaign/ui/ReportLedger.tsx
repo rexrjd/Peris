@@ -22,10 +22,10 @@ export function ReportLedger({ world, playerId, onOpen, onLocateCamp }: {
                 <header><h3>{group.title}</h3><span>{group.reports.length} {group.reports.length === 1 ? 'report' : 'reports'}</span>{camp && onLocateCamp && <button className="report-ledger-locate" title="Center the world map on this camp" onClick={() => onLocateCamp(camp)}><Icon name="focus" size={14}/>Locate</button>}</header>
                 {group.reports.map(report => {
                     const side = reportSide(world, report, playerId), battle = world.battles.find(row => row.id === report.battle_id), returning = reportIsReturning(world, report);
-                    return <article key={report.id}>
+                    return <article key={report.id} className={!report.read_at ? 'is-unread' : undefined}>
                         <button className="report-ledger-open" title="Open the complete saved battle receipt" onClick={() => onOpen(report)}>
                             <span className={`report-ledger-seal ${report.won ? 'won' : ''}`}><Icon name={report.won ? 'check' : 'shield'} size={19}/></span>
-                            <div><strong>{report.title}</strong><small>{new Date(report.created_at).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</small></div>
+                            <div><strong>{report.title}{!report.read_at && <i className="report-unread-dot" aria-label="Unread report"/>}</strong><small>{new Date(report.created_at).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</small></div>
                             <span><b>{battle?.winner_side === 'draw' ? 'Stalemate' : report.won ? 'Victory' : 'No victory'}</b><small>{side ? `${report.result[`${side}_losses`]} lost` : `${report.result.attacker_losses} attacking · ${report.result.defender_losses} defending lost`}</small></span><Icon name="arrow" size={15}/>
                         </button>
                         {side === 'attacker' && reportCampId(world, report) !== undefined && <div className="report-ledger-accounting"><div className="report-ledger-delivery"><span>{report.result.delivered ? 'Delivered home' : returning ? 'Returning spoils' : 'Recorded spoils'}</span><Cost cost={report.result.delivered ?? report.result.loot} compact showZero/></div><ReportEconomics result={report.result} side={side} returning={returning} compact/></div>}

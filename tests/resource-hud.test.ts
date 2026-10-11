@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { ResourceHud } from '../src/shared/ui/ResourceHud';
+import { ResourceHud, compactResource } from '../src/shared/ui/ResourceHud';
 import { CityOverview } from '../src/features/city/ui/CityOverview';
 import { CityReport } from '../src/features/city/ui/CityReport';
 import { SettlementView } from '../src/features/city/ui/SettlementView';
@@ -21,17 +21,16 @@ test('resource HUD exposes individual storage limits, rates and full-storage sta
   assert.ok(html.includes(`Timber: ${numbers.format(5000)} of ${numbers.format(5000)} stored, storage full`));
   assert.ok(html.includes(`Food: ${numbers.format(3500)} of ${numbers.format(10000)} stored; -12.5 per minute`));
   assert.ok(html.includes('resource-food shortage'));
-  for (const width of ['100%', '50%', '35%', '2%']) assert.ok(html.includes(`width:${width}`));
+  assert.equal((html.match(/class="hud-picture"/g) ?? []).length, 4);
+  assert.ok(html.includes('>5k</strong>'));
+  assert.ok(html.includes('>2.5k</strong>'));
+  assert.ok(!html.includes('resource-capacity'));
+  assert.ok(!html.includes('resource-meter'));
 });
 
-test('resource storage bars clamp overflow instead of extending out of the HUD', () => {
-  const html = renderToStaticMarkup(React.createElement(ResourceHud, {
-    resources: { wood: 8000, stone: 0, food: 100, gold: 0 },
-    capacity: () => 5000, rate: () => '+1', onSelect: () => {},
-  }));
-  assert.ok(html.includes('width:100%'));
-  assert.ok(html.includes('width:0%'));
-  assert.ok(!html.includes('width:160%'));
+test('compact totals never round up the resources available to spend', () => {
+  for (const [amount, expected] of [[-2, '0'], [999, '999'], [1259, '1.2k'], [19999, '19.9k'], [20000, '20k'], [1999999, '1.9m']] as const)
+    assert.equal(compactResource(amount), expected);
 });
 
 test('compact city summary avoids repeating food income while retaining its detailed breakdown', () => {

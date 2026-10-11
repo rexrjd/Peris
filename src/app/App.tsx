@@ -3,7 +3,6 @@ import { factionOf, type Faction } from '../features/factions/domain/factions';
 const UnitGallery = lazy(() => import('../features/battle/preview/UnitGallery'));
 import { EmpirePanel } from '../features/empire/ui/EmpirePanel';
 import { useEffect } from 'react';
-import { useCallback } from 'react';
 import { useMemo } from 'react';
 import { useRef } from 'react';
 import { useState } from 'react';
@@ -16,7 +15,8 @@ import { type Doctrine, Login } from '../features/menu/ui/Login';
 import { setAudioScene, tone, unlockAudio } from '../platform/audio/audio';
 import { readSolo } from '../platform/storage/solo';
 import { backupSolo, validateSave } from '../platform/storage/saves';
-import { readReportIds, storeReadReportIds } from '../platform/storage/reports';
+import { unreadReportCount } from '../features/campaign/domain/reports';
+import { useReportReads } from '../features/campaign/ui/useReportReads';
 import { LocalEngine } from '../engine/local/LocalEngine';
 import { createSolo } from '../features/campaign/domain/newRealm';
 import { type World } from '../shared/model/world';
@@ -36,13 +36,11 @@ import { ResourceHud } from '../shared/ui/ResourceHud';
 import { GameNavigation } from '../shared/ui/GameNavigation';
 import { QuickAccess } from '../shared/ui/QuickAccess';
 import type { SlotType } from '../features/city/domain/slots';
-import { QUESTS } from '../features/campaign/domain/quests';
 import { WorldView } from '../features/map/ui/WorldView';
 import { SettlementView } from '../features/city/ui/SettlementView';
 import { ArmyView, type CommandTab } from '../features/army/ui/ArmyView';
 import { RallyPoint } from '../features/army/ui/RallyPoint';
 import { Chronicle, ResultBody } from '../features/campaign/ui/Chronicle';
-import { visibleReports } from '../features/campaign/domain/reportEconomics';
 import { Modal } from '../shared/ui/Shared';
 import { mySide } from '../features/battle/domain/ownership';
 import { CampaignEnding, Welcome } from '../features/campaign/ui/CampaignMoments';
@@ -160,17 +158,8 @@ function Realm({ engine, onExit, onLoad, onRetry, onUnitPreview }: {
     const quietCampBattle = (battle: Battle) => battle.mode === 'pve' && world.camps.some(camp => camp.id === battle.camp_id && camp.bandit);
     const visibleBattle = active && !quietCampBattle(active) ? active : undefined;
     const identity = `${player.id}:${player.created_at}`, welcomeKey = `peris-welcome:${identity}`, endingKey = `peris-ending:${identity}`;
-    const reportReadKey = `peris-read-reports:${engine.mode}:${identity}`;
-    const [readReports, setReadReports] = useState(() => readReportIds(reportReadKey));
-    const unreadReports = visibleReports(world, engine.playerId).filter(r => !readReports.has(r.battle_id)).length;
-    const markReportRead = useCallback((battleId: number) => {
-        if (engine.mode === 'practice' || !world.reports.some(r => r.owner_id === engine.playerId && r.battle_id === battleId)) return;
-        setReadReports(current => {
-            if (current.has(battleId)) return current;
-            const next = new Set(current); next.add(battleId); storeReadReportIds(reportReadKey, next); return next;
-        });
-    }, [world.reports, engine.playerId, engine.mode, reportReadKey]);
-    useEffect(() => { if (report?.result) markReportRead(report.id); }, [report?.id, report?.result, markReportRead]);
+    const unreadReports = unreadReportCount(world, engine.playerId);
+    const markReportRead = useReportReads(engine, world, report?.result ? report.id : null, () => setNotice({ text:'Could not save report read status. Try reopening the report.', error:true }));
     const [welcome, setWelcome] = useState(() => engine.mode === 'solo' && !readFlag(welcomeKey) && player.victories === 0 && player.upgrades === 0 && player.recruits === 0), [endingSeen, setEndingSeen] = useState(() => readFlag(endingKey)), [seenReports] = useState(() => new Set(world.battles.filter(b => b.status === 'resolved').map(b => b.id)));
     const offset = useMemo(() => Date.parse(world.server_now) - Date.now(), [world.server_now]), now = time + offset, resources = liveResources(town, now), projectedTown=projectSettlement(town,now), storage=(key:string)=>key==='food'?town.food_capacity??town.capacity:town.capacity, rate=(key:typeof RESOURCES[number])=>{const value=projectedTown[`${key}_rate`];return `${value>=0?'+':''}${value.toLocaleString(undefined,{maximumFractionDigits:1})}`;};
     useEffect(() => { const t = window.setInterval(() => setTime(Date.now()), 250); return () => window.clearInterval(t); }, []);
@@ -249,8 +238,8 @@ function Realm({ engine, onExit, onLoad, onRetry, onUnitPreview }: {
     const closeEnding = () => { writeFlag(endingKey); setEndingSeen(true); setEnding(false); };
     return <>
   {visibleBattle ? <BattleView world={world} battle={visibleBattle} engine={engine} run={run} onHelp={() => setHelp(true)} onSettings={() => setSettings(true)}/> : <div className="realm-shell game-shell">
-   <header className="realm-topbar game-header"><button className="game-brand" aria-label="Peris world map" onClick={()=>navigate('world')}>PERIS</button>
-   <GameNavigation view={view} unreadReports={unreadReports} rewards={QUESTS.some(q=>player[q.stat]>=q.target&&!world.claims.some(c=>c.quest_id===q.id&&c.owner_id===engine.playerId))} onNavigate={navigate}/>
+   <header className="realm-topbar game-header">
+   <GameNavigation view={view} unreadReports={unreadReports} onNavigate={navigate}/>
    <ResourceHud resources={resources} capacity={storage} rate={rate} onSelect={setResource}/>
    <QuickAccess items={[
        { label:'Rally Point', icon:'flag', description:'Stationed troops, incoming and outgoing movements, farm lists and reports', onSelect:()=>{setEmpireOpen(false);navigate('rally');} },

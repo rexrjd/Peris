@@ -28,6 +28,7 @@ import { claimMapField, queueMapField } from '../../features/map/domain/territor
 import { commandCampaignFarm } from '../../features/campaign/domain/farms';
 import { advanceCampFarms } from '../../features/campaign/domain/campEconomy';
 import { collectGarrison } from '../../features/map/domain/garrisons';
+import { markReportsRead } from '../../features/campaign/domain/reports';
 export class LocalEngine implements GameEngine {
     readonly playerId = 'solo-ruler';
     readonly mode: 'solo' | 'practice';
@@ -136,6 +137,7 @@ export class LocalEngine implements GameEngine {
             throw new Error('Finish the current battle first.');
         const context: LocalCommandContext = { world: this.snapshot, playerId: this.playerId, settlementId: cmd.settlementId, armyId: cmd.armyId, nextId: () => this.nextId = Math.max(this.nextId + 1, nextEntityId(this.snapshot)), active, now: new Date().toISOString(), paused: value => { this.paused = value; }, finalize: id => this.finalize(id) };
         switch (cmd.type) {
+            case 'readReports': markReportsRead(this.snapshot, this.playerId, cmd.reportIds, context.now); break;
             case 'saveCampaignFarmList': case 'saveCampaignFarm': case 'deleteCampaignFarm': case 'deleteCampaignFarmList': case 'startCampaignFarmList': case 'manageCampaignFarmTargets': case 'setCampaignFarmListEnabled': case 'applyCampaignFarmListTroops':
                 commandCampaignFarm(context, cmd); break;
             case 'trainSettlers': trainSettlers(context, cmd.quantity); break;

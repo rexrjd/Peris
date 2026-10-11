@@ -44,3 +44,4 @@
 @import '../../features/menu/styles/accounts.css';
 
 @import '../../features/heroes/styles/artifacts.css';
+@import './compact-header.css';

@@ -35,6 +35,7 @@ export type Report = {
     won: boolean;
     result: BattleResult;
     created_at: string;
+    read_at?: string | null;
 };
 export type CampProgress = {
     camp_id: number;

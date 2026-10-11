@@ -1,5 +1,17 @@
 # Original Peris artwork
 
+## Compact command header
+
+Seven original transparent low-poly pictures depict the map, city, armies,
+timber, stone, food and gold. Generated individually with the built-in image tool
+on 2026-10-11, they use simple sandstone, ivory and slate-blue facets that remain
+readable at small sizes. `assets/ui-low-poly-v1.json` records the complete prompts
+and file mapping. Untouched PNG sources live in `assets/source/ui-low-poly-v1/`.
+`npm run build:ui-icons` trims and exports 96px transparent WebP pictures into
+`public/art/ui/low-poly-v1/`; `npm run check:ui-icons` verifies the runtime set.
+Navigation labels and exact resource amounts remain accessible independently of
+the pictures. No artwork from another strategy game is included.
+
 ## Soft-painted villages
 
 The selected city direction uses original transparent building atlases for all

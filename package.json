@@ -57,7 +57,12 @@
     "test:command-receipts-db": "node --import tsx tests/command-receipts-database.test.mts",
     "test:farm-parity-db": "node tests/campaign-farm-parity-database.test.mjs",
     "test:army-parity-db": "node --import tsx tests/army-role-operations-database.test.mts",
-    "check:artifact-art": "node --import tsx scripts/check-artifact-art.mjs"
+    "check:artifact-art": "node --import tsx scripts/check-artifact-art.mjs",
+    "build:report-reads": "node scripts/build-report-read-upgrade.mjs",
+    "check:report-reads": "node scripts/build-report-read-upgrade.mjs --check",
+    "test:report-reads-db": "node tests/report-reads-database.test.mjs",
+    "build:ui-icons": "node scripts/build-ui-icons.mjs",
+    "check:ui-icons": "node scripts/build-ui-icons.mjs --check"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.57.4",

@@ -1,0 +1,55 @@
+/* A quiet command strip; the scene keeps the centre of the screen. */
+@media(max-width:359px){body{min-width:320px}}
+.realm-shell.game-shell{grid-template-rows:44px minmax(0,1fr)}
+.game-shell .realm-topbar.game-header{gap:8px;padding:0 16px;background:#161b23;border-bottom-color:#ffffff0d;box-shadow:none}
+.game-header .game-navigation{align-self:center;align-items:center;gap:4px;height:32px}
+.game-header .game-navigation button{min-width:0;min-height:32px;padding:4px 10px;gap:7px;border-radius:6px;font-size:11px;color:#9ca6b6;background:transparent}
+.game-header .game-navigation button:hover{background:#ffffff06;color:#edf0f6}
+.game-header .game-navigation button[aria-current=page]{color:#edf0f6;background:transparent}
+.game-header .game-navigation button[aria-current=page]:after{left:12px;right:12px;bottom:-6px;height:2px;background:#aebbd0}
+.game-header .game-navigation button.has-unread,.game-header .game-navigation button.has-unread[aria-current=page]{background:#e8c66c;color:#28210f}
+.game-header .game-navigation button.has-unread:hover{background:#f1d583;color:#28210f}
+.game-header .game-navigation button.has-unread:after{display:none}
+.hud-picture{display:block;width:24px;height:24px;object-fit:contain;flex:none;pointer-events:none}
+.game-header .game-navigation button>.hud-picture{width:24px;height:24px;opacity:.8}
+.game-header .game-navigation button:hover>.hud-picture,.game-header .game-navigation button[aria-current=page]>.hud-picture{opacity:1}
+.game-header .game-navigation .nav-label{gap:5px}
+.game-header .game-navigation .nav-count{font-size:10px;min-width:0}
+.game-shell .game-header .resource-strip.resource-hud{margin-left:auto;gap:2px;align-items:center;padding:0 6px;height:32px;border:1px solid #ffffff08;border-radius:7px;background:#ffffff02}
+.game-shell .game-header .resource-hud .resource{min-width:62px;width:auto;min-height:28px;height:28px;gap:6px;padding:2px 6px;justify-content:center;align-items:center;border-radius:5px;background:transparent}
+.game-shell .game-header .resource-hud .resource:hover{background:#ffffff06}
+.game-header .resource .hud-picture{width:22px;height:22px}
+.game-shell .game-header .resource-hud .resource .hud-stock{font-size:12px;line-height:1;font-weight:600;font-variant-numeric:tabular-nums;color:#e0e5ed;white-space:nowrap}
+.game-header .hud-stock-alert{position:absolute;right:3px;top:3px;width:3px;height:3px;border-radius:50%;background:#d6bc79}
+.game-header .resource.shortage .hud-stock-alert{background:#eaa295}
+.game-shell .game-header .peris-quick-trigger{width:32px;min-width:32px;min-height:32px;height:32px;padding:6px;border:0;border-radius:6px;background:transparent;color:#9ca6b6;box-shadow:none}
+.game-header .peris-quick-trigger>span,.game-header .game-menu>summary>span{display:none}
+.game-shell .game-header .peris-quick-trigger:hover,.game-shell .game-header .game-menu>summary:hover{background:#ffffff06;color:#edf0f6}
+.game-shell .game-header .game-menu{margin:0}
+.game-shell .game-header .game-menu>summary{width:32px;min-width:32px;min-height:32px;height:32px;padding:6px;border-radius:6px}
+.game-header button:focus-visible,.game-header summary:focus-visible{outline:2px solid #c8d5ee;outline-offset:2px}
+/* Read receipts are neutral; only new reports have an amber edge and marker. */
+.report-ledger-group>article.is-unread{border-left:2px solid #d6b765;background:#d6b76505}
+.report-ledger .report-unread-dot{display:inline-block;width:5px;height:5px;background:#e8c66c;border-radius:50%;margin-left:8px;vertical-align:middle}
+@media(max-width:960px){
+ .game-shell .realm-topbar.game-header{padding:0 12px;gap:6px}
+ .game-header .game-navigation button{padding:4px 7px;font-size:11px;gap:5px}
+ .game-header .game-navigation button>svg{display:block}
+ .game-header .game-navigation button>.hud-picture{width:22px;height:22px}
+ .game-shell .game-header .resource-hud .resource{min-width:55px;padding:2px 4px;gap:4px}
+}
+@media(max-width:760px){
+ .realm-shell.game-shell{grid-template-rows:44px minmax(0,1fr);padding-bottom:calc(60px + env(safe-area-inset-bottom))}
+ .game-shell .realm-topbar.game-header{padding:0 8px;gap:4px}
+ .game-shell .game-header .resource-strip.resource-hud{flex:1;min-width:0;height:32px;margin:0;padding:0;gap:2px;border:0;background:transparent}
+ .game-shell .game-header .resource-hud .resource{flex:1;min-width:0;padding:2px;gap:4px}
+ .game-header .resource .hud-picture{width:20px;height:20px}
+ .game-shell .game-header .resource-hud .resource .hud-stock{font-size:11px}
+ .game-shell .game-header .peris-quick-trigger,.game-shell .game-header .game-menu>summary{width:28px;min-width:28px}
+ .game-header .game-navigation{position:fixed;bottom:0;left:0;right:0;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));height:calc(60px + env(safe-area-inset-bottom));padding:4px 10px calc(4px + env(safe-area-inset-bottom));background:#161b23;border-top:1px solid #ffffff0d;gap:4px;align-items:stretch}
+ .game-header .game-navigation button{flex-direction:column;min-height:48px;padding:4px;gap:3px;font-size:10px}
+ .game-header .game-navigation button[aria-current=page]:after{display:none}
+ .game-header .game-navigation button[aria-current=page]{background:#ffffff04}
+ .game-header .game-navigation button>.hud-picture{width:22px;height:22px}
+ .game-header .game-navigation button>svg{width:20px;height:20px}
+}

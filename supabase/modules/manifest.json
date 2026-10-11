@@ -38,6 +38,7 @@
   "multiplayer/peris_challenge.sql",
   "multiplayer/peris_respond.sql",
   "campaign/peris_claim.sql",
+  "campaign/report-reads.sql",
   "city/peris_rename.sql",
   "accounts/create_player.sql",
   "accounts/login.sql",
