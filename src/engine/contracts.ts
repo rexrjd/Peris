@@ -9,6 +9,9 @@ export interface GameEngine {
     snapshot: World;
     subscribe: (fn: () => void) => () => void;
     command: (cmd: Command) => Promise<void>;
+    /** An unconfirmed online mutation retains its original request across retries. */
+    pendingCommand?: { requestId: string } | null;
+    retryCommand?: () => Promise<void>;
     destroy: () => void;
     /** Online adapters may page public rivals as the strategic camera moves. */
     setMapViewport?: (bounds: { minX: number; minY: number; maxX: number; maxY: number }) => void;

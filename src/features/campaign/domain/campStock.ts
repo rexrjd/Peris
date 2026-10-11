@@ -6,10 +6,13 @@ import { accrue } from '../../frontier/domain/economy';
 import { readRoster, writeRoster, rosterTotal } from '../../army/domain/roster';
 import { CAMP_BASE_DEFENDERS } from '../../map/domain/campDifficulty';
 export const campTier = (camp: Camp) => camp.tier >= 6 ? 'hard' : camp.tier <= 2 ? 'low' : 'medium';
-export const campRules = (camp: Camp) => {
+/** The strongest generated garrison at this level fits inside its growth cap. */
+export function campRules(camp: Camp) {
     const rule = DEFAULT_CONFIG.tiers[campTier(camp)];
-    return { ...rule, defenderCap: Math.max(rule.defenderCap, Math.ceil((CAMP_BASE_DEFENDERS[camp.tier] ?? 720) * 1.08)) };
-};
+    const level = Math.min(10, Math.max(1, Math.floor(camp.tier)));
+    const levelCap = Math.ceil(CAMP_BASE_DEFENDERS[level] * 1.08);
+    return { ...rule, defenderCap: Math.max(rule.defenderCap, levelCap) };
+}
 /** Old camps retain IDs, sites and soldiers. Stock begins when this mechanic is installed. */
 export function accrueCamp(camp: Camp, until: number, engaged = false) {
     if (!camp.bandit) return;

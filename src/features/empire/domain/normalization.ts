@@ -15,9 +15,9 @@ export function normalizeRealm(world: World, now = world.server_now, associateOr
                 const current = definitions.get(camp.id);
                 if (!current || current.x !== camp.x || current.y !== camp.y || !!current.bandit !== !!camp.bandit) continue;
                 if (world.battles.some(b => b.camp_id === camp.id && b.status === 'active') || world.armies.some(a => a.raid_target_id === camp.id && a.status === 'moving')) { pending = true; continue; }
-                const growing = camp.bandit && (camp.stock_updated_at || camp.unit_roster);
+                // Difficulty metadata can migrate; casualties, role inventories and
+                // shared stock are live state and must never be refilled by loading.
                 Object.assign(camp, { tier: current.tier, name: current.name, description: current.description });
-                if (!growing) Object.assign(camp, { infantry: current.infantry, archers: current.archers, cavalry: current.cavalry });
             }
             if (!pending) world.camp_balance_version = 1;
         }

@@ -104,7 +104,7 @@ end $$;
 
 create or replace function public.peris_empire_command(p_command jsonb)returns jsonb language plpgsql security definer set search_path='' as $$
 declare u uuid:=public.peris_player_id();command_kind text:=p_command->>'type';s public.settlements%rowtype;a public.armies%rowtype;t public.armies%rowtype;h public.peris_heroes%rowtype;item public.peris_hero_artifacts%rowtype;
- qty integer;main integer;count_cities integer;count_armies integer;cost integer;reason text;distance numeric;hero_class text;hero_name text;new_army_id bigint;stat text;inf integer;arc integer;cav integer;position jsonb;target jsonb;camp public.peris_camps%rowtype;chosen jsonb;
+ qty integer;main integer;count_cities integer;count_armies integer;cost integer;reason text;distance numeric;hero_class text;hero_name text;new_army_id bigint;stat text;inf integer;arc integer;cav integer;position jsonb;target jsonb;camp public.peris_camps%rowtype;chosen jsonb;available jsonb;reply jsonb;
 begin
  if u is null then raise exception 'Authentication required';end if;
  if p_command is null or jsonb_typeof(p_command)<>'object'or command_kind is null then raise exception 'Choose a valid command';end if;
@@ -126,7 +126,21 @@ begin
  when 'buildSlot'then return public.peris_queue_slot((p_command->>'slot')::integer,p_command->>'item');
  when 'upgradeSlot'then return public.peris_queue_slot((p_command->>'slot')::integer,null);
  when 'recruit'then return public.peris_queue_recruit(p_command->>'item',(p_command->>'quantity')::integer);
- when 'move'then if p_command ? 'route'then return public.peris_march(round((p_command->>'x')::numeric)::integer,round((p_command->>'y')::numeric)::integer,p_command->'route');else return public.move_army(round((p_command->>'x')::numeric)::integer,round((p_command->>'y')::numeric)::integer);end if;
+ when 'move'then
+  if p_command ? 'troops'then
+   if jsonb_typeof(p_command->'troops')is distinct from 'object'then raise exception 'Choose troops currently available in this legion';end if;
+   chosen:=public.peris_garrison_troops(p_command->'troops');available:=public.peris_roster(to_jsonb(a));
+   if public.peris_roster_total(chosen)=0 or exists(select 1 from jsonb_each_text(chosen)where value::integer>(available->>key)::integer)then raise exception 'Choose troops currently available in this legion';end if;
+   position:=public.peris_army_position(a);
+   if public.peris_roster_total(chosen)<public.peris_roster_total(available)and not public.peris_station_owned(u,floor((position->>'x')::numeric/128)::integer,floor((position->>'y')::numeric/128)::integer)then raise exception 'Leave reinforcements only at your own village or field';end if;
+  end if;
+  if p_command ? 'route'then reply:=public.peris_march(round((p_command->>'x')::numeric)::integer,round((p_command->>'y')::numeric)::integer,p_command->'route');else reply:=public.move_army(round((p_command->>'x')::numeric)::integer,round((p_command->>'y')::numeric)::integer);end if;
+  if chosen is not null then
+   if public.peris_roster_total(chosen)<public.peris_roster_total(available)then perform public.peris_garrison_add(u,floor((position->>'x')::numeric/128)::integer,floor((position->>'y')::numeric/128)::integer,public.peris_roster_add(available,chosen,-1));end if;
+   perform public.peris_write_roster(a.id,chosen);
+   update public.armies set arrival_at=departure_at+make_interval(secs=>greatest(2,march_distance/public.peris_march_speed(id))::double precision)where id=a.id;
+  end if;
+  return reply;
  when 'raid'then
   return public.peris_prepare_raid((p_command->>'campId')::integer,p_command->'route',p_command->'troops');
  when 'claimField'then return public.peris_claim_field((p_command->>'col')::integer,(p_command->>'row')::integer);
@@ -198,10 +212,16 @@ begin
   position:=public.peris_army_position(a);target:=public.peris_army_position(t);
   if a.status<>'idle'or t.status<>'idle'or a.raid_reserve is not null or t.raid_reserve is not null or a.raid_target_id is not null or t.raid_target_id is not null or sqrt(power(public.peris_wrapped_delta((position->>'x')::numeric,(target->>'x')::numeric),2)+power(public.peris_wrapped_delta((position->>'y')::numeric,(target->>'y')::numeric),2))>90 then raise exception 'Bring both idle armies together first';end if;
   if exists(select 1 from public.peris_orders where kind='recruit'and army_id in(a.id,t.id))then raise exception 'Finish both training queues before transferring troops';end if;
-  inf:=(p_command->>'infantry')::integer;arc:=(p_command->>'archers')::integer;cav:=(p_command->>'cavalry')::integer;
-  if inf is null or arc is null or cav is null or inf<0 or arc<0 or cav<0 or inf>a.infantry or arc>a.archers or cav>a.cavalry then raise exception 'Choose available soldiers';end if;
-  if inf+arc+cav=0 or inf+arc+cav+t.infantry+t.archers+t.cavalry>1000 then raise exception 'Stay within the 1000 soldier capacity';end if;
-  chosen:=public.peris_roster_take_classes(public.peris_roster(to_jsonb(a)),jsonb_build_object('infantry',inf,'archers',arc,'cavalry',cav));
+  if p_command ? 'troops'then
+   if jsonb_typeof(p_command->'troops')is distinct from 'object'then raise exception 'Choose available soldiers';end if;
+   chosen:=public.peris_roster(p_command->'troops');
+   if exists(select 1 from jsonb_each_text(chosen)where value::integer>(public.peris_roster(to_jsonb(a))->>key)::integer)then raise exception 'Choose available soldiers';end if;
+  else
+   inf:=(p_command->>'infantry')::integer;arc:=(p_command->>'archers')::integer;cav:=(p_command->>'cavalry')::integer;
+   if inf is null or arc is null or cav is null or inf<0 or arc<0 or cav<0 or inf>a.infantry or arc>a.archers or cav>a.cavalry then raise exception 'Choose available soldiers';end if;
+   chosen:=public.peris_roster_take_classes(public.peris_roster(to_jsonb(a)),jsonb_build_object('infantry',inf,'archers',arc,'cavalry',cav));
+  end if;
+  if public.peris_roster_total(chosen)=0 or public.peris_roster_total(chosen)+t.infantry+t.archers+t.cavalry>1000 then raise exception 'Stay within the 1000 soldier capacity';end if;
   perform public.peris_write_roster(a.id,public.peris_roster_add(public.peris_roster(to_jsonb(a)),chosen,-1));
   perform public.peris_write_roster(t.id,public.peris_roster_add(public.peris_roster(to_jsonb(t)),chosen));
  when 'rebaseArmy'then

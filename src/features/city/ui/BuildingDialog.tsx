@@ -1,4 +1,5 @@
 import { createPortal } from 'react-dom';
+import { useState } from 'react';
 import type { World } from '../../../shared/model/world';
 import type { Command } from '../../../shared/model/commands';
 import { RESOURCES } from '../../../shared/model/resources';
@@ -19,6 +20,10 @@ import { MageTowerPanel } from '../../magic/ui/MageTowerPanel';
 import { recruitSeconds } from '../../army/domain/recruitment';
 import { BuildingPicker } from './BuildingPicker';
 import { CityConstructionQueue } from './CityConstructionQueue';
+import { RecruitmentPanel } from '../../army/ui/RecruitmentPanel';
+import { atRecruitmentCity } from '../../army/domain/commandRoom';
+import { soldierTotal } from '../../army/domain/units';
+import { MarchDialog, type MarchDestination } from '../../map/ui/MarchDialog';
 
 type BenefitRow = { name: string; current: string; next: string; help?: string };
 function benefits(world: World, sid: number, plot: CityPlot): BenefitRow[] {
@@ -58,6 +63,10 @@ export function BuildingDialog({ world, owner, sid, plot, initialChoice, note, b
     run: (command: Command, message?: string) => void; onSelect: (key: string) => void; onClose: () => void;
 }) {
     const town = world.settlements.find(s => s.id === sid)!, slots = citySlots(world, sid), resources = liveResources(town, now);
+    const legions = world.armies.filter(army => army.owner_id === owner);
+    const [legionId,setLegionId] = useState(() => (legions.find(army => atRecruitmentCity(army,town,now)) ?? legions[0])?.id);
+    const [marchRequest,setMarchRequest] = useState<{armyId:number;destination:MarchDestination}|null>(null);
+    const legion = legions.find(army => army.id === legionId) ?? legions[0];
     const type = plot.type, empty = plot.slot !== undefined && !type;
     const meta = type ? plot.slot === undefined ? BUILDINGS[type as BuildingType] : SLOT_BUILDINGS[type as SlotType] : null;
     const max = type && plot.slot !== undefined ? slotMaxLevel(type as SlotType) : MAX_BUILDING_LEVEL, maxed = plot.level >= max;
@@ -81,8 +90,9 @@ export function BuildingDialog({ world, owner, sid, plot, initialChoice, note, b
         </>}
         {order && <CityConstructionQueue order={order} level={orderLevel} now={now} onSelect={onSelect}/>}
         {type === 'mage_tower' && <MageTowerPanel world={world} sid={sid} level={plot.level} run={run} busy={busy} now={now}/>}
-        {(type === 'barracks' || type === 'stables') && <p className="village-building-footnote">Train available troops from Armies in the main navigation. Completed building levels improve recruitment speed.</p>}
+        {(type === 'barracks' || type === 'stables' || type === 'workshop') && <section className="village-building-recruitment" aria-label={`${meta?.name} recruitment`}><h3>Recruit &amp; research</h3>{legion ? <><label className="command-label">Recruiting legion<select aria-label="Recruiting legion" value={legion.id} onChange={event=>setLegionId(Number(event.target.value))}>{legions.map(army=><option key={army.id} value={army.id}>{army.name} · {soldierTotal(army)} troops{atRecruitmentCity(army,town,now)?' · At this city':' · Away'}</option>)}</select></label><div className="army-command village-recruitment"><RecruitmentPanel key={`${sid}:${type}:${legion.id}`} embedded buildingOnly={type} world={world} army={legion} city={town} busy={busy} now={now} run={(command,message)=>{if(command.type==='move')setMarchRequest({armyId:command.armyId??legion.id,destination:{kind:'move',x:command.x,y:command.y,label:town.name}});else run(command,message);}}/></div></> : <p>Raise a legion from Armies to recruit troops here.</p>}</section>}
         <details className="village-building-settings"><summary>City settings &amp; debug</summary><CityDebugPanel world={world} owner={owner} cityId={sid} target={type ? plot.slot !== undefined && !fishingUnbuilt ? `slot:${plot.slot}` : fishingUnbuilt ? '' : type : ''} name={name} level={plot.level} max={max} busy={busy} run={run}/></details>
     </Modal>;
-    return typeof document === 'undefined' ? dialog : createPortal(dialog, document.body);
+    const shown = marchRequest ? <MarchDialog world={world} playerId={owner} now={now} busy={busy} initialArmyId={marchRequest.armyId} destination={marchRequest.destination} run={run} onClose={()=>setMarchRequest(null)}/> : dialog;
+    return typeof document === 'undefined' ? shown : createPortal(shown, document.body);
 }

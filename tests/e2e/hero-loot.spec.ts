@@ -20,7 +20,7 @@ test('victory receipt shows actual rewards and opens the earned item for the cor
  const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
  await page.addInitScript(w=>{localStorage.setItem('peris-campaign-v6',JSON.stringify(w));localStorage.setItem('peris-settings',JSON.stringify({sound:false,music:false,reducedMotion:true}));localStorage.setItem(`peris-welcome:${w.players[0].id}:${w.players[0].created_at}`,'yes');},world);
  await page.goto('/');await page.getByRole('button',{name:'Continue campaign',exact:true}).click();
- await page.getByRole('button',{name:/^Reports/}).click();await page.locator('.report-list>button').first().click();
+ await page.getByRole('button',{name:/^Reports/}).click();await page.locator('.report-ledger-open').first().click();
  const modal=page.getByRole('dialog',{name:'Battle result'});await expect(modal.getByRole('heading',{name:'Victory',exact:true})).toBeVisible();
  await expect(modal.locator('.result-xp-gain>b')).toHaveText('+'+reward.experience.toLocaleString('en-US'));
  await expect(modal.locator('.result-level-up')).toHaveText(`Level ${reward.level_before} → ${reward.level_after}`);
@@ -36,7 +36,7 @@ test('victory receipt shows actual rewards and opens the earned item for the cor
  await expect(page.locator('.command-artifact-grid>button[aria-pressed=true]')).toContainText(meta.name);
  await page.getByRole('button',{name:'Equip '+meta.name,exact:true}).click();
  await expect(page.locator('.command-artifact-grid>button[aria-pressed=true]')).toContainText('Equipped');
- await page.getByRole('button',{name:/^Reports/}).click();await page.locator('.report-list>button').first().click();await page.keyboard.press('Escape');
+ await page.getByRole('button',{name:/^Reports/}).click();await page.locator('.report-ledger-open').first().click();await page.keyboard.press('Escape');
  await expect(modal).toHaveCount(0);
  const saved=await page.evaluate(()=>JSON.parse(localStorage.getItem('peris-campaign-v6')!));expect(saved.hero_artifacts).toHaveLength(1);expect(saved.heroes.find((h:{id:number})=>h.id===reward.hero_id).experience).toBe(reward.experience_after);expect(saved.hero_artifacts[0].hero_id).toBe(reward.hero_id);expect(errors).toEqual([]);
 });

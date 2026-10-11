@@ -1036,7 +1036,7 @@ insert into public.peris_camps(id,name,x,y,tier,terrain,infantry,archers,cavalry
  (5,'Ashen legion',910,550,8,'plains',240,110,55,'A rebel legion controls the eastern road. You will need a larger host.'),
  (6,'The fallen capital',605,280,10,'highlands',340,160,80,'Break the last great host and restore the lost province of Peris.')
 on conflict(id) do update set name=excluded.name,x=excluded.x,y=excluded.y,tier=excluded.tier,terrain=excluded.terrain,
- infantry=excluded.infantry,archers=excluded.archers,cavalry=excluded.cavalry,description=excluded.description;
+ description=excluded.description;
 
 alter table public.armies add column if not exists raid_target_id integer references public.peris_camps(id);
 alter table public.battles alter column defender_owner_id drop not null;
@@ -2071,6 +2071,8 @@ begin
  if p_troops is not null then
   perform public.peris_garrison_add(u,floor(a.target_x/128.0)::integer,floor(a.target_y/128.0)::integer,public.peris_roster_add(available,preset,-1));
   perform public.peris_write_roster(a.id,preset);
+  -- The route was validated before selecting troops. Recompute the accepted deadline for the chosen party.
+  update public.armies set arrival_at=departure_at+make_interval(secs=>greatest(2,march_distance/public.peris_march_speed(id))::double precision)where id=a.id;
  end if;
  return jsonb_build_object('ok',true);
 end $$;
@@ -2091,7 +2093,7 @@ begin
  if a.march_returning then return true;end if;
  if a.id is null or a.march_origin is null or a.march_path is null or a.march_distance is null then return false;end if;
  select jsonb_agg(value order by ordinal desc) into route from jsonb_array_elements(a.march_path)with ordinality as points(value,ordinal);
- seconds:=greatest(2,a.march_distance/(22*(public.peris_hero_bonuses(a.id)->>'speed')::numeric));
+ seconds:=greatest(2,a.march_distance/public.peris_march_speed(a.id));
  update public.armies set start_x=a.target_x,start_y=a.target_y,target_x=(a.march_origin->>'x')::integer,target_y=(a.march_origin->>'y')::integer,
   march_path=route,status='moving',raid_target_id=null,march_returning=true,march_sent_at=null,march_cancel_until=null,
   departure_at=now(),arrival_at=now()+make_interval(secs=>seconds::double precision),updated_at=now() where id=a.id;
@@ -2203,7 +2205,7 @@ end $$;
 
 create or replace function public.peris_empire_command(p_command jsonb)returns jsonb language plpgsql security definer set search_path='' as $$
 declare u uuid:=public.peris_player_id();command_kind text:=p_command->>'type';s public.settlements%rowtype;a public.armies%rowtype;t public.armies%rowtype;h public.peris_heroes%rowtype;item public.peris_hero_artifacts%rowtype;
- qty integer;main integer;count_cities integer;count_armies integer;cost integer;reason text;distance numeric;hero_class text;hero_name text;new_army_id bigint;stat text;inf integer;arc integer;cav integer;position jsonb;target jsonb;camp public.peris_camps%rowtype;chosen jsonb;
+ qty integer;main integer;count_cities integer;count_armies integer;cost integer;reason text;distance numeric;hero_class text;hero_name text;new_army_id bigint;stat text;inf integer;arc integer;cav integer;position jsonb;target jsonb;camp public.peris_camps%rowtype;chosen jsonb;available jsonb;reply jsonb;
 begin
  if u is null then raise exception 'Authentication required';end if;
  if p_command is null or jsonb_typeof(p_command)<>'object'or command_kind is null then raise exception 'Choose a valid command';end if;
@@ -2225,7 +2227,21 @@ begin
  when 'buildSlot'then return public.peris_queue_slot((p_command->>'slot')::integer,p_command->>'item');
  when 'upgradeSlot'then return public.peris_queue_slot((p_command->>'slot')::integer,null);
  when 'recruit'then return public.peris_queue_recruit(p_command->>'item',(p_command->>'quantity')::integer);
- when 'move'then if p_command ? 'route'then return public.peris_march(round((p_command->>'x')::numeric)::integer,round((p_command->>'y')::numeric)::integer,p_command->'route');else return public.move_army(round((p_command->>'x')::numeric)::integer,round((p_command->>'y')::numeric)::integer);end if;
+ when 'move'then
+  if p_command ? 'troops'then
+   if jsonb_typeof(p_command->'troops')is distinct from 'object'then raise exception 'Choose troops currently available in this legion';end if;
+   chosen:=public.peris_garrison_troops(p_command->'troops');available:=public.peris_roster(to_jsonb(a));
+   if public.peris_roster_total(chosen)=0 or exists(select 1 from jsonb_each_text(chosen)where value::integer>(available->>key)::integer)then raise exception 'Choose troops currently available in this legion';end if;
+   position:=public.peris_army_position(a);
+   if public.peris_roster_total(chosen)<public.peris_roster_total(available)and not public.peris_station_owned(u,floor((position->>'x')::numeric/128)::integer,floor((position->>'y')::numeric/128)::integer)then raise exception 'Leave reinforcements only at your own village or field';end if;
+  end if;
+  if p_command ? 'route'then reply:=public.peris_march(round((p_command->>'x')::numeric)::integer,round((p_command->>'y')::numeric)::integer,p_command->'route');else reply:=public.move_army(round((p_command->>'x')::numeric)::integer,round((p_command->>'y')::numeric)::integer);end if;
+  if chosen is not null then
+   if public.peris_roster_total(chosen)<public.peris_roster_total(available)then perform public.peris_garrison_add(u,floor((position->>'x')::numeric/128)::integer,floor((position->>'y')::numeric/128)::integer,public.peris_roster_add(available,chosen,-1));end if;
+   perform public.peris_write_roster(a.id,chosen);
+   update public.armies set arrival_at=departure_at+make_interval(secs=>greatest(2,march_distance/public.peris_march_speed(id))::double precision)where id=a.id;
+  end if;
+  return reply;
  when 'raid'then
   return public.peris_prepare_raid((p_command->>'campId')::integer,p_command->'route',p_command->'troops');
  when 'claimField'then return public.peris_claim_field((p_command->>'col')::integer,(p_command->>'row')::integer);
@@ -2297,10 +2313,16 @@ begin
   position:=public.peris_army_position(a);target:=public.peris_army_position(t);
   if a.status<>'idle'or t.status<>'idle'or a.raid_reserve is not null or t.raid_reserve is not null or a.raid_target_id is not null or t.raid_target_id is not null or sqrt(power(public.peris_wrapped_delta((position->>'x')::numeric,(target->>'x')::numeric),2)+power(public.peris_wrapped_delta((position->>'y')::numeric,(target->>'y')::numeric),2))>90 then raise exception 'Bring both idle armies together first';end if;
   if exists(select 1 from public.peris_orders where kind='recruit'and army_id in(a.id,t.id))then raise exception 'Finish both training queues before transferring troops';end if;
-  inf:=(p_command->>'infantry')::integer;arc:=(p_command->>'archers')::integer;cav:=(p_command->>'cavalry')::integer;
-  if inf is null or arc is null or cav is null or inf<0 or arc<0 or cav<0 or inf>a.infantry or arc>a.archers or cav>a.cavalry then raise exception 'Choose available soldiers';end if;
-  if inf+arc+cav=0 or inf+arc+cav+t.infantry+t.archers+t.cavalry>1000 then raise exception 'Stay within the 1000 soldier capacity';end if;
-  chosen:=public.peris_roster_take_classes(public.peris_roster(to_jsonb(a)),jsonb_build_object('infantry',inf,'archers',arc,'cavalry',cav));
+  if p_command ? 'troops'then
+   if jsonb_typeof(p_command->'troops')is distinct from 'object'then raise exception 'Choose available soldiers';end if;
+   chosen:=public.peris_roster(p_command->'troops');
+   if exists(select 1 from jsonb_each_text(chosen)where value::integer>(public.peris_roster(to_jsonb(a))->>key)::integer)then raise exception 'Choose available soldiers';end if;
+  else
+   inf:=(p_command->>'infantry')::integer;arc:=(p_command->>'archers')::integer;cav:=(p_command->>'cavalry')::integer;
+   if inf is null or arc is null or cav is null or inf<0 or arc<0 or cav<0 or inf>a.infantry or arc>a.archers or cav>a.cavalry then raise exception 'Choose available soldiers';end if;
+   chosen:=public.peris_roster_take_classes(public.peris_roster(to_jsonb(a)),jsonb_build_object('infantry',inf,'archers',arc,'cavalry',cav));
+  end if;
+  if public.peris_roster_total(chosen)=0 or public.peris_roster_total(chosen)+t.infantry+t.archers+t.cavalry>1000 then raise exception 'Stay within the 1000 soldier capacity';end if;
   perform public.peris_write_roster(a.id,public.peris_roster_add(public.peris_roster(to_jsonb(a)),chosen,-1));
   perform public.peris_write_roster(t.id,public.peris_roster_add(public.peris_roster(to_jsonb(t)),chosen));
  when 'rebaseArmy'then
@@ -2353,6 +2375,9 @@ create index if not exists peris_campaign_farm_lists_owner on public.peris_campa
 
 create index if not exists peris_campaign_farms_owner on public.peris_campaign_farms(owner_id,list_id,id);
 
+alter table public.peris_campaign_farms add column if not exists sent bigint not null default 0 check(sent>=0);
+alter table public.peris_campaign_farms add column if not exists skipped bigint not null default 0 check(skipped>=0);
+
 alter table public.peris_campaign_farm_lists enable row level security;
 
 alter table public.peris_campaign_farms enable row level security;
@@ -2398,6 +2423,7 @@ declare
  preset jsonb;list_name text;losses_only boolean;list public.peris_campaign_farm_lists;farm public.peris_campaign_farms;v_duplicate_id bigint;
 
  started integer:=0;skipped jsonb:='[]';batch_path jsonb;previous_army text;previous_city text;target_army public.armies%rowtype;repeat_enabled boolean;repeat_interval integer;
+ selected_ids bigint[];selected_id jsonb;selected_count integer;v_action text;
 
 begin
 
@@ -2423,7 +2449,42 @@ begin
 
  end if;
 
- if kind='startCampaignFarmList' then
+ if kind='manageCampaignFarmTargets' then
+  if jsonb_typeof(p_command->'ids') is distinct from 'array' then raise exception 'Choose saved targets';end if;
+  selected_count:=jsonb_array_length(p_command->'ids');
+  if selected_count not between 1 and 100 then raise exception 'Choose up to 100 targets';end if;
+  selected_ids:=array[]::bigint[];
+  for selected_id in select value from jsonb_array_elements(p_command->'ids')loop
+   if jsonb_typeof(selected_id) is distinct from 'number' then raise exception 'Choose valid saved targets';end if;
+   if selected_id::text::numeric<>trunc(selected_id::text::numeric) or selected_id::text::numeric not between 1 and 9007199254740991 then raise exception 'Choose valid saved targets';end if;
+   selected_ids:=array_append(selected_ids,selected_id::text::bigint);
+  end loop;
+  if (select count(distinct id)from unnest(selected_ids)ids(id))<>selected_count or (select count(*)from public.peris_campaign_farms where owner_id=u and id=any(selected_ids))<>selected_count then raise exception 'Choose your own saved targets';end if;
+  v_action:=p_command->>'action';
+  if v_action='delete' then delete from public.peris_campaign_farms where owner_id=u and id=any(selected_ids);
+  elsif v_action='move' then
+   if jsonb_typeof(p_command->'listId') is distinct from 'number' then raise exception 'Choose your own destination list';end if;
+   if (p_command->>'listId')::numeric<>trunc((p_command->>'listId')::numeric) then raise exception 'Choose your own destination list';end if;
+   v_list_id:=(p_command->>'listId')::bigint;
+   if not exists(select 1 from public.peris_campaign_farm_lists where id=v_list_id and owner_id=u)then raise exception 'Choose your own destination list';end if;
+   if (select count(*)from public.peris_campaign_farms where list_id=v_list_id and not(id=any(selected_ids)))+selected_count>100 then raise exception 'A campaign farm list holds up to 100 targets';end if;
+   if exists(select camp_id from public.peris_campaign_farms where (list_id=v_list_id and not(id=any(selected_ids)))or(owner_id=u and id=any(selected_ids))group by camp_id having count(*)>1)then raise exception 'A selected camp is already in the destination list';end if;
+   update public.peris_campaign_farms set list_id=v_list_id where owner_id=u and id=any(selected_ids);
+  else raise exception 'Choose move or delete';end if;
+  return jsonb_build_object('ok',true,'changed',selected_count);
+ elsif kind in('setCampaignFarmListEnabled','applyCampaignFarmListTroops')then
+  select * into list from public.peris_campaign_farm_lists where id=v_entry_id and owner_id=u;
+  if not found then raise exception 'Choose your own farm list';end if;
+  if kind='applyCampaignFarmListTroops'then
+   preset:=public.peris_campaign_farm_troops(list.troops,false);
+   update public.peris_campaign_farms set troops=preset where list_id=list.id and owner_id=u;
+  else
+   if jsonb_typeof(p_command->'enabled') is distinct from 'boolean'then raise exception 'Choose a repeat preference';end if;
+   repeat_enabled:=(p_command->>'enabled')::boolean;
+   update public.peris_campaign_farms set enabled=repeat_enabled,next_at=case when repeat_enabled then now()+make_interval(secs=>interval_seconds)else null end,last_status=case when repeat_enabled then 'Scheduled'else 'Paused'end where list_id=list.id and owner_id=u and enabled is distinct from repeat_enabled;
+  end if;
+  return jsonb_build_object('ok',true);
+ elsif kind='startCampaignFarmList' then
 
   if not exists(select 1 from public.peris_campaign_farm_lists where id=v_entry_id and owner_id=u)then raise exception 'Choose your own farm list';end if;
 
@@ -2461,12 +2522,12 @@ begin
 
     update public.armies set farm_list_id=farm.list_id where id=farm.army_id;
 
-    update public.peris_campaign_farms set route=(select march_path from public.armies where id=farm.army_id),last_status='Raid preparing'where id=farm.id;
+    update public.peris_campaign_farms set route=(select march_path from public.armies where id=farm.army_id),last_status='Raid preparing',sent=sent+1 where id=farm.id;
     started:=started+1;
 
    exception when others then
 
-    update public.peris_campaign_farms set last_status=sqlerrm where id=farm.id;
+    update public.peris_campaign_farms set last_status=sqlerrm,skipped=peris_campaign_farms.skipped+1 where id=farm.id;
     skipped:=skipped||jsonb_build_array(jsonb_build_object('targetId',farm.id,'reason',sqlerrm));
 
    end;
@@ -2588,611 +2649,611 @@ end $$;
 -- Generated by scripts/build-bandits.mjs from the shared deterministic world seed.
 insert into public.peris_camps(id,name,x,y,tier,terrain,infantry,archers,cavalry,description,bandit,faction)
 select c.* from (values
-(1000,'Elves outpost',-12224,-11840,1,'highlands',22,7,1,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'elf'),
-(1001,'Dwarves war camp',-11712,-12608,6,'plains',146,39,69,'Level 6 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'dwarf'),
-(1002,'Human · Spartan outpost',-9920,-12736,1,'plains',24,4,1,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'spartan'),
-(1003,'Human · Roman outpost',-9024,-12736,1,'plains',19,11,1,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'roman'),
-(1004,'Human · Roman outpost',-8128,-12352,1,'highlands',23,5,2,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'roman'),
-(1005,'Orcs outpost',-7360,-12224,1,'woods',22,4,2,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'orc'),
-(1006,'Gnomes raider camp',-6208,-12224,3,'highlands',34,23,18,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'gnome'),
-(1007,'Demons outpost',-5568,-11840,1,'highlands',20,9,2,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'demon'),
-(1008,'Human · Roman raider camp',-4032,-12736,5,'plains',84,67,31,'Level 5 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'roman'),
-(1009,'Human · Persian war camp',-3008,-12352,8,'woods',146,186,135,'Level 8 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'persian'),
-(1010,'Human · Roman outpost',-2112,-12736,1,'highlands',23,5,1,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'roman'),
-(1011,'Human · Persian outpost',-1344,-12224,1,'plains',24,7,0,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'persian'),
-(1012,'Human · Spartan outpost',64,-12480,1,'darkland',23,8,0,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'spartan'),
-(1013,'Human · Roman raider camp',1472,-12224,3,'desert',46,21,11,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'roman'),
-(1014,'Human · Roman raider camp',1856,-12224,4,'desert',74,27,26,'Level 4 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'roman'),
-(1015,'Elves raider camp',2624,-12736,5,'highlands',113,62,14,'Level 5 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'elf'),
-(1016,'Gnomes outpost',4160,-11968,2,'plains',39,11,2,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'gnome'),
-(1017,'Human · Egyptian raider camp',5184,-11840,4,'plains',62,42,8,'Level 4 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'egyptian'),
-(1020,'Pandaren outpost',8512,-12224,2,'plains',32,20,1,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'pandaren'),
-(1021,'Human · Egyptian raider camp',9408,-12224,3,'plains',55,19,7,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'egyptian'),
-(1022,'Demons raider camp',10304,-12736,4,'plains',47,33,31,'Level 4 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'demon'),
-(1023,'Human · Spartan raider camp',11328,-12480,5,'woods',110,61,17,'Level 5 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'spartan'),
-(1024,'Gnomes outpost',12352,-11968,2,'plains',31,18,4,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'gnome'),
-(1025,'Orcs raider camp',-12736,-11328,4,'highlands',77,37,15,'Level 4 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'orc'),
-(1026,'Elves raider camp',-11712,-11712,3,'plains',59,26,0,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'elf'),
-(1027,'Demons outpost',-9920,-11200,2,'highlands',38,10,4,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'demon'),
-(1028,'Human · Persian raider camp',-9152,-11456,3,'plains',60,23,2,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'persian'),
-(1029,'Human · Egyptian raider camp',-7744,-11712,3,'highlands',43,20,14,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'egyptian'),
-(1030,'Demons raider camp',-7104,-11072,3,'highlands',39,23,24,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'demon'),
-(1031,'Elves outpost',-6336,-11200,2,'woods',29,15,4,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'elf'),
-(1032,'Demons outpost',-4800,-11200,1,'desert',18,9,2,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'demon'),
-(1033,'Human · Persian war camp',-4416,-11712,8,'plains',256,130,66,'Level 8 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'persian'),
-(1034,'Elves raider camp',-2624,-11712,3,'woods',52,13,9,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'elf'),
-(1035,'Pandaren outpost',-1984,-11328,1,'woods',22,9,1,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'pandaren'),
-(1036,'Pandaren raider camp',-1088,-11712,3,'highlands',56,18,6,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'pandaren'),
-(1037,'Human · Roman raider camp',64,-11456,4,'plains',63,29,23,'Level 4 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'roman'),
-(1038,'Human · Persian raider camp',1088,-11200,5,'plains',136,55,2,'Level 5 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'persian'),
-(1039,'Gnomes war camp',2112,-10944,8,'woods',221,163,64,'Level 8 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'gnome'),
-(1040,'Pandaren stronghold',2624,-11072,9,'marsh',385,144,115,'Level 9 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'pandaren'),
-(1041,'Pandaren stronghold',4160,-11072,10,'plains',331,246,157,'Level 10 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'pandaren'),
-(1042,'Demons outpost',4672,-11456,1,'darkland',21,9,0,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'demon'),
-(1043,'Demons outpost',6336,-11200,1,'plains',18,8,2,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'demon'),
-(1044,'Orcs raider camp',6720,-11456,3,'woods',54,17,8,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'orc'),
-(1045,'Gnomes raider camp',7744,-11200,4,'desert',62,28,24,'Level 4 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'gnome'),
-(1046,'Human · Spartan raider camp',9664,-11200,5,'desert',128,39,4,'Level 5 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'spartan'),
-(1047,'Gnomes raider camp',9792,-10816,4,'desert',54,41,25,'Level 4 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'gnome'),
-(1048,'Orcs raider camp',11072,-11712,5,'desert',113,66,12,'Level 5 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'orc'),
-(1049,'Gnomes outpost',12352,-10816,2,'highlands',29,17,1,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'gnome'),
-(1050,'Gnomes outpost',-12352,-10688,2,'highlands',42,8,3,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'gnome'),
-(1051,'Necropolis raider camp',-11200,-10432,3,'snow',67,15,0,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'undead'),
-(1052,'Human · Roman raider camp',-10176,-10176,4,'highlands',79,25,14,'Level 4 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'roman'),
-(1053,'Human · Spartan raider camp',-8896,-10688,5,'plains',72,68,53,'Level 5 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'spartan'),
-(1054,'Human · Spartan war camp',-7744,-10176,7,'highlands',175,122,52,'Level 7 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'spartan'),
-(1055,'Gnomes raider camp',-6976,-10688,4,'highlands',47,45,29,'Level 4 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'gnome'),
-(1056,'Human · Roman outpost',-6080,-10304,2,'highlands',31,17,2,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'roman'),
-(1057,'Human · Spartan war camp',-5568,-10432,6,'plains',92,96,64,'Level 6 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'spartan'),
-(1058,'Gnomes raider camp',-4288,-10176,3,'woods',47,17,17,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'gnome'),
-(1059,'Gnomes outpost',-3008,-10176,1,'highlands',16,10,2,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'gnome'),
-(1060,'Human · Spartan outpost',-1728,-10176,1,'plains',19,11,2,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'spartan'),
-(1061,'Necropolis raider camp',-576,-10176,4,'plains',53,40,19,'Level 4 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'undead'),
-(1062,'Necropolis raider camp',-448,-9792,3,'marsh',56,11,9,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'undead'),
-(1063,'Dwarves raider camp',832,-10688,4,'highlands',70,18,34,'Level 4 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'dwarf'),
-(1064,'Orcs raider camp',2112,-10560,5,'woods',138,30,26,'Level 5 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'orc'),
-(1065,'Orcs outpost',2624,-9920,1,'marsh',27,5,0,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'orc'),
-(1066,'Demons raider camp',4160,-10176,3,'plains',33,33,19,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'demon'),
-(1067,'Human · Spartan raider camp',5184,-9920,4,'highlands',97,21,4,'Level 4 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'spartan'),
-(1068,'Human · Egyptian raider camp',6336,-10688,5,'desert',114,35,27,'Level 5 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'egyptian'),
-(1069,'Human · Spartan outpost',7232,-9792,2,'plains',44,9,0,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'spartan'),
-(1070,'Necropolis raider camp',8512,-10688,3,'highlands',52,13,12,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'undead'),
-(1071,'Gnomes outpost',9280,-10176,1,'highlands',18,9,1,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'gnome'),
-(1072,'Elves war camp',10304,-10048,6,'highlands',153,69,30,'Level 6 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'elf'),
-(1073,'Orcs outpost',10816,-10176,2,'highlands',29,16,2,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'orc'),
-(1074,'Dwarves raider camp',11840,-9920,3,'highlands',32,32,20,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'dwarf'),
-(1075,'Pandaren raider camp',-12608,-9664,4,'highlands',95,20,7,'Level 4 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'pandaren'),
-(1076,'Gnomes outpost',-11200,-9536,2,'plains',31,19,1,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'gnome'),
-(1077,'Demons outpost',-10688,-9408,1,'desert',20,6,2,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'demon'),
-(1078,'Necropolis outpost',-9280,-9664,2,'snow',36,10,3,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'undead'),
-(1079,'Dwarves raider camp',-8128,-9536,3,'highlands',62,17,4,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'dwarf'),
-(1080,'Pandaren outpost',-7104,-9152,2,'snow',33,15,0,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'pandaren'),
-(1081,'Human · Roman raider camp',-6080,-8896,3,'snow',38,26,10,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'roman'),
-(1082,'Human · Persian raider camp',-4928,-9664,4,'highlands',46,48,32,'Level 4 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'persian'),
-(1083,'Human · Persian outpost',-4032,-9664,2,'marsh',30,18,0,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'persian'),
-(1084,'Elves war camp',-3520,-9536,6,'marsh',179,43,52,'Level 6 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'elf'),
-(1085,'Human · Roman outpost',-1728,-9664,2,'plains',35,10,1,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'roman'),
-(1086,'Human · Roman outpost',-1472,-9024,1,'highlands',25,4,0,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'roman'),
-(1087,'Human · Persian outpost',-448,-9280,2,'plains',33,14,3,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'persian'),
-(1088,'Orcs outpost',576,-8896,2,'plains',33,15,0,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'orc'),
-(1089,'Gnomes raider camp',1728,-9664,3,'plains',37,25,12,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'gnome'),
-(1090,'Elves outpost',2624,-9280,1,'plains',19,9,3,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'elf'),
-(1091,'Human · Roman raider camp',3904,-9152,5,'highlands',137,28,16,'Level 5 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'roman'),
-(1092,'Dwarves outpost',5184,-9280,2,'highlands',42,9,1,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'dwarf'),
-(1093,'Human · Roman outpost',6080,-9664,2,'plains',34,12,1,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'roman'),
-(1094,'Human · Roman outpost',6720,-9408,1,'highlands',24,5,3,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'roman'),
-(1095,'Necropolis outpost',8256,-8896,2,'highlands',32,14,4,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'undead'),
-(1096,'Human · Roman raider camp',9280,-9664,3,'highlands',49,23,5,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'roman'),
-(1097,'Demons raider camp',10048,-9152,5,'highlands',106,52,25,'Level 5 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'demon'),
-(1098,'Elves raider camp',11584,-9152,5,'highlands',63,69,55,'Level 5 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'elf'),
-(1099,'Orcs raider camp',12224,-9664,3,'highlands',30,29,21,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'orc'),
-(1100,'Demons raider camp',-12736,-7872,4,'darkland',50,47,27,'Level 4 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'demon'),
-(1102,'Human · Spartan outpost',-9920,-8640,1,'woods',22,7,2,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'spartan'),
-(1103,'Elves raider camp',-9152,-8256,3,'plains',45,26,14,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'elf'),
-(1104,'Human · Persian raider camp',-8000,-8128,4,'snow',78,36,2,'Level 4 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'persian'),
-(1105,'Demons raider camp',-7488,-8128,4,'snow',61,43,25,'Level 4 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'demon'),
-(1106,'Human · Spartan outpost',-6592,-8000,2,'highlands',31,16,1,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'spartan'),
-(1107,'Human · Egyptian raider camp',-5056,-8384,5,'plains',113,26,28,'Level 5 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'egyptian'),
-(1108,'Human · Persian outpost',-4032,-8640,1,'marsh',21,10,0,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'persian'),
-(1109,'Pandaren outpost',-3008,-8000,1,'snow',26,6,0,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'pandaren'),
-(1110,'Demons outpost',-1984,-7744,2,'snow',38,12,2,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'demon'),
-(1111,'Dwarves war camp',-832,-8640,7,'highlands',215,118,4,'Level 7 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'dwarf'),
-(1112,'Human · Egyptian raider camp',192,-8128,3,'highlands',47,22,7,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'egyptian'),
-(1113,'Demons raider camp',1088,-8000,5,'snow',83,64,39,'Level 5 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'demon'),
-(1114,'Human · Persian war camp',1600,-7872,7,'highlands',272,56,44,'Level 7 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'persian'),
-(1115,'Human · Spartan raider camp',3392,-8640,3,'marsh',56,17,7,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'spartan'),
-(1116,'Human · Spartan outpost',3648,-8000,1,'highlands',22,4,2,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'spartan'),
-(1117,'Orcs outpost',4672,-7744,2,'snow',42,10,1,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'orc'),
-(1118,'Gnomes outpost',6208,-8256,2,'snow',32,18,1,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'gnome'),
-(1119,'Pandaren raider camp',6848,-8128,3,'snow',59,20,0,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'pandaren'),
-(1120,'Orcs war camp',7872,-8128,7,'snow',251,95,3,'Level 7 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'orc'),
-(1121,'Human · Persian raider camp',9024,-8640,5,'snow',86,62,44,'Level 5 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'persian'),
-(1122,'Human · Egyptian outpost',10304,-8000,2,'highlands',33,12,2,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'egyptian'),
-(1123,'Orcs war camp',11328,-8640,8,'highlands',175,185,123,'Level 8 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'orc'),
-(1124,'Necropolis outpost',12352,-7744,1,'snow',22,4,2,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'undead'),
-(1127,'Orcs outpost',-10304,-7104,2,'plains',25,18,4,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'orc'),
-(1128,'Gnomes raider camp',-8896,-7616,4,'woods',66,32,15,'Level 4 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'gnome'),
-(1129,'Demons war camp',-7872,-7616,7,'highlands',176,92,93,'Level 7 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'demon'),
-(1130,'Dwarves raider camp',-7616,-6720,5,'highlands',122,27,23,'Level 5 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'dwarf'),
-(1131,'Human · Persian outpost',-6592,-6720,1,'plains',17,11,1,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'persian'),
-(1132,'Elves outpost',-5568,-7488,1,'marsh',22,4,2,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'elf'),
-(1133,'Gnomes outpost',-4416,-7104,2,'highlands',42,10,1,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'gnome'),
-(1134,'Dwarves outpost',-2752,-7104,2,'snow',41,9,2,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'dwarf'),
-(1135,'Human · Roman raider camp',-2368,-7616,3,'snow',49,24,11,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'roman'),
-(1136,'Elves outpost',-1472,-7104,1,'snow',21,7,2,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'elf'),
-(1137,'Demons raider camp',-448,-7232,4,'snow',94,30,5,'Level 4 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'demon'),
-(1138,'Gnomes outpost',1088,-6720,1,'snow',20,10,0,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'gnome'),
-(1139,'Necropolis outpost',2112,-7488,1,'snow',18,10,1,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'undead'),
-(1140,'Human · Roman outpost',2624,-7360,1,'snow',22,5,1,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'roman'),
-(1141,'Necropolis raider camp',4160,-7232,3,'plains',44,25,16,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'undead'),
-(1142,'Elves raider camp',5440,-7616,3,'snow',45,17,19,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'elf'),
-(1143,'Necropolis raider camp',6208,-7616,3,'snow',43,16,21,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'undead'),
-(1144,'Dwarves outpost',6720,-7104,2,'highlands',31,19,1,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'dwarf'),
-(1145,'Human · Spartan stronghold',7744,-6720,9,'highlands',261,198,182,'Level 9 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'spartan'),
-(1146,'Human · Egyptian outpost',8768,-7488,1,'snow',20,10,0,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'egyptian'),
-(1147,'Human · Egyptian war camp',10304,-7488,7,'highlands',264,84,24,'Level 7 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'egyptian'),
-(1148,'Human · Spartan outpost',10816,-7616,2,'highlands',34,16,2,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'spartan'),
-(1149,'Pandaren outpost',12736,-7104,1,'plains',23,7,0,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'pandaren'),
-(1150,'Elves raider camp',-12736,-5824,4,'plains',67,21,34,'Level 4 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'elf'),
-(1152,'Human · Roman raider camp',-10176,-5696,3,'plains',43,20,19,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'roman'),
-(1153,'Pandaren outpost',-9152,-6464,1,'woods',22,9,0,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'pandaren'),
-(1154,'Orcs outpost',-8128,-5952,2,'woods',38,11,4,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'orc'),
-(1155,'Orcs raider camp',-7360,-6080,4,'woods',68,31,26,'Level 4 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'orc'),
-(1156,'Orcs outpost',-5824,-6592,2,'marsh',28,18,0,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'orc'),
-(1157,'Pandaren outpost',-5056,-6080,1,'darkland',22,7,1,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'pandaren'),
-(1158,'Pandaren raider camp',-3648,-6080,4,'plains',63,24,33,'Level 4 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'pandaren'),
-(1159,'Pandaren outpost',-3520,-6464,1,'highlands',20,9,2,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'pandaren'),
-(1160,'Human · Persian stronghold',-2496,-6464,9,'highlands',297,151,115,'Level 9 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'persian'),
-(1161,'Orcs outpost',-1472,-6208,1,'snow',22,9,0,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'orc'),
-(1162,'Elves raider camp',64,-6464,4,'snow',53,33,33,'Level 4 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'elf'),
-(1163,'Pandaren outpost',704,-6592,2,'snow',28,17,3,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'pandaren'),
-(1164,'Human · Roman stronghold',1600,-6208,9,'snow',244,169,169,'Level 9 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'roman'),
-(1165,'Human · Persian raider camp',3008,-6080,4,'snow',82,21,22,'Level 4 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'persian'),
-(1166,'Human · Roman raider camp',4544,-6080,3,'snow',57,20,3,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'roman'),
-(1167,'Dwarves war camp',5184,-6464,7,'marsh',228,80,37,'Level 7 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'dwarf'),
-(1168,'Necropolis outpost',6208,-6208,1,'highlands',22,8,2,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'undead'),
-(1169,'Pandaren raider camp',6720,-6464,3,'plains',40,23,12,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'pandaren'),
-(1170,'Human · Roman outpost',8256,-5952,1,'woods',23,8,0,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'roman'),
-(1171,'Pandaren raider camp',9280,-6464,3,'highlands',60,22,4,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'pandaren'),
-(1172,'Gnomes raider camp',10560,-6080,3,'highlands',46,33,7,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'gnome'),
-(1173,'Gnomes raider camp',11456,-6592,4,'highlands',72,19,31,'Level 4 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'gnome'),
-(1174,'Human · Roman raider camp',11840,-6592,5,'highlands',143,35,1,'Level 5 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'roman'),
-(1175,'Human · Persian war camp',-12736,-5184,8,'plains',297,104,57,'Level 8 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'persian'),
-(1176,'Pandaren raider camp',-11712,-4928,4,'plains',52,42,31,'Level 4 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'pandaren'),
-(1177,'Human · Persian raider camp',-10048,-5056,5,'woods',118,63,4,'Level 5 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'persian'),
-(1178,'Human · Persian raider camp',-9152,-4800,4,'woods',65,38,10,'Level 4 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'persian'),
-(1179,'Human · Roman raider camp',-8384,-5056,3,'woods',29,26,21,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'roman'),
-(1180,'Demons war camp',-7360,-5056,7,'plains',205,123,22,'Level 7 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'demon'),
-(1181,'Elves raider camp',-6208,-5568,5,'plains',117,29,39,'Level 5 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'elf'),
-(1182,'Gnomes war camp',-5056,-5184,6,'plains',201,49,7,'Level 6 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'gnome'),
-(1183,'Human · Spartan outpost',-3648,-5568,2,'plains',29,18,3,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'spartan'),
-(1184,'Demons outpost',-3008,-5056,2,'desert',34,16,4,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'demon'),
-(1185,'Human · Persian war camp',-1856,-5056,7,'highlands',242,79,56,'Level 7 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'persian'),
-(1186,'Elves outpost',-704,-5056,2,'plains',31,15,3,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'elf'),
-(1187,'Human · Spartan raider camp',192,-5056,5,'plains',64,62,40,'Level 5 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'spartan'),
-(1188,'Demons raider camp',1472,-5568,4,'snow',66,48,14,'Level 4 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'demon'),
-(1189,'Pandaren war camp',2240,-5568,8,'snow',199,200,108,'Level 8 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'pandaren'),
-(1190,'Human · Egyptian war camp',2624,-4928,8,'highlands',364,88,21,'Level 8 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'egyptian'),
-(1191,'Human · Spartan outpost',4160,-5568,2,'highlands',27,19,4,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'spartan'),
-(1192,'Gnomes war camp',4672,-4800,7,'woods',169,86,81,'Level 7 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'gnome'),
-(1193,'Human · Egyptian outpost',6336,-5056,1,'desert',20,10,2,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'egyptian'),
-(1194,'Orcs raider camp',7360,-5568,4,'woods',83,26,20,'Level 4 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'orc'),
-(1195,'Human · Egyptian raider camp',8128,-5568,4,'woods',73,38,2,'Level 4 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'egyptian'),
-(1196,'Dwarves raider camp',9280,-5312,5,'highlands',96,70,25,'Level 5 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'dwarf'),
-(1197,'Pandaren war camp',10304,-4928,6,'highlands',161,39,65,'Level 6 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'pandaren'),
-(1198,'Orcs outpost',11712,-5568,1,'plains',24,4,1,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'orc'),
-(1199,'Human · Roman outpost',12352,-5568,2,'plains',36,11,1,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'roman'),
-(1200,'Elves outpost',-11840,-4544,2,'plains',37,11,0,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'elf'),
-(1201,'Dwarves raider camp',-11200,-4160,3,'plains',64,14,0,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'dwarf'),
-(1202,'Pandaren raider camp',-9792,-4544,3,'woods',38,23,17,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'pandaren'),
-(1203,'Human · Spartan outpost',-9664,-3904,1,'highlands',23,4,1,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'spartan'),
-(1204,'Human · Persian raider camp',-8640,-4032,5,'highlands',93,69,28,'Level 5 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'persian'),
-(1205,'Necropolis outpost',-7104,-3648,1,'woods',17,10,1,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'undead'),
-(1206,'Human · Egyptian outpost',-6080,-4544,1,'marsh',23,5,1,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'egyptian'),
-(1207,'Gnomes outpost',-5568,-4416,1,'plains',18,9,1,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'gnome'),
-(1208,'Necropolis outpost',-4544,-4288,2,'highlands',35,9,2,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'undead'),
-(1209,'Human · Persian raider camp',-3136,-4544,3,'desert',50,21,10,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'persian'),
-(1210,'Human · Egyptian raider camp',-2112,-4032,3,'desert',50,18,16,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'egyptian'),
-(1211,'Gnomes raider camp',-960,-4032,5,'highlands',104,55,9,'Level 5 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'gnome'),
-(1212,'Gnomes raider camp',64,-4288,3,'plains',51,28,7,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'gnome'),
-(1213,'Dwarves war camp',576,-3648,8,'plains',364,117,33,'Level 8 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'dwarf'),
-(1214,'Human · Egyptian outpost',1856,-4544,1,'plains',21,6,2,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'egyptian'),
-(1215,'Gnomes outpost',2624,-4416,2,'plains',38,10,0,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'gnome'),
-(1216,'Pandaren outpost',3648,-4288,1,'highlands',19,9,0,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'pandaren'),
-(1217,'Dwarves outpost',5440,-4032,2,'marsh',37,12,1,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'dwarf'),
-(1218,'Necropolis outpost',5952,-4032,2,'highlands',43,8,1,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'undead'),
-(1219,'Human · Egyptian raider camp',6720,-3776,5,'highlands',102,54,11,'Level 5 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'egyptian'),
-(1220,'Necropolis war camp',8256,-4160,8,'highlands',235,179,56,'Level 8 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'undead'),
-(1221,'Elves war camp',9408,-4544,8,'woods',284,114,44,'Level 8 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'elf'),
-(1222,'Orcs raider camp',10048,-4544,3,'plains',43,29,12,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'orc'),
-(1223,'Human · Roman outpost',10816,-4288,1,'plains',22,8,1,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'roman'),
-(1224,'Elves war camp',12352,-4544,8,'darkland',304,91,84,'Level 8 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'elf'),
-(1225,'Elves raider camp',-12224,-3136,3,'plains',40,24,15,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'elf'),
-(1226,'Gnomes raider camp',-11200,-2752,4,'woods',52,33,31,'Level 4 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'gnome'),
-(1227,'Demons war camp',-10048,-3520,6,'highlands',143,76,21,'Level 6 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'demon'),
-(1228,'Pandaren raider camp',-9664,-2624,5,'woods',81,52,52,'Level 5 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'pandaren'),
-(1229,'Elves war camp',-8384,-3520,7,'woods',193,97,45,'Level 7 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'elf'),
-(1230,'Demons outpost',-7232,-3008,2,'woods',43,10,0,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'demon'),
-(1231,'Necropolis raider camp',-6592,-3392,3,'woods',41,16,23,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'undead'),
-(1232,'Demons raider camp',-5568,-3008,3,'highlands',60,18,5,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'demon'),
-(1233,'Human · Spartan raider camp',-4544,-2752,4,'plains',69,30,21,'Level 4 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'spartan'),
-(1234,'Human · Egyptian raider camp',-3392,-3520,5,'highlands',75,48,50,'Level 5 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'egyptian'),
-(1235,'Demons raider camp',-1984,-2624,4,'highlands',62,36,19,'Level 4 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'demon'),
-(1236,'Pandaren raider camp',-704,-3520,5,'plains',125,59,3,'Level 5 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'pandaren'),
-(1237,'Dwarves war camp',-448,-2880,6,'woods',160,62,29,'Level 6 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'dwarf'),
-(1238,'Human · Spartan raider camp',1088,-2880,5,'woods',123,44,8,'Level 5 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'spartan'),
-(1239,'Orcs outpost',1984,-3008,2,'plains',40,10,4,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'orc'),
-(1240,'Dwarves raider camp',3136,-2752,3,'plains',60,17,6,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'dwarf'),
-(1241,'Pandaren raider camp',4288,-3520,4,'plains',67,29,23,'Level 4 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'pandaren'),
-(1242,'Human · Roman raider camp',4800,-3008,5,'plains',96,47,27,'Level 5 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'roman'),
-(1243,'Demons outpost',6208,-3008,2,'highlands',40,11,1,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'demon'),
-(1244,'Gnomes raider camp',7104,-3520,5,'highlands',113,65,10,'Level 5 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'gnome'),
-(1245,'Orcs war camp',8256,-3392,6,'marsh',110,86,51,'Level 6 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'orc'),
-(1246,'Pandaren outpost',9664,-3008,2,'plains',27,19,2,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'pandaren'),
-(1247,'Demons war camp',10688,-3520,6,'plains',152,53,65,'Level 6 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'demon'),
-(1248,'Human · Egyptian outpost',11584,-3008,2,'woods',40,10,0,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'egyptian'),
-(1250,'Human · Spartan raider camp',-12224,-1600,3,'plains',42,27,6,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'spartan'),
-(1251,'Elves war camp',-10816,-1984,7,'plains',231,143,3,'Level 7 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'elf'),
-(1252,'Gnomes raider camp',-10688,-2368,5,'plains',102,71,17,'Level 5 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'gnome'),
-(1253,'Demons outpost',-9152,-1728,2,'woods',40,8,3,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'demon'),
-(1254,'Orcs outpost',-8128,-1728,2,'woods',27,18,2,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'orc'),
-(1255,'Gnomes raider camp',-7104,-2496,3,'highlands',46,14,25,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'gnome'),
-(1256,'Human · Egyptian war camp',-6336,-1984,7,'highlands',279,72,33,'Level 7 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'egyptian'),
-(1257,'Human · Roman war camp',-4928,-1984,6,'woods',138,60,58,'Level 6 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'roman'),
-(1258,'Elves outpost',-4160,-2496,2,'highlands',32,20,0,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'elf'),
-(1259,'Necropolis raider camp',-3136,-2496,3,'highlands',47,12,21,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'undead'),
-(1260,'Orcs outpost',-1600,-2496,2,'woods',39,7,4,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'orc'),
-(1261,'Necropolis outpost',-1472,-1728,2,'plains',31,17,1,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'undead'),
-(1262,'Human · Roman raider camp',-448,-2496,3,'woods',31,29,15,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'roman'),
-(1263,'Necropolis outpost',832,-1984,1,'woods',22,4,2,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'undead'),
-(1264,'Elves raider camp',1728,-1984,5,'woods',124,36,24,'Level 5 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'elf'),
-(1265,'Pandaren outpost',2624,-2496,1,'woods',25,5,1,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'pandaren'),
-(1266,'Human · Spartan outpost',4544,-2496,2,'plains',38,8,2,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'spartan'),
-(1267,'Dwarves outpost',5440,-1984,1,'woods',16,10,2,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'dwarf'),
-(1268,'Demons outpost',6208,-1856,1,'plains',18,10,2,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'demon'),
-(1269,'Elves outpost',7232,-2496,2,'woods',31,17,1,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'elf'),
-(1270,'Human · Spartan war camp',8384,-1984,8,'plains',315,97,86,'Level 8 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'spartan'),
-(1271,'Demons raider camp',9408,-1984,4,'plains',103,20,4,'Level 4 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'demon'),
-(1272,'Elves outpost',10304,-2368,1,'plains',23,8,0,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'elf'),
-(1273,'Human · Persian outpost',10816,-2112,2,'plains',35,17,1,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'persian'),
-(1275,'Gnomes outpost',-11968,-960,2,'plains',35,11,1,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'gnome'),
-(1276,'Demons outpost',-11712,-576,2,'plains',35,16,0,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'demon'),
-(1277,'Human · Spartan raider camp',-10688,-1216,3,'woods',42,27,9,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'spartan'),
-(1278,'Human · Egyptian raider camp',-9536,-960,4,'woods',44,42,26,'Level 4 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'egyptian'),
-(1279,'Necropolis outpost',-8128,-832,1,'woods',22,6,0,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'undead'),
-(1280,'Dwarves outpost',-7104,-1344,2,'woods',42,8,2,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'dwarf'),
-(1281,'Human · Egyptian outpost',-5696,-1472,2,'highlands',41,12,1,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'egyptian'),
-(1282,'Human · Egyptian outpost',-5568,-1088,2,'woods',30,19,3,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'egyptian'),
-(1283,'Orcs outpost',-4032,-576,2,'plains',35,14,3,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'orc'),
-(1284,'Dwarves outpost',-3008,-1216,2,'desert',35,15,0,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'dwarf'),
-(1285,'Pandaren raider camp',-1856,-960,3,'desert',41,26,10,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'pandaren'),
-(1286,'Necropolis outpost',-1472,-576,2,'plains',33,16,4,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'undead'),
-(1287,'Human · Persian raider camp',320,-1472,5,'highlands',147,28,13,'Level 5 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'persian'),
-(1288,'Dwarves raider camp',1088,-1344,3,'plains',61,23,0,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'dwarf'),
-(1289,'Human · Egyptian outpost',2112,-1472,2,'plains',39,14,1,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'egyptian'),
-(1290,'Pandaren outpost',2624,-576,1,'highlands',21,6,1,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'pandaren'),
-(1291,'Human · Roman outpost',3648,-1344,2,'highlands',35,14,3,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'roman'),
-(1292,'Human · Persian raider camp',4800,-960,3,'plains',53,24,3,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'persian'),
-(1293,'Human · Persian raider camp',6080,-960,5,'highlands',107,51,23,'Level 5 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'persian'),
-(1294,'Gnomes raider camp',6976,-1472,5,'plains',60,61,45,'Level 5 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'gnome'),
-(1295,'Elves outpost',8000,-960,1,'plains',16,11,2,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'elf'),
-(1296,'Elves outpost',8768,-576,1,'plains',19,9,3,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'elf'),
-(1297,'Elves war camp',9792,-960,7,'plains',276,58,25,'Level 7 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'elf'),
-(1298,'Elves outpost',11328,-1344,2,'plains',33,11,2,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'elf'),
-(1299,'Gnomes outpost',12480,-960,2,'plains',34,14,4,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'gnome'),
-(1300,'Elves raider camp',-11968,64,4,'highlands',78,35,1,'Level 4 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'elf'),
-(1301,'Human · Roman raider camp',-10944,-448,4,'plains',57,38,20,'Level 4 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'roman'),
-(1302,'Pandaren outpost',-10688,64,1,'plains',18,8,2,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'pandaren'),
-(1303,'Pandaren outpost',-9152,64,1,'desert',26,4,2,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'pandaren'),
-(1304,'Elves outpost',-8000,-448,1,'woods',21,10,0,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'elf'),
-(1305,'Necropolis outpost',-7616,-320,1,'woods',24,5,0,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'undead'),
-(1306,'Human · Spartan outpost',-6592,-64,2,'highlands',40,12,2,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'spartan'),
-(1307,'Necropolis raider camp',-5568,-192,5,'woods',97,62,17,'Level 5 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'undead'),
-(1308,'Elves raider camp',-4032,64,3,'desert',48,26,3,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'elf'),
-(1309,'Orcs raider camp',-3520,-64,4,'desert',42,44,36,'Level 4 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'orc'),
-(1310,'Demons war camp',-2112,64,6,'woods',179,99,1,'Level 6 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'demon'),
-(1311,'Gnomes war camp',-1472,448,8,'woods',207,167,99,'Level 8 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'gnome'),
-(1312,'Human · Egyptian outpost',64,-320,1,'highlands',23,5,2,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'egyptian'),
-(1313,'Human · Persian outpost',1088,-192,1,'highlands',16,10,2,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'persian'),
-(1314,'Human · Persian raider camp',2112,320,5,'highlands',116,49,12,'Level 5 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'persian'),
-(1315,'Demons raider camp',3264,-448,3,'highlands',39,21,22,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'demon'),
-(1316,'Human · Egyptian war camp',4032,64,7,'plains',186,110,51,'Level 7 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'egyptian'),
-(1317,'Human · Egyptian raider camp',5568,64,5,'woods',82,54,35,'Level 5 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'egyptian'),
-(1318,'Demons raider camp',6208,448,5,'plains',90,63,15,'Level 5 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'demon'),
-(1319,'Pandaren outpost',6720,-320,1,'plains',19,11,1,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'pandaren'),
-(1320,'Demons outpost',7744,-64,1,'plains',24,4,2,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'demon'),
-(1321,'Human · Roman war camp',9280,448,8,'plains',271,118,123,'Level 8 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'roman'),
-(1322,'Orcs outpost',9920,-448,2,'plains',39,11,3,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'orc'),
-(1323,'Gnomes outpost',11328,64,2,'plains',29,21,4,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'gnome'),
-(1324,'Pandaren raider camp',12096,64,4,'highlands',72,33,13,'Level 4 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'pandaren'),
-(1325,'Demons outpost',-11968,576,1,'plains',19,11,2,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'demon'),
-(1326,'Orcs outpost',-11584,576,1,'plains',17,10,1,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'orc'),
-(1327,'Orcs outpost',-10176,960,1,'plains',19,11,1,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'orc'),
-(1328,'Orcs outpost',-9152,704,1,'woods',26,5,1,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'orc'),
-(1329,'Pandaren outpost',-8000,576,2,'plains',38,8,1,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'pandaren'),
-(1330,'Necropolis outpost',-7616,1088,2,'highlands',41,8,2,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'undead'),
-(1331,'Human · Persian raider camp',-5824,1088,4,'desert',92,30,1,'Level 4 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'persian'),
-(1332,'Orcs outpost',-5184,1088,1,'woods',20,9,1,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'orc'),
-(1333,'Human · Spartan raider camp',-4032,1472,4,'woods',102,23,1,'Level 4 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'spartan'),
-(1334,'Necropolis outpost',-3520,960,1,'plains',22,10,0,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'undead'),
-(1335,'Human · Roman outpost',-2496,1216,1,'woods',19,11,1,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'roman'),
-(1336,'Dwarves outpost',-960,832,1,'plains',18,8,2,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'dwarf'),
-(1337,'Human · Egyptian outpost',-448,704,1,'plains',21,6,1,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'egyptian'),
-(1338,'Gnomes raider camp',832,1088,3,'plains',49,18,18,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'gnome'),
-(1339,'Human · Spartan outpost',2112,960,1,'highlands',21,5,2,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'spartan'),
-(1340,'Human · Roman war camp',3008,576,6,'highlands',148,69,37,'Level 6 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'roman'),
-(1341,'Human · Persian stronghold',4160,960,9,'highlands',247,174,149,'Level 9 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'persian'),
-(1342,'Elves outpost',5184,1216,1,'plains',22,10,0,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'elf'),
-(1343,'Gnomes outpost',6208,1344,2,'plains',26,17,4,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'gnome'),
-(1344,'Gnomes war camp',6720,832,6,'highlands',203,66,12,'Level 6 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'gnome'),
-(1345,'Human · Roman raider camp',8512,1088,3,'woods',53,13,9,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'roman'),
-(1346,'Dwarves raider camp',8768,704,4,'plains',41,43,27,'Level 4 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'dwarf'),
-(1347,'Elves raider camp',10688,576,5,'plains',130,43,9,'Level 5 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'elf'),
-(1348,'Gnomes war camp',10816,960,7,'plains',199,94,57,'Level 7 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'gnome'),
-(1349,'Necropolis outpost',11840,1216,1,'plains',18,8,2,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'undead'),
-(1350,'Pandaren raider camp',-12736,1728,5,'highlands',90,44,41,'Level 5 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'pandaren'),
-(1351,'Gnomes outpost',-11200,2368,2,'woods',36,11,1,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'gnome'),
-(1352,'Elves outpost',-10432,2112,2,'highlands',30,18,0,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'elf'),
-(1353,'Human · Roman outpost',-9024,2112,1,'desert',22,7,1,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'roman'),
-(1354,'Demons raider camp',-8256,1600,4,'plains',70,25,31,'Level 4 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'demon'),
-(1355,'Human · Spartan raider camp',-7104,1856,5,'highlands',127,42,12,'Level 5 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'spartan'),
-(1356,'Human · Egyptian war camp',-6080,2240,8,'woods',258,122,84,'Level 8 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'egyptian'),
-(1357,'Human · Roman raider camp',-5056,1600,3,'highlands',52,24,10,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'roman'),
-(1358,'Demons war camp',-4288,2112,7,'marsh',155,124,95,'Level 7 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'demon'),
-(1359,'Pandaren raider camp',-3008,2368,3,'plains',33,28,18,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'pandaren'),
-(1360,'Demons raider camp',-2368,2112,5,'marsh',103,66,21,'Level 5 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'demon'),
-(1361,'Human · Egyptian raider camp',-576,1600,4,'highlands',76,18,17,'Level 4 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'egyptian'),
-(1362,'Pandaren outpost',64,2240,1,'plains',20,9,3,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'pandaren'),
-(1363,'Pandaren war camp',576,2240,7,'plains',249,82,30,'Level 7 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'pandaren'),
-(1364,'Demons outpost',1600,2496,1,'desert',21,7,1,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'demon'),
-(1365,'Human · Roman raider camp',2624,2112,4,'plains',84,32,4,'Level 4 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'roman'),
-(1366,'Human · Spartan war camp',3648,1984,8,'desert',257,201,58,'Level 8 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'spartan'),
-(1367,'Elves raider camp',5184,1984,5,'woods',98,60,31,'Level 5 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'elf'),
-(1368,'Human · Persian war camp',6464,2112,7,'plains',227,109,6,'Level 7 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'persian'),
-(1369,'Dwarves raider camp',7616,1600,4,'woods',86,24,11,'Level 4 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'dwarf'),
-(1370,'Human · Roman raider camp',8128,1600,5,'woods',118,44,28,'Level 5 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'roman'),
-(1371,'Orcs war camp',9280,2496,8,'highlands',324,106,49,'Level 8 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'orc'),
-(1372,'Human · Persian outpost',10304,1600,2,'plains',35,17,0,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'persian'),
-(1373,'Human · Spartan raider camp',11712,2112,5,'woods',84,71,29,'Level 5 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'spartan'),
-(1374,'Human · Roman raider camp',12352,1728,3,'plains',41,18,19,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'roman'),
-(1375,'Human · Persian raider camp',-11840,2624,3,'woods',33,27,20,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'persian'),
-(1376,'Human · Persian war camp',-11328,3136,7,'plains',206,121,19,'Level 7 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'persian'),
-(1377,'Dwarves raider camp',-10688,3136,5,'plains',127,30,36,'Level 5 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'dwarf'),
-(1378,'Necropolis war camp',-9664,3392,6,'plains',218,50,1,'Level 6 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'undead'),
-(1379,'Orcs outpost',-8640,2624,2,'desert',29,17,3,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'orc'),
-(1380,'Pandaren outpost',-7616,3008,1,'woods',26,5,0,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'pandaren'),
-(1381,'Human · Spartan war camp',-5696,3136,7,'plains',170,96,109,'Level 7 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'spartan'),
-(1382,'Gnomes outpost',-5312,2624,2,'woods',34,16,2,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'gnome'),
-(1383,'Orcs raider camp',-3776,3136,5,'marsh',75,72,45,'Level 5 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'orc'),
-(1384,'Human · Roman raider camp',-3008,3136,4,'plains',62,42,10,'Level 4 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'roman'),
-(1385,'Human · Egyptian raider camp',-1984,3392,5,'plains',124,29,39,'Level 5 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'egyptian'),
-(1386,'Human · Egyptian outpost',-1472,3520,1,'plains',21,8,0,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'egyptian'),
-(1387,'Orcs outpost',192,2624,1,'woods',17,11,2,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'orc'),
-(1388,'Pandaren raider camp',832,3136,5,'highlands',118,52,24,'Level 5 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'pandaren'),
-(1389,'Demons raider camp',1600,2880,3,'desert',45,11,20,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'demon'),
-(1390,'Dwarves outpost',3264,3136,1,'desert',18,10,1,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'dwarf'),
-(1391,'Elves raider camp',4544,3136,3,'plains',30,26,23,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'elf'),
-(1392,'Orcs raider camp',4928,2624,4,'woods',53,38,30,'Level 4 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'orc'),
-(1393,'Demons war camp',5696,2624,6,'woods',106,109,62,'Level 6 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'demon'),
-(1394,'Gnomes outpost',6720,3520,1,'plains',23,4,1,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'gnome'),
-(1395,'Orcs outpost',8000,2624,1,'plains',23,5,2,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'orc'),
-(1396,'Human · Spartan outpost',9280,2880,2,'plains',42,9,2,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'spartan'),
-(1397,'Necropolis raider camp',9792,3008,5,'highlands',121,60,3,'Level 5 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'undead'),
-(1398,'Demons raider camp',11200,3136,3,'woods',42,24,16,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'demon'),
-(1399,'Human · Spartan raider camp',12352,3392,4,'woods',79,38,1,'Level 4 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'spartan'),
-(1400,'Human · Egyptian raider camp',-12224,3648,5,'plains',88,60,21,'Level 5 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'egyptian'),
-(1401,'Necropolis stronghold',-11200,4544,9,'plains',503,126,11,'Level 9 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'undead'),
-(1402,'Human · Persian outpost',-10176,3648,1,'plains',26,4,0,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'persian'),
-(1403,'Human · Spartan stronghold',-9152,3776,10,'plains',364,267,48,'Level 10 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'spartan'),
-(1404,'Demons outpost',-8640,3904,1,'plains',20,11,0,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'demon'),
-(1405,'Orcs outpost',-6720,4160,2,'plains',39,13,1,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'orc'),
-(1406,'Elves raider camp',-6336,3648,4,'highlands',69,34,10,'Level 4 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'elf'),
-(1407,'Human · Spartan raider camp',-5568,3904,5,'plains',131,30,15,'Level 5 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'spartan'),
-(1408,'Elves outpost',-4544,4416,2,'marsh',33,16,2,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'elf'),
-(1409,'Elves outpost',-3392,4160,1,'highlands',26,5,1,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'elf'),
-(1410,'Elves outpost',-1856,4160,1,'plains',21,8,1,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'elf'),
-(1411,'Human · Egyptian outpost',-960,3776,1,'plains',24,7,0,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'egyptian'),
-(1412,'Pandaren outpost',-64,4160,2,'plains',37,10,0,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'pandaren'),
-(1413,'Human · Roman raider camp',1088,4416,3,'plains',54,21,9,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'roman'),
-(1414,'Human · Persian raider camp',2112,3648,4,'woods',59,34,28,'Level 4 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'persian'),
-(1415,'Human · Egyptian raider camp',2880,4160,5,'plains',88,56,27,'Level 5 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'egyptian'),
-(1416,'Human · Roman raider camp',4160,4544,5,'plains',93,46,42,'Level 5 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'roman'),
-(1417,'Pandaren war camp',5440,3648,7,'plains',250,99,35,'Level 7 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'pandaren'),
-(1418,'Human · Egyptian raider camp',6208,3648,3,'highlands',49,12,23,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'egyptian'),
-(1419,'Gnomes outpost',6720,4288,2,'woods',36,10,2,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'gnome'),
-(1420,'Human · Roman raider camp',7744,3904,3,'desert',52,31,1,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'roman'),
-(1421,'Gnomes raider camp',8768,3648,3,'desert',52,21,11,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'gnome'),
-(1422,'Necropolis raider camp',10304,4160,3,'plains',53,28,4,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'undead'),
-(1423,'Human · Roman war camp',10944,4160,6,'highlands',157,78,16,'Level 6 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'roman'),
-(1424,'Dwarves raider camp',11840,4416,3,'highlands',54,25,6,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'dwarf'),
-(1426,'Demons raider camp',-11456,5184,3,'woods',36,23,19,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'demon'),
-(1427,'Elves outpost',-10048,5184,2,'highlands',32,15,2,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'elf'),
-(1428,'Human · Roman raider camp',-9152,4672,3,'highlands',56,16,2,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'roman'),
-(1429,'Human · Egyptian raider camp',-8128,4928,4,'woods',76,30,19,'Level 4 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'egyptian'),
-(1430,'Elves raider camp',-6976,5184,5,'plains',83,49,48,'Level 5 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'elf'),
-(1431,'Gnomes raider camp',-6080,4800,5,'marsh',114,64,6,'Level 5 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'gnome'),
-(1432,'Gnomes raider camp',-5568,5440,4,'marsh',69,19,23,'Level 4 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'gnome'),
-(1433,'Pandaren war camp',-4544,4800,6,'plains',125,77,39,'Level 6 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'pandaren'),
-(1434,'Orcs raider camp',-3136,4672,4,'highlands',43,43,26,'Level 4 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'orc'),
-(1435,'Elves outpost',-2496,4672,2,'desert',37,8,3,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'elf'),
-(1436,'Gnomes raider camp',-1472,4928,3,'marsh',64,18,4,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'gnome'),
-(1437,'Demons raider camp',-320,5184,4,'plains',74,30,21,'Level 4 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'demon'),
-(1438,'Human · Roman war camp',576,5312,8,'desert',176,195,146,'Level 8 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'roman'),
-(1439,'Human · Egyptian raider camp',1728,5184,5,'desert',125,56,3,'Level 5 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'egyptian'),
-(1440,'Human · Spartan stronghold',2752,5184,10,'plains',429,252,40,'Level 10 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'spartan'),
-(1441,'Gnomes raider camp',3648,5440,3,'plains',59,11,6,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'gnome'),
-(1442,'Demons outpost',5184,5568,2,'highlands',29,19,2,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'demon'),
-(1443,'Human · Spartan raider camp',6208,4928,3,'plains',44,13,19,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'spartan'),
-(1444,'Human · Egyptian raider camp',7360,5184,4,'woods',94,26,9,'Level 4 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'egyptian'),
-(1445,'Gnomes outpost',8256,5440,2,'woods',30,18,3,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'gnome'),
-(1446,'Human · Persian outpost',8768,5568,1,'desert',25,5,0,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'persian'),
-(1447,'Human · Persian raider camp',10688,4672,3,'woods',33,29,17,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'persian'),
-(1448,'Dwarves outpost',11072,4672,1,'woods',24,7,0,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'dwarf'),
-(1449,'Pandaren raider camp',12224,4672,4,'desert',62,47,18,'Level 4 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'pandaren'),
-(1451,'Human · Persian outpost',-10944,6208,1,'plains',18,12,2,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'persian'),
-(1452,'Orcs stronghold',-10176,5696,9,'plains',347,117,174,'Level 9 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'orc'),
-(1453,'Human · Persian raider camp',-9408,5696,5,'woods',105,42,38,'Level 5 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'persian'),
-(1454,'Orcs raider camp',-8640,5696,4,'woods',89,31,7,'Level 4 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'orc'),
-(1455,'Human · Spartan raider camp',-7104,5696,3,'woods',47,12,20,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'spartan'),
-(1456,'Demons outpost',-6208,6208,2,'marsh',33,19,0,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'demon'),
-(1457,'Human · Roman outpost',-5056,5824,2,'highlands',32,18,1,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'roman'),
-(1458,'Human · Persian raider camp',-4032,6208,3,'highlands',35,30,14,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'persian'),
-(1459,'Human · Spartan outpost',-3136,6208,1,'highlands',24,5,3,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'spartan'),
-(1460,'Dwarves raider camp',-1856,5696,5,'plains',135,37,20,'Level 5 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'dwarf'),
-(1461,'Demons outpost',-832,5696,1,'woods',20,8,1,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'demon'),
-(1462,'Orcs outpost',-448,5696,2,'woods',37,8,2,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'orc'),
-(1463,'Elves outpost',704,6208,1,'plains',24,4,0,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'elf'),
-(1464,'Orcs outpost',1600,5824,2,'desert',33,16,4,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'orc'),
-(1465,'Gnomes outpost',2624,6208,2,'highlands',33,17,1,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'gnome'),
-(1466,'Orcs war camp',4416,6208,7,'plains',237,72,60,'Level 7 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'orc'),
-(1467,'Human · Roman raider camp',4800,5696,4,'woods',94,18,1,'Level 4 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'roman'),
-(1468,'Dwarves raider camp',6208,6336,5,'desert',124,39,29,'Level 5 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'dwarf'),
-(1469,'Pandaren outpost',7232,5952,1,'highlands',19,8,1,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'pandaren'),
-(1470,'Gnomes war camp',8256,6208,6,'woods',154,45,58,'Level 6 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'gnome'),
-(1471,'Necropolis outpost',9280,5824,1,'highlands',20,7,1,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'undead'),
-(1472,'Human · Spartan outpost',10304,6080,2,'woods',32,16,5,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'spartan'),
-(1473,'Human · Egyptian outpost',11328,6464,2,'highlands',32,11,4,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'egyptian'),
-(1476,'Demons war camp',-10944,7232,6,'plains',185,50,39,'Level 6 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'demon'),
-(1477,'Dwarves outpost',-10688,7616,2,'plains',40,12,1,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'dwarf'),
-(1478,'Human · Spartan outpost',-9024,6720,1,'woods',19,9,2,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'spartan'),
-(1479,'Elves outpost',-8640,7104,2,'woods',32,13,2,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'elf'),
-(1480,'Pandaren war camp',-7616,7104,8,'woods',371,80,10,'Level 8 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'pandaren'),
-(1481,'Demons raider camp',-6464,6720,3,'highlands',45,27,9,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'demon'),
-(1482,'Human · Persian outpost',-5056,7104,1,'woods',23,5,1,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'persian'),
-(1483,'Human · Egyptian raider camp',-4288,7232,5,'woods',94,67,7,'Level 5 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'egyptian'),
-(1484,'Pandaren outpost',-3008,7616,1,'plains',21,7,2,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'pandaren'),
-(1485,'Dwarves outpost',-1728,6720,1,'desert',23,8,1,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'dwarf'),
-(1486,'Demons outpost',-960,7104,1,'desert',23,6,0,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'demon'),
-(1487,'Human · Spartan outpost',64,7360,2,'plains',31,12,3,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'spartan'),
-(1488,'Orcs raider camp',1216,6720,3,'woods',58,25,1,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'orc'),
-(1489,'Dwarves raider camp',2112,7232,5,'woods',107,50,21,'Level 5 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'dwarf'),
-(1490,'Pandaren raider camp',3392,7232,5,'woods',68,63,43,'Level 5 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'pandaren'),
-(1491,'Human · Persian raider camp',3648,7616,3,'woods',43,16,20,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'persian'),
-(1492,'Dwarves raider camp',5440,6720,3,'plains',47,16,23,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'dwarf'),
-(1493,'Orcs outpost',5696,7104,1,'plains',22,6,2,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'orc'),
-(1494,'Dwarves outpost',6720,7360,2,'desert',36,11,1,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'dwarf'),
-(1495,'Pandaren raider camp',7744,7104,4,'desert',71,47,2,'Level 4 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'pandaren'),
-(1496,'Pandaren raider camp',8768,7232,3,'woods',52,23,0,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'pandaren'),
-(1497,'Human · Persian raider camp',10048,7232,4,'plains',63,39,18,'Level 4 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'persian'),
-(1498,'Human · Persian raider camp',10816,7488,3,'plains',59,23,2,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'persian'),
-(1500,'Pandaren raider camp',-12608,8256,3,'darkland',40,32,13,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'pandaren'),
-(1501,'Human · Roman raider camp',-11072,8256,5,'woods',139,33,9,'Level 5 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'roman'),
-(1502,'Orcs raider camp',-10688,8256,4,'highlands',77,29,21,'Level 4 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'orc'),
-(1503,'Elves raider camp',-9152,8128,5,'woods',85,62,37,'Level 5 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'elf'),
-(1504,'Gnomes raider camp',-7872,8256,3,'plains',55,24,4,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'gnome'),
-(1505,'Gnomes outpost',-7104,8512,2,'woods',34,17,0,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'gnome'),
-(1506,'Human · Roman war camp',-5696,7744,6,'plains',92,87,70,'Level 6 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'roman'),
-(1507,'Human · Spartan outpost',-4928,8256,2,'desert',38,13,3,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'spartan'),
-(1508,'Elves outpost',-4544,8384,1,'desert',24,5,2,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'elf'),
-(1509,'Gnomes outpost',-3520,8512,1,'highlands',20,11,0,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'gnome'),
-(1510,'Elves raider camp',-2496,8512,3,'desert',56,21,2,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'elf'),
-(1511,'Human · Roman raider camp',-1216,8256,3,'plains',43,21,22,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'roman'),
-(1512,'Human · Persian war camp',192,8256,7,'plains',119,126,100,'Level 7 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'persian'),
-(1513,'Elves raider camp',960,7744,5,'woods',90,56,33,'Level 5 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'elf'),
-(1514,'Human · Persian raider camp',1600,8640,5,'plains',140,26,2,'Level 5 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'persian'),
-(1515,'Necropolis outpost',3136,8384,1,'highlands',19,12,1,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'undead'),
-(1516,'Human · Spartan outpost',4160,8640,1,'highlands',25,4,2,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'spartan'),
-(1517,'Human · Persian outpost',5440,8256,1,'plains',17,11,1,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'persian'),
-(1518,'Elves outpost',6464,8256,2,'highlands',36,10,2,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'elf'),
-(1519,'Demons outpost',7360,8256,2,'highlands',28,21,4,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'demon'),
-(1520,'Demons raider camp',8640,7744,4,'woods',79,34,10,'Level 4 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'demon'),
-(1521,'Necropolis outpost',9408,7744,2,'highlands',38,10,2,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'undead'),
-(1522,'Human · Egyptian stronghold',9792,8384,9,'woods',371,197,10,'Level 9 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'egyptian'),
-(1523,'Elves outpost',10816,8640,1,'plains',20,11,1,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'elf'),
-(1526,'Orcs war camp',-11200,8768,8,'plains',343,120,33,'Level 8 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'orc'),
-(1527,'Human · Egyptian raider camp',-10432,8768,4,'highlands',60,31,37,'Level 4 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'egyptian'),
-(1528,'Gnomes raider camp',-9152,9536,3,'highlands',53,14,11,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'gnome'),
-(1529,'Pandaren war camp',-8128,9408,7,'plains',168,108,78,'Level 7 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'pandaren'),
-(1530,'Demons outpost',-7104,9664,1,'woods',19,9,0,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'demon'),
-(1531,'Human · Roman raider camp',-6080,8896,4,'woods',93,35,1,'Level 4 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'roman'),
-(1532,'Human · Roman raider camp',-5056,9280,3,'plains',56,25,3,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'roman'),
-(1533,'Orcs outpost',-4032,9152,1,'desert',24,5,0,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'orc'),
-(1534,'Human · Spartan outpost',-2752,9280,1,'desert',24,6,1,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'spartan'),
-(1535,'Human · Roman outpost',-2496,8896,2,'desert',34,14,0,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'roman'),
-(1536,'Human · Persian war camp',-576,9280,6,'plains',162,71,32,'Level 6 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'persian'),
-(1537,'Orcs war camp',-448,9664,8,'plains',217,141,112,'Level 8 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'orc'),
-(1538,'Human · Spartan raider camp',1088,8768,5,'woods',102,37,32,'Level 5 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'spartan'),
-(1539,'Human · Spartan outpost',2112,9024,1,'plains',21,9,0,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'spartan'),
-(1540,'Dwarves stronghold',2624,9024,9,'desert',374,149,130,'Level 9 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'dwarf'),
-(1541,'Gnomes raider camp',4160,9536,4,'highlands',73,37,4,'Level 4 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'gnome'),
-(1542,'Human · Spartan outpost',5056,9280,1,'highlands',22,7,2,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'spartan'),
-(1543,'Dwarves raider camp',6080,9280,5,'highlands',141,44,5,'Level 5 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'dwarf'),
-(1544,'Necropolis war camp',7232,9536,7,'plains',218,96,51,'Level 7 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'undead'),
-(1545,'Human · Roman outpost',8256,8896,1,'highlands',19,8,2,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'roman'),
-(1546,'Human · Persian outpost',8768,9408,2,'woods',32,16,4,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'persian'),
-(1547,'Human · Persian raider camp',10304,9152,3,'plains',46,32,6,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'persian'),
-(1548,'Gnomes outpost',11584,8768,2,'plains',32,19,0,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'gnome'),
-(1549,'Elves war camp',11840,9408,7,'plains',176,99,92,'Level 7 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'elf'),
-(1551,'Human · Persian raider camp',-11712,10560,5,'darkland',138,43,8,'Level 5 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'persian'),
-(1552,'Elves war camp',-10688,9920,8,'highlands',283,125,77,'Level 8 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'elf'),
-(1553,'Demons raider camp',-9408,10304,3,'plains',60,15,3,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'demon'),
-(1554,'Human · Egyptian raider camp',-8640,10432,3,'highlands',65,15,5,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'egyptian'),
-(1555,'Pandaren raider camp',-7616,10048,5,'highlands',111,53,21,'Level 5 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'pandaren'),
-(1556,'Human · Roman raider camp',-6080,10688,3,'plains',44,33,8,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'roman'),
-(1557,'Elves raider camp',-5184,10304,4,'plains',83,18,15,'Level 4 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'elf'),
-(1558,'Gnomes raider camp',-4032,10560,5,'woods',94,32,41,'Level 5 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'gnome'),
-(1559,'Demons war camp',-3008,9792,6,'highlands',196,60,16,'Level 6 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'demon'),
-(1560,'Elves outpost',-2496,9792,2,'highlands',32,15,4,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'elf'),
-(1561,'Demons raider camp',-1216,10304,4,'plains',62,37,21,'Level 4 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'demon'),
-(1562,'Human · Roman raider camp',64,10048,4,'highlands',46,36,35,'Level 4 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'roman'),
-(1563,'Gnomes outpost',1088,10304,2,'plains',34,12,4,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'gnome'),
-(1564,'Demons raider camp',2496,10304,3,'woods',48,30,2,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'demon'),
-(1565,'Elves raider camp',2880,9792,4,'desert',63,30,28,'Level 4 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'elf'),
-(1566,'Human · Egyptian raider camp',3648,9792,5,'plains',92,31,43,'Level 5 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'egyptian'),
-(1567,'Pandaren outpost',5184,10688,2,'plains',31,15,2,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'pandaren'),
-(1568,'Elves outpost',6464,9792,2,'highlands',34,17,0,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'elf'),
-(1569,'Human · Roman raider camp',6848,10304,5,'highlands',150,33,0,'Level 5 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'roman'),
-(1570,'Human · Roman raider camp',7744,9792,3,'plains',46,22,16,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'roman'),
-(1571,'Orcs raider camp',9152,10304,3,'plains',36,28,19,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'orc'),
-(1572,'Elves war camp',10304,10304,7,'woods',206,120,15,'Level 7 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'elf'),
-(1573,'Pandaren raider camp',11328,9792,5,'plains',118,26,28,'Level 5 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'pandaren'),
-(1574,'Orcs outpost',11968,10304,1,'plains',22,5,2,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'orc'),
-(1575,'Elves stronghold',-12096,11328,9,'highlands',486,129,32,'Level 9 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'elf'),
-(1576,'Elves outpost',-11328,10816,2,'darkland',32,19,1,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'elf'),
-(1577,'Human · Persian raider camp',-10176,11072,3,'plains',32,27,16,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'persian'),
-(1578,'Elves war camp',-8768,11328,7,'plains',197,98,50,'Level 7 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'elf'),
-(1579,'Gnomes raider camp',-8128,11584,3,'plains',56,13,14,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'gnome'),
-(1580,'Human · Persian raider camp',-7616,10816,4,'desert',68,43,8,'Level 4 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'persian'),
-(1581,'Orcs raider camp',-6592,11072,5,'desert',73,68,31,'Level 5 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'orc'),
-(1582,'Demons outpost',-5056,11712,1,'plains',20,12,0,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'demon'),
-(1583,'Demons raider camp',-4416,10816,4,'woods',50,40,35,'Level 4 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'demon'),
-(1584,'Orcs outpost',-3520,10944,2,'woods',31,20,1,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'orc'),
-(1585,'Necropolis outpost',-2368,10816,1,'woods',20,12,0,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'undead'),
-(1586,'Elves outpost',-576,11328,1,'plains',23,4,2,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'elf'),
-(1587,'Gnomes raider camp',64,10816,3,'plains',33,27,22,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'gnome'),
-(1588,'Necropolis raider camp',1088,11072,4,'plains',67,42,10,'Level 4 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'undead'),
-(1589,'Human · Roman war camp',2240,11328,6,'plains',102,96,49,'Level 6 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'roman'),
-(1590,'Human · Roman outpost',3520,10816,1,'plains',20,10,0,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'roman'),
-(1591,'Gnomes outpost',4032,10816,1,'desert',23,5,2,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'gnome'),
-(1592,'Gnomes outpost',5056,11328,1,'plains',24,4,1,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'gnome'),
-(1593,'Pandaren raider camp',6336,10816,3,'highlands',54,20,8,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'pandaren'),
-(1594,'Human · Roman raider camp',7616,10816,3,'highlands',46,25,14,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'roman'),
-(1595,'Dwarves outpost',8640,11328,1,'highlands',26,5,1,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'dwarf'),
-(1596,'Orcs outpost',9280,11072,2,'highlands',41,8,3,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'orc'),
-(1597,'Elves outpost',9792,11072,2,'woods',33,13,4,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'elf'),
-(1598,'Necropolis outpost',11712,10816,1,'highlands',22,5,1,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'undead'),
-(1599,'Human · Roman outpost',12352,11200,2,'plains',38,9,0,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'roman'),
-(1600,'Gnomes outpost',-12224,11840,2,'plains',33,18,1,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'gnome'),
-(1601,'Elves outpost',-11328,11840,2,'plains',34,12,1,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'elf'),
-(1602,'Gnomes raider camp',-10176,12096,3,'plains',45,24,16,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'gnome'),
-(1603,'Demons raider camp',-9152,12352,4,'woods',83,39,0,'Level 4 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'demon'),
-(1604,'Necropolis raider camp',-7744,12352,3,'plains',59,17,7,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'undead'),
-(1605,'Pandaren outpost',-7616,12736,2,'plains',27,16,4,'Level 2 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'pandaren'),
-(1606,'Necropolis outpost',-6080,11840,1,'desert',21,6,1,'Level 1 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'undead'),
-(1607,'Human · Spartan raider camp',-5056,12096,4,'highlands',74,33,4,'Level 4 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'spartan'),
-(1608,'Human · Spartan raider camp',-3904,12352,4,'plains',91,30,6,'Level 4 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'spartan'),
-(1609,'Human · Spartan raider camp',-3520,12096,3,'woods',50,18,7,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'spartan'),
-(1610,'Human · Egyptian raider camp',-2496,12352,4,'highlands',65,36,26,'Level 4 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'egyptian'),
-(1611,'Dwarves raider camp',-960,12608,4,'highlands',76,28,8,'Level 4 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'dwarf'),
-(1612,'Pandaren war camp',-320,11840,7,'plains',181,121,49,'Level 7 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'pandaren'),
-(1613,'Human · Roman war camp',1472,11840,7,'desert',252,98,30,'Level 7 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'roman'),
-(1614,'Human · Persian raider camp',2368,11840,3,'plains',58,16,10,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'persian'),
-(1615,'Dwarves raider camp',3136,11968,3,'plains',53,14,10,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'dwarf'),
-(1616,'Human · Persian war camp',3648,12096,6,'plains',152,72,52,'Level 6 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'persian'),
-(1621,'Human · Roman war camp',9280,11840,7,'highlands',228,110,45,'Level 7 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'roman'),
-(1622,'Human · Egyptian raider camp',10560,11840,3,'woods',38,26,21,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'egyptian'),
-(1623,'Gnomes raider camp',11328,11968,3,'woods',35,23,21,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'gnome'),
-(1624,'Human · Persian raider camp',11840,12352,3,'highlands',60,16,1,'Level 3 camp. Defeat its defenders to earn an artifact, resources and hero experience. Its stored supplies and defenders grow over time.',true,'persian')
+(1000,'Elves outpost',-12224,-11840,1,'highlands',22,7,1,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'elf'),
+(1001,'Dwarves war camp',-11712,-12608,6,'plains',146,39,69,'Level 6 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'dwarf'),
+(1002,'Human · Spartan outpost',-9920,-12736,1,'plains',24,4,1,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'spartan'),
+(1003,'Human · Roman outpost',-9024,-12736,1,'plains',19,11,1,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'roman'),
+(1004,'Human · Roman outpost',-8128,-12352,1,'highlands',23,5,2,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'roman'),
+(1005,'Orcs outpost',-7360,-12224,1,'woods',22,4,2,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'orc'),
+(1006,'Gnomes raider camp',-6208,-12224,3,'highlands',34,23,18,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'gnome'),
+(1007,'Demons outpost',-5568,-11840,1,'highlands',20,9,2,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'demon'),
+(1008,'Human · Roman raider camp',-4032,-12736,5,'plains',84,67,31,'Level 5 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'roman'),
+(1009,'Human · Persian war camp',-3008,-12352,8,'woods',146,186,135,'Level 8 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'persian'),
+(1010,'Human · Roman outpost',-2112,-12736,1,'highlands',23,5,1,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'roman'),
+(1011,'Human · Persian outpost',-1344,-12224,1,'plains',24,7,0,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'persian'),
+(1012,'Human · Spartan outpost',64,-12480,1,'darkland',23,8,0,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'spartan'),
+(1013,'Human · Roman raider camp',1472,-12224,3,'desert',46,21,11,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'roman'),
+(1014,'Human · Roman raider camp',1856,-12224,4,'desert',74,27,26,'Level 4 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'roman'),
+(1015,'Elves raider camp',2624,-12736,5,'highlands',113,62,14,'Level 5 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'elf'),
+(1016,'Gnomes outpost',4160,-11968,2,'plains',39,11,2,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'gnome'),
+(1017,'Human · Egyptian raider camp',5184,-11840,4,'plains',62,42,8,'Level 4 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'egyptian'),
+(1020,'Pandaren outpost',8512,-12224,2,'plains',32,20,1,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'pandaren'),
+(1021,'Human · Egyptian raider camp',9408,-12224,3,'plains',55,19,7,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'egyptian'),
+(1022,'Demons raider camp',10304,-12736,4,'plains',47,33,31,'Level 4 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'demon'),
+(1023,'Human · Spartan raider camp',11328,-12480,5,'woods',110,61,17,'Level 5 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'spartan'),
+(1024,'Gnomes outpost',12352,-11968,2,'plains',31,18,4,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'gnome'),
+(1025,'Orcs raider camp',-12736,-11328,4,'highlands',77,37,15,'Level 4 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'orc'),
+(1026,'Elves raider camp',-11712,-11712,3,'plains',59,26,0,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'elf'),
+(1027,'Demons outpost',-9920,-11200,2,'highlands',38,10,4,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'demon'),
+(1028,'Human · Persian raider camp',-9152,-11456,3,'plains',60,23,2,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'persian'),
+(1029,'Human · Egyptian raider camp',-7744,-11712,3,'highlands',43,20,14,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'egyptian'),
+(1030,'Demons raider camp',-7104,-11072,3,'highlands',39,23,24,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'demon'),
+(1031,'Elves outpost',-6336,-11200,2,'woods',29,15,4,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'elf'),
+(1032,'Demons outpost',-4800,-11200,1,'desert',18,9,2,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'demon'),
+(1033,'Human · Persian war camp',-4416,-11712,8,'plains',256,130,66,'Level 8 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'persian'),
+(1034,'Elves raider camp',-2624,-11712,3,'woods',52,13,9,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'elf'),
+(1035,'Pandaren outpost',-1984,-11328,1,'woods',22,9,1,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'pandaren'),
+(1036,'Pandaren raider camp',-1088,-11712,3,'highlands',56,18,6,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'pandaren'),
+(1037,'Human · Roman raider camp',64,-11456,4,'plains',63,29,23,'Level 4 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'roman'),
+(1038,'Human · Persian raider camp',1088,-11200,5,'plains',136,55,2,'Level 5 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'persian'),
+(1039,'Gnomes war camp',2112,-10944,8,'woods',221,163,64,'Level 8 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'gnome'),
+(1040,'Pandaren stronghold',2624,-11072,9,'marsh',385,144,115,'Level 9 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'pandaren'),
+(1041,'Pandaren stronghold',4160,-11072,10,'plains',331,246,157,'Level 10 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'pandaren'),
+(1042,'Demons outpost',4672,-11456,1,'darkland',21,9,0,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'demon'),
+(1043,'Demons outpost',6336,-11200,1,'plains',18,8,2,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'demon'),
+(1044,'Orcs raider camp',6720,-11456,3,'woods',54,17,8,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'orc'),
+(1045,'Gnomes raider camp',7744,-11200,4,'desert',62,28,24,'Level 4 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'gnome'),
+(1046,'Human · Spartan raider camp',9664,-11200,5,'desert',128,39,4,'Level 5 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'spartan'),
+(1047,'Gnomes raider camp',9792,-10816,4,'desert',54,41,25,'Level 4 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'gnome'),
+(1048,'Orcs raider camp',11072,-11712,5,'desert',113,66,12,'Level 5 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'orc'),
+(1049,'Gnomes outpost',12352,-10816,2,'highlands',29,17,1,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'gnome'),
+(1050,'Gnomes outpost',-12352,-10688,2,'highlands',42,8,3,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'gnome'),
+(1051,'Necropolis raider camp',-11200,-10432,3,'snow',67,15,0,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'undead'),
+(1052,'Human · Roman raider camp',-10176,-10176,4,'highlands',79,25,14,'Level 4 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'roman'),
+(1053,'Human · Spartan raider camp',-8896,-10688,5,'plains',72,68,53,'Level 5 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'spartan'),
+(1054,'Human · Spartan war camp',-7744,-10176,7,'highlands',175,122,52,'Level 7 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'spartan'),
+(1055,'Gnomes raider camp',-6976,-10688,4,'highlands',47,45,29,'Level 4 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'gnome'),
+(1056,'Human · Roman outpost',-6080,-10304,2,'highlands',31,17,2,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'roman'),
+(1057,'Human · Spartan war camp',-5568,-10432,6,'plains',92,96,64,'Level 6 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'spartan'),
+(1058,'Gnomes raider camp',-4288,-10176,3,'woods',47,17,17,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'gnome'),
+(1059,'Gnomes outpost',-3008,-10176,1,'highlands',16,10,2,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'gnome'),
+(1060,'Human · Spartan outpost',-1728,-10176,1,'plains',19,11,2,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'spartan'),
+(1061,'Necropolis raider camp',-576,-10176,4,'plains',53,40,19,'Level 4 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'undead'),
+(1062,'Necropolis raider camp',-448,-9792,3,'marsh',56,11,9,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'undead'),
+(1063,'Dwarves raider camp',832,-10688,4,'highlands',70,18,34,'Level 4 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'dwarf'),
+(1064,'Orcs raider camp',2112,-10560,5,'woods',138,30,26,'Level 5 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'orc'),
+(1065,'Orcs outpost',2624,-9920,1,'marsh',27,5,0,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'orc'),
+(1066,'Demons raider camp',4160,-10176,3,'plains',33,33,19,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'demon'),
+(1067,'Human · Spartan raider camp',5184,-9920,4,'highlands',97,21,4,'Level 4 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'spartan'),
+(1068,'Human · Egyptian raider camp',6336,-10688,5,'desert',114,35,27,'Level 5 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'egyptian'),
+(1069,'Human · Spartan outpost',7232,-9792,2,'plains',44,9,0,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'spartan'),
+(1070,'Necropolis raider camp',8512,-10688,3,'highlands',52,13,12,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'undead'),
+(1071,'Gnomes outpost',9280,-10176,1,'highlands',18,9,1,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'gnome'),
+(1072,'Elves war camp',10304,-10048,6,'highlands',153,69,30,'Level 6 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'elf'),
+(1073,'Orcs outpost',10816,-10176,2,'highlands',29,16,2,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'orc'),
+(1074,'Dwarves raider camp',11840,-9920,3,'highlands',32,32,20,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'dwarf'),
+(1075,'Pandaren raider camp',-12608,-9664,4,'highlands',95,20,7,'Level 4 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'pandaren'),
+(1076,'Gnomes outpost',-11200,-9536,2,'plains',31,19,1,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'gnome'),
+(1077,'Demons outpost',-10688,-9408,1,'desert',20,6,2,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'demon'),
+(1078,'Necropolis outpost',-9280,-9664,2,'snow',36,10,3,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'undead'),
+(1079,'Dwarves raider camp',-8128,-9536,3,'highlands',62,17,4,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'dwarf'),
+(1080,'Pandaren outpost',-7104,-9152,2,'snow',33,15,0,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'pandaren'),
+(1081,'Human · Roman raider camp',-6080,-8896,3,'snow',38,26,10,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'roman'),
+(1082,'Human · Persian raider camp',-4928,-9664,4,'highlands',46,48,32,'Level 4 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'persian'),
+(1083,'Human · Persian outpost',-4032,-9664,2,'marsh',30,18,0,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'persian'),
+(1084,'Elves war camp',-3520,-9536,6,'marsh',179,43,52,'Level 6 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'elf'),
+(1085,'Human · Roman outpost',-1728,-9664,2,'plains',35,10,1,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'roman'),
+(1086,'Human · Roman outpost',-1472,-9024,1,'highlands',25,4,0,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'roman'),
+(1087,'Human · Persian outpost',-448,-9280,2,'plains',33,14,3,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'persian'),
+(1088,'Orcs outpost',576,-8896,2,'plains',33,15,0,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'orc'),
+(1089,'Gnomes raider camp',1728,-9664,3,'plains',37,25,12,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'gnome'),
+(1090,'Elves outpost',2624,-9280,1,'plains',19,9,3,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'elf'),
+(1091,'Human · Roman raider camp',3904,-9152,5,'highlands',137,28,16,'Level 5 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'roman'),
+(1092,'Dwarves outpost',5184,-9280,2,'highlands',42,9,1,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'dwarf'),
+(1093,'Human · Roman outpost',6080,-9664,2,'plains',34,12,1,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'roman'),
+(1094,'Human · Roman outpost',6720,-9408,1,'highlands',24,5,3,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'roman'),
+(1095,'Necropolis outpost',8256,-8896,2,'highlands',32,14,4,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'undead'),
+(1096,'Human · Roman raider camp',9280,-9664,3,'highlands',49,23,5,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'roman'),
+(1097,'Demons raider camp',10048,-9152,5,'highlands',106,52,25,'Level 5 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'demon'),
+(1098,'Elves raider camp',11584,-9152,5,'highlands',63,69,55,'Level 5 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'elf'),
+(1099,'Orcs raider camp',12224,-9664,3,'highlands',30,29,21,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'orc'),
+(1100,'Demons raider camp',-12736,-7872,4,'darkland',50,47,27,'Level 4 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'demon'),
+(1102,'Human · Spartan outpost',-9920,-8640,1,'woods',22,7,2,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'spartan'),
+(1103,'Elves raider camp',-9152,-8256,3,'plains',45,26,14,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'elf'),
+(1104,'Human · Persian raider camp',-8000,-8128,4,'snow',78,36,2,'Level 4 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'persian'),
+(1105,'Demons raider camp',-7488,-8128,4,'snow',61,43,25,'Level 4 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'demon'),
+(1106,'Human · Spartan outpost',-6592,-8000,2,'highlands',31,16,1,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'spartan'),
+(1107,'Human · Egyptian raider camp',-5056,-8384,5,'plains',113,26,28,'Level 5 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'egyptian'),
+(1108,'Human · Persian outpost',-4032,-8640,1,'marsh',21,10,0,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'persian'),
+(1109,'Pandaren outpost',-3008,-8000,1,'snow',26,6,0,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'pandaren'),
+(1110,'Demons outpost',-1984,-7744,2,'snow',38,12,2,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'demon'),
+(1111,'Dwarves war camp',-832,-8640,7,'highlands',215,118,4,'Level 7 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'dwarf'),
+(1112,'Human · Egyptian raider camp',192,-8128,3,'highlands',47,22,7,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'egyptian'),
+(1113,'Demons raider camp',1088,-8000,5,'snow',83,64,39,'Level 5 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'demon'),
+(1114,'Human · Persian war camp',1600,-7872,7,'highlands',272,56,44,'Level 7 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'persian'),
+(1115,'Human · Spartan raider camp',3392,-8640,3,'marsh',56,17,7,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'spartan'),
+(1116,'Human · Spartan outpost',3648,-8000,1,'highlands',22,4,2,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'spartan'),
+(1117,'Orcs outpost',4672,-7744,2,'snow',42,10,1,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'orc'),
+(1118,'Gnomes outpost',6208,-8256,2,'snow',32,18,1,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'gnome'),
+(1119,'Pandaren raider camp',6848,-8128,3,'snow',59,20,0,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'pandaren'),
+(1120,'Orcs war camp',7872,-8128,7,'snow',251,95,3,'Level 7 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'orc'),
+(1121,'Human · Persian raider camp',9024,-8640,5,'snow',86,62,44,'Level 5 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'persian'),
+(1122,'Human · Egyptian outpost',10304,-8000,2,'highlands',33,12,2,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'egyptian'),
+(1123,'Orcs war camp',11328,-8640,8,'highlands',175,185,123,'Level 8 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'orc'),
+(1124,'Necropolis outpost',12352,-7744,1,'snow',22,4,2,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'undead'),
+(1127,'Orcs outpost',-10304,-7104,2,'plains',25,18,4,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'orc'),
+(1128,'Gnomes raider camp',-8896,-7616,4,'woods',66,32,15,'Level 4 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'gnome'),
+(1129,'Demons war camp',-7872,-7616,7,'highlands',176,92,93,'Level 7 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'demon'),
+(1130,'Dwarves raider camp',-7616,-6720,5,'highlands',122,27,23,'Level 5 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'dwarf'),
+(1131,'Human · Persian outpost',-6592,-6720,1,'plains',17,11,1,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'persian'),
+(1132,'Elves outpost',-5568,-7488,1,'marsh',22,4,2,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'elf'),
+(1133,'Gnomes outpost',-4416,-7104,2,'highlands',42,10,1,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'gnome'),
+(1134,'Dwarves outpost',-2752,-7104,2,'snow',41,9,2,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'dwarf'),
+(1135,'Human · Roman raider camp',-2368,-7616,3,'snow',49,24,11,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'roman'),
+(1136,'Elves outpost',-1472,-7104,1,'snow',21,7,2,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'elf'),
+(1137,'Demons raider camp',-448,-7232,4,'snow',94,30,5,'Level 4 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'demon'),
+(1138,'Gnomes outpost',1088,-6720,1,'snow',20,10,0,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'gnome'),
+(1139,'Necropolis outpost',2112,-7488,1,'snow',18,10,1,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'undead'),
+(1140,'Human · Roman outpost',2624,-7360,1,'snow',22,5,1,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'roman'),
+(1141,'Necropolis raider camp',4160,-7232,3,'plains',44,25,16,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'undead'),
+(1142,'Elves raider camp',5440,-7616,3,'snow',45,17,19,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'elf'),
+(1143,'Necropolis raider camp',6208,-7616,3,'snow',43,16,21,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'undead'),
+(1144,'Dwarves outpost',6720,-7104,2,'highlands',31,19,1,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'dwarf'),
+(1145,'Human · Spartan stronghold',7744,-6720,9,'highlands',261,198,182,'Level 9 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'spartan'),
+(1146,'Human · Egyptian outpost',8768,-7488,1,'snow',20,10,0,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'egyptian'),
+(1147,'Human · Egyptian war camp',10304,-7488,7,'highlands',264,84,24,'Level 7 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'egyptian'),
+(1148,'Human · Spartan outpost',10816,-7616,2,'highlands',34,16,2,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'spartan'),
+(1149,'Pandaren outpost',12736,-7104,1,'plains',23,7,0,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'pandaren'),
+(1150,'Elves raider camp',-12736,-5824,4,'plains',67,21,34,'Level 4 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'elf'),
+(1152,'Human · Roman raider camp',-10176,-5696,3,'plains',43,20,19,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'roman'),
+(1153,'Pandaren outpost',-9152,-6464,1,'woods',22,9,0,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'pandaren'),
+(1154,'Orcs outpost',-8128,-5952,2,'woods',38,11,4,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'orc'),
+(1155,'Orcs raider camp',-7360,-6080,4,'woods',68,31,26,'Level 4 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'orc'),
+(1156,'Orcs outpost',-5824,-6592,2,'marsh',28,18,0,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'orc'),
+(1157,'Pandaren outpost',-5056,-6080,1,'darkland',22,7,1,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'pandaren'),
+(1158,'Pandaren raider camp',-3648,-6080,4,'plains',63,24,33,'Level 4 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'pandaren'),
+(1159,'Pandaren outpost',-3520,-6464,1,'highlands',20,9,2,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'pandaren'),
+(1160,'Human · Persian stronghold',-2496,-6464,9,'highlands',297,151,115,'Level 9 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'persian'),
+(1161,'Orcs outpost',-1472,-6208,1,'snow',22,9,0,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'orc'),
+(1162,'Elves raider camp',64,-6464,4,'snow',53,33,33,'Level 4 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'elf'),
+(1163,'Pandaren outpost',704,-6592,2,'snow',28,17,3,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'pandaren'),
+(1164,'Human · Roman stronghold',1600,-6208,9,'snow',244,169,169,'Level 9 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'roman'),
+(1165,'Human · Persian raider camp',3008,-6080,4,'snow',82,21,22,'Level 4 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'persian'),
+(1166,'Human · Roman raider camp',4544,-6080,3,'snow',57,20,3,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'roman'),
+(1167,'Dwarves war camp',5184,-6464,7,'marsh',228,80,37,'Level 7 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'dwarf'),
+(1168,'Necropolis outpost',6208,-6208,1,'highlands',22,8,2,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'undead'),
+(1169,'Pandaren raider camp',6720,-6464,3,'plains',40,23,12,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'pandaren'),
+(1170,'Human · Roman outpost',8256,-5952,1,'woods',23,8,0,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'roman'),
+(1171,'Pandaren raider camp',9280,-6464,3,'highlands',60,22,4,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'pandaren'),
+(1172,'Gnomes raider camp',10560,-6080,3,'highlands',46,33,7,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'gnome'),
+(1173,'Gnomes raider camp',11456,-6592,4,'highlands',72,19,31,'Level 4 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'gnome'),
+(1174,'Human · Roman raider camp',11840,-6592,5,'highlands',143,35,1,'Level 5 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'roman'),
+(1175,'Human · Persian war camp',-12736,-5184,8,'plains',297,104,57,'Level 8 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'persian'),
+(1176,'Pandaren raider camp',-11712,-4928,4,'plains',52,42,31,'Level 4 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'pandaren'),
+(1177,'Human · Persian raider camp',-10048,-5056,5,'woods',118,63,4,'Level 5 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'persian'),
+(1178,'Human · Persian raider camp',-9152,-4800,4,'woods',65,38,10,'Level 4 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'persian'),
+(1179,'Human · Roman raider camp',-8384,-5056,3,'woods',29,26,21,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'roman'),
+(1180,'Demons war camp',-7360,-5056,7,'plains',205,123,22,'Level 7 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'demon'),
+(1181,'Elves raider camp',-6208,-5568,5,'plains',117,29,39,'Level 5 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'elf'),
+(1182,'Gnomes war camp',-5056,-5184,6,'plains',201,49,7,'Level 6 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'gnome'),
+(1183,'Human · Spartan outpost',-3648,-5568,2,'plains',29,18,3,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'spartan'),
+(1184,'Demons outpost',-3008,-5056,2,'desert',34,16,4,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'demon'),
+(1185,'Human · Persian war camp',-1856,-5056,7,'highlands',242,79,56,'Level 7 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'persian'),
+(1186,'Elves outpost',-704,-5056,2,'plains',31,15,3,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'elf'),
+(1187,'Human · Spartan raider camp',192,-5056,5,'plains',64,62,40,'Level 5 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'spartan'),
+(1188,'Demons raider camp',1472,-5568,4,'snow',66,48,14,'Level 4 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'demon'),
+(1189,'Pandaren war camp',2240,-5568,8,'snow',199,200,108,'Level 8 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'pandaren'),
+(1190,'Human · Egyptian war camp',2624,-4928,8,'highlands',364,88,21,'Level 8 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'egyptian'),
+(1191,'Human · Spartan outpost',4160,-5568,2,'highlands',27,19,4,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'spartan'),
+(1192,'Gnomes war camp',4672,-4800,7,'woods',169,86,81,'Level 7 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'gnome'),
+(1193,'Human · Egyptian outpost',6336,-5056,1,'desert',20,10,2,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'egyptian'),
+(1194,'Orcs raider camp',7360,-5568,4,'woods',83,26,20,'Level 4 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'orc'),
+(1195,'Human · Egyptian raider camp',8128,-5568,4,'woods',73,38,2,'Level 4 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'egyptian'),
+(1196,'Dwarves raider camp',9280,-5312,5,'highlands',96,70,25,'Level 5 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'dwarf'),
+(1197,'Pandaren war camp',10304,-4928,6,'highlands',161,39,65,'Level 6 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'pandaren'),
+(1198,'Orcs outpost',11712,-5568,1,'plains',24,4,1,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'orc'),
+(1199,'Human · Roman outpost',12352,-5568,2,'plains',36,11,1,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'roman'),
+(1200,'Elves outpost',-11840,-4544,2,'plains',37,11,0,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'elf'),
+(1201,'Dwarves raider camp',-11200,-4160,3,'plains',64,14,0,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'dwarf'),
+(1202,'Pandaren raider camp',-9792,-4544,3,'woods',38,23,17,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'pandaren'),
+(1203,'Human · Spartan outpost',-9664,-3904,1,'highlands',23,4,1,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'spartan'),
+(1204,'Human · Persian raider camp',-8640,-4032,5,'highlands',93,69,28,'Level 5 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'persian'),
+(1205,'Necropolis outpost',-7104,-3648,1,'woods',17,10,1,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'undead'),
+(1206,'Human · Egyptian outpost',-6080,-4544,1,'marsh',23,5,1,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'egyptian'),
+(1207,'Gnomes outpost',-5568,-4416,1,'plains',18,9,1,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'gnome'),
+(1208,'Necropolis outpost',-4544,-4288,2,'highlands',35,9,2,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'undead'),
+(1209,'Human · Persian raider camp',-3136,-4544,3,'desert',50,21,10,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'persian'),
+(1210,'Human · Egyptian raider camp',-2112,-4032,3,'desert',50,18,16,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'egyptian'),
+(1211,'Gnomes raider camp',-960,-4032,5,'highlands',104,55,9,'Level 5 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'gnome'),
+(1212,'Gnomes raider camp',64,-4288,3,'plains',51,28,7,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'gnome'),
+(1213,'Dwarves war camp',576,-3648,8,'plains',364,117,33,'Level 8 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'dwarf'),
+(1214,'Human · Egyptian outpost',1856,-4544,1,'plains',21,6,2,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'egyptian'),
+(1215,'Gnomes outpost',2624,-4416,2,'plains',38,10,0,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'gnome'),
+(1216,'Pandaren outpost',3648,-4288,1,'highlands',19,9,0,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'pandaren'),
+(1217,'Dwarves outpost',5440,-4032,2,'marsh',37,12,1,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'dwarf'),
+(1218,'Necropolis outpost',5952,-4032,2,'highlands',43,8,1,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'undead'),
+(1219,'Human · Egyptian raider camp',6720,-3776,5,'highlands',102,54,11,'Level 5 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'egyptian'),
+(1220,'Necropolis war camp',8256,-4160,8,'highlands',235,179,56,'Level 8 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'undead'),
+(1221,'Elves war camp',9408,-4544,8,'woods',284,114,44,'Level 8 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'elf'),
+(1222,'Orcs raider camp',10048,-4544,3,'plains',43,29,12,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'orc'),
+(1223,'Human · Roman outpost',10816,-4288,1,'plains',22,8,1,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'roman'),
+(1224,'Elves war camp',12352,-4544,8,'darkland',304,91,84,'Level 8 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'elf'),
+(1225,'Elves raider camp',-12224,-3136,3,'plains',40,24,15,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'elf'),
+(1226,'Gnomes raider camp',-11200,-2752,4,'woods',52,33,31,'Level 4 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'gnome'),
+(1227,'Demons war camp',-10048,-3520,6,'highlands',143,76,21,'Level 6 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'demon'),
+(1228,'Pandaren raider camp',-9664,-2624,5,'woods',81,52,52,'Level 5 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'pandaren'),
+(1229,'Elves war camp',-8384,-3520,7,'woods',193,97,45,'Level 7 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'elf'),
+(1230,'Demons outpost',-7232,-3008,2,'woods',43,10,0,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'demon'),
+(1231,'Necropolis raider camp',-6592,-3392,3,'woods',41,16,23,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'undead'),
+(1232,'Demons raider camp',-5568,-3008,3,'highlands',60,18,5,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'demon'),
+(1233,'Human · Spartan raider camp',-4544,-2752,4,'plains',69,30,21,'Level 4 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'spartan'),
+(1234,'Human · Egyptian raider camp',-3392,-3520,5,'highlands',75,48,50,'Level 5 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'egyptian'),
+(1235,'Demons raider camp',-1984,-2624,4,'highlands',62,36,19,'Level 4 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'demon'),
+(1236,'Pandaren raider camp',-704,-3520,5,'plains',125,59,3,'Level 5 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'pandaren'),
+(1237,'Dwarves war camp',-448,-2880,6,'woods',160,62,29,'Level 6 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'dwarf'),
+(1238,'Human · Spartan raider camp',1088,-2880,5,'woods',123,44,8,'Level 5 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'spartan'),
+(1239,'Orcs outpost',1984,-3008,2,'plains',40,10,4,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'orc'),
+(1240,'Dwarves raider camp',3136,-2752,3,'plains',60,17,6,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'dwarf'),
+(1241,'Pandaren raider camp',4288,-3520,4,'plains',67,29,23,'Level 4 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'pandaren'),
+(1242,'Human · Roman raider camp',4800,-3008,5,'plains',96,47,27,'Level 5 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'roman'),
+(1243,'Demons outpost',6208,-3008,2,'highlands',40,11,1,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'demon'),
+(1244,'Gnomes raider camp',7104,-3520,5,'highlands',113,65,10,'Level 5 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'gnome'),
+(1245,'Orcs war camp',8256,-3392,6,'marsh',110,86,51,'Level 6 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'orc'),
+(1246,'Pandaren outpost',9664,-3008,2,'plains',27,19,2,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'pandaren'),
+(1247,'Demons war camp',10688,-3520,6,'plains',152,53,65,'Level 6 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'demon'),
+(1248,'Human · Egyptian outpost',11584,-3008,2,'woods',40,10,0,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'egyptian'),
+(1250,'Human · Spartan raider camp',-12224,-1600,3,'plains',42,27,6,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'spartan'),
+(1251,'Elves war camp',-10816,-1984,7,'plains',231,143,3,'Level 7 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'elf'),
+(1252,'Gnomes raider camp',-10688,-2368,5,'plains',102,71,17,'Level 5 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'gnome'),
+(1253,'Demons outpost',-9152,-1728,2,'woods',40,8,3,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'demon'),
+(1254,'Orcs outpost',-8128,-1728,2,'woods',27,18,2,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'orc'),
+(1255,'Gnomes raider camp',-7104,-2496,3,'highlands',46,14,25,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'gnome'),
+(1256,'Human · Egyptian war camp',-6336,-1984,7,'highlands',279,72,33,'Level 7 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'egyptian'),
+(1257,'Human · Roman war camp',-4928,-1984,6,'woods',138,60,58,'Level 6 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'roman'),
+(1258,'Elves outpost',-4160,-2496,2,'highlands',32,20,0,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'elf'),
+(1259,'Necropolis raider camp',-3136,-2496,3,'highlands',47,12,21,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'undead'),
+(1260,'Orcs outpost',-1600,-2496,2,'woods',39,7,4,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'orc'),
+(1261,'Necropolis outpost',-1472,-1728,2,'plains',31,17,1,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'undead'),
+(1262,'Human · Roman raider camp',-448,-2496,3,'woods',31,29,15,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'roman'),
+(1263,'Necropolis outpost',832,-1984,1,'woods',22,4,2,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'undead'),
+(1264,'Elves raider camp',1728,-1984,5,'woods',124,36,24,'Level 5 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'elf'),
+(1265,'Pandaren outpost',2624,-2496,1,'woods',25,5,1,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'pandaren'),
+(1266,'Human · Spartan outpost',4544,-2496,2,'plains',38,8,2,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'spartan'),
+(1267,'Dwarves outpost',5440,-1984,1,'woods',16,10,2,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'dwarf'),
+(1268,'Demons outpost',6208,-1856,1,'plains',18,10,2,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'demon'),
+(1269,'Elves outpost',7232,-2496,2,'woods',31,17,1,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'elf'),
+(1270,'Human · Spartan war camp',8384,-1984,8,'plains',315,97,86,'Level 8 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'spartan'),
+(1271,'Demons raider camp',9408,-1984,4,'plains',103,20,4,'Level 4 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'demon'),
+(1272,'Elves outpost',10304,-2368,1,'plains',23,8,0,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'elf'),
+(1273,'Human · Persian outpost',10816,-2112,2,'plains',35,17,1,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'persian'),
+(1275,'Gnomes outpost',-11968,-960,2,'plains',35,11,1,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'gnome'),
+(1276,'Demons outpost',-11712,-576,2,'plains',35,16,0,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'demon'),
+(1277,'Human · Spartan raider camp',-10688,-1216,3,'woods',42,27,9,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'spartan'),
+(1278,'Human · Egyptian raider camp',-9536,-960,4,'woods',44,42,26,'Level 4 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'egyptian'),
+(1279,'Necropolis outpost',-8128,-832,1,'woods',22,6,0,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'undead'),
+(1280,'Dwarves outpost',-7104,-1344,2,'woods',42,8,2,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'dwarf'),
+(1281,'Human · Egyptian outpost',-5696,-1472,2,'highlands',41,12,1,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'egyptian'),
+(1282,'Human · Egyptian outpost',-5568,-1088,2,'woods',30,19,3,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'egyptian'),
+(1283,'Orcs outpost',-4032,-576,2,'plains',35,14,3,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'orc'),
+(1284,'Dwarves outpost',-3008,-1216,2,'desert',35,15,0,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'dwarf'),
+(1285,'Pandaren raider camp',-1856,-960,3,'desert',41,26,10,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'pandaren'),
+(1286,'Necropolis outpost',-1472,-576,2,'plains',33,16,4,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'undead'),
+(1287,'Human · Persian raider camp',320,-1472,5,'highlands',147,28,13,'Level 5 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'persian'),
+(1288,'Dwarves raider camp',1088,-1344,3,'plains',61,23,0,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'dwarf'),
+(1289,'Human · Egyptian outpost',2112,-1472,2,'plains',39,14,1,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'egyptian'),
+(1290,'Pandaren outpost',2624,-576,1,'highlands',21,6,1,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'pandaren'),
+(1291,'Human · Roman outpost',3648,-1344,2,'highlands',35,14,3,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'roman'),
+(1292,'Human · Persian raider camp',4800,-960,3,'plains',53,24,3,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'persian'),
+(1293,'Human · Persian raider camp',6080,-960,5,'highlands',107,51,23,'Level 5 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'persian'),
+(1294,'Gnomes raider camp',6976,-1472,5,'plains',60,61,45,'Level 5 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'gnome'),
+(1295,'Elves outpost',8000,-960,1,'plains',16,11,2,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'elf'),
+(1296,'Elves outpost',8768,-576,1,'plains',19,9,3,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'elf'),
+(1297,'Elves war camp',9792,-960,7,'plains',276,58,25,'Level 7 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'elf'),
+(1298,'Elves outpost',11328,-1344,2,'plains',33,11,2,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'elf'),
+(1299,'Gnomes outpost',12480,-960,2,'plains',34,14,4,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'gnome'),
+(1300,'Elves raider camp',-11968,64,4,'highlands',78,35,1,'Level 4 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'elf'),
+(1301,'Human · Roman raider camp',-10944,-448,4,'plains',57,38,20,'Level 4 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'roman'),
+(1302,'Pandaren outpost',-10688,64,1,'plains',18,8,2,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'pandaren'),
+(1303,'Pandaren outpost',-9152,64,1,'desert',26,4,2,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'pandaren'),
+(1304,'Elves outpost',-8000,-448,1,'woods',21,10,0,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'elf'),
+(1305,'Necropolis outpost',-7616,-320,1,'woods',24,5,0,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'undead'),
+(1306,'Human · Spartan outpost',-6592,-64,2,'highlands',40,12,2,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'spartan'),
+(1307,'Necropolis raider camp',-5568,-192,5,'woods',97,62,17,'Level 5 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'undead'),
+(1308,'Elves raider camp',-4032,64,3,'desert',48,26,3,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'elf'),
+(1309,'Orcs raider camp',-3520,-64,4,'desert',42,44,36,'Level 4 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'orc'),
+(1310,'Demons war camp',-2112,64,6,'woods',179,99,1,'Level 6 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'demon'),
+(1311,'Gnomes war camp',-1472,448,8,'woods',207,167,99,'Level 8 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'gnome'),
+(1312,'Human · Egyptian outpost',64,-320,1,'highlands',23,5,2,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'egyptian'),
+(1313,'Human · Persian outpost',1088,-192,1,'highlands',16,10,2,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'persian'),
+(1314,'Human · Persian raider camp',2112,320,5,'highlands',116,49,12,'Level 5 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'persian'),
+(1315,'Demons raider camp',3264,-448,3,'highlands',39,21,22,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'demon'),
+(1316,'Human · Egyptian war camp',4032,64,7,'plains',186,110,51,'Level 7 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'egyptian'),
+(1317,'Human · Egyptian raider camp',5568,64,5,'woods',82,54,35,'Level 5 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'egyptian'),
+(1318,'Demons raider camp',6208,448,5,'plains',90,63,15,'Level 5 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'demon'),
+(1319,'Pandaren outpost',6720,-320,1,'plains',19,11,1,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'pandaren'),
+(1320,'Demons outpost',7744,-64,1,'plains',24,4,2,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'demon'),
+(1321,'Human · Roman war camp',9280,448,8,'plains',271,118,123,'Level 8 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'roman'),
+(1322,'Orcs outpost',9920,-448,2,'plains',39,11,3,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'orc'),
+(1323,'Gnomes outpost',11328,64,2,'plains',29,21,4,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'gnome'),
+(1324,'Pandaren raider camp',12096,64,4,'highlands',72,33,13,'Level 4 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'pandaren'),
+(1325,'Demons outpost',-11968,576,1,'plains',19,11,2,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'demon'),
+(1326,'Orcs outpost',-11584,576,1,'plains',17,10,1,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'orc'),
+(1327,'Orcs outpost',-10176,960,1,'plains',19,11,1,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'orc'),
+(1328,'Orcs outpost',-9152,704,1,'woods',26,5,1,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'orc'),
+(1329,'Pandaren outpost',-8000,576,2,'plains',38,8,1,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'pandaren'),
+(1330,'Necropolis outpost',-7616,1088,2,'highlands',41,8,2,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'undead'),
+(1331,'Human · Persian raider camp',-5824,1088,4,'desert',92,30,1,'Level 4 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'persian'),
+(1332,'Orcs outpost',-5184,1088,1,'woods',20,9,1,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'orc'),
+(1333,'Human · Spartan raider camp',-4032,1472,4,'woods',102,23,1,'Level 4 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'spartan'),
+(1334,'Necropolis outpost',-3520,960,1,'plains',22,10,0,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'undead'),
+(1335,'Human · Roman outpost',-2496,1216,1,'woods',19,11,1,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'roman'),
+(1336,'Dwarves outpost',-960,832,1,'plains',18,8,2,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'dwarf'),
+(1337,'Human · Egyptian outpost',-448,704,1,'plains',21,6,1,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'egyptian'),
+(1338,'Gnomes raider camp',832,1088,3,'plains',49,18,18,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'gnome'),
+(1339,'Human · Spartan outpost',2112,960,1,'highlands',21,5,2,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'spartan'),
+(1340,'Human · Roman war camp',3008,576,6,'highlands',148,69,37,'Level 6 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'roman'),
+(1341,'Human · Persian stronghold',4160,960,9,'highlands',247,174,149,'Level 9 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'persian'),
+(1342,'Elves outpost',5184,1216,1,'plains',22,10,0,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'elf'),
+(1343,'Gnomes outpost',6208,1344,2,'plains',26,17,4,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'gnome'),
+(1344,'Gnomes war camp',6720,832,6,'highlands',203,66,12,'Level 6 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'gnome'),
+(1345,'Human · Roman raider camp',8512,1088,3,'woods',53,13,9,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'roman'),
+(1346,'Dwarves raider camp',8768,704,4,'plains',41,43,27,'Level 4 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'dwarf'),
+(1347,'Elves raider camp',10688,576,5,'plains',130,43,9,'Level 5 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'elf'),
+(1348,'Gnomes war camp',10816,960,7,'plains',199,94,57,'Level 7 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'gnome'),
+(1349,'Necropolis outpost',11840,1216,1,'plains',18,8,2,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'undead'),
+(1350,'Pandaren raider camp',-12736,1728,5,'highlands',90,44,41,'Level 5 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'pandaren'),
+(1351,'Gnomes outpost',-11200,2368,2,'woods',36,11,1,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'gnome'),
+(1352,'Elves outpost',-10432,2112,2,'highlands',30,18,0,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'elf'),
+(1353,'Human · Roman outpost',-9024,2112,1,'desert',22,7,1,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'roman'),
+(1354,'Demons raider camp',-8256,1600,4,'plains',70,25,31,'Level 4 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'demon'),
+(1355,'Human · Spartan raider camp',-7104,1856,5,'highlands',127,42,12,'Level 5 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'spartan'),
+(1356,'Human · Egyptian war camp',-6080,2240,8,'woods',258,122,84,'Level 8 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'egyptian'),
+(1357,'Human · Roman raider camp',-5056,1600,3,'highlands',52,24,10,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'roman'),
+(1358,'Demons war camp',-4288,2112,7,'marsh',155,124,95,'Level 7 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'demon'),
+(1359,'Pandaren raider camp',-3008,2368,3,'plains',33,28,18,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'pandaren'),
+(1360,'Demons raider camp',-2368,2112,5,'marsh',103,66,21,'Level 5 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'demon'),
+(1361,'Human · Egyptian raider camp',-576,1600,4,'highlands',76,18,17,'Level 4 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'egyptian'),
+(1362,'Pandaren outpost',64,2240,1,'plains',20,9,3,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'pandaren'),
+(1363,'Pandaren war camp',576,2240,7,'plains',249,82,30,'Level 7 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'pandaren'),
+(1364,'Demons outpost',1600,2496,1,'desert',21,7,1,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'demon'),
+(1365,'Human · Roman raider camp',2624,2112,4,'plains',84,32,4,'Level 4 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'roman'),
+(1366,'Human · Spartan war camp',3648,1984,8,'desert',257,201,58,'Level 8 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'spartan'),
+(1367,'Elves raider camp',5184,1984,5,'woods',98,60,31,'Level 5 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'elf'),
+(1368,'Human · Persian war camp',6464,2112,7,'plains',227,109,6,'Level 7 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'persian'),
+(1369,'Dwarves raider camp',7616,1600,4,'woods',86,24,11,'Level 4 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'dwarf'),
+(1370,'Human · Roman raider camp',8128,1600,5,'woods',118,44,28,'Level 5 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'roman'),
+(1371,'Orcs war camp',9280,2496,8,'highlands',324,106,49,'Level 8 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'orc'),
+(1372,'Human · Persian outpost',10304,1600,2,'plains',35,17,0,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'persian'),
+(1373,'Human · Spartan raider camp',11712,2112,5,'woods',84,71,29,'Level 5 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'spartan'),
+(1374,'Human · Roman raider camp',12352,1728,3,'plains',41,18,19,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'roman'),
+(1375,'Human · Persian raider camp',-11840,2624,3,'woods',33,27,20,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'persian'),
+(1376,'Human · Persian war camp',-11328,3136,7,'plains',206,121,19,'Level 7 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'persian'),
+(1377,'Dwarves raider camp',-10688,3136,5,'plains',127,30,36,'Level 5 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'dwarf'),
+(1378,'Necropolis war camp',-9664,3392,6,'plains',218,50,1,'Level 6 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'undead'),
+(1379,'Orcs outpost',-8640,2624,2,'desert',29,17,3,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'orc'),
+(1380,'Pandaren outpost',-7616,3008,1,'woods',26,5,0,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'pandaren'),
+(1381,'Human · Spartan war camp',-5696,3136,7,'plains',170,96,109,'Level 7 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'spartan'),
+(1382,'Gnomes outpost',-5312,2624,2,'woods',34,16,2,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'gnome'),
+(1383,'Orcs raider camp',-3776,3136,5,'marsh',75,72,45,'Level 5 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'orc'),
+(1384,'Human · Roman raider camp',-3008,3136,4,'plains',62,42,10,'Level 4 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'roman'),
+(1385,'Human · Egyptian raider camp',-1984,3392,5,'plains',124,29,39,'Level 5 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'egyptian'),
+(1386,'Human · Egyptian outpost',-1472,3520,1,'plains',21,8,0,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'egyptian'),
+(1387,'Orcs outpost',192,2624,1,'woods',17,11,2,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'orc'),
+(1388,'Pandaren raider camp',832,3136,5,'highlands',118,52,24,'Level 5 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'pandaren'),
+(1389,'Demons raider camp',1600,2880,3,'desert',45,11,20,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'demon'),
+(1390,'Dwarves outpost',3264,3136,1,'desert',18,10,1,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'dwarf'),
+(1391,'Elves raider camp',4544,3136,3,'plains',30,26,23,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'elf'),
+(1392,'Orcs raider camp',4928,2624,4,'woods',53,38,30,'Level 4 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'orc'),
+(1393,'Demons war camp',5696,2624,6,'woods',106,109,62,'Level 6 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'demon'),
+(1394,'Gnomes outpost',6720,3520,1,'plains',23,4,1,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'gnome'),
+(1395,'Orcs outpost',8000,2624,1,'plains',23,5,2,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'orc'),
+(1396,'Human · Spartan outpost',9280,2880,2,'plains',42,9,2,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'spartan'),
+(1397,'Necropolis raider camp',9792,3008,5,'highlands',121,60,3,'Level 5 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'undead'),
+(1398,'Demons raider camp',11200,3136,3,'woods',42,24,16,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'demon'),
+(1399,'Human · Spartan raider camp',12352,3392,4,'woods',79,38,1,'Level 4 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'spartan'),
+(1400,'Human · Egyptian raider camp',-12224,3648,5,'plains',88,60,21,'Level 5 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'egyptian'),
+(1401,'Necropolis stronghold',-11200,4544,9,'plains',503,126,11,'Level 9 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'undead'),
+(1402,'Human · Persian outpost',-10176,3648,1,'plains',26,4,0,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'persian'),
+(1403,'Human · Spartan stronghold',-9152,3776,10,'plains',364,267,48,'Level 10 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'spartan'),
+(1404,'Demons outpost',-8640,3904,1,'plains',20,11,0,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'demon'),
+(1405,'Orcs outpost',-6720,4160,2,'plains',39,13,1,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'orc'),
+(1406,'Elves raider camp',-6336,3648,4,'highlands',69,34,10,'Level 4 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'elf'),
+(1407,'Human · Spartan raider camp',-5568,3904,5,'plains',131,30,15,'Level 5 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'spartan'),
+(1408,'Elves outpost',-4544,4416,2,'marsh',33,16,2,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'elf'),
+(1409,'Elves outpost',-3392,4160,1,'highlands',26,5,1,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'elf'),
+(1410,'Elves outpost',-1856,4160,1,'plains',21,8,1,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'elf'),
+(1411,'Human · Egyptian outpost',-960,3776,1,'plains',24,7,0,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'egyptian'),
+(1412,'Pandaren outpost',-64,4160,2,'plains',37,10,0,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'pandaren'),
+(1413,'Human · Roman raider camp',1088,4416,3,'plains',54,21,9,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'roman'),
+(1414,'Human · Persian raider camp',2112,3648,4,'woods',59,34,28,'Level 4 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'persian'),
+(1415,'Human · Egyptian raider camp',2880,4160,5,'plains',88,56,27,'Level 5 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'egyptian'),
+(1416,'Human · Roman raider camp',4160,4544,5,'plains',93,46,42,'Level 5 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'roman'),
+(1417,'Pandaren war camp',5440,3648,7,'plains',250,99,35,'Level 7 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'pandaren'),
+(1418,'Human · Egyptian raider camp',6208,3648,3,'highlands',49,12,23,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'egyptian'),
+(1419,'Gnomes outpost',6720,4288,2,'woods',36,10,2,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'gnome'),
+(1420,'Human · Roman raider camp',7744,3904,3,'desert',52,31,1,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'roman'),
+(1421,'Gnomes raider camp',8768,3648,3,'desert',52,21,11,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'gnome'),
+(1422,'Necropolis raider camp',10304,4160,3,'plains',53,28,4,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'undead'),
+(1423,'Human · Roman war camp',10944,4160,6,'highlands',157,78,16,'Level 6 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'roman'),
+(1424,'Dwarves raider camp',11840,4416,3,'highlands',54,25,6,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'dwarf'),
+(1426,'Demons raider camp',-11456,5184,3,'woods',36,23,19,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'demon'),
+(1427,'Elves outpost',-10048,5184,2,'highlands',32,15,2,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'elf'),
+(1428,'Human · Roman raider camp',-9152,4672,3,'highlands',56,16,2,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'roman'),
+(1429,'Human · Egyptian raider camp',-8128,4928,4,'woods',76,30,19,'Level 4 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'egyptian'),
+(1430,'Elves raider camp',-6976,5184,5,'plains',83,49,48,'Level 5 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'elf'),
+(1431,'Gnomes raider camp',-6080,4800,5,'marsh',114,64,6,'Level 5 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'gnome'),
+(1432,'Gnomes raider camp',-5568,5440,4,'marsh',69,19,23,'Level 4 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'gnome'),
+(1433,'Pandaren war camp',-4544,4800,6,'plains',125,77,39,'Level 6 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'pandaren'),
+(1434,'Orcs raider camp',-3136,4672,4,'highlands',43,43,26,'Level 4 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'orc'),
+(1435,'Elves outpost',-2496,4672,2,'desert',37,8,3,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'elf'),
+(1436,'Gnomes raider camp',-1472,4928,3,'marsh',64,18,4,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'gnome'),
+(1437,'Demons raider camp',-320,5184,4,'plains',74,30,21,'Level 4 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'demon'),
+(1438,'Human · Roman war camp',576,5312,8,'desert',176,195,146,'Level 8 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'roman'),
+(1439,'Human · Egyptian raider camp',1728,5184,5,'desert',125,56,3,'Level 5 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'egyptian'),
+(1440,'Human · Spartan stronghold',2752,5184,10,'plains',429,252,40,'Level 10 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'spartan'),
+(1441,'Gnomes raider camp',3648,5440,3,'plains',59,11,6,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'gnome'),
+(1442,'Demons outpost',5184,5568,2,'highlands',29,19,2,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'demon'),
+(1443,'Human · Spartan raider camp',6208,4928,3,'plains',44,13,19,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'spartan'),
+(1444,'Human · Egyptian raider camp',7360,5184,4,'woods',94,26,9,'Level 4 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'egyptian'),
+(1445,'Gnomes outpost',8256,5440,2,'woods',30,18,3,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'gnome'),
+(1446,'Human · Persian outpost',8768,5568,1,'desert',25,5,0,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'persian'),
+(1447,'Human · Persian raider camp',10688,4672,3,'woods',33,29,17,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'persian'),
+(1448,'Dwarves outpost',11072,4672,1,'woods',24,7,0,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'dwarf'),
+(1449,'Pandaren raider camp',12224,4672,4,'desert',62,47,18,'Level 4 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'pandaren'),
+(1451,'Human · Persian outpost',-10944,6208,1,'plains',18,12,2,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'persian'),
+(1452,'Orcs stronghold',-10176,5696,9,'plains',347,117,174,'Level 9 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'orc'),
+(1453,'Human · Persian raider camp',-9408,5696,5,'woods',105,42,38,'Level 5 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'persian'),
+(1454,'Orcs raider camp',-8640,5696,4,'woods',89,31,7,'Level 4 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'orc'),
+(1455,'Human · Spartan raider camp',-7104,5696,3,'woods',47,12,20,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'spartan'),
+(1456,'Demons outpost',-6208,6208,2,'marsh',33,19,0,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'demon'),
+(1457,'Human · Roman outpost',-5056,5824,2,'highlands',32,18,1,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'roman'),
+(1458,'Human · Persian raider camp',-4032,6208,3,'highlands',35,30,14,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'persian'),
+(1459,'Human · Spartan outpost',-3136,6208,1,'highlands',24,5,3,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'spartan'),
+(1460,'Dwarves raider camp',-1856,5696,5,'plains',135,37,20,'Level 5 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'dwarf'),
+(1461,'Demons outpost',-832,5696,1,'woods',20,8,1,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'demon'),
+(1462,'Orcs outpost',-448,5696,2,'woods',37,8,2,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'orc'),
+(1463,'Elves outpost',704,6208,1,'plains',24,4,0,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'elf'),
+(1464,'Orcs outpost',1600,5824,2,'desert',33,16,4,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'orc'),
+(1465,'Gnomes outpost',2624,6208,2,'highlands',33,17,1,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'gnome'),
+(1466,'Orcs war camp',4416,6208,7,'plains',237,72,60,'Level 7 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'orc'),
+(1467,'Human · Roman raider camp',4800,5696,4,'woods',94,18,1,'Level 4 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'roman'),
+(1468,'Dwarves raider camp',6208,6336,5,'desert',124,39,29,'Level 5 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'dwarf'),
+(1469,'Pandaren outpost',7232,5952,1,'highlands',19,8,1,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'pandaren'),
+(1470,'Gnomes war camp',8256,6208,6,'woods',154,45,58,'Level 6 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'gnome'),
+(1471,'Necropolis outpost',9280,5824,1,'highlands',20,7,1,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'undead'),
+(1472,'Human · Spartan outpost',10304,6080,2,'woods',32,16,5,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'spartan'),
+(1473,'Human · Egyptian outpost',11328,6464,2,'highlands',32,11,4,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'egyptian'),
+(1476,'Demons war camp',-10944,7232,6,'plains',185,50,39,'Level 6 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'demon'),
+(1477,'Dwarves outpost',-10688,7616,2,'plains',40,12,1,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'dwarf'),
+(1478,'Human · Spartan outpost',-9024,6720,1,'woods',19,9,2,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'spartan'),
+(1479,'Elves outpost',-8640,7104,2,'woods',32,13,2,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'elf'),
+(1480,'Pandaren war camp',-7616,7104,8,'woods',371,80,10,'Level 8 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'pandaren'),
+(1481,'Demons raider camp',-6464,6720,3,'highlands',45,27,9,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'demon'),
+(1482,'Human · Persian outpost',-5056,7104,1,'woods',23,5,1,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'persian'),
+(1483,'Human · Egyptian raider camp',-4288,7232,5,'woods',94,67,7,'Level 5 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'egyptian'),
+(1484,'Pandaren outpost',-3008,7616,1,'plains',21,7,2,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'pandaren'),
+(1485,'Dwarves outpost',-1728,6720,1,'desert',23,8,1,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'dwarf'),
+(1486,'Demons outpost',-960,7104,1,'desert',23,6,0,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'demon'),
+(1487,'Human · Spartan outpost',64,7360,2,'plains',31,12,3,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'spartan'),
+(1488,'Orcs raider camp',1216,6720,3,'woods',58,25,1,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'orc'),
+(1489,'Dwarves raider camp',2112,7232,5,'woods',107,50,21,'Level 5 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'dwarf'),
+(1490,'Pandaren raider camp',3392,7232,5,'woods',68,63,43,'Level 5 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'pandaren'),
+(1491,'Human · Persian raider camp',3648,7616,3,'woods',43,16,20,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'persian'),
+(1492,'Dwarves raider camp',5440,6720,3,'plains',47,16,23,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'dwarf'),
+(1493,'Orcs outpost',5696,7104,1,'plains',22,6,2,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'orc'),
+(1494,'Dwarves outpost',6720,7360,2,'desert',36,11,1,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'dwarf'),
+(1495,'Pandaren raider camp',7744,7104,4,'desert',71,47,2,'Level 4 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'pandaren'),
+(1496,'Pandaren raider camp',8768,7232,3,'woods',52,23,0,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'pandaren'),
+(1497,'Human · Persian raider camp',10048,7232,4,'plains',63,39,18,'Level 4 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'persian'),
+(1498,'Human · Persian raider camp',10816,7488,3,'plains',59,23,2,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'persian'),
+(1500,'Pandaren raider camp',-12608,8256,3,'darkland',40,32,13,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'pandaren'),
+(1501,'Human · Roman raider camp',-11072,8256,5,'woods',139,33,9,'Level 5 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'roman'),
+(1502,'Orcs raider camp',-10688,8256,4,'highlands',77,29,21,'Level 4 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'orc'),
+(1503,'Elves raider camp',-9152,8128,5,'woods',85,62,37,'Level 5 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'elf'),
+(1504,'Gnomes raider camp',-7872,8256,3,'plains',55,24,4,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'gnome'),
+(1505,'Gnomes outpost',-7104,8512,2,'woods',34,17,0,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'gnome'),
+(1506,'Human · Roman war camp',-5696,7744,6,'plains',92,87,70,'Level 6 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'roman'),
+(1507,'Human · Spartan outpost',-4928,8256,2,'desert',38,13,3,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'spartan'),
+(1508,'Elves outpost',-4544,8384,1,'desert',24,5,2,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'elf'),
+(1509,'Gnomes outpost',-3520,8512,1,'highlands',20,11,0,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'gnome'),
+(1510,'Elves raider camp',-2496,8512,3,'desert',56,21,2,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'elf'),
+(1511,'Human · Roman raider camp',-1216,8256,3,'plains',43,21,22,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'roman'),
+(1512,'Human · Persian war camp',192,8256,7,'plains',119,126,100,'Level 7 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'persian'),
+(1513,'Elves raider camp',960,7744,5,'woods',90,56,33,'Level 5 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'elf'),
+(1514,'Human · Persian raider camp',1600,8640,5,'plains',140,26,2,'Level 5 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'persian'),
+(1515,'Necropolis outpost',3136,8384,1,'highlands',19,12,1,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'undead'),
+(1516,'Human · Spartan outpost',4160,8640,1,'highlands',25,4,2,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'spartan'),
+(1517,'Human · Persian outpost',5440,8256,1,'plains',17,11,1,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'persian'),
+(1518,'Elves outpost',6464,8256,2,'highlands',36,10,2,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'elf'),
+(1519,'Demons outpost',7360,8256,2,'highlands',28,21,4,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'demon'),
+(1520,'Demons raider camp',8640,7744,4,'woods',79,34,10,'Level 4 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'demon'),
+(1521,'Necropolis outpost',9408,7744,2,'highlands',38,10,2,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'undead'),
+(1522,'Human · Egyptian stronghold',9792,8384,9,'woods',371,197,10,'Level 9 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'egyptian'),
+(1523,'Elves outpost',10816,8640,1,'plains',20,11,1,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'elf'),
+(1526,'Orcs war camp',-11200,8768,8,'plains',343,120,33,'Level 8 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'orc'),
+(1527,'Human · Egyptian raider camp',-10432,8768,4,'highlands',60,31,37,'Level 4 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'egyptian'),
+(1528,'Gnomes raider camp',-9152,9536,3,'highlands',53,14,11,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'gnome'),
+(1529,'Pandaren war camp',-8128,9408,7,'plains',168,108,78,'Level 7 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'pandaren'),
+(1530,'Demons outpost',-7104,9664,1,'woods',19,9,0,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'demon'),
+(1531,'Human · Roman raider camp',-6080,8896,4,'woods',93,35,1,'Level 4 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'roman'),
+(1532,'Human · Roman raider camp',-5056,9280,3,'plains',56,25,3,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'roman'),
+(1533,'Orcs outpost',-4032,9152,1,'desert',24,5,0,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'orc'),
+(1534,'Human · Spartan outpost',-2752,9280,1,'desert',24,6,1,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'spartan'),
+(1535,'Human · Roman outpost',-2496,8896,2,'desert',34,14,0,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'roman'),
+(1536,'Human · Persian war camp',-576,9280,6,'plains',162,71,32,'Level 6 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'persian'),
+(1537,'Orcs war camp',-448,9664,8,'plains',217,141,112,'Level 8 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'orc'),
+(1538,'Human · Spartan raider camp',1088,8768,5,'woods',102,37,32,'Level 5 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'spartan'),
+(1539,'Human · Spartan outpost',2112,9024,1,'plains',21,9,0,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'spartan'),
+(1540,'Dwarves stronghold',2624,9024,9,'desert',374,149,130,'Level 9 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'dwarf'),
+(1541,'Gnomes raider camp',4160,9536,4,'highlands',73,37,4,'Level 4 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'gnome'),
+(1542,'Human · Spartan outpost',5056,9280,1,'highlands',22,7,2,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'spartan'),
+(1543,'Dwarves raider camp',6080,9280,5,'highlands',141,44,5,'Level 5 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'dwarf'),
+(1544,'Necropolis war camp',7232,9536,7,'plains',218,96,51,'Level 7 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'undead'),
+(1545,'Human · Roman outpost',8256,8896,1,'highlands',19,8,2,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'roman'),
+(1546,'Human · Persian outpost',8768,9408,2,'woods',32,16,4,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'persian'),
+(1547,'Human · Persian raider camp',10304,9152,3,'plains',46,32,6,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'persian'),
+(1548,'Gnomes outpost',11584,8768,2,'plains',32,19,0,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'gnome'),
+(1549,'Elves war camp',11840,9408,7,'plains',176,99,92,'Level 7 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'elf'),
+(1551,'Human · Persian raider camp',-11712,10560,5,'darkland',138,43,8,'Level 5 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'persian'),
+(1552,'Elves war camp',-10688,9920,8,'highlands',283,125,77,'Level 8 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'elf'),
+(1553,'Demons raider camp',-9408,10304,3,'plains',60,15,3,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'demon'),
+(1554,'Human · Egyptian raider camp',-8640,10432,3,'highlands',65,15,5,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'egyptian'),
+(1555,'Pandaren raider camp',-7616,10048,5,'highlands',111,53,21,'Level 5 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'pandaren'),
+(1556,'Human · Roman raider camp',-6080,10688,3,'plains',44,33,8,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'roman'),
+(1557,'Elves raider camp',-5184,10304,4,'plains',83,18,15,'Level 4 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'elf'),
+(1558,'Gnomes raider camp',-4032,10560,5,'woods',94,32,41,'Level 5 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'gnome'),
+(1559,'Demons war camp',-3008,9792,6,'highlands',196,60,16,'Level 6 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'demon'),
+(1560,'Elves outpost',-2496,9792,2,'highlands',32,15,4,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'elf'),
+(1561,'Demons raider camp',-1216,10304,4,'plains',62,37,21,'Level 4 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'demon'),
+(1562,'Human · Roman raider camp',64,10048,4,'highlands',46,36,35,'Level 4 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'roman'),
+(1563,'Gnomes outpost',1088,10304,2,'plains',34,12,4,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'gnome'),
+(1564,'Demons raider camp',2496,10304,3,'woods',48,30,2,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'demon'),
+(1565,'Elves raider camp',2880,9792,4,'desert',63,30,28,'Level 4 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'elf'),
+(1566,'Human · Egyptian raider camp',3648,9792,5,'plains',92,31,43,'Level 5 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'egyptian'),
+(1567,'Pandaren outpost',5184,10688,2,'plains',31,15,2,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'pandaren'),
+(1568,'Elves outpost',6464,9792,2,'highlands',34,17,0,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'elf'),
+(1569,'Human · Roman raider camp',6848,10304,5,'highlands',150,33,0,'Level 5 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'roman'),
+(1570,'Human · Roman raider camp',7744,9792,3,'plains',46,22,16,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'roman'),
+(1571,'Orcs raider camp',9152,10304,3,'plains',36,28,19,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'orc'),
+(1572,'Elves war camp',10304,10304,7,'woods',206,120,15,'Level 7 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'elf'),
+(1573,'Pandaren raider camp',11328,9792,5,'plains',118,26,28,'Level 5 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'pandaren'),
+(1574,'Orcs outpost',11968,10304,1,'plains',22,5,2,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'orc'),
+(1575,'Elves stronghold',-12096,11328,9,'highlands',486,129,32,'Level 9 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'elf'),
+(1576,'Elves outpost',-11328,10816,2,'darkland',32,19,1,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'elf'),
+(1577,'Human · Persian raider camp',-10176,11072,3,'plains',32,27,16,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'persian'),
+(1578,'Elves war camp',-8768,11328,7,'plains',197,98,50,'Level 7 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'elf'),
+(1579,'Gnomes raider camp',-8128,11584,3,'plains',56,13,14,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'gnome'),
+(1580,'Human · Persian raider camp',-7616,10816,4,'desert',68,43,8,'Level 4 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'persian'),
+(1581,'Orcs raider camp',-6592,11072,5,'desert',73,68,31,'Level 5 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'orc'),
+(1582,'Demons outpost',-5056,11712,1,'plains',20,12,0,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'demon'),
+(1583,'Demons raider camp',-4416,10816,4,'woods',50,40,35,'Level 4 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'demon'),
+(1584,'Orcs outpost',-3520,10944,2,'woods',31,20,1,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'orc'),
+(1585,'Necropolis outpost',-2368,10816,1,'woods',20,12,0,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'undead'),
+(1586,'Elves outpost',-576,11328,1,'plains',23,4,2,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'elf'),
+(1587,'Gnomes raider camp',64,10816,3,'plains',33,27,22,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'gnome'),
+(1588,'Necropolis raider camp',1088,11072,4,'plains',67,42,10,'Level 4 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'undead'),
+(1589,'Human · Roman war camp',2240,11328,6,'plains',102,96,49,'Level 6 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'roman'),
+(1590,'Human · Roman outpost',3520,10816,1,'plains',20,10,0,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'roman'),
+(1591,'Gnomes outpost',4032,10816,1,'desert',23,5,2,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'gnome'),
+(1592,'Gnomes outpost',5056,11328,1,'plains',24,4,1,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'gnome'),
+(1593,'Pandaren raider camp',6336,10816,3,'highlands',54,20,8,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'pandaren'),
+(1594,'Human · Roman raider camp',7616,10816,3,'highlands',46,25,14,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'roman'),
+(1595,'Dwarves outpost',8640,11328,1,'highlands',26,5,1,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'dwarf'),
+(1596,'Orcs outpost',9280,11072,2,'highlands',41,8,3,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'orc'),
+(1597,'Elves outpost',9792,11072,2,'woods',33,13,4,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'elf'),
+(1598,'Necropolis outpost',11712,10816,1,'highlands',22,5,1,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'undead'),
+(1599,'Human · Roman outpost',12352,11200,2,'plains',38,9,0,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'roman'),
+(1600,'Gnomes outpost',-12224,11840,2,'plains',33,18,1,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'gnome'),
+(1601,'Elves outpost',-11328,11840,2,'plains',34,12,1,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'elf'),
+(1602,'Gnomes raider camp',-10176,12096,3,'plains',45,24,16,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'gnome'),
+(1603,'Demons raider camp',-9152,12352,4,'woods',83,39,0,'Level 4 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'demon'),
+(1604,'Necropolis raider camp',-7744,12352,3,'plains',59,17,7,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'undead'),
+(1605,'Pandaren outpost',-7616,12736,2,'plains',27,16,4,'Level 2 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'pandaren'),
+(1606,'Necropolis outpost',-6080,11840,1,'desert',21,6,1,'Level 1 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'undead'),
+(1607,'Human · Spartan raider camp',-5056,12096,4,'highlands',74,33,4,'Level 4 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'spartan'),
+(1608,'Human · Spartan raider camp',-3904,12352,4,'plains',91,30,6,'Level 4 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'spartan'),
+(1609,'Human · Spartan raider camp',-3520,12096,3,'woods',50,18,7,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'spartan'),
+(1610,'Human · Egyptian raider camp',-2496,12352,4,'highlands',65,36,26,'Level 4 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'egyptian'),
+(1611,'Dwarves raider camp',-960,12608,4,'highlands',76,28,8,'Level 4 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'dwarf'),
+(1612,'Pandaren war camp',-320,11840,7,'plains',181,121,49,'Level 7 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'pandaren'),
+(1613,'Human · Roman war camp',1472,11840,7,'desert',252,98,30,'Level 7 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'roman'),
+(1614,'Human · Persian raider camp',2368,11840,3,'plains',58,16,10,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'persian'),
+(1615,'Dwarves raider camp',3136,11968,3,'plains',53,14,10,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'dwarf'),
+(1616,'Human · Persian war camp',3648,12096,6,'plains',152,72,52,'Level 6 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'persian'),
+(1621,'Human · Roman war camp',9280,11840,7,'highlands',228,110,45,'Level 7 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'roman'),
+(1622,'Human · Egyptian raider camp',10560,11840,3,'woods',38,26,21,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'egyptian'),
+(1623,'Gnomes raider camp',11328,11968,3,'woods',35,23,21,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'gnome'),
+(1624,'Human · Persian raider camp',11840,12352,3,'highlands',60,16,1,'Level 3 camp. Raid its stored supplies and defeat its defenders to earn an artifact and hero experience. Stock grows over time and defenders replenish unpredictably.',true,'persian')
 ) as c(id,name,x,y,tier,terrain,infantry,archers,cavalry,description,bandit,faction)
 where not exists(select 1 from public.settlements s where public.peris_cell_distance(floor(s.x/128)::integer,floor(s.y/128)::integer,floor(c.x/128)::integer,floor(c.y/128)::integer)<=1)
  and not exists(select 1 from public.peris_map_plots p where p.col=floor(c.x/128)::integer and p.row=floor(c.y/128)::integer)
@@ -3228,7 +3289,7 @@ begin
  select * into s from public.peris_camp_stock where camp_id=p_camp for update;
  if s.camp_id is null then return;end if;
  rates:=case when c.tier>=6 then array[24,15,15,6]when c.tier<=2 then array[3,2,2,1]else array[9,6,6,3]end;
- cap:=greatest(case when c.tier>=6 then 250 when c.tier<=2 then 30 else 100 end,ceil((array[30,50,80,120,180,260,360,480,610,720])[greatest(1,least(10,c.tier))]*1.08)::integer);
+ cap:=greatest(case when c.tier>=6 then 250 when c.tier<=2 then 30 else 100 end,ceil((array[30,50,80,120,180,260,360,480,610,720])[least(10,greatest(1,c.tier))]*1.08)::integer);
  batch_min:=case when c.tier>=6 then 4 when c.tier<=2 then 1 else 2 end;batch_max:=case when c.tier>=6 then 10 when c.tier<=2 then 3 else 6 end;
  if s.engaged_battle_id is null then
   while s.next_recruit_at<=p_until and steps<1024 loop
@@ -3248,6 +3309,19 @@ begin
  update public.peris_camp_stock set resources=stock,stock_updated_at=greatest(p_until,s.stock_updated_at),next_recruit_at=s.next_recruit_at,recruit_sequence=s.recruit_sequence where camp_id=c.id;
 end $$;
 
+-- Persist battle-time casualty value; signed profit is calculated only from delivery.
+create or replace function public.peris_roster_loss_cost(p_initial jsonb,p_survivors jsonb)returns jsonb
+language sql stable security definer set search_path='' as $$
+ select jsonb_object_agg(resource,amount)from(
+  select resource,coalesce(sum(greatest(0,coalesce((p_initial->>c.unit)::integer,0)-coalesce((p_survivors->>c.unit)::integer,0))*(c.cost->>resource)::numeric),0)as amount
+  from unnest(array['wood','stone','food','gold'])keys(resource)cross join public.peris_unit_catalog c group by resource
+ )costs where jsonb_typeof(p_initial)='object'and jsonb_typeof(p_survivors)='object'
+$$;
+create or replace function public.peris_resource_difference(p_received jsonb,p_spent jsonb)returns jsonb
+language sql immutable set search_path='' as $$
+ select jsonb_object_agg(resource,coalesce((p_received->>resource)::numeric,0)-coalesce((p_spent->>resource)::numeric,0))from unnest(array['wood','stone','food','gold'])keys(resource)
+$$;
+
 create or replace function public.peris_deliver_loot(p_army bigint)returns void language plpgsql security definer set search_path='' as $$
 declare a public.armies%rowtype;s public.settlements%rowtype;delivered jsonb:='{}';overflow jsonb:='{}';r text;amount numeric;remaining numeric;
 begin
@@ -3259,7 +3333,10 @@ begin
   delivered:=delivered||jsonb_build_object(r,least(amount,remaining));overflow:=overflow||jsonb_build_object(r,greatest(0,amount-remaining));
  end loop;
  update public.settlements set wood=wood+(delivered->>'wood')::numeric,stone=stone+(delivered->>'stone')::numeric,food=food+(delivered->>'food')::numeric,gold=gold+(delivered->>'gold')::numeric where id=s.id;
- update public.peris_reports set result=result||jsonb_build_object('delivered',delivered,'overflow',overflow)where battle_id=a.loot_report_id and owner_id=a.owner_id;
+ update public.peris_reports set result=result||jsonb_build_object('delivered',delivered,'overflow',overflow,'delivered_at',now())||
+  case when coalesce(result->'replacement_cost',public.peris_roster_loss_cost(result->'attacker_roster',result->'attacker_survivor_roster'))is not null then jsonb_build_object('estimated_profit',public.peris_resource_difference(delivered,coalesce(result->'replacement_cost',public.peris_roster_loss_cost(result->'attacker_roster',result->'attacker_survivor_roster'))))else '{}'::jsonb end where battle_id=a.loot_report_id and owner_id=a.owner_id;
+ update public.battles set result=result||jsonb_build_object('delivered',delivered,'overflow',overflow,'delivered_at',now())||
+  case when coalesce(result->'replacement_cost',public.peris_roster_loss_cost(result->'attacker_roster',result->'attacker_survivor_roster'))is not null then jsonb_build_object('estimated_profit',public.peris_resource_difference(delivered,coalesce(result->'replacement_cost',public.peris_roster_loss_cost(result->'attacker_roster',result->'attacker_survivor_roster'))))else '{}'::jsonb end where id=a.loot_report_id and attacker_owner_id=a.owner_id;
  update public.armies set carried_loot=null,loot_report_id=null where id=a.id;
 end $$;
 
@@ -3388,21 +3465,23 @@ begin
 end $$;
 create or replace function public.peris_start_raid(p_owner uuid,p_camp integer) returns bigint
 language plpgsql security definer set search_path='' as $$
-declare a public.armies%rowtype;c public.peris_camps%rowtype;bid bigint;mor numeric;
+declare a public.armies%rowtype;c public.peris_camps%rowtype;bid bigint;mor numeric;shared_stock boolean;
 begin
  select * into a from public.armies where id=public.peris_army_id(p_owner) for update;
- if exists(select 1 from public.peris_camps where id=p_camp and bandit)then
-  perform public.peris_camp_accrue(p_camp);
-  if exists(select 1 from public.peris_camp_stock where camp_id=p_camp and engaged_battle_id is not null)then return null;end if;
- end if;
  select * into c from public.peris_camps where id=p_camp for update;
  if c.id is null or a.id is null then raise exception 'Army or camp not found';end if;
+ shared_stock:=c.bandit and to_regclass('public.peris_camp_stock')is not null;
+ if shared_stock then
+  perform public.peris_camp_accrue(p_camp);
+  if exists(select 1 from public.peris_camp_stock where camp_id=p_camp and engaged_battle_id is not null)then return null;end if;
+  select * into c from public.peris_camps where id=p_camp;
+ end if;
  if a.infantry+a.archers+a.cavalry=0 then raise exception 'Your army has no soldiers';end if;
  if exists(select 1 from public.battles where status='active' and (attacker_owner_id=p_owner or defender_owner_id=p_owner)) then raise exception 'Finish the current battle first';end if;
- if not c.bandit and exists(select 1 from public.peris_progress where owner_id=p_owner and camp_id=p_camp and available_at>now()) then raise exception 'The camp is still regrouping';end if;
+ if not shared_stock and exists(select 1 from public.peris_progress where owner_id=p_owner and camp_id=p_camp and available_at>now()) then raise exception 'The camp is still regrouping';end if;
  insert into public.battles(attacker_owner_id,defender_owner_id,attacker_army_id,defender_army_id,mode,phase,camp_id,terrain,difficulty,enemy_name,defender_ready,defender_faction)
  values(p_owner,null,a.id,null,'pve','combat',c.id,public.peris_battle_terrain(c.x,c.y),case when c.tier>=6 then 'hard' when c.tier<=2 then 'easy' else 'normal' end,c.name,true,c.faction) returning id into bid;
- if c.bandit then update public.peris_camp_stock set engaged_battle_id=bid where camp_id=c.id;end if;
+ if shared_stock then update public.peris_camp_stock set engaged_battle_id=bid where camp_id=c.id;end if;
  select 90+2*level into mor from public.buildings where settlement_id=a.home_settlement_id and building_type='wall';
  perform public.peris_add_formations(bid,p_owner,'attacker',a.infantry,a.archers,a.cavalry,coalesce(mor,92));
  perform public.peris_add_formations(bid,null,'defender',c.infantry,c.archers,c.cavalry,case when c.tier>=6 then 100 when c.tier<=2 then 78 else 90 end);
@@ -3495,6 +3574,14 @@ begin
  insert into public.peris_unit_research values(s.id,r.unit,at_time+make_interval(secs=>r.research_seconds));
  return jsonb_build_object('ok',true);
 end $$;
+-- Catalog pace applies only when accepting a new journey; saved journey deadlines remain unchanged.
+create or replace function public.peris_march_speed(p_army bigint,p_troops jsonb default null)returns numeric
+language sql stable security definer set search_path='' as $$
+ select 22*coalesce((select min(c.speed)from public.peris_unit_catalog c where coalesce((coalesce(p_troops,public.peris_roster(to_jsonb(a)))->>c.unit)::integer,0)>0),40)/40::numeric*(public.peris_hero_bonuses(a.id)->>'speed')::numeric
+ from public.armies a where a.id=p_army
+$$;
+revoke all on function public.peris_march_speed(bigint,jsonb)from public,anon,authenticated;
+
 create or replace function public.peris_march_for(p_owner uuid,p_army bigint,p_target_x integer,p_target_y integer,p_path jsonb,p_raid integer default null)returns jsonb
 language plpgsql security definer set search_path='' as $$
 declare u uuid:=p_owner;a public.armies%rowtype;position jsonb;point jsonb;route jsonb;
@@ -3542,7 +3629,7 @@ begin
   px:=x;py:=y;pcx:=cx;pcy:=cy;
  end loop;
  if px<>tx or py<>ty then raise exception 'Route must end at the chosen destination';end if;
- seconds:=greatest(2,distance/(22*(public.peris_hero_bonuses(a.id)->>'speed')::numeric));
+ seconds:=greatest(2,distance/public.peris_march_speed(a.id));
  update public.armies set start_x=round((position->>'x')::numeric),start_y=round((position->>'y')::numeric),target_x=tx,target_y=ty,
   march_path=route,march_distance=distance,march_map_version=4,march_sent_at=now(),march_cancel_until=now()+interval '30 seconds',
   march_origin=jsonb_build_object('col',floor((position->>'x')::numeric/128),'row',floor((position->>'y')::numeric/128),'x',round((position->>'x')::numeric),'y',round((position->>'y')::numeric)),march_returning=false,
@@ -3685,12 +3772,15 @@ begin
    cavalry=coalesce((select sum(soldiers)from public.battle_formations where battle_id=b.id and side='defender'and unit_type='cavalry'),0)where id=camp.id;
  end if;
  r:=jsonb_build_object('attacker_initial',ai,'defender_initial',di,'attacker_survivors',asur,'defender_survivors',dsur,'attacker_losses',ai-asur,'defender_losses',di-dsur,'loot',loot,'duration',round(b.elapsed),'reason',p_reason);
- r:=r||jsonb_build_object('attacker_roster',(select public.peris_roster(coalesce(jsonb_object_agg(unit,sum_initial),'{}'))from(select coalesce(recruit_unit,unit_type)as unit,sum(initial_soldiers)as sum_initial from public.battle_formations where battle_id=b.id and side='attacker'group by coalesce(recruit_unit,unit_type))q),
-  'attacker_survivor_roster',(select public.peris_roster(coalesce(jsonb_object_agg(unit,sum_remaining),'{}'))from(select coalesce(recruit_unit,unit_type)as unit,sum(soldiers)as sum_remaining from public.battle_formations where battle_id=b.id and side='attacker'group by coalesce(recruit_unit,unit_type))q),
-  'defender_roster',(select public.peris_roster(coalesce(jsonb_object_agg(unit,sum_initial),'{}'))from(select coalesce(recruit_unit,unit_type)as unit,sum(initial_soldiers)as sum_initial from public.battle_formations where battle_id=b.id and side='defender'group by coalesce(recruit_unit,unit_type))q),
-  'defender_survivor_roster',(select public.peris_roster(coalesce(jsonb_object_agg(unit,sum_remaining),'{}'))from(select coalesce(recruit_unit,unit_type)as unit,sum(soldiers)as sum_remaining from public.battle_formations where battle_id=b.id and side='defender'group by coalesce(recruit_unit,unit_type))q),
+ r:=r||jsonb_build_object('attacker_roster',(select public.peris_roster(coalesce(jsonb_object_agg(unit,sum_initial),'{}'::jsonb))from(select coalesce(recruit_unit,unit_type)as unit,sum(initial_soldiers)as sum_initial from public.battle_formations where battle_id=b.id and side='attacker'group by coalesce(recruit_unit,unit_type))q),
+  'attacker_survivor_roster',(select public.peris_roster(coalesce(jsonb_object_agg(unit,sum_remaining),'{}'::jsonb))from(select coalesce(recruit_unit,unit_type)as unit,sum(soldiers)as sum_remaining from public.battle_formations where battle_id=b.id and side='attacker'group by coalesce(recruit_unit,unit_type))q),
+  'defender_roster',(select public.peris_roster(coalesce(jsonb_object_agg(unit,sum_initial),'{}'::jsonb))from(select coalesce(recruit_unit,unit_type)as unit,sum(initial_soldiers)as sum_initial from public.battle_formations where battle_id=b.id and side='defender'group by coalesce(recruit_unit,unit_type))q),
+  'defender_survivor_roster',(select public.peris_roster(coalesce(jsonb_object_agg(unit,sum_remaining),'{}'::jsonb))from(select coalesce(recruit_unit,unit_type)as unit,sum(soldiers)as sum_remaining from public.battle_formations where battle_id=b.id and side='defender'group by coalesce(recruit_unit,unit_type))q),
   'defender_faction',coalesce(b.defender_faction,camp.faction),
   'attacker_faction',(select s0.faction from public.armies a0 join public.settlements s0 on s0.id=a0.home_settlement_id where a0.id=b.attacker_army_id));
+ select coalesce(sum(f.soldiers*c.carry),0)into carry from public.battle_formations f join public.peris_unit_catalog c on c.unit=coalesce(f.recruit_unit,f.unit_type)where f.battle_id=b.id and f.side='attacker';
+ r:=r||jsonb_build_object('replacement_cost',public.peris_roster_loss_cost(r->'attacker_roster',r->'attacker_survivor_roster'),'carrying_capacity',carry);
+ if (loot->>'wood')::numeric+(loot->>'stone')::numeric+(loot->>'food')::numeric+(loot->>'gold')::numeric=0 then r:=r||jsonb_build_object('estimated_profit',public.peris_resource_difference(loot,r->'replacement_cost'));end if;
  update public.battles set status='resolved' ,phase='finished',winner_side=p_winner,winner_owner_id=winner,ended_at=now(),result=r where id=b.id;
  for u in select id from public.players where id in(b.attacker_owner_id,b.defender_owner_id) order by id loop
  perform public.peris_settle(u);
@@ -3713,7 +3803,7 @@ begin
   take:=least((loot->>key)::numeric,greatest(0,case when key='food'then s.food_capacity else s.capacity end-(to_jsonb(s)->>key)::numeric));
   delivered:=delivered||jsonb_build_object(key,take);overflow:=overflow||jsonb_build_object(key,(loot->>key)::numeric-take);
  end loop;
- r:=r||jsonb_build_object('delivered',delivered,'overflow',overflow);
+ r:=r||jsonb_build_object('delivered',delivered,'overflow',overflow,'delivered_at',now(),'estimated_profit',public.peris_resource_difference(delivered,r->'replacement_cost'));
  update public.settlements set wood=least(capacity,wood+(loot->>'wood')::integer),stone=least(capacity,stone+(loot->>'stone')::integer),
  food=least(food_capacity,food+(loot->>'food')::integer),gold=least(capacity,gold+(loot->>'gold')::integer)where id=s.id;
  end if;
@@ -4209,6 +4299,13 @@ begin
  'settler_expeditions',coalesce((select jsonb_agg(e order by id)from public.peris_settler_expeditions e where owner_id=u),'[]'::jsonb),
  'campaign_farm_lists',coalesce((select jsonb_agg(l order by id)from public.peris_campaign_farm_lists l where owner_id=u),'[]'::jsonb),
  'campaign_farms',coalesce((select jsonb_agg(f order by id)from public.peris_campaign_farms f where owner_id=u),'[]'::jsonb),
+ 'campaign_farm_stats',coalesce((select jsonb_agg(jsonb_build_object('owner_id',u,'camp_id',s.camp_id,'raids',s.raids,'last_raid_at',coalesce(s.result->>'delivered_at',s.created_at::text),'last_loot',s.delivered,'total_loot',s.total_loot,'last_result',coalesce(s.winner_side,case when s.won then 'attacker'else 'defender'end),'last_losses',coalesce((s.result->>'attacker_losses')::integer,0))order by s.camp_id)from(
+   select r.*,b.winner_side,coalesce((r.result#>>'{delivered,wood}')::numeric,0)+coalesce((r.result#>>'{delivered,stone}')::numeric,0)+coalesce((r.result#>>'{delivered,food}')::numeric,0)+coalesce((r.result#>>'{delivered,gold}')::numeric,0)as delivered,
+    count(*)over(partition by r.camp_id)as raids,
+    sum(coalesce((r.result#>>'{delivered,wood}')::numeric,0)+coalesce((r.result#>>'{delivered,stone}')::numeric,0)+coalesce((r.result#>>'{delivered,food}')::numeric,0)+coalesce((r.result#>>'{delivered,gold}')::numeric,0))over(partition by r.camp_id)as total_loot,
+    row_number()over(partition by r.camp_id order by coalesce((r.result->>'delivered_at')::timestamptz,r.created_at)desc,r.id desc)as rank
+   from public.peris_reports r join public.peris_camps c on c.id=r.camp_id and c.bandit left join public.battles b on b.id=r.battle_id where r.owner_id=u and r.result?'delivered'
+  )s where s.rank=1),'[]'::jsonb),
  'garrisons',coalesce((select jsonb_agg(g order by row,col)from public.peris_garrisons g where owner_id=u),'[]'::jsonb),
  'players',coalesce((select jsonb_agg(p order by created_at)from public.players p where p.id=u
    or exists(select 1 from public.battles b where (b.attacker_owner_id=u or b.defender_owner_id=u) and (b.attacker_owner_id=p.id or b.defender_owner_id=p.id))
@@ -4225,6 +4322,8 @@ begin
  'battles',coalesce((select jsonb_agg(b order by id)from public.battles b where attacker_owner_id=u or defender_owner_id=u),'[]'::jsonb),
  'formations',coalesce((select jsonb_agg(f order by f.id)from public.battle_formations f join public.battles b on b.id=f.battle_id where b.status='active'and (b.attacker_owner_id=u or b.defender_owner_id=u)),'[]'::jsonb),
  'reports',coalesce((select jsonb_agg(r order by id desc)from (select * from public.peris_reports where owner_id=u and (coalesce((peris_reports.result->>'attacker_losses')::integer,0)>0 or not exists(select 1 from public.peris_campaign_farm_lists l where l.id=peris_reports.farm_list_id and l.owner_id=u and l.casualties_only)) order by id desc limit 50)r),'[]'::jsonb),
+ 'report_count',(select count(*)from public.peris_reports r where owner_id=u and (coalesce((r.result->>'attacker_losses')::integer,0)>0 or not exists(select 1 from public.peris_campaign_farm_lists l where l.id=r.farm_list_id and l.owner_id=u and l.casualties_only))),
+ 'hidden_report_count',(select count(*)from public.peris_reports r where owner_id=u and coalesce((r.result->>'attacker_losses')::integer,0)=0 and exists(select 1 from public.peris_campaign_farm_lists l where l.id=r.farm_list_id and l.owner_id=u and l.casualties_only)),
  'progress',coalesce((select jsonb_agg(p)from public.peris_progress p where owner_id=u),'[]'::jsonb),
  'claims',coalesce((select jsonb_agg(c)from public.peris_claims c where owner_id=u),'[]'::jsonb),
  'challenges',coalesce((select jsonb_agg(c)from public.peris_challenges c where (attacker_owner_id=u or defender_owner_id=u)and status='pending'and expires_at>now()),'[]'::jsonb))into result;
@@ -4467,8 +4566,8 @@ begin
      if farm.route is null then raise exception 'Start this target manually once to establish its land route';end if;
      perform public.peris_prepare_raid_for(owner,farm.army_id,farm.camp_id,farm.route,farm.troops);
      update public.armies set farm_list_id=farm.list_id where id=farm.army_id;
-     update public.peris_campaign_farms set last_status='Raid preparing'where id=farm.id;
-    exception when others then update public.peris_campaign_farms set last_status=sqlerrm where id=farm.id;end;
+     update public.peris_campaign_farms set last_status='Raid preparing',sent=sent+1 where id=farm.id;
+    exception when others then update public.peris_campaign_farms set last_status=sqlerrm,skipped=skipped+1 where id=farm.id;end;
     update public.peris_campaign_farms set next_at=now()+make_interval(secs=>farm.interval_seconds)where id=farm.id;
    end loop;
    perform public.peris_sync_owner(owner);
@@ -4479,6 +4578,56 @@ begin
  end loop;
  for camp_id in select s.camp_id from public.peris_camp_stock s where s.next_recruit_at<=now() or s.stock_updated_at<=now()-interval '1 minute'order by least(s.next_recruit_at,s.stock_updated_at+interval '1 minute'),s.camp_id limit 100 loop perform public.peris_camp_accrue(camp_id);end loop;
  return jsonb_build_object('processed',processed);
+end $$;
+-- Gameplay mutations keep a private receipt so a lost response can be retried.
+create table if not exists public.peris_command_receipts(
+ owner_id uuid not null references public.players(id) on delete cascade,
+ request_id uuid not null, function_name text not null, arguments jsonb not null,
+ response jsonb, created_at timestamptz not null default now(),
+ primary key(owner_id,request_id)
+);
+alter table public.peris_command_receipts enable row level security;
+revoke all on public.peris_command_receipts from public,anon,authenticated;
+
+create or replace function public.peris_submit_command(p_request_id uuid,p_function text,p_args jsonb)
+returns jsonb language plpgsql security definer set search_path='' as $$
+declare u uuid:=public.peris_player_id();previous public.peris_command_receipts%rowtype;answer jsonb;
+begin
+ if u is null or not exists(select 1 from public.players where id=u)then raise exception 'Authentication required';end if;
+ if p_request_id is null or p_function is null or p_args is null or jsonb_typeof(p_args)<>'object' or octet_length(p_args::text)>100000 then raise exception 'Choose a valid command';end if;
+ perform pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended(u::text||':'||p_request_id::text,0));
+ select * into previous from public.peris_command_receipts where owner_id=u and request_id=p_request_id;
+ if previous.request_id is not null then
+  if previous.function_name is distinct from p_function or previous.arguments is distinct from p_args then raise exception 'This request belongs to a different command';end if;
+  return previous.response;
+ end if;
+ -- A fixed whitelist keeps the receipt endpoint from invoking private helpers.
+ case p_function
+ when 'peris_empire_command' then answer:=public.peris_empire_command(p_args->'p_command');
+ when 'peris_campaign_farm_command' then answer:=public.peris_campaign_farm_command(p_args->'p_command');
+ when 'peris_research_unit' then answer:=public.peris_research_unit((p_args->>'p_city')::bigint,p_args->>'p_unit');
+ when 'peris_collect_garrison' then answer:=public.peris_collect_garrison((p_args->>'p_army')::bigint,nullif(p_args->'p_troops','null'::jsonb));
+ when 'peris_claim_field' then answer:=public.peris_claim_field((p_args->>'p_col')::integer,(p_args->>'p_row')::integer);
+ when 'peris_queue_field' then answer:=public.peris_queue_field((p_args->>'p_col')::integer,(p_args->>'p_row')::integer,p_args->>'p_type');
+ when 'peris_set_faction' then perform public.peris_set_faction(p_args->>'p_faction');answer:='{}'::jsonb;
+ when 'peris_debug_city' then perform public.peris_debug_city(p_args->>'p_action',p_args->>'p_target',(p_args->>'p_value')::integer);answer:='{}'::jsonb;
+ when 'peris_research_spell' then answer:=public.peris_research_spell(p_args->>'p_spell');
+ when 'peris_queue_slot' then answer:=public.peris_queue_slot((p_args->>'p_slot')::integer,p_args->>'p_type');
+ when 'peris_queue_upgrade' then answer:=public.peris_queue_upgrade(p_args->>'p_type');
+ when 'peris_queue_recruit' then answer:=public.peris_queue_recruit(p_args->>'p_type',(p_args->>'p_quantity')::integer);
+ when 'peris_march' then answer:=public.peris_march((p_args->>'p_target_x')::integer,(p_args->>'p_target_y')::integer,p_args->'p_path');
+ when 'move_army' then answer:=public.move_army((p_args->>'p_target_x')::integer,(p_args->>'p_target_y')::integer);
+ when 'peris_raid' then answer:=public.peris_raid((p_args->>'p_camp_id')::integer);
+ when 'peris_ready' then answer:=public.peris_ready((p_args->>'p_battle_id')::bigint);
+ when 'retreat_from_battle' then answer:=public.retreat_from_battle((p_args->>'p_battle_id')::bigint);
+ when 'peris_claim' then answer:=public.peris_claim(p_args->>'p_quest_id');
+ when 'peris_rename' then answer:=public.peris_rename(p_args->>'p_name');
+ when 'peris_challenge' then answer:=public.peris_challenge((p_args->>'p_defender')::uuid);
+ when 'peris_respond' then answer:=public.peris_respond((p_args->>'p_id')::bigint,(p_args->>'p_accept')::boolean);
+ else raise exception 'This command is not available';
+ end case;
+ insert into public.peris_command_receipts(owner_id,request_id,function_name,arguments,response)values(u,p_request_id,p_function,p_args,coalesce(answer,'{}'::jsonb));
+ return coalesce(answer,'{}'::jsonb);
 end $$;
 -- Retire v4/v5 bypasses: clients cannot use instant upgrades, instant recruitment,
 -- unaccepted challenges, or the old tactical simulation to circumvent v6 rules.
@@ -4497,6 +4646,7 @@ end $$;
 revoke all on function public.create_player(text),public.sync_my_state(),public.move_army(integer,integer),public.retreat_from_battle(bigint)from public,anon;
 grant execute on function public.create_player(text),public.sync_my_state(),public.move_army(integer,integer),public.retreat_from_battle(bigint)to authenticated;
 grant execute on function public.peris_empire_command(jsonb)to authenticated;
+grant execute on function public.peris_submit_command(uuid,text,jsonb)to authenticated;
 grant execute on function public.peris_campaign_farm_command(jsonb)to authenticated;
 grant execute on function public.peris_research_unit(bigint,text)to authenticated;
 grant execute on function public.peris_collect_garrison(bigint,jsonb)to authenticated;

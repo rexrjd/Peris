@@ -10,11 +10,11 @@ import { createSolo } from '../src/features/campaign/domain/newRealm';
 (globalThis as any).React = React;
 
 test('horizontal navigation exposes all destinations and exactly one current page', () => {
-  for (const view of ['world', 'settlement', 'army', 'chronicle'] as GameView[]) {
+  for (const view of ['world', 'settlement', 'rally', 'army', 'chronicle'] as GameView[]) {
     const html = renderToStaticMarkup(React.createElement(GameNavigation, { view, rewards: false, onNavigate: () => {} }));
-    assert.equal((html.match(/<button/g) ?? []).length, 4);
+    assert.equal((html.match(/<button/g) ?? []).length, 5);
     assert.equal((html.match(/aria-current="page"/g) ?? []).length, 1);
-    for (const label of ['Map', 'City', 'Armies', 'Reports']) assert.ok(html.includes(label));
+    for (const label of ['Map', 'City', 'Rally Point', 'Armies', 'Reports']) assert.ok(html.includes(label));
     assert.ok(!html.includes('side-rail'));
   }
 });

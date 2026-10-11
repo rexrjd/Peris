@@ -103,6 +103,10 @@
  .game-shell .city-stage.inspector-open .city-toolbar{max-width:calc(100% - 355px)}
  .game-shell .city-stage.inspector-open .city-overview-compact .economy-residents{display:none}
 }
+@media(min-width:761px) and (max-width:850px){
+ .game-brand{display:none}
+ .game-shell .realm-topbar.game-header{gap:8px}
+}
 @media(max-width:760px){
  .realm-shell.game-shell{grid-template-rows:48px minmax(0,1fr);padding-bottom:62px}
  .game-shell .realm-topbar.game-header{gap:7px;padding:0 10px}
@@ -117,7 +121,7 @@
  .game-shell .game-header .resource-amount strong{font-size:12px}
  .game-shell .game-header .resource-capacity{display:block;height:2px;width:100%}
  .game-shell .game-menu>summary{min-width:30px;width:30px;padding:5px}
- .game-navigation{position:fixed;bottom:0;left:0;right:0;z-index:20;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));height:62px;background:#181c24;border-top:1px solid #ffffff17;padding:3px 8px calc(3px + env(safe-area-inset-bottom));gap:4px}
+ .game-navigation{position:fixed;bottom:0;left:0;right:0;z-index:20;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));height:62px;background:#181c24;border-top:1px solid #ffffff17;padding:3px 8px calc(3px + env(safe-area-inset-bottom));gap:4px}
  .game-navigation button{min-width:0;min-height:50px;display:flex;flex-direction:column;gap:4px;font-size:10px;padding:6px;border-radius:7px}
  .game-navigation button>svg{display:block;width:18px;height:18px}
  .game-navigation button[aria-current=page]{background:#ffffff06}

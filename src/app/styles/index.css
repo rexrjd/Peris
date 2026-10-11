@@ -40,6 +40,7 @@
 @import '../../features/city/styles/village-screen.css';
 
 @import '../../features/army/styles/troop-icons.css';
+@import './pending-orders.css';
 @import '../../features/menu/styles/accounts.css';
 
 @import '../../features/heroes/styles/artifacts.css';

@@ -61,6 +61,8 @@ begin
  if p_troops is not null then
   perform public.peris_garrison_add(u,floor(a.target_x/128.0)::integer,floor(a.target_y/128.0)::integer,public.peris_roster_add(available,preset,-1));
   perform public.peris_write_roster(a.id,preset);
+  -- The route was validated before selecting troops. Recompute the accepted deadline for the chosen party.
+  update public.armies set arrival_at=departure_at+make_interval(secs=>greatest(2,march_distance/public.peris_march_speed(id))::double precision)where id=a.id;
  end if;
  return jsonb_build_object('ok',true);
 end $$;
@@ -81,7 +83,7 @@ begin
  if a.march_returning then return true;end if;
  if a.id is null or a.march_origin is null or a.march_path is null or a.march_distance is null then return false;end if;
  select jsonb_agg(value order by ordinal desc) into route from jsonb_array_elements(a.march_path)with ordinality as points(value,ordinal);
- seconds:=greatest(2,a.march_distance/(22*(public.peris_hero_bonuses(a.id)->>'speed')::numeric));
+ seconds:=greatest(2,a.march_distance/public.peris_march_speed(a.id));
  update public.armies set start_x=a.target_x,start_y=a.target_y,target_x=(a.march_origin->>'x')::integer,target_y=(a.march_origin->>'y')::integer,
   march_path=route,status='moving',raid_target_id=null,march_returning=true,march_sent_at=null,march_cancel_until=null,
   departure_at=now(),arrival_at=now()+make_interval(secs=>seconds::double precision),updated_at=now() where id=a.id;

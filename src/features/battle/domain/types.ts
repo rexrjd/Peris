@@ -72,7 +72,9 @@ export type Formation = {
 export type BattleResult = {
     defender_roster?: import('../../army/domain/roster').UnitRoster; defender_survivor_roster?: import('../../army/domain/roster').UnitRoster; defender_faction?: Faction;
     attacker_roster?: import('../../army/domain/roster').UnitRoster; attacker_survivor_roster?: import('../../army/domain/roster').UnitRoster; attacker_faction?: Faction;
-    delivered?: Resources; overflow?: Resources;
+    delivered?: Resources; overflow?: Resources; delivered_at?: string;
+    /** Attacker casualty price at settlement; profit uses actual delivered resources. */
+    replacement_cost?: Resources; estimated_profit?: Resources; carrying_capacity?: number;
     /** Actual settled NPC rewards; absent in old reports and practice battles. */
     hero_reward?: import('../../heroes/domain/battleRewards').HeroBattleReward;
     attacker_initial: number;

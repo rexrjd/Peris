@@ -3,7 +3,6 @@ import { recruitDelay } from '../../frontier/domain/camps';
 import { DEFAULT_CONFIG } from '../../frontier/domain/balance';
 import { carryingCapacity } from '../../frontier/domain/balance';
 import { takeLoot } from '../../frontier/domain/economy';
-import { readRoster } from '../../army/domain/roster';
 import { emptyResources } from '../../../shared/model/resources';
 import { deliverCampLoot } from './loot';
 import { campCooldown } from '../../map/domain/bandits';
@@ -15,6 +14,7 @@ import { lootFor } from './rewards';
 import { RESOURCES } from '../../../shared/model/resources';
 import { restoreRaidReserve, startRaidReturn } from '../../map/domain/commands';
 import { homeArmyPosition } from '../../map/domain/garrisons';
+import { recordBattleEconomics } from './reportEconomics';
 /** Apply permanent casualties, spoils, reports and home regrouping once per battle. */
 export function settleBattle(w: World, id: number, owner: string, nextId: () => number) {
     const b = w.battles.find(b => b.id === id)!, result = b.result!, won = b.winner_side === 'attacker';
@@ -39,7 +39,7 @@ export function settleBattle(w: World, id: number, owner: string, nextId: () => 
         for (const formation of w.formations.filter(f => f.battle_id === id && f.side === 'defender')) defenders[formation.recruit_unit ?? formation.unit_type] += formation.soldiers;
         writeRoster(camp, defenders);
         camp.next_recruit_at = new Date(Date.now() + recruitDelay(DEFAULT_CONFIG, String(camp.id), camp.recruit_sequence ?? 0)).toISOString();
-        const loot = won ? takeLoot(camp.resources!, carryingCapacity(readRoster(a))) : emptyResources();
+        const loot = won ? takeLoot(camp.resources!, carryingCapacity(result.attacker_survivor_roster)) : emptyResources();
         for (const key of RESOURCES) camp.resources![key] -= loot[key];
         result.loot = loot; a.carried_loot = loot; a.loot_report_id = id;
         if (won) { p.victories++; p.prestige += camp.tier * 25; }
@@ -53,6 +53,7 @@ export function settleBattle(w: World, id: number, owner: string, nextId: () => 
             const delivered = Math.min(loot[key], Math.max(0, (key === 'food' ? s.food_capacity ?? s.capacity : s.capacity) - s[key]));
             s[key] += delivered; result.delivered[key] = delivered; result.overflow[key] = loot[key] - delivered;
         }
+        result.delivered_at = new Date().toISOString();
         const old = w.progress.find(c => c.camp_id === camp.id && c.owner_id===owner);
         if (old) {
             old.defeated++;
@@ -61,6 +62,7 @@ export function settleBattle(w: World, id: number, owner: string, nextId: () => 
         else
             w.progress.push({ camp_id: camp.id, owner_id: owner, defeated: 1, available_at: new Date(Date.now() + campCooldown(camp)).toISOString() });
     }
+    recordBattleEconomics(result);
     w.reports.unshift({ id: nextId(), owner_id: owner, battle_id: id, camp_id: camp?.id, farm_list_id: a.farm_list_id, title: b.enemy_name, won, result: { ...result }, created_at: new Date().toISOString() });
     // Newly sent raids return along their validated route to their actual departure station.
     if (!startRaidReturn(w, a)) {

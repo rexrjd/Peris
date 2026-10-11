@@ -47,7 +47,7 @@ test('home ledger preserves visiting legion cultures and attributes generic garr
     world.armies.push({ ...army, id: 3, home_settlement_id: 2, infantry: 30, archers: 30, cavalry: 30, status: 'moving', departure_at: world.server_now, arrival_at: new Date(Date.parse(world.server_now) + 60000).toISOString() });
     world.garrisons = [{ owner_id: army.owner_id, ...stationCell(town), infantry: 5, archers: 2, cavalry: 1 }];
     const html = renderToStaticMarkup(React.createElement(CityArmySummary, { world, sid: town.id, owner: army.owner_id, now: Date.parse(world.server_now), onSelect: () => {} }));
-    const rows = [...html.matchAll(/<div data-faction="(roman|elf)"[^>]*>(.*?)<\/div>/g)].map(match => ({ faction: match[1], html: match[2] }));
+    const rows = [...html.matchAll(/<button data-faction="(roman|elf)"[^>]*>(.*?)<\/button>/g)].map(match => ({ faction: match[1], html: match[2] }));
     assert.equal(rows.length, 6);
     for (const [faction, expected] of [['roman', [125, 52, 17]], ['elf', [13, 7, 3]]] as const) {
         const culture = rows.filter(row => row.faction === faction);

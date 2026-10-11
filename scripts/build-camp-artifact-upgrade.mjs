@@ -1,6 +1,6 @@
 import fs from 'node:fs/promises';
 import { CAMPS } from '../src/features/map/domain/camps.ts';
-const read = file => fs.readFile('supabase/modules/'+file,'utf8');
+const read = async file => (await fs.readFile('supabase/modules/'+file,'utf8')).replace(/\r\n/g,'\n');
 const story = CAMPS.map(c => `update public.peris_camps set tier=${c.tier} where id=${c.id} and not exists(select 1 from public.battles b where b.camp_id=${c.id} and b.status='active') and not exists(select 1 from public.armies a where a.raid_target_id=${c.id} and a.status='moving');`).join('\n');
 const rewards = (await read('heroes/battle-rewards.sql')).split('create or replace function public.peris_battle_hero_reward')[1];
 const accrual = (await read('campaign/camp-schema.sql')).split('create or replace function public.peris_camp_accrue')[1].split('create or replace function public.peris_deliver_loot')[0];
@@ -17,6 +17,7 @@ create or replace function public.peris_battle_hero_reward${rewards}
 create or replace function public.peris_camp_accrue${accrual}
 ${await read('campaign/peris_start_raid.sql')}
 ${await read('battle/peris_finish.sql')}
+revoke all on function public.peris_roster_loss_cost(jsonb,jsonb),public.peris_resource_difference(jsonb,jsonb) from public,anon,authenticated;
 notify pgrst,'reload schema';
 commit;
 `;

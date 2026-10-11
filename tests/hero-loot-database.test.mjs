@@ -33,6 +33,11 @@ try{
  const xp=w.heroes[0].experience;
  await admin(`select public.peris_finish(${first.id},'attacker','Repeated request')`);await login();w=await rpc('peris_snapshot');assert.equal(w.heroes[0].experience,xp);assert.equal(w.hero_artifacts.length,1);
  const second=await win();assert.equal(second.result.hero_reward.artifacts.length,1);assert.equal(w.hero_artifacts.length,2);assert.notEqual(second.result.hero_reward.artifacts[0].id,item.id);
+ assert.equal(second.result.defender_initial,0);assert.equal(second.result.defender_survivors,0);
+ assert.ok(Object.values(second.result.defender_roster).every(count=>count===0));
+ assert.ok(Object.values(second.result.defender_survivor_roster).every(count=>count===0));
+ assert.deepEqual(second.result.replacement_cost,{wood:0,stone:0,food:0,gold:0});
+ assert.deepEqual(w.reports.find(r=>r.battle_id===second.id).result,second.result);
  console.log('PASS · every NPC victory awards real equippable gear, report receipts and once-only XP, including repeat camps');
  await assert.rejects(()=>rpc('peris_battle_hero_reward',[army.id,9999,camp.id,first.id]),/permission denied/);
  await admin(`update public.peris_heroes set experience=19000 where id=${hero.id};insert into public.peris_hero_artifacts(owner_id,artifact_id,slot)select '${u}','iron_sword','weapon'from generate_series(1,198)`);

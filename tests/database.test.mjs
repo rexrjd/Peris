@@ -6,6 +6,9 @@ const login=async(id)=>db.exec(`reset role;set role authenticated;select set_con
 const admin=async(sql)=>{await db.exec('reset role;');return db.exec(sql)};
 const rpc=async(name,args=[])=>db.query(`select public.${name}(${args.map((_,i)=>'$'+(i+1)).join(',')}) as result`,args);
 const snap=async()=> (await rpc('peris_snapshot')).rows[0].result;
+// These march fixtures use unequipped commanders; check catalog role pace independently of the SQL helper.
+const roleSpeed={infantry:40,spearmen:36,archers:34,elite:38,cavalry:76,scout:92,heavyCavalry:60,ram:16,catapult:12};
+const marchPace=(world,army)=>{assert.equal((world.hero_artifacts??[]).length,0);const roster=army.unit_roster??army,hero=world.heroes?.find(row=>row.army_id===army.id);return 22*Math.min(...Object.entries(roleSpeed).filter(([unit])=>Number(roster[unit]??0)>0).map(([,speed])=>speed))/40*(hero?.class==='ranger'?1.1:1);};
 const rejects=async(fn,message)=>{let fail=false;try{await fn()}catch{fail=true}assert.ok(fail,message)};
 try{
 await db.exec(`create schema auth;create table auth.users(id uuid primary key);create role anon;create role authenticated;create role service_role;create function auth.uid()returns uuid language sql as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;grant usage on schema public,auth to authenticated,anon;grant execute on function auth.uid()to authenticated,anon;create publication supabase_realtime;`);
@@ -35,14 +38,14 @@ console.log('PASS · recruitment, upgrade completion and single-use rewards');
 await rejects(()=>rpc('move_army',[sea.x,sea.y]),'Compatibility move RPC crossed actual sea');
 await admin(`insert into public.peris_map_plots(owner_id,settlement_id,col,row,building_type,level)select '${u}',id,-1,2,null,0 from public.settlements where owner_id='${u}';insert into public.peris_map_plots(owner_id,settlement_id,col,row,building_type,level)select '${u}',id,3,3,null,0 from public.settlements where owner_id='${u}'`);await login(u);
 await rpc('move_army',[-64,320]);w=await snap();assert.deepEqual([w.armies[0].target_x,w.armies[0].target_y],[-64,320]);
-let a=w.armies[0],seconds=(Date.parse(a.arrival_at)-Date.parse(a.departure_at))/1000;assert.ok(Math.abs(seconds-Math.hypot(a.target_x-a.start_x,a.target_y-a.start_y)/22)<.002);
+let a=w.armies[0],seconds=(Date.parse(a.arrival_at)-Date.parse(a.departure_at))/1000;assert.ok(Math.abs(seconds-Math.hypot(a.target_x-a.start_x,a.target_y-a.start_y)/marchPace(w,a))<.002);
 await rejects(()=>rpc('move_army',[null,0]),'Null march destination accepted');
 await admin(`update public.settlements set x=-10000,y=10500 where owner_id='${u}'`);await rejects(()=>admin(`update public.settlements set x=12800 where owner_id='${u}'`),'Out-of-world settlement accepted');await rejects(()=>admin(`update public.settlements set food=-1 where owner_id='${u}'`),'Unrelated resource constraint removed');await admin(`update public.settlements set x=${beforeTown.x},y=${beforeTown.y} where owner_id='${u}'`);
 await login(out);await rejects(()=>rpc('move_army',[-20000,-20000]),'Account without an army moved another player army');await login(u);
-console.log('PASS · expanded signed land bounds, original march speed and unchanged ownership guards');
+console.log('PASS · expanded signed land bounds, slowest-role march speed and unchanged ownership guards');
 await admin(`update public.armies set status='idle',start_x=195,start_y=315,target_x=195,target_y=315,march_path=null,march_distance=null where owner_id='${u}'`);await login(u);
 const route=[[195,315],[320,320],[320,448],[448,448]];await rpc('peris_march',[448,448,JSON.stringify(route)]);w=await snap();a=w.armies[0];assert.deepEqual(a.march_path,route);
-const distance=Math.hypot(125,5)+128+128;assert.ok(Math.abs(Number(a.march_distance)-distance)<.00001);assert.ok(Math.abs((Date.parse(a.arrival_at)-Date.parse(a.departure_at))/1000-distance/22)<.002);
+const distance=Math.hypot(125,5)+128+128;assert.ok(Math.abs(Number(a.march_distance)-distance)<.00001);assert.ok(Math.abs((Date.parse(a.arrival_at)-Date.parse(a.departure_at))/1000-distance/marchPace(w,a))<.002);
 await rejects(()=>rpc('peris_march',[448,448,JSON.stringify([[10000,10000],[320,320],[320,448],[448,448]])]),'Spoofed start position accepted');
 await rejects(()=>rpc('peris_march',[900,315,JSON.stringify([[195,315],[900,315]])]),'Route skipped distant fields');
 await rejects(()=>rpc('peris_march',[448,448,JSON.stringify([[195,315],[320,320]])]),'Wrong route endpoint accepted');

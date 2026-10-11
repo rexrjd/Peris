@@ -26,7 +26,7 @@ begin
  select * into s from public.peris_camp_stock where camp_id=p_camp for update;
  if s.camp_id is null then return;end if;
  rates:=case when c.tier>=6 then array[24,15,15,6]when c.tier<=2 then array[3,2,2,1]else array[9,6,6,3]end;
- cap:=greatest(case when c.tier>=6 then 250 when c.tier<=2 then 30 else 100 end,ceil((array[30,50,80,120,180,260,360,480,610,720])[greatest(1,least(10,c.tier))]*1.08)::integer);
+ cap:=greatest(case when c.tier>=6 then 250 when c.tier<=2 then 30 else 100 end,ceil((array[30,50,80,120,180,260,360,480,610,720])[least(10,greatest(1,c.tier))]*1.08)::integer);
  batch_min:=case when c.tier>=6 then 4 when c.tier<=2 then 1 else 2 end;batch_max:=case when c.tier>=6 then 10 when c.tier<=2 then 3 else 6 end;
  if s.engaged_battle_id is null then
   while s.next_recruit_at<=p_until and steps<1024 loop
@@ -46,6 +46,19 @@ begin
  update public.peris_camp_stock set resources=stock,stock_updated_at=greatest(p_until,s.stock_updated_at),next_recruit_at=s.next_recruit_at,recruit_sequence=s.recruit_sequence where camp_id=c.id;
 end $$;
 
+-- Persist battle-time casualty value; signed profit is calculated only from delivery.
+create or replace function public.peris_roster_loss_cost(p_initial jsonb,p_survivors jsonb)returns jsonb
+language sql stable security definer set search_path='' as $$
+ select jsonb_object_agg(resource,amount)from(
+  select resource,coalesce(sum(greatest(0,coalesce((p_initial->>c.unit)::integer,0)-coalesce((p_survivors->>c.unit)::integer,0))*(c.cost->>resource)::numeric),0)as amount
+  from unnest(array['wood','stone','food','gold'])keys(resource)cross join public.peris_unit_catalog c group by resource
+ )costs where jsonb_typeof(p_initial)='object'and jsonb_typeof(p_survivors)='object'
+$$;
+create or replace function public.peris_resource_difference(p_received jsonb,p_spent jsonb)returns jsonb
+language sql immutable set search_path='' as $$
+ select jsonb_object_agg(resource,coalesce((p_received->>resource)::numeric,0)-coalesce((p_spent->>resource)::numeric,0))from unnest(array['wood','stone','food','gold'])keys(resource)
+$$;
+
 create or replace function public.peris_deliver_loot(p_army bigint)returns void language plpgsql security definer set search_path='' as $$
 declare a public.armies%rowtype;s public.settlements%rowtype;delivered jsonb:='{}';overflow jsonb:='{}';r text;amount numeric;remaining numeric;
 begin
@@ -57,7 +70,10 @@ begin
   delivered:=delivered||jsonb_build_object(r,least(amount,remaining));overflow:=overflow||jsonb_build_object(r,greatest(0,amount-remaining));
  end loop;
  update public.settlements set wood=wood+(delivered->>'wood')::numeric,stone=stone+(delivered->>'stone')::numeric,food=food+(delivered->>'food')::numeric,gold=gold+(delivered->>'gold')::numeric where id=s.id;
- update public.peris_reports set result=result||jsonb_build_object('delivered',delivered,'overflow',overflow)where battle_id=a.loot_report_id and owner_id=a.owner_id;
+ update public.peris_reports set result=result||jsonb_build_object('delivered',delivered,'overflow',overflow,'delivered_at',now())||
+  case when coalesce(result->'replacement_cost',public.peris_roster_loss_cost(result->'attacker_roster',result->'attacker_survivor_roster'))is not null then jsonb_build_object('estimated_profit',public.peris_resource_difference(delivered,coalesce(result->'replacement_cost',public.peris_roster_loss_cost(result->'attacker_roster',result->'attacker_survivor_roster'))))else '{}'::jsonb end where battle_id=a.loot_report_id and owner_id=a.owner_id;
+ update public.battles set result=result||jsonb_build_object('delivered',delivered,'overflow',overflow,'delivered_at',now())||
+  case when coalesce(result->'replacement_cost',public.peris_roster_loss_cost(result->'attacker_roster',result->'attacker_survivor_roster'))is not null then jsonb_build_object('estimated_profit',public.peris_resource_difference(delivered,coalesce(result->'replacement_cost',public.peris_roster_loss_cost(result->'attacker_roster',result->'attacker_survivor_roster'))))else '{}'::jsonb end where id=a.loot_report_id and attacker_owner_id=a.owner_id;
  update public.armies set carried_loot=null,loot_report_id=null where id=a.id;
 end $$;
 

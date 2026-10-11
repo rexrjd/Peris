@@ -2,9 +2,9 @@ import type { Command } from '../../shared/model/commands';
 export function rpcCommand(cmd: Command) {
     if (cmd.type === 'researchUnit') return { fn: 'peris_research_unit', args: { p_city: cmd.settlementId, p_unit: cmd.item } };
     if (cmd.type === 'collectGarrison') return { fn: 'peris_collect_garrison', args: { p_army: cmd.armyId, p_troops: cmd.troops ?? null } };
-    if (['saveCampaignFarmList', 'saveCampaignFarm', 'deleteCampaignFarm', 'deleteCampaignFarmList', 'startCampaignFarmList'].includes(cmd.type))
+    if (['saveCampaignFarmList', 'saveCampaignFarm', 'deleteCampaignFarm', 'deleteCampaignFarmList', 'startCampaignFarmList', 'manageCampaignFarmTargets', 'setCampaignFarmListEnabled', 'applyCampaignFarmListTroops'].includes(cmd.type))
         return { fn: 'peris_campaign_farm_command', args: { p_command: cmd } };
-    if (cmd.type === 'cancelMarch' || cmd.type === 'raid' && cmd.troops !== undefined)
+    if (cmd.type === 'cancelMarch' || (cmd.type === 'raid' || cmd.type === 'move') && cmd.troops !== undefined)
         return { fn: 'peris_empire_command', args: { p_command: cmd } };
     const scoped=['trainSettlers','foundCity','recruitHero','heroSkill','equipArtifact','transferTroops','rebaseArmy','upgrade','buildSlot','upgradeSlot','recruit','move','raid','claimField','buildField','researchSpell','rename','claim','setFaction','debugCity','challenge','respond'];
     if(scoped.includes(cmd.type)&&(cmd.settlementId!==undefined||cmd.armyId!==undefined||['trainSettlers','foundCity','recruitHero','heroSkill','equipArtifact','transferTroops','rebaseArmy'].includes(cmd.type)))return {fn:'peris_empire_command',args:{p_command:cmd}};

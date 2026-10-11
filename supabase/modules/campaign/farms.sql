@@ -38,6 +38,9 @@ create index if not exists peris_campaign_farm_lists_owner on public.peris_campa
 
 create index if not exists peris_campaign_farms_owner on public.peris_campaign_farms(owner_id,list_id,id);
 
+alter table public.peris_campaign_farms add column if not exists sent bigint not null default 0 check(sent>=0);
+alter table public.peris_campaign_farms add column if not exists skipped bigint not null default 0 check(skipped>=0);
+
 alter table public.peris_campaign_farm_lists enable row level security;
 
 alter table public.peris_campaign_farms enable row level security;
@@ -83,6 +86,7 @@ declare
  preset jsonb;list_name text;losses_only boolean;list public.peris_campaign_farm_lists;farm public.peris_campaign_farms;v_duplicate_id bigint;
 
  started integer:=0;skipped jsonb:='[]';batch_path jsonb;previous_army text;previous_city text;target_army public.armies%rowtype;repeat_enabled boolean;repeat_interval integer;
+ selected_ids bigint[];selected_id jsonb;selected_count integer;v_action text;
 
 begin
 
@@ -108,7 +112,42 @@ begin
 
  end if;
 
- if kind='startCampaignFarmList' then
+ if kind='manageCampaignFarmTargets' then
+  if jsonb_typeof(p_command->'ids') is distinct from 'array' then raise exception 'Choose saved targets';end if;
+  selected_count:=jsonb_array_length(p_command->'ids');
+  if selected_count not between 1 and 100 then raise exception 'Choose up to 100 targets';end if;
+  selected_ids:=array[]::bigint[];
+  for selected_id in select value from jsonb_array_elements(p_command->'ids')loop
+   if jsonb_typeof(selected_id) is distinct from 'number' then raise exception 'Choose valid saved targets';end if;
+   if selected_id::text::numeric<>trunc(selected_id::text::numeric) or selected_id::text::numeric not between 1 and 9007199254740991 then raise exception 'Choose valid saved targets';end if;
+   selected_ids:=array_append(selected_ids,selected_id::text::bigint);
+  end loop;
+  if (select count(distinct id)from unnest(selected_ids)ids(id))<>selected_count or (select count(*)from public.peris_campaign_farms where owner_id=u and id=any(selected_ids))<>selected_count then raise exception 'Choose your own saved targets';end if;
+  v_action:=p_command->>'action';
+  if v_action='delete' then delete from public.peris_campaign_farms where owner_id=u and id=any(selected_ids);
+  elsif v_action='move' then
+   if jsonb_typeof(p_command->'listId') is distinct from 'number' then raise exception 'Choose your own destination list';end if;
+   if (p_command->>'listId')::numeric<>trunc((p_command->>'listId')::numeric) then raise exception 'Choose your own destination list';end if;
+   v_list_id:=(p_command->>'listId')::bigint;
+   if not exists(select 1 from public.peris_campaign_farm_lists where id=v_list_id and owner_id=u)then raise exception 'Choose your own destination list';end if;
+   if (select count(*)from public.peris_campaign_farms where list_id=v_list_id and not(id=any(selected_ids)))+selected_count>100 then raise exception 'A campaign farm list holds up to 100 targets';end if;
+   if exists(select camp_id from public.peris_campaign_farms where (list_id=v_list_id and not(id=any(selected_ids)))or(owner_id=u and id=any(selected_ids))group by camp_id having count(*)>1)then raise exception 'A selected camp is already in the destination list';end if;
+   update public.peris_campaign_farms set list_id=v_list_id where owner_id=u and id=any(selected_ids);
+  else raise exception 'Choose move or delete';end if;
+  return jsonb_build_object('ok',true,'changed',selected_count);
+ elsif kind in('setCampaignFarmListEnabled','applyCampaignFarmListTroops')then
+  select * into list from public.peris_campaign_farm_lists where id=v_entry_id and owner_id=u;
+  if not found then raise exception 'Choose your own farm list';end if;
+  if kind='applyCampaignFarmListTroops'then
+   preset:=public.peris_campaign_farm_troops(list.troops,false);
+   update public.peris_campaign_farms set troops=preset where list_id=list.id and owner_id=u;
+  else
+   if jsonb_typeof(p_command->'enabled') is distinct from 'boolean'then raise exception 'Choose a repeat preference';end if;
+   repeat_enabled:=(p_command->>'enabled')::boolean;
+   update public.peris_campaign_farms set enabled=repeat_enabled,next_at=case when repeat_enabled then now()+make_interval(secs=>interval_seconds)else null end,last_status=case when repeat_enabled then 'Scheduled'else 'Paused'end where list_id=list.id and owner_id=u and enabled is distinct from repeat_enabled;
+  end if;
+  return jsonb_build_object('ok',true);
+ elsif kind='startCampaignFarmList' then
 
   if not exists(select 1 from public.peris_campaign_farm_lists where id=v_entry_id and owner_id=u)then raise exception 'Choose your own farm list';end if;
 
@@ -146,12 +185,12 @@ begin
 
     update public.armies set farm_list_id=farm.list_id where id=farm.army_id;
 
-    update public.peris_campaign_farms set route=(select march_path from public.armies where id=farm.army_id),last_status='Raid preparing'where id=farm.id;
+    update public.peris_campaign_farms set route=(select march_path from public.armies where id=farm.army_id),last_status='Raid preparing',sent=sent+1 where id=farm.id;
     started:=started+1;
 
    exception when others then
 
-    update public.peris_campaign_farms set last_status=sqlerrm where id=farm.id;
+    update public.peris_campaign_farms set last_status=sqlerrm,skipped=peris_campaign_farms.skipped+1 where id=farm.id;
     skipped:=skipped||jsonb_build_array(jsonb_build_object('targetId',farm.id,'reason',sqlerrm));
 
    end;

@@ -4,7 +4,7 @@ import { ARTIFACTS, HERO_CLASSES, HERO_COST, HERO_STATS, armyLimit, heroPoints }
 import { armyPosition } from '../../map/domain/movement';
 import { wrappedWorldDelta } from '../../map/domain/dimensions';
 import { soldierTotal } from '../../army/domain/units';
-import { readRoster, writeRoster, addRosters, takeClasses } from '../../army/domain/roster';
+import { readRoster, writeRoster, addRosters, takeClasses, validateRoster, rosterTotal, RECRUIT_UNITS } from '../../army/domain/roster';
 import { homeArmyPosition } from '../../map/domain/garrisons';
 
 export function recruitHero(ctx: LocalCommandContext, cmd: Extract<Command, { type: 'recruitHero' }>) {
@@ -38,12 +38,18 @@ export function transferTroops(ctx: LocalCommandContext, cmd: Extract<Command, {
     const a = armyPosition(source, Date.parse(ctx.now)), b = armyPosition(target, Date.parse(ctx.now));
     if (source.status !== 'idle' || target.status !== 'idle' || source.raid_reserve || target.raid_reserve || source.raid_target_id !== null || target.raid_target_id !== null || Math.hypot(wrappedWorldDelta(a.x, b.x), wrappedWorldDelta(a.y, b.y)) > 90) throw new Error('Bring both armies together and stop them before transferring troops.');
     if (ctx.world.orders.some(o => o.kind === 'recruit' && [source.id, target.id].includes(o.army_id!))) throw new Error('Finish both training queues before transferring troops.');
-    const types = ['infantry', 'archers', 'cavalry'] as const;
-    for (const type of types) if (!Number.isInteger(cmd[type]) || cmd[type] < 0 || cmd[type] > source[type]) throw new Error('Choose soldiers available in the source army.');
-    const total = types.reduce((n, type) => n + cmd[type], 0);
+    const available = readRoster(source), types = ['infantry', 'archers', 'cavalry'] as const;
+    let selected;
+    if (cmd.troops !== undefined) {
+        if (!validateRoster(cmd.troops) || RECRUIT_UNITS.some(unit => (cmd.troops![unit] ?? 0) > available[unit])) throw new Error('Choose soldiers available in the source army.');
+        selected = readRoster(cmd.troops);
+    } else {
+        for (const type of types) if (!Number.isSafeInteger(cmd[type]) || cmd[type] < 0 || cmd[type] > source[type]) throw new Error('Choose soldiers available in the source army.');
+        selected = takeClasses(available, cmd);
+    }
+    const total = rosterTotal(selected);
     if (!total || soldierTotal(target) + total > 1000) throw new Error('Transfer at least one soldier and stay within the 1,000 soldier capacity.');
-    const selected = takeClasses(readRoster(source), cmd);
-    writeRoster(source, addRosters(readRoster(source), selected, -1));
+    writeRoster(source, addRosters(available, selected, -1));
     writeRoster(target, addRosters(readRoster(target), selected));
 }
 export function rebaseArmy(ctx: LocalCommandContext) {

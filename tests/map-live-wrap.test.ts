@@ -4,7 +4,7 @@ import { createSolo } from '../src/features/campaign/domain/newRealm'
 import { getCell, cellCenter, cellAt, isWalkable, isVersion3Walkable, isLegacyWalkable, HISTORIC_MAP_STARTS, worldHeight } from '../src/features/map/domain/worldGrid'
 import { CELL_SIZE, WORLD_MAP_VERSION, WORLD_MAP_SEED, WORLD_W, wrapWorldCoordinate, wrappedWorldDelta, wrappedCellDistance } from '../src/features/map/domain/dimensions'
 import { findMarchPath } from '../src/features/map/domain/pathfinding'
-import { marchArmy } from '../src/features/map/domain/commands'
+import { marchArmy, marchSpeed } from '../src/features/map/domain/commands'
 import { armyPosition, armyRouteRemaining, completeTravel } from '../src/features/map/domain/movement'
 import { validateSave } from '../src/platform/storage/saves'
 import type { LocalCommandContext } from '../src/shared/model/commands'
@@ -90,7 +90,7 @@ test('new commands mark v4 routes and preserve state when invalid destinations f
   assert.equal(army.march_map_version,4)
   assert.equal(army.target_x,to.x);assert.equal(army.target_y,to.y)
   near(army.march_distance!,Math.SQRT2*CELL_SIZE)
-  near(Date.parse(army.arrival_at)-Date.parse(context.now),30000+Math.floor(army.march_distance!/22*1000))
+  near(Date.parse(army.arrival_at)-Date.parse(context.now),30000+Math.floor(army.march_distance!/marchSpeed(world,army)*1000))
 })
 
 test('v4 armies interpolate over seams while untagged old routes retain linear history', () => {

@@ -35,6 +35,14 @@ classes. Formations carry the actual recruited role and separate unit statistics
 hero/magic multipliers remain unchanged. Garrisons, recruitment, transfers,
 cancellation, settlement and save validation preserve those identities.
 
+The Rally Point is part of the main navigation. Its army-domain selector groups
+owned stationed troops and movements by actual village/field coordinates, rather
+than a legion's assigned home. Incoming and outgoing tabs follow the selected
+city and its owned fields; farm lists and reports are labelled empire-wide.
+The UI embeds the existing farm-list component and reuses march review, cancel
+commands and report details. It does not create a second order system or infer
+private rival movement from public map snapshots.
+
 Local camp production and repeat dispatch use `campaign/domain/campStock.ts` and
 `campEconomy.ts`; they feed the existing travel and automatic battle systems.
 Shared worlds use the normal RPC adapter and generated V16 Supabase modules.

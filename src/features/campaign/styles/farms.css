@@ -1,4 +1,8 @@
 .campaign-farm-form>label{display:grid;gap:7px;font-size:12px;font-weight:600;margin:12px 0}
+.campaign-farm-embedded{min-width:0}
+.campaign-farm-embedded>.march-muted:first-child{margin-top:0}
+.campaign-farm-embedded .campaign-farm-lists{display:grid;gap:14px}
+.campaign-farm-embedded .campaign-farm-list{margin-top:0}
 .campaign-create-list{display:flex;flex-wrap:wrap;align-items:end;gap:12px;margin:15px 0}
 .campaign-create-list label{display:grid;flex:1;min-width:130px;gap:7px;font-size:12px}
 .campaign-create-list input{background:#18202b;color:#e8e5dc;border:1px solid #78828d;border-radius:5px;padding:10px;min-height:42px;max-width:100%;font:inherit}
@@ -18,3 +22,8 @@
 .campaign-batch-review article{padding:12px;border:1px solid #ffffff25;border-radius:5px}.campaign-batch-review strong{font-size:12px}.campaign-batch-review small{display:block;margin-top:7px;color:#aeb6c2;font-size:10px;line-height:1.5}
 
 .campaign-sort{display:flex;align-items:center;gap:12px;margin:12px 0;font-size:12px}.campaign-sort select{flex:1;min-width:0;background:#18202b;color:#e8e5dc;border:1px solid #78828d;border-radius:5px;padding:9px}.campaign-farm-form>label>input{background:#18202b;color:inherit;padding:9px;border:1px solid #78828d;border-radius:5px}.campaign-farm-form input[type=checkbox]{width:auto}.campaign-list-start{flex-wrap:wrap}.campaign-farm-target>.game-troop-summary{margin-top:8px}
+.campaign-sort{flex-wrap:wrap}.campaign-sort>label{display:flex;flex:1;align-items:center;gap:12px;min-width:200px}.campaign-sort .button{margin:0;min-height:38px;font-size:11px}
+.campaign-farm-bulk{display:flex;align-items:center;flex-wrap:wrap;gap:9px;padding:12px 13px;border-top:1px solid #ffffff18;font-size:11px;background:#ffffff03}.campaign-farm-bulk>label{display:flex;align-items:center;gap:7px}.campaign-farm-bulk select{min-width:100px;max-width:100%;flex:1;border:1px solid #66707e;border-radius:5px;background:#18202b;color:#e8e5dc;padding:9px;font:inherit}.campaign-farm-bulk .button{margin:0;min-height:36px;padding:8px 12px;font-size:11px}
+.campaign-farm-target>.campaign-farm-heading{display:flex;align-items:flex-start;gap:10px;flex-wrap:nowrap}.campaign-farm-heading>input{margin:4px 0 0;flex-shrink:0;width:16px;height:16px}.campaign-farm-heading .campaign-farm-name{min-width:0;overflow-wrap:anywhere}
+.campaign-farm-target>.campaign-farm-ledger{display:grid;grid-template-columns:minmax(90px,.65fr) minmax(110px,.8fr) minmax(150px,1.5fr);gap:12px;margin:12px 0 15px;color:#acb9c9;font-size:10px;line-height:1.7}.campaign-farm-ledger>span{min-width:0;overflow-wrap:anywhere}.campaign-farm-ledger b{color:#dce3ec;font-weight:600}.campaign-farm-ledger time{display:block;color:#8f9cb0}
+@media(max-width:720px){.campaign-farm-target>.campaign-farm-ledger{grid-template-columns:1fr 1fr}.campaign-farm-ledger>span:last-child{grid-column:1/-1}.campaign-farm-bulk select{flex-basis:100%}.campaign-sort>label{min-width:0;flex-basis:100%}.campaign-sort .button{width:100%}}

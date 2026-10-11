@@ -182,6 +182,7 @@ export function validateSave(data: unknown): World {
     for(const key of ['settlements','armies','buildings','camps','orders','battles','formations','reports','progress','claims','challenges'] as const)
         if(!Array.isArray(w[key])||w[key].length>15000||w[key].some(r=>!r||typeof r!=='object'))invalid();
     if(w.settlements.length<1||w.settlements.length>10||w.armies.length<1||w.armies.length>20)invalid();
+    for (const count of [w.report_count, w.hidden_report_count]) if (count !== undefined && (!Number.isSafeInteger(count) || count < 0)) invalid();
     for (const force of [...w.armies, ...(w.garrisons ?? []), ...w.camps]) if (force.unit_roster != null) {
         if (!validateRoster(force.unit_roster, 'owner_id' in force ? ('col' in force ? 20000 : 1000) : 1000)) invalid();
         const copy = { ...force }; writeRoster(copy, force.unit_roster);
@@ -212,7 +213,10 @@ export function validateSave(data: unknown): World {
             const faction = result[`${side}_faction`]; if (faction !== undefined && !isFaction(faction)) invalid();
             for (const suffix of ['roster', 'survivor_roster'] as const) { const roster = result[`${side}_${suffix}`]; if (roster !== undefined && !validateRoster(roster, 4000)) invalid(); }
         }
-        for (const stock of [result.delivered, result.overflow]) if (stock != null && RESOURCES.some(key => !Number.isFinite(stock[key]) || stock[key] < 0 || stock[key] > 1e9)) invalid();
+        for (const stock of [result.delivered, result.overflow, result.replacement_cost]) if (stock != null && RESOURCES.some(key => !Number.isFinite(stock[key]) || stock[key] < 0 || stock[key] > 1e9)) invalid();
+        if (result.estimated_profit != null && RESOURCES.some(key => !Number.isFinite(result.estimated_profit![key]) || Math.abs(result.estimated_profit![key]) > 1e9)) invalid();
+        if (result.carrying_capacity !== undefined && (!Number.isSafeInteger(result.carrying_capacity) || result.carrying_capacity < 0 || result.carrying_capacity > 1e7)) invalid();
+        if (result.delivered_at !== undefined && !Number.isFinite(Date.parse(result.delivered_at))) invalid();
     }
     const cities=new Map(w.settlements.map(s=>[s.id,s])), armies=new Map(w.armies.map(a=>[a.id,a]));
     if(cities.size!==w.settlements.length||armies.size!==w.armies.length||new Set(w.buildings.map(b=>b.id)).size!==w.buildings.length||new Set(w.orders.map(o=>o.id)).size!==w.orders.length)invalid();
