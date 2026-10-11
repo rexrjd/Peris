@@ -1,5 +1,5 @@
 import fs from 'node:fs/promises';
-const source = await fs.readFile('supabase/modules/campaign/report-reads.sql','utf8');
+const source = (await fs.readFile('supabase/modules/campaign/report-reads.sql','utf8')).replace(/\r\n/g,'\n');
 const sql = `-- Existing name-only-account worlds; additive report read tracking only.
 -- Apply with the compact-header frontend. No battle, camp or building rules change.
 begin;
