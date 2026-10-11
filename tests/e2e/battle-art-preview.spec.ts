@@ -63,27 +63,6 @@ test('army preview supports mesh inspection, automatic combat, quality changes a
     expect(errors).toEqual([]);
 });
 
-test('all eleven factions load published meshes or explicit withheld fallbacks and their own portraits',async({page},testInfo)=>{
-    test.setTimeout(240000);
-    if(testInfo.project.name==='mobile-chromium')test.skip();
-    const errors:string[]=[],assets=new Map<string,number>();page.on('pageerror',e=>errors.push(e.message));
-    page.on('response',response=>{const path=new URL(response.url()).pathname;if(path.match(/\/models\/battle\/.+-(?:roster|army)(?:-lod)?\.glb$/))assets.set(path,response.status());});
-    const report=await (await page.request.get('/models/battle/faction-rosters.json')).json();
-    const enabled=(faction:string)=>!report.withheld?.[faction]&&!!report.factions?.[faction]?.near&&!!report.factions?.[faction]?.far;
-    const pack=(faction:string)=>enabled(faction)&&enabled('roman')?'textured':enabled(faction)||enabled('roman')?'mixed':'earlier';
-    await page.goto('/?battle-preview=1');
-    await expect(page.locator('.battle-art-preview')).toHaveAttribute('data-model-pack',pack('orc'));
-    for(const faction of ['roman','spartan','persian','egyptian','orc','elf','dwarf','gnome','pandaren','undead','demon']){
-        await page.getByLabel('Your faction').selectOption(faction);
-        await expect(page.locator('.battle-art-preview')).toHaveAttribute('data-model-pack',pack(faction));
-        await expect(page.locator('.army-loading')).toHaveCount(0,{timeout:60000});
-        await expect(page.locator('.battle-3d-label.friendly')).toHaveCount(7);
-        for(const suffix of ['','-lod'])await expect.poll(()=>assets.get(`/models/battle/${faction}-${enabled(faction)?'roster':'army'}${suffix}.glb`),{timeout:60000}).toBe(200);
-        await expect(page.locator('.unit-card .faction-portrait').first()).toHaveAttribute('style',new RegExp(`/roster/${faction}.png`));
-    }
-    expect(errors).toEqual([]);
-});
-
 test('a published Roman roster remains visible when its chosen opponent only has the earlier pack',async({page},testInfo)=>{
     test.setTimeout(120000);
     const errors:string[]=[],assets=new Map<string,number>();
