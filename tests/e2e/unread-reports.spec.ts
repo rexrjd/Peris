@@ -60,6 +60,7 @@ test('pruned receipts opened through Reports and Rally clear the same private pe
     await expect(dialog).toBeVisible();
     await expect(nav.getByRole('button', { name: 'Reports, 1 unread', exact: true })).toHaveClass('has-unread');
     await dialog.getByRole('button', { name: 'Back to reports', exact: true }).click();
+    await page.getByRole('dialog',{name:'Reports',exact:true}).getByRole('button',{name:'Close',exact:true}).click();
     await nav.getByRole('button', { name: 'Rally Point', exact: true }).click();
     await page.getByRole('tab', { name: 'Reports', exact: true }).click();
     await page.getByRole('button', { name: /Pruned Rally receipt/ }).click();

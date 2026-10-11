@@ -1,0 +1,54 @@
+/* A small inbox over the current scene; opening it does not replace that scene. */
+.modal-backdrop.reports-popup-backdrop{background:#080c1240;backdrop-filter:none;padding:12px}
+.reports-popup-backdrop .modal.reports-popup{width:min(560px,calc(100vw - 24px));height:min(540px,70dvh);max-width:none;max-height:none;min-height:240px;padding:0;border:1px solid #ffffff19;border-radius:12px;overflow:hidden;box-shadow:0 18px 65px #0007;background:#171d26;color:#dce6f3}
+.reports-popup .modal-close{z-index:3;top:12px;right:12px;width:28px;height:28px;min-height:28px;font:22px/1 Arial,sans-serif;border:0;border-radius:6px;background:none;color:#889bb7}
+.reports-popup .modal-close:hover{background:#ffffff08;color:#edf2f8}
+.reports-popup .reports-page{display:flex;flex-direction:column;height:100%;min-height:0;padding:16px;width:100%;margin:0;font:12px/1.5 'Open Sans',Arial,sans-serif;color:#e2ebf6}
+.reports-popup .reports-page-heading{flex:none;margin-bottom:13px;padding-right:34px;gap:10px}
+.reports-popup .reports-page-heading h1{font:600 18px/1.3 'Open Sans',Arial,sans-serif;margin:0;color:#e8eef8;letter-spacing:-.3px}
+.reports-popup .reports-page-heading p{font-size:10px;line-height:1.5;margin:3px 0 0;color:#8395af}
+.reports-popup .reports-page-tabs button{font-size:10px;padding:5px 8px;min-height:29px}
+.reports-popup .report-inbox{border-radius:8px;flex:1;min-height:0}
+.reports-popup .report-inbox-toolbar{padding:6px 11px 0;gap:8px}
+.reports-popup .report-inbox-filters{gap:13px}
+.reports-popup .report-inbox-filters button{font-size:11px;padding-bottom:10px}
+.reports-popup .report-inbox .report-read-all{font-size:11px;padding:5px;min-height:31px;gap:5px}
+.reports-popup .report-inbox-searchbar{padding:9px 11px;gap:7px;flex-wrap:wrap}
+.reports-popup .report-inbox-searchbar>label{flex-basis:100%;height:32px}
+.reports-popup .report-inbox-searchbar select{flex:1;max-width:none;height:29px;font-size:10px;background:#171c24}
+.reports-popup .report-inbox-workspace{display:block;position:relative;overflow:hidden}
+.reports-popup .report-inbox-list{height:100%;border:0}
+.reports-popup .report-inbox-detail{display:none;height:100%}
+.reports-popup .report-inbox.has-selection .report-inbox-detail{display:block}
+.reports-popup .report-inbox.has-selection .report-inbox-list,.reports-popup .report-inbox.has-selection>.report-inbox-searchbar,.reports-popup .report-inbox.has-selection>.report-inbox-toolbar{display:none}
+.reports-popup .report-row{min-height:80px;padding:12px}
+.reports-popup .report-row-content>strong{font-size:12px}
+.reports-popup .report-row-content>small,.reports-popup .report-row-meta{font-size:10px}
+.reports-popup .report-detail-body{padding:18px}
+.reports-popup .report-detail-heading h2{font:600 19px/1.3 'Open Sans',Arial,sans-serif;margin:4px 0;letter-spacing:-.3px;color:#e5edf9;overflow-wrap:anywhere}
+.reports-popup .report-detail-body p{font-size:11px;line-height:1.65;margin:8px 0 0;color:#879bb7}
+.reports-popup .report-detail-nav{padding:0 12px}
+.reports-popup .report-key-stats{margin:18px 0;padding:14px 0}
+.reports-popup .report-key-stats strong{font-size:21px}
+.reports-popup .report-equipment>div{grid-template-columns:1fr}
+.reports-popup .chronicle-metrics{display:none}
+.reports-popup .chronicle-objectives{margin:0;padding:0}
+.reports-popup .milestone-grid{margin:0;padding:0;grid-template-columns:1fr 1fr;gap:9px}
+.reports-popup .reports-heading{margin:0 0 12px;padding:0}
+.reports-popup .milestone-grid article{padding:14px}
+.reports-popup .milestone-grid h3{font-size:13px}
+.reports-popup .milestone-grid p{font-size:11px}
+.reports-popup .restored-banner{padding:12px;gap:8px;flex-wrap:wrap}
+@media(max-width:600px){
+ .reports-popup-backdrop .modal.reports-popup{height:min(540px,calc(100dvh - 112px));width:calc(100vw - 24px)}
+ .reports-popup .reports-page{padding:13px 10px 10px}
+ .reports-popup .reports-page-heading{padding-right:29px;margin-bottom:11px}
+ .reports-popup .reports-page-tabs button{font-size:9px;padding:5px 6px}
+ .reports-popup .report-inbox-filters{gap:10px}
+ .reports-popup .report-inbox-toolbar{padding-inline:8px}
+ .reports-popup .report-inbox .report-read-all{font-size:10px;padding-inline:2px;gap:3px}
+ .reports-popup .report-inbox-searchbar{padding:8px}
+ .reports-popup .report-inbox-searchbar input{font-size:11px}
+ .reports-popup .report-detail-body{padding:15px 13px}
+ .reports-popup .milestone-grid{grid-template-columns:1fr}
+}

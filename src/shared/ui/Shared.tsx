@@ -10,12 +10,13 @@ export function Cost({ cost, resources, compact = false, showZero = false }: {
 }) {
     return <div className={`cost ${compact ? 'compact' : ''}`}>{RESOURCES.filter(k => showZero || cost[k] > 0).map(k => <span key={k} className={resources && resources[k] < cost[k] ? 'short' : ''} title={`${k}: ${cost[k]}`}><Icon name={k} size={compact ? 13 : 17}/><b>{cost[k].toLocaleString()}</b></span>)}</div>;
 }
-export function Modal({ title, children, onClose, className = '', heading = true }: {
+export function Modal({ title, children, onClose, className = '', heading = true, backdropClassName = '' }: {
     title: string;
     children: React.ReactNode;
     onClose: () => void;
     className?: string;
     heading?: boolean;
+    backdropClassName?: string;
 }) {
     const panel = useRef<HTMLElement>(null), close = useRef(onClose);
     close.current = onClose;
@@ -24,6 +25,8 @@ export function Modal({ title, children, onClose, className = '', heading = true
         const focusable = () => Array.from(panel.current?.querySelectorAll<HTMLElement>('button:not([disabled]),input:not([disabled]),select:not([disabled]),summary,a[href],[tabindex="0"]') ?? []).filter(e => e.offsetParent !== null);
         focusable()[0]?.focus();
         const key = (e: KeyboardEvent) => {
+            const topmost = Array.from(document.querySelectorAll('[role="dialog"][aria-modal="true"]')).at(-1);
+            if (topmost !== panel.current) return;
             if (e.key === 'Escape') {
                 e.stopPropagation();
                 e.preventDefault();
@@ -45,6 +48,6 @@ export function Modal({ title, children, onClose, className = '', heading = true
         window.addEventListener('keydown', key, true);
         return () => { window.removeEventListener('keydown', key, true); previous?.focus(); };
     }, []);
-    return <div className="modal-backdrop" onClick={e => { if (e.target === e.currentTarget)
+    return <div className={`modal-backdrop ${backdropClassName}`} onClick={e => { if (e.target === e.currentTarget)
         onClose(); }}><section ref={panel} className={`modal ${className}`} role="dialog" aria-modal="true" aria-label={title}><button className="modal-close" aria-label="Close" onClick={onClose}>×</button>{heading && <h2>{title}</h2>}{children}</section></div>;
 }

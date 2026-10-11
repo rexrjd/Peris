@@ -1,253 +1,85 @@
 {
-  "base_commit": "06a1a6d215748b270965d2c9c7ee9ddafa4a1bd4",
+  "base_commit": "d73a8a8884f12717e20eb33a96d4f068971d1825",
   "files": [
     {
       "path": "ARTWORK.md",
-      "sha256": "43a9c1cad2f6e2167c178d3ce2ea5b2e101c3f829a0f715c22dc4b3785990fc1"
+      "bytes": 17616,
+      "sha256": "8d3395ab1b1d549d6a0cc4091b73d87b74ee7fb73dee788c84082298abb3ca93"
     },
     {
-      "path": "REPORTS_INBOX_UPDATE.md",
-      "sha256": "1262b27ad070d73089239156c10e5127b7ba718c98cde0c8ceb650f157784250"
+      "path": "REPORTS_POPUP_UPDATE.md",
+      "bytes": 1813,
+      "sha256": "d0f3209c2ed9586407fe1d83527406b7b3122595f7926ad20471161c74b715dc"
     },
     {
-      "path": "assets/source/ui-low-poly-v1/rally.png",
-      "sha256": "33858185a1cbab124163256cbf6214bf2eaba7a7bb0fc749e91e9467f5ededb1"
+      "path": "assets/source/ui-low-poly-v1/reports.png",
+      "bytes": 710671,
+      "sha256": "075c461dba4bbcbd0f505d2202e6bd0f83a83e28c654ab7c8f2663770f35498b"
     },
     {
       "path": "assets/ui-low-poly-v1.json",
-      "sha256": "0dea6ec71b798942e9b2cd0d40d0b155c4cc90602da0d810a8fe7d3c0b5f358d"
+      "bytes": 8714,
+      "sha256": "7eb465192d343e331a208d7067787bc2d3f808a98173d48b62a2dcf01715481d"
     },
     {
-      "path": "public/art/ui/low-poly-v1/rally.webp",
-      "sha256": "41dd85e26e8f733a4e5e5cd193a5e7d77fbf14355d0bd634df75389d602f8c2f"
-    },
-    {
-      "path": "scripts/build-report-read-upgrade.mjs",
-      "sha256": "41c35096255002f33a27b79219cfceea266e5a7a1e28385ed7b67d4f7bf96908"
+      "path": "public/art/ui/low-poly-v1/reports.webp",
+      "bytes": 4902,
+      "sha256": "05e9cee420b22a96fb70b3f3dae915b49c311c287cfb222b5e69f9a0b7101738"
     },
     {
       "path": "src/app/App.tsx",
-      "sha256": "5a3c6ed01a298b529a97eb67d242d575d2219f21ca87a7221cd16ec874a9ac1e"
+      "bytes": 28947,
+      "sha256": "e3de7fba6c9f7f88695e471a319304f7fe2baa9673ca387af926121f260c8102"
     },
     {
-      "path": "src/app/styles/compact-header.css",
-      "sha256": "1a4183030ab28994ad841af04b523d066bd1b2012db8e6269c936c874823802e"
+      "path": "src/features/campaign/styles/reports-popup.css",
+      "bytes": 4423,
+      "sha256": "d4bbb437742a64d8fdbf69e4138530edb4780502f0a1f3d18358db20dc56db90"
     },
     {
-      "path": "src/engine/contracts.ts",
-      "sha256": "677b7eea7ab5e927cefa67ed5776643330e3d730ade29a75364fe99ae70bc34d"
-    },
-    {
-      "path": "src/engine/local/LocalEngine.ts",
-      "sha256": "ff1236ecc97d6b1edf2897b83c61861b4ce8ef7c51fd7b901652b22f58cad330"
-    },
-    {
-      "path": "src/engine/online/OnlineEngine.ts",
-      "sha256": "c2b0ca8309870de07442f7be076bf0d8b1610593731d91d733e5b1acb5562f26"
-    },
-    {
-      "path": "src/engine/online/rpcCommands.ts",
-      "sha256": "b02e9ffa1655b3d1ac200aeb7c6f4ba1d964314e8025bdbc38cae93e3ad8a8ea"
-    },
-    {
-      "path": "src/features/campaign/domain/reportInbox.ts",
-      "sha256": "89c7ab2e74241130128ed4e00dcea0cebbaf63ad35e12bae4dc57bd2de79c261"
-    },
-    {
-      "path": "src/features/campaign/domain/reports.ts",
-      "sha256": "47a44324eb9e129d7d7d1bee5d6979e940aab4facc86259a47896e9ab5870c1e"
-    },
-    {
-      "path": "src/features/campaign/styles/report-inbox.css",
-      "sha256": "b0b064e7903aacc822e54912c6f09cc695fabbdd8742808b613e1df56c9c5a57"
-    },
-    {
-      "path": "src/features/campaign/ui/Chronicle.tsx",
-      "sha256": "37b54fa00b6a77a5fc3ea926910908ec4c071a556b4aaca8c894f0471f1446cb"
-    },
-    {
-      "path": "src/features/campaign/ui/ReportDetails.tsx",
-      "sha256": "e0b1273f1ba1be69802442d8400e4cdc16f6584277a3b534dc2020ec56686835"
-    },
-    {
-      "path": "src/features/campaign/ui/ReportInbox.tsx",
-      "sha256": "53519fb6451466903fab87e39868da2bb38a5574f9c4a35e3b280765b6e774bf"
-    },
-    {
-      "path": "src/features/campaign/ui/useReportReads.ts",
-      "sha256": "bea8fcc4b23bc4f593fbef3fe971b0910518440bbc780c44931bc9bccf71d34d"
-    },
-    {
-      "path": "src/platform/storage/saves.ts",
-      "sha256": "23730064811ed188f6f03f4475843cc89a4dbfd16f26b8f38be25b3d60b132f1"
-    },
-    {
-      "path": "src/shared/model/commands.ts",
-      "sha256": "df23069566a4be04c2d5f86c62df43950f4eb97f020597f0ab709daf887a6c41"
-    },
-    {
-      "path": "src/shared/model/world.ts",
-      "sha256": "608d23123c8d692255649df5ebab4417eafefef0ab83dda5e6142b1ee6faaa4b"
+      "path": "src/features/campaign/ui/ReportsPopup.tsx",
+      "bytes": 503,
+      "sha256": "e233d3514c432b3ed0c8354d93f1599efc7d2649a82ad82ddfbf4e266c610e63"
     },
     {
       "path": "src/shared/ui/GameNavigation.tsx",
-      "sha256": "7f80a0da54ce7d35dfe97de5f259340ff75178a5703d7b12c804fbdc279b5ed8"
+      "bytes": 1386,
+      "sha256": "cd558b5435348399eacf37e909ef7499db09599e43b091e3265598663b4d8284"
     },
     {
       "path": "src/shared/ui/LowPolyIcon.tsx",
-      "sha256": "09add17f9dbdeb7fcfe84f05ebf029a3c4e74a95368f4d65d63681e43372fa22"
+      "bytes": 396,
+      "sha256": "78974a9164250d7c978616b1d672bf1c578dff4d6a4b955b08286dd2893a4384"
     },
     {
-      "path": "supabase/FRESH_INSTALL_V10.sql",
-      "sha256": "47d26cfc38071ad2b3d84d2e3cf2ffdc72e25e4f7e02e0497e13003d0f1c022f"
-    },
-    {
-      "path": "supabase/FRESH_INSTALL_V11.sql",
-      "sha256": "47d26cfc38071ad2b3d84d2e3cf2ffdc72e25e4f7e02e0497e13003d0f1c022f"
-    },
-    {
-      "path": "supabase/FRESH_INSTALL_V12.sql",
-      "sha256": "47d26cfc38071ad2b3d84d2e3cf2ffdc72e25e4f7e02e0497e13003d0f1c022f"
-    },
-    {
-      "path": "supabase/FRESH_INSTALL_V13.sql",
-      "sha256": "47d26cfc38071ad2b3d84d2e3cf2ffdc72e25e4f7e02e0497e13003d0f1c022f"
-    },
-    {
-      "path": "supabase/FRESH_INSTALL_V14.sql",
-      "sha256": "47d26cfc38071ad2b3d84d2e3cf2ffdc72e25e4f7e02e0497e13003d0f1c022f"
-    },
-    {
-      "path": "supabase/FRESH_INSTALL_V15.sql",
-      "sha256": "47d26cfc38071ad2b3d84d2e3cf2ffdc72e25e4f7e02e0497e13003d0f1c022f"
-    },
-    {
-      "path": "supabase/FRESH_INSTALL_V16.sql",
-      "sha256": "47d26cfc38071ad2b3d84d2e3cf2ffdc72e25e4f7e02e0497e13003d0f1c022f"
-    },
-    {
-      "path": "supabase/FRESH_INSTALL_V17.sql",
-      "sha256": "47d26cfc38071ad2b3d84d2e3cf2ffdc72e25e4f7e02e0497e13003d0f1c022f"
-    },
-    {
-      "path": "supabase/FRESH_INSTALL_V6.sql",
-      "sha256": "47d26cfc38071ad2b3d84d2e3cf2ffdc72e25e4f7e02e0497e13003d0f1c022f"
-    },
-    {
-      "path": "supabase/FRESH_INSTALL_V7.sql",
-      "sha256": "47d26cfc38071ad2b3d84d2e3cf2ffdc72e25e4f7e02e0497e13003d0f1c022f"
-    },
-    {
-      "path": "supabase/FRESH_INSTALL_V8.sql",
-      "sha256": "47d26cfc38071ad2b3d84d2e3cf2ffdc72e25e4f7e02e0497e13003d0f1c022f"
-    },
-    {
-      "path": "supabase/FRESH_INSTALL_V9.sql",
-      "sha256": "47d26cfc38071ad2b3d84d2e3cf2ffdc72e25e4f7e02e0497e13003d0f1c022f"
-    },
-    {
-      "path": "supabase/UPDATE_REPORT_READ_STATUS.sql",
-      "sha256": "e51d0e40ce17f2ad22d4133937339ad02e2be0c26484e79cac1abcd8cd2027b5"
-    },
-    {
-      "path": "supabase/UPGRADE_TO_V10.sql",
-      "sha256": "1a11a9c87fba5710edb5da9f271a7eec82691af0c37025803e80c919fb963289"
-    },
-    {
-      "path": "supabase/UPGRADE_TO_V11.sql",
-      "sha256": "1a11a9c87fba5710edb5da9f271a7eec82691af0c37025803e80c919fb963289"
-    },
-    {
-      "path": "supabase/UPGRADE_TO_V12.sql",
-      "sha256": "1a11a9c87fba5710edb5da9f271a7eec82691af0c37025803e80c919fb963289"
-    },
-    {
-      "path": "supabase/UPGRADE_TO_V13.sql",
-      "sha256": "1a11a9c87fba5710edb5da9f271a7eec82691af0c37025803e80c919fb963289"
-    },
-    {
-      "path": "supabase/UPGRADE_TO_V14.sql",
-      "sha256": "1a11a9c87fba5710edb5da9f271a7eec82691af0c37025803e80c919fb963289"
-    },
-    {
-      "path": "supabase/UPGRADE_TO_V15.sql",
-      "sha256": "1a11a9c87fba5710edb5da9f271a7eec82691af0c37025803e80c919fb963289"
-    },
-    {
-      "path": "supabase/UPGRADE_TO_V16.sql",
-      "sha256": "1a11a9c87fba5710edb5da9f271a7eec82691af0c37025803e80c919fb963289"
-    },
-    {
-      "path": "supabase/UPGRADE_TO_V17.sql",
-      "sha256": "1a11a9c87fba5710edb5da9f271a7eec82691af0c37025803e80c919fb963289"
-    },
-    {
-      "path": "supabase/UPGRADE_TO_V7.sql",
-      "sha256": "1a11a9c87fba5710edb5da9f271a7eec82691af0c37025803e80c919fb963289"
-    },
-    {
-      "path": "supabase/UPGRADE_TO_V8.sql",
-      "sha256": "1a11a9c87fba5710edb5da9f271a7eec82691af0c37025803e80c919fb963289"
-    },
-    {
-      "path": "supabase/UPGRADE_TO_V9.sql",
-      "sha256": "1a11a9c87fba5710edb5da9f271a7eec82691af0c37025803e80c919fb963289"
-    },
-    {
-      "path": "supabase/UPGRADE_V5_TO_V6.sql",
-      "sha256": "1a11a9c87fba5710edb5da9f271a7eec82691af0c37025803e80c919fb963289"
-    },
-    {
-      "path": "supabase/modules/campaign/report-reads.sql",
-      "sha256": "136ccfd716bf2efe352c26215a2d82228484a9630b887e182fb73c2761410338"
-    },
-    {
-      "path": "supabase/modules/security/permissions.sql",
-      "sha256": "465ca93ba15e6f69fe0784f9e63f85b5508509a2f7faabe99322e17b24f68ae9"
-    },
-    {
-      "path": "supabase/modules/snapshot/peris_snapshot.sql",
-      "sha256": "ea8ae73530b6c5ffb2fba3fd991e783b1fe1060b8d7a209139632b2ffe5ec9a9"
-    },
-    {
-      "path": "supabase/schema.sql",
-      "sha256": "1a11a9c87fba5710edb5da9f271a7eec82691af0c37025803e80c919fb963289"
+      "path": "src/shared/ui/Shared.tsx",
+      "bytes": 2811,
+      "sha256": "eb7e98cc318e589029e75c833bac89b42d7d76b697e5f1779e95a328ef02406d"
     },
     {
       "path": "tests/e2e/compact-header.spec.ts",
-      "sha256": "4581f217b040b974a065e914517449d084feecd67b1302b368b04f67d5fdfe7d"
+      "bytes": 3876,
+      "sha256": "aa8c1fe90090f77cf1989d22b7075744a9b51403a4779fcf7adfd69b060907ad"
     },
     {
       "path": "tests/e2e/online-report-reads.spec.ts",
-      "sha256": "bc3c02f34bb5da6d5a2f1959d97eac008b8ab67c2390f636a50f3b21aef41f68"
+      "bytes": 5012,
+      "sha256": "f622642dd666a69a4f7cd2f60b231df6edaf19616c41022568f875a59a08e401"
     },
     {
-      "path": "tests/e2e/report-economics.spec.ts",
-      "sha256": "41fac62e5c7a649ea171a2f87ff5ce13323251a0fc9d30ff1790e30e399793df"
-    },
-    {
-      "path": "tests/e2e/report-inbox.spec.ts",
-      "sha256": "239bc3a0f67d8f9774a8b67270aeabb4e4b9576242fa26e6c18d66cebc90dca9"
+      "path": "tests/e2e/reports-popup.spec.ts",
+      "bytes": 3587,
+      "sha256": "e4d45abc10afc2d7515af2df5644eed5fbd96cd0f15a9523b3a7c11055843701"
     },
     {
       "path": "tests/e2e/unread-reports.spec.ts",
-      "sha256": "260c036ab27304d2819a5df8832d1f902a1af9ccfd7a66a2d485bc78d67f5352"
+      "bytes": 9181,
+      "sha256": "a5a10aa52348b8cdde79ccbb6c6e7203605c16dacc4fced9a6f44b0925274827"
     },
     {
       "path": "tests/game-navigation.test.ts",
-      "sha256": "42a8cba8a1392fffba4a416a1590138e9c3c827bb4b261379788ac77e0e2db45"
-    },
-    {
-      "path": "tests/helpers/account-server.mjs",
-      "sha256": "a46d276d1c408dd930d8610210da7cb3c3bf54326e8cf52746380d92a85bd4a5"
-    },
-    {
-      "path": "tests/report-inbox.test.ts",
-      "sha256": "8e70faa08cbbb0ff1e912ac5616a4fe9ebcfa8fbd3ed826ff74670584ba18a51"
-    },
-    {
-      "path": "tests/report-reads-database.test.mjs",
-      "sha256": "197562da24e48c672a79e6b0c38efbdf8079e8e084cf5e13359b4ab51e286f5d"
+      "bytes": 3337,
+      "sha256": "bdbeded76e3fe0bb5a28ab2ffe0388843965e67dc4178d01ca0994eb74da5e3f"
     }
   ]
 }

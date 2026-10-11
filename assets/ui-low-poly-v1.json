@@ -4,6 +4,12 @@
   "method": "Built-in image generation, one original transparent painting per icon",
   "assets": [
     {
+        "id": "reports",
+        "prompt": "Use case: stylized-concept. Asset type: tiny strategy game navigation icon, square transparent PNG. Create one minimal low-poly isometric REPORTS picture: a short ivory parchment scroll with an open broad rectangular face, gently rolled top and bottom edges, and one small slate-blue wax seal in the lower corner. A single chunky compact silhouette, pale sand ivory paper, blue seal, simple faceted geometry and soft studio lighting. Match a small low-poly folded map, sandstone citadel, blue pennant and silver helmet navigation set. Readable at 24px. No lettering, no scribbles, no symbols, no outline, no frame, no scenery, no base tile, no shadow outside the object. Centre the complete object at 80% of the square with generous transparent margins. Genuinely transparent background. An original polished low-poly game object, not a line glyph.",
+        "source": "assets/source/ui-low-poly-v1/reports.png",
+        "image": "/art/ui/low-poly-v1/reports.webp"
+    },
+    {
         "id": "rally",
         "prompt": "Use case: stylized-concept. Asset type: tiny strategy game UI icon, square transparent PNG. Create one minimal low-poly isometric RALLY POINT picture: a short sturdy wooden flagpole with a large simple slate-blue swallowtail pennant, planted in a compact pale sandstone footing. One clear chunky silhouette with the flag as the main shape. Original fantasy game style, flat faceted geometry, soft lighting, readable at 24px. Restrained sand ivory slate blue palette matching a folded parchment map, sandstone citadel and silver helmet navigation set. No soldiers, no scenery, no tiny details, no outline, no text, no symbols, no frame, no base tile, no cast shadow outside the object. Centered object occupies 80% of the square. Genuinely transparent background. A polished small low-poly game object, not a line glyph.",
         "source": "assets/source/ui-low-poly-v1/rally.png",

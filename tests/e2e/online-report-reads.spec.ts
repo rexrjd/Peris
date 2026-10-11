@@ -50,7 +50,7 @@ test('shared-world report reads persist in PostgreSQL after browser receipts are
         await page.getByRole('button',{name:'Load older reports',exact:true}).click();
         await expect(page.locator('.report-row')).toHaveCount(62);
         await page.getByRole('button',{name:'Read all',exact:true}).click();
-        await expect(page.getByRole('status')).toContainText('Could not save report read status');
+        await expect(page.locator('.toast[role="status"]')).toContainText('Could not save report read status');
         await expect(nav.getByRole('button',{name:'Reports, 60 unread',exact:true})).toBeVisible();
         expect((await server.reports(owner)).filter((r:{read_at:string|null})=>!r.read_at)).toHaveLength(60);
         await page.getByRole('button',{name:'Read all',exact:true}).click();
