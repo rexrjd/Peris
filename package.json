@@ -46,7 +46,9 @@
     "test:hero-loot-db": "node --import tsx tests/hero-loot-database.test.mjs",
     "test:hero-loot-ui": "node tests/hero-loot-ui-render.test.mjs",
     "test:signup-db": "node tests/signup-database.test.mjs",
-    "test:accounts-db": "node tests/accounts-database.test.mjs"
+    "test:accounts-db": "node tests/accounts-database.test.mjs",
+    "test:account-directory-db": "node tests/account-directory-database.test.mjs",
+    "test:account-compatibility-db": "node --import tsx tests/account-compatibility-database.test.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.57.4",

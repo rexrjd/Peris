@@ -1,50 +1,53 @@
-# Name-only accounts and stable connections
+# Account entry and stable connections — V15
 
-## Player behaviour
+## Player experience
 
-- Enter the name and control that ruler. No password, email, account claim, or recovery code is involved. Knowing the name grants control, intentionally.
-- An existing name returns the same player UUID, cities, armies, heroes, equipment, queues and progress, including from a fresh device or cleared browser.
-- A new name creates one starting estate. Concurrent name allocation is serialized, and subsequent logins reuse it.
-- Names accept 2–20 ASCII letters, digits, spaces, `_` or `-`. Capitalization and surrounding spaces do not distinguish accounts: `Rex`, `rex` and ` Rex ` open the same ruler. The original display spelling is retained.
-- Refreshing an active shared-world tab resumes it automatically. **Menu → Switch ruler** returns to name entry and clears automatic resume for that tab. The last name remains prefilled.
-- Separate tabs can control different rulers. Switching one does not change the other. Multiple connections to the same ruler are allowed and use the existing authoritative game locks.
-- Expired/missing Auth sessions reconnect through the same name. Failed non-idempotent gameplay orders are not silently replayed. Network requests have a 20-second bound; reconnecting keeps the last valid realm visible.
+Shared world has two separate screens:
+
+- **Log in:** browse ruler portraits, search names, filter by race/activity, sort by activity/name/cities/hero level, and page through every account. The selected preview shows the capital, cities, armies, total population, strongest hero level, founding date and recent activity. **Log in by name** works when the roster is unavailable.
+- **Create account:** choose an unused name and one of eleven factions: Roman, Spartan, Persian, Egyptian, Orcs, Elves, Dwarves, Gnomes, Pandaren, Necropolis or Demons. The starting city and its army/hero appearance use that race immediately. The existing starter economy supplies one city, one army and one commander.
+
+Knowing a name intentionally grants control. No password, email or recovery code is involved. Login requires an existing name and allocates nothing. Creation rejects an occupied name without changing its ruler or race. Names accept 2–20 ASCII letters, digits, spaces, `_` or `-`, ignoring capitalization and surrounding spaces. Original spelling is retained.
+
+Refresh resumes the active tab. **Menu → Switch ruler** opens the account browser and disables automatic resume for that tab. The remembered ruler is selected when on the current page and prefilled under name entry. Tabs have independent connections. Expired/missing sessions reconnect to the same name, preserving V14 behavior. Failed non-idempotent gameplay orders are not automatically replayed; requests retain their 20-second bound.
+
+The roster defaults to all rulers. **Online** means a login/game snapshot was received within two minutes; **Last 24h** includes accounts seen within a day. This is approximate presence, not a live browser count. The roster refreshes every 45 seconds. Gameplay records activity at most once per 30 seconds. Older accounts without activity data remain available under All rulers.
 
 ## Install
 
-This changed-files update is based on `3a598fd`, including the Frontier Wars commit. The original account update was based on `6fcc0df`; this package merges both versions.
+Rebased on main `3ebbb81b84902b14bdaffcb3c9c769a09cee9780` (11 October 2026), including painted faction villages, garrisons, reviewed marches, manual farm batches and expanded Frontier Wars. The earlier V15 ZIP was based on `0f15994`; use this revised overlay with the current main checkout.
 
-1. Copy the included project files over the repository root containing `package.json`.
-2. Run the entire **`supabase/UPGRADE_TO_V14.sql`** in the current Supabase project's SQL Editor.
-3. Commit/deploy the frontend through the existing GitHub/Vercel flow.
-4. Enter the original ruler name. Existing player IDs and progress are retained.
+1. Apply the included files at the repository root containing `package.json`.
+2. Run the entire **`supabase/UPGRADE_TO_V15.sql`** in the existing project's SQL Editor before deploying this frontend, even if V14 is already installed.
+3. Run `npm ci`, project checks and the normal frontend deployment flow.
+4. Select an original ruler under **Shared world → Log in** to resume its progress.
 
-Anonymous sign-ins must remain enabled in Supabase Auth as in the current game. No service-role key, Edge Function, password provider or email configuration is needed. `FRESH_INSTALL_V14.sql` is exclusively for an empty database. No live SQL or frontend deployment was performed while preparing this update.
+The repeatable upgrade preserves player UUIDs, cities, armies, heroes, equipment, queues, progress, farm lists, target presets, garrisons and existing march cancellation/return fields. `FRESH_INSTALL_V15.sql` is exclusively for an empty database and refuses existing players. Anonymous Supabase sign-ins must remain enabled. No new Auth provider or service-role key is required. No live SQL/deployment/push was performed while preparing this update.
+
+Older generated installer aliases include current modules, following the existing generator convention; use the named V15 installer for this release. The frozen V14 and latest-main fixtures are historical test inputs, not deployment files.
+
+## Authority and privacy
+
+`peris_enter_account(name, mode, faction, creation_id)` handles explicit entry. Login requires an existing name. Creation requires an unused name, valid faction and request UUID. Allocation, faction selection and private creation receipt commit atomically. Repeating the same name/race/request returns the same estate, even from a fresh connection after a lost response. Changing a receipt's name/race is rejected.
+
+Auth UUIDs represent browser connections independently of durable ruler UUIDs. Private `peris_account_sessions` binds each connection to its ruler. A connection cannot redirect to another name; switching opens a fresh local session. Original identities, `peris_player_id()`, game RPCs, RLS policies and Auth-cleanup protection retain V14 compatibility. Tokens stay in per-tab session storage; only the remembered name is shared in local storage.
+
+Legacy `peris_login(text)` remains available for already deployed V14 clients, including their new-name allocation behavior. This V15 frontend uses explicit entry exclusively. Entry validates its receipt, settles offline queues and verifies player/city/army ownership before installing the world. A retry retains the creation UUID, and same-action requests are coalesced within a tab.
+
+`peris_account_directory` supplies a bounded public summary (1–100 rows; 12 per UI page) without requiring Auth signup. Search is literal; ordering has deterministic name/UUID tie-breakers. The strongest hero uses existing XP thresholds and the portrait's own army-home faction, which can differ from the capital faction.
+
+Public fields are ruler ID/name, capital name/race, city/army/population totals, strongest hero ID/class/home faction/level and activity/founding dates. Auth IDs, resource balances, troop counts, locations, routes, equipment and orders remain private. Activity/creation tables have RLS and no client privileges; the activity helper is private.
 
 ## Frontier Wars compatibility
 
-The Frontier launcher link, npm commands, separate SQL generator and unchanged-output optimization are preserved. Its application route, persistent Node authority, gameplay and saved data remain as committed on main. `FRONTIER_LOCAL.sql` continues to be generated separately and is excluded from the Shared world installers.
-
-Name-only account recovery applies to **Shared world**. Frontier Wars remains the separate local milestone described in `docs/frontier-wars.md`, with its own browser cookie and database. Its accounts are not combined with Shared world accounts by this update.
-
-## Implementation
-
-Supabase Auth supplies the browser connection, independently of the durable ruler account. `peris_login(text)` resolves the name and privately binds the Auth UUID to the persistent player UUID. A bound connection cannot be redirected to a different name; switching opens a fresh local connection. Old browser identities retain their original account for compatibility. Name allocation and individual connection binding use transaction locks, with the existing land-allocation lock retained for a genuinely new city.
-
-`peris_player_id()` resolves the caller's ruler. Active game RPCs, private snapshots and ownership policies use it, including heroes, equipment, settlers, resources, multiplayer invitations and battles. The mapping table has no client read/write privileges. The argument-free identity helper is executable for RLS and reveals only the caller's ruler ID. The old Auth-user foreign key on `players` is removed while all player UUIDs and game references are preserved, so removing an obsolete anonymous Auth user does not cascade into the estate.
-
-Auth tokens live in per-tab session storage with an independent live-client broadcast/lock key. Supabase refreshes them normally; the adapter recovers the name binding when a session expires. Only the remembered name is shared in local storage. Storage-disabled tabs use memory for the current connection.
-
-Account entry validates the login receipt, settles offline queues before its first snapshot, and verifies that the loaded player/city/army belong to the selected ruler. A different or empty account snapshot cannot replace the current world. Duplicate login attempts are coalesced, and recovering an engine cannot change its persistent player ID.
+The launcher link, npm commands, separate `FRONTIER_LOCAL.sql` generator and unchanged-output optimization remain. Frontier Wars keeps its Node authority, cookie and local database. These account changes apply to Shared world; the two modes' accounts are not combined. See [Frontier Wars](frontier-wars.md).
 
 ## Verification
 
-`npm run test:accounts-db` upgrades a frozen V13 installation twice and checks that existing IDs, multiple cities and armies, commanders, XP, equipment, pending recruitment and camp progress are unchanged. It covers fresh-device recovery, case/space variants, old sessions, repeated/new-name logins, invalid names, private mapping permissions, ownership policy conversion, recovered-ruler construction/hero commands, rival-action rejection, selected-army PvP invitations and accepted automatic battles. It also deletes the original anonymous Auth user in the isolated database and confirms the ruler and progress remain accessible by name.
+`npm run test:account-directory-db` tests frozen V14 upgrades twice, account/estate preservation, all eleven races, strict login, duplicates, receipt retries across connections, accurate empire/hero stats, pagination/search/filters, privacy, activity throttling and fresh-install safeguards. `npm run test:accounts-db` retains V13 preservation, Auth cleanup, multiple cities/armies, equipment, queues, rival-action rejection and accepted automatic PvP checks.
 
-Client tests cover session reuse, cleared storage, name switching, expired JWT/refresh tokens, invalid input, offline failures, queue settlement order, and mismatched or incomplete snapshots. `tests/e2e/accounts.spec.ts` uses an isolated Auth stand-in backed by the actual V14 game SQL to exercise the real frontend without changing the production Supabase project.
+`npm run test:account-compatibility-db` starts from the frozen `3ebbb81` installer, saves a farm target and troop pool, dispatches a partial raid, then applies V15 twice. It compares every persisted game row exactly, opens the same ruler from a new connection, cancels the pre-upgrade order once and dispatches the saved farm batch without changing troop totals. It also verifies race creation, legacy-client access and private farm/garrison permissions. Account browser checks verify that the selected race reaches the new painted village with its six starting plots and Quick access retained. The existing city suite covers growth to sixteen plots.
 
-Passed: 302 gameplay/client tests (one existing skip), production build, tooling, asset validation, SQL/world/camp generation checks, and isolated signup, account migration, fresh-install, economy/PvP, Empire/heroes, hero-loot, territory, automatic-battle and map-snapshot database suites. Four browser tests passed across desktop and mobile, covering refresh, fresh-device recovery, case/space normalization, name switching, token expiry, cleared tokens, main-menu refresh, and independent tabs. Screenshots were inspected. The browser run used Chromium 153 with software graphics, Canvas fallback, and video capture disabled in a private test configuration because the normal browser/video binaries were unavailable; no game assertions were removed. This does not measure hosted Supabase performance or high-player concurrency.
+Unit checks cover session reuse, cleared storage, switching, expired tokens, validation, action/nonce preservation, offline settlement and mismatched/incomplete snapshots. Browser tests use the real frontend and generated V15 SQL behind isolated Auth/HTTP adapters, without changing production accounts. They cover desktop/mobile creation, race choice, duplicates, missing-name rejection, roster filtering/pagination/keyboard selection, failed-directory retry/name fallback, fresh-device login, reload, token expiry and independent tabs. Screenshots are visually inspected.
 
-### Compatibility follow-up on main `3a598fd`
-
-The merged update passes 309 gameplay/client tests (one existing skip), all 15 Frontier server tests, Frontier type checking, four tooling tests, validation of 46 registered models, production build, and world/camp/SQL generation checks. Account migration, general database and fresh-install suites pass. All four account browser checks and both Frontier browser checks pass on desktop/mobile; the Frontier tests enter through the merged launcher link and exercise recruitment, raids, return/delivery, farm presets and reload. These use isolated databases and the same Chromium 153/Canvas configuration described above, with a unique disposable Frontier database directory. Account screenshots were inspected. The V14 account SQL is byte-identical to the previously tested package, and the separate Frontier SQL remains identical to main.
+Browser QA uses Chromium 153, software graphics and Canvas fallback for account flows, with video disabled in a private environment configuration. Frontier browser checks use a separate disposable database. This does not measure hosted Supabase latency or multiplayer load capacity.

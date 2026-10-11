@@ -39,6 +39,8 @@
   "accounts/create_player.sql",
   "accounts/login.sql",
   "factions/city-factions.sql",
+  "accounts/directory.sql",
+  "accounts/access.sql",
   "snapshot/peris_snapshot.sql",
   "snapshot/peris_map_snapshot.sql",
   "battle/automatic.sql",

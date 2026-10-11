@@ -1,46 +1,62 @@
-PERIS V14 — NAME-ONLY ACCOUNTS / FRONTIER COMPATIBILITY UPDATE
-Based on main 3a598fde295c6dd3d62db81de430b5aac29ef388
-Latest reviewed commit: Add persistent Frontier Wars mercenary camp loop
-Commit time: 10 October 2026, 23:00 Europe/Bucharest
+PERIS V15 — ACCOUNT BROWSER, REVISED FOR CURRENT MAIN
 
-This replaces the earlier account ZIP based on 6fcc0df. The old ZIP would
-remove parts of Frontier support if simply copied onto new main.
-This package merges README.md, package.json, scripts/build-sql.mjs and
-src/features/menu/ui/Login.tsx, preserving both updates. The Frontier browser
-regression now enters through its launcher link.
+Based on rexrjd/Peris main:
+3ebbb81b84902b14bdaffcb3c9c769a09cee9780 (11 October 2026).
+Replaces the original V15 overlay based on 0f15994.
 
 INSTALL
-1. Start from latest main containing 3a598fd. Preserve any personal edits.
-2. Copy the included project files over the root containing package.json.
-3. If V14 has not been applied, run the ENTIRE supabase/UPGRADE_TO_V14.sql
-   in Supabase SQL Editor before deploying the updated frontend.
-   Already applied V14? Its SQL is unchanged; no repeat migration is needed.
-4. Commit/deploy the merged frontend through the existing GitHub/Vercel setup.
-5. Enter your original ruler name to return to the same account.
+1. Update your project checkout to current main at the commit above.
+2. Extract this revised changed-files ZIP over that repository root.
+3. Run the ENTIRE supabase/UPGRADE_TO_V15.sql in the existing Supabase SQL Editor.
+4. Run npm ci and project checks, then build/deploy the frontend normally.
+5. Open Shared world: Log in to an existing ruler or Create account with a race.
 
-No database reset. Existing player IDs, cities, armies, heroes, equipment,
-queues and progress are retained. FRESH_INSTALL_V14.sql is for an empty DB only.
-No repository push, live SQL or frontend deployment was performed here.
+If your database already received the original V15 update, run this REVISED
+UPGRADE_TO_V15.sql again. It combines the account additions with all current
+march, garrison and farm logic. The migration is repeatable and preserves data.
+FRESH_INSTALL_V15.sql is exclusively for an EMPTY database; it refuses an
+existing campaign. Anonymous sign-ins must remain enabled.
+Historical SQL files in tests/fixtures are NOT installation files.
 
-FRONTIER WARS
-Its launcher link, npm commands, separate local SQL generation, unchanged-file
-optimization and existing feature code are preserved. Its Node authority,
-local database and cookie identity remain separate from Shared world.
-Name-only recovery applies to Shared world. Frontier still has the local
-identity limitations documented by your friend in docs/frontier-wars.md.
-Do not paste FRONTIER_LOCAL.sql into the live Shared world database.
+ACCOUNT FEATURES
+- Separate Log in / Create account screens, portrait roster and ruler preview.
+- Search, race/activity filters, sorting, pagination and keyboard/mobile entry.
+- Stats: cities, armies, population, strongest hero level and recent activity.
+- Eleven starting races, including Roman, Spartan, Persian and Egyptian humans.
+- Missing-name login creates nothing; duplicate-name creation overwrites nothing.
+- Creation receipts survive lost responses and fresh-session retries.
+- Refresh, account switching, session recovery and independent tabs retained.
+Knowing the ruler name intentionally grants control without a password.
 
-VERIFIED ON CURRENT MAIN
-309 gameplay/client tests passed, one existing skip; 15 Frontier server tests;
-Frontier TypeScript check; 4 tooling tests; 46 model validations; production build;
-world/bandit/SQL generation checks; isolated account/general/fresh database suites.
-All 4 account and 2 Frontier browser tests passed across desktop and mobile.
-Frontier recruitment, raids, return/loot delivery, farm presets and reload pass.
-Account recovery, switches, expiry, reload and independent tabs pass.
-Browser checks used Chromium 153; account rendering used Canvas fallback;
-video disabled in a private test config. No assertions were removed.
-No hosted Supabase or high-player concurrency benchmark was performed.
-Account SQL matches the previous delivery, and Frontier SQL matches main.
+COMPATIBILITY
+The old V15 ZIP overlaps recent commits and would replace newer App, engine,
+styles and generated SQL. This version merges the account delta onto current
+main instead. Painted cities, village ledgers, Quick access, new army-culture
+handling, garrisons, cancellable/returning marches, farm lists and the expanded
+Frontier system are retained. Selected race reaches the painted starter village
+and correct troop labels; initial plots and city growth follow current main.
+Frontier retains its separate authority, accounts, data and deployment flow.
 
-CHANGED FILES ONLY — 69 project files. Full source details and installation
-instructions: docs/name-only-accounts.md. File hashes: ACCOUNT_UPDATE_FILES.json.
+This is a changed-files overlay, not a complete repository. No game asset
+changes/downloads are needed. ACCOUNT_UPDATE.patch is an alternative for applying
+or reviewing the source delta on an untouched target checkout; do not apply it
+after extracting the overlay. No hosted SQL, deployment or repository push
+was performed. See ACCOUNT_UPDATE_COMPATIBILITY.txt for reviewed commits and
+merge details, docs/name-only-accounts.md for behavior, and
+ACCOUNT_UPDATE_FILES.json for baseline and file hashes.
+
+VALIDATION
+- 369 gameplay/client unit checks passed; one existing skip.
+- All 29 Frontier server checks passed.
+- Nine isolated database suites passed: historical account/directory migration,
+  exact current-main migration, general integration, fresh-install guard,
+  garrisons, reviewed marches, saved farms and manual farm batches.
+- Ten production-build account browser checks passed across desktop/mobile.
+- Six production city/farm browser checks passed across desktop/mobile: painted
+  sixteen-plot layout, construction fallback and reviewed farm-list batches.
+- Production build, Frontier types, four tooling checks, 46 model validations,
+  world/camp/SQL generation checks and diff formatting passed.
+Browser QA uses Chromium 153 with software graphics; account flows use the
+Canvas fallback. This does not establish hosted-service load or GPU performance.
+The development-server run had a mobile reload timeout; the same assertions
+passed on the production build without changing their time limits.

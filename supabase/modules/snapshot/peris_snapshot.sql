@@ -2,6 +2,7 @@ create or replace function public.peris_snapshot()returns jsonb language plpgsql
 declare u uuid:=public.peris_player_id();result jsonb;
 begin
  if u is null then raise exception 'Authentication required';end if;
+ perform public.peris_note_account_activity();
  perform public.peris_city_migrate(s.id) from public.settlements s where s.owner_id=u;
  select jsonb_build_object('version',6,'server_now',now(),
  'debug_enabled',coalesce((select enabled from public.peris_debug_config where id),false),

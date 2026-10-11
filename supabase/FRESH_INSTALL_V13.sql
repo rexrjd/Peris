@@ -1,10 +1,10 @@
--- PERIS v7 fresh installation. ONLY for an EMPTY Supabase project.
--- Existing v5/v6/v7 world: use UPGRADE_TO_V7.sql. This file refuses existing players.
+-- PERIS V15 fresh installation. ONLY for an EMPTY Supabase project.
+-- Existing world: use UPGRADE_TO_V15.sql. This file refuses existing players.
 begin;
 do $$ declare occupied boolean;begin
  if to_regclass('public.players') is not null then
  execute 'select exists(select 1 from public.players)' into occupied;
- if occupied then raise exception 'A Peris campaign already exists. Use UPGRADE_TO_V7.sql to preserve it.';end if;
+ if occupied then raise exception 'A Peris campaign already exists. Use UPGRADE_TO_V15.sql to preserve it.';end if;
  end if;
 end $$;
 -- PERIS V5 - TOTAL WAR STYLE BATTLE PROTOTYPE RESET
@@ -21,6 +21,8 @@ drop table if exists public.buildings cascade;
 drop table if exists public.settlements cascade;
 drop table if exists public.spawn_points cascade;
 drop table if exists public.peris_account_sessions cascade;
+drop table if exists public.peris_account_creations cascade;
+drop table if exists public.peris_account_activity cascade;
 drop table if exists public.players cascade;
 
 drop function if exists public.create_peris_world_for_player() cascade;
@@ -987,7 +989,7 @@ begin
 exception when duplicate_object then null;
 end $$;
 
--- PERIS v14 · Stable name-only ruler accounts. Run the complete generated file in Supabase SQL Editor.
+-- PERIS v15 · Account directory and race selection. Run the complete generated file in Supabase SQL Editor.
 -- Requires the v5 schema. Preserves players, settlements, resources and armies.
 -- Safe to run again. No Auth users or campaign data are deleted.
 
@@ -3681,10 +3683,123 @@ begin
 end $$;
 revoke all on function public.peris_set_faction(text),public.peris_debug_city(text,text,integer) from public,anon;
 grant execute on function public.peris_set_faction(text),public.peris_debug_city(text,text,integer) to authenticated;
+-- Public ruler summaries only; connection IDs, resources, troops and orders stay private.
+create table if not exists public.peris_account_activity(
+ player_id uuid primary key references public.players(id) on delete cascade,
+ last_seen_at timestamptz not null default now()
+);
+create table if not exists public.peris_account_creations(
+ request_id uuid primary key,player_id uuid not null unique references public.players(id) on delete cascade,
+ faction text not null
+);
+alter table public.peris_account_activity enable row level security;
+alter table public.peris_account_creations enable row level security;
+revoke all on public.peris_account_activity,public.peris_account_creations from public,anon,authenticated;
+create index if not exists peris_account_activity_recent on public.peris_account_activity(last_seen_at desc);
+create index if not exists peris_heroes_owner on public.peris_heroes(owner_id);
+insert into public.peris_account_activity(player_id,last_seen_at)
+ select player_id,max(created_at) from public.peris_account_sessions group by player_id
+ on conflict(player_id)do nothing;
+
+create or replace function public.peris_note_account_activity()returns void
+language plpgsql security definer set search_path='' as $$
+declare u uuid:=public.peris_player_id();
+begin
+ if u is null or not exists(select 1 from public.players where id=u)then return;end if;
+ insert into public.peris_account_activity(player_id,last_seen_at)values(u,now())
+ on conflict(player_id)do update set last_seen_at=excluded.last_seen_at
+ where public.peris_account_activity.last_seen_at<now()-interval '30 seconds';
+end $$;
+
+create or replace function public.peris_account_directory(
+ p_search text default '',p_faction text default null,p_activity text default 'all',
+ p_sort text default 'active',p_offset integer default 0,p_limit integer default 24
+)returns jsonb language plpgsql stable security definer set search_path='' as $$
+declare result jsonb;
+begin
+ if p_search is null or length(p_search)>40 or p_offset is null or p_offset<0 or p_offset>1000000
+ or p_limit is null or p_limit<1 or p_limit>100 or p_activity is null or p_activity not in('all','online','recent')
+ or p_sort is null or p_sort not in('active','name','cities','hero')
+ or(p_faction is not null and p_faction not in('roman','spartan','persian','egyptian','orc','elf','dwarf','gnome','pandaren','undead','demon'))
+ then raise exception 'Invalid account filters' using errcode='22023';end if;
+ with summaries as (
+  select p.id player_id,p.display_name,p.created_at joined_at,a.last_seen_at,
+   coalesce(a.last_seen_at>now()-interval '2 minutes',false)online,
+   cap.faction,cap.name capital_name,c.city_count,c.population,
+   (select count(*)::integer from public.armies ar where ar.owner_id=p.id)army_count,
+   h.id hero_id,h.class hero_class,coalesce(h.faction,cap.faction)hero_faction,
+   case when h.id is null then 0 else(select max(l)from generate_series(1,20)l where 50*l*(l-1)<=h.experience)end hero_level
+  from public.players p
+  join lateral(select s.name,s.faction from public.settlements s where s.owner_id=p.id order by s.id limit 1)cap on true
+  join lateral(select count(*)::integer city_count,coalesce(sum(s.population),0)::bigint population from public.settlements s where s.owner_id=p.id)c on true
+  left join public.peris_account_activity a on a.player_id=p.id
+  left join lateral(select hero.id,hero.class,hero.experience,home.faction from public.peris_heroes hero
+   left join public.armies army on army.id=hero.army_id
+   left join public.settlements home on home.id=army.home_settlement_id
+   where hero.owner_id=p.id order by hero.experience desc,hero.id limit 1)h on true
+  where strpos(lower(p.display_name),lower(btrim(p_search)))>0
+   and(p_faction is null or cap.faction=p_faction)
+   and(p_activity='all' or p_activity='online' and a.last_seen_at>now()-interval '2 minutes'
+    or p_activity='recent' and a.last_seen_at>now()-interval '24 hours')
+ ),ordered as (
+  select s.*,row_number()over(order by
+   case when p_sort='active' then s.last_seen_at end desc nulls last,
+   case when p_sort='cities' then s.city_count end desc,
+   case when p_sort='hero' then s.hero_level end desc,
+   lower(s.display_name),s.player_id)ordinal from summaries s
+ ),page as(select * from ordered order by ordinal offset p_offset limit p_limit)
+ select jsonb_build_object('server_now',now(),'total',(select count(*)from summaries),
+  'accounts',coalesce((select jsonb_agg(to_jsonb(page)-'ordinal' order by ordinal)from page),'[]'::jsonb))into result;
+ return result;
+end $$;
+-- Login never allocates; creation never silently takes over an occupied name.
+-- A creation UUID makes a lost-response retry safe even after reconnecting.
+create or replace function public.peris_enter_account(
+ p_display_name text,p_mode text default 'login',p_faction text default null,p_creation_id uuid default null
+)returns jsonb language plpgsql security definer set search_path='' as $$
+declare u uuid:=auth.uid();n text:=btrim(p_display_name);r public.players%rowtype;
+ bound uuid;prior public.peris_account_creations%rowtype;receipt jsonb;created boolean:=false;
+begin
+ if u is null then raise exception 'Authentication required' using errcode='42501';end if;
+ if n is null or n!~'^[A-Za-z0-9 _-]{2,20}$'or p_mode is null or p_mode not in('login','create')then
+  raise exception 'Choose a valid ruler name and account action' using errcode='22023';end if;
+ if p_mode='create' and(p_creation_id is null or p_faction is null or p_faction not in('roman','spartan','persian','egyptian','orc','elf','dwarf','gnome','pandaren','undead','demon'))then
+  raise exception 'Choose a race for your new account' using errcode='22023';end if;
+ perform pg_advisory_xact_lock(hashtextextended(u::text,72215));
+ select player_id into bound from public.peris_account_sessions where auth_id=u;
+ if bound is null and exists(select 1 from public.players where id=u)then bound:=u;end if;
+ if bound is not null and not exists(select 1 from public.players where id=bound and lower(display_name)=lower(n))then
+  raise exception 'Choose a fresh browser session to switch rulers' using errcode='PT409';end if;
+ perform pg_advisory_xact_lock(hashtextextended(lower(n),72214));
+ select * into r from public.players where lower(display_name)=lower(n);
+ if p_mode='login' then
+  if r.id is null then raise exception 'No account has that name. Choose Create account to start a realm.' using errcode='PT404';end if;
+ else
+  perform pg_advisory_xact_lock(hashtextextended(p_creation_id::text,72216));
+  select * into prior from public.peris_account_creations where request_id=p_creation_id;
+  if prior.player_id is not null then
+   if r.id is distinct from prior.player_id or prior.faction<>p_faction then
+    raise exception 'This creation request belongs to another name or race' using errcode='22023';end if;
+  elsif r.id is not null then
+   raise exception 'That name already belongs to a ruler. Log in or choose another name.' using errcode='PT422';
+  else
+   receipt:=public.peris_login(n);
+   select * into r from public.players where id=(receipt->>'player_id')::uuid;
+   update public.settlements set faction=p_faction where owner_id=r.id;
+   update public.armies set name='First host' where owner_id=r.id;
+   insert into public.peris_account_creations(request_id,player_id,faction)values(p_creation_id,r.id,p_faction);
+  end if;
+  created:=true;
+ end if;
+ receipt:=public.peris_login(n);
+ perform public.peris_note_account_activity();
+ return receipt||jsonb_build_object('created',created);
+end $$;
 create or replace function public.peris_snapshot()returns jsonb language plpgsql security definer set search_path='' as $$
 declare u uuid:=public.peris_player_id();result jsonb;
 begin
  if u is null then raise exception 'Authentication required';end if;
+ perform public.peris_note_account_activity();
  perform public.peris_city_migrate(s.id) from public.settlements s where s.owner_id=u;
  select jsonb_build_object('version',6,'server_now',now(),
  'debug_enabled',coalesce((select enabled from public.peris_debug_config where id),false),
@@ -3950,6 +4065,8 @@ grant execute on function public.peris_collect_garrison(bigint,jsonb)to authenti
 -- The argument-free identity helper is required by RLS; it exposes only the
 -- caller's current ruler UUID. Session bindings themselves remain inaccessible.
 grant execute on function public.peris_player_id(),public.peris_login(text)to authenticated;
+grant execute on function public.peris_enter_account(text,text,text,uuid)to authenticated;
+grant execute on function public.peris_account_directory(text,text,text,text,integer,integer)to anon,authenticated;
 grant execute on function public.peris_claim_field(integer,integer),public.peris_queue_field(integer,integer,text),public.peris_set_faction(text),public.peris_debug_city(text,text,integer),public.peris_snapshot(),public.peris_map_snapshot(integer,integer,integer,integer),public.peris_march(integer,integer,jsonb),public.peris_queue_upgrade(text),public.peris_queue_slot(integer,text),public.peris_research_spell(text),public.peris_cast_spell(bigint,text,bigint),public.peris_queue_recruit(text,integer),public.peris_raid(integer),public.peris_ready(bigint),
  public.peris_order(bigint,jsonb),public.peris_tick(bigint),public.peris_rally(bigint),public.peris_challenge(uuid),public.peris_respond(bigint,boolean),public.peris_claim(text),public.peris_rename(text)to authenticated;
 

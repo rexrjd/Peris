@@ -10,6 +10,7 @@ import { findMarchPath } from '../../features/map/domain/pathfinding';
 import { isWalkable } from '../../features/map/domain/worldGrid';
 import { supabase } from '../../platform/backend/supabase';
 import { loginAccount } from '../../platform/backend/accounts';
+import type { AccountEntry } from '../../platform/backend/accountLogin';
 import { expiredSession } from '../../platform/backend/accountLogin';
 import { rememberRuler } from '../../platform/backend/accountStorage';
 
@@ -348,8 +349,8 @@ export class OnlineEngine implements GameEngine {
     };
 }
 
-export async function enterOnline(name: string): Promise<OnlineEngine> {
-    const account = await loginAccount(name);
+export async function enterOnline(name: string, entry?: AccountEntry): Promise<OnlineEngine> {
+    const account = await loginAccount(name, entry);
     const engine = new OnlineEngine(account.ruler.player_id, account.world, account.sessionId);
     rememberRuler(account.ruler.display_name);
     return engine;

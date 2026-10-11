@@ -130,3 +130,13 @@ If creating a ruler reports **canceling statement due to statement timeout**, ru
 Enter a ruler name to control that account. Names are case-insensitive and ignore surrounding spaces. Existing names reopen their original realm from any browser; new names create one starter city, army and commander. Page refreshes resume the current realm, expired sessions reconnect by name, and **Menu → Switch ruler** returns to name entry. Each tab has an independent connection. Knowing a name is intentionally sufficient to control its account.
 
 Apply **`supabase/UPGRADE_TO_V14.sql`** to the existing database before deploying this frontend. Player IDs and progress remain intact, and anonymous Auth-user cleanup no longer deletes a ruler. Use `FRESH_INSTALL_V14.sql` only for an empty database. See [account stability](docs/name-only-accounts.md).
+
+### V15: account browser and race selection
+
+Shared world now has separate **Log in** and **Create account** screens. Browse all rulers through searchable portrait cards, race/activity filters and pagination. Select a ruler to see cities, armies, total population, strongest hero level and recent activity, then enter their realm. You can also log in by typing an existing name.
+
+Creation requires an unused name and one of the eleven races, including the four human cultures. The first city and its army/hero appearance use that race immediately. Login does not create a missing account; creation does not overwrite an occupied name. Lost-response retries reuse the same creation request and estate. Name-based control, independent tabs and session recovery remain as in V14.
+
+Run the entire **`supabase/UPGRADE_TO_V15.sql`** before deploying this frontend. Use `FRESH_INSTALL_V15.sql` only for an empty project. Frontier Wars remains a separate local mode. See [account entry and stability](docs/name-only-accounts.md).
+
+The revised V15 overlay targets main `3ebbb81` and keeps the painted faction villages, private garrisons, thirty-second march cancellation, farm lists and current Frontier authority. `npm run test:account-compatibility-db` verifies migration from that exact main snapshot, including live orders and troop conservation.

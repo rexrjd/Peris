@@ -1,0 +1,62 @@
+PERIS V15 — COMPATIBILITY REVIEW, 11 OCTOBER 2026
+
+Target: rexrjd/Peris main at 3ebbb81b84902b14bdaffcb3c9c769a09cee9780.
+Previous V15 overlay baseline: 0f159942434cb575217ed22f8793849e9cf8d0f8.
+Scope: 15 new commits; 212 changed files. Includes overnight commits through
+11 October rather than excluding them by the user's "yesterday" description.
+
+REVIEWED CHANGES
+1b9f7bc, 4492be5, b1a4886, fc7bf94: reviewed camp raids, farm-list batches,
+village ledgers, centered upgrade dialogs, faction-painted villages, walls,
+roads and decorative residents.
+cdc9b34, e404356, 5cca59e, 0f13923: integrated Frontier/account/city branches.
+Frontier includes its separate Node authority, saved farms, troop research,
+resource economy, reports, recurring schedules and camp landscape.
+35072af, 79bd9c8, 31f3ae3, 191c8f1, 6fc9729, 3ebbb81: troop-culture lookup,
+3D suspension/input, first-frame loading, paused battle poses and bounded
+browser coverage. 53566d8 integrates the city branch into main.
+
+COMPATIBILITY RESOLUTIONS
+The old ZIP must not be overlaid unchanged on current main. Its App, online
+engine, styles and generated SQL predate major gameplay changes.
+- Applied the account-only delta to current main using three-way source merges.
+- Retained the current App's Quick access, city shortcuts, farm-list controls
+  and quiet bandit battles while forwarding login/create account options.
+- Retained online subscriptions to farms/garrisons, manual farm routes and
+  immediate army-culture refresh on new battles.
+- Kept march, painted-city and village-screen CSS imports; scoped account CSS
+  follows them without changing the in-game city theme.
+- Kept new farm/garrison snapshot fields and public RPC grants; added account
+  entry, directory, presence and creation receipts alongside them.
+- Regenerated all SQL aliases from the merged module manifest. This retains
+  authoritative garrisons, partial raids, cancellation and return logic.
+- Preserved the friend’s foreground-tab calls in account browser tests.
+- Adapted the historical V14 migration assertion to require neutral values
+  for newly introduced march fields, while checking every prior value exactly.
+- Added a frozen current-main SQL fixture and migration regression covering
+  live orders, farms, troops, fresh-device ownership and legacy clients.
+- Added browser verification of selected race → painted starter village,
+  six initial plots, and retained Quick access; existing growth remains intact.
+
+Frontier source, FRONTIER_LOCAL.sql, garrison, march and farm SQL modules are
+byte-identical to current main. No game assets or rendering sources are changed.
+Account selection still intentionally grants control by ruler name.
+
+INSTALLATION ORDER
+First update the repository to the target main commit or a reviewed descendant.
+Apply this revised overlay, not the previous ZIP. Run UPGRADE_TO_V15.sql in the
+existing Supabase database before deploying the frontend. Use fresh install
+only on an empty database. Retain the separate Frontier deployment flow.
+Historical fixtures under tests/fixtures are test inputs, not installation SQL.
+
+No hosted database writes, production deployment, repository push or force
+push were performed. Validation uses isolated databases and local browsers;
+it does not establish hosted multiplayer load or hardware-GPU performance.
+
+VALIDATED COMBINED RESULT
+369 unit checks (one existing skip), 29 Frontier server checks, nine isolated
+database suites, ten account and six city/farm browser checks on the production
+build. Tooling, asset validation, frontend build, Frontier types, world/camp/SQL
+generation and whitespace checks pass. Desktop/mobile screenshots were inspected.
+The development-server run had a mobile module-loading/reload timeout; the same
+assertions pass on the production build without increasing their time limits.
