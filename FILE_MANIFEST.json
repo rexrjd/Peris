@@ -1,85 +1,35 @@
 {
-  "base_commit": "d73a8a8884f12717e20eb33a96d4f068971d1825",
+  "base_commit": "12012a4b1da51cef4783cce93c73e4ee26887b28",
   "files": [
     {
-      "path": "ARTWORK.md",
-      "bytes": 17616,
-      "sha256": "8d3395ab1b1d549d6a0cc4091b73d87b74ee7fb73dee788c84082298abb3ca93"
+      "path": "REPORTS_ICON_CONTROLS.md",
+      "bytes": 1882,
+      "sha256": "b0cec50e51f22799321273416179b836cb81d34a47e276449c028a80b6e4df99"
     },
     {
-      "path": "REPORTS_POPUP_UPDATE.md",
-      "bytes": 1813,
-      "sha256": "d0f3209c2ed9586407fe1d83527406b7b3122595f7926ad20471161c74b715dc"
-    },
-    {
-      "path": "assets/source/ui-low-poly-v1/reports.png",
-      "bytes": 710671,
-      "sha256": "075c461dba4bbcbd0f505d2202e6bd0f83a83e28c654ab7c8f2663770f35498b"
-    },
-    {
-      "path": "assets/ui-low-poly-v1.json",
-      "bytes": 8714,
-      "sha256": "7eb465192d343e331a208d7067787bc2d3f808a98173d48b62a2dcf01715481d"
-    },
-    {
-      "path": "public/art/ui/low-poly-v1/reports.webp",
-      "bytes": 4902,
-      "sha256": "05e9cee420b22a96fb70b3f3dae915b49c311c287cfb222b5e69f9a0b7101738"
-    },
-    {
-      "path": "src/app/App.tsx",
-      "bytes": 28947,
-      "sha256": "e3de7fba6c9f7f88695e471a319304f7fe2baa9673ca387af926121f260c8102"
+      "path": "src/features/campaign/styles/report-inbox.css",
+      "bytes": 13659,
+      "sha256": "d78a26d0b96400b87255945966753826aa8399571d6b097dc8c8e958b005e027"
     },
     {
       "path": "src/features/campaign/styles/reports-popup.css",
-      "bytes": 4423,
-      "sha256": "d4bbb437742a64d8fdbf69e4138530edb4780502f0a1f3d18358db20dc56db90"
+      "bytes": 4310,
+      "sha256": "9806b8f3486585f05b0f13dece212623ca957c0675a57cfea7d7e2eb20b98147"
     },
     {
-      "path": "src/features/campaign/ui/ReportsPopup.tsx",
-      "bytes": 503,
-      "sha256": "e233d3514c432b3ed0c8354d93f1599efc7d2649a82ad82ddfbf4e266c610e63"
+      "path": "src/features/campaign/ui/ReportInbox.tsx",
+      "bytes": 10692,
+      "sha256": "847a1fb135a722fd7b23686d23b8b67080904c5fc2fe289bb3f1877d38cb5ee6"
     },
     {
-      "path": "src/shared/ui/GameNavigation.tsx",
-      "bytes": 1386,
-      "sha256": "cd558b5435348399eacf37e909ef7499db09599e43b091e3265598663b4d8284"
+      "path": "src/shared/ui/Icons.tsx",
+      "bytes": 5335,
+      "sha256": "45dab6789e25d80bb0fbb6235e87beff88fa1d369505407a61864e20ea38d47c"
     },
     {
-      "path": "src/shared/ui/LowPolyIcon.tsx",
-      "bytes": 396,
-      "sha256": "78974a9164250d7c978616b1d672bf1c578dff4d6a4b955b08286dd2893a4384"
-    },
-    {
-      "path": "src/shared/ui/Shared.tsx",
-      "bytes": 2811,
-      "sha256": "eb7e98cc318e589029e75c833bac89b42d7d76b697e5f1779e95a328ef02406d"
-    },
-    {
-      "path": "tests/e2e/compact-header.spec.ts",
-      "bytes": 3876,
-      "sha256": "aa8c1fe90090f77cf1989d22b7075744a9b51403a4779fcf7adfd69b060907ad"
-    },
-    {
-      "path": "tests/e2e/online-report-reads.spec.ts",
-      "bytes": 5012,
-      "sha256": "f622642dd666a69a4f7cd2f60b231df6edaf19616c41022568f875a59a08e401"
-    },
-    {
-      "path": "tests/e2e/reports-popup.spec.ts",
-      "bytes": 3587,
-      "sha256": "e4d45abc10afc2d7515af2df5644eed5fbd96cd0f15a9523b3a7c11055843701"
-    },
-    {
-      "path": "tests/e2e/unread-reports.spec.ts",
-      "bytes": 9181,
-      "sha256": "a5a10aa52348b8cdde79ccbb6c6e7203605c16dacc4fced9a6f44b0925274827"
-    },
-    {
-      "path": "tests/game-navigation.test.ts",
-      "bytes": 3337,
-      "sha256": "bdbeded76e3fe0bb5a28ab2ffe0388843965e67dc4178d01ca0994eb74da5e3f"
+      "path": "tests/e2e/report-inbox.spec.ts",
+      "bytes": 7981,
+      "sha256": "1441d358bffea9f0473caaa037d88cf55af96c93836bb225ec2f4284cbc1f88b"
     }
   ]
 }
