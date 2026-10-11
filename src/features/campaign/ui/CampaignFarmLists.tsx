@@ -30,7 +30,7 @@ export function CampaignFarmTargetDialog({ world, playerId, busy, run, onClose, 
     const [listId, setListId] = useState(target?.list_id ?? lists[0]?.id ?? 0), [armyId, setArmyId] = useState(target?.army_id ?? initialArmyId);
     const army = armies.find(army => army.id === armyId);
     const [enabled, setEnabled] = useState(target?.enabled ?? false), [interval, setInterval] = useState(target?.interval_seconds ?? 300);
-    const [quantities, setQuantities] = useState(() => Object.fromEntries(UNIT_TYPES.map(unit => [unit, String((target?.troops ?? (rosterTotal(lists[0]?.troops ?? emptyTroops) > 0 ? lists[0].troops : army ? readRoster(army) : emptyTroops))[unit] ?? 0)])) as Record<keyof ArmyTroops, string>);
+    const [quantities, setQuantities] = useState(() => Object.fromEntries(UNIT_TYPES.map(unit => [unit, String((target?.troops ?? lists[0]?.troops ?? emptyTroops)[unit] ?? 0)])) as Record<keyof ArmyTroops, string>);
     useEffect(() => { if (!listId && lists.length) setListId(lists[0].id); }, [lists, listId]);
     const troops = Object.fromEntries(UNIT_TYPES.map(unit => [unit, Number(quantities[unit])])) as ArmyTroops;
     const valid = !!army && lists.some(list => list.id === listId) && UNIT_TYPES.every(unit => quantities[unit].trim() && Number.isSafeInteger(troops[unit]) && (troops[unit] ?? 0) >= 0) && rosterTotal(troops) > 0 && rosterTotal(troops) <= 1000;
