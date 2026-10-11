@@ -1,7 +1,8 @@
 import { FIELD_W,FIELD_H } from '../../domain/dimensions';
-import { ACESFilmicToneMapping, Box3, BoxGeometry, BufferGeometry, Color, DirectionalLight, Float32BufferAttribute, Group, HemisphereLight, Line, LineBasicMaterial, LineLoop, Mesh, MeshBasicMaterial, PlaneGeometry, Raycaster, RingGeometry, Scene, Vector2, WebGLRenderer, PCFShadowMap, PMREMGenerator, type WebGLRenderTarget } from 'three';
+import { ACESFilmicToneMapping, Box3, BoxGeometry, BufferGeometry, Color, DirectionalLight, Float32BufferAttribute, Group, HemisphereLight, Line, LineBasicMaterial, LineLoop, Mesh, MeshBasicMaterial, PlaneGeometry, Raycaster, RingGeometry, Scene, Vector2, WebGLRenderer, PCFShadowMap, PMREMGenerator, type OrthographicCamera, type WebGLRenderTarget } from 'three';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { type RenderActions, type RenderState } from '../../../../shared/rendering/contracts';
+import { GpuFrameBudget } from '../../../../shared/rendering/GpuFrameBudget';
 import { type Formation } from '../../domain/types';
 import { formationSize } from '../../domain/formations';
 import { angleDiff } from '../../../../shared/math/geometry';
@@ -14,6 +15,7 @@ import { disposeObject } from './dispose';
 import { type BattleGesture, type Point } from './interaction';
 
 type FormationView = { group: Group; soldiers: SoldierVisual; pose: FormationPose; pick: Mesh; outline: LineLoop; path: Line; destination: Mesh; label: HTMLDivElement };
+type BattleFrame = { number: number; paused: boolean; camera: OrthographicCamera; width: number; height: number; picks: Mesh[]; labels: Map<number, ReturnType<BattleCamera['project']>> };
 const geometry = (points: number[]) => new BufferGeometry().setAttribute('position', new Float32BufferAttribute(points, 3));
 
 /** Read-only presentation: inspection and camera controls never alter combat. */
@@ -21,6 +23,10 @@ export class BattleScene {
     readonly scene = new Scene();
     readonly view: BattleCamera;
     private renderer: WebGLRenderer | null = null;
+    private frameBudget: GpuFrameBudget | null = null;
+    private displayedFrame: BattleFrame | null = null;
+    private pendingFrame: BattleFrame | null = null;
+    private displayedFrames = 0;
     private input: BattleInput | null = null;
     private observer: ResizeObserver | null = null;
     private frame = 0;
@@ -33,6 +39,9 @@ export class BattleScene {
     private inspectedId: number | null = null;
     private alive = true;
     private readyFrames = 0;
+    private readyNotified = false;
+    private pausedFrameKey = '';
+    private presentationRevision = 0;
     private readonly formations = new Map<number, FormationView>();
     private readonly showcases: Group[] = [];
     private readonly ray = new Raycaster();
@@ -48,6 +57,7 @@ export class BattleScene {
         this.view = new BattleCamera((x, y) => battlefieldHeight(terrain, x, y));
         try {
             this.renderer = new WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
+            this.frameBudget = new GpuFrameBudget(this.renderer.getContext());
             this.renderer.setPixelRatio(Math.min(quality === 'ultra' ? 2 : 1.25, window.devicePixelRatio || 1));
             this.renderer.toneMapping = ACESFilmicToneMapping; this.renderer.toneMappingExposure = 1.15;
             if (soldiers !== createLowPolySoldiers) {
@@ -84,7 +94,10 @@ export class BattleScene {
     private resize() {
         if (!this.alive || !this.renderer) return;
         const rect = this.canvas.parentElement!.getBoundingClientRect();
-        this.renderer.setSize(Math.max(1, rect.width), Math.max(1, rect.height), false); this.view.setSize(rect.width, rect.height);
+        const width = Math.max(1, rect.width), height = Math.max(1, rect.height);
+        if (width !== this.view.width || height !== this.view.height) this.displayedFrame = this.pendingFrame = null;
+        this.renderer.setSize(width, height, false); this.view.setSize(width, height);
+        this.presentationRevision++;
     }
     private create(f: Formation): FormationView {
         const group = new Group(), soldiers = this.soldiers(f);
@@ -104,7 +117,7 @@ export class BattleScene {
     }
     private updateFormation(f: Formation, record: FormationView, dt: number) {
         const state = this.state(), battle = state.battle!, pose = record.pose, height = (x: number, y: number) => battlefieldHeight(battle.terrain, x, y);
-        const amount = battle.phase === 'deployment' || preferences().reducedMotion ? 1 : 1 - Math.exp(-dt * 10);
+        const amount = state.paused || battle.phase === 'deployment' || preferences().reducedMotion ? 1 : 1 - Math.exp(-dt * 10);
         pose.x += (f.x - pose.x) * amount; pose.y += (f.y - pose.y) * amount; pose.facing += angleDiff(f.facing, pose.facing) * amount;
         record.group.visible=!this.view.inspecting || state.selectedIds.includes(f.id);
         if(record.group.visible) record.soldiers.update({ formation: f, pose, dt: state.paused ? 0 : dt, time: this.visualTime, battleTime: battle.elapsed, height, detail:this.view.span>180?'far':'near', animate: !state.paused && !preferences().reducedMotion && preferences().effects });
@@ -128,11 +141,53 @@ export class BattleScene {
         record.path.visible = record.destination.visible = own && selected && (f.status === 'moving' || !!target);
         (record.path.material as LineBasicMaterial).color.set(target ? '#ee896b' : '#ebc481');
         (record.destination.material as MeshBasicMaterial).color.set(target ? '#ee896b' : '#ebc481'); record.destination.position.set(tx, height(tx, ty) + 2, ty);
-        const p = this.view.project(pose.x, pose.y, 29); record.label.hidden = !p.visible || !record.group.visible;
-        record.label.className = `battle-3d-label ${own ? 'friendly' : 'hostile'} ${selected ? 'selected' : ''}`;
-        record.label.style.transform = `translate(${p.x}px, ${p.y}px) translate(-50%, -100%)`;
-        const text = `${f.label} · ${f.soldiers}\n${Math.round(f.morale)}% morale · ${f.status}`;
-        if (record.label.textContent !== text) record.label.textContent = text;
+    }
+    private updateLabels(state: RenderState, formations: Formation[]) {
+        for (const f of formations) {
+            const record = this.formations.get(f.id);
+            if (!record) continue;
+            const p = this.displayedFrame?.labels.get(f.id) ?? this.view.project(record.pose.x, record.pose.y, 29);
+            const visibleInFrame = !this.displayedFrame || this.displayedFrame.labels.has(f.id);
+            const hidden = (this.frameBudget !== null && !this.displayedFrame) || !p.visible || !visibleInFrame || (this.view.inspecting && !state.selectedIds.includes(f.id));
+            const className = `battle-3d-label ${f.owner_id === state.playerId ? 'friendly' : 'hostile'} ${state.selectedIds.includes(f.id) ? 'selected' : ''}`;
+            const transform = `translate(${p.x}px, ${p.y}px) translate(-50%, -100%)`;
+            if (record.label.hidden !== hidden) record.label.hidden = hidden;
+            if (record.label.className !== className) record.label.className = className;
+            if (record.label.style.transform !== transform) record.label.style.transform = transform;
+            const text = `${f.label} · ${f.soldiers}\n${Math.round(f.morale)}% morale · ${f.status}`;
+            if (record.label.textContent !== text) record.label.textContent = text;
+        }
+    }
+    private updateInspection(state: RenderState) {
+        if (!this.view.inspecting || this.inspectedId === null) return;
+        this.inspectedId = state.selectedIds[0] ?? this.inspectedId;
+        const record = this.formations.get(this.inspectedId), pose = record?.pose;
+        const bounds = record?.soldiers.object.userData.inspectionBounds as Box3 | undefined;
+        if (bounds && !bounds.isEmpty()) { bounds.getCenter(this.view.target); this.view.update(); }
+        else if (pose) { this.view.target.x = pose.x; this.view.target.z = pose.y; this.view.update(); }
+    }
+    private captureFrame() {
+        const picks: Mesh[] = [], labels: BattleFrame['labels'] = new Map();
+        for (const [id, record] of this.formations) {
+            if (!record.group.visible) continue;
+            // Clones share the existing geometry/material; only their captured
+            // transforms are retained. They are never uploaded or rendered.
+            const pick = record.pick.clone(); pick.matrixAutoUpdate = false;
+            pick.matrixWorld.copy(record.pick.matrixWorld); picks.push(pick);
+            labels.set(id, this.view.project(record.pose.x, record.pose.y, 29));
+        }
+        this.pendingFrame = { number: this.readyFrames + 1, paused: !!this.state().paused, camera: this.view.camera.clone(), width: this.view.width, height: this.view.height, picks, labels };
+    }
+    private promoteFrame() {
+        const completed = this.frameBudget?.completedFrames ?? this.readyFrames;
+        if (!this.pendingFrame || completed < this.pendingFrame.number || this.pendingFrame.number <= this.displayedFrames) return;
+        this.displayedFrame = this.pendingFrame; this.displayedFrames = this.pendingFrame.number;
+        // Assets and formation uploads are already part of this completed image.
+        // A second identical draw can cost seconds on a software GPU without
+        // making the scene any more ready for inspection.
+        // Pausing while the first image is in flight needs one image of the
+        // paused poses before inspection is enabled, not the earlier moving pose.
+        if (!this.readyNotified && (!this.state().paused || this.displayedFrame.paused)) { this.readyNotified = true; this.ready?.(); }
     }
     private draw(time: number) {
         if (!this.alive) return;
@@ -140,19 +195,29 @@ export class BattleScene {
             const dt = this.last ? Math.min(.05, (time - this.last) / 1000) : 0; this.last = time;
             if (!this.state().paused) this.visualTime += dt;
             this.input?.update(dt);
-            const fs = this.state().world.formations.filter(f => f.battle_id === this.state().battle!.id && f.soldiers > 0), ids = new Set(fs.map(f => f.id));
+            const state = this.state(), fs = state.world.formations.filter(f => f.battle_id === state.battle!.id && f.soldiers > 0), ids = new Set(fs.map(f => f.id));
+            const gpuReady = this.frameBudget?.ready(time) ?? true;
+            this.promoteFrame();
+            // Input and overlays remain responsive while an earlier frame drains.
+            // Keep labels aligned to the last completed frame, rather than doing
+            // expensive model updates and accumulating more GPU work.
+            this.updateInspection(state); this.updateLabels(state, fs);
+            const frameKey = state.paused ? this.pausedKey(state, fs) : '';
+            // Paused armies have no animation to redraw. Keep polling input and
+            // mutable snapshots, but leave the last composited frame in place
+            // until its camera, selection or visible formations actually change.
+            if (!gpuReady || (state.paused && this.readyFrames >= 1 && frameKey === this.pausedFrameKey)) {
+                this.reportDiagnostics(time);
+                this.frame = requestAnimationFrame(next => this.draw(next));
+                return;
+            }
             for (const [id, record] of this.formations) if (!ids.has(id)) { this.remove(record); this.formations.delete(id); }
             for (const f of fs) {
                 let record = this.formations.get(f.id);
                 if (!record) { record = this.create(f); this.formations.set(f.id, record); }
                 this.updateFormation(f, record, dt);
             }
-            if(this.view.inspecting && this.inspectedId!==null) {
-                this.inspectedId=this.state().selectedIds[0] ?? this.inspectedId;
-                const record=this.formations.get(this.inspectedId),p=record?.pose,bounds=record?.soldiers.object.userData.inspectionBounds as Box3|undefined;
-                if(bounds&&!bounds.isEmpty()){bounds.getCenter(this.view.target);this.view.update();}
-                else if(p){this.view.target.x=p.x;this.view.target.z=p.y;this.view.update();}
-            }
+            this.updateInspection(state); this.updateLabels(state, fs);
             if (this.view.inspecting && this.quality === 'ultra') {
                 const span=Math.max(40,this.view.span*1.8);
                 this.sun.position.set(this.view.target.x-250,900,this.view.target.z+450); this.sun.target.position.copy(this.view.target);
@@ -163,25 +228,45 @@ export class BattleScene {
                 Object.assign(this.sun.shadow.camera,{left:-850,right:850,top:650,bottom:-650});this.sun.shadow.camera.updateProjectionMatrix();this.shadowSpan=0;
             }
             this.zones.visible = this.state().battle!.phase === 'deployment' && !this.view.inspecting; this.renderer!.render(this.scene, this.view.camera);
-            // Imported rigs, palettes, textures and shaders must reach actual
-            // frames before removing the loading cover or accepting visual QA.
-            if (++this.readyFrames === 2) this.ready?.();
-            if (this.diagnostics) {
-                this.metricFrames++;
-                if (!this.metricStart) this.metricStart=time;
-                if (time-this.metricStart >= 1000) { this.diagnostics(this.metricFrames*1000/(time-this.metricStart),this.renderer!.info.render.calls,this.renderer!.info.render.triangles); this.metricFrames=0; this.metricStart=time; }
-            }
+            this.captureFrame();
+            this.frameBudget?.submitted(time);
+            this.pausedFrameKey = state.paused ? this.pausedKey(state, fs) : '';
+            // Readiness follows the first completed image, never queued drawing
+            // commands whose image is still unavailable on a slow GPU.
+            this.readyFrames++;
+            this.promoteFrame(); this.updateLabels(state, fs);
+            this.metricFrames++;
+            this.reportDiagnostics(time);
             this.frame = requestAnimationFrame(next => this.draw(next));
         } catch (error) { console.warn('3D battlefield stopped', error); this.fail(); }
     }
-    private project(f: Formation) { const p = this.formations.get(f.id)?.pose ?? f; return this.view.project(p.x, p.y); }
+    private pausedKey(state: RenderState, formations: Formation[]) {
+        const view = this.view, settings = preferences();
+        return JSON.stringify([this.presentationRevision, state.playerId, state.battle?.phase, state.selectedIds,
+            view.target.toArray(), view.span, view.yaw, view.inspecting, view.width, view.height, this.inspectedId,
+            settings.reducedMotion, settings.effects,
+            formations.map(f => [f.id, f.owner_id, f.label, f.unit_type, f.soldiers, f.initial_soldiers, f.columns,
+                f.x, f.y, f.facing, f.morale, f.status, f.target_x, f.target_y, f.target_formation_id])]);
+    }
+    private reportDiagnostics(time: number) {
+        if (!this.diagnostics || !this.renderer) return;
+        if (!this.metricStart) this.metricStart = time;
+        if (time - this.metricStart >= 1000) {
+            this.diagnostics(this.metricFrames * 1000 / (time - this.metricStart), this.renderer.info.render.calls, this.renderer.info.render.triangles);
+            this.metricFrames = 0; this.metricStart = time;
+        }
+    }
     private hit(p: Point) {
-        this.scene.updateMatrixWorld(true);
-        this.ray.setFromCamera(new Vector2(p.x / this.view.width * 2 - 1, 1 - p.y / this.view.height * 2), this.view.camera);
-        const pick = this.ray.intersectObjects([...this.formations.values()].map(record => record.pick), false)[0];
+        const frame = this.displayedFrame;
+        if (this.frameBudget && !frame) return undefined;
+        if (!frame) this.scene.updateMatrixWorld(true);
+        const width = frame?.width ?? this.view.width, height = frame?.height ?? this.view.height;
+        this.ray.setFromCamera(new Vector2(p.x / width * 2 - 1, 1 - p.y / height * 2), frame?.camera ?? this.view.camera);
+        const pick = this.ray.intersectObjects(frame?.picks ?? [...this.formations.values()].map(record => record.pick), false)[0];
         return pick ? this.state().world.formations.find(f => f.battle_id === this.state().battle?.id && f.id === pick.object.userData.formationId) : undefined;
     }
     private preview(gesture: BattleGesture | null) {
+        this.presentationRevision++;
         this.selectionBox.hidden = true; this.previewLine.visible = false;
         if (!gesture) return;
         if (gesture.button === 0 && this.state().touchOrder === 'select') {
@@ -211,7 +296,7 @@ export class BattleScene {
         if(showcase&&bounds){showcase.updateMatrixWorld(true);this.view.inspectBounds(bounds.clone().applyMatrix4(showcase.matrixWorld));}
         else this.view.inspect(x,y);
     }
-    addShowcase(group: Group) { this.showcases.push(group); this.scene.add(group); }
+    addShowcase(group: Group) { this.showcases.push(group); this.scene.add(group); this.presentationRevision++; }
     focus(side: 'own' | 'enemy') {
         this.inspectedId=null; this.view.inspecting=false; this.view.span=Math.max(450,this.view.span);
         const state = this.state(), fs = state.world.formations.filter(f => f.battle_id === state.battle?.id && f.soldiers > 0 && (side === 'own' ? f.owner_id === state.playerId : f.owner_id !== state.playerId));
@@ -222,6 +307,8 @@ export class BattleScene {
     destroy() {
         if (!this.alive) return; this.alive = false;
         cancelAnimationFrame(this.frame); this.observer?.disconnect(); this.input?.destroy(); this.canvas.removeEventListener('webglcontextlost', this.contextLost);
+        this.frameBudget?.dispose(); this.frameBudget = null;
+        this.displayedFrame = this.pendingFrame = null;
         for (const record of this.formations.values()) this.remove(record);
         for (const showcase of this.showcases) { showcase.userData.disposeShowcase?.(); this.scene.remove(showcase); }
         this.showcases.length = 0;

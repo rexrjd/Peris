@@ -50,7 +50,8 @@ test('economy details start collapsed while live population and food remain visi
 test('city opens on the scene with a construction dock and no permanent inspector', () => {
   const world = createSolo('Builder');
   const html = renderToStaticMarkup(React.createElement(SettlementView, { world, playerId: world.players[0].id, now: Date.parse(world.server_now), busy: false, run: () => {} }));
-  assert.ok(html.includes('Low-poly city with selectable plots'));
+  assert.ok(html.includes('Painted isometric village with selectable buildings and empty construction plots'));
+  assert.ok(html.includes('Explore the existing live 3D city models.'));
   assert.ok(!html.includes('class="building-browser"'));
   assert.ok(html.includes('city-action-dock'));
   assert.ok(html.includes('city-build-button'));

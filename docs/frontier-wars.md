@@ -377,7 +377,7 @@ reinforcements. Campaign bandit battles resolve without opening an animation or
 automatic result modal; their reports are available in the Chronicle.
 
 Campaign farm metadata and station troops persist in solo saves and in private
-Supabase snapshots. Apply the regenerated **UPGRADE_TO_V13.sql** to an existing
+Supabase snapshots. Apply the regenerated **UPGRADE_TO_V14.sql** to an existing
 shared world before using its new commands; fresh installers are only for empty
 databases. This work does not deploy SQL. The campaign retains its existing
 troop classes and victory rewards; Frontier's shared production/stock economy,

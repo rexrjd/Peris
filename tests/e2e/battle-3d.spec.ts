@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { BattleCamera } from '../../src/features/battle/rendering/three/BattleCamera';
 
 for (const terrain of ['Open country', 'Woodland', 'High country', 'River crossing']) {
   test(`3D ${terrain} preserves automatic combat, inspection and pause through view changes and context loss`, async ({ page }, testInfo) => {
@@ -14,8 +15,11 @@ for (const terrain of ['Open country', 'Woodland', 'High country', 'River crossi
     await page.getByRole('button', { name: 'Watch the battle' }).click();
     const graphics = page.getByRole('group', { name: 'Battle graphics' });
     await expect(graphics.getByRole('button', { name: '2D', exact: true })).toHaveAttribute('aria-pressed', 'false');
-    await expect(page.locator('.battle-3d-canvas')).toHaveAttribute('data-unit-models', 'published', {timeout:60000});
     await page.getByRole('button', { name: /Ⅱ Pause/ }).click();
+    // Model downloads must not determine how far the automatic armies advance
+    // before the interaction fixture can select their separate formations.
+    await expect(page.locator('.pause-banner')).toBeVisible();
+    await expect(page.locator('.battle-3d-canvas')).toHaveAttribute('data-unit-models', 'published', {timeout:60000});
     await page.locator('.unit-card').first().click();
     const selection = await page.locator('.command-selection').innerText();
     await expect(page.getByRole('button', { name: 'Guard', exact: true })).toHaveCount(0);
@@ -29,6 +33,7 @@ for (const terrain of ['Open country', 'Woodland', 'High country', 'River crossi
     await page.getByRole('button', { name: 'Rotate camera left', exact: true }).click();
     await expect(label).not.toHaveAttribute('style', beforeRotation!);
     await page.getByRole('button', { name: 'Reset camera', exact: true }).click();
+    await expect(label).toHaveAttribute('style', beforeRotation!);
     const bounds = await field.boundingBox();
     if (!bounds) throw new Error('3D battlefield has no bounds.');
     const beforePan=await label.getAttribute('style');
@@ -36,9 +41,16 @@ for (const terrain of ['Open country', 'Woodland', 'High country', 'River crossi
     await page.mouse.down();await page.mouse.move(bounds.x+bounds.width*.5+60,bounds.y+bounds.height*.6+30,{steps:8});await page.mouse.up();
     await expect(label).not.toHaveAttribute('style',beforePan!);
     await page.getByRole('button', { name: 'Reset camera', exact: true }).click();
+    await expect(label).toHaveAttribute('style', beforePan!);
     const hostile=page.locator('.battle-3d-label.hostile').first(),enemyBox=await hostile.boundingBox();
     if(!enemyBox)throw new Error('Missing enemy formation label');
-    await page.mouse.click(enemyBox.x+enemyBox.width/2,enemyBox.y+enemyBox.height+8);
+    // Labels sit above the formation. Convert that lift through the real reset
+    // camera instead of using a fixed CSS offset, which misses on portrait maps.
+    const camera = new BattleCamera(() => 0);
+    camera.setSize(bounds.width, bounds.height); camera.center();
+    const pickOffset = camera.project(0, 0, 13).y - camera.project(0, 0, 29).y;
+    await page.mouse.click(enemyBox.x+enemyBox.width/2,enemyBox.y+enemyBox.height+pickOffset);
+    await expect(hostile).toHaveClass(/selected/);
     await expect(page.locator('.battle-3d-label.hostile.selected')).toHaveCount(1);
     await page.locator('.unit-card').first().click();
     await expect(page.locator('.field-order-hint')).toHaveCount(0);

@@ -38,6 +38,7 @@ export class OnlineEngine implements GameEngine {
     private core: World;
     private armyCultures = new Map<number, Faction>();
     private culturesAt = 0;
+    private cultureBattleIds = '';
     private culturesBusy = false;
     private publicMap: PublicMapSnapshot | null = null;
     private viewport: MapBounds;
@@ -159,7 +160,12 @@ export class OnlineEngine implements GameEngine {
         this.mapDebounce = window.setTimeout(() => { this.mapDebounce = undefined; void this.refreshMap(); }, 300);
     };
     private async refreshArmyCultures() {
-        if (!this.alive || this.culturesBusy || Date.now() - this.culturesAt < 10000) return;
+        const battleIds = this.core.battles.filter(battle => battle.status === 'active')
+            .map(battle => `${battle.id}:${battle.attacker_army_id}:${battle.defender_army_id}`).sort().join('|');
+        // A newly encountered battle needs its actual cultures immediately;
+        // the peaceful-map refresh interval must not launch the wrong 3D army.
+        if (!this.alive || this.culturesBusy || (battleIds === this.cultureBattleIds && Date.now() - this.culturesAt < 10000)) return;
+        this.cultureBattleIds = battleIds;
         this.culturesBusy = true;
         const controller = new AbortController(); this.requests.add(controller);
         try {

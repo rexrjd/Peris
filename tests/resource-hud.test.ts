@@ -63,5 +63,5 @@ test('city keeps identity and economy above the scene, with view/build controls 
   assert.ok(html.includes('city-build-button'));
   assert.ok(!html.includes('city-workspace-tabs'));
   assert.ok(!html.includes('view-heading city-heading'));
-  assert.ok(html.indexOf('</header>') < html.indexOf('city-3d-scene'));
+  assert.ok(html.indexOf('</header>') < html.indexOf('painted-settlement-scene'));
 });

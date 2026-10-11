@@ -29,12 +29,40 @@ jobs:
       - run: npm run assets:check
       - run: npm run check:world
       - run: npm run check:sql
+      - run: npm run check:frontier
+      - run: npm run test:frontier-server
       - run: npm run test:db
       - run: npm run test:fresh
       - run: npm run test:empire-db
       - run: npm run build
 
   browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        project: [desktop-chromium, mobile-chromium]
+        shard: [1, 2]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e -- --project=${{ matrix.project }} --shard=${{ matrix.shard }}/2
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: browser-report-${{ matrix.project }}-${{ matrix.shard }}
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7
+
+  frontier-browser:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -45,12 +73,13 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx playwright install --with-deps chromium
-      - run: npm run test:e2e
+      - run: npm run test:frontier-ui
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: browser-report
+          name: frontier-browser-report
+          include-hidden-files: true
           path: |
-            playwright-report/
-            test-results/
+            .frontier-playwright-report/
+            .frontier-test-results/
           retention-days: 7

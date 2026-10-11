@@ -98,6 +98,7 @@ test('shared-world map and defender battle use the correct published factions', 
     await page.route('**/auth/v1/**', route => route.fulfill({ json: session }));
     await page.route('**/rest/v1/**', async route => {
         const url = new URL(route.request().url()), path = url.pathname;
+        if (path.endsWith('/peris_login')) return route.fulfill({ json: { player_id: me, display_name: world.players[0].display_name, created: false } });
         if (path.endsWith('/players')) return route.fulfill({ json: { id: me } });
         if (path.endsWith('/armies')) { selects.push(url.searchParams.get('select')!); return route.fulfill({ json: [{ id: 900, owner_id: rival, home_settlement_id: 901 }] }); }
         if (path.endsWith('/settlements')) { selects.push(url.searchParams.get('select')!); return route.fulfill({ json: [{ id: world.settlements[0].id, faction: 'dwarf' }, { id: 901, faction: 'demon' }] }); }
@@ -106,6 +107,7 @@ test('shared-world map and defender battle use the correct published factions', 
         return route.fulfill({ json: null });
     });
     await page.goto('/'); await page.getByRole('button', { name: 'Shared world', exact: true }).click();
+    await page.getByLabel('YOUR RULER NAME').fill(world.players[0].display_name);
     await page.getByRole('button', { name: 'Enter the shared world' }).click();
     const map = page.locator('canvas[aria-label^="Interactive 200 by 200"]');
     await expect(map).toHaveAttribute('data-army-models', 'published', { timeout: 60000 });

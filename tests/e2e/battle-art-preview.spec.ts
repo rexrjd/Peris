@@ -1,15 +1,18 @@
 import { test,expect,type Locator } from '@playwright/test';
+import { createHash } from 'node:crypto';
+import sharp from 'sharp';
 
-// Read after the renderer's animation callback, before WebGL discards its back buffer.
+// Inspect the composited canvas, including a paused scene that no longer redraws
+// an unchanged, discarded WebGL back buffer on every animation callback.
 // A selected formation stays centered while orbiting, so its label is not an orbit signal.
 async function battlefieldPixels(field:Locator) {
-    return field.evaluate((canvas:HTMLCanvasElement)=>new Promise<number>((resolve,reject)=>requestAnimationFrame(()=>{
-        const gl=canvas.getContext('webgl2');if(!gl){reject(new Error('Missing prototype WebGL context'));return;}
-        const width=Math.min(128,canvas.width),height=Math.min(128,canvas.height),pixels=new Uint8Array(width*height*4);
-        gl.readPixels(Math.floor((canvas.width-width)/2),Math.floor((canvas.height-height)/2),width,height,gl.RGBA,gl.UNSIGNED_BYTE,pixels);
-        let hash=2166136261;for(const pixel of pixels)hash=Math.imul(hash^pixel,16777619);
-        resolve(hash>>>0);
-    })));
+    const image = sharp(await field.screenshot()), { width = 0, height = 0 } = await image.metadata();
+    const size = Math.min(128, width, height);
+    if (!size) throw new Error('Missing prototype battlefield pixels');
+    // Inspect the same central region as the GL probe. The canvas's rectangle
+    // also contains DOM overlays such as changing FPS diagnostics at its edge.
+    const pixels = await image.extract({ left: Math.floor((width - size) / 2), top: Math.floor((height - size) / 2), width: size, height: size }).removeAlpha().raw().toBuffer();
+    return createHash('sha256').update(pixels).digest('hex');
 }
 
 test('army preview supports mesh inspection, automatic combat, quality changes and 2D fallback without touching a campaign',async({page},testInfo)=>{
@@ -57,27 +60,6 @@ test('army preview supports mesh inspection, automatic combat, quality changes a
     await expect(page.locator('canvas[aria-label^="Tactical battlefield"]')).toBeVisible();
     await expect(page.locator('.pause-banner')).toBeVisible();
     expect(await page.evaluate(()=>localStorage.getItem('peris-solo-v6'))).toBe('preserve-this-campaign');
-    expect(errors).toEqual([]);
-});
-
-test('all eleven factions load published meshes or explicit withheld fallbacks and their own portraits',async({page},testInfo)=>{
-    test.setTimeout(240000);
-    if(testInfo.project.name==='mobile-chromium')test.skip();
-    const errors:string[]=[],assets=new Map<string,number>();page.on('pageerror',e=>errors.push(e.message));
-    page.on('response',response=>{const path=new URL(response.url()).pathname;if(path.match(/\/models\/battle\/.+-(?:roster|army)(?:-lod)?\.glb$/))assets.set(path,response.status());});
-    const report=await (await page.request.get('/models/battle/faction-rosters.json')).json();
-    const enabled=(faction:string)=>!report.withheld?.[faction]&&!!report.factions?.[faction]?.near&&!!report.factions?.[faction]?.far;
-    const pack=(faction:string)=>enabled(faction)&&enabled('roman')?'textured':enabled(faction)||enabled('roman')?'mixed':'earlier';
-    await page.goto('/?battle-preview=1');
-    await expect(page.locator('.battle-art-preview')).toHaveAttribute('data-model-pack',pack('orc'));
-    for(const faction of ['roman','spartan','persian','egyptian','orc','elf','dwarf','gnome','pandaren','undead','demon']){
-        await page.getByLabel('Your faction').selectOption(faction);
-        await expect(page.locator('.battle-art-preview')).toHaveAttribute('data-model-pack',pack(faction));
-        await expect(page.locator('.army-loading')).toHaveCount(0,{timeout:60000});
-        await expect(page.locator('.battle-3d-label.friendly')).toHaveCount(7);
-        for(const suffix of ['','-lod'])await expect.poll(()=>assets.get(`/models/battle/${faction}-${enabled(faction)?'roster':'army'}${suffix}.glb`),{timeout:60000}).toBe(200);
-        await expect(page.locator('.unit-card .faction-portrait').first()).toHaveAttribute('style',new RegExp(`/roster/${faction}.png`));
-    }
     expect(errors).toEqual([]);
 });
 

@@ -33,12 +33,12 @@ test('compact economy signals a negative food balance without opening its detail
   assert.ok(html.includes('has-shortage'));
 });
 
-test('city construction remains visible in the dock with its inspector closed', () => {
+test('city construction remains visible in the village summary with its popup closed', () => {
   const world = createSolo('Builder'), now = Date.parse(world.server_now);
   world.orders.push({ id: 123, owner_id: world.players[0].id, settlement_id: world.settlements[0].id, kind: 'upgrade', item: 'market', quantity: 1, started_at: world.server_now, finish_at: new Date(now + 60000).toISOString() });
   const html = renderToStaticMarkup(React.createElement(SettlementView, { world, playerId: world.players[0].id, now, busy: false, run: () => {} }));
-  assert.ok(html.includes('city-dock-queue'));
-  assert.ok(html.includes('role="status"'));
+  assert.ok(html.includes('aria-label="Construction queue"'));
+  assert.ok(html.includes('role="progressbar"'));
   assert.ok(html.includes('1:00'));
-  assert.ok(!html.includes('city-inspector'));
+  assert.ok(!html.includes('role="dialog"'));
 });
