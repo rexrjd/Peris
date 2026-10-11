@@ -15,7 +15,7 @@ import { disposeObject } from './dispose';
 import { type BattleGesture, type Point } from './interaction';
 
 type FormationView = { group: Group; soldiers: SoldierVisual; pose: FormationPose; pick: Mesh; outline: LineLoop; path: Line; destination: Mesh; label: HTMLDivElement };
-type BattleFrame = { number: number; camera: OrthographicCamera; width: number; height: number; picks: Mesh[]; labels: Map<number, ReturnType<BattleCamera['project']>> };
+type BattleFrame = { number: number; paused: boolean; camera: OrthographicCamera; width: number; height: number; picks: Mesh[]; labels: Map<number, ReturnType<BattleCamera['project']>> };
 const geometry = (points: number[]) => new BufferGeometry().setAttribute('position', new Float32BufferAttribute(points, 3));
 
 /** Read-only presentation: inspection and camera controls never alter combat. */
@@ -176,7 +176,7 @@ export class BattleScene {
             pick.matrixWorld.copy(record.pick.matrixWorld); picks.push(pick);
             labels.set(id, this.view.project(record.pose.x, record.pose.y, 29));
         }
-        this.pendingFrame = { number: this.readyFrames + 1, camera: this.view.camera.clone(), width: this.view.width, height: this.view.height, picks, labels };
+        this.pendingFrame = { number: this.readyFrames + 1, paused: !!this.state().paused, camera: this.view.camera.clone(), width: this.view.width, height: this.view.height, picks, labels };
     }
     private promoteFrame() {
         const completed = this.frameBudget?.completedFrames ?? this.readyFrames;
@@ -185,7 +185,9 @@ export class BattleScene {
         // Assets and formation uploads are already part of this completed image.
         // A second identical draw can cost seconds on a software GPU without
         // making the scene any more ready for inspection.
-        if (!this.readyNotified) { this.readyNotified = true; this.ready?.(); }
+        // Pausing while the first image is in flight needs one image of the
+        // paused poses before inspection is enabled, not the earlier moving pose.
+        if (!this.readyNotified && (!this.state().paused || this.displayedFrame.paused)) { this.readyNotified = true; this.ready?.(); }
     }
     private draw(time: number) {
         if (!this.alive) return;

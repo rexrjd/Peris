@@ -213,7 +213,7 @@ test('paused 3D scenes redraw readiness and presentation changes without repeate
             renderer: { render() { rendered++; }, setSize() {}, info: { render: { calls: 20, triangles: 100000 } } },
             canvas: { parentElement: { getBoundingClientRect: () => ({ width: 900, height: 650 }) } },
             ready: () => { ready++; }, create: (f: Formation) => ({ pose: { x: f.x, y: f.y, facing: f.facing } }),
-            updateFormation: () => { updated++; }, updateLabels: () => {}, captureFrame() { this.pendingFrame = { number: this.readyFrames + 1 }; }, remove: () => {},
+            updateFormation: () => { updated++; }, updateLabels: () => {}, captureFrame() { this.pendingFrame = { number: this.readyFrames + 1, paused: state.paused }; }, remove: () => {},
         });
         scene.draw(1000); scene.draw(1016); scene.draw(1032);
         assert.equal(rendered, 1); assert.equal(ready, 1, 'The completed image is ready without an identical redraw');
@@ -323,6 +323,20 @@ test('GPU pressure preserves paused input, labels and real-frame readiness acros
         assert.deepEqual([recovered.metrics.rendered, recovered.metrics.submitted, recovered.metrics.ready], [1, 1, 1]);
         assert.match(recovered.scene.formations.get(own[1].id).label.className, /friendly selected/);
         recovered.scene.destroy(); assert.equal(recovered.metrics.budgetDisposed, 1);
+
+        // Pause can arrive while the first moving image is still on the GPU.
+        // It must not expose that older pose as the ready, paused baseline.
+        state.paused = false;
+        const interruptedLoad = createScene(); interruptedLoad.scene.draw(1300);
+        state.paused = true; own[0].x += 20;
+        interruptedLoad.release(); interruptedLoad.scene.draw(1316);
+        assert.equal(interruptedLoad.metrics.ready, 0, 'An in-flight moving image cannot complete paused readiness');
+        assert.equal(interruptedLoad.metrics.rendered, 2, 'The actual paused poses are submitted');
+        interruptedLoad.release(); interruptedLoad.scene.draw(1332);
+        assert.equal(interruptedLoad.metrics.ready, 1);
+        assert.equal(interruptedLoad.metrics.rendered, 2, 'The completed paused image needs no duplicate drawing');
+        assert.equal(interruptedLoad.scene.hit(interruptedLoad.view.project(own[0].x, own[0].y, 8))?.id, own[0].id);
+        interruptedLoad.scene.destroy();
     } finally {
         for (const [name, descriptor] of descriptors) {
             if (descriptor) Object.defineProperty(globalThis, name, descriptor); else Reflect.deleteProperty(globalThis, name);
