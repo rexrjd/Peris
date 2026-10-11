@@ -23,12 +23,21 @@ async function start(page: Page, world: World, canvas = false) {
     }, { w: world, fallback: canvas });
     await page.goto('/'); await page.getByRole('button', { name: 'Continue campaign', exact: true }).click();
     await expect(page.locator('canvas[aria-label^="Interactive 200 by 200"]')).toBeVisible();
+}
+async function showEvents(page: Page) {
     if (await page.getByRole('button', { name: 'Open map activity', exact: true }).isVisible()) await page.getByRole('button', { name: 'Open map activity', exact: true }).click();
 }
 const saved = async (page: Page): Promise<World> => page.evaluate(() => JSON.parse(localStorage.getItem('peris-campaign-v6')!));
 async function capture(page: Page, info: TestInfo, name: string) {
     const path = info.outputPath(name + '.png'); await page.screenshot({ path }); await info.attach(name, { path, contentType: 'image/png' });
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+    const bounds = await page.locator('canvas[aria-label^="Interactive 200 by 200"]').boundingBox();
+    const viewport = page.viewportSize()!;
+    expect(bounds!.width).toBeGreaterThanOrEqual(viewport.width - 2);
+    expect(bounds!.height).toBeGreaterThan(viewport.height * .6);
+    const panel = await page.locator('.map-operations').boundingBox();
+    expect(panel!.width).toBeLessThanOrEqual(266);
+    expect(panel!.height).toBeLessThan(viewport.height * .42);
 }
 function richWorld() {
     const world = createSolo('Aurelian'), army = world.armies[0], city = world.settlements[0], at = Date.parse(world.server_now);
@@ -64,25 +73,33 @@ test('realm activity shows every army/city, filters cleanly and selects the corr
     const errors: string[] = []; page.on('pageerror', error => errors.push(error.message));
     await start(page, richWorld());
     const panel = page.getByRole('complementary', { name: 'Map overview and activity' }), list = panel.locator('.ops-events');
+    await showEvents(page);
+    await expect(list.locator('li')).toHaveCount(3);
+    await expect(list).not.toContainText('Smithy');
+    await expect(panel.getByText('Map overview', { exact: true })).toHaveCount(0);
+    await capture(page, info, 'map-minimal-movements');
+    await panel.getByRole('button', { name: /^All events/ }).click();
     await expect(list.locator('li')).toHaveCount(8);
-    await expect(list).toContainText('Raiding'); await expect(list).toContainText('Returning'); await expect(list).toContainText('Marching');
+    await expect(list.getByRole('button', { name: 'View raiding: Ashguard', exact: true })).toHaveCount(1);
+    await expect(list.getByRole('button', { name: 'View returning: River watch', exact: true })).toHaveCount(1);
     await expect(list).toContainText('Smithy · Lv. 3'); await expect(list).toContainText('12 cavalry'); await expect(list).toContainText('New frontier');
-    await capture(page, info, 'map-activity-overview');
+    await panel.getByRole('button', { name: /^Cities/ }).click(); await expect(list.locator('li')).toHaveCount(5);
+    await capture(page, info, 'map-minimal-city-events');
     await panel.getByRole('button', { name: /^Armies/ }).click(); await expect(list.locator('li')).toHaveCount(3);
     await panel.getByRole('button', { name: 'View returning: River watch', exact: true }).click();
     await expect(panel.locator('.ops-army-details')).toContainText('River watch'); await expect(panel.locator('.ops-army-details')).toContainText('Returning');
     await expect(panel.locator('.ops-army-details')).toContainText('Kara');
     await expect(panel.locator('.ops-identity h2')).toBeInViewport();
-    await capture(page, info, 'map-activity-returning-army');
-    if (info.project.name === 'mobile-chromium') {
-        await panel.getByRole('button', { name: 'Jump to map activity', exact: true }).click();
-        await expect(panel.locator('.ops-activity h2')).toBeInViewport();
-        await panel.getByRole('button', { name: 'View marching: Eastern patrol', exact: true }).click();
-        await expect(panel.locator('.ops-identity h2')).toBeInViewport();
-        await panel.getByRole('button', { name: 'Jump to map activity', exact: true }).click();
-        await panel.getByRole('button', { name: 'View returning: River watch', exact: true }).click();
-        await expect(panel.locator('.ops-identity h2')).toBeInViewport();
-    }
+    await expect(panel.locator('.ops-activity')).toHaveCount(0);
+    await expect(page.locator('.army-map-dock')).toBeVisible();
+    await capture(page, info, 'map-minimal-returning-army');
+    await showEvents(page);
+    await panel.getByRole('button', { name: 'View marching: Eastern patrol', exact: true }).click();
+    await expect(panel.locator('.ops-identity h2')).toHaveText('Eastern patrol');
+    await expect(panel.locator('.ops-identity h2')).toBeInViewport();
+    await showEvents(page);
+    await panel.getByRole('button', { name: 'View returning: River watch', exact: true }).click();
+    await expect(panel.locator('.ops-identity h2')).toBeInViewport();
     await panel.getByRole('button', { name: 'Manage troops', exact: true }).click();
     await expect(page.locator('.army-selected-banner')).toContainText('River watch');
     expect((await saved(page)).armies.find(a => a.id === 300)!.march_returning).toBe(true);
@@ -94,11 +111,12 @@ test('a listed staged raid can be cancelled once with its real persisted order t
     const ctx: LocalCommandContext = { world, playerId: army.owner_id, armyId: army.id, now: world.server_now, nextId: () => ++id, active: undefined, paused: () => {}, finalize: () => {} };
     marchArmy(ctx, { type: 'raid', campId: 1, troops: { infantry: 7, archers: 2, cavalry: 1 } });
     await start(page, world, true);
+    await showEvents(page);
     const panel = page.getByRole('complementary', { name: 'Map overview and activity' });
-    await expect(panel.locator('.ops-events')).toContainText('Preparing departure');
+    await expect(panel.getByRole('button', { name: /^Cancel departure/ })).toBeVisible();
     await capture(page, info, 'map-activity-staged-raid');
     await panel.getByRole('button', { name: /^Cancel departure/ }).click();
-    await expect(panel.getByText('All quiet for now', { exact: true })).toBeVisible();
+    await expect(panel.getByText('No ongoing events', { exact: true })).toBeVisible();
     const result = await saved(page); expect(result.armies[0].status).toBe('idle');
     expect([result.armies[0].infantry, result.armies[0].archers, result.armies[0].cavalry]).toEqual([120, 50, 16]);
     await page.reload(); await page.getByRole('button', { name: 'Continue campaign', exact: true }).click();
@@ -108,16 +126,20 @@ test('a listed staged raid can be cancelled once with its real persisted order t
 test('empty activity can fold away, real map clicks open details, and clearing details keeps the activity panel', async ({ page }, info) => {
     await start(page, createSolo('Explore QA'));
     const panel = page.getByRole('complementary', { name: 'Map overview and activity' });
-    await expect(panel.getByText('All quiet for now', { exact: true })).toBeVisible();
-    await panel.getByRole('button', { name: 'Collapse map panel', exact: true }).click();
     await expect(panel.getByRole('button', { name: 'Open map activity', exact: true })).toBeVisible();
+    await expect(panel.locator('.ops-activity')).toHaveCount(0);
+    await capture(page, info, 'map-minimal-idle');
     const canvas = page.locator('canvas[aria-label^="Interactive 200 by 200"]');
     await canvas.click({ position: { x: 90, y: 175 } });
     await expect(panel.getByRole('region', { name: 'Selected map landmark' })).toBeVisible();
-    await capture(page, info, 'map-activity-field-details');
+    await expect(panel.getByRole('button', { name: /^(March to this field|Sea requires ships|No connected land route)$/ })).toBeInViewport();
+    await capture(page, info, 'map-minimal-field');
     await panel.getByRole('button', { name: 'Close map details', exact: true }).click();
     await expect(panel.getByRole('region', { name: 'Selected map landmark' })).toHaveCount(0);
-    await expect(panel.getByRole('region', { name: 'Live realm activity' })).toBeVisible();
-    await panel.getByRole('button', { name: 'Battle reports', exact: true }).click();
+    await showEvents(page);
+    await expect(panel.getByText('No ongoing events', { exact: true })).toBeVisible();
+    await panel.getByRole('button', { name: 'Collapse map panel', exact: true }).click();
+    await page.getByRole('button', { name: 'Quick access', exact: true }).click();
+    await page.getByRole('navigation', { name: 'Quick access shortcuts' }).getByRole('button', { name: /^Reports/ }).click();
     await expect(page.locator('.chronicle')).toBeVisible();
 });
