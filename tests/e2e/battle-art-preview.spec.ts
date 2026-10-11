@@ -1,15 +1,18 @@
 import { test,expect,type Locator } from '@playwright/test';
+import { createHash } from 'node:crypto';
+import sharp from 'sharp';
 
-// Read after the renderer's animation callback, before WebGL discards its back buffer.
+// Inspect the composited canvas, including a paused scene that no longer redraws
+// an unchanged, discarded WebGL back buffer on every animation callback.
 // A selected formation stays centered while orbiting, so its label is not an orbit signal.
 async function battlefieldPixels(field:Locator) {
-    return field.evaluate((canvas:HTMLCanvasElement)=>new Promise<number>((resolve,reject)=>requestAnimationFrame(()=>{
-        const gl=canvas.getContext('webgl2');if(!gl){reject(new Error('Missing prototype WebGL context'));return;}
-        const width=Math.min(128,canvas.width),height=Math.min(128,canvas.height),pixels=new Uint8Array(width*height*4);
-        gl.readPixels(Math.floor((canvas.width-width)/2),Math.floor((canvas.height-height)/2),width,height,gl.RGBA,gl.UNSIGNED_BYTE,pixels);
-        let hash=2166136261;for(const pixel of pixels)hash=Math.imul(hash^pixel,16777619);
-        resolve(hash>>>0);
-    })));
+    const image = sharp(await field.screenshot()), { width = 0, height = 0 } = await image.metadata();
+    const size = Math.min(128, width, height);
+    if (!size) throw new Error('Missing prototype battlefield pixels');
+    // Inspect the same central region as the GL probe. The canvas's rectangle
+    // also contains DOM overlays such as changing FPS diagnostics at its edge.
+    const pixels = await image.extract({ left: Math.floor((width - size) / 2), top: Math.floor((height - size) / 2), width: size, height: size }).removeAlpha().raw().toBuffer();
+    return createHash('sha256').update(pixels).digest('hex');
 }
 
 test('army preview supports mesh inspection, automatic combat, quality changes and 2D fallback without touching a campaign',async({page},testInfo)=>{

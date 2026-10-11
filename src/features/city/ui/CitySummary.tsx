@@ -11,7 +11,7 @@ import { citySlots } from '../domain/slots';
 import { UNIT_TYPES, UNITS, soldierTotal } from '../../army/domain/units';
 import type { ArmyTroops, UnitType } from '../../army/domain/types';
 import { armyFaction } from '../../army/domain/faction';
-import { factionOf, type Faction } from '../../factions/domain/factions';
+import { FACTIONS, factionOf, type Faction } from '../../factions/domain/factions';
 import { factionTroopName } from '../../frontier/ui/roster';
 import { garrisonAt, stationCell } from '../../map/domain/garrisons';
 import { armyPosition } from '../../map/domain/movement';
@@ -61,15 +61,24 @@ export function CityArmySummary({ world, sid, owner, now, onSelect }: {
     const own = world.armies.filter(army => army.owner_id === owner);
     const activeBattle = new Set(world.battles.filter(battle => battle.status === 'active').flatMap(battle => [battle.attacker_army_id, battle.defender_army_id]));
     const stationed = own.filter(army => army.status === 'idle' && army.raid_target_id === null && !army.raid_reserve && !activeBattle.has(army.id) && sameStation(armyPosition(army, now), town));
-    const pool = garrisonAt(world, owner, town), totals: ArmyTroops = { infantry: pool?.infantry ?? 0, archers: pool?.archers ?? 0, cavalry: pool?.cavalry ?? 0 };
-    for (const army of stationed) for (const type of UNIT_TYPES) totals[type] += army[type];
+    const pool = garrisonAt(world, owner, town), troopsByFaction = new Map<Faction, ArmyTroops>();
+    // Unassigned garrisons store troop classes only; stationed legions retain their home culture.
+    if (pool && soldierTotal(pool) > 0) troopsByFaction.set(faction, { infantry: pool.infantry, archers: pool.archers, cavalry: pool.cavalry });
+    for (const army of stationed) {
+        const culture = armyFaction(world, army), troops = troopsByFaction.get(culture) ?? { infantry: 0, archers: 0, cavalry: 0 };
+        for (const type of UNIT_TYPES) troops[type] += army[type];
+        troopsByFaction.set(culture, troops);
+    }
+    if (!troopsByFaction.size) troopsByFaction.set(faction, { infantry: 0, archers: 0, cavalry: 0 });
+    const totals: ArmyTroops = { infantry: 0, archers: 0, cavalry: 0 };
+    for (const troops of troopsByFaction.values()) for (const type of UNIT_TYPES) totals[type] += troops[type];
     // Older saves keep an unsent party reserved by its busy legion until return.
     const legacyReserves = own.filter(army => army.raid_reserve && sameStation(army.march_origin ?? { x: army.start_x, y: army.start_y }, town));
     const reserved = legacyReserves.reduce((sum, army) => sum + soldierTotal(army.raid_reserve!), 0);
     const training = world.orders.filter(order => order.kind === 'recruit' && order.owner_id === owner && (order.settlement_id ?? world.settlements[0].id) === sid).sort((a, b) => Date.parse(a.finish_at) - Date.parse(b.finish_at));
     const movements = own.filter(army => army.status === 'moving' && (sameStation({ x: army.start_x, y: army.start_y }, town) || sameStation({ x: army.target_x, y: army.target_y }, town))).sort((a, b) => Date.parse(a.arrival_at) - Date.parse(b.arrival_at));
     const recruitmentPlot = citySlots(world, sid).find(slot => slot.building_type === 'barracks' && slot.level > 0);
-    return <aside className="village-rail village-army" aria-label="Village troops and movements"><section><h3><Icon name="shield" size={16}/>Army at home <b>{soldierTotal(totals).toLocaleString()}</b></h3><p className="village-muted">Ready troops in this village</p><div className="village-troops" aria-label="Troops stationed in this village">{UNIT_TYPES.map(type => <div key={type} title={`${factionTroopName(faction, type)} · ${UNITS[type].role}. Includes legions and unassigned troops physically stationed here. Travelling and unfinished training are excluded.`}><VillageTroopIcon faction={faction} unit={type}/><span>{factionTroopName(faction, type)}</span><strong data-troop={type}>{totals[type].toLocaleString()}</strong></div>)}</div>
+    return <aside className="village-rail village-army" aria-label="Village troops and movements"><section><h3><Icon name="shield" size={16}/>Army at home <b>{soldierTotal(totals).toLocaleString()}</b></h3><p className="village-muted">Ready troops in this village</p><div className="village-troops" aria-label="Troops stationed in this village">{[...troopsByFaction].flatMap(([culture, troops]) => UNIT_TYPES.map(type => <div key={`${culture}:${type}`} data-faction={culture} title={`${FACTIONS[culture].name} · ${factionTroopName(culture, type)} · ${UNITS[type].role}. Includes legions and unassigned troops physically stationed here. Travelling and unfinished training are excluded.`}><VillageTroopIcon faction={culture} unit={type}/><span>{factionTroopName(culture, type)}</span><strong data-troop={type}>{troops[type].toLocaleString()}</strong></div>))}</div>
         {pool && soldierTotal(pool) > 0 && <small className="village-pool-note" title="These troops can join an idle legion here. A returning legion automatically collects available stationed troops within its 1,000 soldier capacity.">{soldierTotal(pool).toLocaleString()} troops awaiting a legion</small>}
         {reserved > 0 && <small className="village-pool-note" title="These unsent troops belong to a busy legion in an older save. They become available when that legion returns and are excluded from ready troop counts.">{reserved.toLocaleString()} troops reserved until their legion returns</small>}
         <details className="village-legions"><summary>{stationed.length} {stationed.length === 1 ? 'legion' : 'legions'} stationed here</summary>{stationed.map(army => <div key={army.id}><span>{army.name}</span><b>{soldierTotal(army).toLocaleString()}</b></div>)}{!stationed.length && <p>No legion is currently stationed here.</p>}</details>

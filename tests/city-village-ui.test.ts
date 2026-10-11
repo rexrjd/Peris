@@ -5,6 +5,8 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { createSolo } from '../src/features/campaign/domain/newRealm';
 import { CityConstructionQueue, constructionName, constructionTarget } from '../src/features/city/ui/CityConstructionQueue';
 import { CityArmySummary, CityEconomySummary } from '../src/features/city/ui/CitySummary';
+import { stationCell } from '../src/features/map/domain/garrisons';
+import { factionTroopName } from '../src/features/frontier/ui/roster';
 
 (globalThis as any).React = React;
 
@@ -35,4 +37,27 @@ test('home ledger excludes foreign armies and legacy reserves locked to a busy l
     assert.ok(html.includes('data-troop="cavalry">16</strong>'));
     assert.ok(html.includes('100 troops reserved until their legion returns'));
     assert.ok(!html.includes('foreign-ruler'));
+});
+
+test('home ledger preserves visiting legion cultures and attributes generic garrisons to the station', () => {
+    const world = createSolo('Mixed cultures'), army = world.armies[0], town = world.settlements[0];
+    town.faction = 'roman';
+    world.settlements.push({ ...town, id: 2, name: 'Elven home', faction: 'elf', x: town.x + 256 });
+    world.armies.push({ ...army, id: 2, home_settlement_id: 2, infantry: 13, archers: 7, cavalry: 3 });
+    world.armies.push({ ...army, id: 3, home_settlement_id: 2, infantry: 30, archers: 30, cavalry: 30, status: 'moving', departure_at: world.server_now, arrival_at: new Date(Date.parse(world.server_now) + 60000).toISOString() });
+    world.garrisons = [{ owner_id: army.owner_id, ...stationCell(town), infantry: 5, archers: 2, cavalry: 1 }];
+    const html = renderToStaticMarkup(React.createElement(CityArmySummary, { world, sid: town.id, owner: army.owner_id, now: Date.parse(world.server_now), onSelect: () => {} }));
+    const rows = [...html.matchAll(/<div data-faction="(roman|elf)"[^>]*>(.*?)<\/div>/g)].map(match => ({ faction: match[1], html: match[2] }));
+    assert.equal(rows.length, 6);
+    for (const [faction, expected] of [['roman', [125, 52, 17]], ['elf', [13, 7, 3]]] as const) {
+        const culture = rows.filter(row => row.faction === faction);
+        assert.equal(culture.length, 3);
+        for (const [index, unit] of ['infantry', 'archers', 'cavalry'].entries()) {
+            assert.ok(culture[index].html.includes(factionTroopName(faction, unit as 'infantry' | 'archers' | 'cavalry')));
+            assert.ok(culture[index].html.includes(`/art/battle/roster/${faction}.png`));
+            assert.ok(culture[index].html.includes(`data-troop="${unit}">${expected[index]}</strong>`));
+        }
+    }
+    assert.ok(html.includes('Army at home <b>217</b>'));
+    assert.ok(html.includes('8 troops awaiting a legion'));
 });

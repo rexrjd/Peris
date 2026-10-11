@@ -144,7 +144,10 @@ test('real scene picking follows interpolated rotated formation boxes and view u
         assert.equal(scene.hit(view.project(f.x, f.y, 8))?.id, f.id, 'soldier silhouette selects its existing formation');
         assert.equal(scene.hit(view.project(810, 450)), undefined, 'empty terrain does not select a distant formation');
         assert.ok(record.outline.visible); assert.equal(record.path.visible, false);
-        state.paused = true; f.status = 'moving'; f.target_x = 700; scene.updateFormation(f, record, .05);
+        state.paused = true; f.status = 'moving'; f.target_x = 700;
+        record.pose.x -= 20; record.pose.y -= 15; record.pose.facing -= 10;
+        scene.updateFormation(f, record, .05);
+        assert.deepEqual(record.pose, { x: f.x, y: f.y, facing: f.facing }, 'Pausing settles the visible pose before demand redraw sleeps');
         assert.ok(record.path.visible && record.destination.visible);
         scene.remove(record); assert.equal(scene.scene.children.length, 0);
     } finally {
@@ -189,5 +192,40 @@ test('graphics interruption reports fallback exactly once and disposes scene res
         assert.deepEqual([cancelled, disconnected, inputDisposed, rendererDisposed, removedListener, fallback, materialDisposed,showcaseDisposed], [1, 1, 1, 1, 1, 1, 1,1]);
     } finally {
         if (savedCancel) Object.defineProperty(globalThis, 'cancelAnimationFrame', savedCancel); else Reflect.deleteProperty(globalThis, 'cancelAnimationFrame');
+    }
+});
+
+test('paused 3D scenes redraw readiness and presentation changes without repeatedly submitting unchanged armies', () => {
+    const savedFrame = Object.getOwnPropertyDescriptor(globalThis, 'requestAnimationFrame');
+    Object.defineProperty(globalThis, 'requestAnimationFrame', { configurable: true, value: () => 1 });
+    try {
+        const { state, own } = setup(); state.paused = true;
+        const view = new BattleCamera(() => 0); view.setSize(1200, 700); view.center();
+        let rendered = 0, ready = 0, updated = 0;
+        const scene = Object.create(BattleScene.prototype);
+        Object.assign(scene, {
+            alive: true, state: () => state, view, formations: new Map(), input: null,
+            visualTime: 0, last: 0, shadowSpan: 0, readyFrames: 0, pausedFrameKey: '', presentationRevision: 0,
+            inspectedId: null, metricFrames: 0, metricStart: 0, scene: new Scene(), zones: new Group(),
+            renderer: { render() { rendered++; }, setSize() {}, info: { render: { calls: 20, triangles: 100000 } } },
+            canvas: { parentElement: { getBoundingClientRect: () => ({ width: 900, height: 650 }) } },
+            ready: () => { ready++; }, create: (f: Formation) => ({ pose: { x: f.x, y: f.y, facing: f.facing } }),
+            updateFormation: () => { updated++; }, remove: () => {},
+        });
+        scene.draw(1000); scene.draw(1016); scene.draw(1032);
+        assert.equal(rendered, 2); assert.equal(ready, 1, 'Both initial real frames still complete readiness');
+        const stableUpdates = updated;
+        scene.draw(1048); assert.equal(updated, stableUpdates, 'Idle pause also skips formation uploads');
+        state.selectedIds = [own[1].id]; scene.draw(1064); assert.equal(rendered, 3);
+        view.rotate(.2); scene.draw(1080); assert.equal(rendered, 4);
+        scene.resize(); scene.draw(1096); assert.equal(rendered, 5);
+        // Domain snapshots mutate in place: object identity alone is insufficient.
+        own[0].x += 20; scene.draw(1112); assert.equal(rendered, 6);
+        own[0].soldiers = 0; scene.draw(1128); assert.equal(rendered, 7);
+        state.paused = false; scene.draw(1144); scene.draw(1160);
+        assert.equal(rendered, 9, 'Active animation keeps the existing frame cadence');
+    } finally {
+        if (savedFrame) Object.defineProperty(globalThis, 'requestAnimationFrame', savedFrame);
+        else Reflect.deleteProperty(globalThis, 'requestAnimationFrame');
     }
 });

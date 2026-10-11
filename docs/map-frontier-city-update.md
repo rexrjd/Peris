@@ -19,7 +19,7 @@ frontend; use `FRESH_INSTALL_V14.sql` only for an empty database. Frontier start
 with `npm run dev:frontier`. Preparing this update does not deploy SQL or publish
 the application.
 
-Validated on 2026-10-11 with Windows and headless Edge: 348 unit tests passed
+Initial combined-update validation on 2026-10-11 with Windows and headless Edge: 348 unit tests passed
 (one intentional skip), four tooling tests passed, and the production build,
 Frontier typecheck, SQL/world/camp generation and asset checks passed. Frontier
 passed 29 server tests and all ten desktop/mobile browser tests.
@@ -34,3 +34,15 @@ gate access, building bounds, NPC feet and unchanged saves. Repository CI now al
 runs the Frontier typecheck, server tests and dedicated browser suite.
 The artwork exporter was run successfully; all 132 published faction cells have
 visible artwork, transparent gutters and the expected dimensions.
+
+The PR #6 compatibility follow-up merges the latest main, including the completed
+Frontier Wars and account changes. Village troop rows now retain the culture of
+visiting legions. Hidden or covered world maps suspend rendering, and unchanged
+paused battles and reduced-motion maps redraw only when their presentation changes;
+camera controls, model loading, moving troops and automatic combat remain active.
+Regression tests cover these redraw rules and mixed-culture village troops.
+Follow-up validation passed 355 unit tests (one intentional skip), four tooling
+tests, asset validation and the production build. Headless Edge passed all 24
+city/account cases, all ten Frontier cases, and all twelve focused desktop/mobile
+battle-renderer and world-map cases. Battle picking checks use the rendered camera
+projection and pause before model loading so narrow-screen selections stay reliable.

@@ -33,6 +33,8 @@ export class BattleScene {
     private inspectedId: number | null = null;
     private alive = true;
     private readyFrames = 0;
+    private pausedFrameKey = '';
+    private presentationRevision = 0;
     private readonly formations = new Map<number, FormationView>();
     private readonly showcases: Group[] = [];
     private readonly ray = new Raycaster();
@@ -85,6 +87,7 @@ export class BattleScene {
         if (!this.alive || !this.renderer) return;
         const rect = this.canvas.parentElement!.getBoundingClientRect();
         this.renderer.setSize(Math.max(1, rect.width), Math.max(1, rect.height), false); this.view.setSize(rect.width, rect.height);
+        this.presentationRevision++;
     }
     private create(f: Formation): FormationView {
         const group = new Group(), soldiers = this.soldiers(f);
@@ -104,7 +107,7 @@ export class BattleScene {
     }
     private updateFormation(f: Formation, record: FormationView, dt: number) {
         const state = this.state(), battle = state.battle!, pose = record.pose, height = (x: number, y: number) => battlefieldHeight(battle.terrain, x, y);
-        const amount = battle.phase === 'deployment' || preferences().reducedMotion ? 1 : 1 - Math.exp(-dt * 10);
+        const amount = state.paused || battle.phase === 'deployment' || preferences().reducedMotion ? 1 : 1 - Math.exp(-dt * 10);
         pose.x += (f.x - pose.x) * amount; pose.y += (f.y - pose.y) * amount; pose.facing += angleDiff(f.facing, pose.facing) * amount;
         record.group.visible=!this.view.inspecting || state.selectedIds.includes(f.id);
         if(record.group.visible) record.soldiers.update({ formation: f, pose, dt: state.paused ? 0 : dt, time: this.visualTime, battleTime: battle.elapsed, height, detail:this.view.span>180?'far':'near', animate: !state.paused && !preferences().reducedMotion && preferences().effects });
@@ -141,6 +144,15 @@ export class BattleScene {
             if (!this.state().paused) this.visualTime += dt;
             this.input?.update(dt);
             const fs = this.state().world.formations.filter(f => f.battle_id === this.state().battle!.id && f.soldiers > 0), ids = new Set(fs.map(f => f.id));
+            const state = this.state(), frameKey = state.paused ? this.pausedKey(state, fs) : '';
+            // Paused armies have no animation to redraw. Keep polling input and
+            // mutable snapshots, but leave the last composited frame in place
+            // until its camera, selection or visible formations actually change.
+            if (state.paused && this.readyFrames >= 2 && frameKey === this.pausedFrameKey) {
+                this.reportDiagnostics(time);
+                this.frame = requestAnimationFrame(next => this.draw(next));
+                return;
+            }
             for (const [id, record] of this.formations) if (!ids.has(id)) { this.remove(record); this.formations.delete(id); }
             for (const f of fs) {
                 let record = this.formations.get(f.id);
@@ -163,16 +175,30 @@ export class BattleScene {
                 Object.assign(this.sun.shadow.camera,{left:-850,right:850,top:650,bottom:-650});this.sun.shadow.camera.updateProjectionMatrix();this.shadowSpan=0;
             }
             this.zones.visible = this.state().battle!.phase === 'deployment' && !this.view.inspecting; this.renderer!.render(this.scene, this.view.camera);
+            this.pausedFrameKey = state.paused ? this.pausedKey(state, fs) : '';
             // Imported rigs, palettes, textures and shaders must reach actual
             // frames before removing the loading cover or accepting visual QA.
             if (++this.readyFrames === 2) this.ready?.();
-            if (this.diagnostics) {
-                this.metricFrames++;
-                if (!this.metricStart) this.metricStart=time;
-                if (time-this.metricStart >= 1000) { this.diagnostics(this.metricFrames*1000/(time-this.metricStart),this.renderer!.info.render.calls,this.renderer!.info.render.triangles); this.metricFrames=0; this.metricStart=time; }
-            }
+            this.metricFrames++;
+            this.reportDiagnostics(time);
             this.frame = requestAnimationFrame(next => this.draw(next));
         } catch (error) { console.warn('3D battlefield stopped', error); this.fail(); }
+    }
+    private pausedKey(state: RenderState, formations: Formation[]) {
+        const view = this.view, settings = preferences();
+        return JSON.stringify([this.presentationRevision, state.playerId, state.battle?.phase, state.selectedIds,
+            view.target.toArray(), view.span, view.yaw, view.inspecting, view.width, view.height, this.inspectedId,
+            settings.reducedMotion, settings.effects,
+            formations.map(f => [f.id, f.owner_id, f.label, f.unit_type, f.soldiers, f.initial_soldiers, f.columns,
+                f.x, f.y, f.facing, f.morale, f.status, f.target_x, f.target_y, f.target_formation_id])]);
+    }
+    private reportDiagnostics(time: number) {
+        if (!this.diagnostics || !this.renderer) return;
+        if (!this.metricStart) this.metricStart = time;
+        if (time - this.metricStart >= 1000) {
+            this.diagnostics(this.metricFrames * 1000 / (time - this.metricStart), this.renderer.info.render.calls, this.renderer.info.render.triangles);
+            this.metricFrames = 0; this.metricStart = time;
+        }
     }
     private project(f: Formation) { const p = this.formations.get(f.id)?.pose ?? f; return this.view.project(p.x, p.y); }
     private hit(p: Point) {
@@ -182,6 +208,7 @@ export class BattleScene {
         return pick ? this.state().world.formations.find(f => f.battle_id === this.state().battle?.id && f.id === pick.object.userData.formationId) : undefined;
     }
     private preview(gesture: BattleGesture | null) {
+        this.presentationRevision++;
         this.selectionBox.hidden = true; this.previewLine.visible = false;
         if (!gesture) return;
         if (gesture.button === 0 && this.state().touchOrder === 'select') {
@@ -211,7 +238,7 @@ export class BattleScene {
         if(showcase&&bounds){showcase.updateMatrixWorld(true);this.view.inspectBounds(bounds.clone().applyMatrix4(showcase.matrixWorld));}
         else this.view.inspect(x,y);
     }
-    addShowcase(group: Group) { this.showcases.push(group); this.scene.add(group); }
+    addShowcase(group: Group) { this.showcases.push(group); this.scene.add(group); this.presentationRevision++; }
     focus(side: 'own' | 'enemy') {
         this.inspectedId=null; this.view.inspecting=false; this.view.span=Math.max(450,this.view.span);
         const state = this.state(), fs = state.world.formations.filter(f => f.battle_id === state.battle?.id && f.soldiers > 0 && (side === 'own' ? f.owner_id === state.playerId : f.owner_id !== state.playerId));

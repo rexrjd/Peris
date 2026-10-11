@@ -1,4 +1,5 @@
 import { test, expect, type Page, type TestInfo } from '@playwright/test';
+import sharp from 'sharp';
 
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
@@ -102,14 +103,16 @@ test('campaign map renders in WebGL and its camera controls work', async ({ page
   await expect(page.getByLabel('Rotate camera left')).toBeVisible();
   const field = page.locator('canvas[aria-label^="Interactive 200 by 200"]');
   await expect.poll(() => field.evaluate((canvas: HTMLCanvasElement) => canvas.width)).toBeGreaterThan(0);
-  // A context can exist without drawing. Check that WebGL actually produced colored pixels.
-  await expect.poll(() => field.evaluate((canvas: HTMLCanvasElement) => new Promise<boolean>(resolve => requestAnimationFrame(() => {
-    const gl = canvas.getContext('webgl2');
-    if (!gl) { resolve(false); return; }
-    const pixels = new Uint8Array(4 * 4 * 4);
-    gl.readPixels(Math.floor(canvas.width / 2), Math.floor(canvas.height / 2), 4, 4, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
-    resolve(pixels.some((value, index) => index % 4 !== 3 && value > 0));
-  })))).toBe(true);
+  await expect.poll(() => field.evaluate((canvas: HTMLCanvasElement) => !!canvas.getContext('webgl2'))).toBe(true);
+  // A context can exist without drawing. Inspect the actual composited canvas:
+  // reduced-motion maps retain their image without continuously redrawing the
+  // discarded GL back buffer merely to keep this pixel probe populated.
+  await expect.poll(async () => {
+    const image = sharp(await field.screenshot()), { width = 0, height = 0 } = await image.metadata();
+    if (width < 4 || height < 4) return false;
+    const pixels = await image.extract({ left: Math.floor((width - 4) / 2), top: Math.floor((height - 4) / 2), width: 4, height: 4 }).removeAlpha().raw().toBuffer();
+    return pixels.some(value => value > 0);
+  }).toBe(true);
   await page.getByLabel('Rotate camera left').click();
   await page.getByRole('button', { name: 'Zoom in', exact: true }).click();
   await page.getByRole('button', { name: 'Focus your settlement', exact: true }).click();
