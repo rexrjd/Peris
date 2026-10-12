@@ -1,0 +1,97 @@
+{
+  "base_commit": "a24dee6fd3a666a3f3bef6498ceba040cbfb10db",
+  "package": "3D city UI and guild crest",
+  "database_migration": false,
+  "files": [
+    {
+      "path": "CITY_3D_UI_UPDATE.md",
+      "bytes": 2655,
+      "sha256": "628dc9f213557a66764942c4a236c9bd3eb8a480a0d1ab17a7c95b5bd7944be7"
+    },
+    {
+      "path": "CITY_UI_PUSH_NOTES.txt",
+      "bytes": 2717,
+      "sha256": "11fa8baa77b690757a1d0dd28fadcfd4a987a1579083c40de5b41cc1d51731ba"
+    },
+    {
+      "path": "docs/previews/city-ui/building-popup.png",
+      "bytes": 261265,
+      "sha256": "f20776f85b7eb0335accab2ff6f8e457914b3086a5bef753645dca27c09e2d9a"
+    },
+    {
+      "path": "docs/previews/city-ui/desktop.png",
+      "bytes": 419849,
+      "sha256": "e257da5208ab80a1c72990be03e5d82ad8a3e477794b0efdb30a2d7d8232b1cd"
+    },
+    {
+      "path": "docs/previews/city-ui/mobile-320.png",
+      "bytes": 126180,
+      "sha256": "f44d6e796e9f2c77fb91c0e85b9bff7d3ee72d6a0e4fe6ba386cdcef1f408fdb"
+    },
+    {
+      "path": "src/app/App.tsx",
+      "bytes": 31735,
+      "sha256": "f04411f138d10c52e612fe1aa31eb408b6c090695da1bb512c63f18dfcda11f7"
+    },
+    {
+      "path": "src/app/styles/index.css",
+      "bytes": 2246,
+      "sha256": "38dda84aad9b0716cdad103be6ecd9b1f0e4997970a7895128e65ce61de47866"
+    },
+    {
+      "path": "src/features/city/domain/militaryOverview.ts",
+      "bytes": 2963,
+      "sha256": "4e70ea2220c4ec6a30aee33c89e2795588400913002dd077e319fd58b357397c"
+    },
+    {
+      "path": "src/features/city/styles/scene-workspace.css",
+      "bytes": 17750,
+      "sha256": "a2974061d93f2a38b5f68c75cf245d1a2d28b764c3f8091d4afe94133e0f82e3"
+    },
+    {
+      "path": "src/features/city/ui/BuildingDialog.tsx",
+      "bytes": 14854,
+      "sha256": "204ce60951a6053d74277a6cbdb5ecd6c2d60be4e0dcde67bb523f68e44e656e"
+    },
+    {
+      "path": "src/features/city/ui/CitySceneWorkspace.tsx",
+      "bytes": 12568,
+      "sha256": "7e79d70353196c262ec12046c35ede9a9aebf93e2cc8fac4770ef985bf849f57"
+    },
+    {
+      "path": "src/features/city/ui/CitySummary.tsx",
+      "bytes": 12080,
+      "sha256": "8f90afe15ef91f386cf9554971dbc817edbf15104ee72d5f875c5747f9c5ed88"
+    },
+    {
+      "path": "src/features/city/ui/SettlementView.tsx",
+      "bytes": 8297,
+      "sha256": "d062f5a22217ab3175e7dc3bc150500a92b93646966a830cf123bc017307b7ad"
+    },
+    {
+      "path": "src/features/social/styles/social.css",
+      "bytes": 28910,
+      "sha256": "5cf79a20a199e391cd1569f2ad842911c0ee01ee63508cea076e1aeb559af981"
+    },
+    {
+      "path": "src/features/social/ui/SocialNavigation.tsx",
+      "bytes": 1128,
+      "sha256": "6b5f5beb1ec6fddab96008a0c489276edf67eeab3a506da99258e9e249026328"
+    },
+    {
+      "path": "src/shared/ui/Icons.tsx",
+      "bytes": 5485,
+      "sha256": "2127748a36b3dac508605d84cbaa29ff699675663e586572d3d6a100edb49d99"
+    },
+    {
+      "path": "tests/e2e/city-scene-ui.spec.ts",
+      "bytes": 10746,
+      "sha256": "c307c1e8b1f632cc4b0701ff1c6e5630695ce2c5ae613fb6bc304d0c0032ed29"
+    },
+    {
+      "path": "tests/e2e/social.spec.ts",
+      "bytes": 12365,
+      "sha256": "5a311be9e737170124f6690868293fbcd6ecbb7fd6afee25c6186c586b81ef45"
+    }
+  ]
+}

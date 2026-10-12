@@ -256,7 +256,7 @@ function Realm({ engine, onExit, onLoad, onRetry, onUnitPreview }: {
     return <ResearchNavigation.Provider value={id=>{setResearchSelection(id);setEmpireOpen(false);navigate('research');}}>
   {visibleBattle ? <BattleView world={world} battle={visibleBattle} engine={engine} run={run} onHelp={() => setHelp(true)} onSettings={() => setSettings(true)}/> : <div className={`realm-shell game-shell ${view === 'world' && !empireOpen ? 'has-map' : ''}`}>
    <header className="realm-topbar game-header">
-   <SocialNavigation active={socialPanel} unread={social.snapshot.unread} attention={social.snapshot.attention} onOpen={panel=>{if(panel==='messages')setMessageTarget(undefined);setSocialPanel(current=>current===panel?null:panel);setReportsOpen(false);setEmpireOpen(false);}}/>
+   <SocialNavigation active={socialPanel} unread={social.snapshot.unread} attention={social.snapshot.attention} crest={social.snapshot.threads.find(thread=>thread.kind==='guild'&&thread.id===social.snapshot.guild_id)?.crest} onOpen={panel=>{if(panel==='messages')setMessageTarget(undefined);setSocialPanel(current=>current===panel?null:panel);setReportsOpen(false);setEmpireOpen(false);}}/>
    <GameNavigation research={currentTechnology?{id:currentTechnology.id,name:currentTechnology.name,progress:researchSeconds(world,engine.playerId,currentTechnology.id,now)/currentTechnology.seconds}:undefined} reportsOpen={reportsOpen} view={view} unreadReports={unreadReports} onNavigate={navigate}/>
    <div className="game-header-actions"><ResourceHud resources={resources} capacity={storage} rate={rate} onSelect={setResource}/>
    <QuickAccess items={[

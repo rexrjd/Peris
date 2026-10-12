@@ -2,7 +2,7 @@ import {test,expect,type BrowserContext,type Page} from '@playwright/test';
 // @ts-expect-error The isolated multiplayer database adapter is plain Node JS.
 import {accountServer} from '../helpers/account-server.mjs';
 let server:Awaited<ReturnType<typeof accountServer>>;
-test.beforeAll(async()=>{server=await accountServer();for(const name of ['Guild Alice','Guild Bob','Guild Cara','Guild Rival'])await server.seed(name,'roman');});
+test.beforeAll(async()=>{server=await accountServer();for(const name of ['Guild Alice','Guild Bob','Guild Cara','Guild Rival','Guild Crest'])await server.seed(name,'roman');});
 test.afterAll(async()=>{await server.close();});
 async function connect(context:BrowserContext){
  await context.addInitScript(()=>{
@@ -41,4 +41,24 @@ test('diplomatic offers, treasury ledger, and compact mobile controls',async({pa
  await page.bringToFront();await guilds(page);await page.getByRole('button',{name:'Diplomacy',exact:true}).click();await expect(page.getByRole('button',{name:'Accept',exact:true})).toBeVisible();await page.getByRole('button',{name:'Accept',exact:true}).click();await expect(page.locator('.guild-relations')).toContainText('Non-aggression pact');await expect(page.locator('.guild-relations')).not.toContainText('awaiting acceptance');
  await page.getByRole('button',{name:'Overview',exact:true}).click();await page.getByLabel('Treasury gold amount').fill('10');await page.getByRole('button',{name:'Contribute',exact:true}).click();await expect(page.locator('.guild-ledger')).toContainText('+10');await page.getByRole('button',{name:'Withdraw',exact:true}).click();await expect(page.locator('.guild-ledger')).toContainText('-10');await close(page);
  await page.setViewportSize({width:320,height:700});await expect(nav(page)).toBeVisible();const socialBox=await nav(page).boundingBox();expect(socialBox!.y).toBeLessThan(65);expect(socialBox!.x).toBeLessThan(20);await guilds(page);await page.getByRole('button',{name:'Settings',exact:true}).click();await page.screenshot({path:info.outputPath('guild-320px.png')});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await close(page);await nav(page).getByRole('button',{name:/^Messages/}).click();await page.getByRole('button',{name:'New message',exact:true}).click();await page.getByRole('searchbox',{name:'Find players',exact:true}).fill('Guild Alice');await page.locator('.social-player-results').getByRole('button',{name:/Guild Alice/}).click();await page.getByLabel('Write a message').fill('Testing the compact messenger.');await page.screenshot({path:info.outputPath('messages-320px.png')});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await other.close();
+});
+test('navigation shows the current guild crest, follows edits and restores the default after disbanding',async({page,context},info)=>{
+ await connect(context);await login(page,'Guild Crest');
+ const button=nav(page).locator('[data-panel="guilds"]'),crest=button.locator('.guild-crest');
+ await expect(button.locator('.hud-picture')).toHaveCount(1);
+ await createGuild(page,'Crest Workshop','CRST');
+ await expect(crest).toBeVisible();await expect(button.locator('.hud-picture')).toHaveCount(0);
+ await expect(crest.locator('path').first()).toHaveAttribute('fill','#637da3');
+ await page.getByRole('navigation',{name:'Guild sections'}).getByRole('button',{name:'Settings',exact:true}).click();
+ await page.getByLabel('Crest color #ab646d',{exact:true}).click();await page.getByLabel('Crest moon',{exact:true}).click();
+ await page.getByRole('button',{name:'Save guild',exact:true}).click();
+ await expect(crest.locator('path').first()).toHaveAttribute('fill','#ab646d');
+ await expect.poll(async()=>crest.locator('g').innerHTML()).toBe(await page.locator('.guild-banner .guild-crest g').innerHTML());
+ await close(page);await page.reload();await expect(page.getByLabel('Game menu')).toBeVisible();
+ await expect(crest.locator('path').first()).toHaveAttribute('fill','#ab646d');
+ await page.screenshot({path:info.outputPath('guild-navigation-crest.png')});
+ await guilds(page);await page.getByRole('navigation',{name:'Guild sections'}).getByRole('button',{name:'Settings',exact:true}).click();
+ await page.locator('.guild-danger-zone summary').click();await page.getByLabel('Confirm guild tag').fill('CRST');
+ await page.getByRole('button',{name:'Disband',exact:true}).click();await page.getByRole('button',{name:'Confirm',exact:true}).click();
+ await expect(crest).toHaveCount(0);await expect(button.locator('.hud-picture')).toHaveCount(1);
 });

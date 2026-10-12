@@ -1,0 +1,49 @@
+PERIS — 3D CITY UI + GUILD CREST
+Base: a24dee6fd3a666a3f3bef6498ceba040cbfb10db (origin/main)
+Review branch: feat/city-scene-ui
+
+WHAT CHANGED
+- Your own guild crest replaces the default Guilds navigation picture.
+- The original 3D city fills the workspace with floating controls.
+- Production, military details and searchable buildings open on demand.
+- Construction stays in a small live corner card; Build/Expand remains prominent.
+- City switching and reloads preserve the selected view during the browser session.
+- 3D building dialogs use actual models and slate colors.
+- Shared troop selection preserves home/away, garrison and faction counts.
+- Painted Village artwork, layout, city models, gameplay and server functions stay intact.
+
+APPLY
+1. Fetch origin/main and compare it with the base above before copying.
+2. Extract this archive outside your checkout. Review CITY_UI_FILES.json.
+3. Copy the listed files into the repository root on a review branch.
+4. Run the checks below. Open City, then choose 3D to see the redesign.
+5. Commit/push through the normal repository workflow when ready.
+
+No SQL migration or new npm dependency is needed for this patch.
+The existing V19 social migration is still required for an older database.
+This package does not contain or deploy SQL, accounts, saves or environment settings.
+
+VERIFIED
+- npm test: 443 passed, 1 existing skip (444 total).
+- npm run test:tooling: 4 passed.
+- npm run assets:check: 46 registered GLBs passed.
+- npm run build: TypeScript, artifact/research art checks and Vite passed.
+- git diff --check: passed.
+- 18 unique affected browser cases passed across desktop and mobile:
+  6 new city cases (live 3D, building/queue persistence, multi-city graphics fallback),
+  8 existing Village cases (home troops, fishery, mage/building choices, view transitions),
+  2 compact-header cases, and 2 guild crest cases.
+- Guild crest checks cover create, edit, reload, and default restoration on disband.
+- Actual city and preview WebGL canvases were visible and interacted with.
+- Screenshots inspected at desktop, Pixel 7 and 320px widths.
+- Latest main was fetched and still matched a24dee6 at final review.
+
+Browser QA used Chromium with software WebGL. Hardware FPS was not benchmarked.
+Vite retains its existing advisory about large bundle chunks.
+No backend source changed, so production SQL was not touched.
+
+REPRODUCE BROWSER CHECKS
+npm run test:e2e -- tests/e2e/city-scene-ui.spec.ts tests/e2e/social.spec.ts tests/e2e/compact-header.spec.ts tests/e2e/city-village.spec.ts
+
+The normal Playwright configuration needs its installed Chromium and video tools.
+Runner-specific browser binaries/configuration are deliberately excluded from this ZIP.

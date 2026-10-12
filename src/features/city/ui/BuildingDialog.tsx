@@ -17,6 +17,7 @@ import { armyAttack, citySlots, SLOT_BUILDINGS, slotCost, slotCount, slotLevels,
 import type { BuildingType } from '../domain/types';
 import type { CityPlot } from '../rendering/three/layout';
 import { BuildingArtwork } from '../rendering/BuildingArtwork';
+import { BuildingPreview } from '../rendering/BuildingPreview';
 import { factionOf } from '../../factions/domain/factions';
 import { CityDebugPanel } from '../../factions/ui/CityDebugPanel';
 import { MageTowerPanel } from '../../magic/ui/MageTowerPanel';
@@ -62,8 +63,8 @@ function benefits(world: World, sid: number, plot: CityPlot): BenefitRow[] {
     return rows;
 }
 
-export function BuildingDialog({ world, owner, sid, plot, initialChoice, note, busy, now, run, onSelect, onClose }: {
-    world: World; owner: string; sid: number; plot: CityPlot; initialChoice: SlotType; note?: string; busy: boolean; now: number;
+export function BuildingDialog({ world, owner, sid, plot, initialChoice, note, busy, now, run, onSelect, onClose, appearance }: {
+    world: World; owner: string; sid: number; plot: CityPlot; initialChoice: SlotType; note?: string; busy: boolean; now: number; appearance?: 'scene';
     run: (command: Command, message?: string) => void; onSelect: (key: string) => void; onClose: () => void;
 }) {
     const openResearch=useResearchNavigation();
@@ -84,11 +85,12 @@ export function BuildingDialog({ world, owner, sid, plot, initialChoice, note, b
     const name = meta?.name ?? `Empty plot ${plot.slot! + 1}`;
     const close = () => { if (typeof document === 'undefined' || !document.querySelector('.mage-spellbook')) onClose(); };
     const rows = benefits(world, sid, plot);
-    const dialog = <Modal title={type==='academy'?'Academy':'Selected building'} className={`village-building-dialog ${type==='academy'?'academy-dialog':''}`} heading={false} onClose={close}>
+    const Preview = appearance === 'scene' ? BuildingPreview : BuildingArtwork;
+    const dialog = <Modal title={type==='academy'?'Academy':'Selected building'} className={`village-building-dialog ${appearance === 'scene' ? 'city-scene-building-dialog' : ''} ${type==='academy'?'academy-dialog':''}`} heading={false} onClose={close}>
         <header className="village-building-heading"><span className="eyebrow">{town.name} · {empty ? `PLOT ${plot.slot! + 1}` : plot.slot === 16 ? 'RIVERSIDE SITE' : 'VILLAGE DEVELOPMENT'}</span><h2>{name}</h2>{!empty && <p>{plot.level ? `Level ${plot.level}` : 'Not built'} <span>→ {maxed ? 'Fully developed' : `Level ${plot.level + 1}`}</span></p>}</header>
         {note && <p className="village-building-note">{note}</p>}
         {empty ? <><p className="village-building-intro">Develop this plot with a building of your choice. Your main building unlocks additional plots as the village grows.</p><BuildingPicker key={`${plot.key}:${initialChoice}`} initialChoice={initialChoice} slot={plot.slot!} resources={resources} hasTower={slots.some(slot => slot.building_type === 'mage_tower')} busy={busy} building={!!order} run={run}/><p className="village-building-footnote"><Icon name="time" size={14}/> {clock(upgradeSeconds(0,researchFactor(world,owner,'construction')))} construction time · one construction project at a time.</p></> : <>
-            <section className="village-building-hero"><BuildingArtwork type={type!} level={Math.max(1, plot.level)} faction={factionOf(town.faction)} label={`${name}, ${plot.level ? `level ${plot.level}` : 'appearance after construction'}`}/><div className="village-building-hero-info"><span>{maxed ? 'MASTERED' : plot.level ? 'NEXT UPGRADE' : 'NEW CONSTRUCTION'}</span><strong>{maxed ? `Level ${plot.level}` : `Level ${plot.level + 1}`}</strong><p>{maxed ? 'This building is fully developed.' : `${clock(upgradeSeconds(plot.level,researchFactor(world,owner,'construction')))} construction time`}</p>{!plot.level && <small>Preview of the completed building</small>}</div></section>
+            <section className="village-building-hero"><Preview type={type!} level={Math.max(1, plot.level)} faction={factionOf(town.faction)} label={`${name}, ${plot.level ? `level ${plot.level}` : 'appearance after construction'}`}/><div className="village-building-hero-info"><span>{maxed ? 'MASTERED' : plot.level ? 'NEXT UPGRADE' : 'NEW CONSTRUCTION'}</span><strong>{maxed ? `Level ${plot.level}` : `Level ${plot.level + 1}`}</strong><p>{maxed ? 'This building is fully developed.' : `${clock(upgradeSeconds(plot.level,researchFactor(world,owner,'construction')))} construction time`}</p>{!plot.level && <small>Preview of the completed building</small>}</div></section>
             <section className="village-building-description"><h3>Description</h3><p>{meta!.description}</p></section>
             {rows.length > 0 && <section className="village-building-effects"><h3>{maxed ? 'Current benefits' : 'What improves'}</h3><table><thead><tr><th>Benefit</th><th>Current</th>{!maxed && <th>Level {plot.level + 1}</th>}</tr></thead><tbody>{rows.map(row => <tr key={row.name} title={row.help}><th scope="row">{row.name}</th><td>{row.current}</td>{!maxed && <td>{row.next}</td>}</tr>)}</tbody></table>{type && type in WORKERS_PER_LEVEL && <p className="village-building-footnote">Production bonuses are shown before staffing. Keep enough residents and food to run them.</p>}</section>}
             {!maxed && <section className="village-upgrade-box"><h3>{plot.level ? 'Upgrade cost' : 'Construction cost'}</h3><Cost cost={cost!} resources={resources}/>{shortages.length > 0 && <p className="village-shortages">Missing {shortages.join(', ')}.</p>}<div className="village-upgrade-action"><button className="button gold" disabled={!!reason} title={reason ?? `${plot.level ? 'Upgrade' : 'Construct'} ${name}. Supplies are paid once when the command is accepted.`} onClick={() => run(plot.slot === undefined ? { type: 'upgrade', item: type as BuildingType } : fishingUnbuilt ? { type: 'buildSlot', slot: 16, item: 'fishery' } : { type: 'upgradeSlot', slot: plot.slot }, `${name} ${plot.level ? 'upgrade' : 'construction'} started`)}>{reason ?? (plot.level ? `Upgrade to level ${plot.level + 1}` : `Construct ${name}`)}</button><span><Icon name="time" size={17}/>{clock(upgradeSeconds(plot.level,researchFactor(world,owner,'construction')))}</span></div><small>One construction project at a time in this village.</small></section>}
