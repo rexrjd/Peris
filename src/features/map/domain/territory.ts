@@ -1,3 +1,4 @@
+import {researchFactor} from '../../research/domain/effects';
 import { commandCity } from '../../empire/domain/context';
 import type { World, Order } from '../../../shared/model/world';
 import { RESOURCES } from '../../../shared/model/resources';
@@ -19,7 +20,7 @@ export function territoryPopulation(world: World, owner: string, settlementId?: 
 export function territoryAllowance(population: number) {
     return TERRITORY_RULES.startingClaims + (population < TERRITORY_RULES.firstUnlock ? 0 : 1 + Math.floor((population - TERRITORY_RULES.firstUnlock) / TERRITORY_RULES.unlockStep));
 }
-export function fieldSeconds(level: number) { return 15 + level * 10; }
+export function fieldSeconds(level: number, boost=1) { return Math.max(1,Math.ceil((15 + level * 10)/boost)); }
 export function mapClaimReason(world: World, owner: string, col: number, row: number, settlementId?: number): string | null {
     if (!Number.isSafeInteger(col) || !Number.isSafeInteger(row)) return 'Choose whole field coordinates.';
     const cell = wrapWorldCell(col, row), home = world.settlements.find(s => s.owner_id === owner && (settlementId === undefined || s.id === settlementId));
@@ -55,7 +56,7 @@ export function queueMapField(context: LocalCommandContext, col: number, row: nu
     const cost = fieldCost(building, plot.level); if (!affordable(home, cost)) throw new Error('More resources are needed.');
     for (const resource of RESOURCES) home[resource] -= cost[resource];
     plot.building_type = building;
-    world.orders.push({ id: context.nextId(), owner_id: context.playerId, settlement_id: home.id, kind: 'field', item: `field:${plot.col}:${plot.row}:${building}`, quantity: 1, started_at: context.now, finish_at: new Date(Date.parse(context.now) + fieldSeconds(plot.level) * 1000).toISOString() });
+    world.orders.push({ id: context.nextId(), owner_id: context.playerId, settlement_id: home.id, kind: 'field', item: `field:${plot.col}:${plot.row}:${building}`, quantity: 1, started_at: context.now, finish_at: new Date(Date.parse(context.now) + fieldSeconds(plot.level,researchFactor(context.world,context.playerId,'construction')) * 1000).toISOString() });
 }
 export function completeMapField(world: World, owner: string, order: Order) {
     const [, col, row, building] = order.item.split(':');

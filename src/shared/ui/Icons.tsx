@@ -6,6 +6,7 @@ export function Icon({ name, size = 20 }: {
     size?: number;
 }) {
     const shapes: Record<string, React.ReactNode> = {
+        pause:<><path d="M8 4v16M16 4v16" strokeWidth="3"/></>,
         world: <><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c-6 6-6 12 0 18M12 3c6 6 6 12 0 18"/></>,
         focus: <><circle cx="12" cy="12" r="5"/><path d="M12 2v5M12 17v5M2 12h5M17 12h5"/></>,
         settings: <><path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="3" fill="currentColor" stroke="none"/><circle cx="15" cy="17" r="3" fill="currentColor" stroke="none"/></>,

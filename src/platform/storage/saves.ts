@@ -1,3 +1,5 @@
+import {validateResearch} from '../../features/research/domain/science';
+import {researchUnitStatLimit} from '../../features/research/domain/effects';
 import { RECRUIT_UNITS, RECRUIT_RULES, validateRoster, writeRoster, rosterTotal, readRoster } from '../../features/army/domain/roster';
 import { RESOURCES } from '../../shared/model/resources';
 import { BATTLE_TERRAINS } from '../../features/battle/domain/terrain';
@@ -204,9 +206,10 @@ export function validateSave(data: unknown): World {
             known.add(key);
         }
     }
-    for (const formation of w.formations) if (formation.recruit_unit !== undefined) {
-        const rule = Object.hasOwn(RECRUIT_RULES, formation.recruit_unit) ? RECRUIT_RULES[formation.recruit_unit] : undefined;
-        if (!rule || formation.unit_type !== rule.combatClass || formation.unit_attack !== undefined && formation.unit_attack !== rule.attack || formation.unit_defence !== undefined && formation.unit_defence !== rule.defence || formation.unit_speed !== undefined && (!Number.isFinite(formation.unit_speed) || Math.abs(formation.unit_speed - rule.speed / ({ infantry: 40, archers: 34, cavalry: 76 }[rule.combatClass])) > 1e-8)) invalid();
+    for (const formation of w.formations) {
+        const unit=formation.recruit_unit??formation.unit_type;
+        const rule = Object.hasOwn(RECRUIT_RULES, unit) ? RECRUIT_RULES[unit] : undefined;
+        if (!rule || formation.unit_type !== rule.combatClass || formation.unit_attack !== undefined && (!Number.isFinite(formation.unit_attack)||formation.unit_attack<rule.attack||formation.unit_attack>researchUnitStatLimit(unit,'attack')+1e-8) || formation.unit_defence !== undefined && (!Number.isFinite(formation.unit_defence)||formation.unit_defence<rule.defence||formation.unit_defence>researchUnitStatLimit(unit,'defence')+1e-8) || formation.unit_speed !== undefined && (!Number.isFinite(formation.unit_speed) || Math.abs(formation.unit_speed - rule.speed / ({ infantry: 40, archers: 34, cavalry: 76 }[rule.combatClass])) > 1e-8)) invalid();
     }
     for (const entry of [...w.battles, ...w.reports]) if (entry.result) {
         const result = entry.result;
@@ -331,6 +334,7 @@ export function validateSave(data: unknown): World {
         normalized.settlements=legacy.settlements;normalized.buildings=legacy.buildings;normalized.city_slots=legacy.city_slots;if(legacy.map_plots!==undefined)normalized.map_plots=legacy.map_plots;normalized.players=legacy.players;normalized.armies=legacy.armies;
         normalized.orders=[...legacy.orders,...w.orders.filter(o=>o.kind==='settler')];
     }
+    validateResearch(normalized);
     return normalizeRealm(normalized,normalized.server_now,false);
 }
 export async function importSave(file: File) { if (file.size > 12 * 1024 * 1024)

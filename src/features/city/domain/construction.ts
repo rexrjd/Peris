@@ -12,8 +12,8 @@ export function buildingCost(type: BuildingType, level: number) {
     return multiply(BUILDINGS[type].cost, 1.55 ** Math.max(0, level));
 }
 
-export function upgradeSeconds(level: number) {
-    return 15 + Math.max(0, level) * 10;
+export function upgradeSeconds(level: number, boost = 1) {
+    return Math.max(1,Math.ceil((15 + Math.max(0, level) * 10)/boost));
 }
 
 export function completeUpgrade(w: World, s: Settlement, p: Player, o: Order) {

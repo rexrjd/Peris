@@ -1,3 +1,4 @@
+import {researchFactor} from '../../research/domain/effects';
 import type { World } from '../../../shared/model/world';
 import type { Army } from '../../army/domain/types';
 import { ARTIFACTS, type EquipmentSlot } from './artifacts';
@@ -37,7 +38,7 @@ export function heroBonuses(world: World, army: Army) {
     }
     stats.damage = 1 + stats.attack * .02; stats.protection = 1 + stats.defence * .025;
     stats.morale = Math.min(10, stats.attack + stats.defence); stats.mana = stats.knowledge * 10;
-    stats.spell = 1 + stats.power * .08;
+    stats.spell = (1 + stats.power * .08)*researchFactor(world,army.owner_id,'spell_power');stats.speed*=researchFactor(world,army.owner_id,'march');
     return stats;
 }
 export function awardHeroExperience(world: World, armyId: number, experience: number) {

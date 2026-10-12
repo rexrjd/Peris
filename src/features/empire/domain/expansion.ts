@@ -1,3 +1,4 @@
+import {researchFactor} from '../../research/domain/effects';
 import type { World } from '../../../shared/model/world';
 import type { LocalCommandContext } from '../../../shared/model/commands';
 import type { BuildingType } from '../../city/domain/types';
@@ -20,8 +21,8 @@ export const SETTLER_COST = { wood: 350, stone: 250, food: 450, gold: 100 };
 export const COLONY_COST = { wood: 500, stone: 400, food: 600, gold: 150 };
 export const cultureCost = (existingCities: number) => 300 * existingCities ** 2;
 export function cityCultureRate(world: World, sid: number) {
-    return 5 + world.buildings.filter(b => b.settlement_id === sid).reduce((sum, b) => sum + b.level * 2, 0)
-        + (world.city_slots ?? []).filter(s => s.settlement_id === sid).reduce((sum, s) => sum + s.level * 3, 0);
+    return (5 + world.buildings.filter(b => b.settlement_id === sid).reduce((sum, b) => sum + b.level * 2, 0)
+        + (world.city_slots ?? []).filter(s => s.settlement_id === sid).reduce((sum, s) => sum + s.level * 3, 0))*researchFactor(world,world.settlements.find(s=>s.id===sid)!.owner_id,'culture');
 }
 export const cultureRate = (world: World, owner: string) => world.settlements.filter(s => s.owner_id === owner).reduce((sum, s) => sum + cityCultureRate(world, s.id), 0);
 export function liveCulture(world: World, owner: string, now = Date.now()) {

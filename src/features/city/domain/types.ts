@@ -2,6 +2,7 @@ import type {Faction} from '../../factions/domain/factions';
 import { type Resources } from '../../../shared/model/resources';
 export type BuildingType = 'lumber' | 'quarry' | 'farm' | 'market' | 'barracks' | 'stables' | 'wall' | 'storehouse';
 export type Settlement = Resources & {
+    wood_research?:number;stone_research?:number;food_research?:number;gold_research?:number;trade_research?:number;
     id: number;
     settlers?: number;
     development_points?: number;

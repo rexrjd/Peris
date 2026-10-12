@@ -6,7 +6,7 @@ import type { ArmyTroops } from '../../features/army/domain/types';
 import type { RecruitUnit } from '../../features/army/domain/roster';
 import type { Battle, BattleOrder } from '../../features/battle/domain/types';
 import type { World } from './world';
-type BaseCommand = {type:'readAllReports'} | {type:'readReports';reportIds:number[]} | {type:'setFaction';faction:Faction} | {type:'debugCity';action:'resources'|'demolish'|'finish'|'level'|'population'|'culture';target?:string;value?:number} | {type:'researchSpell';spell:string;} | {type:'castSpell';battleId:number;spell:string;target?:number;} | {
+type BaseCommand = {type:'startResearch';technologyId:string} | {type:'pauseResearch'} | {type:'debugResearch';action:'points'|'complete'} | {type:'readAllReports'} | {type:'readReports';reportIds:number[]} | {type:'setFaction';faction:Faction} | {type:'debugCity';action:'resources'|'demolish'|'finish'|'level'|'population'|'culture';target?:string;value?:number} | {type:'researchSpell';spell:string;} | {type:'castSpell';battleId:number;spell:string;target?:number;} | {
     type:'raidCity';targetCityId:number;siegeTarget?:import('../../features/city/domain/siege').SiegeTarget;route?:[number,number][];troops?:ArmyTroops;
 } | {
     type: 'manageCampaignFarmTargets'; ids: number[]; action: 'move' | 'delete'; listId?: number;

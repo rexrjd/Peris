@@ -1,9 +1,10 @@
+import {researchFactor} from '../../research/domain/effects';
 import type { World } from '../../../shared/model/world';
 import type { ArmyTroops } from '../../army/domain/types';
 import { refreshCityEconomy } from './slots';
 
 export const SIEGE_TARGETS = {
-    auto:'Automatic', barracks:'Barracks', stables:'Stables', workshop:'Workshop',
+    auto:'Automatic', academy:'Academy', barracks:'Barracks', stables:'Stables', workshop:'Workshop',
     smithy:'Smithy', warehouse:'Warehouse', granary:'Granary', housing:'Housing',
     mage_tower:'Mage tower', fishery:'Fishery', lumber:'Lumber mill', quarry:'Quarry', farm:'Farm', storehouse:'Storehouse', trading_post:'Trading post',
 } as const;
@@ -21,11 +22,11 @@ export function siegeReduction(engines:number, level:number, weapon:'ram'|'catap
     return level-after;
 }
 
-export function damageCity(world:World, cityId:number, troops:ArmyTroops, target:SiegeTarget='auto', now=new Date().toISOString()):SiegeDamage[] {
-    const damage:SiegeDamage[]=[];
+export function damageCity(world:World, cityId:number, troops:ArmyTroops, target:SiegeTarget='auto', now=new Date().toISOString(),attackerOwner?:string):SiegeDamage[] {
+    const damage:SiegeDamage[]=[];const boost=attackerOwner?researchFactor(world,attackerOwner,'siege'):1;
     const wall=world.buildings.find(row=>row.settlement_id===cityId&&row.building_type==='wall');
     if(wall){
-        const loss=siegeReduction(troops.ram??0,wall.level,'ram');
+        const loss=siegeReduction(Math.floor((troops.ram??0)*boost),wall.level,'ram');
         if(loss){damage.push({building_type:'wall',name:'Walls',before:wall.level,after:wall.level-loss,weapon:'ram'});wall.level-=loss;wall.updated_at=now;}
     }
     const candidates=[
@@ -36,7 +37,7 @@ export function damageCity(world:World, cityId:number, troops:ArmyTroops, target
         .sort((a,b)=>b.row.level-a.row.level||a.type.localeCompare(b.type)|| (a.slot??999)-(b.slot??999)||(a.col??999)-(b.col??999)||(a.fieldRow??999)-(b.fieldRow??999));
     const chosen=candidates[0];
     if(chosen){
-        const loss=siegeReduction(troops.catapult??0,chosen.row.level,'catapult');
+        const loss=siegeReduction(Math.floor((troops.catapult??0)*boost),chosen.row.level,'catapult');
         if(loss){damage.push({building_type:chosen.type,name:SIEGE_TARGETS[chosen.type as SiegeTarget]??chosen.type,slot_index:chosen.slot,col:chosen.col,row:chosen.fieldRow,before:chosen.row.level,after:chosen.row.level-loss,weapon:'catapult'});chosen.row.level-=loss;}
     }
     if(damage.length)refreshCityEconomy(world,cityId);

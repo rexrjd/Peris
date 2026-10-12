@@ -7,7 +7,7 @@ update public.settlements s set development_points=p.upgrades from public.player
 alter table public.peris_challenges add column if not exists attacker_army_id bigint references public.armies(id);
 
 create or replace function public.peris_culture_rate(p_owner uuid)returns numeric language sql stable security definer set search_path='' as $$
- select coalesce(sum(5+2*coalesce((select sum(level)from public.buildings b where b.settlement_id=s.id),0)+3*coalesce((select sum(level)from public.peris_city_slots c where c.settlement_id=s.id),0)),0)from public.settlements s where s.owner_id=p_owner
+ select coalesce(sum(5+2*coalesce((select sum(level)from public.buildings b where b.settlement_id=s.id),0)+3*coalesce((select sum(level)from public.peris_city_slots c where c.settlement_id=s.id),0)),0)*public.peris_research_factor(p_owner,'culture')from public.settlements s where s.owner_id=p_owner
 $$;
 create or replace function public.peris_culture_accrue(p_owner uuid,p_until timestamptz)returns void language plpgsql security definer set search_path='' as $$
 begin update public.players set culture_points=least(1000000000,culture_points+greatest(0,extract(epoch from p_until-culture_updated_at))/60*public.peris_culture_rate(p_owner)),culture_updated_at=greatest(culture_updated_at,p_until)where id=p_owner;end $$;
@@ -25,7 +25,7 @@ begin
  select a+coalesce(sum(c.attack),0),d+coalesce(sum(c.defence),0),p+coalesce(sum(c.power),0),k+coalesce(sum(c.knowledge),0),march_speed+coalesce(sum(c.speed),0)
  into a,d,p,k,march_speed from public.peris_hero_artifacts i join public.peris_artifact_catalog c on c.id=i.artifact_id where i.hero_id=h.id and i.owner_id=h.owner_id;
  end if;
- return jsonb_build_object('attack',a,'defence',d,'power',p,'knowledge',k,'speed',march_speed,'damage',1+a*.02,'protection',1+d*.025,'morale',least(10,a+d),'mana',k*10,'spell',1+p*.08);
+ return jsonb_build_object('attack',a,'defence',d,'power',p,'knowledge',k,'speed',march_speed*public.peris_research_factor((select owner_id from public.armies where id=p_army),'march'),'damage',1+a*.02,'protection',1+d*.025,'morale',least(10,a+d),'mana',k*10,'spell',(1+p*.08)*public.peris_research_factor((select owner_id from public.armies where id=p_army),'spell_power'));
 end $$;
 create or replace function public.peris_apply_hero(p_battle bigint,p_owner uuid,p_side text)returns void language plpgsql security definer set search_path='' as $$
 declare aid bigint;sid bigint;bonus jsonb;tower integer;
@@ -34,17 +34,18 @@ begin
  select case when p_side='attacker'then attacker_army_id else defender_army_id end into aid from public.battles where id=p_battle;
  select home_settlement_id into sid from public.armies where id=aid and owner_id=p_owner;
  bonus:=public.peris_hero_bonuses(aid);
- update public.battle_formations set attack_multiplier=(1+least(.6,coalesce((select sum(level)*.04 from public.peris_city_slots where settlement_id=sid and building_type='smithy'),0)))*(bonus->>'damage')::numeric,
+ update public.battle_formations f set unit_attack=coalesce((select attack from public.peris_unit_catalog where unit=coalesce(f.recruit_unit,f.unit_type)),1)*(1+public.peris_research_bonus(p_owner,'attack')+public.peris_research_bonus(p_owner,f.unit_type||'_attack')),
+ unit_defence=coalesce((select defence from public.peris_unit_catalog where unit=coalesce(f.recruit_unit,f.unit_type)),1)*(1+public.peris_research_bonus(p_owner,'defence')+public.peris_research_bonus(p_owner,f.unit_type||'_defence')),attack_multiplier=(1+least(.6,coalesce((select sum(level)*.04 from public.peris_city_slots where settlement_id=sid and building_type='smithy'),0)))*(bonus->>'damage')::numeric,
  defence_multiplier=(bonus->>'protection')::numeric,morale=least(100,morale+(bonus->>'morale')::numeric)where battle_id=p_battle and side=p_side;
  select coalesce(max(c.level),0)into tower from public.peris_city_slots c join public.settlements s on s.id=c.settlement_id where s.owner_id=p_owner and c.building_type='mage_tower';
- update public.battles set mana_attacker=case when p_side='attacker'then (case when tower>0 then 20+tower*10 else 0 end)+(bonus->>'mana')::integer else mana_attacker end,
- mana_defender=case when p_side='defender'then (case when tower>0 then 20+tower*10 else 0 end)+(bonus->>'mana')::integer else mana_defender end where id=p_battle;
+ update public.battles set mana_attacker=case when p_side='attacker'then floor(((case when tower>0 then 20+tower*10 else 0 end)+(bonus->>'mana')::integer)*public.peris_research_factor(p_owner,'mana'))::integer else mana_attacker end,
+ mana_defender=case when p_side='defender'then floor(((case when tower>0 then 20+tower*10 else 0 end)+(bonus->>'mana')::integer)*public.peris_research_factor(p_owner,'mana'))::integer else mana_defender end where id=p_battle;
 end $$;
 create or replace function public.peris_hero_reward(p_army bigint,p_experience integer,p_camp integer default null)returns void language plpgsql security definer set search_path='' as $$
 declare h public.peris_heroes%rowtype;artifact text;
 begin
  select * into h from public.peris_heroes where army_id=p_army for update;if h.id is null then return;end if;
- update public.peris_heroes set experience=least(19000,experience+greatest(0,p_experience))where id=h.id;
+ update public.peris_heroes set experience=least(19000,experience+floor(greatest(0,p_experience)*public.peris_research_factor(h.owner_id,'hero_xp'))::integer)where id=h.id;
  if p_camp is not null and (p_camp<=6 or p_camp%7=0)and(select count(*)from public.peris_hero_artifacts where owner_id=h.owner_id)<200 then
  artifact:=(array['iron_sword','chainmail','boots','circlet','runestaff','crown_seal'])[least(6,greatest(1,case when p_camp>6 then (select tier from public.peris_camps where id=p_camp)else p_camp end))];
  insert into public.peris_hero_artifacts(owner_id,artifact_id,slot,source_camp_id)select h.owner_id,c.id,c.slot,p_camp from public.peris_artifact_catalog c where c.id=artifact on conflict(owner_id,source_camp_id)do nothing;
@@ -117,6 +118,7 @@ begin
   else return public.peris_respond((p_command->>'id')::bigint,(p_command->>'accept')::boolean);end if;
  end if;
  perform public.peris_settle(u);
+ if command_kind in('startResearch','pauseResearch','debugResearch')then return public.peris_research_command(p_command);end if;
  if command_kind='cancelMarch'then return public.peris_cancel_march((p_command->>'armyId')::bigint,(p_command->>'sentAt')::timestamptz);end if;
  select * into s from public.settlements where id=public.peris_city_id(u)for update;
  select * into a from public.armies where id=public.peris_army_id(u)for update;

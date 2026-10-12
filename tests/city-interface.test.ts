@@ -17,7 +17,7 @@ const picker = (props: Partial<React.ComponentProps<typeof BuildingPicker>> = {}
 
 test('plot picker offers city buildings, excludes the outside fishery, and exposes one build action', () => {
   const html = picker();
-  assert.equal((html.match(/type="radio"/g) ?? []).length, 8);
+  assert.equal((html.match(/type="radio"/g) ?? []).length, 9);
   assert.ok(html.includes('value="mage_tower"'));
   assert.ok(!html.includes('value="fishery"'));
   assert.equal((html.match(/<button/g) ?? []).length, 1);

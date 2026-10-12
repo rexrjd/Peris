@@ -30,7 +30,7 @@ grant execute on function public.peris_claim_field(integer,integer),public.peris
  public.peris_order(bigint,jsonb),public.peris_tick(bigint),public.peris_rally(bigint),public.peris_challenge(uuid),public.peris_respond(bigint,boolean),public.peris_claim(text),public.peris_rename(text)to authenticated;
 
 do $$declare t text;begin
- foreach t in array array['peris_map_plots','peris_orders','peris_reports','peris_challenges','peris_campaign_farm_lists','peris_campaign_farms','peris_garrisons']loop
+ foreach t in array array['peris_account_science','peris_research_progress','peris_map_plots','peris_orders','peris_reports','peris_challenges','peris_campaign_farm_lists','peris_campaign_farms','peris_garrisons']loop
  begin execute format('alter publication supabase_realtime add table public.%I',t);exception when duplicate_object then null;end;
  end loop;
 end $$;

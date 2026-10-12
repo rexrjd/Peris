@@ -1,410 +1,1420 @@
 {
-  "base_commit": "71a18700030ed74cd672eeb9484f17587eafeec5",
-  "files": [
-    {
-      "path": "PLAYER_RAIDS_SIEGE_UPDATE.md",
-      "bytes": 4469,
-      "sha256": "d3ced9d3d8135f064e364912d8dde3c8615e208b468a9d21ef804b2305270671"
+  "name": "Peris account science and tech tree V18",
+  "base_commit": "980b6df",
+  "status": "Packaged for push",
+  "verification": "Prior-session results and outstanding browser rerun are recorded in PUSH_NOTES.txt",
+  "files": {
+    "ARCHITECTURE.md": {
+      "bytes": 10238,
+      "sha256": "0f1978184fef7b3ff817f088952bece84b04dc122b877f412c3a79268726dfc5"
     },
-    {
-      "path": "package.json",
-      "bytes": 4934,
-      "sha256": "bdbacfa656d85b5b74e862f8d9aea4d7bd114237346f674b4116c0e21ea27155"
+    "ARTWORK.md": {
+      "bytes": 18305,
+      "sha256": "2d26c1a82dbaf08379b24c8175a26c40f876a81c133b992ef2b4bc17d14f077a"
     },
-    {
-      "path": "src/app/App.tsx",
-      "bytes": 28972,
-      "sha256": "2d1a537b962bf1adc537f956724e32a43f1dffefa92a89f0298ab6121b0840ce"
+    "PUSH_NOTES.txt": {
+      "bytes": 2897,
+      "sha256": "228adf83879d304bec22b834ff974a5bc315c25ba80535db3e8c26047bed1069"
     },
-    {
-      "path": "src/app/styles/index.css",
-      "bytes": 2074,
-      "sha256": "2b69e9289ab4416874f071646650e926c1eeb4bb1f2fb6d4783dd42c6bd71301"
+    "RESEARCH_ACADEMY_UPDATE.md": {
+      "bytes": 6805,
+      "sha256": "2efea4136ec37b5f9e974fc840df8856f285daf90c7bade1f7a82f33d5730e2d"
     },
-    {
-      "path": "src/engine/local/LocalEngine.ts",
-      "bytes": 12179,
-      "sha256": "3b8605a346cb40bd181e11694fe30ae2be3725b73e6a19e86e70836d8b688fcc"
+    "assets/research-v1.json": {
+      "bytes": 4719,
+      "sha256": "2df24b1d7e9ae0f3634ddb6a9600e63b6165822f74a3ce7f64473dfed2b0a665"
     },
-    {
-      "path": "src/engine/online/OnlineEngine.ts",
-      "bytes": 24176,
-      "sha256": "8ce0f83958776eb800a03935fe7449955d1ae44af1503a21190e6a37cf84e89f"
+    "assets/source/research-v1/academy.png": {
+      "bytes": 2636696,
+      "sha256": "8246ed6f597bfe95caf50775624e88a07fcf2ac0302c93f2969c539a0d5c33d6"
     },
-    {
-      "path": "src/engine/online/rpcCommands.ts",
-      "bytes": 4147,
-      "sha256": "f1be61eb8ae4fdad42e7532b0923d14370a403afb6338aef724783048df492c6"
+    "assets/source/research-v1/agriculture.png": {
+      "bytes": 1827918,
+      "sha256": "7f86488eb096c0ea06b99631bfb72533cb4f36d1535eac8884f17da66ad1c91a"
     },
-    {
-      "path": "src/features/army/domain/commandRoom.ts",
-      "bytes": 7330,
-      "sha256": "6bfb5668d3b3b6e6950295212affe1958263d5c254ac5eb77a053be1b41df932"
+    "assets/source/research-v1/archery.png": {
+      "bytes": 1440949,
+      "sha256": "0fbbfb9c02d8b3068497e2fb09c8aa65b818a31a2377fb38db6eed8f1031e30f"
     },
-    {
-      "path": "src/features/army/domain/commands.ts",
-      "bytes": 2974,
-      "sha256": "4b3df8aa08946f4e89206edbfd980a99fd4cdb9fd213c2e1a6ec7930cd107aff"
+    "assets/source/research-v1/cavalry.png": {
+      "bytes": 1695568,
+      "sha256": "626f0125b552dceacb9c913d75ff6a6a8550858305d17162dbafa55831070941"
     },
-    {
-      "path": "src/features/army/domain/rallyPoint.ts",
-      "bytes": 7606,
-      "sha256": "9c74929479631cf5aae9b1d54a529126536b9b7b986456501caf82c6aca5550b"
+    "assets/source/research-v1/commerce.png": {
+      "bytes": 1587046,
+      "sha256": "7b8e3f3c8e31b35729d7d05e65689c805128b5fedf134cfada69aa85df0624b5"
     },
-    {
-      "path": "src/features/army/domain/types.ts",
-      "bytes": 1782,
-      "sha256": "1d356de2afe9630b33c8a0c7ef8b96dca6453fbb8d32bd5d45d958778db6f675"
+    "assets/source/research-v1/demon.png": {
+      "bytes": 1520821,
+      "sha256": "ca221588824e9e37f57fd17b9908c9cfe38b4ae5b7ff1fa6936d6669e678c5fa"
     },
-    {
-      "path": "src/features/battle/domain/types.ts",
-      "bytes": 4407,
-      "sha256": "aa810e2d0e6ab23ffc12123902d9b164b7a549314307afef5c487817811b46b1"
+    "assets/source/research-v1/dwarf.png": {
+      "bytes": 1778509,
+      "sha256": "f4f5cd9d008e7bc2f9716ebdfc90db9242a233a9b5dfeba1eeebcfedfa717fb3"
     },
-    {
-      "path": "src/features/campaign/domain/battleSettlement.ts",
-      "bytes": 5546,
-      "sha256": "c106e793bfcff175f7342a410990bebd187fd68dcd3d86a8f43334b041eb7d32"
+    "assets/source/research-v1/egyptian.png": {
+      "bytes": 1879725,
+      "sha256": "cca69a84b31caa8fd3edaa5b8b847ebe2625e2bd2fed08837d90b9b14d00d3d7"
     },
-    {
-      "path": "src/features/campaign/domain/cityRaids.ts",
-      "bytes": 8423,
-      "sha256": "7c62c6215a4e05bcb91fef0c6c8d1471c2e365f31feef30dcbe54cc52a686a7d"
+    "assets/source/research-v1/elf.png": {
+      "bytes": 1995478,
+      "sha256": "c6b07162eed95058356d163ccb444046608ac2daccdfe33a7024095af40dac6f"
     },
-    {
-      "path": "src/features/campaign/domain/reportEconomics.ts",
-      "bytes": 5141,
-      "sha256": "f757f9e5aa838a2712cac2af94e3bcc91f4f53260bc163a432dc9814a9b10e49"
+    "assets/source/research-v1/engineering.png": {
+      "bytes": 1558006,
+      "sha256": "3fd2ecd34283666bd25b1d7c606099957db82726825338b23b79bb6e3aadf9b7"
     },
-    {
-      "path": "src/features/campaign/domain/settlement.ts",
-      "bytes": 3419,
-      "sha256": "3c749f401b7fc1d7d42cd6201628c357efa9efcdf02d1efde63ad08215691969"
+    "assets/source/research-v1/gnome.png": {
+      "bytes": 1659987,
+      "sha256": "8be266f242f6b159488cc3fce69f9ed2c776b5815d004ac00c19ed36061255f4"
     },
-    {
-      "path": "src/features/campaign/styles/siege-summary.css",
-      "bytes": 515,
-      "sha256": "f8cc74cf6e8ed319234d06ef5ab6cb5015ba2b3a654a7fbc5209d0dbe5ba2261"
+    "assets/source/research-v1/industry.png": {
+      "bytes": 1798344,
+      "sha256": "8ac9e66cc7124d1da1ecbf8f58feb28f796ef9a379f05a2428a267c18983ec5f"
     },
-    {
-      "path": "src/features/campaign/ui/Chronicle.tsx",
-      "bytes": 13540,
-      "sha256": "82e97af97d2a7c8c8fabf94c7765935ebfa97740c5d115e2848902b3cd8717a3"
+    "assets/source/research-v1/knowledge.png": {
+      "bytes": 1772363,
+      "sha256": "3669c353e6b90abf245fa85f5c25236d69f85b54814a37811a79b7e0f200e3af"
     },
-    {
-      "path": "src/features/campaign/ui/ReportDetails.tsx",
-      "bytes": 5919,
-      "sha256": "c26e77f03e940195087f2a7f118509f20397e7e84455009f62994db7cdf3553f"
+    "assets/source/research-v1/leadership.png": {
+      "bytes": 1681423,
+      "sha256": "e4153a4b3af96d127993a62570a4f73f8a20506952fd0455d06811966cd23723"
     },
-    {
-      "path": "src/features/campaign/ui/ReportEconomics.tsx",
-      "bytes": 2113,
-      "sha256": "9368364bc7887ba68f800550ab2d9153a3efcb85851a3ebaceed833246ee3961"
+    "assets/source/research-v1/navigation.png": {
+      "bytes": 1349307,
+      "sha256": "f5f6b3ef401c0337810dcd79185c68f35de85c1657719a9a90576a4576b9453a"
     },
-    {
-      "path": "src/features/campaign/ui/SiegeSummary.tsx",
-      "bytes": 648,
-      "sha256": "5af8c0ad9311575e1ca0bca560b30942196156df76ddea239d32f075ec3561f4"
+    "assets/source/research-v1/orc.png": {
+      "bytes": 2083569,
+      "sha256": "7599421fd4db22b8a4c567d3f86e8bb69350e3936ce20ef28f9f1cdee56bbf14"
     },
-    {
-      "path": "src/features/city/domain/siege.ts",
-      "bytes": 3092,
-      "sha256": "8e4b2307e66bdfdb2e9dab4ff62931ee39e788263326df666344e300effa9cd6"
+    "assets/source/research-v1/pandaren.png": {
+      "bytes": 1562785,
+      "sha256": "a6b8beeed61657bc3c02d329ecab85219e3b67470d2ef369c67b7cd82a3fac27"
     },
-    {
-      "path": "src/features/heroes/domain/commands.ts",
-      "bytes": 5736,
-      "sha256": "39d1f2946c0573146480945962a553aa4cac4567ba1a5dc4797884bbf453fc8a"
+    "assets/source/research-v1/persian.png": {
+      "bytes": 1777279,
+      "sha256": "1cd1dc9806deb438fd47545ea0042491d2c0da2d77062411dce5db26ab712c35"
     },
-    {
-      "path": "src/features/map/domain/activity.ts",
-      "bytes": 9639,
-      "sha256": "593e187656243c313eefd05a00b82cb92b0f16a7ebb6aa1f8c5c2a95929ba1ac"
+    "assets/source/research-v1/roman.png": {
+      "bytes": 1826017,
+      "sha256": "e2b60636091130f8bf1d333ae562fd0d4af88be34a4f5963ba63da25b18d17a7"
     },
-    {
-      "path": "src/features/map/domain/commands.ts",
-      "bytes": 8590,
-      "sha256": "f5594f8db036ed910229150b814aa69e7575ac400502c4c8d45baf1c1fcebdc3"
+    "assets/source/research-v1/siege.png": {
+      "bytes": 1745478,
+      "sha256": "1cfd2642652d1dd02d35bd4285d3e8a98a4940d462aabe79d120fbadb280ec95"
     },
-    {
-      "path": "src/features/map/domain/garrisons.ts",
-      "bytes": 5379,
-      "sha256": "53c6329f2ce5e001b39e28f2c462cdc203b35fd695dcff31f429be735865d927"
+    "assets/source/research-v1/spartan.png": {
+      "bytes": 1718280,
+      "sha256": "7a0a38cf9b0cf3681cda2adfcf3f5a127c7aeb6a733190fdcf4e4cee00b009d9"
     },
-    {
-      "path": "src/features/map/domain/movement.ts",
-      "bytes": 3952,
-      "sha256": "88a8d9cbfa181bd1b7374332d7d6ddff130dd18ede222496c80677d0ca708255"
+    "assets/source/research-v1/undead.png": {
+      "bytes": 1504175,
+      "sha256": "43dd3ac38d96837ad28544f72200be7e79d6dc08747b01f43494afbe9000a456"
     },
-    {
-      "path": "src/features/map/styles/march-compact.css",
-      "bytes": 6032,
-      "sha256": "b2030d29598f70a4db13905fd28c239a3f104d319bd9fa6314149a5ab55aff48"
+    "assets/source/research-v1/warfare.png": {
+      "bytes": 1538042,
+      "sha256": "d266115078a3d06ad923cbf298003241ebc070970effa9a8f9480d4929a0fd62"
     },
-    {
-      "path": "src/features/map/ui/MapArmyDetails.tsx",
-      "bytes": 4355,
-      "sha256": "91b9d9ea477197c17890f7fe43c29784a072bc7a894ade3c46a1a326bae01cb9"
-    },
-    {
-      "path": "src/features/map/ui/MarchDialog.tsx",
-      "bytes": 10978,
-      "sha256": "c1b3321a11e6e1e1d63bfb984843293bf57c484e264805c13bdd217508643812"
-    },
-    {
-      "path": "src/features/map/ui/MarchTroopPicker.tsx",
-      "bytes": 2379,
-      "sha256": "d7b8176f829978e1582847db655e8bd65fcb49d40e8716486bfe62f818698d21"
-    },
-    {
-      "path": "src/features/map/ui/WorldView.tsx",
-      "bytes": 36684,
-      "sha256": "3106542df4994d8743dc259f5a34c9040a4454f42a58a2911c7e5e93f9b8c729"
-    },
-    {
-      "path": "src/shared/model/commands.ts",
-      "bytes": 3852,
-      "sha256": "1a9b371d2036dc6d38d9a31ac5bbd12ca24f22382a842ab8434d4398711ee3b2"
-    },
-    {
-      "path": "src/shared/ui/Icons.tsx",
-      "bytes": 5372,
-      "sha256": "93c6dbfaeca53aa8598dd02079be2bcb43758ea0d8b91a23ac3643c61b89e84b"
-    },
-    {
-      "path": "supabase/FRESH_INSTALL_V10.sql",
-      "bytes": 584484,
-      "sha256": "5be671811473bd59a201c82f32bb98adee9ec102b646dafb048f54823e6641ec"
-    },
-    {
-      "path": "supabase/FRESH_INSTALL_V11.sql",
-      "bytes": 584484,
-      "sha256": "5be671811473bd59a201c82f32bb98adee9ec102b646dafb048f54823e6641ec"
-    },
-    {
-      "path": "supabase/FRESH_INSTALL_V12.sql",
-      "bytes": 584484,
-      "sha256": "5be671811473bd59a201c82f32bb98adee9ec102b646dafb048f54823e6641ec"
-    },
-    {
-      "path": "supabase/FRESH_INSTALL_V13.sql",
-      "bytes": 584484,
-      "sha256": "5be671811473bd59a201c82f32bb98adee9ec102b646dafb048f54823e6641ec"
-    },
-    {
-      "path": "supabase/FRESH_INSTALL_V14.sql",
-      "bytes": 584484,
-      "sha256": "5be671811473bd59a201c82f32bb98adee9ec102b646dafb048f54823e6641ec"
-    },
-    {
-      "path": "supabase/FRESH_INSTALL_V15.sql",
-      "bytes": 584484,
-      "sha256": "5be671811473bd59a201c82f32bb98adee9ec102b646dafb048f54823e6641ec"
-    },
-    {
-      "path": "supabase/FRESH_INSTALL_V16.sql",
-      "bytes": 584484,
-      "sha256": "5be671811473bd59a201c82f32bb98adee9ec102b646dafb048f54823e6641ec"
-    },
-    {
-      "path": "supabase/FRESH_INSTALL_V17.sql",
-      "bytes": 584484,
-      "sha256": "5be671811473bd59a201c82f32bb98adee9ec102b646dafb048f54823e6641ec"
-    },
-    {
-      "path": "supabase/FRESH_INSTALL_V6.sql",
-      "bytes": 584484,
-      "sha256": "5be671811473bd59a201c82f32bb98adee9ec102b646dafb048f54823e6641ec"
-    },
-    {
-      "path": "supabase/FRESH_INSTALL_V7.sql",
-      "bytes": 584484,
-      "sha256": "5be671811473bd59a201c82f32bb98adee9ec102b646dafb048f54823e6641ec"
-    },
-    {
-      "path": "supabase/FRESH_INSTALL_V8.sql",
-      "bytes": 584484,
-      "sha256": "5be671811473bd59a201c82f32bb98adee9ec102b646dafb048f54823e6641ec"
-    },
-    {
-      "path": "supabase/FRESH_INSTALL_V9.sql",
-      "bytes": 584484,
-      "sha256": "5be671811473bd59a201c82f32bb98adee9ec102b646dafb048f54823e6641ec"
-    },
-    {
-      "path": "supabase/UPGRADE_TO_V10.sql",
-      "bytes": 544321,
-      "sha256": "0a2fca63b86863a4edf9fd06d7b107acbe71c5ccab69ca6a9348102d71043e35"
-    },
-    {
-      "path": "supabase/UPGRADE_TO_V11.sql",
-      "bytes": 544321,
-      "sha256": "0a2fca63b86863a4edf9fd06d7b107acbe71c5ccab69ca6a9348102d71043e35"
-    },
-    {
-      "path": "supabase/UPGRADE_TO_V12.sql",
-      "bytes": 544321,
-      "sha256": "0a2fca63b86863a4edf9fd06d7b107acbe71c5ccab69ca6a9348102d71043e35"
-    },
-    {
-      "path": "supabase/UPGRADE_TO_V13.sql",
-      "bytes": 544321,
-      "sha256": "0a2fca63b86863a4edf9fd06d7b107acbe71c5ccab69ca6a9348102d71043e35"
-    },
-    {
-      "path": "supabase/UPGRADE_TO_V14.sql",
-      "bytes": 544321,
-      "sha256": "0a2fca63b86863a4edf9fd06d7b107acbe71c5ccab69ca6a9348102d71043e35"
-    },
-    {
-      "path": "supabase/UPGRADE_TO_V15.sql",
-      "bytes": 544321,
-      "sha256": "0a2fca63b86863a4edf9fd06d7b107acbe71c5ccab69ca6a9348102d71043e35"
-    },
-    {
-      "path": "supabase/UPGRADE_TO_V16.sql",
-      "bytes": 544321,
-      "sha256": "0a2fca63b86863a4edf9fd06d7b107acbe71c5ccab69ca6a9348102d71043e35"
-    },
-    {
-      "path": "supabase/UPGRADE_TO_V17.sql",
-      "bytes": 544321,
-      "sha256": "0a2fca63b86863a4edf9fd06d7b107acbe71c5ccab69ca6a9348102d71043e35"
-    },
-    {
-      "path": "supabase/UPGRADE_TO_V7.sql",
-      "bytes": 544321,
-      "sha256": "0a2fca63b86863a4edf9fd06d7b107acbe71c5ccab69ca6a9348102d71043e35"
-    },
-    {
-      "path": "supabase/UPGRADE_TO_V8.sql",
-      "bytes": 544321,
-      "sha256": "0a2fca63b86863a4edf9fd06d7b107acbe71c5ccab69ca6a9348102d71043e35"
-    },
-    {
-      "path": "supabase/UPGRADE_TO_V9.sql",
-      "bytes": 544321,
-      "sha256": "0a2fca63b86863a4edf9fd06d7b107acbe71c5ccab69ca6a9348102d71043e35"
-    },
-    {
-      "path": "supabase/UPGRADE_V5_TO_V6.sql",
-      "bytes": 544321,
-      "sha256": "0a2fca63b86863a4edf9fd06d7b107acbe71c5ccab69ca6a9348102d71043e35"
-    },
-    {
-      "path": "supabase/modules/army/peris_queue_recruit.sql",
+    "package.json": {
       "bytes": 5420,
-      "sha256": "4a9df61dc521d1743fedbf1ad76a7837dff22f15bdc9b775d146535682c46e3d"
+      "sha256": "191409897859bcadd67291c3bea6cdcf87c55c44e0894cf537a7e35265830cac"
     },
-    {
-      "path": "supabase/modules/battle/peris_add_formations.sql",
-      "bytes": 3096,
-      "sha256": "536239f654f9d6ff5299b6a81fa626cf9419378acda79bc241ab8d678b415682"
+    "public/art/city/academy-v1/demon.webp": {
+      "bytes": 55366,
+      "sha256": "3c240d72e0e63d56ff9f3fc13960b7f3f81bc1eebf6ee62e02d64d9cf906a7b2"
     },
-    {
-      "path": "supabase/modules/battle/peris_finish.sql",
-      "bytes": 9707,
-      "sha256": "b05f43740509adfa557580b629d3dd50157857165212cc00467dc353734464e7"
+    "public/art/city/academy-v1/dwarf.webp": {
+      "bytes": 53924,
+      "sha256": "83ed102a21c6506075f24d6aa66fbe7953857e1db0130cb4c161adbddbd4b723"
     },
-    {
-      "path": "supabase/modules/battle/peris_tick.sql",
-      "bytes": 13980,
-      "sha256": "bc6bc0801f212199e9f28d7044a61e4c4696e07e72392440812abf8d81157333"
+    "public/art/city/academy-v1/egyptian.webp": {
+      "bytes": 57604,
+      "sha256": "ffa70f974a6342fccca999bbc88991161cf6eb26bdf17704f75e4d2180ad8025"
     },
-    {
-      "path": "supabase/modules/campaign/game-worker.sql",
-      "bytes": 3700,
-      "sha256": "241cd5b8f302610f443a28d32c59689e3441c83379dae783ecabc554dd98aa88"
+    "public/art/city/academy-v1/elf.webp": {
+      "bytes": 61128,
+      "sha256": "cad5b22461a1699a7ade9441de540997cbf3ee9cb21d0d877809e765a641cc66"
     },
-    {
-      "path": "supabase/modules/campaign/player-raids.sql",
-      "bytes": 18016,
-      "sha256": "c23d32459eff799825c12a5b95e7719ceb31ae9a88a583a07ef27ed1ea12e442"
+    "public/art/city/academy-v1/gnome.webp": {
+      "bytes": 64930,
+      "sha256": "a071e9d6b11308daf646a4c2bcb565311ddb736d44cc0faededbaee9a1bef677"
     },
-    {
-      "path": "supabase/modules/campaign/sync_my_state.sql",
-      "bytes": 1877,
-      "sha256": "73c95a8f1b0c3f7dff23273064c29928a663551c1d2cf3010b6900741ceb04d3"
+    "public/art/city/academy-v1/orc.webp": {
+      "bytes": 64734,
+      "sha256": "4c0e6415b5d88428ec940b3f64d006a83ef0e049fccda37342b8f56dd00a1a1f"
     },
-    {
-      "path": "supabase/modules/city/peris_settle.sql",
-      "bytes": 4708,
-      "sha256": "2c3bfff7d1762050740a059f1dde17a69f0880c69cb66c11118732f2a5c6c423"
+    "public/art/city/academy-v1/pandaren.webp": {
+      "bytes": 77090,
+      "sha256": "d4374d6839b368cdaeca2aaeb44fcc8dddfa88f3bc9b7792ff573e9b991570f7"
     },
-    {
-      "path": "supabase/modules/empire/gameplay.sql",
-      "bytes": 25241,
-      "sha256": "f4b637eae27f0280237f5dd14822a22bca5ffda571e44e003d8e7f1090112f16"
+    "public/art/city/academy-v1/persian.webp": {
+      "bytes": 62322,
+      "sha256": "37e156cbb72eb152d53c8c37f89b9edb700642a6074bccda28460c35ed0f7cc7"
     },
-    {
-      "path": "supabase/modules/manifest.json",
-      "bytes": 1586,
-      "sha256": "2ad6ffc31cc6bbbead215d069870b59f4dafe0a97fd8fef6f6c5ba17c596a63b"
+    "public/art/city/academy-v1/roman-master.webp": {
+      "bytes": 70922,
+      "sha256": "f0d7fce68f3818e99283c83c5eb800b03ecb6132b907310e160cc41d2cda0dbf"
     },
-    {
-      "path": "supabase/modules/map/garrisons.sql",
-      "bytes": 8227,
-      "sha256": "511d3560fd910af3b771e95c9e53510a3576e2c3187ee526def8421a04ffb36e"
+    "public/art/city/academy-v1/roman.webp": {
+      "bytes": 61030,
+      "sha256": "a24469c8d460aeab8f7ee4b18f435c6b6feb2013961bd2bf2a77ec104f78c7ce"
     },
-    {
-      "path": "supabase/modules/map/march-orders.sql",
-      "bytes": 6707,
-      "sha256": "ff6a44263e316fe04b1464e4fd5be1170b0ced533d306df79a7315f246c7e830"
+    "public/art/city/academy-v1/spartan.webp": {
+      "bytes": 55370,
+      "sha256": "fd4f7f709d4a8ed28200d19dec53f27fc8ac7c359749c272e95a6ad45c549cad"
     },
-    {
-      "path": "supabase/modules/map/peris_march.sql",
-      "bytes": 6844,
-      "sha256": "3add5de93bced8a72332528589434a2c2bb19a6133303717acc90bbe0c3d4546"
+    "public/art/city/academy-v1/undead.webp": {
+      "bytes": 69806,
+      "sha256": "8ac27599e4d599a1b6d98c0779d00323030bce7b0f0dd69c0ca504a2c86f8dc8"
     },
-    {
-      "path": "supabase/modules/map/player-raid-schema.sql",
-      "bytes": 608,
-      "sha256": "9cdda3e54204d8c364e3090ad9ee8f097d8f03e0f429b361c73dcbd0a1462f17"
+    "public/art/research/v1/abundant-harvest.webp": {
+      "bytes": 18510,
+      "sha256": "f39a328b4d4424a16cbea5efb950dd180528f3a73a399e246f28da37ba51decd"
     },
-    {
-      "path": "supabase/modules/multiplayer/peris_challenge.sql",
-      "bytes": 1240,
-      "sha256": "a21c36a2f339bc94117d93e0351c7bfa36df255cfa443cf7b11b47a0517c186c"
+    "public/art/research/v1/agrarian-estates.webp": {
+      "bytes": 16450,
+      "sha256": "d9d7a8f91c9c2942e70b02512871795122b4798981da591298a3850b747de88e"
     },
-    {
-      "path": "supabase/modules/multiplayer/peris_respond.sql",
-      "bytes": 3158,
-      "sha256": "464623d7a1b104c51567e600363db5a3f1a3574ae384d3ef3bd3ca9b0c437b61"
+    "public/art/research/v1/animal-husbandry.webp": {
+      "bytes": 14958,
+      "sha256": "538ad6aa9df21debfdcebf17207a9f0cf6ac3c1acec4b3fc8a415d17e46e66db"
     },
-    {
-      "path": "supabase/schema.sql",
-      "bytes": 544321,
-      "sha256": "0a2fca63b86863a4edf9fd06d7b107acbe71c5ccab69ca6a9348102d71043e35"
+    "public/art/research/v1/arcane-command.webp": {
+      "bytes": 15720,
+      "sha256": "b92349cb5c48ab8a81f118a9c6a3477fcf0dc1f7651646be0b65b2e7dc9d89eb"
     },
-    {
-      "path": "tests/e2e/compact-raid-layout.spec.ts",
-      "bytes": 2909,
-      "sha256": "268ae98131f89c03046a1cbbb0d25af3994ab2e4158fa73b44a5f4a1afd0bf2e"
+    "public/art/research/v1/architecture.webp": {
+      "bytes": 11746,
+      "sha256": "5a6791eab30024b3954990ea2bcbacc6413cef98d8e21a99a1605b63f9372f6a"
     },
-    {
-      "path": "tests/e2e/player-city-raids.spec.ts",
-      "bytes": 5386,
-      "sha256": "52e86ccc95b5c768efa6ff4a715ad6071a914a79317e0b91816e53b9d5520095"
+    "public/art/research/v1/astronomy.webp": {
+      "bytes": 19474,
+      "sha256": "13285d77e31a9c49ab3ec25be402965f773ce9c013e31aedf8273cd1769dd763"
     },
-    {
-      "path": "tests/e2e/report-economics.spec.ts",
-      "bytes": 9107,
-      "sha256": "754eabae2895f014f01a2edecf1bfc9867a772db7e7e7b0213085c0ac93904f3"
+    "public/art/research/v1/banking.webp": {
+      "bytes": 16886,
+      "sha256": "6a2ecfd3dc3d6b63203388a71929630cd3382d8ab19f75845dce1b1d9d57aeff"
     },
-    {
-      "path": "tests/helpers/account-server.mjs",
-      "bytes": 9102,
-      "sha256": "aa5d19eba1a8409cf38514cf3c92774b034e79736b8295316928ff6d65062d7e"
+    "public/art/research/v1/barding.webp": {
+      "bytes": 15166,
+      "sha256": "fe37a1b2b18f7f3cbbf9d7b66f8c367986ae05294bec7faa3ef6ba7a7cf1b2f4"
     },
-    {
-      "path": "tests/player-city-raids-database.test.mts",
-      "bytes": 9876,
-      "sha256": "99d6d111cf91800934007775977bb3e56513a47dcf9cf942cc069db52aed2098"
+    "public/art/research/v1/barter.webp": {
+      "bytes": 11880,
+      "sha256": "59c718eed4987845d22e2995f2555a4b8554049a637967a0b5f2fab573a0c107"
     },
-    {
-      "path": "tests/player-city-raids.test.ts",
-      "bytes": 7607,
-      "sha256": "e0e86462ec81a7c73c0dd205ad2fa13215ffa75a3d16dda3b06838e9089a3721"
+    "public/art/research/v1/battering-rams.webp": {
+      "bytes": 15838,
+      "sha256": "501083f662293733e1ab9fadab83e0e98b02c9a5050b897104cfba4856a3b807"
+    },
+    "public/art/research/v1/bodkin-arrows.webp": {
+      "bytes": 15092,
+      "sha256": "3186f1030330c666e8694a513d8aa9da0f5d81f916ceb837e2e67af46f8d25df"
+    },
+    "public/art/research/v1/bowcraft.webp": {
+      "bytes": 13240,
+      "sha256": "09599b8b1ad3fed2689727f978194e0f16b822b259760247087828758445d77c"
+    },
+    "public/art/research/v1/bronze-forging.webp": {
+      "bytes": 11658,
+      "sha256": "5a9e8c6734e54f5b8f660a9e6c086addd9566b3ece06d68194819e4b9e56374a"
+    },
+    "public/art/research/v1/caravans.webp": {
+      "bytes": 12898,
+      "sha256": "7fcd47520b3c0d482a9f7844e2f32b1885e027422ef44104e0eb2c468589f2d4"
+    },
+    "public/art/research/v1/carpentry.webp": {
+      "bytes": 12474,
+      "sha256": "689f03d0cf2a5f408b8bf8d2833e05baee09d16dfdbd05494d4b5de3cf50debd"
+    },
+    "public/art/research/v1/catapults.webp": {
+      "bytes": 15426,
+      "sha256": "7e173f025a8832c6cd3cdbc32df1f6dcc0c63d1ef7cbf8d631a455a2327f6234"
+    },
+    "public/art/research/v1/chronicles.webp": {
+      "bytes": 16010,
+      "sha256": "d2d07cf531a92586524110fa911bbd60e24c3896e9bb493e15bb43e9e0ac34c3"
+    },
+    "public/art/research/v1/combined-arms.webp": {
+      "bytes": 17912,
+      "sha256": "492c66000030b338c1eaa2090d1b3f925f765ef0c866d4c48552a60817c8b23a"
+    },
+    "public/art/research/v1/command.webp": {
+      "bytes": 13598,
+      "sha256": "bc2800f5bf57ed3c16a72230b8339af68afe3a0b5bbd993942413d49f282b2be"
+    },
+    "public/art/research/v1/composite-bows.webp": {
+      "bytes": 15388,
+      "sha256": "c4fb6610db75cd039f3e69f3261cdc3bfa4d38fbf339036bd85176b8e9239282"
+    },
+    "public/art/research/v1/concrete.webp": {
+      "bytes": 13206,
+      "sha256": "85ea0e2f79b59ce6294c6681236903dec012028c6292f3ea539abb45b320a85f"
+    },
+    "public/art/research/v1/counterweights.webp": {
+      "bytes": 15760,
+      "sha256": "a854a199610ac8412208cc6d68c23ed26296e51790c4f6479c64bf36c4833ec6"
+    },
+    "public/art/research/v1/counting-houses.webp": {
+      "bytes": 12226,
+      "sha256": "21af64fa94f7d962a8a993c2530c3fbf187dc1cb15b5f9b34098f82962767647"
+    },
+    "public/art/research/v1/cranes.webp": {
+      "bytes": 11460,
+      "sha256": "722f41b1bbdf94b3ba7432855fa2f4fc1e217a67af3586cba3167bb1350e0cab"
+    },
+    "public/art/research/v1/crop-rotation.webp": {
+      "bytes": 20436,
+      "sha256": "042c6a3c6ec505251cc45acf22fc5ca59af1837d671018a97f49d2dcec04e455"
+    },
+    "public/art/research/v1/currency.webp": {
+      "bytes": 14110,
+      "sha256": "37df15f9a0768cc60cc0f03a685fdc39f88ed1685d119d3651bfcf1710efa9ff"
+    },
+    "public/art/research/v1/customs-houses.webp": {
+      "bytes": 14114,
+      "sha256": "8172bbaadfd53a5f8aa4d214c1b4fe879abfbcbe9c4ca5b3ecb90541ad69c91e"
+    },
+    "public/art/research/v1/deep-quarrying.webp": {
+      "bytes": 14906,
+      "sha256": "27a423540e96ac022143065aae01c6d412116253dc6578da6b582bbdf258c806"
+    },
+    "public/art/research/v1/demon-abyssal-gates.webp": {
+      "bytes": 13244,
+      "sha256": "023f32b6f771626e5fa79d3b3caab4e62c971e039cb08e31b1119fed2b6ddfb2"
+    },
+    "public/art/research/v1/demon-archfiend-legacy.webp": {
+      "bytes": 13144,
+      "sha256": "d3b8f11d4021aef9c4de460dfefeeb5eacd7f2fd146ad2c193d78e38c2beb911"
+    },
+    "public/art/research/v1/demon-demonic-warbands.webp": {
+      "bytes": 14628,
+      "sha256": "9060811f4e34fa9373953cc47ec0e548e7a3b6e74167eeb97eb185f5ab735005"
+    },
+    "public/art/research/v1/demon-ember-bolts.webp": {
+      "bytes": 8940,
+      "sha256": "3dac3aeae5d0cfc990dd0ce0cf56f8c613caac7699f0cb1a0bac954fe31168ad"
+    },
+    "public/art/research/v1/demon-flame-scholars.webp": {
+      "bytes": 15360,
+      "sha256": "7447c73e6bd7c4a62a23a075569f866abf5b872b14494b7242e871bc8502af05"
+    },
+    "public/art/research/v1/demon-hellforging.webp": {
+      "bytes": 13546,
+      "sha256": "0135eb0746d5449949f896bfa1e6210a8a8571d41ec85cb0a312207f78f1f5d1"
+    },
+    "public/art/research/v1/demon-infernal-dominion.webp": {
+      "bytes": 15596,
+      "sha256": "f948ac1d57ec5690af1c83ddb68519bf0ddd9cd0a4cca9177cd9144431b91ff2"
+    },
+    "public/art/research/v1/demon-infernal-engines.webp": {
+      "bytes": 10780,
+      "sha256": "d8f4f063e91970a586468d465b226bc551df3a1944cefead8d748df3985a639e"
+    },
+    "public/art/research/v1/demon-obsidian-armour.webp": {
+      "bytes": 14458,
+      "sha256": "b395e332318b24c1fcb63fe6485b899f4fb96a49d916f329832938bcebf8d282"
+    },
+    "public/art/research/v1/demon-soul-bargains.webp": {
+      "bytes": 13578,
+      "sha256": "e2f5b4be7534f66d39da87735b24d8d4c3fb849ca2766b619091a2acb860a710"
+    },
+    "public/art/research/v1/diplomacy.webp": {
+      "bytes": 11352,
+      "sha256": "273d6e0b68200e119fbd43eea429d82c5d58103cd8c7a1625e7dc79fbe9b6a30"
+    },
+    "public/art/research/v1/drill-grounds.webp": {
+      "bytes": 11780,
+      "sha256": "d8ed947a30c438a85f48326f218e76b4f7f8609853d84681b421dad93e66c740"
+    },
+    "public/art/research/v1/dwarf-ancestral-runes.webp": {
+      "bytes": 13382,
+      "sha256": "f2dc0ef8d2302aee009fbe927098185ee50e3d958057024d848c76031ac4efc2"
+    },
+    "public/art/research/v1/dwarf-deep-vaults.webp": {
+      "bytes": 12658,
+      "sha256": "00752fdec7d371cd3150eb1cd0a75e191c57ea58f3eb5925d474dca242955d55"
+    },
+    "public/art/research/v1/dwarf-geared-siege.webp": {
+      "bytes": 16742,
+      "sha256": "8470fd08157727ba0090f2d6d5e68334aa5b509523fbe535ffae8a09028d5309"
+    },
+    "public/art/research/v1/dwarf-heavy-mail.webp": {
+      "bytes": 15010,
+      "sha256": "997d821e1630133ec912a378c2e717b5259c887bd0979fe412720dba7152ad30"
+    },
+    "public/art/research/v1/dwarf-master-forging.webp": {
+      "bytes": 12290,
+      "sha256": "b9111dfe2e54b070acd3ee6f448a74f67235dc046021f870ec7e795d92c0274b"
+    },
+    "public/art/research/v1/dwarf-mountain-mining.webp": {
+      "bytes": 15758,
+      "sha256": "48b6d592de3167317dafd42625398ff118c3d95edd5c9c5869dea8a4490e1288"
+    },
+    "public/art/research/v1/dwarf-rune-carving.webp": {
+      "bytes": 15220,
+      "sha256": "0adf92ea5fa0f392b79ee4a35f62875cf54ef78841a048aff098712c30c6c15f"
+    },
+    "public/art/research/v1/dwarf-steel-axes.webp": {
+      "bytes": 13054,
+      "sha256": "e20af25357714292573aacc92ac90471b848eef2bd042f7bb3f3d2a6cdc501f0"
+    },
+    "public/art/research/v1/dwarf-stone-halls.webp": {
+      "bytes": 15680,
+      "sha256": "aadd43b625392428e6bfd6089ee48c3e6473464628350e5dc64355f58af65bde"
+    },
+    "public/art/research/v1/dwarf-tunnel-roads.webp": {
+      "bytes": 15074,
+      "sha256": "dac29f322691a21ac5cf92e73cba5de6b3e0e4eae39e60c8c35805e5f5f26d72"
+    },
+    "public/art/research/v1/egyptian-chariot-tactics.webp": {
+      "bytes": 21300,
+      "sha256": "29a3596f5916f92d4c9c2067fa74fd2cb3fcf72513516b532154e7d1103c97f4"
+    },
+    "public/art/research/v1/egyptian-desert-scouts.webp": {
+      "bytes": 11820,
+      "sha256": "d09f7dec8837d003dd3809f06ff2738f8790192b00905ead1aaca36cf05493d1"
+    },
+    "public/art/research/v1/egyptian-granary-scribes.webp": {
+      "bytes": 15088,
+      "sha256": "dbfe31e694118c4497fc5165819d2235ec3b7596221a0153a5bf03911d885616"
+    },
+    "public/art/research/v1/egyptian-nile-irrigation.webp": {
+      "bytes": 15862,
+      "sha256": "e733ca05104afa7d4ecd99272dd49485e0e5ce20e8c09398d6b7d4db7ac30c32"
+    },
+    "public/art/research/v1/egyptian-papyrus.webp": {
+      "bytes": 15048,
+      "sha256": "a4035b81cfd1d148ab6f11e5b856c9acaed7a71ce3c25c1bab9c50c05300e972"
+    },
+    "public/art/research/v1/egyptian-pharaonic-legacy.webp": {
+      "bytes": 14062,
+      "sha256": "4fee7692ff831dc6fda8449a2bbf41579927718bf32bf8a61557dea67103e8bf"
+    },
+    "public/art/research/v1/egyptian-pyramid-engineering.webp": {
+      "bytes": 18942,
+      "sha256": "44599b5224dc0c250c828317ba31c1554331bf2dd98e626d4350eb165f33d143"
+    },
+    "public/art/research/v1/egyptian-royal-necropolis.webp": {
+      "bytes": 11480,
+      "sha256": "d5cbcb6fb912925a52b950f09e0dd2012d049f0566843fcc084a73c1b0e3e96c"
+    },
+    "public/art/research/v1/egyptian-solar-temples.webp": {
+      "bytes": 13326,
+      "sha256": "d14aab622bdb6f7a72aaab4ed49ec6892ff14f7aa488209e65b30503efb8d8be"
+    },
+    "public/art/research/v1/egyptian-stone-obelisks.webp": {
+      "bytes": 16482,
+      "sha256": "3afdbdefe27bcb70d159827bf32998ee7392b3173c3616e019460379281e36b7"
+    },
+    "public/art/research/v1/elf-ancient-songs.webp": {
+      "bytes": 25592,
+      "sha256": "3d6725b2bf28a1b23f52d088db3fdb0332184f3445c253b56bfb867c5b58f614"
+    },
+    "public/art/research/v1/elf-crystal-lore.webp": {
+      "bytes": 16470,
+      "sha256": "74fb7b137cf1d53b6df92417760d1534614ba267fc906a1891d85041f62de261"
+    },
+    "public/art/research/v1/elf-elder-wisdom.webp": {
+      "bytes": 19676,
+      "sha256": "2ec2e9dc50f7bd371f21e663d267231b9bef6051ed37f036b357e631ac91b48b"
+    },
+    "public/art/research/v1/elf-forest-wardens.webp": {
+      "bytes": 20742,
+      "sha256": "3a2492c9578c4eefa608e77435ce133185bdd2cc7e5458fcaf4fa9ae9ad353fd"
+    },
+    "public/art/research/v1/elf-living-groves.webp": {
+      "bytes": 11446,
+      "sha256": "9589ceba276b31d955e3ff43a98537f8fea6c2326994825bf37f9c19b1174342"
+    },
+    "public/art/research/v1/elf-moon-arrows.webp": {
+      "bytes": 17938,
+      "sha256": "444959c9cb2d5b64d629fe3b38f64424bf3a839e135687da381199a95187f3fa"
+    },
+    "public/art/research/v1/elf-silver-bark.webp": {
+      "bytes": 20546,
+      "sha256": "8146b275b4dddf1386f2f107691e33a1f05e6adf9ffff17c13c946f1aad84fc3"
+    },
+    "public/art/research/v1/elf-stag-riders.webp": {
+      "bytes": 17744,
+      "sha256": "e489baa1884a589730dad48d51fa91d74d4c456028afa98324faa0612e3e1afa"
+    },
+    "public/art/research/v1/elf-star-sight.webp": {
+      "bytes": 13816,
+      "sha256": "a8bb2fe84d24cdf8bb4baf7545dd8295742ed83b95be98ca216fbace8335abd5"
+    },
+    "public/art/research/v1/elf-sylvan-harvest.webp": {
+      "bytes": 20358,
+      "sha256": "e0e19315b8f7da487ffea41bbc049d1996a5d3ae851e62b6606cd647c7b33b98"
+    },
+    "public/art/research/v1/enlightenment.webp": {
+      "bytes": 15016,
+      "sha256": "d61aa95b6810ee2265722a869d25e6cc9a3bd8a759ff0201524aa600ae259489"
+    },
+    "public/art/research/v1/fletching.webp": {
+      "bytes": 17594,
+      "sha256": "2090b7783576693462a3fee6289e0d2466e4995831cb7642e2437a316ab09691"
+    },
+    "public/art/research/v1/food-preservation.webp": {
+      "bytes": 13056,
+      "sha256": "26b8382893c70246240d6e64ffdabbd2a8d21f7824e5ce3440255b335097e71d"
+    },
+    "public/art/research/v1/forestry.webp": {
+      "bytes": 14772,
+      "sha256": "a04d6b6226339210984a6f0b61601616d0ccc8dbc2682a0cc87f77bd32a23ac4"
+    },
+    "public/art/research/v1/fortification-studies.webp": {
+      "bytes": 12902,
+      "sha256": "5108a1af18f99133f846067ee06eb05368f014551173444ab984ffd012546810"
+    },
+    "public/art/research/v1/gnome-alchemy.webp": {
+      "bytes": 13124,
+      "sha256": "fee938c58b4cc225a21ca089334499d4348b2b1ceed65597a009b7d24bf96c79"
+    },
+    "public/art/research/v1/gnome-automata.webp": {
+      "bytes": 13024,
+      "sha256": "e718fa935382c5ed4f2a6d1a83e3208612484afbf97eba65e0651888d47a5ecd"
+    },
+    "public/art/research/v1/gnome-clockwork-tools.webp": {
+      "bytes": 17374,
+      "sha256": "67aca268693c20e3d97b223a34497b560dac1fb1f2faf80fdb7e87797fe0481a"
+    },
+    "public/art/research/v1/gnome-gearworks.webp": {
+      "bytes": 14618,
+      "sha256": "fe7f93232fb4386dd8015dc052649aa02af20354f3c889cbbb3a4929ed9b4163"
+    },
+    "public/art/research/v1/gnome-grand-invention.webp": {
+      "bytes": 14408,
+      "sha256": "a9401923706015e175dcbd61f7e97ac1e31ba7db780e1b432ff9da820ba23eb5"
+    },
+    "public/art/research/v1/gnome-mechanical-siege.webp": {
+      "bytes": 12538,
+      "sha256": "5a7f590b8c95ded2618d3fda9a6d454b795f6be1788fc9c02ecf19d9a613d1d4"
+    },
+    "public/art/research/v1/gnome-patent-houses.webp": {
+      "bytes": 18974,
+      "sha256": "e24a56798b11e377753e5246ed58f9c5e3cf99c0dad10e366c7ca4bfeebf35c8"
+    },
+    "public/art/research/v1/gnome-precision-optics.webp": {
+      "bytes": 15876,
+      "sha256": "87a89e6edee8ac914190c807ef1c5bf4f557c9056f63ecdc02d21e54fdbb8709"
+    },
+    "public/art/research/v1/gnome-rat-couriers.webp": {
+      "bytes": 15076,
+      "sha256": "7dd06777f553baf0194319d65a51e8e4d2a153d08eb7b35b0b81a3e48eb2eecd"
+    },
+    "public/art/research/v1/gnome-workshop-science.webp": {
+      "bytes": 20014,
+      "sha256": "f3a4cf510a2eced468b33d4bf1f62b03cfacf86600b7c6e31cb85227ca7c0ab4"
+    },
+    "public/art/research/v1/grand-bombardment.webp": {
+      "bytes": 17332,
+      "sha256": "a902418f8fe84217e0dff78b2244bbe1b0575a2ab68b5603f288a683b18f73c1"
+    },
+    "public/art/research/v1/great-exchange.webp": {
+      "bytes": 18394,
+      "sha256": "e1ac567bdd23bff11876766df5ee0e9fefb3b255a0ece90191cbc525aca4b81d"
+    },
+    "public/art/research/v1/great-foundries.webp": {
+      "bytes": 14602,
+      "sha256": "6fc7dab33f36d88362938cb32e33464e6ee9b9e4f140cb77f44218670038365c"
+    },
+    "public/art/research/v1/heavy-cavalry.webp": {
+      "bytes": 17382,
+      "sha256": "04c5aaa0f217d9eaaf195afbe1a4ecd85a03930f202be0bf8f342caa5077c4bf"
+    },
+    "public/art/research/v1/heroic-deeds.webp": {
+      "bytes": 16388,
+      "sha256": "5a725647be8e9385cbed13ca3fa9b4087bfa0525a0dc35b23279235c9339de0e"
+    },
+    "public/art/research/v1/imperial-governance.webp": {
+      "bytes": 18088,
+      "sha256": "a46c82de818b7dc21f573ab284f471c8f1e35d82c34bbae0566af508db469d74"
+    },
+    "public/art/research/v1/improved-axes.webp": {
+      "bytes": 16624,
+      "sha256": "3c4c0c971ba4e30b41468a7cbd4a3273bdd2e2c25788a582103c004a04211d82"
+    },
+    "public/art/research/v1/industrial-estates.webp": {
+      "bytes": 15980,
+      "sha256": "113438f7352be614d2a073d5b87a880d86ff5c9a4358b0931eb8d0f804ab6144"
+    },
+    "public/art/research/v1/iron-forging.webp": {
+      "bytes": 14514,
+      "sha256": "a7228d5bb76df796d1fd9da47f618ad03114561526724842c7e7df600c918eb5"
+    },
+    "public/art/research/v1/irrigation.webp": {
+      "bytes": 15450,
+      "sha256": "fa3bb8fd3d103c9ccb5e646bab1d3acec9ac28b57e34db2ecb0660d845545909"
+    },
+    "public/art/research/v1/legendary-command.webp": {
+      "bytes": 15292,
+      "sha256": "6ee7827ec0ff73f2d5cfab7644a43f28079c45635f706e0cc94279b7ae9fd0db"
+    },
+    "public/art/research/v1/libraries.webp": {
+      "bytes": 15028,
+      "sha256": "68f8d57fe549ac981bcd7a4b99630d0022489d725439b45e3da4a64d1050f0e1"
+    },
+    "public/art/research/v1/logistics.webp": {
+      "bytes": 15304,
+      "sha256": "96865c840434d9ece396d1d076c7f10ae74b2310b7afede3ba12e4340fd2daa4"
+    },
+    "public/art/research/v1/longbows.webp": {
+      "bytes": 17090,
+      "sha256": "c7514c181cec48d175a5284671d0d4ea0f19404cc0a69e7ce2519fa0e2cd8eca"
+    },
+    "public/art/research/v1/market-charters.webp": {
+      "bytes": 17602,
+      "sha256": "15c366455bbc7146952ae5740a5b79a44b12177360bd37b06b1aabadcceef584"
+    },
+    "public/art/research/v1/masonry.webp": {
+      "bytes": 13138,
+      "sha256": "a7ab9dda8ba9d92e7b30e7bb9befd977376bb23ff2fd22d339a4d1016f0c1b7f"
+    },
+    "public/art/research/v1/master-archers.webp": {
+      "bytes": 11394,
+      "sha256": "767c42ecfdc31e5beae557da76e86c63894377952f027f351c62adce67b76318"
+    },
+    "public/art/research/v1/master-builders.webp": {
+      "bytes": 14702,
+      "sha256": "7da7624d12030d5deb039229196230a586b62c42c4e53d01df0ab2c139fdf9d8"
+    },
+    "public/art/research/v1/master-craftsmen.webp": {
+      "bytes": 17316,
+      "sha256": "4b7022e413a76321e8f5034ca9ffdca565eb1a8a2f74d805b6087a3844c435b1"
+    },
+    "public/art/research/v1/mathematics.webp": {
+      "bytes": 18696,
+      "sha256": "26a29e6891d8f3650a62300978cee6b2b0c5a500da23206777a6377bac726aa5"
+    },
+    "public/art/research/v1/merchant-guilds.webp": {
+      "bytes": 14468,
+      "sha256": "888907dd867a0e492e107e890048c66a2a51be216db68256f780ca56e725690b"
+    },
+    "public/art/research/v1/monuments.webp": {
+      "bytes": 17068,
+      "sha256": "86a59e3ef29c614881619373030be3b17d6e4bac3194b52fe6eb0af3e95942b7"
+    },
+    "public/art/research/v1/mounted-tactics.webp": {
+      "bytes": 14210,
+      "sha256": "8b7657fc9a2c946c2a4e107cefd07ae91bd3acd244dcbebb7c9b26470f1a1521"
+    },
+    "public/art/research/v1/observatories.webp": {
+      "bytes": 15316,
+      "sha256": "b73f942e7b9d9aca57f24ab367539be81edd62fa44fb70c4024a56a114eaa983"
+    },
+    "public/art/research/v1/officer-school.webp": {
+      "bytes": 16322,
+      "sha256": "5bed58330ffdfe6dcf4e02531af927ad6f2988ccd27e89afa030362b08255837"
+    },
+    "public/art/research/v1/orc-bone-armour.webp": {
+      "bytes": 15346,
+      "sha256": "ae038f6dc5ea22b73202effc382ebd3d373d529bf7dcb6644bf943939bd78bea"
+    },
+    "public/art/research/v1/orc-brutal-siege.webp": {
+      "bytes": 17156,
+      "sha256": "6ec031c75ad073e354ccb2df08e4dda540698a5cfb2ae2c189135a9982bf1703"
+    },
+    "public/art/research/v1/orc-clan-forging.webp": {
+      "bytes": 18050,
+      "sha256": "63535865b6058796733f72c7b7b00b626f262538c8a1caea8350407c91e2ec8f"
+    },
+    "public/art/research/v1/orc-iron-tusks.webp": {
+      "bytes": 19044,
+      "sha256": "cab3ca27d02403abb0db86f6ee8fd9de1ee17104625c33e0de018274839eed46"
+    },
+    "public/art/research/v1/orc-raider-packs.webp": {
+      "bytes": 12974,
+      "sha256": "83cc9e9bb8e93b1cc9a5cace3246f43060ff71247509157e86e95dc3ac46a1d2"
+    },
+    "public/art/research/v1/orc-shaman-lore.webp": {
+      "bytes": 19106,
+      "sha256": "81c7747a30a2b65665482fbe7ac35df41f0b2be8feae0f69ba5d5638c29983d0"
+    },
+    "public/art/research/v1/orc-spoils-of-war.webp": {
+      "bytes": 17406,
+      "sha256": "dcfa99e1799bd312127fc020dcb5e3c6491bcc8abe3f9333fdf1101c4124c8be"
+    },
+    "public/art/research/v1/orc-war-drums.webp": {
+      "bytes": 17230,
+      "sha256": "974456556974ab3748ad62acb6187183927f7a08e0fc2725cb3fbda1f30fb6ed"
+    },
+    "public/art/research/v1/orc-warchief-legacy.webp": {
+      "bytes": 21006,
+      "sha256": "97c98b87c2c0a9c09289542bf4f528df1cef6e9a5bfb129b72263845920a88a6"
+    },
+    "public/art/research/v1/orc-warg-riders.webp": {
+      "bytes": 17508,
+      "sha256": "51fdadd0dfb9bb95be400fce37e93f602ce02f678f3b264651f738db8a42666c"
+    },
+    "public/art/research/v1/orchards.webp": {
+      "bytes": 22174,
+      "sha256": "29970d514311dedc914662c2487baaa6ffa995fbda9488e2245d712698d4a2c7"
+    },
+    "public/art/research/v1/ore-prospecting.webp": {
+      "bytes": 15652,
+      "sha256": "33f6506d983a6ef955643c2ead514806afd833116c501a2ea0d4188174a8feba"
+    },
+    "public/art/research/v1/pandaren-bamboo-craft.webp": {
+      "bytes": 14336,
+      "sha256": "011c8ef9438d5081aeec8e10d9463d883e0cd86c1ac702b7961cabd78fb920dc"
+    },
+    "public/art/research/v1/pandaren-celestial-harmony.webp": {
+      "bytes": 13898,
+      "sha256": "f6671b402184956b02afdd1cbe7a171ca5fc1e46e66d5facbe005cb9dbed6789"
+    },
+    "public/art/research/v1/pandaren-dragon-breath.webp": {
+      "bytes": 13320,
+      "sha256": "c7ba56c29622b46961495a7b5706f8a667c82b601cd302c363d202f2fc76a18e"
+    },
+    "public/art/research/v1/pandaren-golden-harvest.webp": {
+      "bytes": 13396,
+      "sha256": "87a96a7ca497a146b709891b4868ec5bcf5a666dac710277f93047b769791226"
+    },
+    "public/art/research/v1/pandaren-jade-wisdom.webp": {
+      "bytes": 17420,
+      "sha256": "6afa63eaaa19a1b6bdfdfa63ea8b7a2da561581f0a32083f206ae1924c375151"
+    },
+    "public/art/research/v1/pandaren-martial-forms.webp": {
+      "bytes": 11416,
+      "sha256": "6270a51a433d18b566ac05773bc1bee51ca5383d85ed7759ac4cd6d49af2ea10"
+    },
+    "public/art/research/v1/pandaren-mountain-monasteries.webp": {
+      "bytes": 15398,
+      "sha256": "7eee7908eced18a6d0e506ef2766604c227827bde63842300c9d2378c8a83f10"
+    },
+    "public/art/research/v1/pandaren-rice-terraces.webp": {
+      "bytes": 15278,
+      "sha256": "4f78ed5e8d855070b3c8d81076699dac9e87b81c0f8973c42c2e9d1504a0d5c7"
+    },
+    "public/art/research/v1/pandaren-silk-markets.webp": {
+      "bytes": 15676,
+      "sha256": "6b5e996c3527ee9f64ebba7acb13561c4062ee801d5e3764dbc2fd7d27b23742"
+    },
+    "public/art/research/v1/pandaren-tea-houses.webp": {
+      "bytes": 13896,
+      "sha256": "d9ce2bdc3d03f0d13710563e0ec6f86689d780fc61f434113d2cddbfc7db268d"
+    },
+    "public/art/research/v1/paper-making.webp": {
+      "bytes": 13170,
+      "sha256": "f2ab1756cf22ced5e89e2ccf8ad8d5c516675c65ab611cd9606f19ef8309b2ac"
+    },
+    "public/art/research/v1/persian-cataphract-armour.webp": {
+      "bytes": 13406,
+      "sha256": "4913b1e0b17a8a209d560fcf7c1f05135b168407c0b30bcb4725730fa8dcafbc"
+    },
+    "public/art/research/v1/persian-court-scholars.webp": {
+      "bytes": 16898,
+      "sha256": "77f1b031c4dd7d67712bf4ffac166622cbb8a41abb02527f454ab88e73f87788"
+    },
+    "public/art/research/v1/persian-gardens-of-knowledge.webp": {
+      "bytes": 13458,
+      "sha256": "d05e847c9f008134f396f6edd7931d034b12afc866e44dff01aa7a829153ed63"
+    },
+    "public/art/research/v1/persian-horse-archery.webp": {
+      "bytes": 17748,
+      "sha256": "eac9bed785abd12aafc4f6581edbedbe4ba7f8bb6605d7cbdcd8872fbed514bc"
+    },
+    "public/art/research/v1/persian-immortal-guard.webp": {
+      "bytes": 15506,
+      "sha256": "634f0033cdf2245a3ce70748c30c095804af0499ff20ad7e18f529780a115684"
+    },
+    "public/art/research/v1/persian-king-of-kings.webp": {
+      "bytes": 18994,
+      "sha256": "738b4e5428036f385854afa212f5c596159ca43a6863a5a127aa038788c620f1"
+    },
+    "public/art/research/v1/persian-qanat-irrigation.webp": {
+      "bytes": 16420,
+      "sha256": "085698671b399f83a5f87c1a38a4809eaca07142c93c6e23984b97f404cea869"
+    },
+    "public/art/research/v1/persian-royal-roads.webp": {
+      "bytes": 14096,
+      "sha256": "cc1f692007269b27ec0d1efffb6398f7e140b3e9a8e618d1f4f84a17b9b746c0"
+    },
+    "public/art/research/v1/persian-satrapal-estates.webp": {
+      "bytes": 14790,
+      "sha256": "c22d42fbf8306eef10c62d71dcb01018deb7911947ab3be5d1dd6f673256f38d"
+    },
+    "public/art/research/v1/persian-silk-caravans.webp": {
+      "bytes": 16590,
+      "sha256": "a60117f20ee84acbfbdf55d2bf2b7eeaa04bfb098fa8ff477445063501bea88a"
+    },
+    "public/art/research/v1/philosophy.webp": {
+      "bytes": 13398,
+      "sha256": "515bc5ed6cc07f138880b9aaa6ef84d80c492d8c75bcc86d34bd8d18827b64e5"
+    },
+    "public/art/research/v1/precision-tools.webp": {
+      "bytes": 14900,
+      "sha256": "56b45889461a9802e42c2c8465b611c736caf3b7cdfc8e67d63eacc5245ac4ab"
+    },
+    "public/art/research/v1/professional-soldiers.webp": {
+      "bytes": 13648,
+      "sha256": "4823b309ead2f1dbc31a46d517ffbc142da40991ab2406ebfcada8105927c203"
+    },
+    "public/art/research/v1/range-finding.webp": {
+      "bytes": 18478,
+      "sha256": "5b8e1f3f0ab461d80ec45b215997483c0b01c7221f65a0d3240faa6ffdbb23a8"
+    },
+    "public/art/research/v1/reinforced-frames.webp": {
+      "bytes": 10922,
+      "sha256": "9b9f9f99ea3b71f66d2944029e8875b583a65032348cb52a19f081959fac259e"
+    },
+    "public/art/research/v1/riding-schools.webp": {
+      "bytes": 14428,
+      "sha256": "66f15d79c743fbf6a15b91e0aa8f4c1ce6062d1cd8d0d373f3a668194b5cc996"
+    },
+    "public/art/research/v1/road-building.webp": {
+      "bytes": 10204,
+      "sha256": "100011c56568f2b0ec9aefcefc1ca27706a7065d7c52d7251886c8e1231f844d"
+    },
+    "public/art/research/v1/roman-aqueducts.webp": {
+      "bytes": 16696,
+      "sha256": "54eab4520cb651fa0a88b4ec98f1c37a2e4b718b0bedce6c367fcf7b75bd6609"
+    },
+    "public/art/research/v1/roman-forum-trade.webp": {
+      "bytes": 15864,
+      "sha256": "c942d643b4a8721ab3d7d974173d9275786c4ff6a5abc2eb2879474499831c51"
+    },
+    "public/art/research/v1/roman-imperial-census.webp": {
+      "bytes": 13694,
+      "sha256": "f7f6e18ce9da427cdc1c1730675469049054302497c7b74ed1e1221a794bb666"
+    },
+    "public/art/research/v1/roman-latin-scholarship.webp": {
+      "bytes": 14856,
+      "sha256": "d14be2ab25dee5f3499c29417f9793c315fc0a5c9240b7500645b1b310b009ca"
+    },
+    "public/art/research/v1/roman-legion-discipline.webp": {
+      "bytes": 15520,
+      "sha256": "3e82f970f211227b2e05c7a5fb0615058dfaa6f83d0b804f1d60ab128ef8dc53"
+    },
+    "public/art/research/v1/roman-military-engineering.webp": {
+      "bytes": 17256,
+      "sha256": "d1f731ae1af967d339966702e1100fe6555b7db28ffffaf4d46bfbb59c571861"
+    },
+    "public/art/research/v1/roman-pax-imperium.webp": {
+      "bytes": 21242,
+      "sha256": "881d37a1cd93e2b915ed12d80e8fa9f38bf6478101ef28a1553a5fd6a3ffaf84"
+    },
+    "public/art/research/v1/roman-praetorian-training.webp": {
+      "bytes": 18246,
+      "sha256": "17136b2a708dfcc98f35ada792abd5550a75db486db010576de9467237acd7f2"
+    },
+    "public/art/research/v1/roman-roman-roads.webp": {
+      "bytes": 16614,
+      "sha256": "359e351dd11f91562478fbfab7737a0687e08d7d908a8616c44d7f55fe2ee590"
+    },
+    "public/art/research/v1/roman-testudo.webp": {
+      "bytes": 15644,
+      "sha256": "3aa82b754bd78bced8cfbb590a83dd22809ea73a2c9cf2f58e329542a45739db"
+    },
+    "public/art/research/v1/royal-cavalry.webp": {
+      "bytes": 18068,
+      "sha256": "b597232fec6900ac2ba991ca01cda895e8c6da06d6132f674c74fcfafb514ffa"
+    },
+    "public/art/research/v1/saddles.webp": {
+      "bytes": 12730,
+      "sha256": "a6a2be0baf0f284a9dceab784c8fc911d176ae88f8403156f24916c89c64b4f5"
+    },
+    "public/art/research/v1/saw-mills.webp": {
+      "bytes": 18534,
+      "sha256": "45d897fe9c95fe8c2fd03e05a1dda238731404d0b5045ccb176b1504befdd421"
+    },
+    "public/art/research/v1/scaffolding.webp": {
+      "bytes": 11322,
+      "sha256": "67afadc8fa1bcb4f5d18268ba97f509bea6cbcdcddad1dc9f945e576e2826ae4"
+    },
+    "public/art/research/v1/scholarship.webp": {
+      "bytes": 16716,
+      "sha256": "e7e921161018ec8816f700f193f598344374cb8012dd8d5652f3d671e97dfe01"
+    },
+    "public/art/research/v1/scouting.webp": {
+      "bytes": 12430,
+      "sha256": "3a4261bdea1cdd722d52862e49a5b1e222ca7d2f0acf90c68aba0ea65bb2a69a"
+    },
+    "public/art/research/v1/seed-selection.webp": {
+      "bytes": 16402,
+      "sha256": "1aaff767b67d011d02d4fcdecfdbf3ad1f646ffb24cbe168e82651d95b997870"
+    },
+    "public/art/research/v1/shieldcraft.webp": {
+      "bytes": 13038,
+      "sha256": "caf7ec84936cc9f184b50d14ecd9a75ca36d14f1cedd6bc25321654d50be8694"
+    },
+    "public/art/research/v1/siege-arrows.webp": {
+      "bytes": 18470,
+      "sha256": "8a992048ba28410f374bdf59f0b833cbf9521d7f6303db2269f520f40770d3d0"
+    },
+    "public/art/research/v1/siege-engines.webp": {
+      "bytes": 15546,
+      "sha256": "751e860c411d1a05d65b3391260b84ce742cc7cb85c9be42333bb5fa2a284f75"
+    },
+    "public/art/research/v1/siege-logistics.webp": {
+      "bytes": 15232,
+      "sha256": "a42fe05c122a296a15a65703df65f24ce2a74b39ac0202e687a18c1f54229b57"
+    },
+    "public/art/research/v1/siege-masters.webp": {
+      "bytes": 13908,
+      "sha256": "471054fc6a9985c55c54697b5729e9809595cc7fbb3f835694ccc70c324efe00"
+    },
+    "public/art/research/v1/spartan-agoge.webp": {
+      "bytes": 12578,
+      "sha256": "6003a98c0d793485260d5744f2e1259b51b106ea02c8489f88b96b0b59fe1d6c"
+    },
+    "public/art/research/v1/spartan-battle-oaths.webp": {
+      "bytes": 14198,
+      "sha256": "a5949d8a8d7d14d7e3336aeff723b8b3bd28731e59a84866ba94e6b38c9cea71"
+    },
+    "public/art/research/v1/spartan-bronze-hoplites.webp": {
+      "bytes": 6582,
+      "sha256": "f38efbd280503adf3dd27a61cd7382e5ae91248667c2cf2fbadc6c285c57aa82"
+    },
+    "public/art/research/v1/spartan-iron-discipline.webp": {
+      "bytes": 12854,
+      "sha256": "c28e3e1cd1353801c294b4a1c7e6a7380141a6f42f51fdd7895315f73cd8bcd8"
+    },
+    "public/art/research/v1/spartan-laconic-orders.webp": {
+      "bytes": 12690,
+      "sha256": "9ad000daffd0c5251421bfc8c5485544b96008a021ce0172c4b1d630b943991e"
+    },
+    "public/art/research/v1/spartan-phalanx.webp": {
+      "bytes": 13912,
+      "sha256": "31c326a3c9dbd9ae4e0ff2d64d538b2dd1f3e3b8ee3ac591143abc9a54f0a092"
+    },
+    "public/art/research/v1/spartan-royal-guard.webp": {
+      "bytes": 14430,
+      "sha256": "f84969e19b881f639e28debc3bdcfe754b9503af3c45c7d31e85f3b220114786"
+    },
+    "public/art/research/v1/spartan-shield-wall.webp": {
+      "bytes": 14320,
+      "sha256": "293626a9c762c21157bde7e3421500c3aa3043bc8e2ac5d3af45517f11b11383"
+    },
+    "public/art/research/v1/spartan-spartan-legend.webp": {
+      "bytes": 15474,
+      "sha256": "0ffbc211349c780e858e8def9e3323aec487d823e73fb8d23b074b420049363e"
+    },
+    "public/art/research/v1/spartan-warrior-houses.webp": {
+      "bytes": 19030,
+      "sha256": "64d6f5a2f1536773c5ddaa171cfea63bb519be6715f03cf3661e344827abf5ee"
+    },
+    "public/art/research/v1/spear-formations.webp": {
+      "bytes": 10896,
+      "sha256": "2fece88736bd21fa546a293b1e1e72ec3c28ae89374500faeb4a5b9d3daa9557"
+    },
+    "public/art/research/v1/steel-shields.webp": {
+      "bytes": 12368,
+      "sha256": "b57dab70fcc57e9a028bf6e4dc8866df481639c77a1caad5f62ba54fd4b4e7d0"
+    },
+    "public/art/research/v1/stirrups.webp": {
+      "bytes": 14748,
+      "sha256": "667612c25b8f29a9a501ba754e1afbbea6d63d659e3306014c618c45c8ed2a47"
+    },
+    "public/art/research/v1/stonecutting.webp": {
+      "bytes": 13216,
+      "sha256": "cbfbbcee070b5a81662b836e82186e5404960fc6e3bc343e7cb48ade803b29fc"
+    },
+    "public/art/research/v1/strategy.webp": {
+      "bytes": 16776,
+      "sha256": "6553ccf221af4606d754f6688f4865ba1b2d85efaf5ba964dfa83baa2c8d0633"
+    },
+    "public/art/research/v1/surveying.webp": {
+      "bytes": 10008,
+      "sha256": "ca8c64663150e6abb8949ea982bc8910c3774b8907a80a558c5571ba768e708a"
+    },
+    "public/art/research/v1/swift-couriers.webp": {
+      "bytes": 10652,
+      "sha256": "cb62db5dd177d001e187b521c303598462b979871ca5b6e784d51bde7bca4dd8"
+    },
+    "public/art/research/v1/target-practice.webp": {
+      "bytes": 11428,
+      "sha256": "43f52afdf36c795729fb87d2c63e2d65671977d8cb5f91b2f23ae093cca99dfd"
+    },
+    "public/art/research/v1/terrace-farming.webp": {
+      "bytes": 17184,
+      "sha256": "598fbbaa0ba4466822b5a27fc75d2e14d9589f748596b906bc8a7724df8eab17"
+    },
+    "public/art/research/v1/trade-routes.webp": {
+      "bytes": 19658,
+      "sha256": "e381dbb563d4940efd3c0b78f1906216c0b4cbc8c16adc805b1c51412483ebb7"
+    },
+    "public/art/research/v1/undead-black-citadels.webp": {
+      "bytes": 12570,
+      "sha256": "d2aa202c28643d1e814bd51feb73c16d51b3f3fc37149a6368108b4e6e18b400"
+    },
+    "public/art/research/v1/undead-bone-legion.webp": {
+      "bytes": 7758,
+      "sha256": "2c7286d18773e7142288feb2fd20dd0d97f4f56cb53cea61c3339b6e45b5e8d5"
+    },
+    "public/art/research/v1/undead-crypt-vaults.webp": {
+      "bytes": 13190,
+      "sha256": "ac08400d52bd0088835d4bc21e578992b730ad49afd6d56e11df1887084f420d"
+    },
+    "public/art/research/v1/undead-dark-scholars.webp": {
+      "bytes": 13974,
+      "sha256": "8df40c68c91057f5f7051548881d8b94bc8db242fa85a808632a705ede1d1a3b"
+    },
+    "public/art/research/v1/undead-death-knights.webp": {
+      "bytes": 14388,
+      "sha256": "d5da230ffb0d7cfb5cf2978bb9d302531bb9cd6435852ba61d71424638e0f8aa"
+    },
+    "public/art/research/v1/undead-grave-lore.webp": {
+      "bytes": 15224,
+      "sha256": "ec971bad07293edf59ac3ad822fc9332550fc24236014f976372c5c0304be4d4"
+    },
+    "public/art/research/v1/undead-lich-ascendancy.webp": {
+      "bytes": 13884,
+      "sha256": "2b22a0953d92de81776dc7affccc2ae21112ac351d8bd45f122c488dda2d3ebd"
+    },
+    "public/art/research/v1/undead-necromantic-rites.webp": {
+      "bytes": 17868,
+      "sha256": "a554e034d657799d588d14b434fa8b57c0e97ca9f0796db5299bd0bfd904be4a"
+    },
+    "public/art/research/v1/undead-soul-binding.webp": {
+      "bytes": 13368,
+      "sha256": "16556dbfdd1361ba9bea237512964765c63ce36c18fc34057787fe9000cc08d7"
+    },
+    "public/art/research/v1/undead-spectral-march.webp": {
+      "bytes": 14410,
+      "sha256": "208ea37b8dc56b81318ffff68c144515eec0eaa11889744a70b19dbe6ef86d3a"
+    },
+    "public/art/research/v1/universities.webp": {
+      "bytes": 17198,
+      "sha256": "43329e272bd3ea2d7a502580811fbc2edab8d09cbd89f46f99b27aa115f864aa"
+    },
+    "public/art/research/v1/urban-planning.webp": {
+      "bytes": 15140,
+      "sha256": "8f8f823d36e0c39c6bda83915fe9162846f90dc791d79a7e95812f88d88ce667"
+    },
+    "public/art/research/v1/veteran-guard.webp": {
+      "bytes": 16616,
+      "sha256": "c145ec2e6a3d5c96673d3bb1d82aca5697f1c156106bde15cb50abb4b1b2c560"
+    },
+    "public/art/research/v1/volley-drill.webp": {
+      "bytes": 13902,
+      "sha256": "ddb969a23c3ab7e5af64f4f0389e2f02b5cf501d030d4a9522090aabc84331cd"
+    },
+    "public/art/research/v1/war-council.webp": {
+      "bytes": 14660,
+      "sha256": "d5dca9edca8fb61b8961b877f0279f963392edc49bb81a3de207e73d42669639"
+    },
+    "public/art/research/v1/warhorse-breeding.webp": {
+      "bytes": 16502,
+      "sha256": "4ab175a6917fc1a5ec1bf68873d4962e9b6987cdc6d6b2a3c81e8bfe7794f445"
+    },
+    "public/art/research/v1/water-mills.webp": {
+      "bytes": 13700,
+      "sha256": "7cb9f794d52c66d4d2c2b238ce4b8997938a28b14a05926e4c766163e2899603"
+    },
+    "public/art/research/v1/writing.webp": {
+      "bytes": 13718,
+      "sha256": "c06069be7880f2de4095fcd2fc3b197309fc00d9f4b3adaa2480c2dedbcc9a1c"
+    },
+    "public/art/ui/low-poly-v1/research.webp": {
+      "bytes": 5794,
+      "sha256": "1539824ad88d1dede306e6090482a5a7cb4f66b9494ab120aba62fab54193075"
+    },
+    "scripts/build-research-art.mjs": {
+      "bytes": 1784,
+      "sha256": "c5416c83f94690abc9104f4619479770bac9829ce6fc1383e45e8ccc3c8bc195"
+    },
+    "scripts/build-research-catalog.mjs": {
+      "bytes": 1249,
+      "sha256": "d8d9161de7127b90b10ef06902dac5f46762fcb091f204962547fc01f1a84c9e"
+    },
+    "scripts/build-sql.mjs": {
+      "bytes": 2920,
+      "sha256": "145c70a19b28db4ae2ba0ab3fb1627f8494c3aea0a3ddb6c5451747e90c84525"
+    },
+    "scripts/check-research-art.mjs": {
+      "bytes": 1670,
+      "sha256": "2cd1c1bb369931884d4b63d4d49a09165eb40bd4762c24dd97300acd0826f184"
+    },
+    "src/app/App.tsx": {
+      "bytes": 30110,
+      "sha256": "be72fe3e8e77a3da95bba9d676f24ac29f827441d4ea78d8bde1c305595223d4"
+    },
+    "src/app/styles/index.css": {
+      "bytes": 2136,
+      "sha256": "3c1fd8c11afb9d735186d1803b4c761b0444afd343b4255ff9186a05a070453c"
+    },
+    "src/engine/local/LocalEngine.ts": {
+      "bytes": 12690,
+      "sha256": "2eb88fd354bb5be909fff339a6082f763ce30d1f42667bfd5d1e09dbd1583963"
+    },
+    "src/engine/online/OnlineEngine.ts": {
+      "bytes": 24226,
+      "sha256": "892c112fd23fdcf66040fa1350f2bb2d5bacfacddc7947e964e8911b731301b3"
+    },
+    "src/engine/online/rpcCommands.ts": {
+      "bytes": 4280,
+      "sha256": "783691598cef1865c0b3d5577b4c656aba8cd046dba6d0e8f5e1c3d7344c6ff2"
+    },
+    "src/features/army/domain/commandRoom.ts": {
+      "bytes": 7533,
+      "sha256": "e119769cb86594cab1a1f6908081293094e4660a19860562cefee3859997c55e"
+    },
+    "src/features/army/domain/commands.ts": {
+      "bytes": 3003,
+      "sha256": "4a1e83cbe2281158d57df29f8b8cf8cb58bb294af1aa78c038e7205d645c265a"
+    },
+    "src/features/army/domain/recruitment.ts": {
+      "bytes": 657,
+      "sha256": "6e248e6e15bff69f19b690287ba84d248fed8d9d6b613229eb5285b5e66a7d4a"
+    },
+    "src/features/army/ui/RecruitmentPanel.tsx": {
+      "bytes": 9254,
+      "sha256": "eaaf22e8bee9961b0bef05e6f9c561229c197f5334be463526ba0b97ec963b6a"
+    },
+    "src/features/campaign/domain/battleSettlement.ts": {
+      "bytes": 5652,
+      "sha256": "4ea7c0d8aeabfb36b756b30a6972a9e7bbe1aa79c5c119d862810f9cb476530a"
+    },
+    "src/features/campaign/domain/cityRaids.ts": {
+      "bytes": 8888,
+      "sha256": "12c75e25e1b5a7d00169cf11f68b305565db461aaf17c907db7157e9235e1faa"
+    },
+    "src/features/campaign/domain/raids.ts": {
+      "bytes": 2049,
+      "sha256": "2e0680d3a14b22b41d8495292cb5a3478958b2885d65652d3935963858ff6898"
+    },
+    "src/features/campaign/domain/settlement.ts": {
+      "bytes": 3601,
+      "sha256": "336fae365af3ab8e4978e02602729f55ca98ef85afe5ef81fda57734f7581a1a"
+    },
+    "src/features/city/domain/commands.ts": {
+      "bytes": 1664,
+      "sha256": "39590ea345ced25b63546567e97c9297317bf03d098b0c7fa90e77f651a0fca1"
+    },
+    "src/features/city/domain/construction.ts": {
+      "bytes": 1891,
+      "sha256": "df35f84e7dbce7c609b0cb1ca7fb3569393f682e89fd0bc3d70801ca1709b3f4"
+    },
+    "src/features/city/domain/population.ts": {
+      "bytes": 4344,
+      "sha256": "54cf1cfbde809b66e036e58f649b69c67431b0504baa7168331b993c16c68cc4"
+    },
+    "src/features/city/domain/siege.ts": {
+      "bytes": 3307,
+      "sha256": "0eaeda3e5b12a70d999e9936b4556965210160c39c61baa87f2e75efaa5b578d"
+    },
+    "src/features/city/domain/slotCommands.ts": {
+      "bytes": 2512,
+      "sha256": "843bffc58254b064d66c4d58183fa8c73848d20a6e801c01dc3c5f9b9bd50680"
+    },
+    "src/features/city/domain/slots.ts": {
+      "bytes": 5942,
+      "sha256": "ef4754b83a66e040f10e821646f2eb97ef2c627f76c1172790d0e9e1e773aa33"
+    },
+    "src/features/city/domain/types.ts": {
+      "bytes": 1407,
+      "sha256": "2cbf41f5816dab293676ff59d2c4d92e8c4571227d2a1ae513d96b8d46d581ec"
+    },
+    "src/features/city/rendering/BuildingArtwork.tsx": {
+      "bytes": 1772,
+      "sha256": "82a3c4384404f3cbe8c812872bd62cfde31d15ff9a26628168b13bf7eed38f4e"
+    },
+    "src/features/city/rendering/three/academy.ts": {
+      "bytes": 1085,
+      "sha256": "169a23444e7dc87e2e4b884798aa68ab7f8d648d577eb5716ddcbadab25a1915"
+    },
+    "src/features/city/rendering/three/slotModels.ts": {
+      "bytes": 2396,
+      "sha256": "1acb15e8045863bd35137c47196b119fb5a7704a7836f705bf1256b5676b8880"
+    },
+    "src/features/city/rendering/villageArtwork.ts": {
+      "bytes": 2485,
+      "sha256": "c4eae74e494f36f517080867426e9ff069adb4db23f0c764c8712d8b628b2af6"
+    },
+    "src/features/city/ui/BuildingDialog.tsx": {
+      "bytes": 14622,
+      "sha256": "bb78f912d285d2bc43a78b0513ac42040ff700ed2be78c4aab294bb2055f863d"
+    },
+    "src/features/empire/domain/expansion.ts": {
+      "bytes": 9262,
+      "sha256": "423352e2020c1c11957b7d0a15f523079d38066cae536c69a2ba58bc3be7abc7"
+    },
+    "src/features/factions/domain/debug.ts": {
+      "bytes": 4677,
+      "sha256": "27a907bd464ffe4e330b2cf302b86e743102db5932bcc2010d46e1134a96637c"
+    },
+    "src/features/heroes/domain/battleRewards.ts": {
+      "bytes": 2745,
+      "sha256": "7a7e3ec44eb923519ec3245759bc8e588f50c281ed5b19105029d3c653c56ea6"
+    },
+    "src/features/heroes/domain/heroes.ts": {
+      "bytes": 3376,
+      "sha256": "d608f194e9e59abefbfbb7725e4d2a10c1b52f4f640a9849a17cc1e0cd350110"
+    },
+    "src/features/map/domain/territory.ts": {
+      "bytes": 7096,
+      "sha256": "05b07c23eab6adcd4276e7ec9c404bcdff9694c583b65d38ca18876ad59a0610"
+    },
+    "src/features/map/ui/FieldInspector.tsx": {
+      "bytes": 5142,
+      "sha256": "5c3282ebf4a4af5fa403b79652915731e57bea4a874892981c4404a1c5342a39"
+    },
+    "src/features/research/domain/catalog.json": {
+      "bytes": 99023,
+      "sha256": "1a07a5ee219411cc7d96ff8a6a14394376f306daaa21d7120c1501aaa0ad6b39"
+    },
+    "src/features/research/domain/catalog.ts": {
+      "bytes": 1624,
+      "sha256": "2b170d6102e01125fe5b7c08b73ee9779d8309f03b8740f109de7d3d801b3842"
+    },
+    "src/features/research/domain/effects.ts": {
+      "bytes": 2214,
+      "sha256": "7b3fe886d74f26a959d96a5bbce865999a8badca00e507038133754b91f54a0c"
+    },
+    "src/features/research/domain/science.ts": {
+      "bytes": 6561,
+      "sha256": "8dc9a7ec69dcfea67bab00034f162f6bd4338aafb4aa5508b8111026f12ded60"
+    },
+    "src/features/research/domain/types.ts": {
+      "bytes": 565,
+      "sha256": "2c2bfd71da05ef83370599f46e8e363caec20b3e313825184980a4965c707971"
+    },
+    "src/features/research/styles/technology-tree.css": {
+      "bytes": 12594,
+      "sha256": "691d64d00489ff374c3b8a02bdca490dbaa67a2076e0de32a07414c653fbde8c"
+    },
+    "src/features/research/ui/ResearchNavigation.tsx": {
+      "bytes": 194,
+      "sha256": "f7d2d5beee00f2e2b45bedae74436dc4c5993c7e01ffe61dcde8902f8e514f5e"
+    },
+    "src/features/research/ui/TechnologyTree.tsx": {
+      "bytes": 12170,
+      "sha256": "79a9952280b16123a19a86c90ad7d2f499f729e805ecb486962861ba91e3af60"
+    },
+    "src/platform/storage/saves.ts": {
+      "bytes": 34132,
+      "sha256": "48b188c14ff8908c5d167319527c829cdbe31880fa39684054a24c9d9e6b3e49"
+    },
+    "src/shared/model/commands.ts": {
+      "bytes": 3974,
+      "sha256": "ff7c1bb7df58804777c742c96138508711db775d8a6054d2b312532f4ff28865"
+    },
+    "src/shared/model/world.ts": {
+      "bytes": 2925,
+      "sha256": "13609722e97fe6737dc644412e1a536e647d4e78f56ab768ba93c6c1d3eb15f9"
+    },
+    "src/shared/ui/GameNavigation.tsx": {
+      "bytes": 1967,
+      "sha256": "5eb6037aad74fee677252f3f1e21a29d8390c4e7308b7c749edf121ad5e810e5"
+    },
+    "src/shared/ui/Icons.tsx": {
+      "bytes": 5436,
+      "sha256": "224d18729424bcaeac0b6565c5f2a73373adf97b3e81ff4b45ce262ec2ac9a32"
+    },
+    "src/shared/ui/LowPolyIcon.tsx": {
+      "bytes": 409,
+      "sha256": "58671663351610109113430530d4464727c6c95a03d8adf48dbf7a8a48605110"
+    },
+    "supabase/FRESH_INSTALL_V10.sql": {
+      "bytes": 702058,
+      "sha256": "a897df842fcd17213f52fbf09bcbee4843088480fbd6739f63726cb0f9ef511f"
+    },
+    "supabase/FRESH_INSTALL_V11.sql": {
+      "bytes": 702058,
+      "sha256": "a897df842fcd17213f52fbf09bcbee4843088480fbd6739f63726cb0f9ef511f"
+    },
+    "supabase/FRESH_INSTALL_V12.sql": {
+      "bytes": 702058,
+      "sha256": "a897df842fcd17213f52fbf09bcbee4843088480fbd6739f63726cb0f9ef511f"
+    },
+    "supabase/FRESH_INSTALL_V13.sql": {
+      "bytes": 702058,
+      "sha256": "a897df842fcd17213f52fbf09bcbee4843088480fbd6739f63726cb0f9ef511f"
+    },
+    "supabase/FRESH_INSTALL_V14.sql": {
+      "bytes": 702058,
+      "sha256": "a897df842fcd17213f52fbf09bcbee4843088480fbd6739f63726cb0f9ef511f"
+    },
+    "supabase/FRESH_INSTALL_V15.sql": {
+      "bytes": 702058,
+      "sha256": "a897df842fcd17213f52fbf09bcbee4843088480fbd6739f63726cb0f9ef511f"
+    },
+    "supabase/FRESH_INSTALL_V16.sql": {
+      "bytes": 702058,
+      "sha256": "a897df842fcd17213f52fbf09bcbee4843088480fbd6739f63726cb0f9ef511f"
+    },
+    "supabase/FRESH_INSTALL_V17.sql": {
+      "bytes": 702058,
+      "sha256": "a897df842fcd17213f52fbf09bcbee4843088480fbd6739f63726cb0f9ef511f"
+    },
+    "supabase/FRESH_INSTALL_V18.sql": {
+      "bytes": 702058,
+      "sha256": "a897df842fcd17213f52fbf09bcbee4843088480fbd6739f63726cb0f9ef511f"
+    },
+    "supabase/FRESH_INSTALL_V6.sql": {
+      "bytes": 702058,
+      "sha256": "a897df842fcd17213f52fbf09bcbee4843088480fbd6739f63726cb0f9ef511f"
+    },
+    "supabase/FRESH_INSTALL_V7.sql": {
+      "bytes": 702058,
+      "sha256": "a897df842fcd17213f52fbf09bcbee4843088480fbd6739f63726cb0f9ef511f"
+    },
+    "supabase/FRESH_INSTALL_V8.sql": {
+      "bytes": 702058,
+      "sha256": "a897df842fcd17213f52fbf09bcbee4843088480fbd6739f63726cb0f9ef511f"
+    },
+    "supabase/FRESH_INSTALL_V9.sql": {
+      "bytes": 702058,
+      "sha256": "a897df842fcd17213f52fbf09bcbee4843088480fbd6739f63726cb0f9ef511f"
+    },
+    "supabase/UPGRADE_TO_V10.sql": {
+      "bytes": 661895,
+      "sha256": "88fd0d59760290cf3ee1dd6d9fddadf138a2564f45c0555d632d1b02a4b00737"
+    },
+    "supabase/UPGRADE_TO_V11.sql": {
+      "bytes": 661895,
+      "sha256": "88fd0d59760290cf3ee1dd6d9fddadf138a2564f45c0555d632d1b02a4b00737"
+    },
+    "supabase/UPGRADE_TO_V12.sql": {
+      "bytes": 661895,
+      "sha256": "88fd0d59760290cf3ee1dd6d9fddadf138a2564f45c0555d632d1b02a4b00737"
+    },
+    "supabase/UPGRADE_TO_V13.sql": {
+      "bytes": 661895,
+      "sha256": "88fd0d59760290cf3ee1dd6d9fddadf138a2564f45c0555d632d1b02a4b00737"
+    },
+    "supabase/UPGRADE_TO_V14.sql": {
+      "bytes": 661895,
+      "sha256": "88fd0d59760290cf3ee1dd6d9fddadf138a2564f45c0555d632d1b02a4b00737"
+    },
+    "supabase/UPGRADE_TO_V15.sql": {
+      "bytes": 661895,
+      "sha256": "88fd0d59760290cf3ee1dd6d9fddadf138a2564f45c0555d632d1b02a4b00737"
+    },
+    "supabase/UPGRADE_TO_V16.sql": {
+      "bytes": 661895,
+      "sha256": "88fd0d59760290cf3ee1dd6d9fddadf138a2564f45c0555d632d1b02a4b00737"
+    },
+    "supabase/UPGRADE_TO_V17.sql": {
+      "bytes": 661895,
+      "sha256": "88fd0d59760290cf3ee1dd6d9fddadf138a2564f45c0555d632d1b02a4b00737"
+    },
+    "supabase/UPGRADE_TO_V18.sql": {
+      "bytes": 661895,
+      "sha256": "88fd0d59760290cf3ee1dd6d9fddadf138a2564f45c0555d632d1b02a4b00737"
+    },
+    "supabase/UPGRADE_TO_V7.sql": {
+      "bytes": 661895,
+      "sha256": "88fd0d59760290cf3ee1dd6d9fddadf138a2564f45c0555d632d1b02a4b00737"
+    },
+    "supabase/UPGRADE_TO_V8.sql": {
+      "bytes": 661895,
+      "sha256": "88fd0d59760290cf3ee1dd6d9fddadf138a2564f45c0555d632d1b02a4b00737"
+    },
+    "supabase/UPGRADE_TO_V9.sql": {
+      "bytes": 661895,
+      "sha256": "88fd0d59760290cf3ee1dd6d9fddadf138a2564f45c0555d632d1b02a4b00737"
+    },
+    "supabase/UPGRADE_V5_TO_V6.sql": {
+      "bytes": 661895,
+      "sha256": "88fd0d59760290cf3ee1dd6d9fddadf138a2564f45c0555d632d1b02a4b00737"
+    },
+    "supabase/modules/army/peris_queue_recruit.sql": {
+      "bytes": 5520,
+      "sha256": "7975165b1400b29c2b559add93191237df4f67ac454b4af1e9e211101940baf2"
+    },
+    "supabase/modules/army/roster.sql": {
+      "bytes": 7504,
+      "sha256": "0fd1d906543c36a9d3784cfc1c861f54475791b55bcf8a8b7d563f6878fea375"
+    },
+    "supabase/modules/battle/peris_finish.sql": {
+      "bytes": 9867,
+      "sha256": "9e4df2cffd5fc201250e6b4c29140027bd1dfd3c788ff1c7477cf039981236c1"
+    },
+    "supabase/modules/campaign/game-worker.sql": {
+      "bytes": 3902,
+      "sha256": "2133ce3271c04a02c4f1f290ed891c9200224d25c996dbf3b798a71da5089eae"
+    },
+    "supabase/modules/campaign/player-raids.sql": {
+      "bytes": 18448,
+      "sha256": "997c0ff722083ad11c7af2a6007f9f6e596a4e8f09dee203c7bad9aeaeea7645"
+    },
+    "supabase/modules/city/city-slots.sql": {
+      "bytes": 8612,
+      "sha256": "234d30cd3a33b4756a36f4d525a0d88715c45661e30b6842fa222d1655022d86"
+    },
+    "supabase/modules/city/peris_queue_upgrade.sql": {
+      "bytes": 2549,
+      "sha256": "51f331c9269e6b0cedf2ad9d7b940387d73cc8c51bf40abe892265a2d7ebaffd"
+    },
+    "supabase/modules/city/peris_settle.sql": {
+      "bytes": 4826,
+      "sha256": "e96211adb344b178f09a87f0ae8e8a9f2588ed22b4d6a28b8765058ff923ecfe"
+    },
+    "supabase/modules/city/population.sql": {
+      "bytes": 10576,
+      "sha256": "8b939cd07e932d49f2e79c1207756c16fe2008885150007308091c691705e305"
+    },
+    "supabase/modules/empire/gameplay.sql": {
+      "bytes": 26267,
+      "sha256": "d73badd20aff84f954099c02e0a47f76efd56bfcd74bf238c9a203fcd8972676"
+    },
+    "supabase/modules/factions/city-factions.sql": {
+      "bytes": 6873,
+      "sha256": "10d7f1b5157f4183f15abb4e0b865daae8a496d951d45ea82ef1439b01d6f162"
+    },
+    "supabase/modules/magic/mage-tower.sql": {
+      "bytes": 12179,
+      "sha256": "d6c6d75d9c2b5b0a176ded95af9a02a52a30cee524cfe7b69461e117d712f5b1"
+    },
+    "supabase/modules/manifest.json": {
+      "bytes": 1663,
+      "sha256": "098c34d22efa62ca408e1e8ae80060305f1c307673d73afa2391149ee76dc30c"
+    },
+    "supabase/modules/map/territory.sql": {
+      "bytes": 12966,
+      "sha256": "14e76be3fa3a629f077fb236300bc6021d024020d32f7f3b206ae3ac66f27d90"
+    },
+    "supabase/modules/research/catalog.sql": {
+      "bytes": 102767,
+      "sha256": "7e171c4ce5676351eb74949015780db65f97e05666ebe63b906b4031bf1f5435"
+    },
+    "supabase/modules/research/schema.sql": {
+      "bytes": 3224,
+      "sha256": "f5f9ee75762f551b2ac1114a0598db92226b4e5b61c99868fd52df753494e338"
+    },
+    "supabase/modules/research/science.sql": {
+      "bytes": 7330,
+      "sha256": "b03ec9789b0587d798721f2470b8e9a9530c0f735f91a37a307c5aa6bf841dbf"
+    },
+    "supabase/modules/security/permissions.sql": {
+      "bytes": 3809,
+      "sha256": "5902fecd5bb31dd3f30705ea0675300905a3b10d90eacb114a55a5e694700b19"
+    },
+    "supabase/modules/snapshot/peris_snapshot.sql": {
+      "bytes": 7070,
+      "sha256": "9a847d0a2c29bba14602b28e1808aee1c96880570e0f4f4472bd9af1bbb6dd2b"
+    },
+    "supabase/schema.sql": {
+      "bytes": 661895,
+      "sha256": "88fd0d59760290cf3ee1dd6d9fddadf138a2564f45c0555d632d1b02a4b00737"
+    },
+    "tests/city-interface.test.ts": {
+      "bytes": 3219,
+      "sha256": "77430cb4c76796999b2a1785d49886a3e13bd9477b4eaa6c31e733f0ab649a70"
+    },
+    "tests/e2e/compact-header.spec.ts": {
+      "bytes": 3877,
+      "sha256": "ec136abdbcf5006067aa1fd389444d3cc9cc529a5c729ab74af923e16a0cd7e4"
+    },
+    "tests/e2e/research.spec.ts": {
+      "bytes": 5663,
+      "sha256": "e8850c1be9a86f932551fce83e75a23e901f40919f95ce4fccb470b6c04846e5"
+    },
+    "tests/game-navigation.test.ts": {
+      "bytes": 3361,
+      "sha256": "04570441db1b849cd6789252b02a1092c009e8e39ee2677bb8405ef08e341f1f"
+    },
+    "tests/research-database.test.mts": {
+      "bytes": 7944,
+      "sha256": "5b4b0f592cf40a0cceb2b222c6211ae996aca7b9cd58ab5ceefb801cb0e644c4"
+    },
+    "tests/research.test.ts": {
+      "bytes": 6662,
+      "sha256": "7ed507a302bfd7b3056478d35855bd283b25d48a04d6f0ad213859104b71525f"
     }
-  ]
+  }
 }

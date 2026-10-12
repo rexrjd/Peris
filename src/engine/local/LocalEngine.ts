@@ -1,3 +1,4 @@
+import {ensureScience,startResearch,pauseResearch,debugResearch} from '../../features/research/domain/science';
 import { autoCastSpells } from '../../features/magic/domain/automatic';
 import { normalizeRealm } from '../../features/empire/domain/normalization';
 import { trainSettlers, sendSettlers, nextEntityId } from '../../features/empire/domain/expansion';
@@ -48,6 +49,7 @@ export class LocalEngine implements GameEngine {
     saveError = false;
     constructor(world: World, persistent = true) {
         normalizeRealm(world);
+        ensureScience(world,this.playerId);
         for(const battle of world.battles)if(battle.status==='active'&&battle.phase==='deployment'){battle.phase='combat';battle.attacker_ready=battle.defender_ready=true;}
         this.snapshot = world;
         world.city_slots ??= citySlots(world,world.settlements[0].id);
@@ -142,6 +144,9 @@ export class LocalEngine implements GameEngine {
             throw new Error('Finish the current battle first.');
         const context: LocalCommandContext = { world: this.snapshot, playerId: this.playerId, settlementId: cmd.settlementId, armyId: cmd.armyId, nextId: () => this.nextId = Math.max(this.nextId + 1, nextEntityId(this.snapshot)), active, now: new Date().toISOString(), paused: value => { this.paused = value; }, finalize: id => this.finalize(id) };
         switch (cmd.type) {
+            case 'startResearch': startResearch(this.snapshot,this.playerId,cmd.technologyId,Date.parse(context.now)); break;
+            case 'pauseResearch': pauseResearch(this.snapshot,this.playerId,Date.parse(context.now)); break;
+            case 'debugResearch': debugResearch(this.snapshot,this.playerId,cmd.action,Date.parse(context.now)); break;
             case 'readAllReports': markAllReportsRead(this.snapshot, this.playerId, context.now); break;
             case 'readReports': markReportsRead(this.snapshot, this.playerId, cmd.reportIds, context.now); break;
             case 'saveCampaignFarmList': case 'saveCampaignFarm': case 'deleteCampaignFarm': case 'deleteCampaignFarmList': case 'startCampaignFarmList': case 'manageCampaignFarmTargets': case 'setCampaignFarmListEnabled': case 'applyCampaignFarmListTroops':

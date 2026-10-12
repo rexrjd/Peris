@@ -24,6 +24,7 @@ begin
   select resources into stock from public.peris_camp_stock where camp_id=camp.id for update;
   if p_winner='attacker'then
    select coalesce(sum(f.soldiers*c.carry),0)into carry from public.battle_formations f join public.peris_unit_catalog c on c.unit=coalesce(f.recruit_unit,f.unit_type)where f.battle_id=b.id and f.side='attacker';
+ carry:=floor(carry*public.peris_research_factor(b.attacker_owner_id,'carry'));
    loot:=public.peris_take_camp_loot(stock,carry);
    foreach key in array array['wood','stone','food','gold']loop stock:=jsonb_set(stock,array[key],to_jsonb((stock->>key)::numeric-(loot->>key)::numeric));end loop;
   end if;
@@ -41,6 +42,7 @@ begin
   'defender_faction',coalesce(b.defender_faction,camp.faction),
   'attacker_faction',(select s0.faction from public.armies a0 join public.settlements s0 on s0.id=a0.home_settlement_id where a0.id=b.attacker_army_id));
  select coalesce(sum(f.soldiers*c.carry),0)into carry from public.battle_formations f join public.peris_unit_catalog c on c.unit=coalesce(f.recruit_unit,f.unit_type)where f.battle_id=b.id and f.side='attacker';
+ carry:=floor(carry*public.peris_research_factor(b.attacker_owner_id,'carry'));
  r:=r||jsonb_build_object('replacement_cost',public.peris_roster_loss_cost(r->'attacker_roster',r->'attacker_survivor_roster'),'carrying_capacity',carry);
  if (loot->>'wood')::numeric+(loot->>'stone')::numeric+(loot->>'food')::numeric+(loot->>'gold')::numeric=0 then r:=r||jsonb_build_object('estimated_profit',public.peris_resource_difference(loot,r->'replacement_cost'));end if;
  update public.battles set status='resolved' ,phase='finished',winner_side=p_winner,winner_owner_id=winner,ended_at=now(),result=r where id=b.id;

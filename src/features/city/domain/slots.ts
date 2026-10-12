@@ -1,12 +1,14 @@
+import {researchBonuses} from '../../research/domain/effects';
 import {populationPlan,populationRates,POPULATION_START} from './population';
 import type { World } from '../../../shared/model/world';
 import type { Resources } from '../../../shared/model/resources';
 import { multiply } from '../../../shared/model/resources';
 import { externalFieldRates } from '../../map/domain/fieldProduction';
 
-export type SlotType = 'barracks' | 'stables' | 'workshop' | 'smithy' | 'warehouse' | 'granary' | 'fishery' | 'mage_tower' | 'housing';
+export type SlotType = 'barracks' | 'stables' | 'workshop' | 'smithy' | 'warehouse' | 'granary' | 'fishery' | 'mage_tower' | 'housing' | 'academy';
 export type CitySlot = { settlement_id: number; slot_index: number; building_type: SlotType; level: number };
 export const SLOT_BUILDINGS: Record<SlotType, { name: string; description: string; effect: string; cost: Resources }> = {
+    academy:{name:'Academy',description:'Scholars develop technologies for every city and army in your account.',effect:'12 / 28 / 48 / 72 / 100 science per minute. Multiple Academies stack.',cost:{wood:220,stone:260,food:100,gold:80}},
     housing:{name:'Housing',description:'Homes for the civilians who work in your city. Each level adds room for thirty residents.',effect:'+30 population capacity per level. Housing can be repeated.',cost:{wood:140,stone:110,food:60,gold:20}},
     barracks: { name: 'Barracks', description: 'Train infantry and archers.', effect: 'Each level improves training speed.', cost: { wood:180, stone:160, food:100, gold:30 } },
     stables: { name: 'Stables', description: 'Raise cavalry.', effect: 'Each level improves cavalry training speed.', cost: { wood:200, stone:120, food:180, gold:45 } },
@@ -46,6 +48,9 @@ export function refreshCityEconomy(w: World, sid: number, population = true) {
     const fields = externalFieldRates(w.map_plots ?? [], sid);
     town.wood_rate += fields.wood; town.stone_rate += fields.stone;
     town.food_rate += fields.food; town.gold_rate += fields.gold;
-    if(!population)return;
+    const bonus=researchBonuses(w,town.owner_id);
+    for(const key of ['wood','stone','food','gold'] as const)town[`${key}_research`]=1+(bonus[key]??0);town.trade_research=1+(bonus.trade??0);
+    town.capacity=Math.floor(town.capacity*(1+(bonus.storage??0)));town.food_capacity=Math.floor(town.food_capacity*(1+(bonus.storage??0)));
+    if(!population){town.wood_rate*=(town.wood_research??1);town.stone_rate*=(town.stone_research??1);town.food_rate*=(town.food_research??1);town.gold_rate=(town.gold_rate+fields.gold*(town.trade_research-1))*(town.gold_research??1);return;}
     Object.assign(town,populationPlan(w,sid));town.population=Math.max(10,Math.min(town.population_capacity!,town.population??POPULATION_START));Object.assign(town,populationRates(town));
 }

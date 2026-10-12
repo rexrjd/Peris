@@ -1,3 +1,7 @@
+import {TechnologyTree} from '../features/research/ui/TechnologyTree';
+import {ResearchNavigation} from '../features/research/ui/ResearchNavigation';
+import {researchSeconds} from '../features/research/domain/science';
+import {TECHNOLOGY_BY_ID} from '../features/research/domain/catalog';
 import { lazy, Suspense } from 'react';
 import { factionOf, type Faction } from '../features/factions/domain/factions';
 const UnitGallery = lazy(() => import('../features/battle/preview/UnitGallery'));
@@ -45,7 +49,7 @@ import { ReportsPopup } from '../features/campaign/ui/ReportsPopup';
 import { Modal } from '../shared/ui/Shared';
 import { mySide } from '../features/battle/domain/ownership';
 import { CampaignEnding, Welcome } from '../features/campaign/ui/CampaignMoments';
-type View = 'world' | 'settlement' | 'rally' | 'army' | 'chronicle';
+type View = 'research' | 'world' | 'settlement' | 'rally' | 'army' | 'chronicle';
 function readFlag(key: string) { try {
     return localStorage.getItem(key) === 'yes';
 }
@@ -129,6 +133,7 @@ function Realm({ engine, onExit, onLoad, onRetry, onUnitPreview }: {
     onRetry: () => void;
     onUnitPreview: (faction: Faction) => void;
 }) {
+    const [researchSelection,setResearchSelection]=useState<string>();
     const world = useSyncExternalStore(engine.subscribe, () => engine.snapshot);
     const [view, setView] = useState<View>('world'), [selection, setSelection] = useState<MapSelection>(null), [moveMode, setMoveMode] = useState(false), [sending, setBusy] = useState(false), [notice, setNotice] = useState<{
         text: string;
@@ -221,7 +226,7 @@ function Realm({ engine, onExit, onLoad, onRetry, onUnitPreview }: {
         catch (error) { setNotice({ text: error instanceof Error ? error.message : 'Order status remains unconfirmed.', error: true }); }
         finally { sendLock.current = false; setBusy(false); }
     };
-    const navigate = (v: View) => { if(v === 'chronicle'){setReportsOpen(true);tone('select');return;} setReportsOpen(false); if(v === 'army'){setArmyTab('army');setArmyLootItem(undefined);} setView(v); setMoveMode(false); tone('select'); };
+    const navigate = (v: View) => { if(v!=='settlement')setBuildingShortcut(undefined); if(v === 'chronicle'){setReportsOpen(true);tone('select');return;} setReportsOpen(false); if(v === 'army'){setArmyTab('army');setArmyLootItem(undefined);} setView(v); setMoveMode(false); tone('select'); };
     const openBuilding = (type: SlotType|'market') => {
         setEmpireOpen(false);
         setBuildingShortcut(previous => ({ type, request: (previous?.request ?? 0) + 1 }));
@@ -237,10 +242,12 @@ function Realm({ engine, onExit, onLoad, onRetry, onUnitPreview }: {
             setSelection({ kind: 'camp', id: next.id });
     } navigate(nextView); if(equipment){setArmyTab('equipment');setArmyLootItem(report?.result?.hero_reward?.artifacts[0]?.id);} };
     const closeEnding = () => { writeFlag(endingKey); setEndingSeen(true); setEnding(false); };
-    return <>
+    const currentResearch=world.account_science?.find(s=>s.owner_id===engine.playerId)?.active_id;
+    const currentTechnology=currentResearch?TECHNOLOGY_BY_ID.get(currentResearch):undefined;
+    return <ResearchNavigation.Provider value={id=>{setResearchSelection(id);setEmpireOpen(false);navigate('research');}}>
   {visibleBattle ? <BattleView world={world} battle={visibleBattle} engine={engine} run={run} onHelp={() => setHelp(true)} onSettings={() => setSettings(true)}/> : <div className={`realm-shell game-shell ${view === 'world' && !empireOpen ? 'has-map' : ''}`}>
    <header className="realm-topbar game-header">
-   <GameNavigation reportsOpen={reportsOpen} view={view} unreadReports={unreadReports} onNavigate={navigate}/>
+   <GameNavigation research={currentTechnology?{id:currentTechnology.id,name:currentTechnology.name,progress:researchSeconds(world,engine.playerId,currentTechnology.id,now)/currentTechnology.seconds}:undefined} reportsOpen={reportsOpen} view={view} unreadReports={unreadReports} onNavigate={navigate}/>
    <div className="game-header-actions"><ResourceHud resources={resources} capacity={storage} rate={rate} onSelect={setResource}/>
    <QuickAccess items={[
        { label:'Rally Point', icon:'flag', description:'Stationed troops, incoming and outgoing movements, farm lists and reports', onSelect:()=>{setEmpireOpen(false);navigate('rally');} },
@@ -255,7 +262,7 @@ function Realm({ engine, onExit, onLoad, onRetry, onUnitPreview }: {
    ]}/>
    <details ref={menuRef} className="realm-tools game-menu"><summary aria-label="Game menu"><Icon name="settings" size={19}/><span>Menu</span></summary><div><div className="game-menu-player"><strong>{player.display_name}</strong><small>{campaignRank(done.size)}</small></div><button onClick={event=>{event.currentTarget.closest('details')?.removeAttribute('open');openEmpire();}}><Icon name="world" size={17}/>Empire atlas</button><button onClick={event=>{event.currentTarget.closest('details')?.removeAttribute('open');onUnitPreview(factionOf(town.faction));}}><Icon name="army" size={17}/>Unit preview</button><button onClick={event=>{event.currentTarget.closest('details')?.removeAttribute('open');setHelp(true);}}><Icon name="book" size={17}/>Codex</button><button onClick={event=>{event.currentTarget.closest('details')?.removeAttribute('open');setSettings(true);}}><Icon name="settings" size={17}/>Settings</button><button onClick={onExit}><Icon name="exit" size={17}/>{engine.mode==='online'?'Switch ruler':'Main menu'}</button><small className="game-save-status">{engine.mode==='online'?'Shared world':'Campaign saved automatically'}</small></div></details></div></header>
    <main className={`realm-content ${view === 'world' ? 'world-content' : view === 'settlement' ? 'city-content' : view === 'army' ? 'army-content' : view === 'rally' ? 'rally-content' : ''}`}>
-    {!empireOpen && (view === 'world' ? <WorldView onReadReport={markReportRead} world={world} playerId={engine.playerId} selection={selection} setSelection={selectMap} cityId={town.id} armyId={selectedArmy.id} onCity={chooseCity} onArmy={chooseArmy} onEmpire={()=>openEmpire(selection?.kind==='cell'?selection:undefined)} farmOpen={farmOpen} onFarmClose={()=>setFarmOpen(false)} moveMode={moveMode} setMoveMode={setMoveMode} run={dispatch} busy={busy} now={now} clockOffset={offset} navigate={navigate} mapViewport={engine.setMapViewport?.bind(engine)}/> : view === 'settlement' ? <SettlementView key={town.id} shortcut={buildingShortcut} world={world} playerId={engine.playerId} cityId={town.id} onCity={chooseCity} onEmpire={()=>openEmpire()} run={dispatch} busy={busy} now={now}/> : view === 'army' ? <ArmyView key={`army-${armyTab}-${armyLootItem ?? 0}`} initialTab={armyTab} initialArtifactId={armyLootItem} world={world} playerId={engine.playerId} cityId={town.id} armyId={selectedArmy.id} onCity={chooseCity} onArmy={chooseArmy} onMap={(id, orders)=>{chooseArmy(id);navigate('world');setSelection({kind:'army',id});setMoveMode(!!orders);}} onOpenCity={id=>{chooseCity(id);navigate('settlement');}} run={dispatch} busy={busy} now={now}/> : view === 'rally' ? <RallyPoint onReadReport={markReportRead} world={world} playerId={engine.playerId} cityId={town.id} now={now} busy={busy} run={dispatch} onCity={chooseCity} onManageArmy={id=>{chooseArmy(id);navigate('army');}} onMapArmy={id=>{chooseArmy(id);navigate('world');setSelection({kind:'army',id});}} onLocate={place=>{navigate('world');setSelection(place.campId!==undefined?{kind:'camp',id:place.campId}:place.kind==='village'&&place.cityId!==undefined?{kind:'settlement',id:place.cityId}:{kind:'cell',col:place.col,row:place.row});}} onReport={setReport}/> : null)}
+    {!empireOpen && (view === 'research' ? <TechnologyTree world={world} owner={engine.playerId} now={now} busy={busy} run={dispatch} selectedId={researchSelection} onBuildAcademy={()=>openBuilding('academy')}/> : view === 'world' ? <WorldView onReadReport={markReportRead} world={world} playerId={engine.playerId} selection={selection} setSelection={selectMap} cityId={town.id} armyId={selectedArmy.id} onCity={chooseCity} onArmy={chooseArmy} onEmpire={()=>openEmpire(selection?.kind==='cell'?selection:undefined)} farmOpen={farmOpen} onFarmClose={()=>setFarmOpen(false)} moveMode={moveMode} setMoveMode={setMoveMode} run={dispatch} busy={busy} now={now} clockOffset={offset} navigate={navigate} mapViewport={engine.setMapViewport?.bind(engine)}/> : view === 'settlement' ? <SettlementView key={town.id} shortcut={buildingShortcut} world={world} playerId={engine.playerId} cityId={town.id} onCity={chooseCity} onEmpire={()=>openEmpire()} run={dispatch} busy={busy} now={now}/> : view === 'army' ? <ArmyView key={`army-${armyTab}-${armyLootItem ?? 0}`} initialTab={armyTab} initialArtifactId={armyLootItem} world={world} playerId={engine.playerId} cityId={town.id} armyId={selectedArmy.id} onCity={chooseCity} onArmy={chooseArmy} onMap={(id, orders)=>{chooseArmy(id);navigate('world');setSelection({kind:'army',id});setMoveMode(!!orders);}} onOpenCity={id=>{chooseCity(id);navigate('settlement');}} run={dispatch} busy={busy} now={now}/> : view === 'rally' ? <RallyPoint onReadReport={markReportRead} world={world} playerId={engine.playerId} cityId={town.id} now={now} busy={busy} run={dispatch} onCity={chooseCity} onManageArmy={id=>{chooseArmy(id);navigate('army');}} onMapArmy={id=>{chooseArmy(id);navigate('world');setSelection({kind:'army',id});}} onLocate={place=>{navigate('world');setSelection(place.campId!==undefined?{kind:'camp',id:place.campId}:place.kind==='village'&&place.cityId!==undefined?{kind:'settlement',id:place.cityId}:{kind:'cell',col:place.col,row:place.row});}} onReport={setReport}/> : null)}
    </main><footer className="realm-footer"><span>{engine.mode === 'online' ? 'THE SHARED WORLD' : 'THE SIX STANDARDS'}</span><span>{engine.mode === 'online' ? `${world.map?.total_players ?? world.players.length} rulers in the shared world` : 'Campaign saved automatically'}<button onClick={() => setHelp(true)}>The General's Codex</button></span></footer>
   </div>}
   {notice && <div className={`toast ${notice.error ? 'error' : ''}`} role="status"><Icon name={notice.error ? 'shield' : 'check'}/>{notice.text}<button aria-label="Dismiss notification" onClick={() => setNotice(null)}>×</button></div>}
@@ -272,5 +279,5 @@ function Realm({ engine, onExit, onLoad, onRetry, onUnitPreview }: {
   {help && <Codex onClose={() => setHelp(false)}/>}
   {settings && <Settings world={world} playerId={engine.playerId} cityId={town.id} onClose={() => setSettings(false)} onLoad={engine.mode === 'solo' ? onLoad : undefined} run={dispatch}/>}
   {resource && <Modal title={`${resource === 'wood' ? 'Timber' : resource[0].toUpperCase() + resource.slice(1)} supplies`} onClose={() => setResource(null)}><div className="resource-ledger"><Icon name={resource} size={48}/><strong>{resources[resource].toLocaleString()}<small>of {storage(resource).toLocaleString()} stored</small></strong></div><div className="progress-track"><i style={{ width: `${resources[resource] / storage(resource) * 100}%` }}/></div><div className="ledger-rate"><span>{resource==='food'?'Net food balance':'Production'}</span><strong>{rate(resource)} per minute</strong></div>{resource==='food'&&<p>{projectedTown.food_gross_rate?.toFixed(1)} food produced − {projectedTown.food_upkeep?.toFixed(1)} consumed by residents per minute.</p>}<p>Production continues while you are away. Improve {resource === 'wood' ? 'the timber yard' : resource === 'stone' ? 'the quarry' : resource === 'food' ? 'your wheat fields' : 'the forum'} for more income, build housing for more workers, or upgrade {resource==='food'?'granaries':'warehouses'} to store more supplies.</p><button className="button gold" onClick={() => { setResource(null); navigate('settlement'); }}>Develop the city <Icon name="arrow"/></button></Modal>}
- </>;
+ </ResearchNavigation.Provider>;
 }

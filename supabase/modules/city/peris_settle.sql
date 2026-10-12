@@ -12,6 +12,7 @@ begin
  for event in select id,finish_at as at_time,false as expedition from public.peris_orders where owner_id=p_owner and finish_at<=p_until
  union all select id,arrival_at as at_time,true as expedition from public.peris_settler_expeditions where owner_id=p_owner and status='travelling'and arrival_at<=p_until
  order by at_time,expedition,id loop
+ perform public.peris_science_advance(p_owner,event.at_time);
  perform public.peris_culture_accrue(p_owner,event.at_time);
  if event.expedition then perform public.peris_found_complete(event.id);continue;end if;
  select * into o from public.peris_orders where id=event.id for update;
@@ -36,6 +37,7 @@ begin
  end if;
  delete from public.peris_orders where id=o.id;
  end loop;
+ perform public.peris_science_advance(p_owner,p_until);
  perform public.peris_culture_accrue(p_owner,p_until);
  for s in select * from public.settlements where owner_id=p_owner order by id loop perform public.peris_population_accrue(s.id,p_until);end loop;
  for arriving_army in select id from public.armies where owner_id=p_owner and status='moving' and raid_target_id is null and raid_city_id is null and arrival_at<=p_until order by id for update loop

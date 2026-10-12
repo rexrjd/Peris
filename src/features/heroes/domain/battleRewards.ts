@@ -1,3 +1,4 @@
+import {researchFactor} from '../../research/domain/effects';
 import type { World } from '../../../shared/model/world';
 import type { Army } from '../../army/domain/types';
 import type { Camp } from '../../map/domain/types';
@@ -24,7 +25,7 @@ export function awardBattleHero(world: World, army: Army, battleId: number, expe
     const hero = heroForArmy(world, army.id);
     if (!hero) return;
     const before = hero.experience, levelBefore = heroLevel(hero);
-    awardHeroExperience(world, army.id, experience);
+    awardHeroExperience(world, army.id, Math.floor(experience*researchFactor(world,army.owner_id,'hero_xp')));
     const reward: HeroBattleReward = {
         hero_id: hero.id, hero_name: hero.name, hero_class: hero.class,
         faction: world.settlements.find(s => s.id === army.home_settlement_id)?.faction,

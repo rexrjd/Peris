@@ -1,0 +1,10 @@
+import fs from 'node:fs/promises';
+import path from 'node:path';
+const root=path.resolve(import.meta.dirname,'..'),catalog=JSON.parse(await fs.readFile(path.join(root,'src/features/research/domain/catalog.json'),'utf8'));
+const q=s=>"'"+s.replaceAll("'","''")+"'";
+const json=s=>q(JSON.stringify(s))+'::jsonb';
+const rows=catalog.map(t=>`(${q(t.id)},${q(t.name)},${q(t.branch)},${t.era},${t.faction?q(t.faction):'null'},${t.cost},${t.seconds},${json(t.requires)},${json(t.effects)},${json(t)})`);
+const sql='-- Generated from the shared technology catalog. Do not hand edit.\ninsert into public.peris_technology_catalog(id,name,branch,era,faction,cost,seconds,prerequisites,effects,metadata)values\n'+rows.join(',\n')+'\non conflict(id)do update set name=excluded.name,branch=excluded.branch,era=excluded.era,faction=excluded.faction,cost=excluded.cost,seconds=excluded.seconds,prerequisites=excluded.prerequisites,effects=excluded.effects,metadata=excluded.metadata;\n';
+const target=path.join(root,'supabase/modules/research/catalog.sql');
+if(process.argv.includes('--check')){if(await fs.readFile(target,'utf8')!==sql)throw Error('Stale technology SQL');}else await fs.writeFile(target,sql);
+console.log('210 technologies match shared catalog');

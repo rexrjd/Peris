@@ -1,3 +1,4 @@
+import {researchFactor} from '../../research/domain/effects';
 import { commandCity } from '../../empire/domain/context';
 import type { Command, LocalCommandContext } from '../../../shared/model/commands';
 import { RESOURCES } from '../../../shared/model/resources';
@@ -23,5 +24,5 @@ export function queueSlot(context: LocalCommandContext, cmd: Extract<Command,{ty
     if (!affordable(town,cost)) throw new Error('Your stores cannot cover this cost.');
     for (const resource of RESOURCES) town[resource]-=cost[resource];
     if (cmd.type==='buildSlot') w.city_slots.push(slot);
-    w.orders.push({id:context.nextId(),owner_id:context.playerId,settlement_id:town.id,kind:'upgrade',item:`slot:${cmd.slot}:${slot.building_type}`,quantity:1,started_at:context.now,finish_at:new Date(Date.parse(context.now)+upgradeSeconds(slot.level)*1000).toISOString()});
+    w.orders.push({id:context.nextId(),owner_id:context.playerId,settlement_id:town.id,kind:'upgrade',item:`slot:${cmd.slot}:${slot.building_type}`,quantity:1,started_at:context.now,finish_at:new Date(Date.parse(context.now)+upgradeSeconds(slot.level,researchFactor(w,context.playerId,'construction'))*1000).toISOString()});
 }

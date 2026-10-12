@@ -154,3 +154,7 @@ in `assets/source/artifacts-v1/`; `npm run build:artifact-art` trims transparent
 padding and exports 384px WebP icons into `public/art/artifacts/v1/` without
 redrawing them. Backpack cards, equipped slots and victory receipts use the same
 item ID, painting and rarity. No other game's equipment artwork is included.
+
+## Research and Academies (V18)
+
+210 distinct original transparent technology pictures and a Research navigation picture were generated for Peris on 2026-10-12. Eleven faction Academy paintings plus a Roman master stage match the existing village art direction. The 23 untouched PNG sheets and their ordered mapping are retained in `assets/source/research-v1` and `assets/research-v1.json`. `npm run build:research-art` exports the separate runtime WebP pictures through Sharp; `npm run check:research-art` validates uniqueness, alpha and dimensions. No other strategy game assets are used. Native Academies use original faction-aware code geometry with five distinct development stages.

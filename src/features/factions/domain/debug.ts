@@ -1,3 +1,6 @@
+import {accountFaction} from '../../research/domain/effects';
+import {pauseResearch} from '../../research/domain/science';
+import {TECHNOLOGY_BY_ID} from '../../research/domain/catalog';
 import { commandCity } from '../../empire/domain/context';
 import type {LocalCommandContext,Command} from '../../../shared/model/commands';
 import {isFaction} from './factions';
@@ -6,7 +9,9 @@ import {completeUpgrade} from '../../city/domain/construction';
 import {RESOURCES} from '../../../shared/model/resources';
 export function changeFaction(ctx:LocalCommandContext,cmd:Extract<Command,{type:'setFaction'}>){
  if(!isFaction(cmd.faction))throw new Error('Unknown faction.');
- const town=commandCity(ctx);if(!town)throw new Error('Settlement missing.');town.faction=cmd.faction;
+ const town=commandCity(ctx);if(!town)throw new Error('Settlement missing.');const isMain=ctx.world.settlements.filter(s=>s.owner_id===ctx.playerId).sort((a,b)=>a.id-b.id)[0]?.id===town.id;
+ if(isMain){const active=ctx.world.account_science?.find(s=>s.owner_id===ctx.playerId)?.active_id;const tech=active?TECHNOLOGY_BY_ID.get(active):undefined;if(tech?.faction&&tech.faction!==cmd.faction)pauseResearch(ctx.world,ctx.playerId,Date.parse(ctx.now));}
+ town.faction=cmd.faction;for(const c of ctx.world.settlements.filter(s=>s.owner_id===ctx.playerId))refreshCityEconomy(ctx.world,c.id,c.population!==undefined);
 }
 /** Explicit debug actions only touch the current ruler's settlement. */
 export function debugCity(ctx:LocalCommandContext,cmd:Extract<Command,{type:'debugCity'}>){

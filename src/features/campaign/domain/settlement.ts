@@ -1,3 +1,4 @@
+import {ensureScience,advanceResearch} from '../../research/domain/science';
 import { accrueResources } from '../../city/domain/economy';
 import { completeUpgrade } from '../../city/domain/construction';
 import { completeRecruit } from '../../army/domain/recruitment';
@@ -13,11 +14,13 @@ import { mergeStationGarrison } from '../../map/domain/garrisons';
 export function settleLocal(w: World, owner: string, now = Date.now(), travel = true) {
     const player = w.players.find(p => p.id === owner);
     if (!player) return;
+    ensureScience(w,owner);
     const events = [
         ...w.orders.filter(o => o.owner_id === owner && Date.parse(o.finish_at) <= now).map(order => ({ at: Date.parse(order.finish_at), order, expedition: undefined })),
         ...(w.settler_expeditions ?? []).filter(e => e.owner_id === owner && e.status === 'travelling' && Date.parse(e.arrival_at) <= now).map(expedition => ({ at: Date.parse(expedition.arrival_at), expedition, order: undefined })),
     ].sort((a, b) => a.at - b.at || (a.order?.id ?? a.expedition!.id) - (b.order?.id ?? b.expedition!.id));
     for (const event of events) {
+        advanceResearch(w,owner,event.at);
         accrueCulture(w, owner, event.at);
         if (event.expedition) {
             const source = w.settlements.find(s => s.id === event.expedition!.origin_settlement_id);
@@ -38,6 +41,7 @@ export function settleLocal(w: World, owner: string, now = Date.now(), travel = 
         }
         w.orders = w.orders.filter(o => o.id !== order.id);
     }
+    advanceResearch(w,owner,now);
     accrueCulture(w, owner, now);
     for (const city of w.settlements.filter(s => s.owner_id === owner)) accrueResources(city, now);
     if (travel) for (const army of w.armies.filter(a => a.owner_id === owner)) {

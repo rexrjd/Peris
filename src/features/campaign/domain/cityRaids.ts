@@ -1,3 +1,4 @@
+import {applyResearchFormations,researchFactor} from '../../research/domain/effects';
 import type { World } from '../../../shared/model/world';
 import type { Army } from '../../army/domain/types';
 import type { Battle } from '../../battle/domain/types';
@@ -40,9 +41,10 @@ export function beginCityRaid(world:World, owner:string, armyId:number, nextId:(
     b.defender_owner_id=city.owner_id;b.defender_army_id=leader?.id??null;b.defender_faction=city.faction;
     b.raid_city_id=city.id;b.siege_target=army.siege_target??'auto';b.city_defenders=parties;
     const wall=world.buildings.find(row=>row.settlement_id===city.id&&row.building_type==='wall')?.level??0;
-    const effectiveWall=wall-siegeReduction(readRoster(army).ram,wall,'ram');
+    const effectiveWall=wall-siegeReduction(Math.floor(readRoster(army).ram*researchFactor(world,owner,'siege')),wall,'ram');
     for(const side of ['attacker','defender'] as const){
         const commanding=side==='attacker'?army:leader, player=side==='attacker'?owner:city.owner_id;
+        applyResearchFormations(world,player,instance.formations);
         const bonuses=commanding?heroBonuses(world,commanding):{damage:1,protection:1,morale:0,mana:0};
         const smithy=armyAttack(world,side==='attacker'?army.home_settlement_id:city.id);
         for(const formation of instance.formations.filter(row=>row.side===side)){
@@ -50,7 +52,9 @@ export function beginCityRaid(world:World, owner:string, armyId:number, nextId:(
             formation.defence_multiplier=bonuses.protection*(side==='defender'?1+effectiveWall*.06:1);
             formation.morale=Math.min(100,90+bonuses.morale+(side==='defender'?effectiveWall*2:0));
         }
+        applyResearchFormations(world,player,instance.formations.filter(f=>f.side===side));
         b[side==='attacker'?'mana_attacker':'mana_defender']=maximumMana(Math.max(0,...world.settlements.filter(row=>row.owner_id===player).map(row=>towerLevel(world,row.id))))+bonuses.mana;
+        b[side==='attacker'?'mana_attacker':'mana_defender']! *= researchFactor(world,player,'mana');
     }
     world.battles.push(b);world.formations.push(...instance.formations);
     army.raid_city_id=null;
@@ -86,11 +90,11 @@ export function settleCityRaid(world:World,battle:Battle,nextId:()=>number,now=D
     }
     world.garrisons=world.garrisons?.filter(row=>rosterTotal(readRoster(row))>0);
     writeRoster(army,attacking);restoreRaidReserve(army);
-    result.loot=won?takeLoot(city,carryingCapacity(attacking)):emptyResources();
+    result.loot=won?takeLoot(city,Math.floor(carryingCapacity(attacking)*researchFactor(world,army.owner_id,'carry'))):emptyResources();
     for(const key of RESOURCES)city[key]-=result.loot[key];
     const engines=emptyRoster();
     for(const row of world.formations.filter(row=>row.battle_id===battle.id&&row.side==='attacker'&&row.status!=='routed'))engines[row.recruit_unit??row.unit_type]+=row.soldiers;
-    result.siege_damage=won?damageCity(world,city.id,engines,battle.siege_target,new Date(now).toISOString()):[];
+    result.siege_damage=won?damageCity(world,city.id,engines,battle.siege_target,new Date(now).toISOString(),army.owner_id):[];
     army.carried_loot={...result.loot};army.loot_report_id=battle.id;
     recordBattleEconomics(result);
     for(const side of ['attacker','defender'] as const){

@@ -1,3 +1,4 @@
+import {researchFactor} from '../../research/domain/effects';
 import { accrueCamp } from './campStock';
 import { settleCityRaid } from './cityRaids';
 import { recruitDelay } from '../../frontier/domain/camps';
@@ -41,7 +42,7 @@ export function settleBattle(w: World, id: number, owner: string, nextId: () => 
         for (const formation of w.formations.filter(f => f.battle_id === id && f.side === 'defender')) defenders[formation.recruit_unit ?? formation.unit_type] += formation.soldiers;
         writeRoster(camp, defenders);
         camp.next_recruit_at = new Date(Date.now() + recruitDelay(DEFAULT_CONFIG, String(camp.id), camp.recruit_sequence ?? 0)).toISOString();
-        const loot = won ? takeLoot(camp.resources!, carryingCapacity(result.attacker_survivor_roster)) : emptyResources();
+        const loot = won ? takeLoot(camp.resources!, Math.floor(carryingCapacity(result.attacker_survivor_roster)*researchFactor(w,owner,'carry'))) : emptyResources();
         for (const key of RESOURCES) camp.resources![key] -= loot[key];
         result.loot = loot; a.carried_loot = loot; a.loot_report_id = id;
         if (won) { p.victories++; p.prestige += camp.tier * 25; }

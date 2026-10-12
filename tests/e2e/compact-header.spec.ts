@@ -21,7 +21,7 @@ test('compact command header keeps the scene clear and all controls usable', asy
         expect(await page.evaluate(({x,y})=>document.elementFromPoint(x,y)?.tagName,{x:(left.x+left.width+right.x)/2,y:left.y+left.height/2})).toBe('CANVAS');
     }
     await expect(header.locator('.hud-stock').first()).toHaveCSS('font-size', info.project.name.includes('desktop') ? '12px' : '11px');
-    await expect(header.locator('.hud-picture')).toHaveCount(9);
+    await expect(header.locator('.hud-picture')).toHaveCount(10);
     await expect(page.getByLabel('Game menu')).toBeInViewport();
     for (const button of await nav.getByRole('button').all()) await expect(button).toBeInViewport();
     for (const img of await header.locator('.hud-picture').all())

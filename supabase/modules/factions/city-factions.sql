@@ -8,11 +8,17 @@ alter table public.peris_debug_config enable row level security;
 revoke all on public.peris_debug_config from public,anon,authenticated;
 -- This admin-owned flag can disable instant cheats without disabling faction selection.
 create or replace function public.peris_set_faction(p_faction text)returns void language plpgsql security definer set search_path='' as $$
-declare u uuid:=public.peris_player_id();
+declare u uuid:=public.peris_player_id();city record;active_faction text;
 begin
  if u is null then raise exception 'Authentication required';end if;
  if p_faction is null or p_faction not in ('roman','spartan','persian','egyptian','orc','elf','dwarf','gnome','pandaren','undead','demon')then raise exception 'Unknown faction';end if;
+ perform public.peris_settle(u);
+ if public.peris_city_id(u)=(select min(id)from public.settlements where owner_id=u)then
+  select c.faction into active_faction from public.peris_account_science s join public.peris_technology_catalog c on c.id=s.active_id where s.owner_id=u;
+  if active_faction is not null and active_faction<>p_faction then perform public.peris_research_pause(u,now());end if;
+ end if;
  update public.settlements set faction=p_faction where id=public.peris_city_id(u);if not found then raise exception 'Settlement missing';end if;
+ for city in select id from public.settlements where owner_id=u order by id loop perform public.peris_city_economy(city.id);end loop;
 end $$;
 create or replace function public.peris_debug_city(p_action text,p_target text default null,p_value integer default null)returns void language plpgsql security definer set search_path='' as $$
 declare u uuid:=public.peris_player_id();s public.settlements%rowtype;c public.peris_city_slots%rowtype;b public.buildings%rowtype;target_slot integer;l integer;max_level integer;lost_magic boolean:=false;count_slots integer;

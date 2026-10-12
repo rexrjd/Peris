@@ -1,3 +1,4 @@
+import {researchFactor} from '../../research/domain/effects';
 import { commandCity } from '../../empire/domain/context';
 import { type Command, type LocalCommandContext } from '../../../shared/model/commands';
 import { buildingCost, MAX_BUILDING_LEVEL, upgradeSeconds } from './construction';
@@ -17,5 +18,5 @@ export function upgradeBuilding(context: LocalCommandContext, cmd: Extract<Comma
     if (building.level >= MAX_BUILDING_LEVEL)
         throw new Error('Maximum building level reached.');
     spend(buildingCost(cmd.item, building.level));
-    w.orders.push({ id: context.nextId(), owner_id: context.playerId, settlement_id: s.id, kind: 'upgrade', item: cmd.item, quantity: 1, started_at: now, finish_at: new Date(Date.parse(now) + upgradeSeconds(building.level) * 1000).toISOString() });
+    w.orders.push({ id: context.nextId(), owner_id: context.playerId, settlement_id: s.id, kind: 'upgrade', item: cmd.item, quantity: 1, started_at: now, finish_at: new Date(Date.parse(now) + upgradeSeconds(building.level,researchFactor(w,context.playerId,'construction')) * 1000).toISOString() });
 }

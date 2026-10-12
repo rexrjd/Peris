@@ -68,7 +68,7 @@ begin
  perform public.peris_add_formations(bid,p_owner,'attacker',a.infantry,a.archers,a.cavalry,90);
  perform public.peris_add_formations(bid,c.owner_id,'defender',0,0,0,90);
  select coalesce(level,0)into wall from public.buildings where settlement_id=c.id and building_type='wall';wall:=coalesce(wall,0);
- effective:=wall-public.peris_siege_reduction((public.peris_roster(to_jsonb(a))->>'ram')::integer,wall,'ram');
+ effective:=wall-public.peris_siege_reduction(floor((public.peris_roster(to_jsonb(a))->>'ram')::integer*public.peris_research_factor(p_owner,'siege'))::integer,wall,'ram');
  bonus:=public.peris_hero_bonuses(leader);
  update public.battle_formations set defence_multiplier=defence_multiplier*(1+effective*.06),morale=least(100,morale+effective*2),
  attack_multiplier=(1+least(.6,coalesce((select sum(level)*.04 from public.peris_city_slots where settlement_id=c.id and building_type='smithy'),0)))*(bonus->>'damage')::numeric where battle_id=bid and side='defender';
@@ -140,10 +140,12 @@ begin
  end loop;
  perform public.peris_write_roster(a.id,public.peris_roster_add(survivors,coalesce(a.raid_reserve,'{}')));
  select coalesce(sum(f.soldiers*u.carry),0)into carry from public.battle_formations f join public.peris_unit_catalog u on u.unit=coalesce(f.recruit_unit,f.unit_type)where f.battle_id=b.id and f.side='attacker';
+ carry:=floor(carry*public.peris_research_factor(b.attacker_owner_id,'carry'));
  if p_winner='attacker'then
   loot:=public.peris_take_camp_loot(jsonb_build_object('wood',floor(c.wood),'stone',floor(c.stone),'food',floor(c.food),'gold',floor(c.gold)),carry);
   update public.settlements set wood=wood-(loot->>'wood')::numeric,stone=stone-(loot->>'stone')::numeric,food=food-(loot->>'food')::numeric,gold=gold-(loot->>'gold')::numeric where id=c.id;
   select public.peris_roster(coalesce(jsonb_object_agg(unit,n),'{}'))into engines from(select coalesce(f.recruit_unit,f.unit_type)unit,sum(f.soldiers)n from public.battle_formations f where f.battle_id=b.id and f.side='attacker'and f.status<>'routed'group by coalesce(f.recruit_unit,f.unit_type))q;
+  engines:=jsonb_set(jsonb_set(engines,'{ram}',to_jsonb(floor((engines->>'ram')::integer*public.peris_research_factor(b.attacker_owner_id,'siege'))::integer)),'{catapult}',to_jsonb(floor((engines->>'catapult')::integer*public.peris_research_factor(b.attacker_owner_id,'siege'))::integer));
   damage:=public.peris_damage_city(c.id,engines,b.siege_target);
  else damage:='[]';end if;
  winner:=case p_winner when 'attacker'then b.attacker_owner_id when 'defender'then b.defender_owner_id end;

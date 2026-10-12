@@ -1,3 +1,5 @@
+import {unitUnlocked,unitTechnology} from '../../research/domain/effects';
+import {useResearchNavigation} from '../../research/ui/ResearchNavigation';
 import { useState } from 'react';
 import { armyFaction } from '../domain/faction';
 import type { World } from '../../../shared/model/world';
@@ -16,12 +18,13 @@ import { homeArmyPosition } from '../../map/domain/garrisons';
 import type { RecruitmentBuilding } from '../../frontier/domain/units';
 
 export function RecruitmentPanel({ world, army, city, run, busy, now, onCity, onOpenCity, onLogistics, buildingOnly, embedded = false }: { world: World; army: Army; city: Settlement; run: (c: Command, message?: string) => void; busy: boolean; now: number; onCity?: (id: number) => void; onOpenCity?: (id: number) => void; onLogistics?: () => void; buildingOnly?: RecruitmentBuilding; embedded?: boolean }) {
+ const openResearch=useResearchNavigation();
  const [type, setType] = useState<RecruitUnit>(() => RECRUIT_UNITS.find(unit => RECRUIT_RULES[unit].building === (buildingOnly ?? 'barracks'))!), [quantity, setQuantity] = useState(20);
  const [building, setBuilding] = useState<RecruitmentBuilding>(buildingOnly ?? 'barracks');
  const rule = RECRUIT_RULES[type], roster = readRoster(army), faction = armyFaction(world, army);
  const name = factionTroopName(faction, type), overview = armyOverview(world, army, now), plan = recruitmentPlan(world, army, city, type, quantity, now);
  const research = world.unit_research?.find(entry => entry.settlement_id === city.id && entry.unit === type);
- const researched = !rule.researchSeconds || !!research && Date.parse(research.completes_at) <= now;
+ const researched = unitUnlocked(world,army.owner_id,city.id,type,now);
  const training = embedded ? world.orders.filter(order => order.kind === 'recruit' && order.owner_id === army.owner_id && order.settlement_id === city.id && RECRUIT_RULES[order.item as RecruitUnit]?.building === building).sort((a,b) => Date.parse(a.finish_at)-Date.parse(b.finish_at)) : overview.orders.filter(order => RECRUIT_RULES[order.item as RecruitUnit]?.building === building);
  const researching = (world.unit_research ?? []).filter(entry => entry.settlement_id === city.id && RECRUIT_RULES[entry.unit].building === building && Date.parse(entry.completes_at) > now).sort((a,b) => Date.parse(a.completes_at)-Date.parse(b.completes_at));
  const changeQuantity = (n: number) => setQuantity(Math.max(1, Math.min(200, Math.floor(n || 1))));
@@ -36,11 +39,11 @@ export function RecruitmentPanel({ world, army, city, run, busy, now, onCity, on
   <h2>Recruitment</h2>{!embedded && <label className="command-label">Training city<select aria-label="Training city" value={city.id} onChange={event => onCity?.(Number(event.target.value))}>{world.settlements.filter(s => s.owner_id === army.owner_id).map(s => <option key={s.id} value={s.id}>{s.name}</option>)}</select></label>}
   {!buildingOnly && <nav className="army-command-tabs" aria-label="Recruitment buildings">{(['barracks', 'stables', 'workshop'] as const).map(site => <button key={site} aria-pressed={building === site} onClick={() => { setBuilding(site); setType(RECRUIT_UNITS.find(unit => RECRUIT_RULES[unit].building === site)!); }}>{site === 'barracks' ? 'Barracks' : site === 'stables' ? 'Stables' : 'Workshop'}<small> Lv. {slotLevels(world, city.id, site)}</small></button>)}</nav>}
   <div className="game-unit-choices">{RECRUIT_UNITS.filter(unit => RECRUIT_RULES[unit].building === building).map(unit => {
-   const entry = world.unit_research?.find(r => r.settlement_id === city.id && r.unit === unit), ready = !RECRUIT_RULES[unit].researchSeconds || !!entry && Date.parse(entry.completes_at) <= now;
+   const entry = world.unit_research?.find(r => r.settlement_id === city.id && r.unit === unit), ready = unitUnlocked(world,army.owner_id,city.id,unit,now);
    return <button key={unit} aria-pressed={type === unit} title={`${factionTroopName(faction, unit)} · ${ready ? 'Ready to recruit' : entry ? 'Research in progress' : 'Research required'}`} onClick={() => setType(unit)}><TroopIcon faction={faction} unit={unit}/><span>{factionTroopName(faction, unit)}<small>{ready ? 'Ready to recruit' : entry ? 'Researching' : 'Research required'}</small></span></button>;
   })}</div>
   <h3>{name}</h3><p className="command-muted" title="Statistics used by automatic combat and loot rules">Attack ×{rule.attack} · Defence ×{rule.defence} · Carry {rule.carry} · Speed {rule.speed}</p>
-  {!researched ? <><Cost cost={rule.researchCost} resources={liveResources(city, now)} compact/>{research ? <p role="status">Research completes in {clock(Math.max(0, (Date.parse(research.completes_at) - now) / 1000))}</p> : <button className="command-button primary" disabled={busy || !slotLevels(world, city.id, building) || !affordable(liveResources(city, now), rule.researchCost)} onClick={() => run({ type: 'researchUnit', settlementId: city.id, item: type }, `${name} research queued.`)}>Research {name} · {clock(rule.researchSeconds)}</button>}</> : <>
+  {!researched ? <><Cost cost={rule.researchCost} resources={liveResources(city, now)} compact/>{research ? <p role="status">Research completes in {clock(Math.max(0, (Date.parse(research.completes_at) - now) / 1000))}</p> : <button className="command-button primary" onClick={()=>openResearch(unitTechnology(type)?.id)}>Unlock in Research <span>→</span></button>}</> : <>
    <label className="command-label" htmlFor="recruit-quantity">Soldiers to train</label><div className="command-quantity"><button aria-label="Train fewer soldiers" onClick={() => changeQuantity(quantity - 5)}>−</button><input id="recruit-quantity" type="number" min={1} max={200} value={quantity} onChange={event => changeQuantity(Number(event.target.value))}/><button aria-label="Train more soldiers" onClick={() => changeQuantity(quantity + 5)}>+</button></div>
    <div className="recruit-presets">{[10, 25, 50].map(n => <button key={n} aria-pressed={quantity === n} onClick={() => changeQuantity(n)}>{n}</button>)}<button disabled={!plan.max} onClick={() => changeQuantity(plan.max)}>Max {plan.max}</button></div><Cost cost={plan.cost} resources={plan.resources} compact/>
    <div className="recruit-timing"><span>Training time<b>{clock(plan.seconds)}</b></span><span>Ready with queue<b>{clock(plan.finishSeconds)}</b></span></div>

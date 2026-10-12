@@ -1,0 +1,180 @@
+{
+  "ownership": "Original Peris artwork generated with the built-in image tool, 2026-10-12. No other game assets used.",
+  "sources": [
+    {
+      "id": "warfare",
+      "file": "assets/source/research-v1/warfare.png",
+      "original_name": "Faceted fantasy armory icon sheet.png",
+      "columns": 5,
+      "rows": 2
+    },
+    {
+      "id": "archery",
+      "file": "assets/source/research-v1/archery.png",
+      "original_name": "Low-poly archery icon atlas.png",
+      "columns": 5,
+      "rows": 2
+    },
+    {
+      "id": "cavalry",
+      "file": "assets/source/research-v1/cavalry.png",
+      "original_name": "Low-poly cavalry technology icon atlas.png",
+      "columns": 5,
+      "rows": 2
+    },
+    {
+      "id": "siege",
+      "file": "assets/source/research-v1/siege.png",
+      "original_name": "Ten low-poly siege technology icons.png",
+      "columns": 5,
+      "rows": 2
+    },
+    {
+      "id": "agriculture",
+      "file": "assets/source/research-v1/agriculture.png",
+      "original_name": "Fantasy agriculture icon atlas.png",
+      "columns": 5,
+      "rows": 2
+    },
+    {
+      "id": "industry",
+      "file": "assets/source/research-v1/industry.png",
+      "original_name": "Low-poly fantasy industry icon atlas.png",
+      "columns": 5,
+      "rows": 2
+    },
+    {
+      "id": "engineering",
+      "file": "assets/source/research-v1/engineering.png",
+      "original_name": "Fantasy engineering icon atlas.png",
+      "columns": 5,
+      "rows": 2
+    },
+    {
+      "id": "commerce",
+      "file": "assets/source/research-v1/commerce.png",
+      "original_name": "Fantasy commerce icon atlas.png",
+      "columns": 5,
+      "rows": 2
+    },
+    {
+      "id": "knowledge",
+      "file": "assets/source/research-v1/knowledge.png",
+      "original_name": "Ten fantasy knowledge emblems atlas.png",
+      "columns": 5,
+      "rows": 2
+    },
+    {
+      "id": "leadership",
+      "file": "assets/source/research-v1/leadership.png",
+      "original_name": "Fantasy leadership emblem atlas.png",
+      "columns": 5,
+      "rows": 2
+    },
+    {
+      "id": "roman",
+      "file": "assets/source/research-v1/roman.png",
+      "original_name": "Roman Technology Icon Atlas.png",
+      "columns": 5,
+      "rows": 2
+    },
+    {
+      "id": "spartan",
+      "file": "assets/source/research-v1/spartan.png",
+      "original_name": "Spartan technology icon atlas.png",
+      "columns": 5,
+      "rows": 2
+    },
+    {
+      "id": "persian",
+      "file": "assets/source/research-v1/persian.png",
+      "original_name": "Persian Faction Technology Icon Atlas.png",
+      "columns": 5,
+      "rows": 2
+    },
+    {
+      "id": "egyptian",
+      "file": "assets/source/research-v1/egyptian.png",
+      "original_name": "Egyptian faction technology icon atlas.png",
+      "columns": 5,
+      "rows": 2
+    },
+    {
+      "id": "orc",
+      "file": "assets/source/research-v1/orc.png",
+      "original_name": "Orc Faction Relics Icon Atlas.png",
+      "columns": 5,
+      "rows": 2
+    },
+    {
+      "id": "elf",
+      "file": "assets/source/research-v1/elf.png",
+      "original_name": "Elven faction technology icon atlas.png",
+      "columns": 5,
+      "rows": 2
+    },
+    {
+      "id": "dwarf",
+      "file": "assets/source/research-v1/dwarf.png",
+      "original_name": "Dwarven technology emblem atlas.png",
+      "columns": 5,
+      "rows": 2
+    },
+    {
+      "id": "gnome",
+      "file": "assets/source/research-v1/gnome.png",
+      "original_name": "Gnome Technology Icon Atlas.png",
+      "columns": 5,
+      "rows": 2
+    },
+    {
+      "id": "pandaren",
+      "file": "assets/source/research-v1/pandaren.png",
+      "original_name": "Pandaren faction technology icon atlas.png",
+      "columns": 5,
+      "rows": 2
+    },
+    {
+      "id": "undead",
+      "file": "assets/source/research-v1/undead.png",
+      "original_name": "Undead Technology Icon Atlas.png",
+      "columns": 5,
+      "rows": 2
+    },
+    {
+      "id": "demon",
+      "file": "assets/source/research-v1/demon.png",
+      "original_name": "Infernal faction technology icon atlas.png",
+      "columns": 5,
+      "rows": 2
+    },
+    {
+      "id": "academy",
+      "file": "assets/source/research-v1/academy.png",
+      "original_name": "Twelve isometric faction academies.png",
+      "columns": 4,
+      "rows": 3
+    },
+    {
+      "id": "navigation",
+      "file": "assets/source/research-v1/navigation.png",
+      "original_name": "Astral book with armillary sphere.png",
+      "columns": 1,
+      "rows": 1
+    }
+  ],
+  "academy_order": [
+    "roman",
+    "spartan",
+    "persian",
+    "egyptian",
+    "orc",
+    "elf",
+    "dwarf",
+    "gnome",
+    "pandaren",
+    "undead",
+    "demon",
+    "roman-master"
+  ]
+}

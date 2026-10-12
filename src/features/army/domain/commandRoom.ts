@@ -1,3 +1,4 @@
+import {trainingBoost,unitUnlocked} from '../../research/domain/effects';
 import type { World } from '../../../shared/model/world';
 import type { Army, ArmyTroops } from './types';
 import type { Settlement } from '../../city/domain/types';
@@ -42,8 +43,8 @@ export function recruitmentPlan(world: World, army: Army, city: Settlement, type
     const building = RECRUIT_RULES[type].building, level = slotLevels(world, city.id, building);
     const near = atRecruitmentCity(army, city, now);
     const max = Math.max(0, Math.min(200, free, ...RESOURCES.filter(k => RECRUIT_RULES[type].cost[k] > 0).map(k => Math.floor(resources[k] / RECRUIT_RULES[type].cost[k]))));
-    const reason = city.owner_id !== army.owner_id ? 'Choose one of your cities.' : army.status === 'moving' ? 'Stop at a city before recruiting.' : !near ? `Bring this army to ${city.name}.` : !level ? `Build ${building} in ${city.name}.` : orders.length >= 3 ? 'All three training slots are occupied.' : free === 0 ? 'This army has no room for more soldiers.' : !Number.isInteger(quantity) || quantity < 1 || quantity > 200 ? 'Choose 1–200 soldiers.' : quantity > free ? `Only ${free} spaces remain, including queued troops.` : !affordable(resources, cost) ? `${city.name} needs more supplies for this batch.` : null;
-    const seconds = recruitSeconds(type, quantity, Math.max(1, level)), start = Math.max(now, ...world.orders.filter(o => o.kind === 'recruit' && o.settlement_id === city.id && RECRUIT_RULES[o.item as RecruitUnit]?.building === building).map(o => Date.parse(o.finish_at)));
+    const reason = !unitUnlocked(world,army.owner_id,city.id,type,now) ? 'Unlock this unit in Research first.' : city.owner_id !== army.owner_id ? 'Choose one of your cities.' : army.status === 'moving' ? 'Stop at a city before recruiting.' : !near ? `Bring this army to ${city.name}.` : !level ? `Build ${building} in ${city.name}.` : orders.length >= 3 ? 'All three training slots are occupied.' : free === 0 ? 'This army has no room for more soldiers.' : !Number.isInteger(quantity) || quantity < 1 || quantity > 200 ? 'Choose 1–200 soldiers.' : quantity > free ? `Only ${free} spaces remain, including queued troops.` : !affordable(resources, cost) ? `${city.name} needs more supplies for this batch.` : null;
+    const seconds = recruitSeconds(type, quantity, Math.max(1, level),trainingBoost(world,army.owner_id)), start = Math.max(now, ...world.orders.filter(o => o.kind === 'recruit' && o.settlement_id === city.id && RECRUIT_RULES[o.item as RecruitUnit]?.building === building).map(o => Date.parse(o.finish_at)));
     return { orders, queued, free, resources, cost, building, level, near, max, reason, seconds, finishSeconds: (start - now) / 1000 + seconds };
 }
 export function transferReason(world: World, source: Army, target: Army | undefined, troops: ArmyTroops, now: number, exactRoles = false) {

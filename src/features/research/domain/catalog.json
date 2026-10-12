@@ -1,0 +1,4222 @@
+[
+  {
+    "id": "drill-grounds",
+    "name": "Drill Grounds",
+    "branch": "warfare",
+    "era": 0,
+    "stage": 0,
+    "lane": 0,
+    "faction": null,
+    "cost": 35,
+    "seconds": 30,
+    "requires": [],
+    "effects": {
+      "training": 0.05
+    },
+    "atlas": "warfare",
+    "art_index": 0,
+    "description": "Drill Grounds develops your empire\u2019s warfare. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "spear-formations",
+    "name": "Spear Formations",
+    "branch": "warfare",
+    "era": 0,
+    "stage": 1,
+    "lane": 0,
+    "faction": null,
+    "cost": 42,
+    "seconds": 36,
+    "requires": [
+      "drill-grounds"
+    ],
+    "effects": {
+      "unlock_spearmen": 1
+    },
+    "atlas": "warfare",
+    "art_index": 1,
+    "description": "Spear Formations develops your empire\u2019s warfare. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "shieldcraft",
+    "name": "Shieldcraft",
+    "branch": "warfare",
+    "era": 1,
+    "stage": 2,
+    "lane": 0,
+    "faction": null,
+    "cost": 90,
+    "seconds": 90,
+    "requires": [
+      "spear-formations"
+    ],
+    "effects": {
+      "infantry_defence": 0.05
+    },
+    "atlas": "warfare",
+    "art_index": 2,
+    "description": "Shieldcraft develops your empire\u2019s warfare. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "bronze-forging",
+    "name": "Bronze Forging",
+    "branch": "warfare",
+    "era": 1,
+    "stage": 3,
+    "lane": 0,
+    "faction": null,
+    "cost": 108,
+    "seconds": 108,
+    "requires": [
+      "shieldcraft"
+    ],
+    "effects": {
+      "infantry_attack": 0.05
+    },
+    "atlas": "warfare",
+    "art_index": 3,
+    "description": "Bronze Forging develops your empire\u2019s warfare. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "professional-soldiers",
+    "name": "Professional Soldiers",
+    "branch": "warfare",
+    "era": 2,
+    "stage": 4,
+    "lane": 0,
+    "faction": null,
+    "cost": 220,
+    "seconds": 240,
+    "requires": [
+      "bronze-forging",
+      "libraries"
+    ],
+    "effects": {
+      "unlock_elite": 1
+    },
+    "atlas": "warfare",
+    "art_index": 4,
+    "description": "Professional Soldiers develops your empire\u2019s warfare. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "iron-forging",
+    "name": "Iron Forging",
+    "branch": "warfare",
+    "era": 2,
+    "stage": 5,
+    "lane": 0,
+    "faction": null,
+    "cost": 264,
+    "seconds": 288,
+    "requires": [
+      "professional-soldiers"
+    ],
+    "effects": {
+      "attack": 0.08
+    },
+    "atlas": "warfare",
+    "art_index": 5,
+    "description": "Iron Forging develops your empire\u2019s warfare. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "steel-shields",
+    "name": "Steel Shields",
+    "branch": "warfare",
+    "era": 3,
+    "stage": 6,
+    "lane": 0,
+    "faction": null,
+    "cost": 500,
+    "seconds": 480,
+    "requires": [
+      "iron-forging"
+    ],
+    "effects": {
+      "defence": 0.08
+    },
+    "atlas": "warfare",
+    "art_index": 6,
+    "description": "Steel Shields develops your empire\u2019s warfare. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "officer-school",
+    "name": "Officer School",
+    "branch": "warfare",
+    "era": 3,
+    "stage": 7,
+    "lane": 0,
+    "faction": null,
+    "cost": 600,
+    "seconds": 576,
+    "requires": [
+      "steel-shields"
+    ],
+    "effects": {
+      "training": 0.08
+    },
+    "atlas": "warfare",
+    "art_index": 7,
+    "description": "Officer School develops your empire\u2019s warfare. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "combined-arms",
+    "name": "Combined Arms",
+    "branch": "warfare",
+    "era": 4,
+    "stage": 8,
+    "lane": 0,
+    "faction": null,
+    "cost": 1000,
+    "seconds": 850,
+    "requires": [
+      "officer-school",
+      "philosophy"
+    ],
+    "effects": {
+      "attack": 0.1
+    },
+    "atlas": "warfare",
+    "art_index": 8,
+    "description": "Combined Arms develops your empire\u2019s warfare. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "veteran-guard",
+    "name": "Veteran Guard",
+    "branch": "warfare",
+    "era": 4,
+    "stage": 9,
+    "lane": 0,
+    "faction": null,
+    "cost": 1200,
+    "seconds": 1020,
+    "requires": [
+      "combined-arms"
+    ],
+    "effects": {
+      "infantry_defence": 0.1
+    },
+    "atlas": "warfare",
+    "art_index": 9,
+    "description": "Veteran Guard develops your empire\u2019s warfare. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "bowcraft",
+    "name": "Bowcraft",
+    "branch": "archery",
+    "era": 0,
+    "stage": 0,
+    "lane": 1,
+    "faction": null,
+    "cost": 35,
+    "seconds": 30,
+    "requires": [],
+    "effects": {
+      "archers_attack": 0.05
+    },
+    "atlas": "archery",
+    "art_index": 0,
+    "description": "Bowcraft develops your empire\u2019s archery. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "fletching",
+    "name": "Fletching",
+    "branch": "archery",
+    "era": 0,
+    "stage": 1,
+    "lane": 1,
+    "faction": null,
+    "cost": 42,
+    "seconds": 36,
+    "requires": [
+      "bowcraft"
+    ],
+    "effects": {
+      "training": 0.05
+    },
+    "atlas": "archery",
+    "art_index": 1,
+    "description": "Fletching develops your empire\u2019s archery. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "target-practice",
+    "name": "Target Practice",
+    "branch": "archery",
+    "era": 1,
+    "stage": 2,
+    "lane": 1,
+    "faction": null,
+    "cost": 90,
+    "seconds": 90,
+    "requires": [
+      "fletching"
+    ],
+    "effects": {
+      "archers_defence": 0.05
+    },
+    "atlas": "archery",
+    "art_index": 2,
+    "description": "Target Practice develops your empire\u2019s archery. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "composite-bows",
+    "name": "Composite Bows",
+    "branch": "archery",
+    "era": 1,
+    "stage": 3,
+    "lane": 1,
+    "faction": null,
+    "cost": 108,
+    "seconds": 108,
+    "requires": [
+      "target-practice"
+    ],
+    "effects": {
+      "archers_attack": 0.05
+    },
+    "atlas": "archery",
+    "art_index": 3,
+    "description": "Composite Bows develops your empire\u2019s archery. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "range-finding",
+    "name": "Range Finding",
+    "branch": "archery",
+    "era": 2,
+    "stage": 4,
+    "lane": 1,
+    "faction": null,
+    "cost": 220,
+    "seconds": 240,
+    "requires": [
+      "composite-bows",
+      "libraries"
+    ],
+    "effects": {
+      "archers_attack": 0.08
+    },
+    "atlas": "archery",
+    "art_index": 4,
+    "description": "Range Finding develops your empire\u2019s archery. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "siege-arrows",
+    "name": "Siege Arrows",
+    "branch": "archery",
+    "era": 2,
+    "stage": 5,
+    "lane": 1,
+    "faction": null,
+    "cost": 264,
+    "seconds": 288,
+    "requires": [
+      "range-finding"
+    ],
+    "effects": {
+      "siege": 0.08
+    },
+    "atlas": "archery",
+    "art_index": 5,
+    "description": "Siege Arrows develops your empire\u2019s archery. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "longbows",
+    "name": "Longbows",
+    "branch": "archery",
+    "era": 3,
+    "stage": 6,
+    "lane": 1,
+    "faction": null,
+    "cost": 500,
+    "seconds": 480,
+    "requires": [
+      "siege-arrows"
+    ],
+    "effects": {
+      "archers_attack": 0.08
+    },
+    "atlas": "archery",
+    "art_index": 6,
+    "description": "Longbows develops your empire\u2019s archery. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "bodkin-arrows",
+    "name": "Bodkin Arrows",
+    "branch": "archery",
+    "era": 3,
+    "stage": 7,
+    "lane": 1,
+    "faction": null,
+    "cost": 600,
+    "seconds": 576,
+    "requires": [
+      "longbows"
+    ],
+    "effects": {
+      "archers_attack": 0.08
+    },
+    "atlas": "archery",
+    "art_index": 7,
+    "description": "Bodkin Arrows develops your empire\u2019s archery. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "volley-drill",
+    "name": "Volley Drill",
+    "branch": "archery",
+    "era": 4,
+    "stage": 8,
+    "lane": 1,
+    "faction": null,
+    "cost": 1000,
+    "seconds": 850,
+    "requires": [
+      "bodkin-arrows",
+      "philosophy"
+    ],
+    "effects": {
+      "training": 0.1
+    },
+    "atlas": "archery",
+    "art_index": 8,
+    "description": "Volley Drill develops your empire\u2019s archery. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "master-archers",
+    "name": "Master Archers",
+    "branch": "archery",
+    "era": 4,
+    "stage": 9,
+    "lane": 1,
+    "faction": null,
+    "cost": 1200,
+    "seconds": 1020,
+    "requires": [
+      "volley-drill"
+    ],
+    "effects": {
+      "archers_defence": 0.1
+    },
+    "atlas": "archery",
+    "art_index": 9,
+    "description": "Master Archers develops your empire\u2019s archery. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "scouting",
+    "name": "Scouting",
+    "branch": "cavalry",
+    "era": 0,
+    "stage": 0,
+    "lane": 2,
+    "faction": null,
+    "cost": 35,
+    "seconds": 30,
+    "requires": [],
+    "effects": {
+      "unlock_scout": 1
+    },
+    "atlas": "cavalry",
+    "art_index": 0,
+    "description": "Scouting develops your empire\u2019s cavalry. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "saddles",
+    "name": "Saddles",
+    "branch": "cavalry",
+    "era": 0,
+    "stage": 1,
+    "lane": 2,
+    "faction": null,
+    "cost": 42,
+    "seconds": 36,
+    "requires": [
+      "scouting"
+    ],
+    "effects": {
+      "march": 0.05
+    },
+    "atlas": "cavalry",
+    "art_index": 1,
+    "description": "Saddles develops your empire\u2019s cavalry. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "stirrups",
+    "name": "Stirrups",
+    "branch": "cavalry",
+    "era": 1,
+    "stage": 2,
+    "lane": 2,
+    "faction": null,
+    "cost": 90,
+    "seconds": 90,
+    "requires": [
+      "saddles"
+    ],
+    "effects": {
+      "cavalry_attack": 0.05
+    },
+    "atlas": "cavalry",
+    "art_index": 2,
+    "description": "Stirrups develops your empire\u2019s cavalry. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "riding-schools",
+    "name": "Riding Schools",
+    "branch": "cavalry",
+    "era": 1,
+    "stage": 3,
+    "lane": 2,
+    "faction": null,
+    "cost": 108,
+    "seconds": 108,
+    "requires": [
+      "stirrups"
+    ],
+    "effects": {
+      "training": 0.05
+    },
+    "atlas": "cavalry",
+    "art_index": 3,
+    "description": "Riding Schools develops your empire\u2019s cavalry. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "barding",
+    "name": "Barding",
+    "branch": "cavalry",
+    "era": 2,
+    "stage": 4,
+    "lane": 2,
+    "faction": null,
+    "cost": 220,
+    "seconds": 240,
+    "requires": [
+      "riding-schools",
+      "libraries"
+    ],
+    "effects": {
+      "cavalry_defence": 0.08
+    },
+    "atlas": "cavalry",
+    "art_index": 4,
+    "description": "Barding develops your empire\u2019s cavalry. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "heavy-cavalry",
+    "name": "Heavy Cavalry",
+    "branch": "cavalry",
+    "era": 2,
+    "stage": 5,
+    "lane": 2,
+    "faction": null,
+    "cost": 264,
+    "seconds": 288,
+    "requires": [
+      "barding"
+    ],
+    "effects": {
+      "unlock_heavyCavalry": 1
+    },
+    "atlas": "cavalry",
+    "art_index": 5,
+    "description": "Heavy Cavalry develops your empire\u2019s cavalry. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "swift-couriers",
+    "name": "Swift Couriers",
+    "branch": "cavalry",
+    "era": 3,
+    "stage": 6,
+    "lane": 2,
+    "faction": null,
+    "cost": 500,
+    "seconds": 480,
+    "requires": [
+      "heavy-cavalry"
+    ],
+    "effects": {
+      "march": 0.08
+    },
+    "atlas": "cavalry",
+    "art_index": 6,
+    "description": "Swift Couriers develops your empire\u2019s cavalry. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "mounted-tactics",
+    "name": "Mounted Tactics",
+    "branch": "cavalry",
+    "era": 3,
+    "stage": 7,
+    "lane": 2,
+    "faction": null,
+    "cost": 600,
+    "seconds": 576,
+    "requires": [
+      "swift-couriers"
+    ],
+    "effects": {
+      "cavalry_attack": 0.08
+    },
+    "atlas": "cavalry",
+    "art_index": 7,
+    "description": "Mounted Tactics develops your empire\u2019s cavalry. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "warhorse-breeding",
+    "name": "Warhorse Breeding",
+    "branch": "cavalry",
+    "era": 4,
+    "stage": 8,
+    "lane": 2,
+    "faction": null,
+    "cost": 1000,
+    "seconds": 850,
+    "requires": [
+      "mounted-tactics",
+      "philosophy"
+    ],
+    "effects": {
+      "training": 0.1
+    },
+    "atlas": "cavalry",
+    "art_index": 8,
+    "description": "Warhorse Breeding develops your empire\u2019s cavalry. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "royal-cavalry",
+    "name": "Royal Cavalry",
+    "branch": "cavalry",
+    "era": 4,
+    "stage": 9,
+    "lane": 2,
+    "faction": null,
+    "cost": 1200,
+    "seconds": 1020,
+    "requires": [
+      "warhorse-breeding"
+    ],
+    "effects": {
+      "cavalry_defence": 0.1
+    },
+    "atlas": "cavalry",
+    "art_index": 9,
+    "description": "Royal Cavalry develops your empire\u2019s cavalry. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "carpentry",
+    "name": "Carpentry",
+    "branch": "siege",
+    "era": 0,
+    "stage": 0,
+    "lane": 3,
+    "faction": null,
+    "cost": 35,
+    "seconds": 30,
+    "requires": [],
+    "effects": {
+      "construction": 0.05
+    },
+    "atlas": "siege",
+    "art_index": 0,
+    "description": "Carpentry develops your empire\u2019s siege. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "battering-rams",
+    "name": "Battering Rams",
+    "branch": "siege",
+    "era": 0,
+    "stage": 1,
+    "lane": 3,
+    "faction": null,
+    "cost": 42,
+    "seconds": 36,
+    "requires": [
+      "carpentry"
+    ],
+    "effects": {
+      "unlock_ram": 1
+    },
+    "atlas": "siege",
+    "art_index": 1,
+    "description": "Battering Rams develops your empire\u2019s siege. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "siege-logistics",
+    "name": "Siege Logistics",
+    "branch": "siege",
+    "era": 1,
+    "stage": 2,
+    "lane": 3,
+    "faction": null,
+    "cost": 90,
+    "seconds": 90,
+    "requires": [
+      "battering-rams"
+    ],
+    "effects": {
+      "march": 0.05
+    },
+    "atlas": "siege",
+    "art_index": 2,
+    "description": "Siege Logistics develops your empire\u2019s siege. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "fortification-studies",
+    "name": "Fortification Studies",
+    "branch": "siege",
+    "era": 1,
+    "stage": 3,
+    "lane": 3,
+    "faction": null,
+    "cost": 108,
+    "seconds": 108,
+    "requires": [
+      "siege-logistics"
+    ],
+    "effects": {
+      "defence": 0.05
+    },
+    "atlas": "siege",
+    "art_index": 3,
+    "description": "Fortification Studies develops your empire\u2019s siege. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "catapults",
+    "name": "Catapults",
+    "branch": "siege",
+    "era": 2,
+    "stage": 4,
+    "lane": 3,
+    "faction": null,
+    "cost": 220,
+    "seconds": 240,
+    "requires": [
+      "fortification-studies",
+      "libraries"
+    ],
+    "effects": {
+      "unlock_catapult": 1
+    },
+    "atlas": "siege",
+    "art_index": 4,
+    "description": "Catapults develops your empire\u2019s siege. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "counterweights",
+    "name": "Counterweights",
+    "branch": "siege",
+    "era": 2,
+    "stage": 5,
+    "lane": 3,
+    "faction": null,
+    "cost": 264,
+    "seconds": 288,
+    "requires": [
+      "catapults"
+    ],
+    "effects": {
+      "siege": 0.08
+    },
+    "atlas": "siege",
+    "art_index": 5,
+    "description": "Counterweights develops your empire\u2019s siege. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "reinforced-frames",
+    "name": "Reinforced Frames",
+    "branch": "siege",
+    "era": 3,
+    "stage": 6,
+    "lane": 3,
+    "faction": null,
+    "cost": 500,
+    "seconds": 480,
+    "requires": [
+      "counterweights"
+    ],
+    "effects": {
+      "siege": 0.08
+    },
+    "atlas": "siege",
+    "art_index": 6,
+    "description": "Reinforced Frames develops your empire\u2019s siege. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "siege-engines",
+    "name": "Siege Engines",
+    "branch": "siege",
+    "era": 3,
+    "stage": 7,
+    "lane": 3,
+    "faction": null,
+    "cost": 600,
+    "seconds": 576,
+    "requires": [
+      "reinforced-frames"
+    ],
+    "effects": {
+      "training": 0.08
+    },
+    "atlas": "siege",
+    "art_index": 7,
+    "description": "Siege Engines develops your empire\u2019s siege. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "siege-masters",
+    "name": "Siege Masters",
+    "branch": "siege",
+    "era": 4,
+    "stage": 8,
+    "lane": 3,
+    "faction": null,
+    "cost": 1000,
+    "seconds": 850,
+    "requires": [
+      "siege-engines",
+      "philosophy"
+    ],
+    "effects": {
+      "siege": 0.1
+    },
+    "atlas": "siege",
+    "art_index": 8,
+    "description": "Siege Masters develops your empire\u2019s siege. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "grand-bombardment",
+    "name": "Grand Bombardment",
+    "branch": "siege",
+    "era": 4,
+    "stage": 9,
+    "lane": 3,
+    "faction": null,
+    "cost": 1200,
+    "seconds": 1020,
+    "requires": [
+      "siege-masters"
+    ],
+    "effects": {
+      "siege": 0.1
+    },
+    "atlas": "siege",
+    "art_index": 9,
+    "description": "Grand Bombardment develops your empire\u2019s siege. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "crop-rotation",
+    "name": "Crop Rotation",
+    "branch": "agriculture",
+    "era": 0,
+    "stage": 0,
+    "lane": 4,
+    "faction": null,
+    "cost": 35,
+    "seconds": 30,
+    "requires": [],
+    "effects": {
+      "food": 0.05
+    },
+    "atlas": "agriculture",
+    "art_index": 0,
+    "description": "Crop Rotation develops your empire\u2019s agriculture. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "irrigation",
+    "name": "Irrigation",
+    "branch": "agriculture",
+    "era": 0,
+    "stage": 1,
+    "lane": 4,
+    "faction": null,
+    "cost": 42,
+    "seconds": 36,
+    "requires": [
+      "crop-rotation"
+    ],
+    "effects": {
+      "food": 0.05
+    },
+    "atlas": "agriculture",
+    "art_index": 1,
+    "description": "Irrigation develops your empire\u2019s agriculture. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "seed-selection",
+    "name": "Seed Selection",
+    "branch": "agriculture",
+    "era": 1,
+    "stage": 2,
+    "lane": 4,
+    "faction": null,
+    "cost": 90,
+    "seconds": 90,
+    "requires": [
+      "irrigation"
+    ],
+    "effects": {
+      "food": 0.05
+    },
+    "atlas": "agriculture",
+    "art_index": 2,
+    "description": "Seed Selection develops your empire\u2019s agriculture. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "water-mills",
+    "name": "Water Mills",
+    "branch": "agriculture",
+    "era": 1,
+    "stage": 3,
+    "lane": 4,
+    "faction": null,
+    "cost": 108,
+    "seconds": 108,
+    "requires": [
+      "seed-selection"
+    ],
+    "effects": {
+      "food": 0.05
+    },
+    "atlas": "agriculture",
+    "art_index": 3,
+    "description": "Water Mills develops your empire\u2019s agriculture. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "terrace-farming",
+    "name": "Terrace Farming",
+    "branch": "agriculture",
+    "era": 2,
+    "stage": 4,
+    "lane": 4,
+    "faction": null,
+    "cost": 220,
+    "seconds": 240,
+    "requires": [
+      "water-mills",
+      "libraries"
+    ],
+    "effects": {
+      "food": 0.08
+    },
+    "atlas": "agriculture",
+    "art_index": 4,
+    "description": "Terrace Farming develops your empire\u2019s agriculture. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "orchards",
+    "name": "Orchards",
+    "branch": "agriculture",
+    "era": 2,
+    "stage": 5,
+    "lane": 4,
+    "faction": null,
+    "cost": 264,
+    "seconds": 288,
+    "requires": [
+      "terrace-farming"
+    ],
+    "effects": {
+      "food": 0.08
+    },
+    "atlas": "agriculture",
+    "art_index": 5,
+    "description": "Orchards develops your empire\u2019s agriculture. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "animal-husbandry",
+    "name": "Animal Husbandry",
+    "branch": "agriculture",
+    "era": 3,
+    "stage": 6,
+    "lane": 4,
+    "faction": null,
+    "cost": 500,
+    "seconds": 480,
+    "requires": [
+      "orchards"
+    ],
+    "effects": {
+      "food": 0.08
+    },
+    "atlas": "agriculture",
+    "art_index": 6,
+    "description": "Animal Husbandry develops your empire\u2019s agriculture. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "food-preservation",
+    "name": "Food Preservation",
+    "branch": "agriculture",
+    "era": 3,
+    "stage": 7,
+    "lane": 4,
+    "faction": null,
+    "cost": 600,
+    "seconds": 576,
+    "requires": [
+      "animal-husbandry"
+    ],
+    "effects": {
+      "storage": 0.08
+    },
+    "atlas": "agriculture",
+    "art_index": 7,
+    "description": "Food Preservation develops your empire\u2019s agriculture. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "agrarian-estates",
+    "name": "Agrarian Estates",
+    "branch": "agriculture",
+    "era": 4,
+    "stage": 8,
+    "lane": 4,
+    "faction": null,
+    "cost": 1000,
+    "seconds": 850,
+    "requires": [
+      "food-preservation",
+      "philosophy"
+    ],
+    "effects": {
+      "food": 0.1
+    },
+    "atlas": "agriculture",
+    "art_index": 8,
+    "description": "Agrarian Estates develops your empire\u2019s agriculture. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "abundant-harvest",
+    "name": "Abundant Harvest",
+    "branch": "agriculture",
+    "era": 4,
+    "stage": 9,
+    "lane": 4,
+    "faction": null,
+    "cost": 1200,
+    "seconds": 1020,
+    "requires": [
+      "agrarian-estates"
+    ],
+    "effects": {
+      "food": 0.1
+    },
+    "atlas": "agriculture",
+    "art_index": 9,
+    "description": "Abundant Harvest develops your empire\u2019s agriculture. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "forestry",
+    "name": "Forestry",
+    "branch": "industry",
+    "era": 0,
+    "stage": 0,
+    "lane": 5,
+    "faction": null,
+    "cost": 35,
+    "seconds": 30,
+    "requires": [],
+    "effects": {
+      "wood": 0.05
+    },
+    "atlas": "industry",
+    "art_index": 0,
+    "description": "Forestry develops your empire\u2019s industry. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "stonecutting",
+    "name": "Stonecutting",
+    "branch": "industry",
+    "era": 0,
+    "stage": 1,
+    "lane": 5,
+    "faction": null,
+    "cost": 42,
+    "seconds": 36,
+    "requires": [
+      "forestry"
+    ],
+    "effects": {
+      "stone": 0.05
+    },
+    "atlas": "industry",
+    "art_index": 1,
+    "description": "Stonecutting develops your empire\u2019s industry. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "improved-axes",
+    "name": "Improved Axes",
+    "branch": "industry",
+    "era": 1,
+    "stage": 2,
+    "lane": 5,
+    "faction": null,
+    "cost": 90,
+    "seconds": 90,
+    "requires": [
+      "stonecutting"
+    ],
+    "effects": {
+      "wood": 0.05
+    },
+    "atlas": "industry",
+    "art_index": 2,
+    "description": "Improved Axes develops your empire\u2019s industry. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "deep-quarrying",
+    "name": "Deep Quarrying",
+    "branch": "industry",
+    "era": 1,
+    "stage": 3,
+    "lane": 5,
+    "faction": null,
+    "cost": 108,
+    "seconds": 108,
+    "requires": [
+      "improved-axes"
+    ],
+    "effects": {
+      "stone": 0.05
+    },
+    "atlas": "industry",
+    "art_index": 3,
+    "description": "Deep Quarrying develops your empire\u2019s industry. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "ore-prospecting",
+    "name": "Ore Prospecting",
+    "branch": "industry",
+    "era": 2,
+    "stage": 4,
+    "lane": 5,
+    "faction": null,
+    "cost": 220,
+    "seconds": 240,
+    "requires": [
+      "deep-quarrying",
+      "libraries"
+    ],
+    "effects": {
+      "gold": 0.08
+    },
+    "atlas": "industry",
+    "art_index": 4,
+    "description": "Ore Prospecting develops your empire\u2019s industry. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "saw-mills",
+    "name": "Saw Mills",
+    "branch": "industry",
+    "era": 2,
+    "stage": 5,
+    "lane": 5,
+    "faction": null,
+    "cost": 264,
+    "seconds": 288,
+    "requires": [
+      "ore-prospecting"
+    ],
+    "effects": {
+      "wood": 0.08
+    },
+    "atlas": "industry",
+    "art_index": 5,
+    "description": "Saw Mills develops your empire\u2019s industry. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "precision-tools",
+    "name": "Precision Tools",
+    "branch": "industry",
+    "era": 3,
+    "stage": 6,
+    "lane": 5,
+    "faction": null,
+    "cost": 500,
+    "seconds": 480,
+    "requires": [
+      "saw-mills"
+    ],
+    "effects": {
+      "construction": 0.08
+    },
+    "atlas": "industry",
+    "art_index": 6,
+    "description": "Precision Tools develops your empire\u2019s industry. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "industrial-estates",
+    "name": "Industrial Estates",
+    "branch": "industry",
+    "era": 3,
+    "stage": 7,
+    "lane": 5,
+    "faction": null,
+    "cost": 600,
+    "seconds": 576,
+    "requires": [
+      "precision-tools"
+    ],
+    "effects": {
+      "stone": 0.08
+    },
+    "atlas": "industry",
+    "art_index": 7,
+    "description": "Industrial Estates develops your empire\u2019s industry. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "master-craftsmen",
+    "name": "Master Craftsmen",
+    "branch": "industry",
+    "era": 4,
+    "stage": 8,
+    "lane": 5,
+    "faction": null,
+    "cost": 1000,
+    "seconds": 850,
+    "requires": [
+      "industrial-estates",
+      "philosophy"
+    ],
+    "effects": {
+      "wood": 0.1
+    },
+    "atlas": "industry",
+    "art_index": 8,
+    "description": "Master Craftsmen develops your empire\u2019s industry. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "great-foundries",
+    "name": "Great Foundries",
+    "branch": "industry",
+    "era": 4,
+    "stage": 9,
+    "lane": 5,
+    "faction": null,
+    "cost": 1200,
+    "seconds": 1020,
+    "requires": [
+      "master-craftsmen"
+    ],
+    "effects": {
+      "stone": 0.1
+    },
+    "atlas": "industry",
+    "art_index": 9,
+    "description": "Great Foundries develops your empire\u2019s industry. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "masonry",
+    "name": "Masonry",
+    "branch": "engineering",
+    "era": 0,
+    "stage": 0,
+    "lane": 6,
+    "faction": null,
+    "cost": 35,
+    "seconds": 30,
+    "requires": [],
+    "effects": {
+      "construction": 0.05
+    },
+    "atlas": "engineering",
+    "art_index": 0,
+    "description": "Masonry develops your empire\u2019s engineering. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "road-building",
+    "name": "Road Building",
+    "branch": "engineering",
+    "era": 0,
+    "stage": 1,
+    "lane": 6,
+    "faction": null,
+    "cost": 42,
+    "seconds": 36,
+    "requires": [
+      "masonry"
+    ],
+    "effects": {
+      "march": 0.05
+    },
+    "atlas": "engineering",
+    "art_index": 1,
+    "description": "Road Building develops your empire\u2019s engineering. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "scaffolding",
+    "name": "Scaffolding",
+    "branch": "engineering",
+    "era": 1,
+    "stage": 2,
+    "lane": 6,
+    "faction": null,
+    "cost": 90,
+    "seconds": 90,
+    "requires": [
+      "road-building"
+    ],
+    "effects": {
+      "construction": 0.05
+    },
+    "atlas": "engineering",
+    "art_index": 2,
+    "description": "Scaffolding develops your empire\u2019s engineering. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "architecture",
+    "name": "Architecture",
+    "branch": "engineering",
+    "era": 1,
+    "stage": 3,
+    "lane": 6,
+    "faction": null,
+    "cost": 108,
+    "seconds": 108,
+    "requires": [
+      "scaffolding"
+    ],
+    "effects": {
+      "storage": 0.05
+    },
+    "atlas": "engineering",
+    "art_index": 3,
+    "description": "Architecture develops your empire\u2019s engineering. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "cranes",
+    "name": "Cranes",
+    "branch": "engineering",
+    "era": 2,
+    "stage": 4,
+    "lane": 6,
+    "faction": null,
+    "cost": 220,
+    "seconds": 240,
+    "requires": [
+      "architecture",
+      "libraries"
+    ],
+    "effects": {
+      "construction": 0.08
+    },
+    "atlas": "engineering",
+    "art_index": 4,
+    "description": "Cranes develops your empire\u2019s engineering. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "surveying",
+    "name": "Surveying",
+    "branch": "engineering",
+    "era": 2,
+    "stage": 5,
+    "lane": 6,
+    "faction": null,
+    "cost": 264,
+    "seconds": 288,
+    "requires": [
+      "cranes"
+    ],
+    "effects": {
+      "construction": 0.08
+    },
+    "atlas": "engineering",
+    "art_index": 5,
+    "description": "Surveying develops your empire\u2019s engineering. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "urban-planning",
+    "name": "Urban Planning",
+    "branch": "engineering",
+    "era": 3,
+    "stage": 6,
+    "lane": 6,
+    "faction": null,
+    "cost": 500,
+    "seconds": 480,
+    "requires": [
+      "surveying"
+    ],
+    "effects": {
+      "construction": 0.08
+    },
+    "atlas": "engineering",
+    "art_index": 6,
+    "description": "Urban Planning develops your empire\u2019s engineering. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "concrete",
+    "name": "Concrete",
+    "branch": "engineering",
+    "era": 3,
+    "stage": 7,
+    "lane": 6,
+    "faction": null,
+    "cost": 600,
+    "seconds": 576,
+    "requires": [
+      "urban-planning"
+    ],
+    "effects": {
+      "defence": 0.08
+    },
+    "atlas": "engineering",
+    "art_index": 7,
+    "description": "Concrete develops your empire\u2019s engineering. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "monuments",
+    "name": "Monuments",
+    "branch": "engineering",
+    "era": 4,
+    "stage": 8,
+    "lane": 6,
+    "faction": null,
+    "cost": 1000,
+    "seconds": 850,
+    "requires": [
+      "concrete",
+      "philosophy"
+    ],
+    "effects": {
+      "culture": 0.1
+    },
+    "atlas": "engineering",
+    "art_index": 8,
+    "description": "Monuments develops your empire\u2019s engineering. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "master-builders",
+    "name": "Master Builders",
+    "branch": "engineering",
+    "era": 4,
+    "stage": 9,
+    "lane": 6,
+    "faction": null,
+    "cost": 1200,
+    "seconds": 1020,
+    "requires": [
+      "monuments"
+    ],
+    "effects": {
+      "construction": 0.1
+    },
+    "atlas": "engineering",
+    "art_index": 9,
+    "description": "Master Builders develops your empire\u2019s engineering. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "barter",
+    "name": "Barter",
+    "branch": "commerce",
+    "era": 0,
+    "stage": 0,
+    "lane": 7,
+    "faction": null,
+    "cost": 35,
+    "seconds": 30,
+    "requires": [],
+    "effects": {
+      "trade": 0.05
+    },
+    "atlas": "commerce",
+    "art_index": 0,
+    "description": "Barter develops your empire\u2019s commerce. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "currency",
+    "name": "Currency",
+    "branch": "commerce",
+    "era": 0,
+    "stage": 1,
+    "lane": 7,
+    "faction": null,
+    "cost": 42,
+    "seconds": 36,
+    "requires": [
+      "barter"
+    ],
+    "effects": {
+      "gold": 0.05
+    },
+    "atlas": "commerce",
+    "art_index": 1,
+    "description": "Currency develops your empire\u2019s commerce. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "trade-routes",
+    "name": "Trade Routes",
+    "branch": "commerce",
+    "era": 1,
+    "stage": 2,
+    "lane": 7,
+    "faction": null,
+    "cost": 90,
+    "seconds": 90,
+    "requires": [
+      "currency"
+    ],
+    "effects": {
+      "carry": 0.05
+    },
+    "atlas": "commerce",
+    "art_index": 2,
+    "description": "Trade Routes develops your empire\u2019s commerce. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "merchant-guilds",
+    "name": "Merchant Guilds",
+    "branch": "commerce",
+    "era": 1,
+    "stage": 3,
+    "lane": 7,
+    "faction": null,
+    "cost": 108,
+    "seconds": 108,
+    "requires": [
+      "trade-routes"
+    ],
+    "effects": {
+      "trade": 0.05
+    },
+    "atlas": "commerce",
+    "art_index": 3,
+    "description": "Merchant Guilds develops your empire\u2019s commerce. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "caravans",
+    "name": "Caravans",
+    "branch": "commerce",
+    "era": 2,
+    "stage": 4,
+    "lane": 7,
+    "faction": null,
+    "cost": 220,
+    "seconds": 240,
+    "requires": [
+      "merchant-guilds",
+      "libraries"
+    ],
+    "effects": {
+      "carry": 0.08
+    },
+    "atlas": "commerce",
+    "art_index": 4,
+    "description": "Caravans develops your empire\u2019s commerce. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "counting-houses",
+    "name": "Counting Houses",
+    "branch": "commerce",
+    "era": 2,
+    "stage": 5,
+    "lane": 7,
+    "faction": null,
+    "cost": 264,
+    "seconds": 288,
+    "requires": [
+      "caravans"
+    ],
+    "effects": {
+      "gold": 0.08
+    },
+    "atlas": "commerce",
+    "art_index": 5,
+    "description": "Counting Houses develops your empire\u2019s commerce. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "banking",
+    "name": "Banking",
+    "branch": "commerce",
+    "era": 3,
+    "stage": 6,
+    "lane": 7,
+    "faction": null,
+    "cost": 500,
+    "seconds": 480,
+    "requires": [
+      "counting-houses"
+    ],
+    "effects": {
+      "storage": 0.08
+    },
+    "atlas": "commerce",
+    "art_index": 6,
+    "description": "Banking develops your empire\u2019s commerce. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "customs-houses",
+    "name": "Customs Houses",
+    "branch": "commerce",
+    "era": 3,
+    "stage": 7,
+    "lane": 7,
+    "faction": null,
+    "cost": 600,
+    "seconds": 576,
+    "requires": [
+      "banking"
+    ],
+    "effects": {
+      "trade": 0.08
+    },
+    "atlas": "commerce",
+    "art_index": 7,
+    "description": "Customs Houses develops your empire\u2019s commerce. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "market-charters",
+    "name": "Market Charters",
+    "branch": "commerce",
+    "era": 4,
+    "stage": 8,
+    "lane": 7,
+    "faction": null,
+    "cost": 1000,
+    "seconds": 850,
+    "requires": [
+      "customs-houses",
+      "philosophy"
+    ],
+    "effects": {
+      "gold": 0.1
+    },
+    "atlas": "commerce",
+    "art_index": 8,
+    "description": "Market Charters develops your empire\u2019s commerce. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "great-exchange",
+    "name": "Great Exchange",
+    "branch": "commerce",
+    "era": 4,
+    "stage": 9,
+    "lane": 7,
+    "faction": null,
+    "cost": 1200,
+    "seconds": 1020,
+    "requires": [
+      "market-charters"
+    ],
+    "effects": {
+      "trade": 0.1
+    },
+    "atlas": "commerce",
+    "art_index": 9,
+    "description": "Great Exchange develops your empire\u2019s commerce. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "writing",
+    "name": "Writing",
+    "branch": "knowledge",
+    "era": 0,
+    "stage": 0,
+    "lane": 8,
+    "faction": null,
+    "cost": 35,
+    "seconds": 30,
+    "requires": [],
+    "effects": {
+      "science": 0.05
+    },
+    "atlas": "knowledge",
+    "art_index": 0,
+    "description": "Writing develops your empire\u2019s knowledge. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "mathematics",
+    "name": "Mathematics",
+    "branch": "knowledge",
+    "era": 0,
+    "stage": 1,
+    "lane": 8,
+    "faction": null,
+    "cost": 42,
+    "seconds": 36,
+    "requires": [
+      "writing"
+    ],
+    "effects": {
+      "science": 0.05
+    },
+    "atlas": "knowledge",
+    "art_index": 1,
+    "description": "Mathematics develops your empire\u2019s knowledge. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "libraries",
+    "name": "Libraries",
+    "branch": "knowledge",
+    "era": 1,
+    "stage": 2,
+    "lane": 8,
+    "faction": null,
+    "cost": 90,
+    "seconds": 90,
+    "requires": [
+      "mathematics"
+    ],
+    "effects": {
+      "science": 0.05
+    },
+    "atlas": "knowledge",
+    "art_index": 2,
+    "description": "Libraries develops your empire\u2019s knowledge. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "scholarship",
+    "name": "Scholarship",
+    "branch": "knowledge",
+    "era": 1,
+    "stage": 3,
+    "lane": 8,
+    "faction": null,
+    "cost": 108,
+    "seconds": 108,
+    "requires": [
+      "libraries"
+    ],
+    "effects": {
+      "research_speed": 0.05
+    },
+    "atlas": "knowledge",
+    "art_index": 3,
+    "description": "Scholarship develops your empire\u2019s knowledge. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "astronomy",
+    "name": "Astronomy",
+    "branch": "knowledge",
+    "era": 2,
+    "stage": 4,
+    "lane": 8,
+    "faction": null,
+    "cost": 220,
+    "seconds": 240,
+    "requires": [
+      "scholarship"
+    ],
+    "effects": {
+      "science": 0.08
+    },
+    "atlas": "knowledge",
+    "art_index": 4,
+    "description": "Astronomy develops your empire\u2019s knowledge. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "observatories",
+    "name": "Observatories",
+    "branch": "knowledge",
+    "era": 2,
+    "stage": 5,
+    "lane": 8,
+    "faction": null,
+    "cost": 264,
+    "seconds": 288,
+    "requires": [
+      "astronomy"
+    ],
+    "effects": {
+      "research_speed": 0.08
+    },
+    "atlas": "knowledge",
+    "art_index": 5,
+    "description": "Observatories develops your empire\u2019s knowledge. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "philosophy",
+    "name": "Philosophy",
+    "branch": "knowledge",
+    "era": 3,
+    "stage": 6,
+    "lane": 8,
+    "faction": null,
+    "cost": 500,
+    "seconds": 480,
+    "requires": [
+      "observatories"
+    ],
+    "effects": {
+      "science": 0.08
+    },
+    "atlas": "knowledge",
+    "art_index": 6,
+    "description": "Philosophy develops your empire\u2019s knowledge. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "paper-making",
+    "name": "Paper Making",
+    "branch": "knowledge",
+    "era": 3,
+    "stage": 7,
+    "lane": 8,
+    "faction": null,
+    "cost": 600,
+    "seconds": 576,
+    "requires": [
+      "philosophy"
+    ],
+    "effects": {
+      "science": 0.08
+    },
+    "atlas": "knowledge",
+    "art_index": 7,
+    "description": "Paper Making develops your empire\u2019s knowledge. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "universities",
+    "name": "Universities",
+    "branch": "knowledge",
+    "era": 4,
+    "stage": 8,
+    "lane": 8,
+    "faction": null,
+    "cost": 1000,
+    "seconds": 850,
+    "requires": [
+      "paper-making"
+    ],
+    "effects": {
+      "research_speed": 0.1
+    },
+    "atlas": "knowledge",
+    "art_index": 8,
+    "description": "Universities develops your empire\u2019s knowledge. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "enlightenment",
+    "name": "Enlightenment",
+    "branch": "knowledge",
+    "era": 4,
+    "stage": 9,
+    "lane": 8,
+    "faction": null,
+    "cost": 1200,
+    "seconds": 1020,
+    "requires": [
+      "universities"
+    ],
+    "effects": {
+      "science": 0.1
+    },
+    "atlas": "knowledge",
+    "art_index": 9,
+    "description": "Enlightenment develops your empire\u2019s knowledge. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "command",
+    "name": "Command",
+    "branch": "leadership",
+    "era": 0,
+    "stage": 0,
+    "lane": 9,
+    "faction": null,
+    "cost": 35,
+    "seconds": 30,
+    "requires": [],
+    "effects": {
+      "attack": 0.05
+    },
+    "atlas": "leadership",
+    "art_index": 0,
+    "description": "Command develops your empire\u2019s leadership. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "logistics",
+    "name": "Logistics",
+    "branch": "leadership",
+    "era": 0,
+    "stage": 1,
+    "lane": 9,
+    "faction": null,
+    "cost": 42,
+    "seconds": 36,
+    "requires": [
+      "command"
+    ],
+    "effects": {
+      "carry": 0.05
+    },
+    "atlas": "leadership",
+    "art_index": 1,
+    "description": "Logistics develops your empire\u2019s leadership. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "diplomacy",
+    "name": "Diplomacy",
+    "branch": "leadership",
+    "era": 1,
+    "stage": 2,
+    "lane": 9,
+    "faction": null,
+    "cost": 90,
+    "seconds": 90,
+    "requires": [
+      "logistics"
+    ],
+    "effects": {
+      "culture": 0.05
+    },
+    "atlas": "leadership",
+    "art_index": 2,
+    "description": "Diplomacy develops your empire\u2019s leadership. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "war-council",
+    "name": "War Council",
+    "branch": "leadership",
+    "era": 1,
+    "stage": 3,
+    "lane": 9,
+    "faction": null,
+    "cost": 108,
+    "seconds": 108,
+    "requires": [
+      "diplomacy"
+    ],
+    "effects": {
+      "defence": 0.05
+    },
+    "atlas": "leadership",
+    "art_index": 3,
+    "description": "War Council develops your empire\u2019s leadership. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "heroic-deeds",
+    "name": "Heroic Deeds",
+    "branch": "leadership",
+    "era": 2,
+    "stage": 4,
+    "lane": 9,
+    "faction": null,
+    "cost": 220,
+    "seconds": 240,
+    "requires": [
+      "war-council",
+      "libraries"
+    ],
+    "effects": {
+      "hero_xp": 0.08
+    },
+    "atlas": "leadership",
+    "art_index": 4,
+    "description": "Heroic Deeds develops your empire\u2019s leadership. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "strategy",
+    "name": "Strategy",
+    "branch": "leadership",
+    "era": 2,
+    "stage": 5,
+    "lane": 9,
+    "faction": null,
+    "cost": 264,
+    "seconds": 288,
+    "requires": [
+      "heroic-deeds"
+    ],
+    "effects": {
+      "march": 0.08
+    },
+    "atlas": "leadership",
+    "art_index": 5,
+    "description": "Strategy develops your empire\u2019s leadership. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "chronicles",
+    "name": "Chronicles",
+    "branch": "leadership",
+    "era": 3,
+    "stage": 6,
+    "lane": 9,
+    "faction": null,
+    "cost": 500,
+    "seconds": 480,
+    "requires": [
+      "strategy"
+    ],
+    "effects": {
+      "culture": 0.08
+    },
+    "atlas": "leadership",
+    "art_index": 6,
+    "description": "Chronicles develops your empire\u2019s leadership. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "arcane-command",
+    "name": "Arcane Command",
+    "branch": "leadership",
+    "era": 3,
+    "stage": 7,
+    "lane": 9,
+    "faction": null,
+    "cost": 600,
+    "seconds": 576,
+    "requires": [
+      "chronicles"
+    ],
+    "effects": {
+      "spell_power": 0.08
+    },
+    "atlas": "leadership",
+    "art_index": 7,
+    "description": "Arcane Command develops your empire\u2019s leadership. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "imperial-governance",
+    "name": "Imperial Governance",
+    "branch": "leadership",
+    "era": 4,
+    "stage": 8,
+    "lane": 9,
+    "faction": null,
+    "cost": 1000,
+    "seconds": 850,
+    "requires": [
+      "arcane-command",
+      "philosophy"
+    ],
+    "effects": {
+      "mana": 0.1
+    },
+    "atlas": "leadership",
+    "art_index": 8,
+    "description": "Imperial Governance develops your empire\u2019s leadership. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "legendary-command",
+    "name": "Legendary Command",
+    "branch": "leadership",
+    "era": 4,
+    "stage": 9,
+    "lane": 9,
+    "faction": null,
+    "cost": 1200,
+    "seconds": 1020,
+    "requires": [
+      "imperial-governance"
+    ],
+    "effects": {
+      "hero_xp": 0.1
+    },
+    "atlas": "leadership",
+    "art_index": 9,
+    "description": "Legendary Command develops your empire\u2019s leadership. This discovery benefits every owned city and army."
+  },
+  {
+    "id": "roman-legion-discipline",
+    "name": "Legion Discipline",
+    "branch": "heritage",
+    "era": 0,
+    "stage": 0,
+    "lane": 10,
+    "faction": "roman",
+    "cost": 40,
+    "seconds": 34,
+    "requires": [
+      "writing"
+    ],
+    "effects": {
+      "infantry_attack": 0.08
+    },
+    "atlas": "roman",
+    "art_index": 0,
+    "description": "A roman tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "roman-testudo",
+    "name": "Testudo",
+    "branch": "heritage",
+    "era": 0,
+    "stage": 1,
+    "lane": 10,
+    "faction": "roman",
+    "cost": 48,
+    "seconds": 41,
+    "requires": [
+      "roman-legion-discipline"
+    ],
+    "effects": {
+      "infantry_defence": 0.08
+    },
+    "atlas": "roman",
+    "art_index": 1,
+    "description": "A roman tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "roman-roman-roads",
+    "name": "Roman Roads",
+    "branch": "heritage",
+    "era": 1,
+    "stage": 2,
+    "lane": 10,
+    "faction": "roman",
+    "cost": 103,
+    "seconds": 103,
+    "requires": [
+      "roman-testudo"
+    ],
+    "effects": {
+      "march": 0.08
+    },
+    "atlas": "roman",
+    "art_index": 2,
+    "description": "A roman tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "roman-aqueducts",
+    "name": "Aqueducts",
+    "branch": "heritage",
+    "era": 1,
+    "stage": 3,
+    "lane": 10,
+    "faction": "roman",
+    "cost": 124,
+    "seconds": 124,
+    "requires": [
+      "roman-roman-roads"
+    ],
+    "effects": {
+      "food": 0.08
+    },
+    "atlas": "roman",
+    "art_index": 3,
+    "description": "A roman tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "roman-imperial-census",
+    "name": "Imperial Census",
+    "branch": "heritage",
+    "era": 2,
+    "stage": 4,
+    "lane": 10,
+    "faction": "roman",
+    "cost": 253,
+    "seconds": 276,
+    "requires": [
+      "roman-aqueducts",
+      "libraries"
+    ],
+    "effects": {
+      "gold": 0.08
+    },
+    "atlas": "roman",
+    "art_index": 4,
+    "description": "A roman tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "roman-military-engineering",
+    "name": "Military Engineering",
+    "branch": "heritage",
+    "era": 2,
+    "stage": 5,
+    "lane": 10,
+    "faction": "roman",
+    "cost": 304,
+    "seconds": 331,
+    "requires": [
+      "roman-imperial-census"
+    ],
+    "effects": {
+      "construction": 0.08
+    },
+    "atlas": "roman",
+    "art_index": 5,
+    "description": "A roman tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "roman-forum-trade",
+    "name": "Forum Trade",
+    "branch": "heritage",
+    "era": 3,
+    "stage": 6,
+    "lane": 10,
+    "faction": "roman",
+    "cost": 575,
+    "seconds": 552,
+    "requires": [
+      "roman-military-engineering"
+    ],
+    "effects": {
+      "trade": 0.12
+    },
+    "atlas": "roman",
+    "art_index": 6,
+    "description": "A roman tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "roman-latin-scholarship",
+    "name": "Latin Scholarship",
+    "branch": "heritage",
+    "era": 3,
+    "stage": 7,
+    "lane": 10,
+    "faction": "roman",
+    "cost": 690,
+    "seconds": 662,
+    "requires": [
+      "roman-forum-trade"
+    ],
+    "effects": {
+      "science": 0.12
+    },
+    "atlas": "roman",
+    "art_index": 7,
+    "description": "A roman tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "roman-praetorian-training",
+    "name": "Praetorian Training",
+    "branch": "heritage",
+    "era": 4,
+    "stage": 8,
+    "lane": 10,
+    "faction": "roman",
+    "cost": 1150,
+    "seconds": 977,
+    "requires": [
+      "roman-latin-scholarship",
+      "philosophy"
+    ],
+    "effects": {
+      "training": 0.12
+    },
+    "atlas": "roman",
+    "art_index": 8,
+    "description": "A roman tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "roman-pax-imperium",
+    "name": "Pax Imperium",
+    "branch": "heritage",
+    "era": 4,
+    "stage": 9,
+    "lane": 10,
+    "faction": "roman",
+    "cost": 1380,
+    "seconds": 1173,
+    "requires": [
+      "roman-praetorian-training"
+    ],
+    "effects": {
+      "culture": 0.12
+    },
+    "atlas": "roman",
+    "art_index": 9,
+    "description": "A roman tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "spartan-agoge",
+    "name": "Agoge",
+    "branch": "heritage",
+    "era": 0,
+    "stage": 0,
+    "lane": 10,
+    "faction": "spartan",
+    "cost": 40,
+    "seconds": 34,
+    "requires": [
+      "writing"
+    ],
+    "effects": {
+      "training": 0.08
+    },
+    "atlas": "spartan",
+    "art_index": 0,
+    "description": "A spartan tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "spartan-phalanx",
+    "name": "Phalanx",
+    "branch": "heritage",
+    "era": 0,
+    "stage": 1,
+    "lane": 10,
+    "faction": "spartan",
+    "cost": 48,
+    "seconds": 41,
+    "requires": [
+      "spartan-agoge"
+    ],
+    "effects": {
+      "infantry_defence": 0.08
+    },
+    "atlas": "spartan",
+    "art_index": 1,
+    "description": "A spartan tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "spartan-bronze-hoplites",
+    "name": "Bronze Hoplites",
+    "branch": "heritage",
+    "era": 1,
+    "stage": 2,
+    "lane": 10,
+    "faction": "spartan",
+    "cost": 103,
+    "seconds": 103,
+    "requires": [
+      "spartan-phalanx"
+    ],
+    "effects": {
+      "infantry_attack": 0.08
+    },
+    "atlas": "spartan",
+    "art_index": 2,
+    "description": "A spartan tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "spartan-laconic-orders",
+    "name": "Laconic Orders",
+    "branch": "heritage",
+    "era": 1,
+    "stage": 3,
+    "lane": 10,
+    "faction": "spartan",
+    "cost": 124,
+    "seconds": 124,
+    "requires": [
+      "spartan-bronze-hoplites"
+    ],
+    "effects": {
+      "march": 0.08
+    },
+    "atlas": "spartan",
+    "art_index": 3,
+    "description": "A spartan tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "spartan-shield-wall",
+    "name": "Shield Wall",
+    "branch": "heritage",
+    "era": 2,
+    "stage": 4,
+    "lane": 10,
+    "faction": "spartan",
+    "cost": 253,
+    "seconds": 276,
+    "requires": [
+      "spartan-laconic-orders",
+      "libraries"
+    ],
+    "effects": {
+      "defence": 0.08
+    },
+    "atlas": "spartan",
+    "art_index": 4,
+    "description": "A spartan tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "spartan-warrior-houses",
+    "name": "Warrior Houses",
+    "branch": "heritage",
+    "era": 2,
+    "stage": 5,
+    "lane": 10,
+    "faction": "spartan",
+    "cost": 304,
+    "seconds": 331,
+    "requires": [
+      "spartan-shield-wall"
+    ],
+    "effects": {
+      "food": 0.08
+    },
+    "atlas": "spartan",
+    "art_index": 5,
+    "description": "A spartan tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "spartan-battle-oaths",
+    "name": "Battle Oaths",
+    "branch": "heritage",
+    "era": 3,
+    "stage": 6,
+    "lane": 10,
+    "faction": "spartan",
+    "cost": 575,
+    "seconds": 552,
+    "requires": [
+      "spartan-warrior-houses"
+    ],
+    "effects": {
+      "attack": 0.12
+    },
+    "atlas": "spartan",
+    "art_index": 6,
+    "description": "A spartan tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "spartan-iron-discipline",
+    "name": "Iron Discipline",
+    "branch": "heritage",
+    "era": 3,
+    "stage": 7,
+    "lane": 10,
+    "faction": "spartan",
+    "cost": 690,
+    "seconds": 662,
+    "requires": [
+      "spartan-battle-oaths"
+    ],
+    "effects": {
+      "training": 0.12
+    },
+    "atlas": "spartan",
+    "art_index": 7,
+    "description": "A spartan tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "spartan-royal-guard",
+    "name": "Royal Guard",
+    "branch": "heritage",
+    "era": 4,
+    "stage": 8,
+    "lane": 10,
+    "faction": "spartan",
+    "cost": 1150,
+    "seconds": 977,
+    "requires": [
+      "spartan-iron-discipline",
+      "philosophy"
+    ],
+    "effects": {
+      "infantry_defence": 0.12
+    },
+    "atlas": "spartan",
+    "art_index": 8,
+    "description": "A spartan tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "spartan-spartan-legend",
+    "name": "Spartan Legend",
+    "branch": "heritage",
+    "era": 4,
+    "stage": 9,
+    "lane": 10,
+    "faction": "spartan",
+    "cost": 1380,
+    "seconds": 1173,
+    "requires": [
+      "spartan-royal-guard"
+    ],
+    "effects": {
+      "hero_xp": 0.12
+    },
+    "atlas": "spartan",
+    "art_index": 9,
+    "description": "A spartan tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "persian-royal-roads",
+    "name": "Royal Roads",
+    "branch": "heritage",
+    "era": 0,
+    "stage": 0,
+    "lane": 10,
+    "faction": "persian",
+    "cost": 40,
+    "seconds": 34,
+    "requires": [
+      "writing"
+    ],
+    "effects": {
+      "march": 0.08
+    },
+    "atlas": "persian",
+    "art_index": 0,
+    "description": "A persian tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "persian-qanat-irrigation",
+    "name": "Qanat Irrigation",
+    "branch": "heritage",
+    "era": 0,
+    "stage": 1,
+    "lane": 10,
+    "faction": "persian",
+    "cost": 48,
+    "seconds": 41,
+    "requires": [
+      "persian-royal-roads"
+    ],
+    "effects": {
+      "food": 0.08
+    },
+    "atlas": "persian",
+    "art_index": 1,
+    "description": "A persian tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "persian-immortal-guard",
+    "name": "Immortal Guard",
+    "branch": "heritage",
+    "era": 1,
+    "stage": 2,
+    "lane": 10,
+    "faction": "persian",
+    "cost": 103,
+    "seconds": 103,
+    "requires": [
+      "persian-qanat-irrigation"
+    ],
+    "effects": {
+      "infantry_attack": 0.08
+    },
+    "atlas": "persian",
+    "art_index": 2,
+    "description": "A persian tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "persian-silk-caravans",
+    "name": "Silk Caravans",
+    "branch": "heritage",
+    "era": 1,
+    "stage": 3,
+    "lane": 10,
+    "faction": "persian",
+    "cost": 124,
+    "seconds": 124,
+    "requires": [
+      "persian-immortal-guard"
+    ],
+    "effects": {
+      "trade": 0.08
+    },
+    "atlas": "persian",
+    "art_index": 3,
+    "description": "A persian tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "persian-horse-archery",
+    "name": "Horse Archery",
+    "branch": "heritage",
+    "era": 2,
+    "stage": 4,
+    "lane": 10,
+    "faction": "persian",
+    "cost": 253,
+    "seconds": 276,
+    "requires": [
+      "persian-silk-caravans",
+      "libraries"
+    ],
+    "effects": {
+      "archers_attack": 0.08
+    },
+    "atlas": "persian",
+    "art_index": 4,
+    "description": "A persian tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "persian-court-scholars",
+    "name": "Court Scholars",
+    "branch": "heritage",
+    "era": 2,
+    "stage": 5,
+    "lane": 10,
+    "faction": "persian",
+    "cost": 304,
+    "seconds": 331,
+    "requires": [
+      "persian-horse-archery"
+    ],
+    "effects": {
+      "science": 0.08
+    },
+    "atlas": "persian",
+    "art_index": 5,
+    "description": "A persian tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "persian-gardens-of-knowledge",
+    "name": "Gardens of Knowledge",
+    "branch": "heritage",
+    "era": 3,
+    "stage": 6,
+    "lane": 10,
+    "faction": "persian",
+    "cost": 575,
+    "seconds": 552,
+    "requires": [
+      "persian-court-scholars"
+    ],
+    "effects": {
+      "research_speed": 0.12
+    },
+    "atlas": "persian",
+    "art_index": 6,
+    "description": "A persian tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "persian-cataphract-armour",
+    "name": "Cataphract Armour",
+    "branch": "heritage",
+    "era": 3,
+    "stage": 7,
+    "lane": 10,
+    "faction": "persian",
+    "cost": 690,
+    "seconds": 662,
+    "requires": [
+      "persian-gardens-of-knowledge"
+    ],
+    "effects": {
+      "cavalry_defence": 0.12
+    },
+    "atlas": "persian",
+    "art_index": 7,
+    "description": "A persian tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "persian-satrapal-estates",
+    "name": "Satrapal Estates",
+    "branch": "heritage",
+    "era": 4,
+    "stage": 8,
+    "lane": 10,
+    "faction": "persian",
+    "cost": 1150,
+    "seconds": 977,
+    "requires": [
+      "persian-cataphract-armour",
+      "philosophy"
+    ],
+    "effects": {
+      "gold": 0.12
+    },
+    "atlas": "persian",
+    "art_index": 8,
+    "description": "A persian tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "persian-king-of-kings",
+    "name": "King of Kings",
+    "branch": "heritage",
+    "era": 4,
+    "stage": 9,
+    "lane": 10,
+    "faction": "persian",
+    "cost": 1380,
+    "seconds": 1173,
+    "requires": [
+      "persian-satrapal-estates"
+    ],
+    "effects": {
+      "culture": 0.12
+    },
+    "atlas": "persian",
+    "art_index": 9,
+    "description": "A persian tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "egyptian-nile-irrigation",
+    "name": "Nile Irrigation",
+    "branch": "heritage",
+    "era": 0,
+    "stage": 0,
+    "lane": 10,
+    "faction": "egyptian",
+    "cost": 40,
+    "seconds": 34,
+    "requires": [
+      "writing"
+    ],
+    "effects": {
+      "food": 0.08
+    },
+    "atlas": "egyptian",
+    "art_index": 0,
+    "description": "A egyptian tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "egyptian-papyrus",
+    "name": "Papyrus",
+    "branch": "heritage",
+    "era": 0,
+    "stage": 1,
+    "lane": 10,
+    "faction": "egyptian",
+    "cost": 48,
+    "seconds": 41,
+    "requires": [
+      "egyptian-nile-irrigation"
+    ],
+    "effects": {
+      "science": 0.08
+    },
+    "atlas": "egyptian",
+    "art_index": 1,
+    "description": "A egyptian tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "egyptian-granary-scribes",
+    "name": "Granary Scribes",
+    "branch": "heritage",
+    "era": 1,
+    "stage": 2,
+    "lane": 10,
+    "faction": "egyptian",
+    "cost": 103,
+    "seconds": 103,
+    "requires": [
+      "egyptian-papyrus"
+    ],
+    "effects": {
+      "storage": 0.08
+    },
+    "atlas": "egyptian",
+    "art_index": 2,
+    "description": "A egyptian tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "egyptian-desert-scouts",
+    "name": "Desert Scouts",
+    "branch": "heritage",
+    "era": 1,
+    "stage": 3,
+    "lane": 10,
+    "faction": "egyptian",
+    "cost": 124,
+    "seconds": 124,
+    "requires": [
+      "egyptian-granary-scribes"
+    ],
+    "effects": {
+      "march": 0.08
+    },
+    "atlas": "egyptian",
+    "art_index": 3,
+    "description": "A egyptian tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "egyptian-stone-obelisks",
+    "name": "Stone Obelisks",
+    "branch": "heritage",
+    "era": 2,
+    "stage": 4,
+    "lane": 10,
+    "faction": "egyptian",
+    "cost": 253,
+    "seconds": 276,
+    "requires": [
+      "egyptian-desert-scouts",
+      "libraries"
+    ],
+    "effects": {
+      "stone": 0.08
+    },
+    "atlas": "egyptian",
+    "art_index": 4,
+    "description": "A egyptian tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "egyptian-solar-temples",
+    "name": "Solar Temples",
+    "branch": "heritage",
+    "era": 2,
+    "stage": 5,
+    "lane": 10,
+    "faction": "egyptian",
+    "cost": 304,
+    "seconds": 331,
+    "requires": [
+      "egyptian-stone-obelisks"
+    ],
+    "effects": {
+      "culture": 0.08
+    },
+    "atlas": "egyptian",
+    "art_index": 5,
+    "description": "A egyptian tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "egyptian-chariot-tactics",
+    "name": "Chariot Tactics",
+    "branch": "heritage",
+    "era": 3,
+    "stage": 6,
+    "lane": 10,
+    "faction": "egyptian",
+    "cost": 575,
+    "seconds": 552,
+    "requires": [
+      "egyptian-solar-temples"
+    ],
+    "effects": {
+      "cavalry_attack": 0.12
+    },
+    "atlas": "egyptian",
+    "art_index": 6,
+    "description": "A egyptian tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "egyptian-pyramid-engineering",
+    "name": "Pyramid Engineering",
+    "branch": "heritage",
+    "era": 3,
+    "stage": 7,
+    "lane": 10,
+    "faction": "egyptian",
+    "cost": 690,
+    "seconds": 662,
+    "requires": [
+      "egyptian-chariot-tactics"
+    ],
+    "effects": {
+      "construction": 0.12
+    },
+    "atlas": "egyptian",
+    "art_index": 7,
+    "description": "A egyptian tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "egyptian-royal-necropolis",
+    "name": "Royal Necropolis",
+    "branch": "heritage",
+    "era": 4,
+    "stage": 8,
+    "lane": 10,
+    "faction": "egyptian",
+    "cost": 1150,
+    "seconds": 977,
+    "requires": [
+      "egyptian-pyramid-engineering",
+      "philosophy"
+    ],
+    "effects": {
+      "mana": 0.12
+    },
+    "atlas": "egyptian",
+    "art_index": 8,
+    "description": "A egyptian tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "egyptian-pharaonic-legacy",
+    "name": "Pharaonic Legacy",
+    "branch": "heritage",
+    "era": 4,
+    "stage": 9,
+    "lane": 10,
+    "faction": "egyptian",
+    "cost": 1380,
+    "seconds": 1173,
+    "requires": [
+      "egyptian-royal-necropolis"
+    ],
+    "effects": {
+      "hero_xp": 0.12
+    },
+    "atlas": "egyptian",
+    "art_index": 9,
+    "description": "A egyptian tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "orc-war-drums",
+    "name": "War Drums",
+    "branch": "heritage",
+    "era": 0,
+    "stage": 0,
+    "lane": 10,
+    "faction": "orc",
+    "cost": 40,
+    "seconds": 34,
+    "requires": [
+      "writing"
+    ],
+    "effects": {
+      "training": 0.08
+    },
+    "atlas": "orc",
+    "art_index": 0,
+    "description": "A orc tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "orc-iron-tusks",
+    "name": "Iron Tusks",
+    "branch": "heritage",
+    "era": 0,
+    "stage": 1,
+    "lane": 10,
+    "faction": "orc",
+    "cost": 48,
+    "seconds": 41,
+    "requires": [
+      "orc-war-drums"
+    ],
+    "effects": {
+      "infantry_attack": 0.08
+    },
+    "atlas": "orc",
+    "art_index": 1,
+    "description": "A orc tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "orc-raider-packs",
+    "name": "Raider Packs",
+    "branch": "heritage",
+    "era": 1,
+    "stage": 2,
+    "lane": 10,
+    "faction": "orc",
+    "cost": 103,
+    "seconds": 103,
+    "requires": [
+      "orc-iron-tusks"
+    ],
+    "effects": {
+      "carry": 0.08
+    },
+    "atlas": "orc",
+    "art_index": 2,
+    "description": "A orc tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "orc-bone-armour",
+    "name": "Bone Armour",
+    "branch": "heritage",
+    "era": 1,
+    "stage": 3,
+    "lane": 10,
+    "faction": "orc",
+    "cost": 124,
+    "seconds": 124,
+    "requires": [
+      "orc-raider-packs"
+    ],
+    "effects": {
+      "defence": 0.08
+    },
+    "atlas": "orc",
+    "art_index": 3,
+    "description": "A orc tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "orc-warg-riders",
+    "name": "Warg Riders",
+    "branch": "heritage",
+    "era": 2,
+    "stage": 4,
+    "lane": 10,
+    "faction": "orc",
+    "cost": 253,
+    "seconds": 276,
+    "requires": [
+      "orc-bone-armour",
+      "libraries"
+    ],
+    "effects": {
+      "cavalry_attack": 0.08
+    },
+    "atlas": "orc",
+    "art_index": 4,
+    "description": "A orc tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "orc-spoils-of-war",
+    "name": "Spoils of War",
+    "branch": "heritage",
+    "era": 2,
+    "stage": 5,
+    "lane": 10,
+    "faction": "orc",
+    "cost": 304,
+    "seconds": 331,
+    "requires": [
+      "orc-warg-riders"
+    ],
+    "effects": {
+      "gold": 0.08
+    },
+    "atlas": "orc",
+    "art_index": 5,
+    "description": "A orc tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "orc-shaman-lore",
+    "name": "Shaman Lore",
+    "branch": "heritage",
+    "era": 3,
+    "stage": 6,
+    "lane": 10,
+    "faction": "orc",
+    "cost": 575,
+    "seconds": 552,
+    "requires": [
+      "orc-spoils-of-war"
+    ],
+    "effects": {
+      "spell_power": 0.12
+    },
+    "atlas": "orc",
+    "art_index": 6,
+    "description": "A orc tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "orc-brutal-siege",
+    "name": "Brutal Siege",
+    "branch": "heritage",
+    "era": 3,
+    "stage": 7,
+    "lane": 10,
+    "faction": "orc",
+    "cost": 690,
+    "seconds": 662,
+    "requires": [
+      "orc-shaman-lore"
+    ],
+    "effects": {
+      "siege": 0.12
+    },
+    "atlas": "orc",
+    "art_index": 7,
+    "description": "A orc tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "orc-clan-forging",
+    "name": "Clan Forging",
+    "branch": "heritage",
+    "era": 4,
+    "stage": 8,
+    "lane": 10,
+    "faction": "orc",
+    "cost": 1150,
+    "seconds": 977,
+    "requires": [
+      "orc-brutal-siege",
+      "philosophy"
+    ],
+    "effects": {
+      "construction": 0.12
+    },
+    "atlas": "orc",
+    "art_index": 8,
+    "description": "A orc tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "orc-warchief-legacy",
+    "name": "Warchief Legacy",
+    "branch": "heritage",
+    "era": 4,
+    "stage": 9,
+    "lane": 10,
+    "faction": "orc",
+    "cost": 1380,
+    "seconds": 1173,
+    "requires": [
+      "orc-clan-forging"
+    ],
+    "effects": {
+      "attack": 0.12
+    },
+    "atlas": "orc",
+    "art_index": 9,
+    "description": "A orc tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "elf-living-groves",
+    "name": "Living Groves",
+    "branch": "heritage",
+    "era": 0,
+    "stage": 0,
+    "lane": 10,
+    "faction": "elf",
+    "cost": 40,
+    "seconds": 34,
+    "requires": [
+      "writing"
+    ],
+    "effects": {
+      "wood": 0.08
+    },
+    "atlas": "elf",
+    "art_index": 0,
+    "description": "A elf tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "elf-moon-arrows",
+    "name": "Moon Arrows",
+    "branch": "heritage",
+    "era": 0,
+    "stage": 1,
+    "lane": 10,
+    "faction": "elf",
+    "cost": 48,
+    "seconds": 41,
+    "requires": [
+      "elf-living-groves"
+    ],
+    "effects": {
+      "archers_attack": 0.08
+    },
+    "atlas": "elf",
+    "art_index": 1,
+    "description": "A elf tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "elf-silver-bark",
+    "name": "Silver Bark",
+    "branch": "heritage",
+    "era": 1,
+    "stage": 2,
+    "lane": 10,
+    "faction": "elf",
+    "cost": 103,
+    "seconds": 103,
+    "requires": [
+      "elf-moon-arrows"
+    ],
+    "effects": {
+      "defence": 0.08
+    },
+    "atlas": "elf",
+    "art_index": 2,
+    "description": "A elf tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "elf-stag-riders",
+    "name": "Stag Riders",
+    "branch": "heritage",
+    "era": 1,
+    "stage": 3,
+    "lane": 10,
+    "faction": "elf",
+    "cost": 124,
+    "seconds": 124,
+    "requires": [
+      "elf-silver-bark"
+    ],
+    "effects": {
+      "cavalry_defence": 0.08
+    },
+    "atlas": "elf",
+    "art_index": 3,
+    "description": "A elf tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "elf-forest-wardens",
+    "name": "Forest Wardens",
+    "branch": "heritage",
+    "era": 2,
+    "stage": 4,
+    "lane": 10,
+    "faction": "elf",
+    "cost": 253,
+    "seconds": 276,
+    "requires": [
+      "elf-stag-riders",
+      "libraries"
+    ],
+    "effects": {
+      "march": 0.08
+    },
+    "atlas": "elf",
+    "art_index": 4,
+    "description": "A elf tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "elf-crystal-lore",
+    "name": "Crystal Lore",
+    "branch": "heritage",
+    "era": 2,
+    "stage": 5,
+    "lane": 10,
+    "faction": "elf",
+    "cost": 304,
+    "seconds": 331,
+    "requires": [
+      "elf-forest-wardens"
+    ],
+    "effects": {
+      "science": 0.08
+    },
+    "atlas": "elf",
+    "art_index": 5,
+    "description": "A elf tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "elf-sylvan-harvest",
+    "name": "Sylvan Harvest",
+    "branch": "heritage",
+    "era": 3,
+    "stage": 6,
+    "lane": 10,
+    "faction": "elf",
+    "cost": 575,
+    "seconds": 552,
+    "requires": [
+      "elf-crystal-lore"
+    ],
+    "effects": {
+      "food": 0.12
+    },
+    "atlas": "elf",
+    "art_index": 6,
+    "description": "A elf tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "elf-ancient-songs",
+    "name": "Ancient Songs",
+    "branch": "heritage",
+    "era": 3,
+    "stage": 7,
+    "lane": 10,
+    "faction": "elf",
+    "cost": 690,
+    "seconds": 662,
+    "requires": [
+      "elf-sylvan-harvest"
+    ],
+    "effects": {
+      "culture": 0.12
+    },
+    "atlas": "elf",
+    "art_index": 7,
+    "description": "A elf tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "elf-star-sight",
+    "name": "Star Sight",
+    "branch": "heritage",
+    "era": 4,
+    "stage": 8,
+    "lane": 10,
+    "faction": "elf",
+    "cost": 1150,
+    "seconds": 977,
+    "requires": [
+      "elf-ancient-songs",
+      "philosophy"
+    ],
+    "effects": {
+      "spell_power": 0.12
+    },
+    "atlas": "elf",
+    "art_index": 8,
+    "description": "A elf tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "elf-elder-wisdom",
+    "name": "Elder Wisdom",
+    "branch": "heritage",
+    "era": 4,
+    "stage": 9,
+    "lane": 10,
+    "faction": "elf",
+    "cost": 1380,
+    "seconds": 1173,
+    "requires": [
+      "elf-star-sight"
+    ],
+    "effects": {
+      "research_speed": 0.12
+    },
+    "atlas": "elf",
+    "art_index": 9,
+    "description": "A elf tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "dwarf-mountain-mining",
+    "name": "Mountain Mining",
+    "branch": "heritage",
+    "era": 0,
+    "stage": 0,
+    "lane": 10,
+    "faction": "dwarf",
+    "cost": 40,
+    "seconds": 34,
+    "requires": [
+      "writing"
+    ],
+    "effects": {
+      "stone": 0.08
+    },
+    "atlas": "dwarf",
+    "art_index": 0,
+    "description": "A dwarf tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "dwarf-rune-carving",
+    "name": "Rune Carving",
+    "branch": "heritage",
+    "era": 0,
+    "stage": 1,
+    "lane": 10,
+    "faction": "dwarf",
+    "cost": 48,
+    "seconds": 41,
+    "requires": [
+      "dwarf-mountain-mining"
+    ],
+    "effects": {
+      "science": 0.08
+    },
+    "atlas": "dwarf",
+    "art_index": 1,
+    "description": "A dwarf tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "dwarf-deep-vaults",
+    "name": "Deep Vaults",
+    "branch": "heritage",
+    "era": 1,
+    "stage": 2,
+    "lane": 10,
+    "faction": "dwarf",
+    "cost": 103,
+    "seconds": 103,
+    "requires": [
+      "dwarf-rune-carving"
+    ],
+    "effects": {
+      "storage": 0.08
+    },
+    "atlas": "dwarf",
+    "art_index": 2,
+    "description": "A dwarf tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "dwarf-steel-axes",
+    "name": "Steel Axes",
+    "branch": "heritage",
+    "era": 1,
+    "stage": 3,
+    "lane": 10,
+    "faction": "dwarf",
+    "cost": 124,
+    "seconds": 124,
+    "requires": [
+      "dwarf-deep-vaults"
+    ],
+    "effects": {
+      "infantry_attack": 0.08
+    },
+    "atlas": "dwarf",
+    "art_index": 3,
+    "description": "A dwarf tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "dwarf-heavy-mail",
+    "name": "Heavy Mail",
+    "branch": "heritage",
+    "era": 2,
+    "stage": 4,
+    "lane": 10,
+    "faction": "dwarf",
+    "cost": 253,
+    "seconds": 276,
+    "requires": [
+      "dwarf-steel-axes",
+      "libraries"
+    ],
+    "effects": {
+      "infantry_defence": 0.08
+    },
+    "atlas": "dwarf",
+    "art_index": 4,
+    "description": "A dwarf tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "dwarf-geared-siege",
+    "name": "Geared Siege",
+    "branch": "heritage",
+    "era": 2,
+    "stage": 5,
+    "lane": 10,
+    "faction": "dwarf",
+    "cost": 304,
+    "seconds": 331,
+    "requires": [
+      "dwarf-heavy-mail"
+    ],
+    "effects": {
+      "siege": 0.08
+    },
+    "atlas": "dwarf",
+    "art_index": 5,
+    "description": "A dwarf tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "dwarf-stone-halls",
+    "name": "Stone Halls",
+    "branch": "heritage",
+    "era": 3,
+    "stage": 6,
+    "lane": 10,
+    "faction": "dwarf",
+    "cost": 575,
+    "seconds": 552,
+    "requires": [
+      "dwarf-geared-siege"
+    ],
+    "effects": {
+      "construction": 0.12
+    },
+    "atlas": "dwarf",
+    "art_index": 6,
+    "description": "A dwarf tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "dwarf-tunnel-roads",
+    "name": "Tunnel Roads",
+    "branch": "heritage",
+    "era": 3,
+    "stage": 7,
+    "lane": 10,
+    "faction": "dwarf",
+    "cost": 690,
+    "seconds": 662,
+    "requires": [
+      "dwarf-stone-halls"
+    ],
+    "effects": {
+      "march": 0.12
+    },
+    "atlas": "dwarf",
+    "art_index": 7,
+    "description": "A dwarf tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "dwarf-master-forging",
+    "name": "Master Forging",
+    "branch": "heritage",
+    "era": 4,
+    "stage": 8,
+    "lane": 10,
+    "faction": "dwarf",
+    "cost": 1150,
+    "seconds": 977,
+    "requires": [
+      "dwarf-tunnel-roads",
+      "philosophy"
+    ],
+    "effects": {
+      "training": 0.12
+    },
+    "atlas": "dwarf",
+    "art_index": 8,
+    "description": "A dwarf tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "dwarf-ancestral-runes",
+    "name": "Ancestral Runes",
+    "branch": "heritage",
+    "era": 4,
+    "stage": 9,
+    "lane": 10,
+    "faction": "dwarf",
+    "cost": 1380,
+    "seconds": 1173,
+    "requires": [
+      "dwarf-master-forging"
+    ],
+    "effects": {
+      "spell_power": 0.12
+    },
+    "atlas": "dwarf",
+    "art_index": 9,
+    "description": "A dwarf tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "gnome-clockwork-tools",
+    "name": "Clockwork Tools",
+    "branch": "heritage",
+    "era": 0,
+    "stage": 0,
+    "lane": 10,
+    "faction": "gnome",
+    "cost": 40,
+    "seconds": 34,
+    "requires": [
+      "writing"
+    ],
+    "effects": {
+      "construction": 0.08
+    },
+    "atlas": "gnome",
+    "art_index": 0,
+    "description": "A gnome tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "gnome-precision-optics",
+    "name": "Precision Optics",
+    "branch": "heritage",
+    "era": 0,
+    "stage": 1,
+    "lane": 10,
+    "faction": "gnome",
+    "cost": 48,
+    "seconds": 41,
+    "requires": [
+      "gnome-clockwork-tools"
+    ],
+    "effects": {
+      "archers_attack": 0.08
+    },
+    "atlas": "gnome",
+    "art_index": 1,
+    "description": "A gnome tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "gnome-automata",
+    "name": "Automata",
+    "branch": "heritage",
+    "era": 1,
+    "stage": 2,
+    "lane": 10,
+    "faction": "gnome",
+    "cost": 103,
+    "seconds": 103,
+    "requires": [
+      "gnome-precision-optics"
+    ],
+    "effects": {
+      "training": 0.08
+    },
+    "atlas": "gnome",
+    "art_index": 2,
+    "description": "A gnome tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "gnome-gearworks",
+    "name": "Gearworks",
+    "branch": "heritage",
+    "era": 1,
+    "stage": 3,
+    "lane": 10,
+    "faction": "gnome",
+    "cost": 124,
+    "seconds": 124,
+    "requires": [
+      "gnome-automata"
+    ],
+    "effects": {
+      "gold": 0.08
+    },
+    "atlas": "gnome",
+    "art_index": 3,
+    "description": "A gnome tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "gnome-mechanical-siege",
+    "name": "Mechanical Siege",
+    "branch": "heritage",
+    "era": 2,
+    "stage": 4,
+    "lane": 10,
+    "faction": "gnome",
+    "cost": 253,
+    "seconds": 276,
+    "requires": [
+      "gnome-gearworks",
+      "libraries"
+    ],
+    "effects": {
+      "siege": 0.08
+    },
+    "atlas": "gnome",
+    "art_index": 4,
+    "description": "A gnome tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "gnome-workshop-science",
+    "name": "Workshop Science",
+    "branch": "heritage",
+    "era": 2,
+    "stage": 5,
+    "lane": 10,
+    "faction": "gnome",
+    "cost": 304,
+    "seconds": 331,
+    "requires": [
+      "gnome-mechanical-siege"
+    ],
+    "effects": {
+      "science": 0.08
+    },
+    "atlas": "gnome",
+    "art_index": 5,
+    "description": "A gnome tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "gnome-rat-couriers",
+    "name": "Rat Couriers",
+    "branch": "heritage",
+    "era": 3,
+    "stage": 6,
+    "lane": 10,
+    "faction": "gnome",
+    "cost": 575,
+    "seconds": 552,
+    "requires": [
+      "gnome-workshop-science"
+    ],
+    "effects": {
+      "march": 0.12
+    },
+    "atlas": "gnome",
+    "art_index": 6,
+    "description": "A gnome tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "gnome-alchemy",
+    "name": "Alchemy",
+    "branch": "heritage",
+    "era": 3,
+    "stage": 7,
+    "lane": 10,
+    "faction": "gnome",
+    "cost": 690,
+    "seconds": 662,
+    "requires": [
+      "gnome-rat-couriers"
+    ],
+    "effects": {
+      "spell_power": 0.12
+    },
+    "atlas": "gnome",
+    "art_index": 7,
+    "description": "A gnome tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "gnome-patent-houses",
+    "name": "Patent Houses",
+    "branch": "heritage",
+    "era": 4,
+    "stage": 8,
+    "lane": 10,
+    "faction": "gnome",
+    "cost": 1150,
+    "seconds": 977,
+    "requires": [
+      "gnome-alchemy",
+      "philosophy"
+    ],
+    "effects": {
+      "trade": 0.12
+    },
+    "atlas": "gnome",
+    "art_index": 8,
+    "description": "A gnome tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "gnome-grand-invention",
+    "name": "Grand Invention",
+    "branch": "heritage",
+    "era": 4,
+    "stage": 9,
+    "lane": 10,
+    "faction": "gnome",
+    "cost": 1380,
+    "seconds": 1173,
+    "requires": [
+      "gnome-patent-houses"
+    ],
+    "effects": {
+      "research_speed": 0.12
+    },
+    "atlas": "gnome",
+    "art_index": 9,
+    "description": "A gnome tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "pandaren-bamboo-craft",
+    "name": "Bamboo Craft",
+    "branch": "heritage",
+    "era": 0,
+    "stage": 0,
+    "lane": 10,
+    "faction": "pandaren",
+    "cost": 40,
+    "seconds": 34,
+    "requires": [
+      "writing"
+    ],
+    "effects": {
+      "wood": 0.08
+    },
+    "atlas": "pandaren",
+    "art_index": 0,
+    "description": "A pandaren tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "pandaren-rice-terraces",
+    "name": "Rice Terraces",
+    "branch": "heritage",
+    "era": 0,
+    "stage": 1,
+    "lane": 10,
+    "faction": "pandaren",
+    "cost": 48,
+    "seconds": 41,
+    "requires": [
+      "pandaren-bamboo-craft"
+    ],
+    "effects": {
+      "food": 0.08
+    },
+    "atlas": "pandaren",
+    "art_index": 1,
+    "description": "A pandaren tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "pandaren-tea-houses",
+    "name": "Tea Houses",
+    "branch": "heritage",
+    "era": 1,
+    "stage": 2,
+    "lane": 10,
+    "faction": "pandaren",
+    "cost": 103,
+    "seconds": 103,
+    "requires": [
+      "pandaren-rice-terraces"
+    ],
+    "effects": {
+      "culture": 0.08
+    },
+    "atlas": "pandaren",
+    "art_index": 2,
+    "description": "A pandaren tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "pandaren-martial-forms",
+    "name": "Martial Forms",
+    "branch": "heritage",
+    "era": 1,
+    "stage": 3,
+    "lane": 10,
+    "faction": "pandaren",
+    "cost": 124,
+    "seconds": 124,
+    "requires": [
+      "pandaren-tea-houses"
+    ],
+    "effects": {
+      "infantry_defence": 0.08
+    },
+    "atlas": "pandaren",
+    "art_index": 3,
+    "description": "A pandaren tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "pandaren-silk-markets",
+    "name": "Silk Markets",
+    "branch": "heritage",
+    "era": 2,
+    "stage": 4,
+    "lane": 10,
+    "faction": "pandaren",
+    "cost": 253,
+    "seconds": 276,
+    "requires": [
+      "pandaren-martial-forms",
+      "libraries"
+    ],
+    "effects": {
+      "trade": 0.08
+    },
+    "atlas": "pandaren",
+    "art_index": 4,
+    "description": "A pandaren tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "pandaren-jade-wisdom",
+    "name": "Jade Wisdom",
+    "branch": "heritage",
+    "era": 2,
+    "stage": 5,
+    "lane": 10,
+    "faction": "pandaren",
+    "cost": 304,
+    "seconds": 331,
+    "requires": [
+      "pandaren-silk-markets"
+    ],
+    "effects": {
+      "science": 0.08
+    },
+    "atlas": "pandaren",
+    "art_index": 5,
+    "description": "A pandaren tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "pandaren-mountain-monasteries",
+    "name": "Mountain Monasteries",
+    "branch": "heritage",
+    "era": 3,
+    "stage": 6,
+    "lane": 10,
+    "faction": "pandaren",
+    "cost": 575,
+    "seconds": 552,
+    "requires": [
+      "pandaren-jade-wisdom"
+    ],
+    "effects": {
+      "training": 0.12
+    },
+    "atlas": "pandaren",
+    "art_index": 6,
+    "description": "A pandaren tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "pandaren-dragon-breath",
+    "name": "Dragon Breath",
+    "branch": "heritage",
+    "era": 3,
+    "stage": 7,
+    "lane": 10,
+    "faction": "pandaren",
+    "cost": 690,
+    "seconds": 662,
+    "requires": [
+      "pandaren-mountain-monasteries"
+    ],
+    "effects": {
+      "spell_power": 0.12
+    },
+    "atlas": "pandaren",
+    "art_index": 7,
+    "description": "A pandaren tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "pandaren-golden-harvest",
+    "name": "Golden Harvest",
+    "branch": "heritage",
+    "era": 4,
+    "stage": 8,
+    "lane": 10,
+    "faction": "pandaren",
+    "cost": 1150,
+    "seconds": 977,
+    "requires": [
+      "pandaren-dragon-breath",
+      "philosophy"
+    ],
+    "effects": {
+      "gold": 0.12
+    },
+    "atlas": "pandaren",
+    "art_index": 8,
+    "description": "A pandaren tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "pandaren-celestial-harmony",
+    "name": "Celestial Harmony",
+    "branch": "heritage",
+    "era": 4,
+    "stage": 9,
+    "lane": 10,
+    "faction": "pandaren",
+    "cost": 1380,
+    "seconds": 1173,
+    "requires": [
+      "pandaren-golden-harvest"
+    ],
+    "effects": {
+      "mana": 0.12
+    },
+    "atlas": "pandaren",
+    "art_index": 9,
+    "description": "A pandaren tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "undead-grave-lore",
+    "name": "Grave Lore",
+    "branch": "heritage",
+    "era": 0,
+    "stage": 0,
+    "lane": 10,
+    "faction": "undead",
+    "cost": 40,
+    "seconds": 34,
+    "requires": [
+      "writing"
+    ],
+    "effects": {
+      "science": 0.08
+    },
+    "atlas": "undead",
+    "art_index": 0,
+    "description": "A undead tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "undead-bone-legion",
+    "name": "Bone Legion",
+    "branch": "heritage",
+    "era": 0,
+    "stage": 1,
+    "lane": 10,
+    "faction": "undead",
+    "cost": 48,
+    "seconds": 41,
+    "requires": [
+      "undead-grave-lore"
+    ],
+    "effects": {
+      "infantry_defence": 0.08
+    },
+    "atlas": "undead",
+    "art_index": 1,
+    "description": "A undead tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "undead-crypt-vaults",
+    "name": "Crypt Vaults",
+    "branch": "heritage",
+    "era": 1,
+    "stage": 2,
+    "lane": 10,
+    "faction": "undead",
+    "cost": 103,
+    "seconds": 103,
+    "requires": [
+      "undead-bone-legion"
+    ],
+    "effects": {
+      "storage": 0.08
+    },
+    "atlas": "undead",
+    "art_index": 2,
+    "description": "A undead tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "undead-soul-binding",
+    "name": "Soul Binding",
+    "branch": "heritage",
+    "era": 1,
+    "stage": 3,
+    "lane": 10,
+    "faction": "undead",
+    "cost": 124,
+    "seconds": 124,
+    "requires": [
+      "undead-crypt-vaults"
+    ],
+    "effects": {
+      "mana": 0.08
+    },
+    "atlas": "undead",
+    "art_index": 3,
+    "description": "A undead tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "undead-dark-scholars",
+    "name": "Dark Scholars",
+    "branch": "heritage",
+    "era": 2,
+    "stage": 4,
+    "lane": 10,
+    "faction": "undead",
+    "cost": 253,
+    "seconds": 276,
+    "requires": [
+      "undead-soul-binding",
+      "libraries"
+    ],
+    "effects": {
+      "research_speed": 0.08
+    },
+    "atlas": "undead",
+    "art_index": 4,
+    "description": "A undead tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "undead-spectral-march",
+    "name": "Spectral March",
+    "branch": "heritage",
+    "era": 2,
+    "stage": 5,
+    "lane": 10,
+    "faction": "undead",
+    "cost": 304,
+    "seconds": 331,
+    "requires": [
+      "undead-dark-scholars"
+    ],
+    "effects": {
+      "march": 0.08
+    },
+    "atlas": "undead",
+    "art_index": 5,
+    "description": "A undead tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "undead-necromantic-rites",
+    "name": "Necromantic Rites",
+    "branch": "heritage",
+    "era": 3,
+    "stage": 6,
+    "lane": 10,
+    "faction": "undead",
+    "cost": 575,
+    "seconds": 552,
+    "requires": [
+      "undead-spectral-march"
+    ],
+    "effects": {
+      "spell_power": 0.12
+    },
+    "atlas": "undead",
+    "art_index": 6,
+    "description": "A undead tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "undead-black-citadels",
+    "name": "Black Citadels",
+    "branch": "heritage",
+    "era": 3,
+    "stage": 7,
+    "lane": 10,
+    "faction": "undead",
+    "cost": 690,
+    "seconds": 662,
+    "requires": [
+      "undead-necromantic-rites"
+    ],
+    "effects": {
+      "construction": 0.12
+    },
+    "atlas": "undead",
+    "art_index": 7,
+    "description": "A undead tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "undead-death-knights",
+    "name": "Death Knights",
+    "branch": "heritage",
+    "era": 4,
+    "stage": 8,
+    "lane": 10,
+    "faction": "undead",
+    "cost": 1150,
+    "seconds": 977,
+    "requires": [
+      "undead-black-citadels",
+      "philosophy"
+    ],
+    "effects": {
+      "cavalry_attack": 0.12
+    },
+    "atlas": "undead",
+    "art_index": 8,
+    "description": "A undead tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "undead-lich-ascendancy",
+    "name": "Lich Ascendancy",
+    "branch": "heritage",
+    "era": 4,
+    "stage": 9,
+    "lane": 10,
+    "faction": "undead",
+    "cost": 1380,
+    "seconds": 1173,
+    "requires": [
+      "undead-death-knights"
+    ],
+    "effects": {
+      "hero_xp": 0.12
+    },
+    "atlas": "undead",
+    "art_index": 9,
+    "description": "A undead tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "demon-hellforging",
+    "name": "Hellforging",
+    "branch": "heritage",
+    "era": 0,
+    "stage": 0,
+    "lane": 10,
+    "faction": "demon",
+    "cost": 40,
+    "seconds": 34,
+    "requires": [
+      "writing"
+    ],
+    "effects": {
+      "infantry_attack": 0.08
+    },
+    "atlas": "demon",
+    "art_index": 0,
+    "description": "A demon tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "demon-ember-bolts",
+    "name": "Ember Bolts",
+    "branch": "heritage",
+    "era": 0,
+    "stage": 1,
+    "lane": 10,
+    "faction": "demon",
+    "cost": 48,
+    "seconds": 41,
+    "requires": [
+      "demon-hellforging"
+    ],
+    "effects": {
+      "archers_attack": 0.08
+    },
+    "atlas": "demon",
+    "art_index": 1,
+    "description": "A demon tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "demon-infernal-engines",
+    "name": "Infernal Engines",
+    "branch": "heritage",
+    "era": 1,
+    "stage": 2,
+    "lane": 10,
+    "faction": "demon",
+    "cost": 103,
+    "seconds": 103,
+    "requires": [
+      "demon-ember-bolts"
+    ],
+    "effects": {
+      "siege": 0.08
+    },
+    "atlas": "demon",
+    "art_index": 2,
+    "description": "A demon tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "demon-soul-bargains",
+    "name": "Soul Bargains",
+    "branch": "heritage",
+    "era": 1,
+    "stage": 3,
+    "lane": 10,
+    "faction": "demon",
+    "cost": 124,
+    "seconds": 124,
+    "requires": [
+      "demon-infernal-engines"
+    ],
+    "effects": {
+      "trade": 0.08
+    },
+    "atlas": "demon",
+    "art_index": 3,
+    "description": "A demon tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "demon-obsidian-armour",
+    "name": "Obsidian Armour",
+    "branch": "heritage",
+    "era": 2,
+    "stage": 4,
+    "lane": 10,
+    "faction": "demon",
+    "cost": 253,
+    "seconds": 276,
+    "requires": [
+      "demon-soul-bargains",
+      "libraries"
+    ],
+    "effects": {
+      "defence": 0.08
+    },
+    "atlas": "demon",
+    "art_index": 4,
+    "description": "A demon tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "demon-flame-scholars",
+    "name": "Flame Scholars",
+    "branch": "heritage",
+    "era": 2,
+    "stage": 5,
+    "lane": 10,
+    "faction": "demon",
+    "cost": 304,
+    "seconds": 331,
+    "requires": [
+      "demon-obsidian-armour"
+    ],
+    "effects": {
+      "science": 0.08
+    },
+    "atlas": "demon",
+    "art_index": 5,
+    "description": "A demon tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "demon-abyssal-gates",
+    "name": "Abyssal Gates",
+    "branch": "heritage",
+    "era": 3,
+    "stage": 6,
+    "lane": 10,
+    "faction": "demon",
+    "cost": 575,
+    "seconds": 552,
+    "requires": [
+      "demon-flame-scholars"
+    ],
+    "effects": {
+      "march": 0.12
+    },
+    "atlas": "demon",
+    "art_index": 6,
+    "description": "A demon tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "demon-demonic-warbands",
+    "name": "Demonic Warbands",
+    "branch": "heritage",
+    "era": 3,
+    "stage": 7,
+    "lane": 10,
+    "faction": "demon",
+    "cost": 690,
+    "seconds": 662,
+    "requires": [
+      "demon-abyssal-gates"
+    ],
+    "effects": {
+      "training": 0.12
+    },
+    "atlas": "demon",
+    "art_index": 7,
+    "description": "A demon tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "demon-infernal-dominion",
+    "name": "Infernal Dominion",
+    "branch": "heritage",
+    "era": 4,
+    "stage": 8,
+    "lane": 10,
+    "faction": "demon",
+    "cost": 1150,
+    "seconds": 977,
+    "requires": [
+      "demon-demonic-warbands",
+      "philosophy"
+    ],
+    "effects": {
+      "culture": 0.12
+    },
+    "atlas": "demon",
+    "art_index": 8,
+    "description": "A demon tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  },
+  {
+    "id": "demon-archfiend-legacy",
+    "name": "Archfiend Legacy",
+    "branch": "heritage",
+    "era": 4,
+    "stage": 9,
+    "lane": 10,
+    "faction": "demon",
+    "cost": 1380,
+    "seconds": 1173,
+    "requires": [
+      "demon-infernal-dominion"
+    ],
+    "effects": {
+      "spell_power": 0.12
+    },
+    "atlas": "demon",
+    "art_index": 9,
+    "description": "A demon tradition that strengthens the whole account. Heritage bonuses apply while this is your account faction."
+  }
+]

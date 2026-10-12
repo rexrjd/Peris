@@ -1,0 +1,47 @@
+PERIS V18 — PACKAGE FOR PUSH
+
+Base: main commit 980b6dfbeb37abd852749735be79dba87a89e0ab.
+Main was checked again when this package was prepared and is unchanged.
+This is a changed-files package, with paths relative to the repository root.
+
+INCLUDED WORK
+- 210 technologies: 100 shared and 10 for each of the 11 factions.
+- Original unique technology pictures, faction Academy pictures and Research icon.
+- Repeatable five-level Academies and account-wide science from every owned city.
+- Persistent science stockpiling, timed research, one-time costs, pause/switch/resume.
+- Linked research tree, filters/search/zoom, responsive details and top-bar progress.
+- Actual production, storage, construction, training, troop unlock/stat, trade-post,
+  march, loot, culture, hero XP, spell, mana and siege bonuses in local and SQL rules.
+- Private Supabase science/progress, command receipts, worker completion and V18 SQL.
+- Previously completed Academy dark styling and navigation cleanup are recovered:
+  returning to City no longer reopens the consumed Academy shortcut.
+- Gameplay/database regression tests, editable catalog and original art sources.
+
+PUSH / DEPLOY
+1. Extract into the existing repository root on your review branch.
+2. Review the changed files and run your normal build/check workflow.
+3. Apply supabase/UPGRADE_TO_V18.sql BEFORE a frontend deployment. If pushing main
+   triggers Vercel automatically, apply the migration before that push.
+4. Commit and push the extracted source, assets, tests, documentation and SQL.
+   The archive itself does not need to be added to the repository.
+FRESH_INSTALL_V18.sql is only for an empty database. The upgrade is rerunnable.
+See RESEARCH_ACADEMY_UPDATE.md for detailed installation, balance and behavior.
+
+VERIFICATION ACHIEVED IN THE WORK SESSION
+- Full unit suite: 441 tests, 440 passed, 1 existing skip.
+- Tooling checks passed; all 46 registered GLB models passed asset checks.
+- TypeScript / Vite production build passed.
+- Shared catalog/art, world and generated SQL checks passed.
+- Research, baseline, fresh-install, population, city-slot, magic, player-raid and
+  army-role isolated database suites passed, including ownership and migration reruns.
+- Desktop, mobile and 320px browser screenshots were reviewed. The latest combined
+  browser run recorded 8 passes; its remaining desktop case failed during trace-file
+  cleanup because concurrent test runs shared an output directory. The isolated
+  final rerun was interrupted when the workspace disconnected.
+
+REMAINING CHECK
+Run the complete browser suite in one isolated run before production release.
+This packaging pass does not claim a new full-project build or browser rerun.
+No repository push, production migration or deployment was performed by this task.
+Dependencies, credentials, browser binaries, screenshots and temporary QA files
+are excluded from this package.

@@ -68,8 +68,8 @@ begin
 end $$;
 
 -- Unit attributes are independent of hero and magical modifiers.
-alter table public.battle_formations add column if not exists unit_attack numeric not null default 1 check(unit_attack between .4 and 3);
-alter table public.battle_formations add column if not exists unit_defence numeric not null default 1 check(unit_defence between .5 and 3);
+alter table public.battle_formations add column if not exists unit_attack numeric not null default 1 check(unit_attack between .4 and 20);
+alter table public.battle_formations add column if not exists unit_defence numeric not null default 1 check(unit_defence between .5 and 20);
 alter table public.battle_formations add column if not exists unit_speed numeric not null default 1 check(unit_speed between .15 and 3);
 create or replace function public.peris_roster_take_classes(p_roster jsonb,p_classes jsonb)returns jsonb
 language plpgsql security definer set search_path='' as $$

@@ -110,3 +110,7 @@ Run `npm run build:sql` after editing server source. Then `npm run check:sql`, `
 ## Updating an existing repository
 
 ZIP extraction does not delete moved paths. `node scripts/clean-legacy-paths.mjs` removes only legacy source/art files whose contents match a known v5/v6/v7 version. `--check` previews candidates. Modified files are preserved and flagged; merge those personal edits into the new owner modules before building. It never touches accounts, database data, save storage, Git metadata or environment configuration.
+
+## Account research (V18)
+
+`features/research/domain` owns the shared 210-node catalog, bonus selectors, account science and project timing. Its private World arrays serialize through the existing engine and save path. `features/research/ui` owns the linked tree and navigation context. Academies remain ordinary repeatable city slots. SQL sources live in `supabase/modules/research`; generate catalog and V18 bundles with `npm run build:sql`. Owner-scoped science/progress stay outside public map and player metadata. Existing worker settlement includes research deadlines. See `RESEARCH_ACADEMY_UPDATE.md` for installation and balance.

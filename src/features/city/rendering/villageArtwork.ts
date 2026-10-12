@@ -19,11 +19,12 @@ export function villageAtlasCell(type: BuildingType | SlotType) {
     };
 }
 
-export function villageArtwork(type: BuildingType | SlotType, faction: Faction) {
+export function villageArtwork(type: BuildingType | SlotType, faction: Faction, level=1) {
+    if(type==='academy')return {url:`/art/city/academy-v1/${faction==='roman'&&level>=5?'roman-master':faction}.webp`,position:'50% 50%',aspectRatio:1,index:0,size:'100%'};
     const cell = villageAtlasCell(type);
     if (!cell || !APPROVED_VILLAGE_ATLASES.includes(faction)) return null;
     const revision = CULTURE_REVISIONS[faction];
-    return { url: `/art/city/village-v1/${faction}-atlas${revision ? `-v${revision}` : ''}.webp`, aspectRatio: VILLAGE_ATLAS_ASPECTS[faction] ?? 1, ...cell };
+    return { url: `/art/city/village-v1/${faction}-atlas${revision ? `-v${revision}` : ''}.webp`, aspectRatio: VILLAGE_ATLAS_ASPECTS[faction] ?? 1, size:'300% 400%', ...cell };
 }
 
 const loaded = new Map<string, Promise<boolean>>();
