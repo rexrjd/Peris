@@ -1,0 +1,58 @@
+PERIS — ARMIES UI
+Base: ab4325ccc4d4bd80da44abfb8be17bf6572b2f19 (origin/main)
+Review branch: feat/army-ui
+
+CHANGES
+- Compact horizontal roster, commander portraits, search and status indicators.
+- One commander card across Army, Commander, Equipment and Logistics.
+- Troop cards show actual recruited identities and counts.
+- Recruitment opens in a compact overlay, including costs and city/building context.
+- Visible training timers and progress without a permanent recruitment column.
+- Skills use smaller attribute cards and retain real point-spending commands.
+- Equipment has compact slots, a shared backpack, tier/name sorting and search.
+- Artifact ownership, holder navigation, equip and unequip use existing commands.
+- Logistics remains an exact-role transfer table with a separate home city card.
+- Narrow screens use a smaller hero card; resizing keeps the selected roster item visible.
+
+INSTALL
+1. Fetch current origin/main and compare with the base above.
+2. Extract this archive outside the checkout; review ARMIES_UI_FILES.json.
+3. Copy only the listed files into the repository root on a review branch.
+4. Run the checks below and open Armies.
+5. Commit/push through the normal repository workflow when ready.
+
+No SQL migration and no new npm dependencies are required.
+The base already includes V19 guilds/messages and the V19.1 3D city redesign.
+SQL, production data, saves and environments are excluded from this archive.
+
+VALIDATION
+- npm test: 443 passed, 1 existing skip (444 total).
+- 13 army command-room checks re-run after the final UI changes: passed.
+- npm run test:tooling: 4 passed.
+- npm run assets:check: 46 registered GLBs passed.
+- npm run build: TypeScript, artifact/research art checks and Vite passed.
+- git diff --check: passed.
+- 16 unique affected browser cases passed across desktop and mobile:
+  6 new army cases, 6 existing city/recruitment/exact-role transfer cases,
+  2 victory-to-equipment cases and 2 3D city compatibility cases.
+- Actual screenshots reviewed at desktop, Pixel 7 and 320px widths.
+- Latest main was fetched again before packaging and remained ab4325c.
+
+The legacy reward test pointed to the former Reports ledger. It now opens the
+existing Rally Point Reports ledger, which still provides the full battle receipt
+and Open equipment action. All reward, XP, portrait, persistence and item ownership
+assertions remain in place. No reports product code changed.
+
+Browser QA used Chromium with software WebGL. Hardware FPS was not benchmarked.
+Vite retains its existing advisory about large bundle chunks.
+No backend source changed and no production SQL was run.
+
+REPRODUCE
+npm test
+npm run test:tooling
+npm run assets:check
+npm run build
+npm run test:e2e -- tests/e2e/army-workspace.spec.ts tests/e2e/army-frontier-parity.spec.ts tests/e2e/hero-loot.spec.ts tests/e2e/city-scene-ui.spec.ts
+
+The standard Playwright setup needs Chromium and its video tools installed.
+Runner-specific browser configuration is excluded from the delivery.

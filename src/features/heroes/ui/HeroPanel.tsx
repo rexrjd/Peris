@@ -7,7 +7,7 @@ import { armyOverview, STAT_NAMES, percent, count } from '../../army/domain/comm
 import { Icon } from '../../../shared/ui/Icons';
 import { SPELLS, towerLevel, maximumMana, knowsSpell } from '../../magic/domain/spells';
 
-export function HeroPanel({ world, army, run, busy, now, onCity }: { world: World; army: Army; run: (cmd: Command, message?: string) => void; busy: boolean; now: number; onCity?: (id: number) => void }) {
+export function HeroPanel({ world, army, run, busy, now, onCity, compact = false }: { world: World; army: Army; run: (cmd: Command, message?: string) => void; busy: boolean; now: number; onCity?: (id: number) => void; compact?: boolean }) {
     const hero = heroForArmy(world, army.id), overview = armyOverview(world, army, now);
     if (!hero) return <div className="command-empty"><Icon name="crown" size={34}/><h2>No commander assigned</h2><p>This army can still recruit and march. Raise a new army to choose a specialist commander.</p></div>;
     const level = heroLevel(hero), points = heroPoints(hero), base = HERO_CLASSES[hero.class], bonuses = overview.bonuses;
@@ -18,12 +18,12 @@ export function HeroPanel({ world, army, run, busy, now, onCity }: { world: Worl
     const towerCity = [...cities].sort((a, b) => towerLevel(world, b.id) - towerLevel(world, a.id))[0];
     const mana = maximumMana(towerCity ? towerLevel(world, towerCity.id) : 0) + bonuses.mana;
     const effects = { attack: 'Each point adds 2% troop damage.', defence: 'Each point adds 2.5% to damage protection.', power: 'Each point adds 8% to spell damage and healing.', knowledge: 'Each point adds 10 battle mana.' };
-    return <div className="commander-layout">
-        <aside className="commander-dossier command-panel"><HeroPortrait heroId={hero.id} heroClass={hero.class} faction={overview.home?.faction}/><span className="command-kicker">{base.name} · Level {level}</span><h2>{hero.name}</h2><p>{base.description}</p>
+    return <div className={`commander-layout ${compact ? 'is-compact' : ''}`}>
+        {!compact && <aside className="commander-dossier command-panel"><HeroPortrait heroId={hero.id} heroClass={hero.class} faction={overview.home?.faction}/><span className="command-kicker">{base.name} · Level {level}</span><h2>{hero.name}</h2><p>{base.description}</p>
             <div className="command-xp"><div><span>{level === MAX_HERO_LEVEL ? 'Maximum level' : `Next rank · Level ${level + 1}`}</span><b>{level === MAX_HERO_LEVEL ? count(hero.experience) + ' XP' : `${count(earned)} / ${count(needed)} XP`}</b></div><div className="command-meter"><i style={{ width: `${progress}%` }}/></div><small>{count(hero.experience)} lifetime XP · Battles and victories earn experience.</small></div>
             <div className={`command-point-notice ${points > 0 ? 'available' : ''}`}><Icon name="sparkles"/><span>{points > 0 ? `${points} skill ${points === 1 ? 'point' : 'points'} to spend` : level === MAX_HERO_LEVEL ? 'All skill points spent' : 'Win battles to earn skill points'}</span></div>
-        </aside>
-        <div className="commander-development"><section className="command-panel"><div className="command-section-heading"><div><span className="command-kicker">Build your commander</span><h2>Four paths. Your choice.</h2></div><span className="command-pill">{Math.max(0, points)} points</span></div>
+        </aside>}
+        <div className="commander-development"><section className="command-panel"><div className="command-section-heading"><div>{!compact && <span className="command-kicker">Build your commander</span>}<h2>{compact ? 'Attributes' : 'Four paths. Your choice.'}</h2></div><span className="command-pill">{Math.max(0, points)} {points === 1 ? 'point' : 'points'}</span></div>
             <div className="command-attributes">{HERO_STATS.map(stat => {
                 const items = (world.hero_artifacts ?? []).filter(a => a.hero_id === hero.id && a.owner_id === hero.owner_id).reduce((n, a) => n + (ARTIFACTS[a.artifact_id]?.[stat] ?? 0), 0);
                 return <article key={stat}><div className="attribute-top"><Icon name={stat === 'attack' ? 'army' : stat === 'defence' ? 'shield' : stat === 'power' ? 'sparkles' : 'book'}/><span>{STAT_NAMES[stat]}</span><strong>{bonuses[stat]}</strong></div><p>{effects[stat]}</p><small>{base[stat]} class + {hero[stat]} trained + {items} equipment</small><button className="command-button secondary" disabled={busy || points < 1} onClick={() => run({ type: 'heroSkill', armyId: army.id, heroId: hero.id, stat }, `${hero.name} improved ${STAT_NAMES[stat].toLowerCase()}`)}><Icon name="plus" size={15}/>Improve {STAT_NAMES[stat].toLowerCase()}</button></article>;

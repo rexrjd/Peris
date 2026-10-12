@@ -1,0 +1,92 @@
+{
+  "base_commit": "ab4325ccc4d4bd80da44abfb8be17bf6572b2f19",
+  "package": "Armies UI V19.2",
+  "database_migration": false,
+  "files": [
+    {
+      "path": "ARMIES_UI_PUSH_NOTES.txt",
+      "bytes": 3001,
+      "sha256": "113aecfec9d20e74ca6131c8c37dc4908c8b4ce96cd59febd2d757c46d7021ae"
+    },
+    {
+      "path": "ARMIES_UI_UPDATE.md",
+      "bytes": 2671,
+      "sha256": "3eb2da65801c8b26200b037397bcd754439410a09faa442e866e83a01b2da585"
+    },
+    {
+      "path": "docs/previews/armies-ui/commander-desktop.png",
+      "bytes": 274381,
+      "sha256": "8f2112aae9919dd899f994e24f31216fb873fbfbf4ba612a3334cf08869a2127"
+    },
+    {
+      "path": "docs/previews/armies-ui/equipment-desktop.png",
+      "bytes": 285824,
+      "sha256": "3d1717f71f78d0610d4d459a5db61d8a5f83b1425e33274441fc63ee5a2ca92e"
+    },
+    {
+      "path": "docs/previews/armies-ui/mobile-320.png",
+      "bytes": 340736,
+      "sha256": "6777eb4bfb5fef57ce47c1b1034ba42cd85abd89c4d212dcca292a2493a33869"
+    },
+    {
+      "path": "docs/previews/armies-ui/recruitment-desktop.png",
+      "bytes": 227095,
+      "sha256": "4eb017ccc36033c0794ecfc263951ef609d34d21b0bba0a87c2b2193924d79de"
+    },
+    {
+      "path": "docs/previews/armies-ui/troops-desktop.png",
+      "bytes": 309440,
+      "sha256": "a7b5cf9a4b448613ff3487aab268d35bbe6dcff60b4c54bd8e3ecdc19a82b9f7"
+    },
+    {
+      "path": "src/app/styles/index.css",
+      "bytes": 2298,
+      "sha256": "45e1f32dbfbe1b2182611b2e0acd03ce3cc9d51b364c8db4cb84905e44cca6e8"
+    },
+    {
+      "path": "src/features/army/styles/workspace.css",
+      "bytes": 35683,
+      "sha256": "8a4dd3ee74da69aa31af8fa293146f16ec9ce592ea605d911804940e2fb89c3f"
+    },
+    {
+      "path": "src/features/army/ui/ArmyCommanderCard.tsx",
+      "bytes": 4274,
+      "sha256": "eafa199ae57ca799f5427dc6131327b45eef00d20e5986c24fb4065e3fb60982"
+    },
+    {
+      "path": "src/features/army/ui/ArmyTroopsPanel.tsx",
+      "bytes": 5660,
+      "sha256": "b7339262530e54d85fa3d23b28ee1435d804700f11b9fe076d39911f66b01000"
+    },
+    {
+      "path": "src/features/army/ui/ArmyView.tsx",
+      "bytes": 9952,
+      "sha256": "b64500cd0909fc147dead778176dac98c18c3674d3efc0a6b63f489b3a40c692"
+    },
+    {
+      "path": "src/features/army/ui/RecruitmentPanel.tsx",
+      "bytes": 9450,
+      "sha256": "5b5c6b7ea4db8eb40ea53abdd043753c3d7a32f057bb2713b079099b580822d9"
+    },
+    {
+      "path": "src/features/heroes/ui/EquipmentPanel.tsx",
+      "bytes": 8006,
+      "sha256": "dde01d92696e3656c803111382a268766c1ff286d8b293bd885981268571d440"
+    },
+    {
+      "path": "src/features/heroes/ui/HeroPanel.tsx",
+      "bytes": 6488,
+      "sha256": "cc2d29b88a7dc195f85dedd4f07662a836d46fa229e9fc26f370ae9cf21367bb"
+    },
+    {
+      "path": "tests/e2e/army-workspace.spec.ts",
+      "bytes": 10523,
+      "sha256": "564f88ff7e80906d24b36f436a6f0a2ab5ded3bbc838d7561d0d8275b443619c"
+    },
+    {
+      "path": "tests/e2e/hero-loot.spec.ts",
+      "bytes": 7688,
+      "sha256": "625103f1e6f0f64c8827cf315d3fc54cb44120dbddc4b7b2296b4b11a5725a48"
+    }
+  ]
+}

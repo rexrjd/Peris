@@ -1,0 +1,234 @@
+/* Armies share the quiet slate HUD, with one commander and one management view. */
+.game-shell .army-command.armies-workspace{--cmd-panel:#1b222d;--cmd-bg:#151b25;--cmd-accent:#e3c48f;--cmd-text:#edf0f6;--cmd-muted:#a7b4c9;--cmd-border:#ffffff18;max-width:1680px;height:100%;min-height:0;display:flex;flex-direction:column;gap:14px;padding:16px 20px;margin:auto;background:radial-gradient(ellipse at 0 35%,#31425c15,transparent 65%);overflow:hidden}
+.armies-workspace button:focus-visible,.armies-workspace input:focus-visible,.army-recruit-modal :is(button,input,select):focus-visible{outline:2px solid #e3c48f;outline-offset:3px}
+.armies-toolbar{display:flex;align-items:center;gap:12px;min-height:38px;flex:none}
+.armies-toolbar>div{display:flex;align-items:center;gap:10px;min-width:0}
+.army-command.armies-workspace .armies-toolbar h1{font-size:19px;line-height:1.3;margin:0;letter-spacing:-.03em}
+.armies-toolbar>div>span{color:var(--cmd-muted);font-size:11px;border-left:1px solid #ffffff20;padding-left:10px}
+.armies-toolbar small{color:#8897af;font-size:10px;margin-left:7px}
+.armies-search{display:flex;align-items:center;gap:8px;width:175px;min-width:0;margin-left:auto;padding:8px 10px;border:1px solid #ffffff15;border-radius:8px;background:#ffffff03;color:#9caec8}
+.armies-workspace .armies-search input{font:11px 'Open Sans',Arial,sans-serif;width:100%;min-width:0;min-height:18px;height:18px;color:#edf0f6;background:transparent;border:0;padding:0;border-radius:0;outline:none;box-shadow:none}
+.armies-workspace .command-button{min-height:36px;padding:8px 12px;font-size:11px;border-radius:8px;gap:7px}
+.armies-workspace .command-button.primary{background:var(--cmd-accent);border-color:var(--cmd-accent);color:#1b222d}
+.armies-workspace .command-button.secondary{background:#ffffff04;color:#c6d1e4;border-color:#ffffff20}
+.armies-workspace .command-text-button{font-size:11px;color:#d5bc8e}
+.armies-workspace .armies-roster-strip{display:flex;flex:none;gap:8px;margin:0;padding:1px 0 5px;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:thin;scrollbar-color:#ffffff28 transparent;scroll-snap-type:x proximity}
+.armies-workspace .armies-roster-strip>button{display:flex;align-items:center;gap:10px;flex:0 0 auto;min-width:184px;max-width:248px;min-height:60px;padding:8px 11px;border:1px solid #ffffff12;border-radius:10px;background:#ffffff02;text-align:left;scroll-snap-align:start;color:#dce4f2}
+.armies-workspace .armies-roster-strip>button:hover{background:#ffffff06;border-color:#ffffff25}
+.armies-workspace .armies-roster-strip>button[aria-pressed=true]{background:#e3c48f0a;border-color:#e3c48f65;box-shadow:inset 0 -2px #e3c48f30}
+.armies-workspace .armies-roster-strip .command-portrait{width:34px;height:42px;flex:none;object-position:center 35%;border-radius:6px;border:1px solid #ffffff20}
+.armies-roster-identity{display:block;min-width:0;flex:1}
+.armies-roster-identity strong{display:block;font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.armies-roster-identity small{display:block;color:#96a7c1;font-size:9px;margin-top:3px;white-space:nowrap}
+.army-roster-state{display:flex;align-items:center;gap:6px;flex:none;margin-left:6px}
+.army-roster-state>i,.army-live-status>i{display:block;width:5px;height:5px;border-radius:50%;background:#a5b9d6;flex:none}
+.army-roster-state.status-training>i,.army-live-status.status-training>i{background:#e3c48f}
+.army-roster-state.status-marching>i,.army-live-status.status-marching>i{background:#8eaff2}
+.army-roster-state.status-empty-army>i,.army-live-status.status-empty-army>i{background:#7f8ca2}
+.army-roster-state>b{font:500 9px 'Open Sans',Arial,sans-serif;display:grid;place-items:center;min-width:17px;height:17px;border-radius:4px;background:#e3c48f18;color:#e3c48f}
+.army-roster-empty{padding:12px;font-size:11px;color:#96a7c1;margin:0}
+.army-workspace-board{display:grid;grid-template-columns:232px minmax(0,1fr);gap:18px;flex:1;min-height:0}
+.army-commander-card{display:flex;flex-direction:column;align-self:start;gap:11px;padding:16px;min-width:0;max-height:100%;overflow:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#ffffff25 transparent;border:1px solid #ffffff18;border-radius:13px;background:linear-gradient(160deg,#202a38,#1a212d);box-shadow:0 4px 18px #0001}
+.army-commander-face{position:relative;flex:none}
+.armies-workspace .army-commander-face .command-portrait{display:block;width:100%;height:190px;max-width:none;object-fit:cover;object-position:center 32%;border:1px solid #ffffff18;border-radius:8px;margin:0}
+.army-commander-rank{position:absolute;right:9px;bottom:9px;padding:4px 8px;background:#171f2bed;border:1px solid #e3c48f55;border-radius:6px;color:#e3c48f;font-size:10px}
+.army-commander-class{display:block;color:#b8c5da;font-size:10px;letter-spacing:.03em}
+.armies-workspace .army-commander-identity h2{font-size:23px;line-height:1.2;margin:5px 0;color:#edf0f6;overflow-wrap:anywhere}
+.army-commander-identity p{color:#98a8c1;font-size:10px;line-height:1.4!important;margin:0 0 9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.army-live-status{display:flex;align-items:center;gap:6px;color:#c2cee0;font-size:10px}
+.army-live-status time{margin-left:auto;font-variant-numeric:tabular-nums;color:#e3c48f}
+.army-commander-xp>div:first-child{display:flex;justify-content:space-between;gap:8px;margin-bottom:6px;font-size:9px;color:#96a7c1}
+.army-commander-xp strong{font-weight:500;color:#c6d1e4;font-variant-numeric:tabular-nums}
+.army-commander-xp>div[role=progressbar]{height:3px;overflow:hidden;border-radius:3px;background:#ffffff12}
+.army-commander-xp i{display:block;height:100%;background:#e3c48f}
+.army-commander-summary{margin:0;padding:2px 0;display:grid;gap:11px}
+.army-commander-summary>div{display:flex;justify-content:space-between;gap:8px;font-size:10px}
+.army-commander-summary dt{display:flex;align-items:center;gap:7px;color:#96a7c1}
+.army-commander-summary dd{margin:0;color:#edf0f6;font-weight:500;font-variant-numeric:tabular-nums}
+.army-commander-summary dd small{color:#8394b0;font-size:9px;font-weight:400}
+.army-commander-location{display:flex;align-items:center;gap:8px;border-top:1px solid #ffffff12;padding-top:12px;color:#adbdd6;font-size:10px}
+.army-commander-location>span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}
+.army-commander-location small{display:block;font-size:9px;color:#8295b3;margin-top:3px}
+.army-commander-location>svg{flex:none;color:#d5bc8e}
+.army-commander-location button{display:grid;place-items:center;flex:none;width:28px;height:28px;background:none;border:0;border-radius:6px;color:#adbdd6}
+.army-commander-location button:hover{background:#ffffff08}
+.army-skill-notice{display:flex;align-items:center;gap:7px;padding:8px 0;margin:0;min-height:30px;background:none;border:0;color:#e3c48f;font-size:10px;text-align:left}
+.army-skill-notice>span{flex:1}
+.army-orders-button{width:100%}
+.army-management-workspace{display:flex;flex-direction:column;min-width:0;min-height:0;border:1px solid #ffffff16;border-radius:13px;background:#1b222df0;overflow:hidden;box-shadow:0 4px 18px #0001}
+.armies-workspace .army-command-tabs{position:relative;top:auto;display:flex;align-items:center;gap:7px;flex:none;margin:0;padding:0 18px;min-height:52px;border:0;border-bottom:1px solid #ffffff14;background:#ffffff01;border-radius:0}
+.armies-workspace .army-command-tabs>button{display:flex;align-items:center;gap:7px;padding:16px 10px;min-height:52px;font-size:11px;color:#91a4bf;border:0;border-bottom:2px solid transparent;background:none}
+.armies-workspace .army-command-tabs>button:hover{color:#dce4f2;background:#ffffff03}
+.armies-workspace .army-command-tabs>button[aria-current=page]{color:#edf0f6;border-bottom-color:#e3c48f}
+.armies-workspace .army-command-tabs>button>b{min-width:15px;height:15px;padding:1px 4px;font-size:8px;border-radius:4px;background:#e3c48f17;color:#e3c48f}
+.armies-workspace .army-command-body{flex:1;min-height:0;padding:22px;overflow:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#ffffff2b transparent;background:none}
+.armies-workspace .command-panel{padding:0;margin:0;border:0;border-radius:0;background:none;box-shadow:none}
+.armies-workspace h2{font-size:16px;letter-spacing:-.02em;margin:0;color:#edf0f6}
+.armies-workspace h3{font-size:14px}
+.armies-workspace .command-section-heading{margin-bottom:16px;gap:12px}
+.armies-workspace .command-kicker{font-size:9px;letter-spacing:.035em;color:#96a7c1;margin:0 0 4px;text-transform:none}
+.armies-workspace .command-muted{color:#96a7c1;font-size:11px;line-height:1.55}
+.armies-workspace .command-pill{font-size:10px;color:#adbdd6;border-color:#ffffff15;background:#ffffff03;padding:4px 7px}
+.army-troops-section>header,.army-training-section>header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:18px}
+.army-troops-section>header>div:first-child>span{display:block;font-size:10px;color:#96a7c1;margin-top:4px}
+.army-troops-section>header>div:last-child{display:flex;align-items:center;gap:6px}
+.army-small-icon{display:grid;place-items:center;width:34px;height:34px;border:1px solid #ffffff12;border-radius:7px;background:none;color:#91a4bf}
+.army-small-icon[aria-pressed=true]{background:#e3c48f0c;color:#e3c48f;border-color:#e3c48f40}
+.army-troop-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.army-troop-grid>button{display:flex;align-items:center;gap:13px;position:relative;min-width:0;min-height:116px;padding:17px 14px;text-align:left;border:1px solid #ffffff13;border-radius:11px;background:#242e3d;color:#edf0f6;overflow:hidden}
+.army-troop-grid>button:hover{background:#ffffff06;border-color:#e3c48f45}
+.army-troop-grid .fw-troop-icon{width:64px;height:76px;flex:none;border:1px solid #ffffff16;border-radius:8px;background-color:#151d29}
+.army-troop-grid>button>span:not(.fw-troop-icon){display:block;min-width:0;flex:1}
+.army-troop-grid strong{display:block;font-size:11px;line-height:1.4;font-weight:500}
+.army-troop-grid small{display:block;font-size:9px;color:#8195b4;margin:4px 0 10px}
+.army-troop-grid b{font-size:25px;line-height:1;font-weight:500;font-variant-numeric:tabular-nums;color:#edf0f6}
+.army-troop-grid>button>svg{position:absolute;right:9px;bottom:9px;color:#7f95b5}
+.army-training-section{padding-top:22px;margin-top:26px;border-top:1px solid #ffffff12}
+.army-training-section>header{margin:0;min-height:20px}
+.army-training-section>header h2{font-size:12px;color:#b4c2d8}
+.army-training-section>header>span{font-size:10px;color:#8195b4}
+.armies-workspace .command-queue-list{padding:0;margin:13px 0 0;list-style:none;display:grid;gap:9px}
+.armies-workspace .command-queue-list>li{display:flex;align-items:center;gap:11px;padding:10px 12px;border:1px solid #ffffff0e;border-radius:8px;background:#ffffff02;color:#b9c8e0}
+.armies-workspace .command-queue-list .fw-troop-icon{width:32px;height:36px;border-radius:5px}
+.armies-workspace .command-queue-list>li>div{flex:1;min-width:0}
+.armies-workspace .command-queue-list strong{display:block;font-size:11px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.armies-workspace .command-queue-list small{display:block;font-size:9px;color:#8195b4;margin-top:4px}
+.armies-workspace .command-queue-list time{font-size:11px;color:#e3c48f;flex:none;font-variant-numeric:tabular-nums}
+.army-training-meter{display:block;height:3px;max-width:280px;margin-top:7px;background:#ffffff0b;border-radius:3px;overflow:hidden}
+.army-training-meter>i{display:block;height:100%;background:#a2b7d9}
+.army-empty-troops{padding:42px 16px;text-align:center;border:1px dashed #ffffff18;border-radius:10px;color:#8195b4}
+.army-empty-troops h3{margin:12px 0 6px;color:#dce4f2}
+.army-empty-troops p{font-size:11px;margin-bottom:16px;color:#96a7c1}
+.army-empty-troops .command-text-button{justify-content:center}
+.army-operation-notices:empty{display:none}
+.army-operation-notices{flex:none}
+.army-operation{display:flex;align-items:center;gap:9px;padding:9px 18px;border-bottom:1px solid #ffffff12;background:#e3c48f04;color:#acbdd5;font-size:10px}
+.army-operation>span{flex:1;min-width:0}.army-operation b{font-weight:500;margin-left:6px;color:#e3c48f}
+.armies-workspace .army-operation .command-button{min-height:29px;padding:6px 9px;font-size:10px;white-space:nowrap}
+/* Skills remain actionable without repeating the hero dossier. */
+.armies-workspace .commander-layout.is-compact{display:block}
+.armies-workspace .commander-development{display:grid;gap:25px}
+.armies-workspace .commander-development>.command-panel+.command-panel{padding-top:22px;border-top:1px solid #ffffff12}
+.armies-workspace .command-attributes{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.armies-workspace .command-attributes>article{padding:15px 13px;border:1px solid #ffffff12;border-radius:10px;background:#ffffff02}
+.armies-workspace .attribute-top{gap:7px}
+.armies-workspace .attribute-top>span{font-size:11px}
+.armies-workspace .attribute-top>strong{font-size:25px;font-weight:500}
+.armies-workspace .attribute-top>svg{width:17px;color:#e3c48f}
+.armies-workspace .command-attributes p{font-size:10px;line-height:1.6;min-height:32px;margin:10px 0 8px;color:#b7c6dd}
+.armies-workspace .command-attributes small{font-size:9px;color:#8195b4;min-height:28px;line-height:1.45}
+.armies-workspace .command-attributes .command-button{width:100%;font-size:10px;min-height:33px;padding:7px 6px;margin-top:11px}
+.armies-workspace .command-effects{grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+.armies-workspace .command-effects strong{font-size:20px;font-weight:500;color:#dbe5f5}
+.armies-workspace .command-effects small{font-size:10px;color:#91a4bf}
+.armies-workspace .command-spells{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.armies-workspace .command-spells strong{font-size:11px}.armies-workspace .command-spells small{font-size:9px}
+.armies-workspace .command-inline-footer{margin-top:14px;font-size:10px;gap:12px}
+/* Five compact equipment slots above a shared inventory and a focused inspector. */
+.armies-workspace .equipment-layout{display:flex;flex-direction:column;align-items:stretch;gap:24px;width:100%}
+.armies-workspace .command-loadout>.command-muted,.armies-workspace .command-loadout>.command-note{display:none}
+.armies-workspace .command-equipment-slots{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:9px;margin:0}
+.armies-workspace .command-equipment-slots>button{display:flex;align-items:center;flex-direction:column;gap:8px;padding:12px 8px;min-width:0;text-align:center;border:1px solid #ffffff14;border-radius:10px;background:#ffffff02}
+.armies-workspace .command-equipment-slots>button[aria-pressed=true]{border-color:#e3c48f65;background:#e3c48f07}
+.armies-workspace .command-equipment-slots>button>.artifact-art{width:52px;height:52px;border-radius:8px}
+.armies-workspace .command-equipment-slots>button>span{min-width:0;max-width:100%}
+.armies-workspace .command-equipment-slots small{font-size:9px;color:#9bacc6}
+.armies-workspace .command-equipment-slots strong{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:10px;color:#dce4f2;margin-top:4px}
+.armies-workspace .command-equipment-slots em,.armies-workspace .command-equipment-slots>button>svg:last-child{display:none}
+.armies-workspace .command-equipment-slots .artifact-glyph{width:42px;height:42px;flex:none}
+.armies-workspace .command-backpack{display:grid;grid-template-columns:minmax(0,1fr) 264px;gap:17px;align-items:start;padding-top:23px;border-top:1px solid #ffffff12}
+.armies-workspace .command-backpack>.command-section-heading{grid-column:1/-1;margin:0 0 2px}
+.equipment-inventory-tools{display:flex;align-items:center;gap:6px;grid-column:1/-1;width:100%;margin:0 0 2px}
+.equipment-inventory-tools>label{display:flex;align-items:center;gap:8px;flex:1;max-width:260px;padding:8px 10px;border:1px solid #ffffff18;border-radius:7px;background:#ffffff02;color:#8b9fbf}
+.armies-workspace .equipment-inventory-tools input{min-width:0;width:100%;height:18px;min-height:18px;padding:0;border:0;background:none;border-radius:0;color:#dce4f2;font:10px 'Open Sans',Arial,sans-serif;outline:none;box-shadow:none}
+.equipment-inventory-tools>button{width:32px;height:32px;display:grid;place-items:center;padding:0;border:1px solid #ffffff18;border-radius:7px;background:#ffffff02;color:#91a4bf}
+.equipment-inventory-tools>button[aria-pressed=true]{border-color:#e3c48f40;background:#e3c48f08;color:#e3c48f}
+.armies-workspace .command-artifact-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:9px;margin:0;align-items:start}
+.armies-workspace .command-artifact-grid>button{display:flex;flex-direction:column;align-items:center;gap:5px;min-width:0;padding:12px 8px 9px;border:1px solid #ffffff14;border-radius:10px;background:#ffffff02;text-align:center}
+.armies-workspace .command-artifact-grid>button[aria-pressed=true]{background:#e3c48f07;border-color:#e3c48f75}
+.armies-workspace .command-artifact-grid>button>.artifact-art{width:61px;height:61px;border-radius:7px;margin:0 0 4px}
+.armies-workspace .command-artifact-grid strong{font-size:10px;line-height:1.4;font-weight:500;color:#dce4f2}
+.armies-workspace .command-artifact-grid .artifact-rarity{font-size:9px}
+.armies-workspace .command-artifact-grid small:not(.artifact-rarity){display:none}
+.armies-workspace .command-artifact-grid>button>span:last-child{font-size:8px;padding:0;margin-top:1px;background:none;border:0;color:#8d9fba;line-height:1.4}
+.armies-workspace .command-artifact-grid>button>span.equipped{color:#e3c48f}
+.armies-workspace .command-artifact-detail{position:sticky;top:0;padding:15px;margin:0;border:1px solid #ffffff18;border-radius:10px;background:#ffffff02}
+.armies-workspace .command-artifact-detail>div:first-child{display:flex;flex-direction:column;align-items:flex-start;gap:12px}
+.armies-workspace .command-artifact-detail>div>.artifact-art{width:80px;height:80px;border-radius:9px}
+.armies-workspace .command-artifact-detail h3{font-size:18px;line-height:1.35;margin:4px 0 8px;color:#edf0f6}
+.armies-workspace .command-artifact-detail p{font-size:11px;color:#b3c3dc;line-height:1.6;margin:0}
+.armies-workspace .command-artifact-detail .command-muted{display:block;font-size:9px;margin-top:15px}
+.armies-workspace .artifact-comparison{gap:6px;margin:10px 0 15px}
+.armies-workspace .artifact-comparison>span{font-size:10px;padding:5px 7px;border-radius:5px;background:#a4bbdf0b;color:#adc2e6;border-color:#a4bbdf25}
+.armies-workspace .artifact-comparison>span.loss{color:#dda7a7;border-color:#dda7a730;background:#dda7a708}
+.armies-workspace .command-artifact-detail>.command-button{width:100%;margin-top:14px;font-size:10px}
+.armies-workspace .command-backpack>.command-empty{grid-column:1/-1;padding:28px 16px}
+.armies-workspace .command-note{font-size:10px;color:#9fb0ca;background:#ffffff02;border-color:#ffffff12;padding:12px;border-radius:8px}
+.armies-workspace .command-note p{font-size:10px;line-height:1.6}
+/* Logistics uses a readable table and a smaller city card. */
+.armies-workspace .army-logistics-layout{grid-template-columns:minmax(0,1fr) 250px;gap:22px;align-items:start}
+.armies-workspace .command-base{padding:17px;border:1px solid #ffffff14;border-radius:11px;background:#ffffff02}
+.armies-workspace .command-label{font-size:10px;margin-top:0}
+.armies-workspace .command-label select{font-size:11px;min-height:36px;padding:8px 10px;border-radius:7px;background:#141c28;border-color:#ffffff20;color:#dce4f2}
+.armies-workspace .transfer-army-pair{margin:17px 0;padding:12px;gap:10px;border-radius:9px;background:#ffffff02;border:1px solid #ffffff10}
+.armies-workspace .transfer-army-pair .command-portrait{width:33px;height:40px;border-radius:5px}
+.armies-workspace .transfer-army-pair strong{font-size:11px}.armies-workspace .transfer-army-pair b{font-size:10px;color:#e3c48f}
+.armies-workspace .transfer-table>div{grid-template-columns:minmax(110px,1fr) 35px 66px 68px;gap:10px;padding:8px 0;font-size:10px;border-color:#ffffff0d}
+.armies-workspace .transfer-table-head{font-size:8px!important;color:#8295b3}
+.armies-workspace .transfer-table input{min-height:31px;border-radius:6px;padding:5px 7px;font-size:11px;border-color:#ffffff20;background:#141c28;color:#dce4f2}
+.armies-workspace .transfer-table .fw-troop-icon{width:23px;height:25px}
+.armies-workspace .command-transfer-footer{gap:12px;margin:15px 0}.armies-workspace .command-transfer-footer strong{font-size:11px}.armies-workspace .command-transfer-footer small{font-size:9px}
+/* Recruitment is a small overlay; city-embedded recruitment keeps its existing UI. */
+.army-recruit-backdrop{align-items:flex-start!important;justify-content:flex-end!important;padding:74px 20px 20px!important;background:#070d1760!important;backdrop-filter:blur(2px)}
+.modal.army-recruit-modal{--cmd-bg:#1b222d;--cmd-panel:#1b222d;--cmd-border:#ffffff20;--cmd-text:#edf0f6;--cmd-muted:#a7b4c9;--cmd-accent:#e3c48f;width:380px;max-width:calc(100vw - 24px);max-height:calc(100dvh - 94px);border-radius:13px;padding:20px;background:#1b222d;border:1px solid #ffffff25;color:#edf0f6;box-shadow:0 18px 60px #0005}
+.army-recruit-heading{padding:0 30px 15px 0;margin-bottom:16px;border-bottom:1px solid #ffffff12}
+.army-recruit-heading>span{font-size:10px;color:#9bacc6}
+.army-recruit-heading h2{font:600 19px/1.3 'Open Sans',Arial,sans-serif;margin:4px 0 0;color:#edf0f6;letter-spacing:-.025em}
+.army-recruit-modal .army-recruit-layout.is-form-only{display:block}
+.army-recruit-modal .command-recruit-form{padding:0;border:0;border-radius:0;background:none;box-shadow:none}
+.army-recruit-modal .command-recruit-form>h2{display:none}
+.army-recruit-modal .command-recruit-form h3{font:600 15px/1.3 'Open Sans',Arial,sans-serif;color:#edf0f6;margin:17px 0 6px}
+.army-recruit-modal .command-label{font-size:10px;margin-top:0;color:#aabbd4}
+.army-recruit-modal .command-label select{font-size:11px;min-height:36px;padding:8px 10px;border-radius:7px;background:#141c28;border-color:#ffffff20;color:#dce4f2}
+.army-recruit-modal .army-command-tabs{position:relative;top:auto;display:flex;justify-content:space-between;gap:5px;margin:15px 0;padding:0;border:0;background:none}
+.army-recruit-modal .army-command-tabs button{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0;min-height:44px;padding:7px 8px;font-size:10px;background:#ffffff03;border:1px solid #ffffff15;border-radius:7px;color:#9bacc6}
+.army-recruit-modal .army-command-tabs button[aria-pressed=true]{color:#e3c48f;background:#e3c48f0a;border-color:#e3c48f55}
+.army-recruit-modal .army-command-tabs button small{font-size:8px;color:#8195b4}
+.army-recruit-modal .game-unit-choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.army-recruit-modal .game-unit-choices>button{display:flex;align-items:center;gap:8px;min-height:54px;padding:7px;background:#ffffff02;border:1px solid #ffffff14;border-radius:7px;text-align:left;color:#dce4f2;min-width:0}
+.army-recruit-modal .game-unit-choices>button[aria-pressed=true]{border-color:#e3c48f65;background:#e3c48f09}
+.army-recruit-modal .game-unit-choices .fw-troop-icon{width:31px;height:36px;border-radius:5px}
+.army-recruit-modal .game-unit-choices>button>span{min-width:0;font-size:10px;line-height:1.4}
+.army-recruit-modal .game-unit-choices small{display:block;font-size:8px;color:#8195b4;margin-top:3px}
+.army-recruit-modal .command-muted{font-size:10px;color:#96a7c1;line-height:1.6}
+.army-recruit-modal .command-quantity{display:grid;grid-template-columns:36px minmax(0,1fr) 36px;gap:7px;margin-top:7px}
+.army-recruit-modal .command-quantity>button,.army-recruit-modal .command-quantity input{min-height:37px;background:#141c28;border:1px solid #ffffff20;border-radius:7px;color:#dce4f2;font:12px 'Open Sans',Arial,sans-serif;padding:7px;text-align:center}
+.army-recruit-modal .recruit-presets{display:flex;gap:6px;margin:8px 0 14px}
+.army-recruit-modal .recruit-presets>button{min-height:29px;flex:1;padding:5px 7px;border-radius:6px;border:1px solid #ffffff15;background:#ffffff03;color:#aabbd4;font-size:10px}
+.army-recruit-modal .recruit-presets>button[aria-pressed=true]{border-color:#e3c48f55;color:#e3c48f;background:#e3c48f09}
+.army-recruit-modal .cost{gap:12px;margin:12px 0;font-size:11px}
+.army-recruit-modal .recruit-timing{padding:12px 0;margin:0;border-top:1px solid #ffffff12;font-size:9px;color:#96a7c1}
+.army-recruit-modal .recruit-timing b{font-size:11px;color:#c6d1e4}
+.army-recruit-modal .command-button{min-height:37px;padding:9px 12px;border-radius:7px;font:600 11px 'Open Sans',Arial,sans-serif}
+.army-recruit-modal .command-button.primary{width:100%;background:#e3c48f;border-color:#e3c48f;color:#1b222d}
+.army-recruit-modal .recruit-blocked{font-size:10px;line-height:1.6;color:#d5b997;background:#e3c48f06;border-color:#e3c48f22}
+.army-recruit-modal .command-text-button{font-size:10px;color:#d5bc8e}
+.army-recruit-modal .modal-close{background:#ffffff04;border-color:#ffffff20;color:#dce4f2;right:12px;top:12px}
+.modal.raise-army-modal.army-command-dialog{--cmd-accent:#e3c48f;--cmd-muted:#a7b4c9;--cmd-text:#edf0f6;--cmd-border:#ffffff20;width:690px;max-width:calc(100vw - 24px);padding:25px;border:1px solid #ffffff25;border-radius:13px;background:#1b222d;color:#edf0f6;box-shadow:0 18px 60px #0005}
+.raise-army-modal .raise-army-heading h2{font-size:24px;letter-spacing:-.035em}
+.raise-army-modal .raise-army-heading p{font-size:11px;color:#96a7c1}
+.raise-army-modal .raise-class-picker{gap:10px;margin-top:20px}
+.raise-army-modal .raise-class-picker>button{padding:15px 10px;border-radius:10px;background:#ffffff02;border-color:#ffffff16}
+.raise-army-modal .raise-class-picker>button[aria-pressed=true]{background:#e3c48f07;border-color:#e3c48f65}
+.raise-army-modal .raise-class-picker .command-portrait{width:80px;max-width:100%;height:96px;border-radius:8px;margin:0 auto 12px}
+.raise-army-modal .raise-class-picker strong{font-size:13px;color:#edf0f6}.raise-army-modal .raise-class-picker small{font-size:10px;color:#96a7c1}.raise-army-modal .raise-class-picker>button>span{font-size:9px;color:#d5bc8e}
+.raise-army-modal .raise-army-fields{gap:15px;margin-top:20px}.raise-army-modal .raise-army-fields label{font-size:10px;color:#96a7c1}.raise-army-modal .raise-army-fields :is(input,select){font-size:12px;min-height:39px;border-radius:7px;background:#141c28;color:#dce4f2;border-color:#ffffff20}
+.raise-army-modal .command-note{font-size:10px;background:#ffffff02;border-color:#ffffff14;padding:11px;border-radius:8px;margin:17px 0}.raise-army-modal .command-note p{font-size:10px;color:#96a7c1}
+.raise-army-modal .raise-army-footer .command-button{min-height:38px;padding:9px 13px;border-radius:8px;font-size:11px}.raise-army-modal .raise-army-footer strong{font-size:11px}.raise-army-modal .raise-army-footer small{font-size:9px}.raise-army-modal .raise-army-reason{font-size:10px}
+@media(max-width:1180px){.army-workspace-board{grid-template-columns:212px minmax(0,1fr);gap:14px}.army-troop-grid{gap:9px}.army-troop-grid>button{padding:14px 11px;gap:10px}.army-troop-grid .fw-troop-icon{width:48px;height:60px}.armies-workspace .command-attributes{grid-template-columns:repeat(2,minmax(0,1fr))}.armies-workspace .command-backpack{grid-template-columns:minmax(0,1fr) 235px}.armies-workspace .army-logistics-layout{grid-template-columns:1fr}.armies-workspace .command-base{margin-top:4px}}
+@media(max-width:930px){.army-troop-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.armies-toolbar small{display:none}.armies-workspace .command-backpack{display:flex;flex-direction:column;gap:15px}.armies-workspace .command-artifact-grid{width:100%;grid-template-columns:repeat(3,minmax(0,1fr))}.armies-workspace .command-artifact-detail{position:relative;top:auto;width:100%}.armies-workspace .command-artifact-detail>div:first-child{flex-direction:row;gap:14px}.armies-workspace .command-artifact-detail>div>.artifact-art{width:62px;height:62px}.armies-workspace .command-equipment-slots{gap:5px}.armies-workspace .command-equipment-slots>button{padding:9px 5px}.armies-workspace .command-equipment-slots>button>.artifact-art{width:40px;height:40px}.armies-workspace .command-equipment-slots strong{display:none}.armies-workspace .command-spells{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:760px){.game-shell .army-command.armies-workspace{height:auto;min-height:100%;padding:12px;gap:12px;overflow:visible}.army-workspace-board{display:flex;flex-direction:column;gap:12px;min-height:0;flex:none}.armies-toolbar{gap:8px}.army-command.armies-workspace .armies-toolbar h1{font-size:17px}.armies-toolbar>div{gap:7px}.armies-toolbar>div>span{font-size:10px;padding-left:7px}.armies-toolbar .command-button{min-height:34px;font-size:10px;padding:8px 10px;gap:5px}.armies-search{width:130px;padding:7px 8px}.armies-search input{font-size:10px}.armies-workspace .armies-roster-strip{margin:0 -2px;gap:7px;padding-bottom:4px}.armies-workspace .armies-roster-strip>button{min-width:166px;max-width:210px;min-height:54px;padding:7px 9px;gap:8px}.armies-workspace .armies-roster-strip .command-portrait{width:30px;height:37px}.armies-roster-identity strong{font-size:11px}.army-commander-card{position:relative;display:grid;grid-template-columns:52px minmax(0,1fr);gap:9px 12px;width:100%;max-height:none;padding:13px;overflow:visible}.armies-workspace .army-commander-face .command-portrait{width:52px;height:66px;border-radius:6px}.army-commander-face{grid-row:1}.army-commander-rank{right:2px;bottom:2px;padding:2px 3px;font-size:7px;border-radius:3px}.army-commander-identity{padding-right:37px;min-width:0}.armies-workspace .army-commander-identity h2{font-size:18px;margin:3px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.army-commander-class{font-size:9px}.army-commander-identity p{font-size:9px;margin-bottom:5px}.army-live-status{font-size:9px}.army-live-status time{margin-left:7px}.army-commander-summary{display:none}.army-commander-location{grid-column:1/-1;border:0;padding:0;font-size:9px}.army-commander-location small{display:none}.army-commander-location button{width:24px;height:24px}.army-commander-xp{grid-column:1/-1}.army-commander-xp>div:first-child{font-size:8px}.army-commander-card .army-orders-button{position:absolute;right:13px;top:13px;width:33px;height:33px;min-height:33px;padding:0}.army-orders-button>span{display:none}.army-skill-notice{grid-column:1/-1;min-height:23px;padding:2px 0;font-size:9px}.army-management-workspace{min-height:0;overflow:visible}.armies-workspace .army-command-tabs{gap:0;padding:0 10px;justify-content:space-between;min-height:46px;border-radius:12px 12px 0 0;overflow-x:auto}.armies-workspace .army-command-tabs>button{min-height:46px;font-size:10px;padding:13px 6px;gap:5px;white-space:nowrap}.armies-workspace .army-command-tabs svg{width:14px;flex:none}.armies-workspace .army-command-body{padding:16px;overflow:visible;min-height:0;flex:none}.army-troops-section>header{gap:8px;margin-bottom:14px}.army-troops-section>header>div:first-child>span{font-size:9px}.army-troops-section .command-button{min-height:33px;padding:7px 9px;font-size:10px}.army-small-icon{width:30px;height:30px}.army-troop-grid{gap:8px}.army-troop-grid>button{min-height:99px;padding:13px 10px;gap:8px}.army-troop-grid .fw-troop-icon{width:40px;height:54px}.army-troop-grid strong{font-size:10px}.army-troop-grid small{font-size:8px;margin:3px 0 9px}.army-troop-grid b{font-size:23px}.army-training-section{margin-top:20px;padding-top:17px}.army-training-section>header>span{font-size:9px}.army-operation{padding:9px 11px;gap:7px}.armies-workspace .army-operation .command-button{font-size:9px;padding:6px 7px}.armies-workspace .command-attributes{gap:9px}.armies-workspace .command-attributes>article{padding:13px 10px}.armies-workspace .command-attributes p{font-size:9px;min-height:29px}.armies-workspace .command-attributes small{font-size:8px}.armies-workspace .command-attributes .command-button{font-size:9px}.armies-workspace .command-effects{grid-template-columns:repeat(2,minmax(0,1fr))}.armies-workspace .command-equipment-slots>button>.artifact-art{width:43px;height:43px}.armies-workspace .command-equipment-slots>button{padding:10px 5px}.armies-workspace .command-artifact-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.armies-workspace .command-artifact-grid>button>.artifact-art{width:58px;height:58px}.armies-workspace .command-artifact-detail>div>.artifact-art{width:68px;height:68px}.armies-workspace .transfer-table>div{grid-template-columns:minmax(80px,1fr) 26px 53px 58px;gap:7px;font-size:9px}.armies-workspace .transfer-table-head{font-size:7px!important}.armies-workspace .transfer-table .fw-troop-icon{width:20px;height:22px}.armies-workspace .transfer-army-pair{gap:7px;padding:10px}.armies-workspace .transfer-army-pair>div{gap:6px}.armies-workspace .transfer-army-pair strong{font-size:10px}.armies-workspace .command-transfer-footer{flex-direction:column;align-items:stretch}.army-recruit-backdrop{padding:65px 10px 70px!important;justify-content:center!important}.modal.army-recruit-modal{width:390px;max-height:calc(100dvh - 130px);padding:18px;max-width:calc(100vw - 20px)}}
+@media(max-width:430px){.armies-search{display:none}.armies-toolbar>.command-button{margin-left:auto}.game-shell .army-command.armies-workspace{padding:10px;gap:10px}.armies-workspace .army-command-body{padding:13px}.armies-workspace .army-command-tabs{padding:0 6px}.armies-workspace .army-command-tabs>button{font-size:9px;gap:4px;padding:13px 5px}.armies-workspace .army-command-tabs>button>b{font-size:7px;min-width:13px;height:13px;padding:1px 3px}.army-troop-grid{gap:7px}.army-troop-grid .fw-troop-icon{width:33px;height:47px}.army-troop-grid>button{padding:12px 8px;gap:7px}.army-troop-grid strong{font-size:9px}.army-troop-grid b{font-size:21px}.army-troops-section>header>div:last-child{gap:4px}.army-small-icon{width:27px;height:30px}.army-troops-section .command-button{font-size:9px;padding:7px 8px;gap:4px}.armies-workspace .command-equipment-slots>button>.artifact-art{width:36px;height:36px}.armies-workspace .command-equipment-slots small{font-size:8px}.armies-workspace .command-artifact-grid strong{font-size:9px}.armies-workspace .command-artifact-grid>button>.artifact-art{width:52px;height:52px}.armies-workspace .command-attributes>article{padding:12px 9px}.armies-workspace .attribute-top>span{font-size:10px}.armies-workspace .attribute-top>strong{font-size:23px}.armies-workspace .command-attributes .command-button{font-size:8px;padding:7px 4px;gap:4px}.armies-workspace .transfer-table>div{grid-template-columns:minmax(68px,1fr) 24px 48px 48px;gap:6px}.armies-workspace .transfer-table-head{font-size:6px!important}.armies-workspace .transfer-table>div>span:first-child{gap:5px}.armies-workspace .transfer-table .fw-troop-icon{width:18px;height:20px}.army-recruit-modal .game-unit-choices>button>span{font-size:9px}.army-recruit-modal .game-unit-choices small{font-size:7px}}
+@media(max-height:750px) and (min-width:761px){.armies-workspace .army-commander-face .command-portrait{height:145px}.army-commander-card{gap:11px}.armies-workspace .army-commander-identity h2{font-size:20px}}
+@media(max-width:760px){.army-commander-card{gap:6px 12px}.army-commander-xp>div:first-child,.army-skill-notice{display:none}.armies-workspace .command-equipment-slots .artifact-glyph{width:40px;height:40px}}
+@media(max-width:430px){.armies-workspace .command-equipment-slots .artifact-glyph{width:34px;height:34px}.armies-workspace .army-command-tabs svg{display:none}}
