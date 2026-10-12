@@ -1,0 +1,35 @@
+diff --git a/src/app/styles/compact-header.css b/src/app/styles/compact-header.css
+index ec51300..a8655ed 100644
+--- a/src/app/styles/compact-header.css
++++ b/src/app/styles/compact-header.css
+@@ -54,7 +54,7 @@
+  .game-header .game-navigation button>svg{width:20px;height:20px}
+ }
+ 
+-/* Two floating groups. The uncovered centre belongs to the map. */
++/* Shared floating header. Both map and native city scenery fill the uncovered centre. */
+ .realm-shell.game-shell{position:relative;grid-template-rows:60px minmax(0,1fr)}
+ .game-shell .realm-topbar.game-header{position:absolute;inset:8px 0 auto;height:44px;border:0;background:transparent;pointer-events:none}
+ .game-header .game-navigation,.game-header-actions{pointer-events:auto;background:#161b23f5;border:1px solid #ffffff16;border-radius:9px;box-shadow:0 2px 8px #0002}
+@@ -62,7 +62,12 @@
+ .game-header-actions{display:flex;align-items:center;gap:4px;height:44px;padding:5px;margin-left:auto;min-width:0}
+ .game-shell .game-header .resource-strip.resource-hud{margin:0;border:0;background:transparent;padding:0}
+ .game-header .game-navigation button[aria-current=page]:after{bottom:0;left:10px;right:10px}
+-.game-shell.has-map{grid-template-rows:0 minmax(0,1fr)}
++.game-shell.has-map,.game-shell:has(.city-scene-screen){grid-template-rows:0 minmax(0,1fr)}
++.game-shell:has(.city-scene-screen) .city-scene-top,
++.game-shell:has(.city-scene-screen) .city-scene-alert,
++.game-shell:has(.city-scene-screen) .city-scene-peek:not(.peek-buildings){translate:0 60px}
++.game-shell:has(.city-scene-screen) .city-scene-peek{max-height:calc(100% - 238px)}
++.game-shell:has(.city-scene-screen) .city-fallback-grid{padding-top:150px}
+ .game-shell.has-map .map-hud,.game-shell.has-map .map-city-select,.game-shell.has-map .map-field-search,.game-shell.has-map .map-operations,.game-shell.has-map .scene-compatibility{translate:0 44px}
+ @media(max-width:960px) and (min-width:761px){
+  .game-header .game-navigation button{padding:4px 6px}
+@@ -70,6 +75,7 @@
+  .game-shell .game-header .resource-hud .resource{min-width:50px}
+ }
+ @media(max-width:760px){
++ .game-shell:has(.city-scene-screen) .city-scene-peek{max-height:calc(100% - 284px)}
+  .game-shell .realm-topbar.game-header{inset:6px 0 auto;height:44px}
+  .game-shell.has-map .map-focus-controls{translate:0 44px}
+  .game-header-actions{width:100%;height:44px;margin:0;padding:4px;gap:2px}

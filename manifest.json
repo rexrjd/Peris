@@ -1,97 +1,10 @@
 {
-  "version": "19.4",
-  "base_commit": "4bfa6e8d72f744f2c542c07d6baa90a72128ee90",
+  "base_commit": "7f7094942fd16926d63c912f65275de45b095caa",
+  "version": "19.6",
   "files": [
     {
-      "path": "ARTWORK.md",
-      "sha256": "a6e06d8e2581f0da4b6047e21b061f603f8f292c755b19afeffd0849e6ccbba2",
-      "base_sha256": "482b93344ecc95fa9fcacbadadb128115f810d143ade00db9d62ddade19adc08"
-    },
-    {
-      "path": "src/features/city/rendering/SettlementScene.tsx",
-      "sha256": "82b27f8f60f1f97e02566ebb5a4bd139bfcb85cd80e7dbaffecd2c9c87d304dd",
-      "base_sha256": "e6dc867450d2e846cf9efa6a6fdbdb24011f7810a03161abd5ad1aafcc2e297e"
-    },
-    {
-      "path": "src/features/city/rendering/three/CityCamera.ts",
-      "sha256": "38aca3f0872950f25099bf079a9fca44671d154571b57b3f875274c4dec78997",
-      "base_sha256": null
-    },
-    {
-      "path": "src/features/city/rendering/three/CityScene.ts",
-      "sha256": "34a7c825ecb53dbaa52d696223a93da22a4baebac8ca089d374d052fd97f7a9f",
-      "base_sha256": "f565d0eda87a6cef015b9a67a4cf656d67ff9149c7b658b7794c380408684288"
-    },
-    {
-      "path": "src/features/city/rendering/three/academy.ts",
-      "sha256": "a957ed31b1cddbfb4119e8aa740d0220b4d86bba077ed6cd128d21b42822f1c1",
-      "base_sha256": "169a23444e7dc87e2e4b884798aa68ab7f8d648d577eb5716ddcbadab25a1915"
-    },
-    {
-      "path": "src/features/city/rendering/three/buildingModels.ts",
-      "sha256": "2bdd46b14ef01454b932ef23d6ac37a1eac0c2eebddd1c0e847ed7f7fda79f1d",
-      "base_sha256": "0bdc8cf6b5dabd95853a805f0e1922faaf5ad2b8695c8d255ae6398f94591432"
-    },
-    {
-      "path": "src/features/city/rendering/three/cityActivities.ts",
-      "sha256": "3ec842142ff5584fc5f03f18214e2a8faff83169fab942dde08a2beffc664685",
-      "base_sha256": null
-    },
-    {
-      "path": "src/features/city/rendering/three/cityWalls.ts",
-      "sha256": "9d64bd7a4ca172762a7a3abd713f226891825b5c86f5519a19a743e175f218e7",
-      "base_sha256": "8d48e4841e55f8f8615395150c7b4f16af03b07991c686ea43a0505298d19e72"
-    },
-    {
-      "path": "src/features/city/rendering/three/factionHall.ts",
-      "sha256": "d38322f071148ad8440065a968b0817f175716e3cbc65cde11072ce0a2f768b1",
-      "base_sha256": "e4a8a0dfe7c209f28943d07bf38393225bda4c9872df00d39416a43aa915aae6"
-    },
-    {
-      "path": "src/features/city/rendering/three/landscape.ts",
-      "sha256": "f887cd9644acb9f59884d065a78bef4070d6f383f970eacfa5c7284648c0d4b1",
-      "base_sha256": "af88ddb98cf725c3ae08ed59f5e2a781e602ba0b95cbbf1171190eab0aebc543"
-    },
-    {
-      "path": "src/features/city/rendering/three/mageTower.ts",
-      "sha256": "7c1fae70c73ee3df5d447e68cec28613847d15579306a3c37766e9ace5bbdc4f",
-      "base_sha256": "3e8d89c3e821b4065210eaced34376e7f920a9f691b606bb779e82f25e32fa70"
-    },
-    {
-      "path": "src/features/city/rendering/three/modelKit.ts",
-      "sha256": "81cab327c0d5e9543b1b29667966df204fe30b75966e55bf3235cb30b87014c5",
-      "base_sha256": "07355d6389f67e5b586e5da320b61a4bd67b57fe5241fb1677743a479174008e"
-    },
-    {
-      "path": "src/features/city/rendering/three/slotModels.ts",
-      "sha256": "317ac996c5cde9af43c587cf6c9227fe9317a1f28735fcbbb0a7650832910abe",
-      "base_sha256": "1acb15e8045863bd35137c47196b119fb5a7704a7836f705bf1256b5676b8880"
-    },
-    {
-      "path": "src/features/city/styles/scene-workspace.css",
-      "sha256": "d5db162874a3486108ed0936f181957bccdbb9ec49be5d89b546583740391986",
-      "base_sha256": "a2974061d93f2a38b5f68c75cf245d1a2d28b764c3f8091d4afe94133e0f82e3"
-    },
-    {
-      "path": "tests/city-camera.test.ts",
-      "sha256": "c147967aca3d8be6a3f6e3fbc2e41d7c3bc86d56430e575def2d24c1fa06f914",
-      "base_sha256": null
-    },
-    {
-      "path": "tests/e2e/city-camera.spec.ts",
-      "sha256": "ad98340fe09e6e36f473a926cfea6d0ac9aada6b2b768c8ace308b19df991481",
-      "base_sha256": null
+      "path": "src/app/styles/compact-header.css",
+      "sha256": "698145cd46a2563ff1b7f62f61776654022cb41d61b865fb419e459ec02df0cb"
     }
-  ],
-  "sql_required": false,
-  "deployments_performed": false,
-  "validation": {
-    "unit_passed": 449,
-    "unit_skipped": 1,
-    "browser_passed": 9,
-    "browser_skipped": 1,
-    "tooling_passed": 4,
-    "registered_models_checked": 46,
-    "production_build": "passed"
-  }
+  ]
 }
