@@ -178,3 +178,36 @@ A broader, gentler river stays clear of the inner lots and connects two timber/s
 The floating HUD uses smaller translucent plates and compact controls. Building levels appear on hover/selection, with a separate Show building levels toggle for the full overview. Wheel zoom, Q/E rotation, reduced motion, hidden-tab pause, selection, city switching and the WebGL fallback remain supported. The painted Village view and authoritative city/world rules are retained.
 
 Research references: Anno 117's official Roads & building in the grid and UI visual-design developer articles, Townscaper's official screenshot gallery, and Civilization VII's official gameplay overview. Reference artwork is used for study only. The shipped graphics are original procedural geometry; no third-party textures or new GLB files are added.
+
+## Ornate faction Rally Point (V19.6)
+
+The Rally Point uses the approved original ornate prototype's eleven faction
+backgrounds, transparent frames and quiet material textures. All 33 individual
+paintings were generated for Peris with the built-in image tool on 2026-10-12.
+Untouched PNGs are preserved in `assets/source/rally-point-v1/`;
+`assets/rally-point-v1.json` records every exact prompt, source and runtime SHA-256,
+generated ownership, original Peris reference paths and export byte budgets.
+No other game's images, interface assets or characters are included.
+
+`node scripts/build-rally-art.mjs` exports native 1672×941 backgrounds and
+1254×1254 frames/textures to `public/art/ui/rally-point-v1/`. Format compression
+does not trim, crop, resize or repaint the artwork. Frames use lossless WebP and
+retain their entire original alpha plane; nine-slice cuts remain 225 source
+pixels, or 290 for Orcs, 265 for Elves and 340 for Dwarves/Gnomes.
+`node scripts/build-rally-art.mjs --check`, also called by `npm run assets:check`,
+verifies uniqueness, hashes, dimensions, frame alpha, font weights and licenses.
+
+Cinzel and Crimson Text regular, semibold and bold are copied unchanged from the
+prototype into `public/fonts/rally-point/`. Their authors' copyrights and full
+SIL Open Font License 1.1 texts are retained in `public/licenses/Cinzel-OFL.txt`
+and `public/licenses/CrimsonText-OFL.txt`, with upstream sources and font hashes
+recorded in the same manifest. Faction surfaces follow the selected village;
+the artwork does not change army, movement, combat, account or save rules.
+
+The eleven faction crest vectors reuse the prototype's Game Icons through
+`react-icons/gi`. Lorc created Eagle Emblem, Tree Branch, Anvil, Clockwork,
+Skull Shield and Daemon Skull; Delapouite created Spartan Helmet, Winged Scepter,
+Egyptian Bird, Orc Head and Pagoda. `public/licenses/peris-rally-point-icons.txt`
+records each original artist and primary icon page, the CC BY 3.0 artwork license,
+interface color/size adaptations and the complete react-icons 5.5.0 MIT software
+notice. These licensed vectors are distinct from the original generated paintings.

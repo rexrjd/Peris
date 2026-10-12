@@ -2,3 +2,7 @@
 assets/source/**/*.blend filter=lfs diff=lfs merge=lfs -text
 assets/source/**/*.fbx filter=lfs diff=lfs merge=lfs -text
 assets/source/**/*.psd filter=lfs diff=lfs merge=lfs -text
+
+# These original license files are checked by SHA-256 on every platform.
+public/licenses/Cinzel-OFL.txt text eol=lf
+public/licenses/CrimsonText-OFL.txt text eol=lf

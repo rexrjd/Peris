@@ -66,6 +66,8 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
       const result = spawnSync(process.execPath, [resolve(root, 'node_modules/@gltf-transform/cli/bin/cli.js'), 'validate', file], { stdio: 'inherit' });
       if (result.error || result.status !== 0) throw new Error(`glTF validation failed: ${relative(root, file)}`);
     }
+    const { buildRallyArt } = await import('./build-rally-art.mjs');
+    await buildRallyArt({ check: true });
     console.log(`Asset checks passed: ${files.length} registered GLB model(s).`);
   } catch (error) {
     console.error(error.message);

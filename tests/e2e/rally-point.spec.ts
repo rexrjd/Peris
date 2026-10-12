@@ -1,5 +1,6 @@
 import { test, expect, type Page, type TestInfo, type Locator } from '@playwright/test';
 import { readFileSync } from 'node:fs';
+import { mkdir } from 'node:fs/promises';
 import { createSolo } from '../../src/features/campaign/domain/newRealm';
 import { beginRaid } from '../../src/features/campaign/domain/raids';
 import { emptyRoster, readRoster, writeRoster, RECRUIT_RULES, type RecruitUnit } from '../../src/features/army/domain/roster';
@@ -87,6 +88,120 @@ async function capture(page: Page, info: TestInfo, name: string) {
 async function count(summary: Locator, unit: RecruitUnit, amount: number) {
     await expect(summary.locator('.game-troop-summary > span').filter({ has: summary.page().getByRole('img', { name: troopName(unit), exact: true }) }).first()).toHaveText(String(amount));
 }
+
+function presentationFixture() {
+    const f = fixture();
+    f.camp.name = 'Rally review target';
+    f.world.armies = f.world.armies.filter(army => army.id === 1 || army.id === 500);
+    f.world.heroes = f.world.heroes!.filter(hero => f.world.armies.some(army => army.id === hero.army_id));
+    f.world.battles = []; f.world.formations = []; f.world.reports = [];
+    f.world.garrisons = []; f.world.campaign_farms = []; f.world.campaign_farm_lists = [];
+    for (const army of f.world.armies) army.faction = 'roman';
+    writeRoster(f.world.armies[1], { ...emptyRoster(), archers: 2, scout: 9, ram: 1 });
+    validateSave(f.world);
+    return f;
+}
+
+function campaignIdentity(world: World) {
+    return {
+        cities: world.settlements.map(({ id, name, owner_id, faction, x, y }) => ({ id, name, owner_id, faction, x, y })),
+        armies: world.armies.map(({ id, name, owner_id, faction, home_settlement_id, status, target_x, target_y, raid_target_id, unit_roster }) => ({ id, name, owner_id, faction, home_settlement_id, status, target_x, target_y, raid_target_id, unit_roster })),
+        heroes: world.heroes, orders: world.orders, reports: world.reports, farms: world.campaign_farms,
+    };
+}
+
+test('integrated Rally appearances remain cosmetic and scoped to this game screen', async ({ page }, info) => {
+    const f = presentationFixture(), errors = await start(page, f.world);
+    const shell = page.locator('.game-shell'), stage = page.locator('.rp-stage');
+    await expect(shell).toHaveClass(/rp-shell/);
+    await expect(shell).toHaveAttribute('data-rally-faction', 'roman');
+    await expect(page.locator('.rp-unit-card')).toHaveCount(9);
+    const identity = campaignIdentity(await saved(page));
+    await expect(page.getByLabel('Rally Point appearance').locator('option')).toHaveCount(12);
+    await page.getByLabel('Rally Point appearance').selectOption('persian');
+    await expect(shell).toHaveAttribute('data-rally-faction', 'persian');
+    await expect(stage).toHaveCSS('border-image-source', /persian-frame\.webp/);
+    await expect(page.locator('.rp-nation-title')).toContainText('Persian Empire');
+    await expect(page.locator('.rp-unit-card .fw-troop-icon').first()).toHaveCSS('background-image', /roster\/roman\.png/);
+    await expect(page.locator('.rp-commander img')).toHaveAttribute('src', /portraits\/roman\//);
+    await page.getByRole('button', { name: 'Explore appearances', exact: true }).click();
+    const chooser = page.getByRole('dialog', { name: 'Rally Point appearances', exact: true });
+    await expect(chooser.locator('.rp-faction-card')).toHaveCount(11);
+    await chooser.getByRole('button', { name: 'Necropolis appearance', exact: true }).click();
+    await expect(shell).toHaveAttribute('data-rally-faction', 'undead');
+    await expect(stage).toHaveCSS('border-image-source', /undead-frame\.webp/);
+    await page.getByLabel('Rally Point appearance').selectOption('city');
+    await expect(shell).toHaveAttribute('data-rally-faction', 'roman');
+    await expect(stage).toHaveCSS('border-image-source', /roman-frame\.webp/);
+    expect(campaignIdentity(await saved(page))).toEqual(identity);
+    await page.evaluate(async () => { await document.fonts.ready; });
+    await expect(page.locator('.rally-note').first()).toHaveCSS('font-family', /Crimson Text/);
+    await expect(page.locator('.rally-heading p')).toHaveCSS('font-family', /Crimson Text/);
+    await expect(page.locator('.rp-nation-title strong')).toHaveCSS('font-family', /Cinzel/);
+    await expect(page.locator('.rp-command-caption h2')).toHaveCSS('font-family', /Cinzel/);
+    expect(await page.locator('.rally-panel').evaluate(el => el.scrollHeight > el.clientHeight && getComputedStyle(el).overflowY === 'auto')).toBe(true);
+    await capture(page, info, 'rally-integrated-appearance');
+    const deliverables = process.env.PERIS_RALLY_QA_OUTPUT;
+    if (deliverables) {
+        await mkdir(deliverables, { recursive: true });
+        if (info.project.name === 'desktop-chromium') {
+            await page.setViewportSize({ width: 1440, height: 900 });
+            await page.screenshot({ path: `${deliverables}/rally-desktop.png`, scale: 'css' });
+        } else {
+            await page.setViewportSize({ width: 390, height: 844 });
+            await page.screenshot({ path: `${deliverables}/rally-mobile.png`, scale: 'css' });
+        }
+    }
+    await page.getByRole('navigation', { name: 'Game navigation' }).getByRole('button', { name: 'Map', exact: true }).click();
+    await expect(shell).not.toHaveClass(/rp-shell/);
+    await expect(shell).not.toHaveAttribute('data-rally-faction', /.+/);
+    await expect(page.locator('.rp-overlay-theme')).toHaveCount(0);
+    expect(campaignIdentity(await saved(page))).toEqual(identity);
+    expect(errors).toEqual([]);
+});
+
+test('integrated Rally selected station legion reviews a real raid and can cancel its first thirty seconds', async ({ page }, info) => {
+    const f = presentationFixture(), errors = await start(page, f.world);
+    const original = readRoster(f.world.armies.find(army => army.id === 500)!);
+    const station = page.getByRole('article', { name: `Station: Field (${f.field.col} | ${f.field.row})`, exact: true });
+    await station.getByRole('button', { name: 'Field watch', exact: true }).click();
+    const tray = page.getByRole('region', { name: 'Legion details: Field watch', exact: true });
+    await expect(station.getByRole('button', { name: 'Field watch', exact: true })).toHaveAttribute('aria-pressed', 'true');
+    await expect(tray.getByRole('heading', { name: 'Field watch', exact: true })).toBeVisible();
+    await expect(tray.locator('.rp-unit-card')).toHaveCount(9);
+    await expect(page.getByRole('navigation', { name: 'Game navigation' }).getByRole('button', { name: 'Rally Point', exact: true })).toHaveAttribute('aria-current', 'page');
+    await tray.getByRole('button', { name: 'Issue orders', exact: true }).click();
+    const picker = page.getByRole('dialog', { name: 'Issue orders', exact: true });
+    await expect(picker).toContainText('Field watch · 12 soldiers');
+    await picker.getByLabel('Search campaign targets').fill(f.camp.name);
+    await picker.locator('.rp-target-grid article').filter({ has: page.getByRole('heading', { name: f.camp.name, exact: true }) }).getByRole('button', { name: 'Review raid', exact: true }).click();
+    const review = page.getByRole('dialog', { name: 'Prepare camp raid', exact: true });
+    await expect(review).toHaveClass(/march-dialog/);
+    await expect(review.getByLabel('Choose legion')).toHaveValue('500');
+    await review.getByRole('button', { name: 'Clear troops', exact: true }).click();
+    await review.getByLabel(troopName('archers') + ' to send', { exact: true }).fill('1');
+    await review.getByLabel(troopName('scout') + ' to send', { exact: true }).fill('3');
+    await expect(review.locator('.march-review').first()).toContainText('Sending4');
+    expect(readRoster((await saved(page)).armies.find(army => army.id === 500)!)).toEqual(original);
+    await expect(review.getByRole('button', { name: 'Confirm raid', exact: true })).toBeEnabled();
+    await capture(page, info, 'rally-integrated-raid-review');
+    await review.getByRole('button', { name: 'Confirm raid', exact: true }).click();
+    await expect(review).toHaveCount(0);
+    await expect.poll(async () => (await saved(page)).armies.find(army => army.id === 500)?.status).toBe('moving');
+    const sent = (await saved(page)).armies.find(army => army.id === 500)!;
+    expect(sent.raid_target_id).toBe(f.camp.id);
+    expect(readRoster(sent)).toEqual({ ...emptyRoster(), archers: 1, scout: 3 });
+    expect(Date.parse(sent.march_cancel_until!) - Date.parse(sent.march_sent_at!)).toBe(30000);
+    await page.getByRole('tab', { name: /^Outgoing 1$/ }).click();
+    const raid = page.getByRole('article', { name: 'Raid: Field watch', exact: true });
+    await expect(raid).toContainText(f.camp.name);
+    await raid.getByRole('button', { name: 'Cancel order', exact: true }).click();
+    await expect.poll(async () => (await saved(page)).armies.find(army => army.id === 500)?.status).toBe('idle');
+    const restored = await saved(page);
+    expect(readRoster(restored.armies.find(army => army.id === 500)!)).toEqual(original);
+    expect(restored.garrisons).toEqual([]);
+    expect(errors).toEqual([]);
+});
 
 test('Rally Point keeps city-specific stations and incoming/outgoing nine-role parties together', async ({ page }, info) => {
     const f = fixture(), errors = await start(page, f.world);

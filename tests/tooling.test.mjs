@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { validateManifest } from '../scripts/check-assets.mjs';
@@ -39,4 +39,14 @@ test('share-alike models require source provenance and attribution', t => {
   const shared = { ...asset, license: 'CC-BY-SA-3.0', source: 'https://github.com/0ad/0ad' };
   assert.ok(validateManifest({ version: 1, assets: [shared] }, root).errors.some(e => e.includes('attribution')));
   assert.deepEqual(validateManifest({ version: 1, assets: [{ ...shared, attribution: 'Wildfire Games; https://wildfiregames.com/; CC BY-SA 3.0 https://creativecommons.org/licenses/by-sa/3.0/; adapted for Peris.' }] }, root).errors, []);
+});
+
+test('standalone asset discovery covers every Rally Point faction painting', () => {
+  const theme = readFileSync(new URL('../src/features/army/ui/rallyFactionTheme.ts', import.meta.url), 'utf8');
+  const manifest = JSON.parse(readFileSync(new URL('../assets/rally-point-v1.json', import.meta.url), 'utf8'));
+  // Match the quoted URL discovery contract in scripts/standalone.mjs.
+  const discovered = new Set([...theme.matchAll(/["'](\/art\/[^"']+)["']/g)].map(match => match[1]));
+  const expected = manifest.assets.map(asset => asset.file.replace(/^public\//, '/'));
+  assert.equal(discovered.size, 33);
+  assert.deepEqual([...discovered].sort(), expected.sort());
 });

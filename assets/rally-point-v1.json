@@ -1,0 +1,803 @@
+{
+  "version": 1,
+  "date": "2026-10-12",
+  "generation": "33 original faction paintings generated individually with the built-in ImageGen tool for the Peris Rally Point prototype.",
+  "ownership": "Original artwork generated specifically for Peris. Shipped paintings contain no third-party game assets. Generated PNG sources are preserved byte-for-byte.",
+  "prototype": {
+    "name": "Peris Rally Point",
+    "source_commit": "99cc94edd006e93fd2de01ed079975b3ef2d3c7a",
+    "selection": "Approved original ornate faction design; original generated paintings reused unchanged."
+  },
+  "export": {
+    "script": "scripts/build-rally-art.mjs",
+    "transform": "Format optimization only. Native dimensions and framing are retained; no trimming, cropping, resizing, repainting or colour filters.",
+    "background": {
+      "format": "webp",
+      "quality": 90,
+      "effort": 6,
+      "maxBytes": 768000
+    },
+    "frame": {
+      "format": "webp",
+      "lossless": true,
+      "effort": 6,
+      "maxBytes": 1800000,
+      "alpha": "Runtime alpha is identical to the source at every pixel."
+    },
+    "texture": {
+      "format": "webp",
+      "quality": 90,
+      "effort": 6,
+      "maxBytes": 768000
+    }
+  },
+  "assets": [
+    {
+      "id": "roman-background",
+      "faction": "roman",
+      "kind": "background",
+      "license": "original",
+      "generator": "Built-in ImageGen",
+      "source": "assets/source/rally-point-v1/roman-background.png",
+      "sourceSha256": "7809a82781d13079a2c0ffd013952e621687b0048a7f6c6ee5788fb9341b4b61",
+      "sourceBytes": 2744094,
+      "file": "public/art/ui/rally-point-v1/roman-background.webp",
+      "dimensions": {
+        "width": 1672,
+        "height": 941
+      },
+      "prompt": "Use case: stylized-concept\nAsset type: a wide 16:9 campaign environment background for the original Peris fantasy strategy game's army-management interface. Generate ONE original landscape raster image, preferably 2048×1152, without interface elements.\nStyle/medium: rich painterly AAA dark-fantasy strategy-game environment, convincing worn architectural materials, deep cinematic atmosphere, high-quality detailed environmental concept art rather than a flat illustration. Serious and immersive.\nComposition: Cultural architecture, ornament, standards, vegetation and firelight must remain strongly visible at BOTH SIDE EDGES because a large translucent interface overlays the middle. The central 60% is simpler, quieter and lower contrast: broad open ground and soft layered distance, no foreground hero, large statues or busy structures in the center. Preserve material sharpness and strong silhouettes around the outer edges; distant figures are tiny background elements.\nConstraints: no UI, borders, panels, lettering, numerals, readable inscriptions, logo, watermark, modern architecture or modern technology. Distinct original cultural scene, not a palette swap of a generic camp.\nScene: an imperial Roman marble forum and muster terrace at sunset, terracotta-roofed ancient buildings and red imperial standards, bronze braziers and weathered classical columns on the side edges. Cream and grey veined marble, patinated bronze fittings, crimson fabric and cypress trees. Side architecture frames a broad quiet dusty-stone parade ground; the distance descends into a misty Mediterranean valley and glints of river water. Tiny disciplined legion formations and a few wooden siege engines near the outer camp edges.\nLighting: dramatic low amber sunset through smoky blue-grey clouds, warm bronze firelight, deep sepia stone shadows and rich crimson standards. Original Peris Roman identity; no war eagles or franchise symbols.",
+      "reference_inputs": [],
+      "runtimeSha256": "f6b2fee5491686acf14bcd703807e3359c9f8c79e577ead9e33b8f130c446954",
+      "runtimeBytes": 391088
+    },
+    {
+      "id": "roman-frame",
+      "faction": "roman",
+      "kind": "frame",
+      "license": "original",
+      "generator": "Built-in ImageGen",
+      "source": "assets/source/rally-point-v1/roman-frame.png",
+      "sourceSha256": "067b398bc9c89410eac74209c42309c44ab3ad3d36c114cf8879eafd63f25c01",
+      "sourceBytes": 2030954,
+      "file": "public/art/ui/rally-point-v1/roman-frame.webp",
+      "dimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "prompt": "Use case: stylized-concept\nAsset type: one square 1:1 transparent PNG ornamental frame and material-surface rim for the original Peris strategy-game UI. Generate ONE original raster asset, preferably 1024×1024.\nComposition: Flat orthographic view, frame lies in the image plane, symmetrical rectangle reaching the canvas edges, suitable for a nine-slice border. Broad substantial rim approximately 15% of canvas width on all four sides. A large CENTRAL SQUARE occupying approximately 70% of canvas width and height must be completely EMPTY with TRUE ALPHA TRANSPARENCY. Only the thick rim and its restrained corner ornaments contain visible material. Keep the inner edge straight and clean for interface overlay. No center panel, parchment sheet, colored fill, fake transparency, checkerboard, shadow haze, floating scene, perspective or 3D room in the transparent opening. Dark convincing material grain should be genuinely visible on the thick frame surfaces even when the rim is resized to about 32 CSS pixels. Cultural carving must read as relief and material texture, not a collection of icons.\nStyle: rich painterly realistic AAA dark-fantasy game UI asset, believable worn carved materials, metallic highlights and inset relief, restrained sophisticated ornament, consistent with cinematic Peris artwork. Square geometric structure with restrained ornament at the corners.\nConstraints: genuinely transparent center and transparent pixels outside ornament where needed. No text, letters, numbers, readable inscriptions, watermark, logos, heraldic letter symbols, interface controls or fake UI.\nMaterial and identity: Roman imperial frame carved from dark ivory-and-grey veined marble bordered with worn bronze and narrow crimson leather insets. Relief laurel leaves and restrained classical acanthus curl at the four corners, fine repeated Roman architectural moldings along the broad straight edges. Patinated bronze rivets and carved marble chips provide crisp material grain. A rich ancient imperial surface with soft warm bronze highlights and dark recesses, distinct from Greek limestone or jeweled Persian tile. No eagle logo and no lettering.",
+      "reference_inputs": [],
+      "nineSlicePixels": 225,
+      "runtimeSha256": "65f3fa5c552874715e05d8ba4a94f9455adfb72ae658f5b2ad3b77cb793c8468",
+      "runtimeBytes": 1339386
+    },
+    {
+      "id": "roman-texture",
+      "faction": "roman",
+      "kind": "texture",
+      "license": "original",
+      "generator": "Built-in ImageGen",
+      "source": "assets/source/rally-point-v1/roman-texture.png",
+      "sourceSha256": "785a23b7f08dfcb146d8290a7893cc1c776b8baaa96ea4ace40f00461c00987f",
+      "sourceBytes": 3463074,
+      "file": "public/art/ui/rally-point-v1/roman-texture.webp",
+      "dimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "prompt": "Use case: stylized-concept\nAsset type: ONE square opaque seamless material texture tile for dark panels in the original Peris strategy-game interface, preferably 1024×1024.\nComposition: Orthographic close-up of a continuous material surface fills the entire square edge to edge. Quiet, very low contrast, rich genuine microtexture and subtly recessed cultural pattern, dark enough for cream UI text. Uniform even lighting, no bright hotspot or visible vignette, no center object, no architectural scene, no frame, no border, no corners, no lettering, no numerals, no logo, no symbols resembling words, no watermark, no transparent pixels. Seamless repeat-friendly surface, not a smooth gradient or generic recolored parchment. The distinct cultural material must be recognizable even in 32px to 100px strips.\nStyle: painterly realistic AAA dark-fantasy strategy-game material asset; convincing worn grain and fine dimensional surface relief, sophisticated and restrained.\nRoman material: deep aged oxblood leather, fine natural leather pores, faint impressed laurel-leaf scroll and classical acanthus relief, extremely restrained antique-bronze rubbed highlights in recessed embossing. Near-black warm burgundy and dark bronze shadows. Elegant worn imperial saddle/document-case leather, no Greek key or Persian tile.",
+      "reference_inputs": [],
+      "runtimeSha256": "ef26b01fee02fdb23cb08418f1bcb07896ddf51315a458db4cad532bf43d6d0b",
+      "runtimeBytes": 550098
+    },
+    {
+      "id": "spartan-background",
+      "faction": "spartan",
+      "kind": "background",
+      "license": "original",
+      "generator": "Built-in ImageGen",
+      "source": "assets/source/rally-point-v1/spartan-background.png",
+      "sourceSha256": "27dd42b17bce62a7c8a032283589ccba4351f5b346a81656e60e459aea334d12",
+      "sourceBytes": 2938138,
+      "file": "public/art/ui/rally-point-v1/spartan-background.webp",
+      "dimensions": {
+        "width": 1672,
+        "height": 941
+      },
+      "prompt": "Use case: stylized-concept\nAsset type: a wide 16:9 campaign environment background for the original Peris fantasy strategy game's army-management interface. Generate ONE original landscape raster image, preferably 2048×1152, without interface elements.\nStyle/medium: rich painterly AAA dark-fantasy strategy-game environment, convincing worn architectural materials, deep cinematic atmosphere, high-quality detailed environmental concept art rather than a flat illustration. Serious and immersive.\nComposition: Cultural architecture, ornament, standards, vegetation and firelight must remain strongly visible at BOTH SIDE EDGES because a large translucent interface overlays the middle. The central 60% is simpler, quieter and lower contrast: broad open ground and soft layered distance, no foreground hero, large statues or busy structures in the center. Preserve material sharpness and strong silhouettes around the outer edges; distant figures are tiny background elements.\nConstraints: no UI, borders, panels, lettering, numerals, readable inscriptions, logo, watermark, modern architecture or modern technology. Distinct original cultural scene, not a palette swap of a generic camp.\nScene: a fortified Spartan mountain citadel in stormy ancient Greece. White weathered limestone battlements and severe Doric temple columns are prominent at the left and right edges; aged bronze round shields stored against the stone, deep crimson hanging military cloth, sparse dark olive and cypress trees. The citadel overlooks a rugged mountain pass with a broad quiet grey-brown muster yard in the central foreground. Tiny hoplite formations and a few wood-and-bronze siege constructions gather near the outer walls.\nLighting: turbulent storm-grey sky, cold green-grey mountain atmosphere and wind-driven mist, occasional warm bronze torchlight on whitened limestone. Severe, austere Spartan identity; strong stone texture and restrained crimson accents rather than Roman forum richness. No shield letters or emblems.",
+      "reference_inputs": [],
+      "runtimeSha256": "e885ddbd88fd3fb3d552faaead7086fb39ab8bce3c74507fbb0cd85a5c3604b4",
+      "runtimeBytes": 393844
+    },
+    {
+      "id": "spartan-frame",
+      "faction": "spartan",
+      "kind": "frame",
+      "license": "original",
+      "generator": "Built-in ImageGen",
+      "source": "assets/source/rally-point-v1/spartan-frame.png",
+      "sourceSha256": "28e9571059f909427c63505eee6fa4884e32fc5c10a59587777a81302090f38e",
+      "sourceBytes": 2022570,
+      "file": "public/art/ui/rally-point-v1/spartan-frame.webp",
+      "dimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "prompt": "Use case: stylized-concept\nAsset type: one square 1:1 transparent PNG ornamental frame and material-surface rim for the original Peris strategy-game UI. Generate ONE original raster asset, preferably 1024×1024.\nComposition: Flat orthographic view, frame lies in the image plane, symmetrical rectangle reaching the canvas edges, suitable for a nine-slice border. Broad substantial rim approximately 15% of canvas width on all four sides. A large CENTRAL SQUARE occupying approximately 70% of canvas width and height must be completely EMPTY with TRUE ALPHA TRANSPARENCY. Only the thick rim and its restrained corner ornaments contain visible material. Keep the inner edge straight and clean for interface overlay. No center panel, parchment sheet, colored fill, fake transparency, checkerboard, shadow haze, floating scene, perspective or 3D room in the transparent opening. Dark convincing material grain should be genuinely visible on the thick frame surfaces even when the rim is resized to about 32 CSS pixels. Cultural carving must read as relief and material texture, not a collection of icons.\nStyle: rich painterly realistic AAA dark-fantasy game UI asset, believable worn carved materials, metallic highlights and inset relief, restrained sophisticated ornament, consistent with cinematic Peris artwork. Square geometric structure with restrained ornament at the corners.\nConstraints: genuinely transparent center and transparent pixels outside ornament where needed. No text, letters, numbers, readable inscriptions, watermark, logos, heraldic letter symbols, interface controls or fake UI.\nMaterial and identity: severe Spartan frame made of thick whitened weathered limestone and dark aged bronze, with narrow oxblood-crimson cloth or leather insets. Broad straight stone edges have crisp chisel grain, small chips and austere Greek meander carved as geometric relief; corners contain restrained round bronze shield-like bosses and simple Doric fluting. Storm-darkened recesses, grey-green patina and warm bronze highlights. Distinct austere military character, less decorative than Roman acanthus; absolutely no letters, lambda shapes, emblems or inscriptions.",
+      "reference_inputs": [],
+      "nineSlicePixels": 225,
+      "runtimeSha256": "263d6d80389555bdce06967533a5c33b9c0cf946969810072608db6031b3bddb",
+      "runtimeBytes": 1295452
+    },
+    {
+      "id": "spartan-texture",
+      "faction": "spartan",
+      "kind": "texture",
+      "license": "original",
+      "generator": "Built-in ImageGen",
+      "source": "assets/source/rally-point-v1/spartan-texture.png",
+      "sourceSha256": "e2de6a67e17a4e1090de10a56307b8b1bdf303883c19f2cae1c4dd6715c42470",
+      "sourceBytes": 3199931,
+      "file": "public/art/ui/rally-point-v1/spartan-texture.webp",
+      "dimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "prompt": "Use case: stylized-concept\nAsset type: ONE square opaque seamless material texture tile for dark panels in the original Peris strategy-game interface, preferably 1024×1024.\nComposition: Orthographic close-up of a continuous material surface fills the entire square edge to edge. Quiet, very low contrast, rich genuine microtexture and subtly recessed cultural pattern, dark enough for cream UI text. Uniform even lighting, no bright hotspot or visible vignette, no center object, no architectural scene, no frame, no border, no corners, no lettering, no numerals, no logo, no symbols resembling words, no watermark, no transparent pixels. Seamless repeat-friendly surface, not a smooth gradient or generic recolored parchment. The distinct cultural material must be recognizable even in 32px to 100px strips.\nStyle: painterly realistic AAA dark-fantasy strategy-game material asset; convincing worn grain and fine dimensional surface relief, sophisticated and restrained.\nSpartan material: blackened aged bronze plate, genuine hammered metal grain, minute abrasions, cold dark olive-grey patina and faint geometric Greek-key relief incised into the material. Very restrained antique-bronze ridges, low contrast severe martial surface. No laurel flourishes, no leather, no turquoise jewel patterns.",
+      "reference_inputs": [],
+      "runtimeSha256": "944fa9c0b7a15d5e1134a6f59c014bbbc8ad99e272c1023634f9c9b140fe7f46",
+      "runtimeBytes": 501176
+    },
+    {
+      "id": "persian-background",
+      "faction": "persian",
+      "kind": "background",
+      "license": "original",
+      "generator": "Built-in ImageGen",
+      "source": "assets/source/rally-point-v1/persian-background.png",
+      "sourceSha256": "42954a8815f32c047fffe6764715c5d3347cf208a1dcbc4b50906a906955106c",
+      "sourceBytes": 2810212,
+      "file": "public/art/ui/rally-point-v1/persian-background.webp",
+      "dimensions": {
+        "width": 1672,
+        "height": 941
+      },
+      "prompt": "Use case: stylized-concept\nAsset type: a wide 16:9 campaign environment background for the original Peris fantasy strategy game's army-management interface. Generate ONE original landscape raster image, preferably 2048×1152, without interface elements.\nStyle/medium: rich painterly AAA dark-fantasy strategy-game environment, convincing worn architectural materials, deep cinematic atmosphere, high-quality detailed environmental concept art rather than a flat illustration. Serious and immersive.\nComposition: Cultural architecture, ornament, standards, vegetation and firelight must remain strongly visible at BOTH SIDE EDGES because a large translucent interface overlays the middle. The central 60% is simpler, quieter and lower contrast: broad open ground and soft layered distance, no foreground hero, large statues or busy structures in the center. Preserve material sharpness and strong silhouettes around the outer edges; distant figures are tiny background elements.\nConstraints: no UI, borders, panels, lettering, numerals, readable inscriptions, logo, watermark, modern architecture or modern technology. Distinct original cultural scene, not a palette swap of a generic camp.\nScene: a royal Persian sandstone courtyard at blue hour with richly cobalt-and-turquoise tiled arches, golden fittings, turquoise domes and slender sandstone towers at the SIDE EDGES. Gold lanterns and bronze fire bowls glow under the arcades; turquoise glazed geometric tiles have genuine chipped highlights and aged grout, ivory sandstone is worn and carved. The middle is a broad quiet dark sandstone courtyard leading toward a distant garden and misty desert-mountain valley. A few tiny royal guards and fine crimson or turquoise standards remain peripheral.\nLighting: deep blue hour with luminous turquoise tile, warm gold lantern light, amber sandstone and cool blue-grey valley haze. Rich original Peris Persian identity; no Roman columns, no Greek shields, no Egyptian obelisks.\nLatest art direction: Favor genuinely hand-painted, human-designed game art and believable cultural craft. Ornament is calm, purposeful and based on a few coherent motifs with physically credible material construction. No plastic gold glow, jewelry excess, random overdecoration, excessive gloss or generic AI-fantasy visual noise. Use subtle brushwork, restrained wear and authentic architectural joinery. Keep composition calm and controlled.",
+      "reference_inputs": [],
+      "runtimeSha256": "6ec1498f0107de8d9fe7b756a67de510da41370382823d7c7ab15e4b9d643db3",
+      "runtimeBytes": 418662
+    },
+    {
+      "id": "persian-frame",
+      "faction": "persian",
+      "kind": "frame",
+      "license": "original",
+      "generator": "Built-in ImageGen",
+      "source": "assets/source/rally-point-v1/persian-frame.png",
+      "sourceSha256": "b77672c2704aed39f2388af7e5acea1b4576551d2bba8cce31e8cf0b2e271612",
+      "sourceBytes": 2248782,
+      "file": "public/art/ui/rally-point-v1/persian-frame.webp",
+      "dimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "prompt": "Use case: stylized-concept\nAsset type: one square 1:1 transparent PNG ornamental frame and material-surface rim for the original Peris strategy-game UI. Generate ONE original raster asset, preferably 1024×1024.\nComposition: Flat orthographic view, frame lies in the image plane, symmetrical rectangle reaching the canvas edges, suitable for a nine-slice border. Broad substantial rim approximately 15% of canvas width on all four sides. A large CENTRAL SQUARE occupying approximately 70% of canvas width and height must be completely EMPTY with TRUE ALPHA TRANSPARENCY. Only the thick rim and its restrained corner ornaments contain visible material. Keep the inner edge straight and clean for interface overlay. No center panel, parchment sheet, colored fill, fake transparency, checkerboard, shadow haze, floating scene, perspective or 3D room in the transparent opening. Dark convincing material grain should be genuinely visible on the thick frame surfaces even when the rim is resized to about 32 CSS pixels. Cultural carving must read as relief and material texture, not a collection of icons.\nStyle: rich painterly realistic AAA dark-fantasy game UI asset, believable worn carved materials, metallic highlights and inset relief, restrained sophisticated ornament, consistent with cinematic Peris artwork. Square geometric structure with restrained ornament at the corners.\nConstraints: genuinely transparent center and transparent pixels outside ornament where needed. No text, letters, numbers, readable inscriptions, watermark, logos, heraldic letter symbols, interface controls or fake UI.\nMaterial and identity: opulent Persian frame of carved warm sandstone, cobalt-and-turquoise glazed tile inlay and aged gold filigree relief. Broad edges carry fine geometric Persian tile patterns, chipped glaze, granular sandstone and slender interlaced floral relief; quiet corner ornaments are carved palmettes and gold arabesque, not a crown or logo. Deep cobalt and turquoise shadow recesses with restrained warm gold highlights and ivory sandstone borders. Cultural material must be vivid and instantly different from marble or bronze Greek frames, while remaining dark enough for cream interface text around it. No calligraphy or readable inscriptions.\nLatest art direction: Favor genuinely hand-painted, human-designed game art and believable cultural craft. Ornament is calm, purposeful and based on a few coherent motifs with physically credible material construction. No plastic gold glow, jewelry excess, random overdecoration, excessive gloss or generic AI-fantasy visual noise. Use subtle brushwork, restrained wear and authentic architectural joinery. Keep composition calm and controlled.",
+      "reference_inputs": [],
+      "nineSlicePixels": 225,
+      "runtimeSha256": "fc13d5c6473eda20425d7d02f58f06d263d6ab0628d0245ea6371a0cd88f7475",
+      "runtimeBytes": 1536536
+    },
+    {
+      "id": "persian-texture",
+      "faction": "persian",
+      "kind": "texture",
+      "license": "original",
+      "generator": "Built-in ImageGen",
+      "source": "assets/source/rally-point-v1/persian-texture.png",
+      "sourceSha256": "2597b0dd2767e9aba0e6d51617824a9c86afe4c9f2555d5905f03584b09ddf61",
+      "sourceBytes": 3345684,
+      "file": "public/art/ui/rally-point-v1/persian-texture.webp",
+      "dimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "prompt": "Use case: stylized-concept\nAsset type: ONE square opaque seamless material texture tile for dark panels in the original Peris strategy-game interface, preferably 1024×1024.\nComposition: Orthographic close-up of a continuous material surface fills the entire square edge to edge. Quiet, very low contrast, rich genuine microtexture and subtly recessed cultural pattern, dark enough for cream UI text. Uniform even lighting, no bright hotspot or visible vignette, no center object, no architectural scene, no frame, no border, no corners, no lettering, no numerals, no logo, no symbols resembling words, no watermark, no transparent pixels. Seamless repeat-friendly surface, not a smooth gradient or generic recolored parchment. The distinct cultural material must be recognizable even in 32px to 100px strips.\nStyle: painterly realistic AAA dark-fantasy strategy-game material asset; convincing worn grain and fine dimensional surface relief, sophisticated and restrained.\nPersian material: dark indigo and deep turquoise glazed ceramic, fine irregular crazing and tile-glaze micrograin, quietly recessed geometric arabesque, extremely thin faded antique-gold inlay traces and authentic aged grout detail. Luxurious royal tile with very low contrast, deep cool blue-green shadows. No marble, no leather or bronze shield.\nLatest art direction: Favor genuinely hand-painted, human-designed game art and believable cultural craft. Ornament is calm, purposeful and based on a few coherent motifs with physically credible material construction. No plastic gold glow, jewelry excess, random overdecoration, excessive gloss or generic AI-fantasy visual noise. Use subtle brushwork, restrained wear and authentic architectural joinery. Keep composition calm and controlled.",
+      "reference_inputs": [],
+      "runtimeSha256": "b9075a7ec6432ee4a7a47f2c2b70a66779bd996bc0207835fe06dda58e6f2675",
+      "runtimeBytes": 494572
+    },
+    {
+      "id": "egyptian-background",
+      "faction": "egyptian",
+      "kind": "background",
+      "license": "original",
+      "generator": "Built-in ImageGen",
+      "source": "assets/source/rally-point-v1/egyptian-background.png",
+      "sourceSha256": "4999097aac18c619b4bb4232fc27c62b19e379decc959921765fe65893313f7b",
+      "sourceBytes": 2498140,
+      "file": "public/art/ui/rally-point-v1/egyptian-background.webp",
+      "dimensions": {
+        "width": 1672,
+        "height": 941
+      },
+      "prompt": "Use case: stylized-concept\nAsset type: a wide 16:9 campaign environment background for the original Peris fantasy strategy game's army-management interface. Generate ONE original landscape raster image, preferably 2048×1152, without interface elements.\nStyle/medium: rich painterly AAA dark-fantasy strategy-game environment, convincing worn architectural materials, deep cinematic atmosphere, high-quality detailed environmental concept art rather than a flat illustration. Serious and immersive.\nComposition: Cultural architecture, ornament, standards, vegetation and firelight must remain strongly visible at BOTH SIDE EDGES because a large translucent interface overlays the middle. The central 60% is simpler, quieter and lower contrast: broad open ground and soft layered distance, no foreground hero, large statues or busy structures in the center. Preserve material sharpness and strong silhouettes around the outer edges; distant figures are tiny background elements.\nConstraints: no UI, borders, panels, lettering, numerals, readable inscriptions, logo, watermark, modern architecture or modern technology. Distinct original cultural scene, not a palette swap of a generic camp.\nScene: a monumental Egyptian Nile temple precinct at dusk. Sunbaked golden sandstone pylons, tall obelisks, carved relief walls and lapis-blue bands dominate the SIDE EDGES, with bronze fire bowls and palms. Low distant pyramids sit beyond a still Nile branch and palm-lined floodplain, under violet-blue dusk haze. The central foreground is a wide quiet sand-and-sandstone temple approach, low contrast and open for interface overlay. Tiny disciplined ancient Egyptian guards and a few wooden chariots gather near the outer temple walls.\nLighting: burnt-gold sandstone catches the last dusk glow, cool lapis and Nile blue shadows, faint amber firelight and desert dust. Original Peris Egyptian identity, strong golden sandstone texture; no Persian dome, no Roman forum, no Greek battlements. Carvings are purely decorative relief, no readable hieroglyphic text.\nLatest art direction: Favor genuinely hand-painted, human-designed game art and believable cultural craft. Ornament is calm, purposeful and based on a few coherent motifs with physically credible material construction. No plastic gold glow, jewelry excess, random overdecoration, excessive gloss or generic AI-fantasy visual noise. Use subtle brushwork, restrained wear and authentic architectural joinery. Keep composition calm and controlled.",
+      "reference_inputs": [],
+      "runtimeSha256": "ffaa01e02798300eb1ce8e4a3c45e519ce8db13a8278b31f1b08fa3dd33ea28e",
+      "runtimeBytes": 330022
+    },
+    {
+      "id": "egyptian-frame",
+      "faction": "egyptian",
+      "kind": "frame",
+      "license": "original",
+      "generator": "Built-in ImageGen",
+      "source": "assets/source/rally-point-v1/egyptian-frame.png",
+      "sourceSha256": "914f7fe51b18b18c0b373ae39ce193fd2ceb6202f40313290e68ab86636b58ef",
+      "sourceBytes": 1870633,
+      "file": "public/art/ui/rally-point-v1/egyptian-frame.webp",
+      "dimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "prompt": "Use case: stylized-concept\nAsset type: one square 1:1 transparent PNG ornamental frame and material-surface rim for the original Peris strategy-game UI. Generate ONE original raster asset, preferably 1024×1024.\nComposition: Flat orthographic view, frame lies in the image plane, symmetrical rectangle reaching the canvas edges, suitable for a nine-slice border. Broad substantial rim approximately 15% of canvas width on all four sides. A large CENTRAL SQUARE occupying approximately 70% of canvas width and height must be completely EMPTY with TRUE ALPHA TRANSPARENCY. Only the thick rim and its restrained corner ornaments contain visible material. Keep the inner edge straight and clean for interface overlay. No center panel, parchment sheet, colored fill, fake transparency, checkerboard, shadow haze, floating scene, perspective or 3D room in the transparent opening. Dark convincing material grain should be genuinely visible on the thick frame surfaces even when the rim is resized to about 32 CSS pixels. Cultural carving must read as relief and material texture, not a collection of icons.\nStyle: rich painterly realistic AAA dark-fantasy game UI asset, believable worn carved materials, metallic highlights and inset relief, restrained sophisticated ornament, consistent with cinematic Peris artwork. Square geometric structure with restrained ornament at the corners.\nConstraints: genuinely transparent center and transparent pixels outside ornament where needed. No text, letters, numbers, readable inscriptions, watermark, logos, heraldic letter symbols, interface controls or fake UI.\nMaterial and identity: Egyptian temple frame made from thick sunbaked golden sandstone with dark antique bronze edges and vivid but restrained lapis-blue inlay. Broad rim surfaces show real granular stone grain, chisel cuts and aged chips; decorative lotus and papyrus relief occupies the corners, with fine stepped pylon geometry, shallow repeated carved bands and lapis ribs along the straight edges. Warm gold sandstone highlights and deep blue-black recessed relief, monumental rather than delicate jeweled ornament. No eye symbol, ankh logo, readable hieroglyphs or inscriptions; no lettering.\nLatest art direction: Favor genuinely hand-painted, human-designed game art and believable cultural craft. Ornament is calm, purposeful and based on a few coherent motifs with physically credible material construction. No plastic gold glow, jewelry excess, random overdecoration, excessive gloss or generic AI-fantasy visual noise. Use subtle brushwork, restrained wear and authentic architectural joinery. Keep composition calm and controlled.",
+      "reference_inputs": [],
+      "nineSlicePixels": 225,
+      "runtimeSha256": "4bb5bef401b153f45a950adaf491bdc4aba4c10b2fccf2c71d179c387290a490",
+      "runtimeBytes": 1234344
+    },
+    {
+      "id": "egyptian-texture",
+      "faction": "egyptian",
+      "kind": "texture",
+      "license": "original",
+      "generator": "Built-in ImageGen",
+      "source": "assets/source/rally-point-v1/egyptian-texture.png",
+      "sourceSha256": "2a95e08621d27177a4e84ccc5dec052169f8de315f5fbb17927ea56822fd9734",
+      "sourceBytes": 3730181,
+      "file": "public/art/ui/rally-point-v1/egyptian-texture.webp",
+      "dimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "prompt": "Use case: stylized-concept\nAsset type: ONE square opaque seamless material texture tile for dark panels in the original Peris strategy-game interface, preferably 1024×1024.\nComposition: Orthographic close-up of a continuous material surface fills the entire square edge to edge. Quiet, very low contrast, rich genuine microtexture and subtly recessed cultural pattern, dark enough for cream UI text. Uniform even lighting, no bright hotspot or visible vignette, no center object, no architectural scene, no frame, no border, no corners, no lettering, no numerals, no logo, no symbols resembling words, no watermark, no transparent pixels. Seamless repeat-friendly surface, not a smooth gradient or generic recolored parchment. The distinct cultural material must be recognizable even in 32px to 100px strips.\nStyle: painterly realistic AAA dark-fantasy strategy-game material asset; convincing worn grain and fine dimensional surface relief, sophisticated and restrained.\nEgyptian material: deep weathered brown-gold sandstone, real fine sand-granule/chisel grain, restrained dark lapis-blue mineral seams and faint shallow incised reed-and-papyrus motifs. Antique desert-temple wall texture in very dark warm umber with cool blue-black recesses. No readable hieroglyphs, no eye/ankh symbols, no leather or modern ceramic.\nLatest art direction: Favor genuinely hand-painted, human-designed game art and believable cultural craft. Ornament is calm, purposeful and based on a few coherent motifs with physically credible material construction. No plastic gold glow, jewelry excess, random overdecoration, excessive gloss or generic AI-fantasy visual noise. Use subtle brushwork, restrained wear and authentic architectural joinery. Keep composition calm and controlled.",
+      "reference_inputs": [],
+      "runtimeSha256": "a3ec5efbeba748f00a1e485f6e47ab223c6fef7519cd71d18238f03ed1efe3ef",
+      "runtimeBytes": 660920
+    },
+    {
+      "id": "orc-background",
+      "faction": "orc",
+      "kind": "background",
+      "license": "original",
+      "generator": "Built-in ImageGen",
+      "source": "assets/source/rally-point-v1/orc-background.png",
+      "sourceSha256": "cdc20f71f724374594d039354f2d4dfe70464d43b774ade58c41352f7ee44037",
+      "sourceBytes": 2976989,
+      "file": "public/art/ui/rally-point-v1/orc-background.webp",
+      "dimensions": {
+        "width": 1672,
+        "height": 941
+      },
+      "prompt": "Use case: stylized-concept.\nAsset type: one original wide 16:9 campaign landscape background for the Peris strategy-game interface, ideally 2048 × 1152 pixels, opaque PNG.\nImage 1 is a structural and cultural reference only: original Peris Orc building atlas. Build one cohesive landscape, not an atlas; preserve its rugged timber, green hide roofs, black iron, ivory tusks and war-banner material identity, rendered at epic real-world scale.\nScene: a formidable timber stronghold rises along the far left edge of a smoky forest valley, with massive hide-roofed halls, tusk-braced palisades, black-iron gates and layered rough fortifications. The far right edge holds a mustering encampment with weathered dark green and red war cloth, a few tiny distant formations and dull embers. An atmospheric red-grey evening sky hangs over deep moss-green woodland and distant rugged ridges. Tiny torches glow softly in the edges, no dominant central fire.\nComposition: cinematic wide view across the valley from a low hillside. Put bold architecture, tusks, rough textures and sharp banners at the side edges. Keep the central 60% of the image quiet and relatively empty: a broad dark earthy muster ground fading into low-contrast mist. The center will sit behind interface panels and must have subdued detail and lighting. All characters remain tiny distant silhouettes.\nStyle: rich, physically textured, premium painterly AAA dark-fantasy strategy-game environment, adjacent to Warhammer III campaign art while fully original Peris. Rugged powerful Orc culture, believable monumental wood, dark iron, aged leather and smoke, restrained moss green and smoky crimson. Serious and regal martial mood, not cartoon.\nNo interface, UI, panels, words, letters, labels, numbers, writing on banners, logos, watermarks, foreground characters or recognizable copyrighted game characters. No collage or grid. One continuous landscape.\n",
+      "reference_inputs": [
+        {
+          "path": "public/art/city/village-v1/orc-atlas.webp",
+          "role": "Original Peris faction structural/cultural identity; reference only, not an edit target"
+        }
+      ],
+      "runtimeSha256": "3b660d6a8e23fff5495e933fa7813afce19403c2a2be2f4e82fa99eb81c9bda3",
+      "runtimeBytes": 428764
+    },
+    {
+      "id": "orc-frame",
+      "faction": "orc",
+      "kind": "frame",
+      "license": "original",
+      "generator": "Built-in ImageGen",
+      "source": "assets/source/rally-point-v1/orc-frame.png",
+      "sourceSha256": "cc0cb1af3960b0b1ba4b8672012505b68a43d8054f03729c0c87491e04f2db27",
+      "sourceBytes": 1897373,
+      "file": "public/art/ui/rally-point-v1/orc-frame.webp",
+      "dimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "prompt": "Use case: stylized-concept.\nAsset type: one original square 1:1 transparent PNG game-interface frame, ideally 1024 × 1024 pixels, for CSS border-image nine-slice.\nImage 1 is a cultural material reference only: original Peris Orc architecture. Create a flat frontal square frame, not a building and not an atlas.\nOne continuous thick ornate frame, rim approximately 15% of canvas width, central opening approximately 70% wide and 70% tall. The entire center must be true fully transparent alpha, and outside the frame also transparent. No filled panel or backdrop; do not paint checkerboard squares. Straight consistent edge runs and bold corners stay inside the perimeter, with a tiny transparent outer margin.\nOrc materials and cultivated national motifs: deeply carved weathered dark timber, rough black iron bands, thick forged rivets, taut aged green-brown hide inlays, restrained oxblood war cloth binding and strong ivory tusks curving around the four corner joints. Heavy hand-forged iron and wood architectural craftsmanship, visibly rugged and powerful. Corner motifs are bold tusk-and-iron assemblies; side rails remain straight so they can stretch cleanly. No face, no skull or character portrait.\nRich physically textured painterly AAA dark-fantasy game UI asset, high contrast material relief with subtle red ember reflections on black iron, moss-green hide and aged ivory. Original Peris culture, visually different from a generic gold frame.\nNo interface content, UI elements, buttons, words, letters, runic writing, numbers, logos, watermark, scenery or objects inside the transparent opening. Flat orthographic view, no perspective tilt. One square frame only.\n",
+      "reference_inputs": [
+        {
+          "path": "public/art/city/village-v1/orc-atlas.webp",
+          "role": "Original Peris faction structural/cultural identity; reference only, not an edit target"
+        }
+      ],
+      "nineSlicePixels": 290,
+      "runtimeSha256": "7a516a20ac48893a19a81eb07b8a515c2fb61b340a552bb2603c3d59fd4dcc3e",
+      "runtimeBytes": 1297816
+    },
+    {
+      "id": "orc-texture",
+      "faction": "orc",
+      "kind": "texture",
+      "license": "original",
+      "generator": "Built-in ImageGen",
+      "source": "assets/source/rally-point-v1/orc-texture.png",
+      "sourceSha256": "93ee29ca20455851eaf012d91842ded4d4f2f33353a8de2d01e01f7c6fdf4a7c",
+      "sourceBytes": 3825974,
+      "file": "public/art/ui/rally-point-v1/orc-texture.webp",
+      "dimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "prompt": "Use case: stylized-concept.\nAsset type: one square 1:1 opaque PNG production repeating panel-material texture for original Peris Orc faction UI, ideally 1024 × 1024 pixels.\nCreate a genuine close-up flat orthographic material surface only: very dark charcoal and olive-brown worn hide over aged black-iron undertones. Coarse low-relief leather grain, subtle old scarring, tiny shallow scratched iron texture and a few understated dark stitches worked into the hide surface. Colors remain near-black brown, charcoal, very subdued olive and rusty earth; no bright highlights. Mature hand-crafted material, convincingly physical and painterly, no synthetic glossy finish.\nEven edge-to-edge lighting and very low contrast so ivory body text stays readable. Uniform center and edges, no vignetting or directional gradient, no obvious hard seam. Use tiny micro-detail rather than large wrinkles or conspicuous stitch lines. Texture must support repeat or stretch across a full interface panel and look distinctly different from plain parchment.\nNo objects, figures, scenery, frame, border, corners, emblems, tusks, words, letters, numbers, logos, watermark, bright lamps, glow or UI. Do not make a poster or a leather object. Fully opaque material tile, one continuous surface.\n",
+      "reference_inputs": [],
+      "runtimeSha256": "b6dc1258c367cdf8cf01dd8747837ac1ac9c1cd7d1edcf27f8516c17d9e2f1e6",
+      "runtimeBytes": 602196
+    },
+    {
+      "id": "elf-background",
+      "faction": "elf",
+      "kind": "background",
+      "license": "original",
+      "generator": "Built-in ImageGen",
+      "source": "assets/source/rally-point-v1/elf-background.png",
+      "sourceSha256": "91a01c11bd3f1dce9da8271c1b8293814f33e7dbcd167ce3551a5c1da68b8adf",
+      "sourceBytes": 3254831,
+      "file": "public/art/ui/rally-point-v1/elf-background.webp",
+      "dimensions": {
+        "width": 1672,
+        "height": 941
+      },
+      "prompt": "Use case: stylized-concept.\nAsset type: one original wide 16:9 campaign landscape background for the Peris strategy-game interface, ideally 2048 × 1152 pixels, opaque PNG.\nImage 1 is a structural and cultural reference only: original Peris Elf building atlas. Build one cohesive landscape, not an atlas; preserve elegant living woodland forms, pale stone, jade-green leaf roofs, arched vaults and cool crystal accents at epic real-world scale.\nScene: a luminous forest citadel grown around colossal living trees, elegant leaf-like vaults, slender ivory-silver towers and jade roofs tucked into a verdant canopy. On the far left, silver archways and branch-built terraces rise above a misty forest valley. On the far right, delicate crystalline spires and graceful canopy bridges vanish into moonlit foliage. Small crystal lamps glow cool blue-white. Deep emerald, jade, moonlit silver and subdued teal establish a cultivated ancient Elven nation.\nComposition: wide cinematic forest-valley view at blue hour, soft moonlight filtering through leaves. Strong buildings, intricate branches, crystals and leaves stay at side edges. Keep the central 60% quiet and usable behind interface panels: a shaded low-contrast forest clearing with soft moss, distant mist and subdued silhouettes. No central tower, hero, bright light pool or busy branches crossing the opening.\nStyle: rich premium painterly AAA dark-fantasy strategy environment with believable detailed natural materials and regal Elven architecture, adjacent to Warhammer III campaign atmosphere while original Peris. Serious, luminous and elegant, not cartoon or sugary fairy art.\nNo UI, interface, panels, words, letters, labels, numbers, logos, watermark, foreground characters or recognizable copyrighted game characters. No collage, grid or atlas. One continuous landscape.\n",
+      "reference_inputs": [
+        {
+          "path": "public/art/city/village-v1/elf-atlas.webp",
+          "role": "Original Peris faction structural/cultural identity; reference only, not an edit target"
+        }
+      ],
+      "runtimeSha256": "86884c5df957e6fce4980aa051e53240e7b6f7aabc9b277281725cf24c7115f3",
+      "runtimeBytes": 520416
+    },
+    {
+      "id": "elf-frame",
+      "faction": "elf",
+      "kind": "frame",
+      "license": "original",
+      "generator": "Built-in ImageGen",
+      "source": "assets/source/rally-point-v1/elf-frame.png",
+      "sourceSha256": "a12e8b654366c0299defe844137d3d1e1cf06be5ae44eddb1cee3b9831a14abd",
+      "sourceBytes": 1703383,
+      "file": "public/art/ui/rally-point-v1/elf-frame.webp",
+      "dimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "prompt": "Use case: stylized-concept.\nAsset type: one original square 1:1 transparent PNG game-interface frame, ideally 1024 × 1024 pixels, for CSS border-image nine-slice.\nImage 1 is a cultural material reference only: original Peris Elf architecture. Create one frontal flat square frame, not a building and not an atlas.\nA continuous thick ornate frame whose material rim occupies approximately 15% of canvas width. Leave a square central opening approximately 70% wide and 70% tall, genuinely fully transparent alpha. Outside the frame is also transparent. No filled panel, scenery, checkerboard or backdrop. Straight uniform edge rails, crisp substantial corners, tiny transparent outer margin; decorative corner motifs stay inside their corner zones.\nElf cultivated nation motifs and materials: carved living dark wood and elegant pale silver metal shaped into flowing pointed leaf forms, jade-green enamel, fine interlaced vines and a few cool translucent cyan crystals nestled into all four corner ornaments. Monumental restrained botanical craftsmanship, silver veins along the green leaf rails. Deep physical carving, tasteful dark green recesses, bright moon-silver edge glints. Bold elaborate leaf-vault corner assemblies visibly distinguish the faction, but no branches extend across the empty opening.\nPremium physically textured painterly AAA fantasy game UI art, serious and regal, rich silver/jade/wood relief. Original Peris identity, no cartoon or flat vector illustration.\nNo characters, faces, UI content, symbols containing letters, text, runic writing, numbers, buttons, logos or watermark. No objects in the transparent center. Flat orthographic frontal view, no perspective. Exactly one square frame.\n",
+      "reference_inputs": [
+        {
+          "path": "public/art/city/village-v1/elf-atlas.webp",
+          "role": "Original Peris faction structural/cultural identity; reference only, not an edit target"
+        }
+      ],
+      "nineSlicePixels": 265,
+      "runtimeSha256": "967b703fbb0303ac303b7f50d512909757e9ac97dd4ca30f38a6a002f14efc03",
+      "runtimeBytes": 1103900
+    },
+    {
+      "id": "elf-texture",
+      "faction": "elf",
+      "kind": "texture",
+      "license": "original",
+      "generator": "Built-in ImageGen",
+      "source": "assets/source/rally-point-v1/elf-texture.png",
+      "sourceSha256": "0ae277e5639c3c5a59347ff5230ffd04ff05824f5aed6cc861790af3202e8547",
+      "sourceBytes": 3408240,
+      "file": "public/art/ui/rally-point-v1/elf-texture.webp",
+      "dimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "prompt": "Use case: stylized-concept.\nAsset type: one square 1:1 opaque PNG production repeating panel-material texture for original Peris Elf faction UI, ideally 1024 × 1024 pixels.\nCreate a genuine close-up flat orthographic material surface only: dark carved ebony living wood, fine flowing bark grain and faint shallow leaf-vein engraving with subdued jade and silver-grey patina. The veins are subtle material relief embedded in the wood, not a picture of leaves or separate objects. Refined deliberate artisan woodwork, delicate non-letter curves, charcoal-green recesses and quiet muted silver details, no jewels or crystals. Painterly but physically credible and restrained, no plastic gloss.\nKeep the surface uniformly dark and extremely low contrast for ivory text. Even lighting across center and edges, no vignette, bright streak, bloom, large carving or directional gradient. The material should repeat or stretch across a readable game panel; fine micro-detail and shallow wood grain are the focus.\nNo objects, figures, scenery, recognizable leaves lying on the surface, frame, border, corners, emblem, words, letters, numbers, logos, watermark or UI. Fully opaque, one continuous close-up material tile.\n",
+      "reference_inputs": [],
+      "runtimeSha256": "1a523c6a5bebe53942306dc23f3d7541e513b190b69d6dab62e3576bb61cb781",
+      "runtimeBytes": 444106
+    },
+    {
+      "id": "dwarf-background",
+      "faction": "dwarf",
+      "kind": "background",
+      "license": "original",
+      "generator": "Built-in ImageGen",
+      "source": "assets/source/rally-point-v1/dwarf-background.png",
+      "sourceSha256": "823d646ead3a11e657252bbc7d341f9a63b6ce9fb459f2d1ce15d8f5bee4c831",
+      "sourceBytes": 3083143,
+      "file": "public/art/ui/rally-point-v1/dwarf-background.webp",
+      "dimensions": {
+        "width": 1672,
+        "height": 941
+      },
+      "prompt": "Use case: stylized-concept.\nAsset type: one original wide 16:9 campaign landscape background for the Peris strategy-game interface, ideally 2048 × 1152 pixels, opaque PNG.\nImage 1 is a structural and cultural reference only: original Peris Dwarf building atlas. Build a coherent epic landscape, not an atlas; preserve its massive geometric basalt stonework, copper roof panels, powerful forge architecture and warm forge light.\nScene: a monumental Dwarf mountain hold carved into a sheer basalt ridge. Huge stepped stone buttresses and copper-clad gatehouses dominate the left side edge, with braziers and deep orange forge glows tucked inside enormous masonry openings. The right side edge shows towering angular walls, a copper-roofed fortress and a few monumental non-letter geometric carved emblems, snow banks and a narrow bridge. Beyond, icy blue mountain peaks and clouds fall into a misty ravine. Snow and blue evening light contrast with subdued orange forge light.\nComposition: wide cinematic mountain court and ravine vista. Strong gate silhouettes, carving, braziers, copper and snow detail stay at the side edges. Leave the central 60% a quiet dark basalt courtyard and soft icy mist with low contrast, no central forge, glaring fire, huge statue or foreground hero. This central region sits behind interface panels. Any figures are tiny distant workers or sentries, no readable faces.\nStyle: rich painterly AAA dark-fantasy strategy-game environmental art, monumental believable stone, metal and ice texture, cultivated proud Dwarf nation. Serious and regal, adjacent to Warhammer III campaign atmosphere while fully original Peris. No cartoon, no low-poly simplification.\nNo UI, interface, panels, words, letters, readable runes, labels, numbers, logos, watermark, recognizable copyrighted characters, collage, grid or atlas. One continuous landscape.\nArt-direction refinement: The scene should feel designed by a careful environment artist: clear functional gate, masonry buttresses, forge vents and deliberate architecture, a readable coherent structure rather than a heap of random towers. Restrained painted surface light, no shiny fantasy soup, no exaggerated bloom or randomly scattered crystals or jewels. Weathering follows actual material joints and exposures.\n",
+      "reference_inputs": [
+        {
+          "path": "public/art/city/village-v1/dwarf-atlas.webp",
+          "role": "Original Peris faction structural/cultural identity; reference only, not an edit target"
+        }
+      ],
+      "runtimeSha256": "35b74502a3c0af9282cbfcf49e0064d472b28feb02977909cbd993a19e018b99",
+      "runtimeBytes": 449646
+    },
+    {
+      "id": "dwarf-frame",
+      "faction": "dwarf",
+      "kind": "frame",
+      "license": "original",
+      "generator": "Built-in ImageGen",
+      "source": "assets/source/rally-point-v1/dwarf-frame.png",
+      "sourceSha256": "d21624271151647fafd3afc808a34de70595a74ce691a20402c96db28197c32b",
+      "sourceBytes": 1893715,
+      "file": "public/art/ui/rally-point-v1/dwarf-frame.webp",
+      "dimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "prompt": "Use case: stylized-concept.\nAsset type: one original square 1:1 transparent PNG game-interface frame, ideally 1024 × 1024 pixels, for CSS border-image nine-slice.\nImage 1 is a cultural material reference only: original Peris Dwarf architecture. Render a single flat frontal square frame, not a building, not an atlas.\nContinuous substantial frame with rim approximately 15% of canvas width and central square opening approximately 70% wide and 70% tall. The opening must be completely genuine transparent alpha, and all outside area transparent too. No panel fill, backdrop or checkerboard. Straight consistent edge rails allow nine-slice stretching. Keep all carving in the rim and all large corner motifs inside their corner zones, tiny transparent margin outside.\nDwarf cultivated nation materials and motifs: massive sharply faceted black basalt, heavily embossed aged copper plates, square iron clamps and rivets, deep angular interlocking geometric engraving (ornamental patterns only, no readable runes). Bold monumental stepped corner buttresses use deep geometric dovetail joints and crossed copper braces, with subtle orange forge reflections under the metal; no jewels or gems. Cold icy-blue highlights on stone and dark recesses; fine realistic chips and metal patina. Heavy proud precision stone-and-metal craftsmanship, clearly different from woodland or gold frames.\nRich premium physically textured painterly AAA dark-fantasy game UI asset, strong relief, serious regal Dwarf identity, original Peris. Flat orthographic frontal lighting and geometry, no perspective tilt.\nNo characters, faces, content, words, letters, runic writing, numbers, buttons, UI symbols, logos, watermark or interior objects. Exactly one square frame.\nRestrained material craft: make every copper clamp and stone joint plausible and intentional, crisp dressed stone forms and measured engraved spacing. Avoid excessive shine, random ornate clutter, oversaturated glowing effects or generic fantasy decoration.\n",
+      "reference_inputs": [
+        {
+          "path": "public/art/city/village-v1/dwarf-atlas.webp",
+          "role": "Original Peris faction structural/cultural identity; reference only, not an edit target"
+        }
+      ],
+      "nineSlicePixels": 340,
+      "runtimeSha256": "e14e3d78b0e3786b740977337aaa41abfa79bed2ee9a66942b4f86dccb203ba8",
+      "runtimeBytes": 1264696
+    },
+    {
+      "id": "dwarf-texture",
+      "faction": "dwarf",
+      "kind": "texture",
+      "license": "original",
+      "generator": "Built-in ImageGen",
+      "source": "assets/source/rally-point-v1/dwarf-texture.png",
+      "sourceSha256": "1f69ba2694d5752ab8921d42c490394036a673c857df4aaf7756a93340efad68",
+      "sourceBytes": 3575996,
+      "file": "public/art/ui/rally-point-v1/dwarf-texture.webp",
+      "dimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "prompt": "Use case: stylized-concept.\nAsset type: one square 1:1 opaque PNG production repeating panel-material texture for original Peris Dwarf faction UI, ideally 1024 × 1024 pixels.\nCreate a genuine close-up flat orthographic surface of forged slate-black iron, subtle tiny hammer impressions and dark aged copper patina with a few small recessed rivet impressions and extremely faint angular geometric etching. The ornamental etching is abstract measured geometric craft, not actual letters or readable runic writing. Cold charcoal/slate with very subdued dark copper oxidation, all kept dark enough for ivory text. Physical smith-work, clear deliberate material construction and microscopic wear, no glossy or magical effects.\nUniform even lighting and very low contrast across center and edges. Fine micro-detail only; no large plates, conspicuous rivets, deep seams, wrinkles, bright spots, glowing forge lines or vignette. Repeat/stretch-ready panel surface, no directional gradient. A restrained artisan metal material tile, distinct from leather and wood.\nNo objects, figures, scenery, gems, jewels, frame, border, corners, emblem, letters, readable runes, words, numbers, logos, watermark or UI. Fully opaque, one continuous close-up material surface.\n",
+      "reference_inputs": [],
+      "runtimeSha256": "819497eebbe909a755a3413f3e8c8821c13ccf16067f76e63da6249afd992c99",
+      "runtimeBytes": 575660
+    },
+    {
+      "id": "gnome-background",
+      "faction": "gnome",
+      "kind": "background",
+      "license": "original",
+      "generator": "Built-in ImageGen",
+      "source": "assets/source/rally-point-v1/gnome-background.png",
+      "sourceSha256": "c64407c7ddcfc11e7fa540876c7d1dfe0dc6966f34dd8b3f0fa0091504c1e2ba",
+      "sourceBytes": 3166596,
+      "file": "public/art/ui/rally-point-v1/gnome-background.webp",
+      "dimensions": {
+        "width": 1672,
+        "height": 941
+      },
+      "prompt": "Use case: stylized-concept.\nAsset type: one original wide 16:9 campaign landscape background for the Peris strategy-game interface, ideally 2048 × 1152 pixels, opaque PNG.\nImage 1 is a structural and cultural reference only: original Peris Gnome building atlas. Render one coherent epic landscape, not an atlas, preserving intricate brass clockwork workshops, cream stone, colored rounded small roofs, visible mechanical fittings and amber windows.\nScene: a cultivated clockwork workshop town at warm rose-and-indigo evening. On the far left edge, ornate cream-stone workshops rise in layered terraces beneath burgundy and plum tiled domes, brass pipes, beautiful gear housings and copper chimneys. On the far right edge, an elegant brass astronomical tower and intricate bridges overlook a quiet valley, with little jewel-colored roofs and restrained warm amber windows. A few tiny mechanical carts and distant workshops add nation identity without becoming foreground subjects. Refined steampunk craft and inventive whimsy, balanced by regal serious strategy-game architecture, no goofy cartoon props.\nComposition: cinematic wide vista over a quiet central paved or grassy market approach. Place rich mechanical detail, colored roofs and lit silhouettes at both side edges. The central 60% remains a broad low-contrast shaded approach, quiet soft earth/stone and evening valley mist, so game UI panels can overlay. No central clock tower, hero, giant gear or glaring lamp. Figures remain tiny and distant.\nStyle: physically textured painterly AAA fantasy strategy-game campaign environment with believable brass, timber, stone and tile materials; mature, rich and atmospheric. Original Peris Gnome culture, adjacent to Warhammer III campaign art but more refined mechanical craftsmanship. Warm rose, muted indigo, aged brass and quiet plum, not neon.\nNo UI, panels, interface, words, numbers, letters, labels on signs, readable clock numbers, logos, watermark, modern technology or recognizable copyrighted characters. No collage, grid or atlas. One continuous landscape.\nArt-direction refinement: Coherent workshop engineering and deliberately composed buildings, brass pipe routes and mechanical joints with a plausible purpose. Keep whimsical silhouettes restrained and refined. Avoid glossy AI-fantasy excess, random floating gears, jewel clutter, exaggerated bloom or oversaturated colored light. No giant decorative gear floating without a housing.\n",
+      "reference_inputs": [
+        {
+          "path": "public/art/city/village-v1/gnome-atlas.webp",
+          "role": "Original Peris faction structural/cultural identity; reference only, not an edit target"
+        }
+      ],
+      "runtimeSha256": "407e5a8235264210b2788c524dd40f3c2b7f0683c709ac4d9041ee78b7fbf78f",
+      "runtimeBytes": 511914
+    },
+    {
+      "id": "gnome-frame",
+      "faction": "gnome",
+      "kind": "frame",
+      "license": "original",
+      "generator": "Built-in ImageGen",
+      "source": "assets/source/rally-point-v1/gnome-frame.png",
+      "sourceSha256": "0a5359868923e12594dc7343cb7131b925c3f927586bd078f9a8723d7a8ba94c",
+      "sourceBytes": 1666914,
+      "file": "public/art/ui/rally-point-v1/gnome-frame.webp",
+      "dimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "prompt": "Use case: stylized-concept.\nAsset type: one original square 1:1 transparent PNG game-interface frame, ideally 1024 × 1024 pixels, for CSS border-image nine-slice.\nImage 1 is a cultural material reference only: original Peris Gnome architecture. Make a single flat frontal square frame, not a building or atlas.\nOne continuous thick ornate square frame, rim approximately 15% of canvas width. Preserve a completely transparent central square hole approximately 70% wide and 70% tall; genuine alpha, no filled panel, backdrop or checkerboard. Outside is fully transparent too. Straight consistent horizontal and vertical edge runs with larger bold corner motifs wholly within their corner zones. Tiny transparent outer margin. Designed for nine-slice stretching.\nGnome cultivated nation motifs and materials: intricate aged brass clockwork plates, small interlocking bronze gears, riveted cream-ivory metal fittings, finely engraved plum and muted indigo enamel rails and warm rose-copper details. Bold corner gear assemblies are beautifully crafted mechanical rosettes with multiple layered little cogs, bearing rings and delicate pipes. Brass bearing hubs anchor the corners, no crystals or jewels, no clock faces or numerals. Deep physical carving, dark patina in recesses, believable brushed metal highlights. Whimsical precision but regal mature serious strategy-game style, distinct from Dwarf block masonry and Elf foliage.\nPremium rich physically textured painterly AAA fantasy game UI art, original Peris. Frontal orthographic view, even restrained lighting, no perspective tilt or cartoon/vector look.\nNo faces, characters, words, letters, numbers, clock markings, buttons, logos, watermark, UI content or objects inside the transparent opening. Exactly one square frame.\nRestrained material craft: each gear must sit in a believable fixed housing; deliberate engineered joins and a clear brass bearing assembly at each corner. No random floating gears, overglossy surfaces, bloom or jeweled decoration.\n",
+      "reference_inputs": [
+        {
+          "path": "public/art/city/village-v1/gnome-atlas.webp",
+          "role": "Original Peris faction structural/cultural identity; reference only, not an edit target"
+        }
+      ],
+      "nineSlicePixels": 340,
+      "runtimeSha256": "0239f5bd2b43655122f7d8243910840d2754ec800beb504948323792176dd23c",
+      "runtimeBytes": 1130972
+    },
+    {
+      "id": "gnome-texture",
+      "faction": "gnome",
+      "kind": "texture",
+      "license": "original",
+      "generator": "Built-in ImageGen",
+      "source": "assets/source/rally-point-v1/gnome-texture.png",
+      "sourceSha256": "3917aa2fdc71d781a475db457de7d97a73a99e2836cc30996f63514eefed7f4a",
+      "sourceBytes": 3508867,
+      "file": "public/art/ui/rally-point-v1/gnome-texture.webp",
+      "dimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "prompt": "Use case: stylized-concept.\nAsset type: one square 1:1 opaque PNG production repeating panel-material texture for original Peris Gnome faction UI, ideally 1024 × 1024 pixels.\nCreate a genuine close-up flat orthographic surface of very dark aged brass with fine machined circular grain, subtle shallow etched interlocking gear-spiral lines and subdued navy/rose oxidation. The gear spirals are very faint engraved micro-patterns in the material, not separate gears or illustrations. Dark patina in precise machining marks, tiny physical wear and deliberate elegant engineering, near-black navy-brown with quiet muted brass and rose copper hints. Refined serious craft, no plastic gloss, no shiny fantasy excess.\nUniform even lighting and extremely low contrast so ivory body text remains readable. Micro-detail only, consistent center and edges, no hard seams, large gear outlines, bright highlights, vignetting, directional gradient or glowing effects. Repeat or stretch ready as a panel surface, visibly different from generic parchment.\nNo objects, actual gears, figures, scenery, crystals, jewels, frame, border, corners, emblems, words, letters, numbers, logos, watermark or UI. Fully opaque, one continuous close-up material tile.\n",
+      "reference_inputs": [],
+      "runtimeSha256": "ec55746cfd992c11be23ec40c639da57412256650c5622bb97ec79f489b977d4",
+      "runtimeBytes": 544968
+    },
+    {
+      "id": "pandaren-background",
+      "faction": "pandaren",
+      "kind": "background",
+      "license": "original",
+      "generator": "Built-in ImageGen",
+      "source": "assets/source/rally-point-v1/pandaren-background.png",
+      "sourceSha256": "7c9613e1c198e08ab6f84912dfd37922291d674e0ea669d030534c6031160a36",
+      "sourceBytes": 2784241,
+      "file": "public/art/ui/rally-point-v1/pandaren-background.webp",
+      "dimensions": {
+        "width": 1672,
+        "height": 941
+      },
+      "prompt": "Use case: stylized-concept. Asset type: finished wide 16:9 campaign landscape background for a dark fantasy strategy game, painted AAA cinematic concept art. Primary request: a richly specific Pandaren-inspired jade kingdom landscape, warm red and jade cultural identity. Scene: ancient jade pagodas with curved red tiled roofs on terraces beside a winding river, bamboo gardens, carved stone bridges, hanging red lanterns, misty wooded mountains. Composition: panoramic 16:9, detailed architecture and bamboo visibly frame the left and right sides; the middle 60 percent is a calmer river courtyard and soft atmospheric mist, with subdued detail and medium-dark tone so an opaque command panel can sit over it. Rich painterly surface and believable worn materials, restrained warm lantern light with cool jade ambient atmosphere, depth across multiple landscape planes. Distinctive red lacquered timber, jade stone, bronze cloud ornament, bamboo details. No interface, no panels, no mockup, no words, no letters, no logos, no watermarks. Generate the landscape itself edge to edge; no decorative outer frame. Desired size 2048x1152 or wider with exact 16:9 composition.",
+      "reference_inputs": [],
+      "runtimeSha256": "0702afbf468f1e8a26190837d3dedb284ee8726dca45a269cfac3d3671a33139",
+      "runtimeBytes": 389258
+    },
+    {
+      "id": "pandaren-frame",
+      "faction": "pandaren",
+      "kind": "frame",
+      "license": "original",
+      "generator": "Built-in ImageGen",
+      "source": "assets/source/rally-point-v1/pandaren-frame.png",
+      "sourceSha256": "9f659a1e3adf64bd63f382f4eee67723ccd93e83edc52764ff06d892652aab36",
+      "sourceBytes": 1634549,
+      "file": "public/art/ui/rally-point-v1/pandaren-frame.webp",
+      "dimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "prompt": "Use case: stylized-concept. Asset type: square 1:1 ornamental fantasy strategy-game frame with genuine transparent alpha, finished isolated PNG asset. Primary request: a culturally specific Pandaren imperial wooden and jade frame. Materials: deeply carved dark red-black lacquered wood, segmented bamboo construction, aged bronze cloud ornaments and small jade inlays, thick tactile woodgrain, worn varnish, intricate embossed cloud scrolls, ornamental corner caps, balanced architectural symmetry. Composition: perfectly frontal square frame, no perspective; frame rim fills approximately 15 percent of the image width on each side; the interior central rectangular 70 percent by 70 percent area is a completely empty transparent cutout, and the outside around the frame is also transparent. No scene inside the opening. Highly detailed painterly AAA fantasy game material rendering, warm bronze highlights, rich carved dark wood and jade cultural identity. The border must be visually continuous on all four sides, corners fully visible, almost fill the canvas with a tiny outer margin. True alpha throughout the central hole and outside silhouette, no checkerboard painted into pixels, no black/white background. No mock interface, no text, no letters, no logos, no watermarks.",
+      "reference_inputs": [],
+      "nineSlicePixels": 225,
+      "runtimeSha256": "bdaa4efce862aab585d76f930922f8bb5ee6107830dde8716118711ef2911060",
+      "runtimeBytes": 1137880
+    },
+    {
+      "id": "pandaren-texture",
+      "faction": "pandaren",
+      "kind": "texture",
+      "license": "original",
+      "generator": "Built-in ImageGen",
+      "source": "assets/source/rally-point-v1/pandaren-texture.png",
+      "sourceSha256": "c9e40416dc6a61e344b28e52d9c49789ce100a9173ee906c4a03d0d78d62827a",
+      "sourceBytes": 2957053,
+      "file": "public/art/ui/rally-point-v1/pandaren-texture.webp",
+      "dimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "prompt": "Use case: stylized-concept. Asset type: square 1:1 opaque fantasy game interior panel material texture, quiet photographic/painterly close-up of a real material surface, edge-to-edge. Primary request: Pandaren faction dark red-black lacquered wood with subtle bamboo-like woodgrain, fine jade-and-bronze cloud incisions embedded flush in the material. Dark matte weathered lacquer, tactile fine grain and shallow carved craftwork, very small understated jade green and old bronze accents. The cloud incisions are faint continuous decorative curves, not large motifs or raised objects. Very low contrast and uniformly dark, evenly lit, suitable behind dense cream-colored strategy UI text. Flat frontal macro surface plane, no perspective, no scene, no frame or borders, no objects, no architecture or characters. The surface is a continuous dark wooden material sheet with subtle culture-specific workmanship. No bright jade patches, no shiny glare, no text, no letters, no logo, no watermark, no interface or mockup. Opaque background, no transparency.",
+      "reference_inputs": [],
+      "runtimeSha256": "bba8fe41e269cf8a41f1aa4529b6555b830f045154bbd8cc2fec9be6dc6ad3aa",
+      "runtimeBytes": 446174
+    },
+    {
+      "id": "undead-background",
+      "faction": "undead",
+      "kind": "background",
+      "license": "original",
+      "generator": "Built-in ImageGen",
+      "source": "assets/source/rally-point-v1/undead-background.png",
+      "sourceSha256": "60f180887d5e6ee414bd6fd986c2e53c97410b590d2daa161c8db3bc1f44b151",
+      "sourceBytes": 2832473,
+      "file": "public/art/ui/rally-point-v1/undead-background.webp",
+      "dimensions": {
+        "width": 1672,
+        "height": 941
+      },
+      "prompt": "Use case: stylized-concept. Asset type: finished wide 16:9 campaign landscape background for a dark fantasy strategy game, painted AAA cinematic concept art. Primary request: an unmistakable Undead necropolis landscape, ancient bone crypts and violet sky with eerie pale-green crystal illumination, atmospheric and majestic rather than horror gore. Scene: monumental ancient bone-and-black-stone crypt architecture on the left and right, skull-shaped carved gateways as architecture, layered graveyard terraces, giant tomb spires, worn gravestones, pale green magical crystals, drifting low ghostly mist, distant mountains under a dusky violet moonlit sky. Composition: panorama 16:9, rich necropolis architecture visibly framing both side edges; the central 60 percent is a quieter dark misty processional avenue and atmospheric valley, with restrained detail and medium-dark tone for a large strategy command panel overlay. Believable aged bone and weathered basalt materials, precise engraved reliefs, rich painterly surface, cinematic layered depth. Palette: charcoal black, old ivory bone, desaturated violet sky and restrained pale-green crystal light. No gore, no bodies, no interface, no panels, no mockup, no words, no letters, no logos, no watermark, no decorative outer frame. Desired size 2048x1152 or wider with exact 16:9 composition.",
+      "reference_inputs": [],
+      "runtimeSha256": "5c906933826607849dcff163f3a093c5773e4134b39dc0d06d92964b04eaf92f",
+      "runtimeBytes": 351242
+    },
+    {
+      "id": "undead-frame",
+      "faction": "undead",
+      "kind": "frame",
+      "license": "original",
+      "generator": "Built-in ImageGen",
+      "source": "assets/source/rally-point-v1/undead-frame.png",
+      "sourceSha256": "a0836912548bd1395c02dd62596d902430fff0f73579150485d8309059bbe5af",
+      "sourceBytes": 1982121,
+      "file": "public/art/ui/rally-point-v1/undead-frame.webp",
+      "dimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "prompt": "Use case: stylized-concept. Asset type: square 1:1 ornamental fantasy strategy-game frame with genuine transparent alpha, finished isolated PNG asset. Primary request: an unmistakable Undead necropolis frame carved from aged ivory bone and black crypt stone, eerie elegant architecture rather than gore. Materials: sculpted ancient bone arches, architectural skull corner caps and ribbed bone structure, weathered black basalt stone inner band, violet engraved rune-like decorative marks without readable text, tiny restrained pale-green crystal highlights, tactile wear and intricate funerary reliefs. Composition: perfectly frontal square frame, no perspective; ornate but continuous thick border rim approximately 15 percent of image width on each side; central rectangular 70 percent by 70 percent hole completely transparent and empty; outside silhouette also transparent. All four corners fully visible and the frame nearly fills canvas with tiny outer margin. Rich painterly AAA dark fantasy material rendering, believable bone surface and blackstone, desaturated violet accents and pale green highlights. True alpha in the empty center and outside, no background scene, no black/white fill, no checkerboard painted into image. No gore, no flesh, no blood, no interface mockup, no letters, no readable words, no logo, no watermark.",
+      "reference_inputs": [],
+      "nineSlicePixels": 225,
+      "runtimeSha256": "28518cbd0d2330d28d28212f034caec1e9c9a579e7964e93bf63b16e51903a96",
+      "runtimeBytes": 1260508
+    },
+    {
+      "id": "undead-texture",
+      "faction": "undead",
+      "kind": "texture",
+      "license": "original",
+      "generator": "Built-in ImageGen",
+      "source": "assets/source/rally-point-v1/undead-texture.png",
+      "sourceSha256": "f1ce80eaed39d72bc4f2f6a862474d791d90564906fd9722adb2a71d84fd66ca",
+      "sourceBytes": 3674791,
+      "file": "public/art/ui/rally-point-v1/undead-texture.webp",
+      "dimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "prompt": "Use case: stylized-concept. Asset type: square 1:1 opaque fantasy game interior panel material texture, a quiet photographic/painterly close-up of a real material surface, edge-to-edge. Primary request: Undead faction black crypt stone with very fine aged ivory bone inlay and faint desaturated violet mineral veining. The surface is dark weathered basalt, slightly porous with hairline chisel marks, restrained slim fragments of smooth ancient bone inlay embedded flush in the stone. Very low contrast, evenly lit, dark matte, subtle tactile detail suitable behind dense cream-colored UI text. Flat frontal macro material plane, no perspective, no objects, no frame or borders, no architecture scene, no skull shapes, no characters, no gore. The fine violet veins are dim, not luminous or bright, and the bone inlay is small and subdued rather than large white patches. A unified dark stone plane with subtle culture-specific workmanship, seamlessly continuous appearance. No text, no letters, no logo, no watermark, no interface or mockup. Opaque background, no transparency.",
+      "reference_inputs": [],
+      "runtimeSha256": "a9acda7d325e8d9989586d462775eff4523ee4e9c67e39987501be91163a3b0d",
+      "runtimeBytes": 551492
+    },
+    {
+      "id": "demon-background",
+      "faction": "demon",
+      "kind": "background",
+      "license": "original",
+      "generator": "Built-in ImageGen",
+      "source": "assets/source/rally-point-v1/demon-background.png",
+      "sourceSha256": "65c37e393af9a19d8cd6c6ea80963d8d66a941bc0d31f7a38eae9b38b0da1350",
+      "sourceBytes": 2421204,
+      "file": "public/art/ui/rally-point-v1/demon-background.webp",
+      "dimensions": {
+        "width": 1672,
+        "height": 941
+      },
+      "prompt": "Use case: stylized-concept. Asset type: finished wide 16:9 campaign landscape background for a dark fantasy strategy game, painted AAA cinematic concept art. Primary request: an unmistakable Demon realm, obsidian horned fortresses, molten red architectural inlays, active volcano, cinders and ashen mountains. Scene: brutal monumental horned obsidian fortress battlements on both left and right side edges, carved dark volcanic stone buttresses and charred iron architectural bands, narrow dim molten-red channels in the masonry, a far active volcano casting red furnace glow through an ash cloud, blackened ridges and cinder fields, drifting sparse embers. Composition: panoramic 16:9 with rich fortress identity visible on both sides; central 60 percent is a quieter dark ashen valley and winding approach road under atmospheric smoke, medium-dark tone and restrained detail for an opaque command panel overlay. Believable obsidian glass, chipped basalt and scorched iron textures, rich detailed painterly surface, cinematic layered depth. Palette: coal black, iron grey, restrained deep red embers with few warm molten highlights. The fiery accents should be threatening and restrained, not flooding the scene with orange. No characters, no interface, no panels, no mockup, no words, no letters, no logos, no watermark, no outer decorative frame. Desired size 2048x1152 or wider with exact 16:9 composition.",
+      "reference_inputs": [],
+      "runtimeSha256": "4ff7e55830bdbf4d0ce9e530a177415c6a365e0e9c63afab8f16834dad27cc33",
+      "runtimeBytes": 259356
+    },
+    {
+      "id": "demon-frame",
+      "faction": "demon",
+      "kind": "frame",
+      "license": "original",
+      "generator": "Built-in ImageGen",
+      "source": "assets/source/rally-point-v1/demon-frame.png",
+      "sourceSha256": "b598a81c7aa740bce6a717684ea47df1e975463bca6f7be9086b8577ff18a0a0",
+      "sourceBytes": 1723629,
+      "file": "public/art/ui/rally-point-v1/demon-frame.webp",
+      "dimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "prompt": "Use case: stylized-concept. Asset type: square 1:1 ornamental fantasy strategy-game frame with genuine transparent alpha, finished isolated PNG asset. Primary request: a culturally unmistakable Demon fortress frame built from black obsidian horns and charred iron, with narrow molten fractures and restrained dark-red fiery accents. Materials: jagged black obsidian layered stone rim, architectural curved horns at the four corners, thick textured scorched iron bands, hammered rivets, deep carved infernal reliefs, fine narrow cracks glowing dimly red from within. The fiery edges are restrained rather than bright orange all over. Composition: perfectly frontal square, no perspective; continuous thick border rim approximately 15 percent of the image width on each side; central rectangular 70 percent by 70 percent is a completely empty transparent hole, with no scene; outside the irregular horned silhouette also transparent. All four corners fully visible, frame almost fills canvas with small outer margin. Rich painterly AAA dark fantasy game material rendering, tactile char and obsidian, believable irregular fractures, quiet black and charcoal mass with deep red ember seams. True alpha center and outside, no black/white fill, no painted checkerboard. No UI mockup, no text, no letters, no logo, no watermark.",
+      "reference_inputs": [],
+      "nineSlicePixels": 225,
+      "runtimeSha256": "81c362c64a364e8379eb045cb4a6d0b059b7bfa1d766149516789dd756586c3b",
+      "runtimeBytes": 1239754
+    },
+    {
+      "id": "demon-texture",
+      "faction": "demon",
+      "kind": "texture",
+      "license": "original",
+      "generator": "Built-in ImageGen",
+      "source": "assets/source/rally-point-v1/demon-texture.png",
+      "sourceSha256": "36ba41e4fcce09938698b8a40353a0258f15b66e6b75fd57888376b285eb7626",
+      "sourceBytes": 3288665,
+      "file": "public/art/ui/rally-point-v1/demon-texture.webp",
+      "dimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "prompt": "Use case: stylized-concept. Asset type: square 1:1 opaque fantasy game interior panel material texture, quiet photographic/painterly close-up of a real material surface, edge-to-edge. Primary request: Demon faction charred black obsidian and forged iron fused into one dark matte material plane, with fine hairline fractures and extremely restrained dim red ember veins. Tactile rough black volcanic stone interspersed with scorched wrought iron grain, shallow hammered marks and tiny cracks; only a few thin ember seams in deep dark red, barely glowing, never orange bright. Very low contrast, evenly lit, uniformly dark and quiet, suitable behind dense cream-colored strategy UI text. Flat frontal macro surface with no perspective, no objects, no large symbols, no frame, no border, no architecture or scene, no skulls or characters. No shiny reflective glare, no active fire, no dramatic lighting, no text, no letters, no logo, no watermark, no interface or mockup. Entire square is a continuous dark physical material, opaque with no transparency.",
+      "reference_inputs": [],
+      "runtimeSha256": "489d976df3c29759f2ea737f78cf37824cbffb58a74c6c54ece715aae83c44f2",
+      "runtimeBytes": 474340
+    }
+  ],
+  "fonts": [
+    {
+      "family": "Cinzel",
+      "style": "normal",
+      "weight": 400,
+      "file": "public/fonts/rally-point/cinzel-0.ttf",
+      "sha256": "a0242f6698ae0d3220a29986a09274f9d1eddb4a24da4e50faf387fd1804eb7b",
+      "bytes": 45884,
+      "source": "https://github.com/google/fonts/tree/main/ofl/cinzel",
+      "license": "SIL OFL 1.1",
+      "license_file": "public/licenses/Cinzel-OFL.txt",
+      "copyright": "Copyright 2020 The Cinzel Project Authors (https://github.com/NDISCOVER/Cinzel)"
+    },
+    {
+      "family": "Cinzel",
+      "style": "normal",
+      "weight": 600,
+      "file": "public/fonts/rally-point/cinzel-1.ttf",
+      "sha256": "5150b3609eeaaa9c6d7e093cb9b16ab8ec2f7110ddf0cbe751887e6f158398af",
+      "bytes": 46116,
+      "source": "https://github.com/google/fonts/tree/main/ofl/cinzel",
+      "license": "SIL OFL 1.1",
+      "license_file": "public/licenses/Cinzel-OFL.txt",
+      "copyright": "Copyright 2020 The Cinzel Project Authors (https://github.com/NDISCOVER/Cinzel)"
+    },
+    {
+      "family": "Cinzel",
+      "style": "normal",
+      "weight": 700,
+      "file": "public/fonts/rally-point/cinzel-2.ttf",
+      "sha256": "2c6b1ff0d368efb73636700b69dbef707fa5602a06d085a4e91e5125082651f0",
+      "bytes": 46124,
+      "source": "https://github.com/google/fonts/tree/main/ofl/cinzel",
+      "license": "SIL OFL 1.1",
+      "license_file": "public/licenses/Cinzel-OFL.txt",
+      "copyright": "Copyright 2020 The Cinzel Project Authors (https://github.com/NDISCOVER/Cinzel)"
+    },
+    {
+      "family": "Crimson Text",
+      "style": "normal",
+      "weight": 400,
+      "file": "public/fonts/rally-point/crimson-text-0.ttf",
+      "sha256": "72c4209c94de3e6ac6f4f2256ae604174102bbed26ec2a14948024cb86f5c10f",
+      "bytes": 98516,
+      "source": "https://github.com/google/fonts/tree/main/ofl/crimsontext",
+      "license": "SIL OFL 1.1",
+      "license_file": "public/licenses/CrimsonText-OFL.txt",
+      "copyright": "Copyright 2010 The Crimson Text Project Authors (https://github.com/googlefonts/Crimson)"
+    },
+    {
+      "family": "Crimson Text",
+      "style": "normal",
+      "weight": 600,
+      "file": "public/fonts/rally-point/crimson-text-1.ttf",
+      "sha256": "2edf7742debe883538a37223c263b5f0d1c4ae7e61b5cec6199a31c6c0345e5d",
+      "bytes": 100660,
+      "source": "https://github.com/google/fonts/tree/main/ofl/crimsontext",
+      "license": "SIL OFL 1.1",
+      "license_file": "public/licenses/CrimsonText-OFL.txt",
+      "copyright": "Copyright 2010 The Crimson Text Project Authors (https://github.com/googlefonts/Crimson)"
+    },
+    {
+      "family": "Crimson Text",
+      "style": "normal",
+      "weight": 700,
+      "file": "public/fonts/rally-point/crimson-text-2.ttf",
+      "sha256": "0613f2f47f8c76e8b7a99be0545b388c1ee87265952afa41b9a06ae64ecd7799",
+      "bytes": 102364,
+      "source": "https://github.com/google/fonts/tree/main/ofl/crimsontext",
+      "license": "SIL OFL 1.1",
+      "license_file": "public/licenses/CrimsonText-OFL.txt",
+      "copyright": "Copyright 2010 The Crimson Text Project Authors (https://github.com/googlefonts/Crimson)"
+    }
+  ],
+  "licenses": [
+    {
+      "file": "public/licenses/Cinzel-OFL.txt",
+      "sha256": "f2b3029aba64c378bf0963b62945eee15e564fe4330b934c8f2eb058282b5e83",
+      "source": "https://github.com/google/fonts/blob/main/ofl/cinzel/OFL.txt",
+      "license": "SIL OFL 1.1"
+    },
+    {
+      "file": "public/licenses/CrimsonText-OFL.txt",
+      "sha256": "50fd67cddc097377a5c871e8452b778bc5aedfa3480a705cb27c5e3a078218df",
+      "source": "https://github.com/google/fonts/blob/main/ofl/crimsontext/OFL.txt",
+      "license": "SIL OFL 1.1"
+    }
+  ],
+  "references": "Reference artwork was studied only. This edition contains the generated faction paintings and original Peris identity references; no reference screenshots are copied into source or runtime assets."
+}
