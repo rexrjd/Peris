@@ -44,7 +44,7 @@ deadline. Cancellation checks the original send token and refunds once. After th
 deadline, the order cannot be redirected or cancelled. Ordinary movement must end
 at an owned village or field. Raids must depart from an owned station; legacy
 neutral-position armies can relocate to owned land without discarding their saves.
-Strategic alliances are not available yet, so allied reinforcement is not enabled.
+V19 guilds, accepted bilateral alliances, and non-aggression pacts protect friendly cities from raids. Reinforcement destinations continue to use owned-station rules.
 
 Partial raids leave unused troops in a private location garrison. Other idle,
 non-training legions at the same owned station can collect them. Raid survivors
@@ -57,7 +57,7 @@ schedules. Survivors carry available loot back to their departure station, then
 credit their home city once. Bandit battles run quietly; the six story encounters
 retain their battle screens.
 
-Thousands of candidate spawn sites exist. New accounts require a dry 3 × 3 ring, no neighbouring claims and safe village spacing. Existing IDs and positions remain intact. Empire gameplay supports up to ten cities; each city adds capacity for two hero-led armies, up to twenty armies across the empire. See `docs/empire-and-heroes.md` for founding and ownership rules. Alliances, trade, conquest and ships are future work. The optional private database worker settles existing gameplay without browser polling; its scheduler requires separate installation. Thousands of simultaneous players have not been load tested.
+Thousands of candidate spawn sites exist. New accounts require a dry 3 × 3 ring, no neighbouring claims and safe village spacing. Existing IDs and positions remain intact. Empire gameplay supports up to ten cities; each city adds capacity for two hero-led armies, up to twenty armies across the empire. See `docs/empire-and-heroes.md` for founding and ownership rules. Guilds and diplomacy are available in V19. Broader trading, conquest and ships are future work. The optional private database worker settles existing gameplay without browser polling; its scheduler requires separate installation. Thousands of simultaneous players have not been load tested.
 
 ## Build and release
 

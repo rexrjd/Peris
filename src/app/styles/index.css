@@ -48,3 +48,5 @@
 @import '../../features/map/styles/march-compact.css';
 @import '../../features/campaign/styles/siege-summary.css';
 @import '../../features/research/styles/technology-tree.css';
+
+@import '../../features/social/styles/social.css';

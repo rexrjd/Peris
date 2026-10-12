@@ -22,7 +22,7 @@ export function Modal({ title, children, onClose, className = '', heading = true
     close.current = onClose;
     useEffect(() => {
         const previous = document.activeElement as HTMLElement | null;
-        const focusable = () => Array.from(panel.current?.querySelectorAll<HTMLElement>('button:not([disabled]),input:not([disabled]),select:not([disabled]),summary,a[href],[tabindex="0"]') ?? []).filter(e => e.offsetParent !== null);
+        const focusable = () => Array.from(panel.current?.querySelectorAll<HTMLElement>('button:not([disabled]),input:not([disabled]),textarea:not([disabled]),select:not([disabled]),summary,a[href],[tabindex="0"]') ?? []).filter(e => e.offsetParent !== null);
         focusable()[0]?.focus();
         const key = (e: KeyboardEvent) => {
             const topmost = Array.from(document.querySelectorAll('[role="dialog"][aria-modal="true"]')).at(-1);

@@ -1,0 +1,377 @@
+{
+  "version": 19,
+  "base_commit": "6c3025c7878335bff50f05a6885d1016b8ca75b9",
+  "compatible_main": "6c3025c7878335bff50f05a6885d1016b8ca75b9",
+  "install": "supabase/UPGRADE_GUILDS_TO_V19.sql for an existing V18 world, before frontend deployment",
+  "validation": {
+    "unit": {
+      "passed": 443,
+      "skipped": 1
+    },
+    "social_database": {
+      "passed": 58
+    },
+    "tooling": {
+      "passed": 4
+    },
+    "glb_assets": {
+      "passed": 46
+    },
+    "typescript_vite_build": "passed",
+    "world_and_sql_generation": "passed",
+    "ui_art": "passed",
+    "privacy_and_migration_preservation": "passed",
+    "baseline_test_limits": [
+      "Existing older account fixture column comparisons",
+      "3D-only browser assertions in a Canvas fallback runner"
+    ]
+  },
+  "changed_files": 69,
+  "files": [
+    {
+      "path": "ARCHITECTURE.md",
+      "bytes": 11227,
+      "sha256": "f0d0c8499a5a76b4d60daeffdc6019e1bb1e913da40c0e6312f8aa9a6e5f20fd"
+    },
+    {
+      "path": "ARTWORK.md",
+      "bytes": 18960,
+      "sha256": "482b93344ecc95fa9fcacbadadb128115f810d143ade00db9d62ddade19adc08"
+    },
+    {
+      "path": "GUILDS_AND_MESSAGES_UPDATE.md",
+      "bytes": 6213,
+      "sha256": "225a5d5b822d445c71db0c438cf3b0b72ebcc99daecae573baaa40ffa0a76a51"
+    },
+    {
+      "path": "GUILDS_PUSH_NOTES.txt",
+      "bytes": 3184,
+      "sha256": "5d40c09396939e7439b42d34a214f1c022fc5a821fcbd42188c3ac5ad447294a"
+    },
+    {
+      "path": "MAP_WORLD.md",
+      "bytes": 10216,
+      "sha256": "94255a81aa1b0104a54754a1b652fe6273452a9160dee0797174183d4285d79b"
+    },
+    {
+      "path": "assets/social-art-prompts.json",
+      "bytes": 1469,
+      "sha256": "2e982b6bacfe86e88874ff24db9e25f336c8c3136bcee0cae0dde1c6c09053b2"
+    },
+    {
+      "path": "assets/source/ui-low-poly-v1/guilds.png",
+      "bytes": 1201908,
+      "sha256": "06da8e91cb01c432c8b0f4d5784d2e3202e623cfabd9537056d40814ce8c3f9a"
+    },
+    {
+      "path": "assets/source/ui-low-poly-v1/messages.png",
+      "bytes": 1023479,
+      "sha256": "0ef55b37e6ebf8c16b55f52100a57728aa930da36d2a2d211ac09196c62e0158"
+    },
+    {
+      "path": "assets/ui-low-poly-v1.json",
+      "bytes": 10402,
+      "sha256": "2df87f1fbc0125adfb4692733f011217d6e3dcdc96b26f871e4dbde85cecb542"
+    },
+    {
+      "path": "package.json",
+      "bytes": 5494,
+      "sha256": "1c89a208b238d8bb276c211b4611744bb0f9cfca7d97f56745f8b8ebbac8c782"
+    },
+    {
+      "path": "public/art/ui/low-poly-v1/guilds.webp",
+      "bytes": 6430,
+      "sha256": "34f961d2079439af7e7d901dcb8a8573363a29a093ced51c3a12ae72151bcaa0"
+    },
+    {
+      "path": "public/art/ui/low-poly-v1/messages.webp",
+      "bytes": 5672,
+      "sha256": "393333894cb8aec47b30a8a34f9bd90cd9449bc22fa8b332527c78a6aa3a56e1"
+    },
+    {
+      "path": "scripts/build-sql.mjs",
+      "bytes": 4226,
+      "sha256": "3aafda088ad81270083bbf1554ef4a4b3635c3adb823287ef986ba4333426a41"
+    },
+    {
+      "path": "src/app/App.tsx",
+      "bytes": 31622,
+      "sha256": "c4d9aa121a6a073a2b7ea623ba1e0a36c2a60918466496699e696a91822a7eaf"
+    },
+    {
+      "path": "src/app/styles/index.css",
+      "bytes": 2188,
+      "sha256": "b25c1c88ab7c57ecc26d8e847029560f4d40dabbcc782f9565dda3eacb19362e"
+    },
+    {
+      "path": "src/features/social/domain/social.ts",
+      "bytes": 4615,
+      "sha256": "15d1ca9669cb8ff259218594aae599249d72dd51d7411b16a9e671ee68a66189"
+    },
+    {
+      "path": "src/features/social/platform/client.ts",
+      "bytes": 1788,
+      "sha256": "6387d00e316c48aab248d2b9ab093afdf410327cf73661e87e53c3d25cc6db1c"
+    },
+    {
+      "path": "src/features/social/styles/social.css",
+      "bytes": 28844,
+      "sha256": "4c6563057cc3abcba663aa5a2e124448e4d5e6a7298341230726b59e929b6fd0"
+    },
+    {
+      "path": "src/features/social/ui/Crest.tsx",
+      "bytes": 1005,
+      "sha256": "2ccd1ca4babb1e821e43aa184adf0b093240fa977040307a1602f49a28395d11"
+    },
+    {
+      "path": "src/features/social/ui/GuildsPanel.tsx",
+      "bytes": 29954,
+      "sha256": "ac9258c13de7a15184b1cdcff57d8190bbcb773c0bb895c3a23f93ba199576ca"
+    },
+    {
+      "path": "src/features/social/ui/MessagesPanel.tsx",
+      "bytes": 14121,
+      "sha256": "8e6c7ff1ee1ef18d657df6151b14abf097c77f9d248f094f6ef2b8359931cac2"
+    },
+    {
+      "path": "src/features/social/ui/SocialNavigation.tsx",
+      "bytes": 960,
+      "sha256": "44d49b987a64c9778a46c4906344f288adc8b6b376c8248722b17706791b3c84"
+    },
+    {
+      "path": "src/features/social/ui/SocialShared.tsx",
+      "bytes": 1285,
+      "sha256": "3898bfae532e5d1a21682468f642adce02f9b08281d55e93c89cdb30da6f1d34"
+    },
+    {
+      "path": "src/features/social/ui/useSocial.ts",
+      "bytes": 4170,
+      "sha256": "fbff3d89525e34dbefbb8709a4a4fc4ee2fd40ee5c6212b4c6459a6a8e8adbfe"
+    },
+    {
+      "path": "src/shared/ui/LowPolyIcon.tsx",
+      "bytes": 433,
+      "sha256": "66c1d7d360c22f4f5dec4f3e3dcb305c445f48b16b3e49941e6c318ea7a989f9"
+    },
+    {
+      "path": "src/shared/ui/Shared.tsx",
+      "bytes": 2836,
+      "sha256": "63f4cad6a6cb045f6c9ea8b9ce2f4a315c7774ddcb816f52edc554a16a6321ec"
+    },
+    {
+      "path": "supabase/FRESH_INSTALL_V10.sql",
+      "bytes": 749046,
+      "sha256": "7bfece2d399938a1631c2523fe1f52ba3ebe2859ea6491c8e8670820b5f90556"
+    },
+    {
+      "path": "supabase/FRESH_INSTALL_V11.sql",
+      "bytes": 749046,
+      "sha256": "7bfece2d399938a1631c2523fe1f52ba3ebe2859ea6491c8e8670820b5f90556"
+    },
+    {
+      "path": "supabase/FRESH_INSTALL_V12.sql",
+      "bytes": 749046,
+      "sha256": "7bfece2d399938a1631c2523fe1f52ba3ebe2859ea6491c8e8670820b5f90556"
+    },
+    {
+      "path": "supabase/FRESH_INSTALL_V13.sql",
+      "bytes": 749046,
+      "sha256": "7bfece2d399938a1631c2523fe1f52ba3ebe2859ea6491c8e8670820b5f90556"
+    },
+    {
+      "path": "supabase/FRESH_INSTALL_V14.sql",
+      "bytes": 749046,
+      "sha256": "7bfece2d399938a1631c2523fe1f52ba3ebe2859ea6491c8e8670820b5f90556"
+    },
+    {
+      "path": "supabase/FRESH_INSTALL_V15.sql",
+      "bytes": 749046,
+      "sha256": "7bfece2d399938a1631c2523fe1f52ba3ebe2859ea6491c8e8670820b5f90556"
+    },
+    {
+      "path": "supabase/FRESH_INSTALL_V16.sql",
+      "bytes": 749046,
+      "sha256": "7bfece2d399938a1631c2523fe1f52ba3ebe2859ea6491c8e8670820b5f90556"
+    },
+    {
+      "path": "supabase/FRESH_INSTALL_V17.sql",
+      "bytes": 749046,
+      "sha256": "7bfece2d399938a1631c2523fe1f52ba3ebe2859ea6491c8e8670820b5f90556"
+    },
+    {
+      "path": "supabase/FRESH_INSTALL_V18.sql",
+      "bytes": 749046,
+      "sha256": "7bfece2d399938a1631c2523fe1f52ba3ebe2859ea6491c8e8670820b5f90556"
+    },
+    {
+      "path": "supabase/FRESH_INSTALL_V19.sql",
+      "bytes": 749046,
+      "sha256": "7bfece2d399938a1631c2523fe1f52ba3ebe2859ea6491c8e8670820b5f90556"
+    },
+    {
+      "path": "supabase/FRESH_INSTALL_V6.sql",
+      "bytes": 749046,
+      "sha256": "7bfece2d399938a1631c2523fe1f52ba3ebe2859ea6491c8e8670820b5f90556"
+    },
+    {
+      "path": "supabase/FRESH_INSTALL_V7.sql",
+      "bytes": 749046,
+      "sha256": "7bfece2d399938a1631c2523fe1f52ba3ebe2859ea6491c8e8670820b5f90556"
+    },
+    {
+      "path": "supabase/FRESH_INSTALL_V8.sql",
+      "bytes": 749046,
+      "sha256": "7bfece2d399938a1631c2523fe1f52ba3ebe2859ea6491c8e8670820b5f90556"
+    },
+    {
+      "path": "supabase/FRESH_INSTALL_V9.sql",
+      "bytes": 749046,
+      "sha256": "7bfece2d399938a1631c2523fe1f52ba3ebe2859ea6491c8e8670820b5f90556"
+    },
+    {
+      "path": "supabase/UPGRADE_GUILDS_TO_V19.sql",
+      "bytes": 53617,
+      "sha256": "581db09377cb6070cf0efd5971065c29488b9527dd76ae38a67329bdf88050fb"
+    },
+    {
+      "path": "supabase/UPGRADE_TO_V10.sql",
+      "bytes": 708883,
+      "sha256": "30a43f3b94d06733e44e051d29a9c4445c5181c30be6a195cd7d430a42ca0fa8"
+    },
+    {
+      "path": "supabase/UPGRADE_TO_V11.sql",
+      "bytes": 708883,
+      "sha256": "30a43f3b94d06733e44e051d29a9c4445c5181c30be6a195cd7d430a42ca0fa8"
+    },
+    {
+      "path": "supabase/UPGRADE_TO_V12.sql",
+      "bytes": 708883,
+      "sha256": "30a43f3b94d06733e44e051d29a9c4445c5181c30be6a195cd7d430a42ca0fa8"
+    },
+    {
+      "path": "supabase/UPGRADE_TO_V13.sql",
+      "bytes": 708883,
+      "sha256": "30a43f3b94d06733e44e051d29a9c4445c5181c30be6a195cd7d430a42ca0fa8"
+    },
+    {
+      "path": "supabase/UPGRADE_TO_V14.sql",
+      "bytes": 708883,
+      "sha256": "30a43f3b94d06733e44e051d29a9c4445c5181c30be6a195cd7d430a42ca0fa8"
+    },
+    {
+      "path": "supabase/UPGRADE_TO_V15.sql",
+      "bytes": 708883,
+      "sha256": "30a43f3b94d06733e44e051d29a9c4445c5181c30be6a195cd7d430a42ca0fa8"
+    },
+    {
+      "path": "supabase/UPGRADE_TO_V16.sql",
+      "bytes": 708883,
+      "sha256": "30a43f3b94d06733e44e051d29a9c4445c5181c30be6a195cd7d430a42ca0fa8"
+    },
+    {
+      "path": "supabase/UPGRADE_TO_V17.sql",
+      "bytes": 708883,
+      "sha256": "30a43f3b94d06733e44e051d29a9c4445c5181c30be6a195cd7d430a42ca0fa8"
+    },
+    {
+      "path": "supabase/UPGRADE_TO_V18.sql",
+      "bytes": 708883,
+      "sha256": "30a43f3b94d06733e44e051d29a9c4445c5181c30be6a195cd7d430a42ca0fa8"
+    },
+    {
+      "path": "supabase/UPGRADE_TO_V19.sql",
+      "bytes": 708883,
+      "sha256": "30a43f3b94d06733e44e051d29a9c4445c5181c30be6a195cd7d430a42ca0fa8"
+    },
+    {
+      "path": "supabase/UPGRADE_TO_V7.sql",
+      "bytes": 708883,
+      "sha256": "30a43f3b94d06733e44e051d29a9c4445c5181c30be6a195cd7d430a42ca0fa8"
+    },
+    {
+      "path": "supabase/UPGRADE_TO_V8.sql",
+      "bytes": 708883,
+      "sha256": "30a43f3b94d06733e44e051d29a9c4445c5181c30be6a195cd7d430a42ca0fa8"
+    },
+    {
+      "path": "supabase/UPGRADE_TO_V9.sql",
+      "bytes": 708883,
+      "sha256": "30a43f3b94d06733e44e051d29a9c4445c5181c30be6a195cd7d430a42ca0fa8"
+    },
+    {
+      "path": "supabase/UPGRADE_V5_TO_V6.sql",
+      "bytes": 708883,
+      "sha256": "30a43f3b94d06733e44e051d29a9c4445c5181c30be6a195cd7d430a42ca0fa8"
+    },
+    {
+      "path": "supabase/modules/campaign/player-raids.sql",
+      "bytes": 18827,
+      "sha256": "a934b9835527152055e9d365f68457265de12f569b374031e8c916543b514129"
+    },
+    {
+      "path": "supabase/modules/manifest.json",
+      "bytes": 1733,
+      "sha256": "51f3d2be2994a6cccba5b5096dce8cf3e75e9f740b0413a85969f25c256cc117"
+    },
+    {
+      "path": "supabase/modules/security/permissions.sql",
+      "bytes": 4054,
+      "sha256": "1b6e6b20e3a51362839dcdce776f34fc1e93281b43995b265e7d0d2e7ad18f67"
+    },
+    {
+      "path": "supabase/modules/social/commands.sql",
+      "bytes": 25452,
+      "sha256": "6e125d2e10df1c3b73e6959b1d6c3f1f6a2106f01375bd62578297b8cd3bbcd3"
+    },
+    {
+      "path": "supabase/modules/social/reads.sql",
+      "bytes": 12176,
+      "sha256": "c3928e5d35f9b6815b5d998e764fd37362427228e0b4ac6090e9e38ffc394e15"
+    },
+    {
+      "path": "supabase/modules/social/schema.sql",
+      "bytes": 8736,
+      "sha256": "ba7cca7cc59a9806f0b98cb1667aad7bfe9a2482b6553e672746cbd2deb8078e"
+    },
+    {
+      "path": "supabase/modules/social/upgrade-permissions.sql",
+      "bytes": 681,
+      "sha256": "fdf39ad98bdb6d4b4747798c141f5eb673582dd1f5255877ae0221d3277a3d15"
+    },
+    {
+      "path": "supabase/schema.sql",
+      "bytes": 708883,
+      "sha256": "30a43f3b94d06733e44e051d29a9c4445c5181c30be6a195cd7d430a42ca0fa8"
+    },
+    {
+      "path": "tests/e2e/compact-header.spec.ts",
+      "bytes": 4274,
+      "sha256": "bf9a9db49af3324b159a6583902a3033e33b1f90110ab098c5212c6b031fbec1"
+    },
+    {
+      "path": "tests/e2e/social.spec.ts",
+      "bytes": 10507,
+      "sha256": "8086c5245c41da0d9ed0acc0b6c360d4b6b0a7221a6e86a59c700f458eac85b1"
+    },
+    {
+      "path": "tests/fixtures/v18-pre-social.sql",
+      "bytes": 702058,
+      "sha256": "a897df842fcd17213f52fbf09bcbee4843088480fbd6739f63726cb0f9ef511f"
+    },
+    {
+      "path": "tests/helpers/account-server.mjs",
+      "bytes": 9320,
+      "sha256": "0469929ab22fbcf91249bcb2fbf3fc9bea659c87fd0aafeed9921762a86c98d8"
+    },
+    {
+      "path": "tests/social-database.test.mts",
+      "bytes": 15378,
+      "sha256": "370d2a14989e8adb721040da908278a20581f95af5327651db2ed997f276651b"
+    },
+    {
+      "path": "tests/social.test.ts",
+      "bytes": 1224,
+      "sha256": "e513397d125121770594fd80bdcb2f578d9b81058e4cfee3380c4ead774e0ab7"
+    }
+  ]
+}

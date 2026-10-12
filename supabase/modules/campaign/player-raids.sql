@@ -28,6 +28,7 @@ begin
  select * into a from public.armies where id=p_army and owner_id=p_owner for update;
  select * into c from public.settlements where id=p_city and owner_id<>p_owner;
  if a.id is null or c.id is null then raise exception 'Choose your legion and another player''s city';end if;
+ if public.peris_social_relation(p_owner,c.owner_id)in('guild','alliance','nap')then raise exception 'Your guild or diplomatic pact protects this city';end if;
  available:=public.peris_roster(to_jsonb(a));chosen:=public.peris_garrison_troops(coalesce(nullif(p_troops,'null'::jsonb),available));
  if public.peris_roster_total(chosen)=0 then raise exception 'Send at least one soldier';end if;
  foreach unit_name in array array['infantry','spearmen','archers','elite','cavalry','scout','heavyCavalry','ram','catapult']loop
@@ -47,6 +48,8 @@ begin
  select * into a from public.armies where id=p_army and owner_id=p_owner;
  select * into c from public.settlements where id=a.raid_city_id and owner_id<>p_owner;
  if a.id is null or c.id is null or a.status<>'idle'or a.target_x<>c.x or a.target_y<>c.y then return null;end if;
+ -- A pact accepted during travel protects the city when the raid arrives.
+ if public.peris_social_relation(p_owner,c.owner_id)in('guild','alliance','nap')then perform public.peris_return_raid(a.id);return null;end if;
  -- Avoid waiting on another ruler while the caller already holds its own lock.
  if exists(select 1 from public.peris_settler_expeditions where owner_id in(p_owner,c.owner_id)and status='travelling'and arrival_at<=now())and not pg_try_advisory_xact_lock(204200)then return null;end if;
  begin perform 1 from public.players where id in(p_owner,c.owner_id)order by id for update nowait;

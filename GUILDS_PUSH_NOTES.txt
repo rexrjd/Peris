@@ -1,0 +1,57 @@
+PERIS V19 — GUILDS AND MESSAGES
+
+BASE
+Current main: 6c3025c7878335bff50f05a6885d1016b8ca75b9.
+Includes the preceding V18 account research/Academy update.
+No production database was modified, no remote push or deployment was performed.
+
+APPLY
+Extract the changed files into the repository root, review on a branch, then
+run supabase/UPGRADE_GUILDS_TO_V19.sql on your current V18 database BEFORE the
+frontend push/deployment. If your main push triggers Vercel, apply SQL first.
+Older databases can use UPGRADE_TO_V19.sql. FRESH_INSTALL_V19.sql is for empty
+databases only. No credentials, node_modules, QA screenshots, or browser binaries
+are included in the package.
+
+VALIDATION
+- Unit suite: 444 tests; 443 passed, one existing skip.
+- Tooling: four checks passed.
+- Assets: all 46 registered GLB models passed their existing asset checks.
+- TypeScript/Vite build and world/SQL generation checks passed.
+- UI art checks passed, including the new unique Guilds and Messages pictures.
+- 58 social database checks passed, including a focused upgrade from the exact
+  V18 baseline that preserves existing player, city, army, science and slot rows.
+  Tests cover guild lifecycle, roles/hierarchy, recruitment, 60-member capacity,
+  treasury, diplomacy, dispatch/arrival raid protection, private messages,
+  read receipts, paging, rate limits, new-device login, privacy, request UUID
+  retries, and repeated focused/full migrations.
+- Existing baseline/fresh database, player city raid, and research suites passed.
+- Functional browser coverage and screenshot review: see the final appended
+  validation entry below.
+
+BASELINE TEST LIMITATIONS
+test:accounts-db and test:account-compatibility-db have older fixture comparisons
+that fail on unchanged main 6c3025c as well: the complete migration adds the
+existing siege/research columns to their older records. These two fixture tests
+were not weakened or changed by this update. The new focused migration is tested
+to leave all existing campaign records byte-for-byte unchanged.
+
+The broad browser suite was attempted. This container falls back to Canvas 2D,
+so existing battle-3d tests fail while waiting for the 3D canvas. That broad run
+was stopped after the repeated unavailable-renderer failures. The social and
+affected interface/account/report/raid/research tests run against isolated
+PostgreSQL and the Canvas fallback; no production accounts are contacted.
+
+DETAILS
+Read GUILDS_AND_MESSAGES_UPDATE.md for features, limits, permissions, privacy,
+original art provenance, design references and installation instructions.
+
+FINAL BROWSER VALIDATION
+34 unique affected browser cases passed across combined and isolated runs:
+accounts/directory/session recovery, compact HUD, persistent report reads,
+player city raids, report inbox/popup, research/Academy, and guilds/messages.
+The four new guild/message flows passed on desktop and Pixel 7; additional
+320px checks passed. Header expectations were updated for the two new icons.
+Reopening Messages now returns to the inbox. Desktop/mobile screenshots were
+reviewed. Guilds, conversations, pacts and read state were exercised against
+isolated PostgreSQL with separate player sessions.

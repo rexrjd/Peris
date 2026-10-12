@@ -1,4 +1,4 @@
-export type HudPicture = 'research' | 'map' | 'city' | 'army' | 'rally' | 'reports' | 'wood' | 'stone' | 'food' | 'gold';
+export type HudPicture = 'guilds' | 'messages' | 'research' | 'map' | 'city' | 'army' | 'rally' | 'reports' | 'wood' | 'stone' | 'food' | 'gold';
 
 /** Small original paintings, exported with alpha for the game HUD. */
 export function LowPolyIcon({ name }: { name: HudPicture }) {

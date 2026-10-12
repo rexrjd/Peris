@@ -1,0 +1,10 @@
+[
+  {
+    "id": "guilds",
+    "prompt": "Use case: stylized-concept. Asset type: tiny fantasy strategy game navigation picture. Create one original minimal low-poly isometric GUILD emblem: a single chunky sandstone-ivory kite shield with a slate-blue face and a simple raised warm-gold sun in its centre, with two short slate-blue pennant tails behind it. Very simple broad faceted geometry, softly lit, readable silhouette at 24 pixels. Match a restrained ivory sandstone and slate blue low-poly map/citadel/helmet game UI set. Square, isolated centred object fills 80% of canvas. No words, no letters, no frame, no scenery, no floor or base tile, no tiny filigree, no outlined drawing. Actual transparent background."
+  },
+  {
+    "id": "messages",
+    "prompt": "Use case: stylized-concept. Asset type: tiny fantasy strategy game navigation picture. Create one original minimal low-poly isometric MESSAGES icon: a single thick folded ivory parchment envelope with three clean angular folds and a broad slate-blue wax seal on the front. Restrained sandstone ivory and slate-blue palette, warm gold highlight only. Simple flat faceted surfaces, softly lit, readable chunky silhouette at 24 pixels, matching low-poly map and citadel icons. Square, isolated centred object fills 80% of canvas. No text, no words, no letters, no background, no scenery, no frame, no floor, no base tile, no extra objects or tiny details, no outline. Actual transparent background."
+  }
+]

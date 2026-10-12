@@ -114,3 +114,9 @@ ZIP extraction does not delete moved paths. `node scripts/clean-legacy-paths.mjs
 ## Account research (V18)
 
 `features/research/domain` owns the shared 210-node catalog, bonus selectors, account science and project timing. Its private World arrays serialize through the existing engine and save path. `features/research/ui` owns the linked tree and navigation context. Academies remain ordinary repeatable city slots. SQL sources live in `supabase/modules/research`; generate catalog and V18 bundles with `npm run build:sql`. Owner-scoped science/progress stay outside public map and player metadata. Existing worker settlement includes research deadlines. See `RESEARCH_ACADEMY_UPDATE.md` for installation and balance.
+
+## Guilds and messages (V19)
+
+`features/social/domain` owns social types, guild/rank selectors and message-page merging. `features/social/platform` owns bounded Supabase RPC access, and `features/social/ui` owns the guild hall, messenger, navigation, and safe pending-action retries. Social state is account-scoped and separate from campaign saves and public map snapshots. The guild and message entry points remain in the upper left on desktop and mobile. Solo campaigns show an entry guide to the shared world.
+
+Authoritative source lives in `supabase/modules/social`. Guild permissions, receipts, treasury transfers, and channel privacy are checked in SQL. Guild membership, accepted alliances, and non-aggression pacts guard outgoing and arriving city raids. Generate complete V19 installers and the focused V18-to-V19 migration with `npm run build:sql`. `UPGRADE_GUILDS_TO_V19.sql` alters only social state and the two city-raid entry functions. See `GUILDS_AND_MESSAGES_UPDATE.md`.

@@ -35,5 +35,6 @@ do $$declare t text;begin
  end loop;
 end $$;
 grant execute on function public.peris_game_tick(integer)to service_role;
+grant execute on function public.peris_social_snapshot(),public.peris_social_directory(text,text,text,integer),public.peris_social_guild(uuid),public.peris_social_thread(text,uuid,bigint),public.peris_social_command(uuid,jsonb)to authenticated;
 notify pgrst,'reload schema';
 commit;

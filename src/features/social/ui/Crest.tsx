@@ -1,0 +1,5 @@
+import type {Crest as CrestData} from '../domain/social';
+export function Crest({crest,size=44}: {crest:CrestData;size?:number}) {
+  const sigils={sun:<><circle cx="32" cy="28" r="7"/><path d="M32 15v4m0 18v4M19 28h4m18 0h4M23 19l3 3m12 12 3 3M23 37l3-3m12-12 3-3"/></>,moon:<path d="M37 16a13 13 0 1 0 7 20 15 15 0 0 1-7-20Z"/>,swords:<><path d="m22 16 19 23m-21-1 20-22M19 34l8 8m10-8 8 8M22 38l-3 4m22-4 3 4"/></>,mountain:<path d="m16 37 12-20 8 13 5-8 9 15H16Zm8-7 4-6 4 6"/>,star:<path d="m32 15 4 10 12 1-9 8 3 11-10-6-10 6 3-11-9-8 12-1Z"/>,tower:<path d="M22 40V17h6v5h8v-5h6v23M18 40h28M29 40V29h6v11"/>};
+  return <svg className="guild-crest" width={size} height={size} viewBox="0 0 64 64" aria-hidden="true"><path fill={crest.color} stroke="#ffffff25" d="M9 7 32 3l23 4v26c0 13-23 26-23 26S9 46 9 33Z"/><path fill="#0001" d="M32 3v56s23-13 23-26V7Z"/><g fill="none" stroke="#efe7d7" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">{sigils[crest.sigil]??sigils.sun}</g></svg>;
+}

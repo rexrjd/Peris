@@ -35,7 +35,7 @@ export async function accountServer(){
     if(path.startsWith('/rest/v1/rpc/')){
      const name=path.split('/').at(-1);
      // Only existing named test RPCs, with parameters bound as values.
-     const args={peris_login:['p_display_name'],peris_enter_account:['p_display_name','p_mode','p_faction','p_creation_id'],peris_account_directory:['p_search','p_faction','p_activity','p_sort','p_offset','p_limit'],peris_snapshot:[],peris_read_reports:['p_report_ids'],peris_read_all_reports:[],peris_report_page:['p_before_id'],sync_my_state:[],peris_map_snapshot:['p_min_x','p_min_y','p_max_x','p_max_y'],peris_rename:['p_name'],peris_submit_command:['p_request_id','p_function','p_args']};
+     const args={peris_login:['p_display_name'],peris_enter_account:['p_display_name','p_mode','p_faction','p_creation_id'],peris_account_directory:['p_search','p_faction','p_activity','p_sort','p_offset','p_limit'],peris_social_snapshot:[],peris_social_directory:['p_kind','p_search','p_focus','p_offset'],peris_social_guild:['p_id'],peris_social_thread:['p_kind','p_id','p_before'],peris_social_command:['p_request_id','p_command'],peris_snapshot:[],peris_read_reports:['p_report_ids'],peris_read_all_reports:[],peris_report_page:['p_before_id'],sync_my_state:[],peris_map_snapshot:['p_min_x','p_min_y','p_max_x','p_max_y'],peris_rename:['p_name'],peris_submit_command:['p_request_id','p_function','p_args']};
      if(!Object.hasOwn(args,name))return result(400,{message:'Unexpected test RPC: '+name});
      const values=args[name].map(k=>body[k]);
      const rows=await tx.query(`select public.${name}(${values.map((_,i)=>'$'+(i+1)).join(',')}) result`,values);

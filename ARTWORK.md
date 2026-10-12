@@ -158,3 +158,7 @@ item ID, painting and rarity. No other game's equipment artwork is included.
 ## Research and Academies (V18)
 
 210 distinct original transparent technology pictures and a Research navigation picture were generated for Peris on 2026-10-12. Eleven faction Academy paintings plus a Roman master stage match the existing village art direction. The 23 untouched PNG sheets and their ordered mapping are retained in `assets/source/research-v1` and `assets/research-v1.json`. `npm run build:research-art` exports the separate runtime WebP pictures through Sharp; `npm run check:research-art` validates uniqueness, alpha and dimensions. No other strategy game assets are used. Native Academies use original faction-aware code geometry with five distinct development stages.
+
+## V19 community navigation
+
+Original Guilds and Messages navigation pictures use the same ivory, sandstone and slate-blue low-poly style as the existing HUD. The built-in Imagegen tool created the transparent sources under `assets/source/ui-low-poly-v1/`; prompts and export paths are recorded in `assets/ui-low-poly-v1.json` and `assets/social-art-prompts.json`. `npm run build:ui-icons` exports their 96px WebP assets, and `npm run check:ui-icons` verifies the complete set. Guild crests are original editable SVG compositions with six sigils and six preset colors, rendered by `features/social/ui/Crest.tsx`. No Travian or Albion artwork is shipped.

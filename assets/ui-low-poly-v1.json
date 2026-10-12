@@ -4,16 +4,16 @@
   "method": "Built-in image generation, one original transparent painting per icon",
   "assets": [
     {
-        "id": "reports",
-        "prompt": "Use case: stylized-concept. Asset type: tiny strategy game navigation icon, square transparent PNG. Create one minimal low-poly isometric REPORTS picture: a short ivory parchment scroll with an open broad rectangular face, gently rolled top and bottom edges, and one small slate-blue wax seal in the lower corner. A single chunky compact silhouette, pale sand ivory paper, blue seal, simple faceted geometry and soft studio lighting. Match a small low-poly folded map, sandstone citadel, blue pennant and silver helmet navigation set. Readable at 24px. No lettering, no scribbles, no symbols, no outline, no frame, no scenery, no base tile, no shadow outside the object. Centre the complete object at 80% of the square with generous transparent margins. Genuinely transparent background. An original polished low-poly game object, not a line glyph.",
-        "source": "assets/source/ui-low-poly-v1/reports.png",
-        "image": "/art/ui/low-poly-v1/reports.webp"
+      "id": "reports",
+      "prompt": "Use case: stylized-concept. Asset type: tiny strategy game navigation icon, square transparent PNG. Create one minimal low-poly isometric REPORTS picture: a short ivory parchment scroll with an open broad rectangular face, gently rolled top and bottom edges, and one small slate-blue wax seal in the lower corner. A single chunky compact silhouette, pale sand ivory paper, blue seal, simple faceted geometry and soft studio lighting. Match a small low-poly folded map, sandstone citadel, blue pennant and silver helmet navigation set. Readable at 24px. No lettering, no scribbles, no symbols, no outline, no frame, no scenery, no base tile, no shadow outside the object. Centre the complete object at 80% of the square with generous transparent margins. Genuinely transparent background. An original polished low-poly game object, not a line glyph.",
+      "source": "assets/source/ui-low-poly-v1/reports.png",
+      "image": "/art/ui/low-poly-v1/reports.webp"
     },
     {
-        "id": "rally",
-        "prompt": "Use case: stylized-concept. Asset type: tiny strategy game UI icon, square transparent PNG. Create one minimal low-poly isometric RALLY POINT picture: a short sturdy wooden flagpole with a large simple slate-blue swallowtail pennant, planted in a compact pale sandstone footing. One clear chunky silhouette with the flag as the main shape. Original fantasy game style, flat faceted geometry, soft lighting, readable at 24px. Restrained sand ivory slate blue palette matching a folded parchment map, sandstone citadel and silver helmet navigation set. No soldiers, no scenery, no tiny details, no outline, no text, no symbols, no frame, no base tile, no cast shadow outside the object. Centered object occupies 80% of the square. Genuinely transparent background. A polished small low-poly game object, not a line glyph.",
-        "source": "assets/source/ui-low-poly-v1/rally.png",
-        "image": "/art/ui/low-poly-v1/rally.webp"
+      "id": "rally",
+      "prompt": "Use case: stylized-concept. Asset type: tiny strategy game UI icon, square transparent PNG. Create one minimal low-poly isometric RALLY POINT picture: a short sturdy wooden flagpole with a large simple slate-blue swallowtail pennant, planted in a compact pale sandstone footing. One clear chunky silhouette with the flag as the main shape. Original fantasy game style, flat faceted geometry, soft lighting, readable at 24px. Restrained sand ivory slate blue palette matching a folded parchment map, sandstone citadel and silver helmet navigation set. No soldiers, no scenery, no tiny details, no outline, no text, no symbols, no frame, no base tile, no cast shadow outside the object. Centered object occupies 80% of the square. Genuinely transparent background. A polished small low-poly game object, not a line glyph.",
+      "source": "assets/source/ui-low-poly-v1/rally.png",
+      "image": "/art/ui/low-poly-v1/rally.webp"
     },
     {
       "id": "map",
@@ -56,6 +56,18 @@
       "prompt": "Use case: stylized-concept. Asset type: tiny strategy game UI icon, square transparent PNG. Create one minimal low-poly isometric GOLD resource picture: three thick polygonal golden coins in a short staggered stack, simple flat coin faces with no symbols or lettering. Original fantasy game style, flat faceted geometry, soft lighting, crisp chunky silhouette readable at 24px. Restrained sand ivory slate blue palette with the natural material colour appropriate for this object. No tiny details, no outline, no text, no frame, no base tile, no cast shadow outside the object. Centered object occupies 80% of the square. Genuinely transparent background. A polished small low-poly game object, not a line glyph. Match the simple folded parchment map icon style in this project's new navigation set.",
       "source": "assets/source/ui-low-poly-v1/gold.png",
       "image": "/art/ui/low-poly-v1/gold.webp"
+    },
+    {
+      "id": "guilds",
+      "prompt": "Use case: stylized-concept. Asset type: tiny fantasy strategy game navigation picture. Create one original minimal low-poly isometric GUILD emblem: a single chunky sandstone-ivory kite shield with a slate-blue face and a simple raised warm-gold sun in its centre, with two short slate-blue pennant tails behind it. Very simple broad faceted geometry, softly lit, readable silhouette at 24 pixels. Match a restrained ivory sandstone and slate blue low-poly map/citadel/helmet game UI set. Square, isolated centred object fills 80% of canvas. No words, no letters, no frame, no scenery, no floor or base tile, no tiny filigree, no outlined drawing. Actual transparent background.",
+      "source": "assets/source/ui-low-poly-v1/guilds.png",
+      "image": "/art/ui/low-poly-v1/guilds.webp"
+    },
+    {
+      "id": "messages",
+      "prompt": "Use case: stylized-concept. Asset type: tiny fantasy strategy game navigation picture. Create one original minimal low-poly isometric MESSAGES icon: a single thick folded ivory parchment envelope with three clean angular folds and a broad slate-blue wax seal on the front. Restrained sandstone ivory and slate-blue palette, warm gold highlight only. Simple flat faceted surfaces, softly lit, readable chunky silhouette at 24 pixels, matching low-poly map and citadel icons. Square, isolated centred object fills 80% of canvas. No text, no words, no letters, no background, no scenery, no frame, no floor, no base tile, no extra objects or tiny details, no outline. Actual transparent background.",
+      "source": "assets/source/ui-low-poly-v1/messages.png",
+      "image": "/art/ui/low-poly-v1/messages.webp"
     }
   ]
 }

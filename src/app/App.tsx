@@ -1,3 +1,8 @@
+import {GuildsPanel} from '../features/social/ui/GuildsPanel';
+import {MessagesPanel,type MessageTarget} from '../features/social/ui/MessagesPanel';
+import {SocialNavigation} from '../features/social/ui/SocialNavigation';
+import {useSocial} from '../features/social/ui/useSocial';
+import type {SocialPlayer} from '../features/social/domain/social';
 import {TechnologyTree} from '../features/research/ui/TechnologyTree';
 import {ResearchNavigation} from '../features/research/ui/ResearchNavigation';
 import {researchSeconds} from '../features/research/domain/science';
@@ -134,6 +139,10 @@ function Realm({ engine, onExit, onLoad, onRetry, onUnitPreview }: {
     onUnitPreview: (faction: Faction) => void;
 }) {
     const [researchSelection,setResearchSelection]=useState<string>();
+    const [socialPanel,setSocialPanel]=useState<'guilds'|'messages'|null>(null),[messageTarget,setMessageTarget]=useState<MessageTarget>();
+    const social=useSocial(engine,!!socialPanel);
+    const closeSocial=()=>{const panel=socialPanel;setSocialPanel(null);requestAnimationFrame(()=>document.querySelector<HTMLButtonElement>(`.social-navigation button[data-panel="${panel}"]`)?.focus());};
+    const openMessage=(player?:SocialPlayer,guild?:boolean)=>{setSocialPanel('messages');setMessageTarget(previous=>({player,guild,request:(previous?.request??0)+1}));};
     const world = useSyncExternalStore(engine.subscribe, () => engine.snapshot);
     const [view, setView] = useState<View>('world'), [selection, setSelection] = useState<MapSelection>(null), [moveMode, setMoveMode] = useState(false), [sending, setBusy] = useState(false), [notice, setNotice] = useState<{
         text: string;
@@ -226,7 +235,7 @@ function Realm({ engine, onExit, onLoad, onRetry, onUnitPreview }: {
         catch (error) { setNotice({ text: error instanceof Error ? error.message : 'Order status remains unconfirmed.', error: true }); }
         finally { sendLock.current = false; setBusy(false); }
     };
-    const navigate = (v: View) => { if(v!=='settlement')setBuildingShortcut(undefined); if(v === 'chronicle'){setReportsOpen(true);tone('select');return;} setReportsOpen(false); if(v === 'army'){setArmyTab('army');setArmyLootItem(undefined);} setView(v); setMoveMode(false); tone('select'); };
+    const navigate = (v: View) => { setSocialPanel(null); if(v!=='settlement')setBuildingShortcut(undefined); if(v === 'chronicle'){setReportsOpen(true);tone('select');return;} setReportsOpen(false); if(v === 'army'){setArmyTab('army');setArmyLootItem(undefined);} setView(v); setMoveMode(false); tone('select'); };
     const openBuilding = (type: SlotType|'market') => {
         setEmpireOpen(false);
         setBuildingShortcut(previous => ({ type, request: (previous?.request ?? 0) + 1 }));
@@ -247,6 +256,7 @@ function Realm({ engine, onExit, onLoad, onRetry, onUnitPreview }: {
     return <ResearchNavigation.Provider value={id=>{setResearchSelection(id);setEmpireOpen(false);navigate('research');}}>
   {visibleBattle ? <BattleView world={world} battle={visibleBattle} engine={engine} run={run} onHelp={() => setHelp(true)} onSettings={() => setSettings(true)}/> : <div className={`realm-shell game-shell ${view === 'world' && !empireOpen ? 'has-map' : ''}`}>
    <header className="realm-topbar game-header">
+   <SocialNavigation active={socialPanel} unread={social.snapshot.unread} attention={social.snapshot.attention} onOpen={panel=>{if(panel==='messages')setMessageTarget(undefined);setSocialPanel(current=>current===panel?null:panel);setReportsOpen(false);setEmpireOpen(false);}}/>
    <GameNavigation research={currentTechnology?{id:currentTechnology.id,name:currentTechnology.name,progress:researchSeconds(world,engine.playerId,currentTechnology.id,now)/currentTechnology.seconds}:undefined} reportsOpen={reportsOpen} view={view} unreadReports={unreadReports} onNavigate={navigate}/>
    <div className="game-header-actions"><ResourceHud resources={resources} capacity={storage} rate={rate} onSelect={setResource}/>
    <QuickAccess items={[
@@ -271,6 +281,8 @@ function Realm({ engine, onExit, onLoad, onRetry, onUnitPreview }: {
   {engine instanceof LocalEngine && engine.saveError && engine.mode === 'solo' && <div className="connection-warning">This browser could not save your realm.<button onClick={() => setSettings(true)}>Export a backup</button></div>}
   {!active && incoming.length > 0 && <div className="challenge-banner"><Icon name="army"/><span>{world.players.find(p => p.id === incoming[0].attacker_owner_id)?.display_name ?? 'A rival'} challenges your legion.<small>Accept to deploy together. Campaign casualties are permanent.</small></span><button className="button gold" disabled={busy} onClick={() => dispatch({ type: 'respond', id: incoming[0].id, accept: true })}>Accept battle</button><button className="button outline" disabled={busy} onClick={() => dispatch({ type: 'respond', id: incoming[0].id, accept: false })}>Decline</button></div>}
   {!active && outgoing.length > 0 && <div className="outgoing-challenge"><Icon name="flag" size={16}/>Your invitation awaits a reply · {Math.ceil((Date.parse(outgoing[0].expires_at) - now) / 1000)}s</div>}
+  {socialPanel==='guilds'&&!visibleBattle&&<GuildsPanel social={social} cities={ownedCities.map(c=>({id:c.id,name:c.name}))} onMessage={openMessage} onClose={closeSocial}/>}
+  {socialPanel==='messages'&&!visibleBattle&&<MessagesPanel social={social} target={messageTarget} onClose={closeSocial}/>}
   {reportsOpen && !visibleBattle && <ReportsPopup world={world} playerId={engine.playerId} unreadReports={unreadReports} onReadReport={markReportRead} onReadAll={markAllReportsRead} loadReports={engine.reportPage} run={dispatch} onEnding={()=>{setReportsOpen(false);setEnding(true);}} onLocateCamp={camp=>{setReportsOpen(false);setEmpireOpen(false);navigate('world');setSelection({kind:'camp',id:camp.id});}} onClose={()=>setReportsOpen(false)}/>}
   {report?.result && <Modal title="Battle result" className="result-modal battle-rewards-modal" heading={false} onClose={() => closeReport(view === 'rally' ? 'rally' : view === 'chronicle' ? 'chronicle' : 'world')}><ResultBody returning={world.armies.some(army => army.owner_id === engine.playerId && army.loot_report_id === report.id && !!army.carried_loot)} result={report.result} won={report.winner_owner_id === engine.playerId} draw={report.winner_side === 'draw'} side={mySide(report, engine.playerId)} enemyName={report.enemy_name} formations={world.formations.filter(f => f.battle_id === report.id && f.owner_id === engine.playerId)} practice={engine.mode === 'practice'}/><div className="result-actions"><button className="button gold" onClick={() => closeReport(view === 'rally' ? 'rally' : view === 'chronicle' ? 'chronicle' : 'world')}>{engine.mode === 'practice' ? 'Return to main menu' : view === 'rally' ? 'Back to Rally Point' : view === 'chronicle' ? 'Back to reports' : 'Back to map'}<Icon name="arrow"/></button>{engine.mode === 'practice' ? <button className="button outline" onClick={onRetry}>Fight again</button> : <button className="button outline" onClick={() => closeReport('army',!!report.result?.hero_reward?.artifacts.length)}>{report.result.hero_reward?.artifacts.length ? 'Open equipment' : 'Manage army'}</button>}</div></Modal>}
   {welcome && <Welcome name={player.display_name} onClose={() => { writeFlag(welcomeKey); setWelcome(false); }}/>}
