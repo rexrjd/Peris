@@ -1,0 +1,56 @@
+{
+  "version": "V19.3",
+  "base_commit": "61581c7121cc6c6c9650211ad19d6e563eb7bb5d",
+  "files": [
+    {
+      "path": "src/app/styles/index.css",
+      "bytes": 2354,
+      "sha256": "85ea684c78bfce5b9e258dad3aa0636b5127d059b2e318ce18cb8c1062fc204e"
+    },
+    {
+      "path": "src/features/army/domain/troopDetails.ts",
+      "bytes": 2061,
+      "sha256": "b1a50e15fe4a88e14e36ff8d18e9baf3c8d238c6d06b0eccfe1abefe87b6489f"
+    },
+    {
+      "path": "src/features/army/styles/troop-details.css",
+      "bytes": 8604,
+      "sha256": "5395014502822c02f8f2a1476416dea2c7d220d52d5643a1f4c929b29fa9324f"
+    },
+    {
+      "path": "src/features/army/ui/ArmyTroopsPanel.tsx",
+      "bytes": 6376,
+      "sha256": "1faa8b53020a027958e6acf589bec4cb8d1bd14e72c0d40a7dd64867c3002517"
+    },
+    {
+      "path": "src/features/army/ui/TroopStatsDialog.tsx",
+      "bytes": 7189,
+      "sha256": "e2fa7975cbabcc0c1131c78009ac2ca1ca23bae35561604be8493dc390370159"
+    },
+    {
+      "path": "src/features/army/ui/troopPresentation.ts",
+      "bytes": 1722,
+      "sha256": "1d09edc3c46cb6544dec1fe3f06fbea2b9149905c882ca96da5adcfb820930e7"
+    },
+    {
+      "path": "tests/troop-details.test.ts",
+      "bytes": 4022,
+      "sha256": "1d6cd8dd2eda4e424ae6eef75d962239b2ad818c2e2480821f4d2d0437d879fe"
+    },
+    {
+      "path": "tests/e2e/army-workspace.spec.ts",
+      "bytes": 15264,
+      "sha256": "1d9b977d53a422ced46081665644bbbe846d1de673c71ebd858f0dab404c2d85"
+    },
+    {
+      "path": "TROOP_STATS_UI_UPDATE.md",
+      "bytes": 2906,
+      "sha256": "ed4a61e06d952ae6c857a1f735e2eae85f05742e8b759a7ba8a54b4a64393afc"
+    },
+    {
+      "path": "TROOP_STATS_UI_PUSH_NOTES.txt",
+      "bytes": 1339,
+      "sha256": "2ce074b0c54a8e3d2b0ce5b9afc114a98e4ac6561580d25f59ad65d8fd2949d7"
+    }
+  ]
+}

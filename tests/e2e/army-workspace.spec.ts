@@ -3,7 +3,8 @@ import { createSolo } from '../../src/features/campaign/domain/newRealm';
 import { refreshCityEconomy } from '../../src/features/city/domain/slots';
 import { ARTIFACTS, heroForArmy, heroPoints } from '../../src/features/heroes/domain/heroes';
 import { heroPortraitUrl } from '../../src/features/heroes/domain/portraits';
-import { emptyRoster, writeRoster, RECRUIT_RULES, type RecruitUnit } from '../../src/features/army/domain/roster';
+import { emptyRoster, writeRoster, RECRUIT_RULES, RECRUIT_UNITS, type RecruitUnit } from '../../src/features/army/domain/roster';
+import { troopDetails } from '../../src/features/army/domain/troopDetails';
 import { readFileSync } from 'node:fs';
 import { validateSave } from '../../src/platform/storage/saves';
 import type { World } from '../../src/shared/model/world';
@@ -66,6 +67,8 @@ test('army workspace keeps one hero identity, real troops and army-specific recr
     await expect(page.getByLabel('Give orders', { exact: true })).toBeDisabled();
     await page.getByRole('group', { name: 'Your armies', exact: true }).getByRole('button', { name: /^Ash guard/ }).click();
     await expect(card.getByRole('heading', { name: 'Korga', exact: true })).toBeVisible();
+    await expect(page.locator('.army-troop-grid>button')).toHaveCount(9);
+    await expect(page.locator('.army-troop-grid>button[data-empty=true]')).toHaveCount(8);
     await expect(page.getByRole('region', { name: 'Army training queue', exact: true })).toContainText('No active orders');
     await manage(page, 'Commander');
     await expect(page.locator('.commander-dossier')).toHaveCount(0);
@@ -113,7 +116,9 @@ test('raising a commander selects the new empty army and narrow layouts keep eve
     await capture(page, info, 'armies-raise');
     await dialog.getByRole('button', { name: 'Raise army · 500 gold', exact: true }).click();
     await expect(page.getByRole('complementary', { name: 'Selected army' })).toContainText('River scout');
-    await expect(page.locator('.army-empty-troops')).toBeVisible();
+    await expect(page.locator('.army-troop-grid>button')).toHaveCount(9);
+    await expect(page.locator('.army-troop-grid>button[data-empty=true]')).toHaveCount(9);
+    await expect(page.getByRole('button', { name: 'Transfer troops', exact: true })).toBeVisible();
     await page.setViewportSize({ width: 320, height: 700 });
     await expect(page.getByRole('group', { name: 'Your armies', exact: true }).getByRole('button', { name: /^River scout/ })).toBeInViewport();
     await capture(page, info, 'armies-320');
@@ -123,4 +128,57 @@ test('raising a commander selects the new empty army and narrow layouts keep eve
         await expect(page.getByRole('region', { name: `${tab} management`, exact: true })).toBeVisible();
         expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     }
+});
+
+test('every troop opens real stats, locked roles remain inspectable and recruitment is explicit', async ({ page }, info) => {
+    const world = fixture(), errors: string[] = []; page.on('pageerror', error => errors.push(error.message));
+    await start(page, world);
+    await capture(page, info, 'troop-catalog-desktop');
+    const before = await save(page);
+    for (const unit of RECRUIT_UNITS) {
+        const card = page.locator(`.army-troop-grid>button[data-unit="${unit}"]`);
+        await card.click();
+        const dialog = page.getByRole('dialog', { name: `${factionTroopName('roman', unit)} stats`, exact: true });
+        await expect(dialog).toBeVisible();
+        await expect(dialog.getByRole('heading', { name: factionTroopName('roman', unit), exact: true })).toBeVisible();
+        await expect(dialog.getByRole('region', { name: 'Troop combat stats' })).toContainText('Attack range');
+        await expect(dialog.getByRole('region', { name: 'Troop recruitment requirements' })).toContainText(RECRUIT_RULES[unit].cost.gold.toString());
+        await expect(dialog.locator('.fw-troop-portrait')).toHaveCSS('background-image', /\/art\/battle\/roster\/roman\.png/);
+        await page.keyboard.press('Escape'); await expect(card).toBeFocused();
+    }
+    expect((await save(page)).orders).toEqual(before.orders);
+    expect((await save(page)).armies.map(army => army.unit_roster)).toEqual(before.armies.map(army => army.unit_roster));
+    await page.locator('.army-troop-grid>button[data-unit="infantry"]').click();
+    const stats = page.getByRole('dialog', { name: / stats$/ });
+    const actual = troopDetails(world, world.armies[0], world.settlements[0], 'infantry', Date.parse(world.server_now));
+    await expect(stats.locator('.troop-dossier-combat dl>div').filter({ has: page.getByText('Attack', { exact: true }) }).locator('dd').last()).toHaveText(`×${actual.attack.toLocaleString(undefined, { maximumFractionDigits: 3 })}`);
+    await capture(page, info, 'troop-stats-desktop');
+    await stats.getByText('More combat details', { exact: true }).click();
+    await expect(stats.locator('.troop-combat-details')).toContainText('separate health stat');
+    await stats.getByRole('button', { name: 'Previous troop type', exact: true }).click();
+    await expect(stats.getByRole('heading', { name: factionTroopName('roman', 'catapult'), exact: true })).toBeVisible();
+    await expect(stats.getByRole('button', { name: 'Unlock in Research', exact: true })).toBeVisible();
+    await capture(page, info, 'troop-stats-siege');
+    await stats.getByRole('button', { name: 'Next troop type', exact: true }).click();
+    await stats.getByRole('button', { name: 'Recruit this troop', exact: true }).click();
+    await expect(page.getByRole('dialog', { name: / stats$/ })).toHaveCount(0);
+    const recruit = page.getByRole('dialog', { name: 'Recruit troops', exact: true });
+    await expect(recruit).toBeVisible();
+    await expect(recruit.locator('.game-unit-choices>button[aria-pressed=true]')).toContainText(factionTroopName('roman', 'infantry'));
+    await page.keyboard.press('Escape');
+    await page.setViewportSize({ width: 320, height: 700 });
+    await page.locator('.army-troop-grid>button[data-unit="catapult"]').click();
+    const narrow = page.getByRole('dialog', { name: `${factionTroopName('roman', 'catapult')} stats`, exact: true });
+    await expect(narrow).toBeVisible();
+    expect(await narrow.evaluate(el => el.scrollWidth <= el.clientWidth)).toBe(true);
+    await narrow.getByRole('button', { name: 'Unlock in Research', exact: true }).scrollIntoViewIfNeeded();
+    await expect(narrow.getByRole('button', { name: 'Unlock in Research', exact: true })).toBeInViewport();
+    await capture(page, info, 'troop-stats-320');
+    await narrow.getByRole('button', { name: 'Close', exact: true }).focus();
+    await page.keyboard.press('Shift+Tab');
+    await expect(narrow.getByRole('button', { name: 'Unlock in Research', exact: true })).toBeFocused();
+    await narrow.getByRole('button', { name: 'Unlock in Research', exact: true }).click();
+    await expect(page.getByRole('dialog', { name: / stats$/ })).toHaveCount(0);
+    await expect(page.getByRole('heading', { name: 'Research', exact: true })).toBeVisible();
+    expect(errors).toEqual([]);
 });

@@ -1,0 +1,37 @@
+PERIS V19.3 — COMPLETE TROOP CATALOG AND STATS POPUP
+
+Base: origin/main 61581c7121cc6c6c9650211ad19d6e563eb7bb5d
+Branch: feat/troop-stats
+
+Copy the archive files into the repository root, preserving paths.
+Review git diff and run npm test / npm run build before pushing.
+No SQL scripts, new raster assets, credentials or save files are included.
+The previous Armies UI release must already be present (it is in the base commit).
+
+Changed behavior:
+All nine troop types are always visible, even when empty or locked.
+Troop cards open detailed read-only stats.
+Recruitment remains a separate action and can also be opened from stats.
+Locked troops link directly to their existing research technology.
+Faction names, portraits and exact recruitment identities are preserved.
+
+Source additions:
+src/features/army/domain/troopDetails.ts
+src/features/army/ui/TroopStatsDialog.tsx
+src/features/army/ui/troopPresentation.ts
+src/features/army/styles/troop-details.css
+
+Source changes:
+src/features/army/ui/ArmyTroopsPanel.tsx
+src/app/styles/index.css
+
+Test additions/changes:
+tests/troop-details.test.ts
+tests/e2e/army-workspace.spec.ts
+
+Validation:
+445 unit checks passed; one existing skip.
+4 tooling checks and 46 model checks passed.
+Production build passed.
+8 distinct affected desktop/mobile browser checks passed.
+git diff --check passed.
