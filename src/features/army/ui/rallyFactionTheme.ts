@@ -3,7 +3,7 @@ import type { IconType } from 'react-icons';
 import { GiEagleEmblem, GiSpartanHelmet, GiWingedScepter, GiEgyptianBird, GiOrcHead, GiTreeBranch, GiAnvil, GiClockwork, GiPagoda, GiSkullShield, GiDaemonSkull } from 'react-icons/gi';
 import type { Faction } from '../../factions/domain/factions';
 
-/** Presentation only: a preview changes these materials, never the campaign's faction. */
+/** Materials for the selected city's actual faction. */
 export type RallyFactionTheme = { name: string; realm: string; material: string; crest: IconType };
 export const RALLY_FACTION_THEMES: Record<Faction, RallyFactionTheme> = {
     roman: { name: 'Roman', realm: 'Roman Empire', material: 'Oxblood leather · imperial bronze · marble', crest: GiEagleEmblem },
@@ -18,7 +18,6 @@ export const RALLY_FACTION_THEMES: Record<Faction, RallyFactionTheme> = {
     undead: { name: 'Necropolis', realm: 'Necropolis', material: 'Crypt stone · aged bone · amethyst', crest: GiSkullShield },
     demon: { name: 'Demons', realm: 'Demon Dominion', material: 'Obsidian · charred iron · molten inlay', crest: GiDaemonSkull },
 };
-export const RALLY_FACTION_ORDER = Object.keys(RALLY_FACTION_THEMES) as Faction[];
 
 type RallyMaterial = 'background' | 'frame' | 'texture';
 // Literal URLs are also discoverable by the standalone asset embedder.

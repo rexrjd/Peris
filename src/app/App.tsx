@@ -49,8 +49,7 @@ import { WorldView } from '../features/map/ui/WorldView';
 import { SettlementView } from '../features/city/ui/SettlementView';
 import { ArmyView, type CommandTab } from '../features/army/ui/ArmyView';
 import { RallyPoint } from '../features/army/ui/RallyPoint';
-import { RallyThemeChooser } from '../features/army/ui/RallyThemeChooser';
-import { RALLY_FACTION_ORDER, RALLY_FACTION_THEMES, rallyFactionStyle } from '../features/army/ui/rallyFactionTheme';
+import { RALLY_FACTION_THEMES, rallyFactionStyle } from '../features/army/ui/rallyFactionTheme';
 import { prepareRallyFactionArt } from '../features/army/ui/rallyArt';
 import { ResultBody } from '../features/campaign/ui/Chronicle';
 import { ReportsPopup } from '../features/campaign/ui/ReportsPopup';
@@ -164,9 +163,8 @@ function Realm({ engine, onExit, onLoad, onRetry, onUnitPreview }: {
     const [cityId,setCityId]=useState<number>(),[armyId,setArmyId]=useState<number>(),[empireOpen,setEmpireOpen]=useState(false);
     const [buildingShortcut,setBuildingShortcut]=useState<{type:SlotType|'market';request:number}>();
     const [farmOpen,setFarmOpen]=useState(false), [reportsOpen,setReportsOpen]=useState(false);
-    const [rallyAppearance, setRallyAppearance] = useState<Faction>();
     const [rallyVisualFaction, setRallyVisualFaction] = useState<Faction>();
-    const [rallyChooser, setRallyChooser] = useState(false), [rallyArtLoading, setRallyArtLoading] = useState(false);
+    const [rallyArtLoading, setRallyArtLoading] = useState(false);
     const [rallyArtError, setRallyArtError] = useState<string>();
     const [empireTarget,setEmpireTarget]=useState<{col:number;row:number}>();
     const openEmpire=(target?:{col:number;row:number})=>{setEmpireTarget(target);setEmpireOpen(true);};
@@ -180,18 +178,18 @@ function Realm({ engine, onExit, onLoad, onRetry, onUnitPreview }: {
     const quietCampBattle = (battle: Battle) => !!battle.raid_city_id || battle.mode === 'pve' && world.camps.some(camp => camp.id === battle.camp_id && camp.bandit);
     const visibleBattle = active && !quietCampBattle(active) ? active : undefined;
     const rallyActive = view === 'rally' && !empireOpen && !visibleBattle;
-    const rallyRequestedFaction = rallyAppearance ?? factionOf(town.faction);
+    const rallyRequestedFaction = factionOf(town.faction);
     const rallyDisplayedFaction = rallyVisualFaction ?? rallyRequestedFaction;
-    const rallyTheme = RALLY_FACTION_THEMES[rallyDisplayedFaction], RallyCrest = rallyTheme.crest;
+    const rallyTheme = RALLY_FACTION_THEMES[rallyRequestedFaction], RallyCrest = rallyTheme.crest;
     const rallyStyle = rallyActive && rallyVisualFaction ? rallyFactionStyle(rallyVisualFaction) : undefined;
     useEffect(() => {
-        if (!rallyActive) { setRallyChooser(false); return; }
+        if (!rallyActive) return;
         let cancelled = false;
         setRallyArtLoading(true); setRallyArtError(undefined);
         void prepareRallyFactionArt(rallyRequestedFaction).then(() => {
             if (!cancelled) { setRallyVisualFaction(rallyRequestedFaction); setRallyArtLoading(false); }
         }).catch(() => {
-            if (!cancelled) { setRallyArtLoading(false); setRallyArtError('The appearance could not be loaded. Choose another theme to retry.'); }
+            if (!cancelled) { setRallyArtLoading(false); setRallyArtError('The faction artwork could not be loaded. Reopen Rally Point to retry.'); }
         });
         return () => { cancelled = true; };
     }, [rallyActive, rallyRequestedFaction]);
@@ -297,13 +295,7 @@ function Realm({ engine, onExit, onLoad, onRetry, onUnitPreview }: {
    <details ref={menuRef} className="realm-tools game-menu"><summary aria-label="Game menu"><Icon name="settings" size={19}/><span>Menu</span></summary><div><div className="game-menu-player"><strong>{player.display_name}</strong><small>{campaignRank(done.size)}</small></div><button onClick={event=>{event.currentTarget.closest('details')?.removeAttribute('open');openEmpire();}}><Icon name="world" size={17}/>Empire atlas</button><button onClick={event=>{event.currentTarget.closest('details')?.removeAttribute('open');onUnitPreview(factionOf(town.faction));}}><Icon name="army" size={17}/>Unit preview</button><button onClick={event=>{event.currentTarget.closest('details')?.removeAttribute('open');setHelp(true);}}><Icon name="book" size={17}/>Codex</button><button onClick={event=>{event.currentTarget.closest('details')?.removeAttribute('open');setSettings(true);}}><Icon name="settings" size={17}/>Settings</button><button onClick={onExit}><Icon name="exit" size={17}/>{engine.mode==='online'?'Switch ruler':'Main menu'}</button><small className="game-save-status">{engine.mode==='online'?'Shared world':'Campaign saved automatically'}</small></div></details></div></header>
    {rallyActive && <div className="rp-nation-banner">
        <div className="rp-nation-title"><RallyCrest aria-hidden="true"/><span><strong>{rallyTheme.realm}</strong><small>War council · {town.name}</small></span></div>
-       <div className="rp-faction-controls"><label>Appearance<select aria-label="Rally Point appearance" value={rallyAppearance ?? 'city'} onChange={event => {
-           const value = event.target.value;
-           if (value === 'city') setRallyAppearance(undefined);
-           else if (RALLY_FACTION_ORDER.includes(value as Faction)) setRallyAppearance(value as Faction);
-       }}><option value="city">City faction</option>{RALLY_FACTION_ORDER.map(id => <option key={id} value={id}>{RALLY_FACTION_THEMES[id].name}</option>)}</select></label>
-       <button className="button outline rp-explore-factions" onClick={() => setRallyChooser(true)}><Icon name="crown" size={16}/>Explore appearances</button></div>
-       {rallyArtLoading && <span className="rp-art-status" role="status">Preparing appearance…</span>}
+       {rallyArtLoading && <span className="rp-art-status" role="status">Preparing faction artwork…</span>}
        {rallyArtError && <span className="rp-art-status" role="alert">{rallyArtError}</span>}
    </div>}
    <main className={`realm-content ${view === 'world' ? 'world-content' : view === 'settlement' ? 'city-content' : view === 'army' ? 'army-content' : view === 'rally' ? `rally-content ${rallyActive ? 'rp-stage' : ''}` : ''}`}>
@@ -326,7 +318,6 @@ function Realm({ engine, onExit, onLoad, onRetry, onUnitPreview }: {
   {help && <Codex onClose={() => setHelp(false)}/>}
   {settings && <Settings world={world} playerId={engine.playerId} cityId={town.id} onClose={() => setSettings(false)} onLoad={engine.mode === 'solo' ? onLoad : undefined} run={dispatch}/>}
   {resource && <Modal title={`${resource === 'wood' ? 'Timber' : resource[0].toUpperCase() + resource.slice(1)} supplies`} onClose={() => setResource(null)}><div className="resource-ledger"><Icon name={resource} size={48}/><strong>{resources[resource].toLocaleString()}<small>of {storage(resource).toLocaleString()} stored</small></strong></div><div className="progress-track"><i style={{ width: `${resources[resource] / storage(resource) * 100}%` }}/></div><div className="ledger-rate"><span>{resource==='food'?'Net food balance':'Production'}</span><strong>{rate(resource)} per minute</strong></div>{resource==='food'&&<p>{projectedTown.food_gross_rate?.toFixed(1)} food produced − {projectedTown.food_upkeep?.toFixed(1)} consumed by residents per minute.</p>}<p>Production continues while you are away. Improve {resource === 'wood' ? 'the timber yard' : resource === 'stone' ? 'the quarry' : resource === 'food' ? 'your wheat fields' : 'the forum'} for more income, build housing for more workers, or upgrade {resource==='food'?'granaries':'warehouses'} to store more supplies.</p><button className="button gold" onClick={() => { setResource(null); navigate('settlement'); }}>Develop the city <Icon name="arrow"/></button></Modal>}
-  {rallyActive && rallyChooser && <RallyThemeChooser faction={rallyDisplayedFaction} onSelect={faction => { setRallyAppearance(faction); setRallyChooser(false); }} onClose={() => setRallyChooser(false)}/>}
   </div>
  </ResearchNavigation.Provider>;
 }

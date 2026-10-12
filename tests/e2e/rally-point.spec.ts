@@ -110,29 +110,31 @@ function campaignIdentity(world: World) {
     };
 }
 
-test('integrated Rally appearances remain cosmetic and scoped to this game screen', async ({ page }, info) => {
-    const f = presentationFixture(), errors = await start(page, f.world);
+test('integrated Rally follows the selected city faction and stays scoped to this game screen', async ({ page }, info) => {
+    const f = presentationFixture();
+    f.world.settlements.find(city => city.id === 2)!.faction = 'persian';
+    const errors = await start(page, f.world);
     const shell = page.locator('.game-shell'), stage = page.locator('.rp-stage');
     await expect(shell).toHaveClass(/rp-shell/);
     await expect(shell).toHaveAttribute('data-rally-faction', 'roman');
     await expect(page.locator('.rp-unit-card')).toHaveCount(9);
     const identity = campaignIdentity(await saved(page));
-    await expect(page.getByLabel('Rally Point appearance').locator('option')).toHaveCount(12);
-    await page.getByLabel('Rally Point appearance').selectOption('persian');
+    await expect(page.getByLabel('Rally Point appearance')).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Explore appearances', exact: true })).toHaveCount(0);
+    await expect(page.locator('.rp-faction-gallery, .rp-faction-card')).toHaveCount(0);
+    await page.getByLabel('Rally Point city').selectOption('2');
     await expect(shell).toHaveAttribute('data-rally-faction', 'persian');
     await expect(stage).toHaveCSS('border-image-source', /persian-frame\.webp/);
     await expect(page.locator('.rp-nation-title')).toContainText('Persian Empire');
-    await expect(page.locator('.rp-unit-card .fw-troop-icon').first()).toHaveCSS('background-image', /roster\/roman\.png/);
-    await expect(page.locator('.rp-commander img')).toHaveAttribute('src', /portraits\/roman\//);
-    await page.getByRole('button', { name: 'Explore appearances', exact: true }).click();
-    const chooser = page.getByRole('dialog', { name: 'Rally Point appearances', exact: true });
-    await expect(chooser.locator('.rp-faction-card')).toHaveCount(11);
-    await chooser.getByRole('button', { name: 'Necropolis appearance', exact: true }).click();
-    await expect(shell).toHaveAttribute('data-rally-faction', 'undead');
-    await expect(stage).toHaveCSS('border-image-source', /undead-frame\.webp/);
-    await page.getByLabel('Rally Point appearance').selectOption('city');
+    await expect(page.locator('.rp-nation-title')).toContainText('Dawnwatch');
+    await expect(page.getByRole('article', { name: 'Station: Dawnwatch', exact: true })).toBeVisible();
+    await expect(page.getByRole('article', { name: 'Station: Stonehaven', exact: true })).toHaveCount(0);
+    expect(campaignIdentity(await saved(page))).toEqual(identity);
+    await page.getByLabel('Rally Point city').selectOption('1');
     await expect(shell).toHaveAttribute('data-rally-faction', 'roman');
     await expect(stage).toHaveCSS('border-image-source', /roman-frame\.webp/);
+    await expect(page.locator('.rp-unit-card .fw-troop-icon').first()).toHaveCSS('background-image', /roster\/roman\.png/);
+    await expect(page.locator('.rp-commander img')).toHaveAttribute('src', /portraits\/roman\//);
     expect(campaignIdentity(await saved(page))).toEqual(identity);
     await page.evaluate(async () => { await document.fonts.ready; });
     await expect(page.locator('.rally-note').first()).toHaveCSS('font-family', /Crimson Text/);
@@ -140,7 +142,7 @@ test('integrated Rally appearances remain cosmetic and scoped to this game scree
     await expect(page.locator('.rp-nation-title strong')).toHaveCSS('font-family', /Cinzel/);
     await expect(page.locator('.rp-command-caption h2')).toHaveCSS('font-family', /Cinzel/);
     expect(await page.locator('.rally-panel').evaluate(el => el.scrollHeight > el.clientHeight && getComputedStyle(el).overflowY === 'auto')).toBe(true);
-    await capture(page, info, 'rally-integrated-appearance');
+    await capture(page, info, 'rally-integrated-city-faction');
     const deliverables = process.env.PERIS_RALLY_QA_OUTPUT;
     if (deliverables) {
         await mkdir(deliverables, { recursive: true });

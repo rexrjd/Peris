@@ -14,21 +14,23 @@ The full-view comparison checks the frame, city selector, five tabs, four totals
 - Packaging issue found separately during review: dynamic art paths were invisible to the existing standalone asset discovery parser. Fixed with an explicit typed map of 33 literal paths and a focused tooling regression. The actual production bundle exposes every expected path.
 - No remaining actionable P0/P1/P2 visual findings.
 
-Intentional compatibility differences: the game's existing map/city/army/research/social navigation remains at the top; the selector is labelled Appearance because it previews materials without changing campaign identity; station rows retain locate controls; the live game's wording, timers and quantities remain authoritative. Shorter desktops and mobile use the existing inner-panel scroll pattern. The mobile layout stacks the content and retains the game's bottom navigation.
+Production correction (2026-10-13): removed the preview-only Appearance selector and Explore appearances gallery. The nation banner and all artwork now follow the selected city's actual faction automatically. Revised evidence: `../../outputs/peris-rally-integration/city-faction-only.jpg`, plus the refreshed `rally-desktop.png` and `rally-mobile.png`. Browser inspection confirms zero preview controls and zero console errors. The city-faction test switches between Roman and Persian owned cities and verifies their corresponding artwork, banner and unchanged campaign data.
+
+Intentional compatibility differences: the game's existing map/city/army/research/social navigation remains at the top; station rows retain locate controls; the live game's wording, timers and quantities remain authoritative. Shorter desktops and mobile use the existing inner-panel scroll pattern. The mobile layout stacks the content and retains the game's bottom navigation.
 
 ## Required fidelity surfaces
 
 - Fonts/typography: original Cinzel and Crimson Text, original weights and licenses; headings, body notes, buttons and modal text checked after specificity repair.
 - Spacing/layout: ornate framed stage, original section hierarchy, narrow station column and nine-card commander tray retained. Desktop 1440 × 900 shows all nine role portraits; mobile 390 × 844 has no horizontal overflow and its panel scrolls.
-- Colors/tokens: all eleven nation palettes, backgrounds, frames and material textures loaded in the game; appearance follows the city by default and overrides are scoped to Rally and its dialogs.
+- Colors/tokens: all eleven nation palettes, backgrounds, frames and material textures follow the actual selected city's faction; styling is scoped to Rally and its dialogs.
 - Image quality: original artwork and original game troop/hero portraits, lossless frame alpha and verified WebP dimensions; no replacement drawings, movie character art or placeholder illustrations.
-- Copy/content: live city, commander identity, roster counts, routes, farm lists and reports. Preview controls describe cosmetic appearance accurately.
+- Copy/content: live city, commander identity, roster counts, routes, farm lists and reports. Production has no faction preview controls.
 
 ## Interaction and browser evidence
 
-Manual game checks: all five tabs; summary expansion; eleven appearance options and gallery; Issue orders through the existing troop review dialog; commander management; removal of Rally styles on other views. Browser console: zero captured errors during the eleven-theme pass.
+Manual game checks: all five tabs; summary expansion; removal of preview controls; Issue orders through the existing troop review dialog; commander management; removal of Rally styles on other views. The original eleven-theme artwork pass remains valid; automatic city-faction selection is now covered by the production test. Browser console: zero captured errors.
 
-Automated checks: five existing desktop Rally tests passed; four new desktop/mobile appearance and partial-raid cancellation cases passed. The new cases verify campaign identity/order/roster invariants, exact troop review, a confirmed partial raid, the 30-second cancellation token and restored troops. Production build, TypeScript, unit tests, tooling and artwork checks passed. Broader game-suite failures are recorded separately and are not represented as a passing global regression run.
+Automated checks: all fourteen related Rally desktop/mobile tests passed after removing the preview feature. The cases verify automatic city-faction artwork, absent preview controls, campaign identity/order/roster invariants, exact troop review, a confirmed partial raid, the 30-second cancellation token and restored troops, station rosters, farm lists and reports. Production build, TypeScript, 458 unit tests (one existing skip), five tooling tests and artwork checks passed. Broader pre-existing game-suite failures remain recorded separately and are not represented as a passing global regression run.
 
 ## Implementation checklist
 
