@@ -1,7 +1,7 @@
 import {FACTIONS,type Faction} from '../../../factions/domain/factions';
 import * as THREE from 'three';
 import { type BuildingType } from '../../domain/types';
-import { cityLayout, cityFootprint, type CityPlot } from './layout';
+import { cityLayout, type CityPlot } from './layout';
 import { cityGrowth, type CitySlot, type SlotType } from '../../domain/slots';
 import { createSlotModel } from './slotModels';
 import { createVillagers } from './villagers';
@@ -9,12 +9,20 @@ import { createBuildingModel, visualLevel } from './buildingModels';
 import { createCityLandscape } from './landscape';
 import { disposeCityObject } from './modelKit';
 import { createCityWalls } from './cityWalls';
+import { CityCamera } from './CityCamera';
+import { createCityActivities } from './cityActivities';
 
 /** Presentation only. Selection returns through React; upgrades stay in the engine. */
 export class CityScene {
     private readonly renderer: THREE.WebGLRenderer;
     private readonly scene = new THREE.Scene();
-    private readonly camera = new THREE.OrthographicCamera(-12, 12, 8, -8, .1, 100);
+    private readonly view = new CityCamera();
+    private readonly camera = this.view.camera;
+    private readonly activities = createCityActivities();
+    private animationTime = 0;
+    private dirty = true;
+    private readonly motionPreference = window.matchMedia('(prefers-reduced-motion: reduce)');
+    private readonly settingsObserver: MutationObserver;
     private readonly models = new Map<string, { level: number; type: string | null; model: THREE.Group }>();
     private readonly pickMeshes: THREE.Mesh[] = [];
     private readonly ray = new THREE.Raycaster();
@@ -48,8 +56,8 @@ export class CityScene {
         const sun = new THREE.DirectionalLight(0xffedd4, 2.7); sun.position.set(-12, 22, 14); sun.castShadow = true;
         sun.shadow.mapSize.set(1024, 1024); Object.assign(sun.shadow.camera, { left: -24, right: 24, top: 24, bottom: -24, near: .1, far: 70 });
         sun.shadow.bias = -.0004; sun.shadow.normalBias = .035;
-        this.scene.add(sun, sun.target, this.landscape, this.villagers.group);
-        this.camera.position.set(3.6, 22, 25); this.camera.lookAt(0, 0, .8);
+        this.scene.add(sun, sun.target, this.landscape, this.villagers.group, this.activities.group);
+
         const ring = (color: number, opacity: number) => {
             const mesh = new THREE.Mesh(new THREE.RingGeometry(.92, 1, 48), new THREE.MeshBasicMaterial({ color, opacity, transparent: true, depthWrite: false, side: THREE.DoubleSide }));
             mesh.rotation.x = -Math.PI / 2; mesh.position.y = .06; this.scene.add(mesh); return mesh;
@@ -58,6 +66,12 @@ export class CityScene {
         canvas.addEventListener('pointermove', this.move); canvas.addEventListener('pointerleave', this.leave);
         canvas.addEventListener('pointerdown', this.start); canvas.addEventListener('pointerup', this.end);
         canvas.addEventListener('webglcontextlost', this.contextLost);
+        canvas.parentElement!.addEventListener('wheel', this.wheel, { passive: false });
+        window.addEventListener('keydown', this.key);
+        document.addEventListener('visibilitychange', this.resume);
+        this.motionPreference.addEventListener('change', this.resume);
+        this.settingsObserver = new MutationObserver(this.resume);
+        this.settingsObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
         this.resize = new ResizeObserver(() => this.setSize()); this.resize.observe(canvas.parentElement!); this.setSize();
     }
     update(levels: Record<string, number>, selected: string, slots: CitySlot[],faction:Faction='roman') {
@@ -85,7 +99,7 @@ export class CityScene {
             const level=plot.type==='mage_tower'?Math.max(0,Math.min(10,Math.round(plot.level))):visualLevel(plot.level), previous=this.models.get(plot.key);
             if (changed || !previous || previous.level!==level || previous.type!==plot.type || plot.type==='wall' && resized) {
                 if(previous) {this.scene.remove(previous.model);disposeCityObject(previous.model);}
-                const model=plot.slot!==undefined ? createSlotModel(plot.type as SlotType|null,level,faction) : plot.type==='wall' ? createCityWalls(level,this.mainLevel,faction) : createBuildingModel(plot.type as BuildingType,level,faction);
+                const model=plot.slot!==undefined ? createSlotModel(plot.type as SlotType|null,level,faction,true) : plot.type==='wall' ? createCityWalls(level,this.mainLevel,faction,true) : createBuildingModel(plot.type as BuildingType,level,faction,true);
                 this.scene.add(model); this.models.set(plot.key,{level,type:plot.type,model});
             }
             const model=this.models.get(plot.key)!.model;
@@ -93,7 +107,8 @@ export class CityScene {
             if(plot.type==='wall') model.scale.set(growth,1,growth);
             else if(plot.slot!==undefined) model.scale.setScalar(.78);
         }
-        this.villagers.setPlots(this.plots,growth,this.mainLevel); this.villagers.animate(performance.now());
+        this.villagers.setPlots(this.plots,growth,this.mainLevel);
+        this.activities.setModels(this.models, this.plots, faction);
         this.selected=selected;
         const plot=this.plots.find(p=>p.key===selected);
         this.ring.visible=!!plot;
@@ -104,34 +119,62 @@ export class CityScene {
     private setSize() {
         const rect = this.canvas.parentElement!.getBoundingClientRect(); this.width = Math.max(1, rect.width); this.height = Math.max(1, rect.height);
         this.renderer.setSize(this.width, this.height, false);
-        // Frame the tallest level-five gate as well as the foreground nameplates.
-        const footprint=cityFootprint(this.mainLevel),centerZ=(footprint.back+footprint.fishingZ)*this.growth/2;
-        this.camera.position.set(3.6,22,25+centerZ-.8);this.camera.lookAt(0,0,centerZ);
-        const aspect = this.width / this.height, halfHeight = Math.max(12.2, 16 / aspect) * this.growth;
-        this.camera.left = -halfHeight * aspect; this.camera.right = halfHeight * aspect;
-        this.camera.top = halfHeight; this.camera.bottom = -halfHeight; this.camera.updateProjectionMatrix(); this.render();
+        this.view.resize(this.width, this.height, this.mainLevel); this.render();
     }
+    private get reduced() { return this.motionPreference.matches || document.documentElement.classList.contains('reduced-motion'); }
+    rotate(angle: number) { this.view.rotate(angle, this.reduced); this.hoverRing.visible = false; this.render(); }
+    zoom(factor: number) { this.view.zoom(factor); this.hoverRing.visible = false; this.render(); }
+    resetCamera() { this.view.reset(); this.hoverRing.visible = false; this.render(); }
     private render() {
-        if (this.destroyed || this.frame) return;
-        this.frame = requestAnimationFrame((time) => {
-            this.frame = 0; if (this.destroyed) return;
-            const reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches || document.documentElement.classList.contains('reduced-motion');
-            if(time-this.lastFrame>=33 || reduced) {
-                this.lastFrame=time; this.villagers.animate(reduced?0:time);
-                this.renderer.render(this.scene,this.camera);
-                for(const plot of this.plots) {
-                    const button=this.labelRoot.querySelector<HTMLElement>(`[data-building="${plot.key}"]`);
-                    if(!button)continue;
-                    // Place the wall marker above the gate, clear of the main building behind it.
-                    const wall=plot.type==='wall';
-                    const anchor=new THREE.Vector3(plot.x,wall ? .8 + plot.level * .7 : .05,wall ? plot.z : plot.z+plot.radius*.74).project(this.camera);
-                    const top=(1-anchor.y)*this.height/2-(wall?button.offsetHeight+8:0);
-                    button.style.left=`${(anchor.x+1)*this.width/2}px`;button.style.top=`${wall ? Math.max(8,top) : top}px`;
+        this.dirty = true; this.schedule();
+    }
+    private schedule() {
+        if (this.destroyed || this.frame || document.hidden) return;
+        this.frame = requestAnimationFrame(time => {
+            this.frame = 0; if (this.destroyed || document.hidden) return;
+            const reduced = this.reduced;
+            if (time - this.lastFrame >= 33 || this.dirty) {
+                const delta = this.lastFrame ? Math.min(.1, (time - this.lastFrame) / 1000) : 0;
+                this.lastFrame = time; this.dirty = false;
+                if (!reduced) this.animationTime += delta;
+                this.view.step(delta, reduced);
+                this.villagers.animate(reduced ? 0 : this.animationTime * 1000);
+                this.activities.animate(this.animationTime, reduced);
+                this.renderer.render(this.scene, this.camera);
+                this.canvas.dataset.cityZoom = this.camera.zoom.toFixed(3);
+                this.canvas.dataset.cityRotation = this.view.rotation.toFixed(3);
+                for (const plot of this.plots) {
+                    const button = this.labelRoot.querySelector<HTMLElement>(`[data-building="${plot.key}"]`);
+                    if (!button) continue;
+                    const wall = plot.type === 'wall';
+                    const anchor = new THREE.Vector3(plot.x, wall ? .8 + plot.level * .7 : .05, wall ? plot.z : plot.z + plot.radius * .74).project(this.camera);
+                    const visible = Math.abs(anchor.x) < 1.02 && Math.abs(anchor.y) < 1.02 && Math.abs(anchor.z) < 1;
+                    button.style.visibility = visible ? '' : 'hidden';
+                    const top = (1 - anchor.y) * this.height / 2 - (wall ? button.offsetHeight + 8 : 0);
+                    button.style.left = `${(anchor.x + 1) * this.width / 2}px`;
+                    button.style.top = `${wall ? Math.max(8, top) : top}px`;
                 }
             }
-            if(!reduced && !document.hidden) this.render();
+            if (!reduced || this.view.moving) this.schedule();
         });
     }
+    private resume = () => { this.lastFrame = 0; this.render(); };
+    private key = (event: KeyboardEvent) => {
+        if (event.defaultPrevented || event.ctrlKey || event.altKey || event.metaKey || document.querySelector('[role="dialog"][aria-modal="true"]')) return;
+        if (event.target instanceof Element && event.target.closest('input,textarea,select,[contenteditable="true"]')) return;
+        const key = event.key.toLowerCase();
+        if (key === 'q' || key === 'e') { event.preventDefault(); this.rotate((key === 'q' ? -1 : 1) * Math.PI / 8); }
+    };
+    private wheel = (event: WheelEvent) => {
+        if (event.target instanceof Element && event.target.closest('.city-camera-controls')) return;
+        event.preventDefault();
+        const rect = this.canvas.getBoundingClientRect();
+        this.pointer.set((event.clientX - rect.left) / rect.width * 2 - 1, -(event.clientY - rect.top) / rect.height * 2 + 1);
+        const pixels = event.deltaY * (event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? this.height : 1);
+        this.view.zoom(Math.exp(-THREE.MathUtils.clamp(pixels, -300, 300) * .0018), this.pointer);
+        this.hoverRing.visible = false; this.render();
+    };
+
     private pick(event: PointerEvent): string | undefined {
         const rect = this.canvas.getBoundingClientRect();
         this.pointer.set((event.clientX - rect.left) / rect.width * 2 - 1, -(event.clientY - rect.top) / rect.height * 2 + 1);
@@ -141,7 +184,9 @@ export class CityScene {
         const hit = this.ray.intersectObjects(objects, true)[0];
         if (!hit) return;
         if (hit.object.userData.building) return hit.object.userData.building as string;
-        for (const [type, { model }] of this.models) if (hit.object.parent === model) return type;
+        for (const [type, { model }] of this.models) {
+            for (let node: THREE.Object3D | null = hit.object; node; node = node.parent) if (node === model) return type;
+        }
     }
     private move = (event: PointerEvent) => {
         const type = this.pick(event), plot = this.plots.find(item => item.key === type);
@@ -158,10 +203,13 @@ export class CityScene {
     };
     private contextLost = (event: Event) => { event.preventDefault(); this.canvas.dispatchEvent(new CustomEvent('citygraphicslost')); };
     destroy() {
-        if (this.destroyed) return; this.destroyed = true; cancelAnimationFrame(this.frame); this.resize.disconnect();
+        if (this.destroyed) return; this.destroyed = true; cancelAnimationFrame(this.frame); this.resize.disconnect(); this.settingsObserver.disconnect();
         this.canvas.removeEventListener('pointermove', this.move); this.canvas.removeEventListener('pointerleave', this.leave);
         this.canvas.removeEventListener('pointerdown', this.start); this.canvas.removeEventListener('pointerup', this.end);
         this.canvas.removeEventListener('webglcontextlost', this.contextLost);
+        this.canvas.parentElement?.removeEventListener('wheel', this.wheel);
+        window.removeEventListener('keydown', this.key); document.removeEventListener('visibilitychange', this.resume);
+        this.motionPreference.removeEventListener('change', this.resume);
         disposeCityObject(this.scene); this.renderer.dispose(); this.renderer.forceContextLoss(); this.models.clear();
     }
 }

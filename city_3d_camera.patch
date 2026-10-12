@@ -1,0 +1,844 @@
+diff --git a/ARTWORK.md b/ARTWORK.md
+index 06cce4e..c7b8f0c 100644
+--- a/ARTWORK.md
++++ b/ARTWORK.md
+@@ -162,3 +162,9 @@ item ID, painting and rarity. No other game's equipment artwork is included.
+ ## V19 community navigation
+ 
+ Original Guilds and Messages navigation pictures use the same ivory, sandstone and slate-blue low-poly style as the existing HUD. The built-in Imagegen tool created the transparent sources under `assets/source/ui-low-poly-v1/`; prompts and export paths are recorded in `assets/ui-low-poly-v1.json` and `assets/social-art-prompts.json`. `npm run build:ui-icons` exports their 96px WebP assets, and `npm run check:ui-icons` verifies the complete set. Guild crests are original editable SVG compositions with six sigils and six preset colors, rendered by `features/social/ui/Crest.tsx`. No Travian or Albion artwork is shipped.
++
++## V19.4 live 3D city
++
++The native 3D settlement has an independent orthographic orbit camera with cursor-anchored wheel zoom, Q/E rotation, and compact rotation/zoom/reset controls. Its surrounding procedural landscape is wider; settlement plots, wall growth and game coordinates retain their existing rules. Resizing and upgrading the main building preserve camera zoom and rotation.
++
++City-only moving geometry preserves windmill blades, saw wheels, crane loads, flags, a working blacksmith, fishing poles and the level-ten mage crystal outside the static material batches. Shared instanced smoke and arcane motes add ambient activity. The ordinary map and building preview factories retain their static default. All effects use original native geometry and existing faction palettes; no external assets or license dependencies are introduced. Effects pause while the tab is hidden and respect the OS/game reduced-motion setting, including when it changes while the scene is open.
+diff --git a/src/features/city/rendering/SettlementScene.tsx b/src/features/city/rendering/SettlementScene.tsx
+index aee8757..0e37779 100644
+--- a/src/features/city/rendering/SettlementScene.tsx
++++ b/src/features/city/rendering/SettlementScene.tsx
+@@ -5,6 +5,7 @@ import type { BuildingType } from '../domain/types';
+ import { SLOT_BUILDINGS, type CitySlot, type SlotType, riversideSlot } from '../domain/slots';
+ import { CityScene } from './three/CityScene';
+ import { cityLayout } from './three/layout';
++import { Icon } from '../../../shared/ui/Icons';
+ type SceneProps = { selected:string; onSelect:(key:string)=>void; levels:Record<string,number>; slots:CitySlot[]; faction?:Faction };
+ export function SettlementScene({selected,onSelect,levels,slots,faction='roman'}:SceneProps) {
+  const canvas=useRef<HTMLCanvasElement>(null),labels=useRef<HTMLDivElement>(null),renderer=useRef<CityScene|null>(null),props=useRef({selected,onSelect,levels,slots,faction});
+@@ -20,7 +21,14 @@ export function SettlementScene({selected,onSelect,levels,slots,faction='roman'}
+  const name=(p:typeof plots[number])=>p.slot===undefined?BUILDINGS[p.type as BuildingType].name:p.type?SLOT_BUILDINGS[p.type as SlotType].name:`Empty plot ${p.slot+1}`;
+  const hint=(p:typeof plots[number])=>!p.type?'Choose a building for this plot.':`${p.level?`Level ${p.level}.`:'Not built yet.'} ${p.slot===undefined?BUILDINGS[p.type as BuildingType].effect:SLOT_BUILDINGS[p.type as SlotType].effect}${p.slot===16?' Riverside site outside the wall.':''}`;
+  if(failed)return <div className="city-fallback-grid">{plots.map(p=><button key={p.key} onClick={()=>onSelect(p.key)}>{name(p)} · {p.level?`Level ${p.level}`:'Empty'}</button>)}</div>;
+- return <div className={`city-3d-scene ${ready?'ready':''}`}><canvas ref={canvas} aria-label="Low-poly city with selectable plots and walking villagers"/><div ref={labels} className="city-landmark-labels" aria-label="City landmarks">
++ return <div className={`city-3d-scene ${ready?'ready':''}`}><canvas ref={canvas} tabIndex={0} aria-label="Interactive 3D city. Scroll to zoom. Q and E rotate. Select a building or plot."/><div ref={labels} className="city-landmark-labels" aria-label="City landmarks">
+  {plots.map(p=><button key={p.key} data-building={p.key} className={`city-landmark-label ${selected===p.key?'selected':''} ${!p.level?'unbuilt':''} ${p.slot!==undefined&&p.slot<16?'slot-label':''}`} title={`${name(p)} — ${hint(p)}`} aria-label={`${name(p)}${p.slot!==undefined&&riversideSlot(p.slot)?', riverside':''}, ${p.level?`level ${p.level}`:p.type?'unbuilt':'choose a building'}`} aria-pressed={selected===p.key} onClick={()=>onSelect(p.key)}><em className="city-level-badge" aria-hidden="true">{p.level||'+'}</em><span className="city-landmark-tooltip" aria-hidden="true"><strong>{name(p)}</strong><small>{hint(p)}</small></span></button>)}
++ </div><div className="city-camera-controls city-scene-plate" role="group" aria-label="City camera">
++ <button disabled={!ready} aria-label="Rotate city left" title="Rotate left (Q)" onClick={()=>renderer.current?.rotate(-Math.PI/8)}>↶</button>
++ <button disabled={!ready} aria-label="Rotate city right" title="Rotate right (E)" onClick={()=>renderer.current?.rotate(Math.PI/8)}>↷</button>
++ <i aria-hidden="true"/>
++ <button disabled={!ready} aria-label="Zoom city out" title="Zoom out · scroll down" onClick={()=>renderer.current?.zoom(1/1.2)}>−</button>
++ <button disabled={!ready} aria-label="Zoom city in" title="Zoom in · scroll up" onClick={()=>renderer.current?.zoom(1.2)}>+</button>
++ <button disabled={!ready} aria-label="Reset city camera" title="Reset city camera" onClick={()=>renderer.current?.resetCamera()}><Icon name="focus" size={16}/></button>
+  </div>{!ready&&<div className="city-graphics-loading">Opening the city…</div>}</div>;
+ }
+diff --git a/src/features/city/rendering/three/CityScene.ts b/src/features/city/rendering/three/CityScene.ts
+index adb52e7..0e55b2d 100644
+--- a/src/features/city/rendering/three/CityScene.ts
++++ b/src/features/city/rendering/three/CityScene.ts
+@@ -1,7 +1,7 @@
+ import {FACTIONS,type Faction} from '../../../factions/domain/factions';
+ import * as THREE from 'three';
+ import { type BuildingType } from '../../domain/types';
+-import { cityLayout, cityFootprint, type CityPlot } from './layout';
++import { cityLayout, type CityPlot } from './layout';
+ import { cityGrowth, type CitySlot, type SlotType } from '../../domain/slots';
+ import { createSlotModel } from './slotModels';
+ import { createVillagers } from './villagers';
+@@ -9,12 +9,20 @@ import { createBuildingModel, visualLevel } from './buildingModels';
+ import { createCityLandscape } from './landscape';
+ import { disposeCityObject } from './modelKit';
+ import { createCityWalls } from './cityWalls';
++import { CityCamera } from './CityCamera';
++import { createCityActivities } from './cityActivities';
+ 
+ /** Presentation only. Selection returns through React; upgrades stay in the engine. */
+ export class CityScene {
+     private readonly renderer: THREE.WebGLRenderer;
+     private readonly scene = new THREE.Scene();
+-    private readonly camera = new THREE.OrthographicCamera(-12, 12, 8, -8, .1, 100);
++    private readonly view = new CityCamera();
++    private readonly camera = this.view.camera;
++    private readonly activities = createCityActivities();
++    private animationTime = 0;
++    private dirty = true;
++    private readonly motionPreference = window.matchMedia('(prefers-reduced-motion: reduce)');
++    private readonly settingsObserver: MutationObserver;
+     private readonly models = new Map<string, { level: number; type: string | null; model: THREE.Group }>();
+     private readonly pickMeshes: THREE.Mesh[] = [];
+     private readonly ray = new THREE.Raycaster();
+@@ -48,8 +56,8 @@ export class CityScene {
+         const sun = new THREE.DirectionalLight(0xffedd4, 2.7); sun.position.set(-12, 22, 14); sun.castShadow = true;
+         sun.shadow.mapSize.set(1024, 1024); Object.assign(sun.shadow.camera, { left: -24, right: 24, top: 24, bottom: -24, near: .1, far: 70 });
+         sun.shadow.bias = -.0004; sun.shadow.normalBias = .035;
+-        this.scene.add(sun, sun.target, this.landscape, this.villagers.group);
+-        this.camera.position.set(3.6, 22, 25); this.camera.lookAt(0, 0, .8);
++        this.scene.add(sun, sun.target, this.landscape, this.villagers.group, this.activities.group);
++
+         const ring = (color: number, opacity: number) => {
+             const mesh = new THREE.Mesh(new THREE.RingGeometry(.92, 1, 48), new THREE.MeshBasicMaterial({ color, opacity, transparent: true, depthWrite: false, side: THREE.DoubleSide }));
+             mesh.rotation.x = -Math.PI / 2; mesh.position.y = .06; this.scene.add(mesh); return mesh;
+@@ -58,6 +66,12 @@ export class CityScene {
+         canvas.addEventListener('pointermove', this.move); canvas.addEventListener('pointerleave', this.leave);
+         canvas.addEventListener('pointerdown', this.start); canvas.addEventListener('pointerup', this.end);
+         canvas.addEventListener('webglcontextlost', this.contextLost);
++        canvas.parentElement!.addEventListener('wheel', this.wheel, { passive: false });
++        window.addEventListener('keydown', this.key);
++        document.addEventListener('visibilitychange', this.resume);
++        this.motionPreference.addEventListener('change', this.resume);
++        this.settingsObserver = new MutationObserver(this.resume);
++        this.settingsObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+         this.resize = new ResizeObserver(() => this.setSize()); this.resize.observe(canvas.parentElement!); this.setSize();
+     }
+     update(levels: Record<string, number>, selected: string, slots: CitySlot[],faction:Faction='roman') {
+@@ -85,7 +99,7 @@ export class CityScene {
+             const level=plot.type==='mage_tower'?Math.max(0,Math.min(10,Math.round(plot.level))):visualLevel(plot.level), previous=this.models.get(plot.key);
+             if (changed || !previous || previous.level!==level || previous.type!==plot.type || plot.type==='wall' && resized) {
+                 if(previous) {this.scene.remove(previous.model);disposeCityObject(previous.model);}
+-                const model=plot.slot!==undefined ? createSlotModel(plot.type as SlotType|null,level,faction) : plot.type==='wall' ? createCityWalls(level,this.mainLevel,faction) : createBuildingModel(plot.type as BuildingType,level,faction);
++                const model=plot.slot!==undefined ? createSlotModel(plot.type as SlotType|null,level,faction,true) : plot.type==='wall' ? createCityWalls(level,this.mainLevel,faction,true) : createBuildingModel(plot.type as BuildingType,level,faction,true);
+                 this.scene.add(model); this.models.set(plot.key,{level,type:plot.type,model});
+             }
+             const model=this.models.get(plot.key)!.model;
+@@ -93,7 +107,8 @@ export class CityScene {
+             if(plot.type==='wall') model.scale.set(growth,1,growth);
+             else if(plot.slot!==undefined) model.scale.setScalar(.78);
+         }
+-        this.villagers.setPlots(this.plots,growth,this.mainLevel); this.villagers.animate(performance.now());
++        this.villagers.setPlots(this.plots,growth,this.mainLevel);
++        this.activities.setModels(this.models, this.plots, faction);
+         this.selected=selected;
+         const plot=this.plots.find(p=>p.key===selected);
+         this.ring.visible=!!plot;
+@@ -104,34 +119,62 @@ export class CityScene {
+     private setSize() {
+         const rect = this.canvas.parentElement!.getBoundingClientRect(); this.width = Math.max(1, rect.width); this.height = Math.max(1, rect.height);
+         this.renderer.setSize(this.width, this.height, false);
+-        // Frame the tallest level-five gate as well as the foreground nameplates.
+-        const footprint=cityFootprint(this.mainLevel),centerZ=(footprint.back+footprint.fishingZ)*this.growth/2;
+-        this.camera.position.set(3.6,22,25+centerZ-.8);this.camera.lookAt(0,0,centerZ);
+-        const aspect = this.width / this.height, halfHeight = Math.max(12.2, 16 / aspect) * this.growth;
+-        this.camera.left = -halfHeight * aspect; this.camera.right = halfHeight * aspect;
+-        this.camera.top = halfHeight; this.camera.bottom = -halfHeight; this.camera.updateProjectionMatrix(); this.render();
++        this.view.resize(this.width, this.height, this.mainLevel); this.render();
+     }
++    private get reduced() { return this.motionPreference.matches || document.documentElement.classList.contains('reduced-motion'); }
++    rotate(angle: number) { this.view.rotate(angle, this.reduced); this.hoverRing.visible = false; this.render(); }
++    zoom(factor: number) { this.view.zoom(factor); this.hoverRing.visible = false; this.render(); }
++    resetCamera() { this.view.reset(); this.hoverRing.visible = false; this.render(); }
+     private render() {
+-        if (this.destroyed || this.frame) return;
+-        this.frame = requestAnimationFrame((time) => {
+-            this.frame = 0; if (this.destroyed) return;
+-            const reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches || document.documentElement.classList.contains('reduced-motion');
+-            if(time-this.lastFrame>=33 || reduced) {
+-                this.lastFrame=time; this.villagers.animate(reduced?0:time);
+-                this.renderer.render(this.scene,this.camera);
+-                for(const plot of this.plots) {
+-                    const button=this.labelRoot.querySelector<HTMLElement>(`[data-building="${plot.key}"]`);
+-                    if(!button)continue;
+-                    // Place the wall marker above the gate, clear of the main building behind it.
+-                    const wall=plot.type==='wall';
+-                    const anchor=new THREE.Vector3(plot.x,wall ? .8 + plot.level * .7 : .05,wall ? plot.z : plot.z+plot.radius*.74).project(this.camera);
+-                    const top=(1-anchor.y)*this.height/2-(wall?button.offsetHeight+8:0);
+-                    button.style.left=`${(anchor.x+1)*this.width/2}px`;button.style.top=`${wall ? Math.max(8,top) : top}px`;
++        this.dirty = true; this.schedule();
++    }
++    private schedule() {
++        if (this.destroyed || this.frame || document.hidden) return;
++        this.frame = requestAnimationFrame(time => {
++            this.frame = 0; if (this.destroyed || document.hidden) return;
++            const reduced = this.reduced;
++            if (time - this.lastFrame >= 33 || this.dirty) {
++                const delta = this.lastFrame ? Math.min(.1, (time - this.lastFrame) / 1000) : 0;
++                this.lastFrame = time; this.dirty = false;
++                if (!reduced) this.animationTime += delta;
++                this.view.step(delta, reduced);
++                this.villagers.animate(reduced ? 0 : this.animationTime * 1000);
++                this.activities.animate(this.animationTime, reduced);
++                this.renderer.render(this.scene, this.camera);
++                this.canvas.dataset.cityZoom = this.camera.zoom.toFixed(3);
++                this.canvas.dataset.cityRotation = this.view.rotation.toFixed(3);
++                for (const plot of this.plots) {
++                    const button = this.labelRoot.querySelector<HTMLElement>(`[data-building="${plot.key}"]`);
++                    if (!button) continue;
++                    const wall = plot.type === 'wall';
++                    const anchor = new THREE.Vector3(plot.x, wall ? .8 + plot.level * .7 : .05, wall ? plot.z : plot.z + plot.radius * .74).project(this.camera);
++                    const visible = Math.abs(anchor.x) < 1.02 && Math.abs(anchor.y) < 1.02 && Math.abs(anchor.z) < 1;
++                    button.style.visibility = visible ? '' : 'hidden';
++                    const top = (1 - anchor.y) * this.height / 2 - (wall ? button.offsetHeight + 8 : 0);
++                    button.style.left = `${(anchor.x + 1) * this.width / 2}px`;
++                    button.style.top = `${wall ? Math.max(8, top) : top}px`;
+                 }
+             }
+-            if(!reduced && !document.hidden) this.render();
++            if (!reduced || this.view.moving) this.schedule();
+         });
+     }
++    private resume = () => { this.lastFrame = 0; this.render(); };
++    private key = (event: KeyboardEvent) => {
++        if (event.defaultPrevented || event.ctrlKey || event.altKey || event.metaKey || document.querySelector('[role="dialog"][aria-modal="true"]')) return;
++        if (event.target instanceof Element && event.target.closest('input,textarea,select,[contenteditable="true"]')) return;
++        const key = event.key.toLowerCase();
++        if (key === 'q' || key === 'e') { event.preventDefault(); this.rotate((key === 'q' ? -1 : 1) * Math.PI / 8); }
++    };
++    private wheel = (event: WheelEvent) => {
++        if (event.target instanceof Element && event.target.closest('.city-camera-controls')) return;
++        event.preventDefault();
++        const rect = this.canvas.getBoundingClientRect();
++        this.pointer.set((event.clientX - rect.left) / rect.width * 2 - 1, -(event.clientY - rect.top) / rect.height * 2 + 1);
++        const pixels = event.deltaY * (event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? this.height : 1);
++        this.view.zoom(Math.exp(-THREE.MathUtils.clamp(pixels, -300, 300) * .0018), this.pointer);
++        this.hoverRing.visible = false; this.render();
++    };
++
+     private pick(event: PointerEvent): string | undefined {
+         const rect = this.canvas.getBoundingClientRect();
+         this.pointer.set((event.clientX - rect.left) / rect.width * 2 - 1, -(event.clientY - rect.top) / rect.height * 2 + 1);
+@@ -141,7 +184,9 @@ export class CityScene {
+         const hit = this.ray.intersectObjects(objects, true)[0];
+         if (!hit) return;
+         if (hit.object.userData.building) return hit.object.userData.building as string;
+-        for (const [type, { model }] of this.models) if (hit.object.parent === model) return type;
++        for (const [type, { model }] of this.models) {
++            for (let node: THREE.Object3D | null = hit.object; node; node = node.parent) if (node === model) return type;
++        }
+     }
+     private move = (event: PointerEvent) => {
+         const type = this.pick(event), plot = this.plots.find(item => item.key === type);
+@@ -158,10 +203,13 @@ export class CityScene {
+     };
+     private contextLost = (event: Event) => { event.preventDefault(); this.canvas.dispatchEvent(new CustomEvent('citygraphicslost')); };
+     destroy() {
+-        if (this.destroyed) return; this.destroyed = true; cancelAnimationFrame(this.frame); this.resize.disconnect();
++        if (this.destroyed) return; this.destroyed = true; cancelAnimationFrame(this.frame); this.resize.disconnect(); this.settingsObserver.disconnect();
+         this.canvas.removeEventListener('pointermove', this.move); this.canvas.removeEventListener('pointerleave', this.leave);
+         this.canvas.removeEventListener('pointerdown', this.start); this.canvas.removeEventListener('pointerup', this.end);
+         this.canvas.removeEventListener('webglcontextlost', this.contextLost);
++        this.canvas.parentElement?.removeEventListener('wheel', this.wheel);
++        window.removeEventListener('keydown', this.key); document.removeEventListener('visibilitychange', this.resume);
++        this.motionPreference.removeEventListener('change', this.resume);
+         disposeCityObject(this.scene); this.renderer.dispose(); this.renderer.forceContextLoss(); this.models.clear();
+     }
+ }
+diff --git a/src/features/city/rendering/three/academy.ts b/src/features/city/rendering/three/academy.ts
+index e356703..ccec066 100644
+--- a/src/features/city/rendering/three/academy.ts
++++ b/src/features/city/rendering/three/academy.ts
+@@ -1,8 +1,8 @@
+ import type {Faction} from '../../../factions/domain/factions';
+ import {cityKit} from './modelKit';
+ /** Five native geometry stages, sharing each faction's materials and roof language. */
+-export function createAcademy(level:number,faction:Faction){
+- const k=cityKit(faction),{m,box,cylinder,house,roof}=k;
++export function createAcademy(level:number,faction:Faction,animated=false){
++ const k=cityKit(faction,animated),{m,box,cylinder,house,roof}=k;
+  const l=Math.max(1,Math.min(5,level));box(1.8,.12,1.55,0,0,0,m.stone);house(0,-.25,1.3,1,.7+l*.08,true,m.slate);
+  for(const x of [-.5,0,.5]){cylinder(.06,.55,x,.12,.52,m.light);box(.2,.09,.22,x,.1,.52,m.stone);}
+  box(.45,.08,.25,0,.52,.9,m.gold);box(.18,.045,.24,-.1,.61,.9,m.light);box(.18,.045,.24,.1,.61,.9,m.light);
+diff --git a/src/features/city/rendering/three/buildingModels.ts b/src/features/city/rendering/three/buildingModels.ts
+index dab0404..c53c68d 100644
+--- a/src/features/city/rendering/three/buildingModels.ts
++++ b/src/features/city/rendering/three/buildingModels.ts
+@@ -6,8 +6,8 @@ import { cityKit } from './modelKit';
+ export const visualLevel = (level: number) => Number.isFinite(level) ? Math.max(0, Math.min(5, Math.floor(level))) : 0;
+ 
+ /** Zero is an empty plot; levels 1–5 change the actual geometry, not an image tint. */
+-export function createBuildingModel(type: BuildingType, value: number, faction:Faction='roman') {
+-    const level = visualLevel(value), k = cityKit(faction);
++export function createBuildingModel(type: BuildingType, value: number, faction:Faction='roman', animated=false) {
++    const level = visualLevel(value), k = cityKit(faction,animated);
+     const { group, m, box, cylinder, cone, rock, roof, house, tower, flag, fence } = k;
+     group.name = `${type} level ${level}`;
+     if (!level) {
+@@ -22,7 +22,7 @@ export function createBuildingModel(type: BuildingType, value: number, faction:F
+         }
+         return k.finish();
+     }
+-    if(type==='market'&&faction!=='roman')return createFactionHall(level,faction);
++    if(type==='market'&&faction!=='roman')return createFactionHall(level,faction,animated);
+     const stone = level >= 3;
+     if (type === 'lumber') {
+         house(-.25, -.15, 1.05 + level * .06, .9, .65 + level * .06, stone);
+@@ -32,7 +32,7 @@ export function createBuildingModel(type: BuildingType, value: number, faction:F
+             log.rotation.z = Math.PI / 2; log.position.y = .12 + Math.floor(i / 3) * .2;
+         }
+         if (level >= 2) {
+-            const wheel = cylinder(.4, .1, .72, .25, .3, m.wood); wheel.rotation.x = Math.PI / 2; wheel.position.y = .43;
++            const wheel = cylinder(.4, .1, .72, .25, .3, m.wood); wheel.rotation.x = Math.PI / 2; wheel.position.y = .43; k.motion(wheel,'spin');
+             const hub = cylinder(.08, .12, .72, .25, .37, m.gold); hub.rotation.x = Math.PI / 2; hub.position.y = .43;
+         }
+         if (level >= 3) { house(-1.15, -.3, .55, .85, .6); fence(0, -1, 2.3); }
+@@ -46,12 +46,12 @@ export function createBuildingModel(type: BuildingType, value: number, faction:F
+         for (let i = 0; i < level + 1; i++) box(.32, .22, .28, -.65 + i % 3 * .39, Math.floor(i / 3) * .24, .65, m.stone);
+         if (level >= 2) {
+             box(.15, 1.65, .15, -.65, 0, -.35, m.wood); box(1.5, .14, .14, -.13, 1.5, -.35, m.wood);
+-            cylinder(.022, 1, .54, .5, -.35, m.timber); box(.4, .32, .4, .54, .28, -.35, m.light);
++            cylinder(.022, 1, .54, .5, -.35, m.timber); k.motion(box(.4, .32, .4, .54, .28, -.35, m.light),'lift');
+         }
+         if (level >= 3) house(1.03, -.28, .65, .9, .9, true);
+         if (level >= 4) {
+             box(.15, 2.15, .15, -.85, 0, -.95, m.wood); box(2.3, .15, .15, -.15, 2, -.95, m.wood);
+-            cylinder(.02, 1.35, .85, .6, -.95, m.timber); box(.45, .32, .45, .85, .4, -.95, m.stone);
++            cylinder(.02, 1.35, .85, .6, -.95, m.timber); k.motion(box(.45, .32, .45, .85, .4, -.95, m.stone),'lift');
+         }
+         if (level >= 5) { house(1.12, -.32, .85, 1, 1.4, true, m.slate); flag(1.15, 1.9, -.35); }
+     } else if (type === 'farm') {
+@@ -64,7 +64,7 @@ export function createBuildingModel(type: BuildingType, value: number, faction:F
+             cylinder(.26, 1.7, -.95, 0, -.55, m.light); cone(.36, .42, -.95, 1.7, -.55, m.roof);
+             box(.09, .1, .25, -.95, 1.25, -.24, m.wood);
+             for (const angle of [Math.PI / 4, -Math.PI / 4]) {
+-                const blade = box(1.5, .13, .05, -.95, 1.25, -.1, m.light); blade.rotation.z = angle;
++                const blade = box(1.5, .13, .05, -.95, 1.25, -.1, m.light); blade.rotation.z = angle; k.motion(blade,'spinSlow');
+             }
+         }
+         if (level >= 4) { fence(0, 1.4, 2.8); fence(-1.4, .3, 2.2, Math.PI / 2); }
+diff --git a/src/features/city/rendering/three/cityWalls.ts b/src/features/city/rendering/three/cityWalls.ts
+index 68d6756..a24fc3a 100644
+--- a/src/features/city/rendering/three/cityWalls.ts
++++ b/src/features/city/rendering/three/cityWalls.ts
+@@ -4,8 +4,8 @@ import { cityKit } from './modelKit';
+ import { cityFootprint, riverX } from './layout';
+ 
+ /** Enclose the city; roads and the river retain real openings through the walls. */
+-export function createCityWalls(value: number, mainLevel = 0,faction:Faction='roman') {
+-    const level = visualLevel(value), k = cityKit(faction);
++export function createCityWalls(value: number, mainLevel = 0,faction:Faction='roman',animated=false) {
++    const level = visualLevel(value), k = cityKit(faction,animated);
+     const { m, box, cone, tower } = k;
+     // Coordinates are relative to the northern gate at (-.4, -9).
+     const footprint=cityFootprint(mainLevel);
+@@ -51,7 +51,7 @@ export function createCityWalls(value: number, mainLevel = 0,faction:Faction='ro
+     if (level >= 3) for (const x of [-.75, .95]) tower(x, front, 1.2 + level * .1, .23);
+     if (level === 5) for (const x of [left, right]) k.flag(x, 2.35, back);
+     const perimeter = k.finish();
+-    const gate = createBuildingModel('wall', level,faction);
++    const gate = createBuildingModel('wall', level,faction,animated);
+     // Flatten both groups so every wall segment uses the existing building picker.
+     perimeter.add(...[...gate.children]);
+     perimeter.name = `City perimeter level ${level}`;
+diff --git a/src/features/city/rendering/three/factionHall.ts b/src/features/city/rendering/three/factionHall.ts
+index 26a26af..6a5b1a2 100644
+--- a/src/features/city/rendering/three/factionHall.ts
++++ b/src/features/city/rendering/three/factionHall.ts
+@@ -1,8 +1,8 @@
+ import type {Faction} from '../../../factions/domain/factions';
+ import {cityKit} from './modelKit';
+ /** Culture-specific main halls keep the same plot size and five-stage progression. */
+-export function createFactionHall(level:number,faction:Faction){
+- const k=cityKit(faction),{m,box,cylinder,cone,roof,house,tower,flag}=k,h=.8+level*.16;
++export function createFactionHall(level:number,faction:Faction,animated=false){
++ const k=cityKit(faction,animated),{m,box,cylinder,cone,roof,house,tower,flag}=k,h=.8+level*.16;
+  box(2,.12,1.7,0,0,0,m.stone);
+  if(faction==='spartan'){
+   box(1.5,h,.75,0,.12,-.25,m.light);
+diff --git a/src/features/city/rendering/three/landscape.ts b/src/features/city/rendering/three/landscape.ts
+index baf47e3..5356289 100644
+--- a/src/features/city/rendering/three/landscape.ts
++++ b/src/features/city/rendering/three/landscape.ts
+@@ -15,13 +15,13 @@ export function createCityLandscape(mainLevel = 0,faction:Faction='roman') {
+     const palette=FACTIONS[faction];
+     const points: number[] = [], colors: number[] = [];
+     const grid = (x: number, z: number): [number, number, number] => {
+-        const px = -24 + x * 2, pz = -23 + z * 2;
++        const px = -28 + x * 2, pz = -27 + z * 2;
+         const town = px > -15 && px < 16 && pz > -9 && pz < footprint.fishingZ+1;
+         const streamBank = Math.abs(px - streamX(pz)) < 2;
+         const hill = Math.max(0, -pz - 8) * .13 + Math.max(0, Math.abs(px) - 10) * .07;
+         return [px + (random(x * 23 + z * 71) - .5) * .45, town || streamBank ? -.035 : hill + random(x * 83 + z) * .32 - .08, pz];
+     };
+-    for (let z = 0; z < 24; z++) for (let x = 0; x < 24; x++) {
++    for (let z = 0; z < 28; z++) for (let x = 0; x < 28; x++) {
+         const a = grid(x, z), b = grid(x + 1, z), c = grid(x, z + 1), d = grid(x + 1, z + 1);
+         const triangles = (x + z) % 2 ? [[a, c, b], [b, c, d]] : [[a, d, b], [a, c, d]];
+         for (const triangle of triangles) {
+@@ -48,7 +48,7 @@ export function createCityLandscape(mainLevel = 0,faction:Faction='roman') {
+     road(-.3,.1,.1,front,.7);road(-.4,-6.8,-.4,-12,.65);
+     // A restrained stream and bridge at the eastern edge.
+     const waterPoints: number[] = [], bankPoints: number[] = [];
+-    for (let z = -24; z < 26; z++) {
++    for (let z = -28; z < 30; z++) {
+         const a = streamX(z), b = streamX(z + 1);
+         for (const [target, width, y] of [[waterPoints, .43, .025], [bankPoints, .67, .006]] as const) target.push(a-width,y,z, a+width,y,z, b+width,y,z+1, a-width,y,z, b+width,y,z+1, b-width,y,z+1);
+     }
+diff --git a/src/features/city/rendering/three/mageTower.ts b/src/features/city/rendering/three/mageTower.ts
+index b6c365b..c2697ae 100644
+--- a/src/features/city/rendering/three/mageTower.ts
++++ b/src/features/city/rendering/three/mageTower.ts
+@@ -1,8 +1,8 @@
+ import {FACTIONS,type Faction} from '../../../factions/domain/factions';
+ import {cityKit} from './modelKit';
+ /** Ten cumulative silhouettes: hall, library, turrets, spires and an arcane crown. */
+-export function createMageTower(value:number,faction:Faction='roman'){
+- const level=Math.max(1,Math.min(10,Math.round(value))),k=cityKit(faction),{m,cylinder,cone,box,rock}=k;
++export function createMageTower(value:number,faction:Faction='roman', animated=false){
++ const level=Math.max(1,Math.min(10,Math.round(value))),k=cityKit(faction,animated),{m,cylinder,cone,box,rock}=k;
+  if(faction==='roman'){m.slate.color.set(0x4f5684);m.water.color.set(0x63b9d8);}m.water.emissive.set(FACTIONS[faction].water).multiplyScalar(.2);
+  const height=.75+level*.2;
+  cylinder(.84,.12,0,0,0,m.darkStone);cylinder(.62,height,0,.12,0,m.light);
+@@ -16,7 +16,7 @@ export function createMageTower(value:number,faction:Faction='roman'){
+  if(level>=7)for(const x of [-.42,.42]){cylinder(.08,.3,x,height+.12,.42,m.gold);rock(.16,x,height+.42,.42,m.water);}
+  if(level>=8){cylinder(.72,.08,0,height*.78,0,m.gold);for(let i=0;i<6;i++){const angle=i*Math.PI/3;rock(.12,Math.cos(angle)*.72,height*.78+.08,Math.sin(angle)*.72,m.water);}}
+  if(level>=9){for(const x of [-.83,.83]){cylinder(.14,.48,x,height*.72+.55,0,m.light);cone(.24,.48,x,height*.72+1.03,0,m.slate);}box(.12,.8,.12,0,height+1.65,0,m.gold);}
+- if(level>=10){rock(.34,0,height+2.2,0,m.water);for(const x of [-.5,.5])rock(.16,x,height+1.8,0,m.gold);cylinder(.9,.1,0,.12,0,m.gold);}
++ if(level>=10){k.motion(rock(.34,0,height+2.2,0,m.water),'crystal');for(const x of [-.5,.5])rock(.16,x,height+1.8,0,m.gold);cylinder(.9,.1,0,.12,0,m.gold);}
+  if(faction==='pandaren')for(let row=0;row<Math.ceil(level/3);row++)k.roof(1.7,.2,1.7,0,.6+row*.7,0,m.slate);
+  if(faction==='elf')for(const x of [-.6,.6])cone(.12,.55+level*.07,x,height*.7,0,m.gold);
+  if(faction==='dwarf')for(const x of [-.7,.7])box(.18,height,.3,x,.12,0,m.darkStone);
+diff --git a/src/features/city/rendering/three/modelKit.ts b/src/features/city/rendering/three/modelKit.ts
+index a291df7..f8e08fc 100644
+--- a/src/features/city/rendering/three/modelKit.ts
++++ b/src/features/city/rendering/three/modelKit.ts
+@@ -3,7 +3,7 @@ import { FACTIONS, type Faction } from '../../../factions/domain/factions';
+ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+ 
+ /** Same stone, terracotta, timber and flat shading as the campaign models. */
+-export function cityKit(faction: Faction = 'roman') {
++export function cityKit(faction: Faction = 'roman', animated = false) {
+     const palette=FACTIONS[faction];
+     const group = new THREE.Group();
+     const material = (color: number) => new THREE.MeshStandardMaterial({ color, roughness: 1, flatShading: true });
+@@ -12,7 +12,7 @@ export function cityKit(faction: Faction = 'roman') {
+         roof: material(0x995536), roofLight: material(0xb46a45), slate: material(0x5c7274),
+         wood: material(0x65503b), timber: material(0x9c784e), dark: material(0x3c4036),
+         road: material(0xc3ae80), green: material(0x547442), leaf: material(0x71884c),
+-        gold: material(0xcfa657), earth: material(0x8e8260), wheat: material(0xb8ac64), water: material(0x4c9299),
++        gold: material(0xcfa657), earth: material(0x8e8260), wheat: material(0xb8ac64), water: material(0x4c9299), skin: material(palette.skin),
+     };
+     for(const key of Object.keys(palette) as (keyof typeof palette)[]) if(key in m) (m[key as keyof typeof m]).color.set(palette[key] as number);
+     const shapes = {
+@@ -66,8 +66,14 @@ export function cityKit(faction: Faction = 'roman') {
+     }
+     function flag(x: number, bottom: number, z: number, h = .9) {
+         cylinder(.025, h, x, bottom, z, m.wood);
+-        box(.36, .26, .025, x + .18, bottom + h - .3, z, m.roof);
+-        box(.05, .2, .035, x + .15, bottom + h - .27, z + .014, m.gold);
++        const cloth = new THREE.Group(); cloth.position.set(x, bottom + h - .3, z); group.add(cloth);
++        const fabric = box(.36, .26, .025, .18, 0, 0, m.roof); cloth.add(fabric);
++        const trim = box(.05, .2, .035, .15, .03, .014, m.gold); cloth.add(trim);
++        motion(cloth, 'flag');
++    }
++    function motion<T extends THREE.Object3D>(object: T, kind: string): T {
++        if (animated) object.userData.cityMotion = kind;
++        return object;
+     }
+     function fence(x: number, z: number, length: number, angle = 0) {
+         const local = (dx: number) => [x + dx * Math.cos(angle), z - dx * Math.sin(angle)];
+@@ -90,23 +96,32 @@ export function cityKit(faction: Faction = 'roman') {
+     function finish() {
+         group.updateMatrixWorld(true);
+         const batches = new Map<THREE.Material, THREE.BufferGeometry[]>();
++        const moving: THREE.Object3D[] = [], movingMaterials = new Set<THREE.Material>();
++        group.traverse(object => { if (object.userData.cityMotion) moving.push(object); });
++        const dynamic = (object: THREE.Object3D) => { for (let node: THREE.Object3D | null = object; node && node !== group; node = node.parent) if (node.userData.cityMotion) return true; return false; };
+         group.traverse(object => {
+             if (!(object instanceof THREE.Mesh) || Array.isArray(object.material)) return;
++            if (dynamic(object)) {
++                // Kit geometries are disposed below. Moving parts own their copies.
++                object.geometry = object.geometry.clone(); object.castShadow = false;
++                movingMaterials.add(object.material); return;
++            }
+             const shape = object.geometry.index ? object.geometry.toNonIndexed() : object.geometry.clone();
+             shape.applyMatrix4(object.matrixWorld); shape.deleteAttribute('uv');
+             const batch = batches.get(object.material) ?? []; batch.push(shape); batches.set(object.material, batch);
+         });
+         group.clear();
++        moving.forEach(object => group.add(object));
+         for (const [surface, batch] of batches) {
+             const shape = mergeGeometries(batch, false)!;
+             const object = new THREE.Mesh(shape, surface); object.castShadow = true; object.receiveShadow = true;
+             group.add(object); batch.forEach(item => item.dispose());
+         }
+         Object.values(shapes).forEach(shape => shape.dispose()); roofShape.dispose();
+-        Object.values(m).filter(surface => !batches.has(surface)).forEach(surface => surface.dispose());
++        Object.values(m).filter(surface => !batches.has(surface) && !movingMaterials.has(surface)).forEach(surface => surface.dispose());
+         return group;
+     }
+-    return { group, m, box, cylinder, cone, rock, roof, house, tower, flag, fence, heraldry, finish };
++    return { group, m, box, cylinder, cone, rock, roof, house, tower, flag, fence, heraldry, motion, finish };
+ }
+ 
+ export function disposeCityObject(object: THREE.Object3D) {
+diff --git a/src/features/city/rendering/three/slotModels.ts b/src/features/city/rendering/three/slotModels.ts
+index 7ebfd6f..870ee7c 100644
+--- a/src/features/city/rendering/three/slotModels.ts
++++ b/src/features/city/rendering/three/slotModels.ts
+@@ -4,13 +4,14 @@ import type { SlotType } from '../../domain/slots';
+ import { createBuildingModel } from './buildingModels';
+ import {createMageTower} from './mageTower';
+ import { cityKit } from './modelKit';
+-export function createSlotModel(type:SlotType|null,level:number,faction:Faction='roman') {
++import * as THREE from 'three';
++export function createSlotModel(type:SlotType|null,level:number,faction:Faction='roman', animated=false) {
+  if(!type || !level)return createBuildingModel('barracks',0,faction);
+- if(type==='academy')return createAcademy(level,faction);
+- if(type==='mage_tower')return createMageTower(level,faction);
+- if(type==='barracks'||type==='stables')return createBuildingModel(type,level,faction);
+- if(type==='warehouse')return createBuildingModel('storehouse',level,faction);
+- const k=cityKit(faction),{m,box,cylinder,cone,house}=k;
++ if(type==='academy')return createAcademy(level,faction,animated);
++ if(type==='mage_tower')return createMageTower(level,faction,animated);
++ if(type==='barracks'||type==='stables')return createBuildingModel(type,level,faction,animated);
++ if(type==='warehouse')return createBuildingModel('storehouse',level,faction,animated);
++ const k=cityKit(faction,animated),{m,box,cylinder,cone,house}=k;
+  if(type==='housing'){
+   house(0,-.1,1.15,.9,.55+level*.13,level>=3);
+   if(level>=2)house(-.85,.15,.55,.65,.55+level*.08,level>=3,m.roofLight);
+@@ -21,7 +22,17 @@ export function createSlotModel(type:SlotType|null,level:number,faction:Faction=
+   house(-.2,0,1.2,.9,.7+level*.06,level>=3,m.slate);
+   box(.28,1.35+level*.12,.28,.4,0,-.25,m.darkStone);
+   box(.45,.4,.45,.85,0,.6,m.darkStone);box(.26,.15,.03,.85,.15,.85,m.gold);
+-  box(.45,.12,.23,-.8,.3,.65,m.dark);box(.22,.3,.16,-.8,0,.65,m.darkStone);
++  box(.45,.12,.23,-.8,.3,.65,m.dark);
++  box(.22,.3,.16,-.8,0,.65,m.darkStone);
++  if(animated){
++   // A grounded blacksmith operates the hammer; the workshop itself stays still.
++   for(const x of [-.84,-.76])box(.05,.18,.055,x,0,.96,m.dark);
++   box(.16,.24,.13,-.8,.18,.96,m.wood);k.rock(.085,-.8,.43,.96,m.skin);
++   const arm=new THREE.Group();arm.position.set(-.8,.37,.88);k.group.add(arm);
++   arm.add(box(.055,.06,.22,0,-.03,-.08,m.skin));
++   arm.add(box(.03,.16,.03,0,-.04,-.19,m.timber));
++   arm.add(box(.18,.08,.1,0,.04,-.19,m.dark));k.motion(arm,'hammer');
++  }
+   if(level>=2)k.fence(-.2,-.8,2);
+   if(level>=3)house(-1.05,-.25,.6,.7,.7,true);
+   if(level>=4)box(.7,.25,.5,.8,0,-.85,m.stone);
+@@ -37,7 +48,7 @@ export function createSlotModel(type:SlotType|null,level:number,faction:Faction=
+   for(let i=0;i<7;i++)box(width,.075,.13,.7,.12,-.45+i*.18,m.timber);
+   for(const x of [.3,1.2])for(const z of [-.45,.65])cylinder(.045,.4,x,0,z,m.wood);
+   for(let i=0;i<level;i++){box(.2,.2,.2,-.5+i*.2,0,.65,m.wood);}
+-  if(level>=2) {box(.035,.8,.035,1.1,.2,.1,m.wood);box(.65,.035,.035,.9,1,.1,m.timber,-.2);}
++  if(level>=2) {box(.035,.8,.035,1.1,.2,.1,m.wood);k.motion(box(.65,.035,.035,.9,1,.1,m.timber,-.2),'fishing');}
+   if(level>=4)k.fence(.7,.85,width);
+   if(level>=5)k.flag(-.4,1,-.3);
+  }
+diff --git a/src/features/city/styles/scene-workspace.css b/src/features/city/styles/scene-workspace.css
+index 6e62602..a274710 100644
+--- a/src/features/city/styles/scene-workspace.css
++++ b/src/features/city/styles/scene-workspace.css
+@@ -76,6 +76,12 @@
+ .city-scene-workspace .city-scene-build:hover:not(:disabled){background:#f0d6aa}
+ .city-scene-build small{margin-left:3px;font-size:9px;font-weight:500;border-left:1px solid #1b202938;padding-left:7px}
+ .city-scene-utilities{position:absolute;right:16px;bottom:16px;z-index:5;display:flex;gap:2px;padding:5px}
++.city-camera-controls{position:absolute;bottom:72px;left:50%;transform:translateX(-50%);z-index:5;display:flex;align-items:center;gap:2px;padding:4px;pointer-events:auto}
++.city-camera-controls>button{display:grid;place-items:center;width:32px;height:32px;padding:0;border:0;border-radius:6px;background:none;color:#cdd6e6;font-size:21px;line-height:1;cursor:pointer}
++.city-camera-controls>button:hover{background:#ffffff0e;color:#e3c48f}
++.city-camera-controls>button:focus-visible{outline:2px solid #e3c48f;outline-offset:2px}
++.city-camera-controls>i{height:18px;width:1px;background:#ffffff18;margin:0 3px}
++@media(max-width:720px){.city-camera-controls{bottom:132px}.city-camera-controls>button{width:34px;height:34px}}
+ .city-scene-screen .city-landmark-label{min-width:36px!important;width:36px!important;height:36px!important;display:grid!important;place-items:center!important;padding:0!important;border:0!important;background:transparent!important;box-shadow:none!important;overflow:visible;transform:translate(-50%,-50%);border-radius:50%}
+ .city-scene-screen .city-landmark-label[data-building="wall"]{transform:translate(-50%,0)}
+ .city-scene-screen .city-landmark-label .city-level-badge{display:grid!important;place-items:center;width:23px;height:23px;padding:0;border-radius:7px;background:#1b2029e8;border:1px solid #d2dbed65;color:#ecf0f7;box-shadow:0 2px 8px #07101a30;font:600 10px/1 'Open Sans',Arial,sans-serif}
+diff --git a/src/features/city/rendering/three/CityCamera.ts b/src/features/city/rendering/three/CityCamera.ts
+new file mode 100644
+index 0000000..a4a637e
+--- /dev/null
++++ b/src/features/city/rendering/three/CityCamera.ts
+@@ -0,0 +1,66 @@
++import * as THREE from 'three';
++import { cityFootprint } from './layout';
++import { cityGrowth } from '../../domain/slots';
++
++/** Local presentation camera. Never changes settlement or plot coordinates. */
++export class CityCamera {
++    readonly camera = new THREE.OrthographicCamera(-12, 12, 8, -8, .1, 160);
++    readonly target = new THREE.Vector3();
++    rotation = 0;
++    private desiredRotation = 0;
++    private width = 1;
++    private height = 1;
++    private growth = 1;
++    private centerZ = 0;
++    private readonly plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
++    private readonly ray = new THREE.Raycaster();
++    get moving() { return Math.abs(this.desiredRotation - this.rotation) > .001; }
++    resize(width: number, height: number, mainLevel: number) {
++        this.width = Math.max(1, width); this.height = Math.max(1, height);
++        const growth = cityGrowth(mainLevel), footprint = cityFootprint(mainLevel);
++        const centerZ = (footprint.back + footprint.fishingZ) * growth / 2;
++        this.target.z += centerZ - this.centerZ;
++        this.centerZ = centerZ; this.growth = growth; this.update();
++    }
++    rotate(angle: number, instant = false) {
++        if (!Number.isFinite(angle)) return;
++        this.desiredRotation += angle;
++        if (instant) this.rotation = this.desiredRotation;
++        this.update();
++    }
++    step(seconds: number, reduced: boolean) {
++        this.rotation = reduced ? this.desiredRotation : THREE.MathUtils.damp(this.rotation, this.desiredRotation, 16, Math.min(.1, seconds));
++        if (!this.moving) this.rotation = this.desiredRotation;
++        this.update();
++    }
++    ground(point: THREE.Vector2) {
++        this.ray.setFromCamera(point, this.camera);
++        return this.ray.ray.intersectPlane(this.plane, new THREE.Vector3());
++    }
++    zoom(factor: number, anchor?: THREE.Vector2) {
++        if (!Number.isFinite(factor) || factor <= 0) return;
++        const before = anchor ? this.ground(anchor) : null;
++        this.camera.zoom = THREE.MathUtils.clamp(this.camera.zoom * factor, .7, 3);
++        this.update();
++        const after = anchor ? this.ground(anchor) : null;
++        if (before && after) this.target.add(before.sub(after));
++        this.target.x = THREE.MathUtils.clamp(this.target.x, -9 * this.growth, 9 * this.growth);
++        this.target.z = THREE.MathUtils.clamp(this.target.z, this.centerZ - 9 * this.growth, this.centerZ + 9 * this.growth);
++        this.update();
++    }
++    reset() {
++        this.rotation = this.desiredRotation = 0; this.camera.zoom = 1;
++        this.target.set(0, 0, this.centerZ); this.update();
++    }
++    private update() {
++        const aspect = this.width / this.height;
++        // A closer default framing makes the buildings larger; zoom out reveals the extended landscape.
++        // Diagonal views need a little more room for the river plot and opposite corners.
++        const diagonalRoom = 1 + Math.abs(Math.sin(this.rotation * 2)) * .14;
++        const halfHeight = Math.max(11.5 * diagonalRoom, 15 / aspect) * this.growth;
++        Object.assign(this.camera, { left: -halfHeight * aspect, right: halfHeight * aspect, top: halfHeight, bottom: -halfHeight });
++        const angle = this.rotation + Math.atan2(3.6, 24.2), radius = Math.hypot(3.6, 24.2);
++        this.camera.position.set(this.target.x + Math.sin(angle) * radius, 22, this.target.z + Math.cos(angle) * radius);
++        this.camera.lookAt(this.target); this.camera.updateProjectionMatrix(); this.camera.updateMatrixWorld();
++    }
++}
+diff --git a/src/features/city/rendering/three/cityActivities.ts b/src/features/city/rendering/three/cityActivities.ts
+new file mode 100644
+index 0000000..67f92a9
+--- /dev/null
++++ b/src/features/city/rendering/three/cityActivities.ts
+@@ -0,0 +1,70 @@
++import * as THREE from 'three';
++import type { Faction } from '../../../factions/domain/factions';
++import { FACTIONS } from '../../../factions/domain/factions';
++import type { CityPlot } from './layout';
++
++type Model = { model: THREE.Group };
++type Part = { object: THREE.Object3D; kind: string; position: THREE.Vector3; rotation: THREE.Euler; phase: number };
++/** Small moving parts and shared particle batches; no animation state enters the save. */
++export function createCityActivities() {
++    const group = new THREE.Group(), parts: Part[] = [];
++    const originals = new WeakMap<THREE.Object3D, { position: THREE.Vector3; rotation: THREE.Euler }>();
++    const smoke = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(.13, 0), new THREE.MeshBasicMaterial({ color: '#c7c5ba', transparent: true, opacity: .22, depthWrite: false }), 96);
++    const motes = new THREE.InstancedMesh(new THREE.OctahedronGeometry(.035), new THREE.MeshBasicMaterial({ color: '#9ae4ff', transparent: true, opacity: .75, depthWrite: false }), 48);
++    smoke.instanceMatrix.setUsage(THREE.DynamicDrawUsage); motes.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
++    smoke.frustumCulled = motes.frustumCulled = false; smoke.count = motes.count = 0;
++    group.add(smoke, motes); group.name = 'City work and ambient effects';
++    const chimneys: THREE.Vector3[] = [], magic: THREE.Vector3[] = [], transform = new THREE.Object3D();
++    function setModels(models: ReadonlyMap<string, Model>, plots: CityPlot[], faction: Faction) {
++        parts.length = chimneys.length = magic.length = 0;
++        motes.material.color.set(FACTIONS[faction].water);
++        for (const plot of plots) {
++            const model = models.get(plot.key)?.model;
++            if (!model || !plot.level) continue;
++            model.updateMatrixWorld(true);
++            model.traverse(object => {
++                if (object.userData.cityMotion) {
++                    let base = originals.get(object);
++                    if (!base) { base = { position: object.position.clone(), rotation: object.rotation.clone() }; originals.set(object, base); }
++                    parts.push({ object, kind: object.userData.cityMotion, ...base, phase: plot.x * .17 + plot.z * .29 });
++                }
++            });
++            if (plot.type === 'smithy') chimneys.push(model.localToWorld(new THREE.Vector3(.4, 1.35 + plot.level * .12, -.25)));
++            if (plot.type === 'housing') chimneys.push(model.localToWorld(new THREE.Vector3(0, 1 + plot.level * .13, -.1)));
++            if (plot.type === 'lumber') chimneys.push(model.localToWorld(new THREE.Vector3(-.25, 1.15 + plot.level * .06, -.15)));
++            if (plot.type === 'mage_tower') magic.push(model.localToWorld(new THREE.Vector3(0, 1.4 + plot.level * .2, 0)));
++        }
++        smoke.count = Math.min(smoke.instanceMatrix.count, chimneys.length * 6);
++        motes.count = Math.min(motes.instanceMatrix.count, magic.length * 12);
++    }
++    function animate(seconds: number, reduced = false) {
++        for (const part of parts) {
++            const { object, kind, position, rotation, phase } = part, t = seconds + phase;
++            object.position.copy(position); object.rotation.copy(rotation);
++            if (reduced) continue;
++            if (kind === 'spin') object.rotation.y += seconds * 1.5;
++            if (kind === 'spinSlow') object.rotation.z += seconds * .65;
++            if (kind === 'flag') { object.rotation.y += Math.sin(t * 2.3) * .16; object.rotation.z += Math.sin(t * 2.3 + 1) * .035; }
++            if (kind === 'lift') object.position.y += (1 + Math.sin(t * .8)) * .12;
++            if (kind === 'hammer') object.rotation.x -= Math.max(0, Math.sin(t * 3)) * .7;
++            if (kind === 'fishing') object.rotation.z += Math.sin(t * .8) * .07;
++            if (kind === 'crystal') { object.position.y += Math.sin(t * 1.6) * .1; object.rotation.y += seconds * .4; }
++        }
++        smoke.visible = motes.visible = !reduced;
++        if (reduced) return;
++        for (let i = 0; i < smoke.count; i++) {
++            const source = chimneys[Math.floor(i / 6)], rise = (seconds * .22 + (i % 6) / 6 + i * .017) % 1;
++            transform.position.set(source.x + rise * .35 + Math.sin(seconds + i) * .035, source.y + rise * 1.25, source.z + rise * .13);
++            transform.rotation.set(0, seconds * .1 + i, 0); transform.scale.setScalar(Math.sin(rise * Math.PI) * (1 + rise * 1.5));
++            transform.updateMatrix(); smoke.setMatrixAt(i, transform.matrix);
++        }
++        for (let i = 0; i < motes.count; i++) {
++            const source = magic[Math.floor(i / 12)], angle = seconds * .45 + i * Math.PI / 6;
++            transform.position.set(source.x + Math.cos(angle) * .6, source.y + Math.sin(seconds * .8 + i) * .35, source.z + Math.sin(angle) * .6);
++            transform.rotation.set(seconds, angle, 0); transform.scale.setScalar(.6 + Math.sin(seconds + i) * .25);
++            transform.updateMatrix(); motes.setMatrixAt(i, transform.matrix);
++        }
++        smoke.instanceMatrix.needsUpdate = motes.instanceMatrix.needsUpdate = true;
++    }
++    return { group, setModels, animate };
++}
+diff --git a/tests/city-camera.test.ts b/tests/city-camera.test.ts
+new file mode 100644
+index 0000000..17e6350
+--- /dev/null
++++ b/tests/city-camera.test.ts
+@@ -0,0 +1,67 @@
++import { test } from 'node:test';
++import assert from 'node:assert/strict';
++import * as THREE from 'three';
++import { CityCamera } from '../src/features/city/rendering/three/CityCamera';
++import { createBuildingModel } from '../src/features/city/rendering/three/buildingModels';
++import { createSlotModel } from '../src/features/city/rendering/three/slotModels';
++import { createCityActivities } from '../src/features/city/rendering/three/cityActivities';
++import { cityLayout } from '../src/features/city/rendering/three/layout';
++import { disposeCityObject } from '../src/features/city/rendering/three/modelKit';
++import { FACTIONS, type Faction } from '../src/features/factions/domain/factions';
++
++test('city camera preserves the cursor ground point and zoom/rotation through resize and expansion', () => {
++    const view = new CityCamera(); view.resize(1440, 700, 2);
++    const anchor = new THREE.Vector2(.15, -.1), before = view.ground(anchor)!;
++    view.zoom(1.5, anchor);
++    assert.ok(before.distanceTo(view.ground(anchor)!) < 1e-8);
++    view.rotate(Math.PI / 2, true); view.resize(500, 700, 5);
++    assert.equal(view.rotation, Math.PI / 2); assert.equal(view.camera.zoom, 1.5);
++    view.zoom(100); assert.equal(view.camera.zoom, 3);
++    view.zoom(.0001); assert.equal(view.camera.zoom, .7);
++    view.reset(); assert.equal(view.rotation, 0); assert.equal(view.camera.zoom, 1);
++    assert.equal(view.target.x, 0);
++});
++
++test('camera remains finite after invalid inputs and smooth rotation finishes at its requested angle', () => {
++    const view = new CityCamera(); view.resize(0, 0, 0);
++    view.zoom(NaN); view.zoom(-1); view.rotate(Infinity);
++    assert.equal(view.camera.zoom, 1); assert.equal(view.rotation, 0);
++    view.rotate(Math.PI / 8); assert.ok(view.moving);
++    for (let i = 0; i < 100; i++) view.step(1 / 30, false);
++    assert.equal(view.rotation, Math.PI / 8); assert.equal(view.moving, false);
++    view.rotate(-Math.PI / 4); view.step(0, true);
++    assert.equal(view.rotation, -Math.PI / 8);
++});
++
++test('all factions keep static map models and opt into separate working city parts', () => {
++    for (const faction of Object.keys(FACTIONS) as Faction[]) {
++        const staticModel = createBuildingModel('farm', 5, faction);
++        let staticMotion = 0; staticModel.traverse(object => { if (object.userData.cityMotion) staticMotion++; });
++        assert.equal(staticMotion, 0);
++        const working = createBuildingModel('farm', 5, faction, true);
++        let blades = 0; working.traverse(object => { if (object.userData.cityMotion === 'spinSlow') blades++; });
++        assert.equal(blades, 2);
++        const activities = createCityActivities(), plots = cityLayout({ farm: 5 }, []);
++        activities.setModels(new Map([['farm', { model: working }]]), plots, faction);
++        const blade = working.children.find(object => object.userData.cityMotion === 'spinSlow')!;
++        const original = blade.rotation.z;
++        activities.animate(4); assert.notEqual(blade.rotation.z, original);
++        // Economy updates reuse existing models; their rest transforms must not drift.
++        activities.setModels(new Map([['farm', { model: working }]]), plots, faction);
++        activities.animate(0, true); assert.equal(blade.rotation.z, original);
++        disposeCityObject(staticModel); disposeCityObject(working); disposeCityObject(activities.group);
++    }
++});
++
++test('smoke and mage effects are batched, disappear for reduced motion, and clear after demolition', () => {
++    const smithy = createSlotModel('smithy', 5, 'roman', true), mage = createSlotModel('mage_tower', 10, 'roman', true);
++    const plots = cityLayout({}, [{ settlement_id: 1, slot_index: 0, building_type: 'smithy', level: 5 }, { settlement_id: 1, slot_index: 1, building_type: 'mage_tower', level: 10 }]);
++    smithy.position.set(plots[6].x, 0, plots[6].z); mage.position.set(plots[7].x, 0, plots[7].z);
++    const activities = createCityActivities(); activities.setModels(new Map([['slot:0', { model: smithy }], ['slot:1', { model: mage }]]), plots, 'roman');
++    const [smoke, motes] = activities.group.children as THREE.InstancedMesh[];
++    assert.equal(smoke.count, 6); assert.equal(motes.count, 12);
++    activities.animate(2); assert.ok(smoke.visible && motes.visible);
++    activities.animate(2, true); assert.ok(!smoke.visible && !motes.visible);
++    activities.setModels(new Map(), [], 'roman'); assert.equal(smoke.count + motes.count, 0);
++    disposeCityObject(smithy); disposeCityObject(mage); disposeCityObject(activities.group);
++});
+diff --git a/tests/e2e/city-camera.spec.ts b/tests/e2e/city-camera.spec.ts
+new file mode 100644
+index 0000000..9faeafa
+--- /dev/null
++++ b/tests/e2e/city-camera.spec.ts
+@@ -0,0 +1,78 @@
++import { test, expect, type Page } from '@playwright/test';
++import { createSolo } from '../../src/features/campaign/domain/newRealm';
++import { refreshCityEconomy, type SlotType } from '../../src/features/city/domain/slots';
++
++async function city(page: Page) {
++    const world = createSolo('Camera test');
++    world.buildings.forEach(building => { building.level = 5; });
++    world.city_slots = ['smithy', 'academy', 'housing', 'mage_tower', 'granary', 'stables'].map((type, i) => ({ settlement_id: 1, slot_index: i, building_type: type as SlotType, level: type === 'mage_tower' ? 10 : 5 }));
++    world.city_slots.push({ settlement_id: 1, slot_index: 16, building_type: 'fishery', level: 5 });
++    refreshCityEconomy(world, 1);
++    await page.addInitScript(w => {
++        localStorage.setItem('peris-campaign-v6', JSON.stringify(w));
++        localStorage.setItem('peris-settings', JSON.stringify({ sound: false, music: false, reducedMotion: true }));
++        localStorage.setItem(`peris-welcome:${w.players[0].id}:${w.players[0].created_at}`, 'yes');
++    }, world);
++    await page.goto('/');
++    await page.getByRole('button', { name: 'Continue campaign', exact: true }).click();
++    await page.getByRole('button', { name: 'City', exact: true }).click();
++    await page.getByRole('button', { name: '3D', exact: true }).click();
++    await expect(page.locator('.city-3d-scene.ready canvas')).toBeVisible();
++    return page.locator('.city-3d-scene canvas');
++}
++
++test('wheel and bottom controls rotate and zoom the real 3D city; reset restores framing', async ({ page, isMobile }, info) => {
++    const errors: string[] = []; page.on('pageerror', error => errors.push(error.message));
++    const canvas = await city(page);
++    await expect(canvas).toHaveAttribute('data-city-zoom', '1.000');
++    if (!isMobile) {
++        const bounds = (await canvas.boundingBox())!;
++        await page.mouse.move(bounds.x + bounds.width * .52, bounds.y + bounds.height * .5);
++        await page.mouse.wheel(0, -200);
++        await expect.poll(async () => Number(await canvas.getAttribute('data-city-zoom'))).toBeGreaterThan(1.3);
++        await page.mouse.wheel(0, 400);
++        await expect.poll(async () => Number(await canvas.getAttribute('data-city-zoom'))).toBeLessThan(1);
++        await page.keyboard.press('q'); await expect(canvas).toHaveAttribute('data-city-rotation', '-0.393');
++        await page.keyboard.press('e'); await expect(canvas).toHaveAttribute('data-city-rotation', '0.000');
++    }
++    await page.getByRole('button', { name: 'Reset city camera', exact: true }).click();
++    await expect(canvas).toHaveAttribute('data-city-zoom', '1.000');
++    await page.getByRole('button', { name: 'Rotate city right', exact: true }).click();
++    await expect(canvas).toHaveAttribute('data-city-rotation', '0.393');
++    await page.getByRole('button', { name: 'Zoom city in', exact: true }).click();
++    await expect(canvas).toHaveAttribute('data-city-zoom', '1.200');
++    await page.getByRole('button', { name: 'Zoom city out', exact: true }).click();
++    await expect(canvas).toHaveAttribute('data-city-zoom', '1.000');
++    await page.screenshot({ path: info.outputPath('city-rotated.png') });
++    await page.locator('[data-building="market"]').click();
++    await expect(page.getByRole('dialog')).toBeVisible();
++    const rotation = await canvas.getAttribute('data-city-rotation');
++    await page.keyboard.press('q'); await expect(canvas).toHaveAttribute('data-city-rotation', rotation!);
++    await page.keyboard.press('Escape');
++    await page.getByRole('button', { name: 'Open city building list', exact: true }).click();
++    await page.getByRole('searchbox', { name: 'Find a city building' }).fill('qe');
++    await page.keyboard.press('q'); await expect(canvas).toHaveAttribute('data-city-rotation', rotation!);
++    await page.getByRole('button', { name: 'Close city panel', exact: true }).click();
++    await page.getByRole('button', { name: 'Reset city camera', exact: true }).click();
++    await expect(canvas).toHaveAttribute('data-city-rotation', '0.000');
++    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
++    await page.screenshot({ path: info.outputPath('city-default.png') });
++    expect(errors).toEqual([]);
++});
++
++test('building effects render and city controls resume when reduced motion is toggled', async ({ page, isMobile }, info) => {
++    test.skip(isMobile, 'Shared renderer motion is exercised once on desktop; touch camera controls have their own coverage.');
++    const canvas = await city(page);
++    await page.evaluate(() => document.documentElement.classList.remove('reduced-motion'));
++    await page.getByRole('button', { name: 'Zoom city in', exact: true }).click();
++    await page.screenshot({ path: info.outputPath('city-working.png') });
++    await page.getByRole('button', { name: 'Rotate city right', exact: true }).click();
++    await expect(canvas).toHaveAttribute('data-city-rotation', '0.393');
++    await page.evaluate(() => document.documentElement.classList.add('reduced-motion'));
++    await page.getByRole('button', { name: 'Reset city camera', exact: true }).click();
++    await expect(canvas).toHaveAttribute('data-city-rotation', '0.000');
++    await page.evaluate(() => document.documentElement.classList.remove('reduced-motion'));
++    await page.getByRole('button', { name: 'Rotate city left', exact: true }).click();
++    await expect(canvas).toHaveAttribute('data-city-rotation', '-0.393');
++    await page.screenshot({ path: info.outputPath('city-working-rotated.png') });
++});

@@ -76,6 +76,12 @@
 .city-scene-workspace .city-scene-build:hover:not(:disabled){background:#f0d6aa}
 .city-scene-build small{margin-left:3px;font-size:9px;font-weight:500;border-left:1px solid #1b202938;padding-left:7px}
 .city-scene-utilities{position:absolute;right:16px;bottom:16px;z-index:5;display:flex;gap:2px;padding:5px}
+.city-camera-controls{position:absolute;bottom:72px;left:50%;transform:translateX(-50%);z-index:5;display:flex;align-items:center;gap:2px;padding:4px;pointer-events:auto}
+.city-camera-controls>button{display:grid;place-items:center;width:32px;height:32px;padding:0;border:0;border-radius:6px;background:none;color:#cdd6e6;font-size:21px;line-height:1;cursor:pointer}
+.city-camera-controls>button:hover{background:#ffffff0e;color:#e3c48f}
+.city-camera-controls>button:focus-visible{outline:2px solid #e3c48f;outline-offset:2px}
+.city-camera-controls>i{height:18px;width:1px;background:#ffffff18;margin:0 3px}
+@media(max-width:720px){.city-camera-controls{bottom:132px}.city-camera-controls>button{width:34px;height:34px}}
 .city-scene-screen .city-landmark-label{min-width:36px!important;width:36px!important;height:36px!important;display:grid!important;place-items:center!important;padding:0!important;border:0!important;background:transparent!important;box-shadow:none!important;overflow:visible;transform:translate(-50%,-50%);border-radius:50%}
 .city-scene-screen .city-landmark-label[data-building="wall"]{transform:translate(-50%,0)}
 .city-scene-screen .city-landmark-label .city-level-badge{display:grid!important;place-items:center;width:23px;height:23px;padding:0;border-radius:7px;background:#1b2029e8;border:1px solid #d2dbed65;color:#ecf0f7;box-shadow:0 2px 8px #07101a30;font:600 10px/1 'Open Sans',Arial,sans-serif}

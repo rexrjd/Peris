@@ -162,3 +162,9 @@ item ID, painting and rarity. No other game's equipment artwork is included.
 ## V19 community navigation
 
 Original Guilds and Messages navigation pictures use the same ivory, sandstone and slate-blue low-poly style as the existing HUD. The built-in Imagegen tool created the transparent sources under `assets/source/ui-low-poly-v1/`; prompts and export paths are recorded in `assets/ui-low-poly-v1.json` and `assets/social-art-prompts.json`. `npm run build:ui-icons` exports their 96px WebP assets, and `npm run check:ui-icons` verifies the complete set. Guild crests are original editable SVG compositions with six sigils and six preset colors, rendered by `features/social/ui/Crest.tsx`. No Travian or Albion artwork is shipped.
+
+## V19.4 live 3D city
+
+The native 3D settlement has an independent orthographic orbit camera with cursor-anchored wheel zoom, Q/E rotation, and compact rotation/zoom/reset controls. Its surrounding procedural landscape is wider; settlement plots, wall growth and game coordinates retain their existing rules. Resizing and upgrading the main building preserve camera zoom and rotation.
+
+City-only moving geometry preserves windmill blades, saw wheels, crane loads, flags, a working blacksmith, fishing poles and the level-ten mage crystal outside the static material batches. Shared instanced smoke and arcane motes add ambient activity. The ordinary map and building preview factories retain their static default. All effects use original native geometry and existing faction palettes; no external assets or license dependencies are introduced. Effects pause while the tab is hidden and respect the OS/game reduced-motion setting, including when it changes while the scene is open.

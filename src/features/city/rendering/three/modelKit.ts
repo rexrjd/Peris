@@ -3,7 +3,7 @@ import { FACTIONS, type Faction } from '../../../factions/domain/factions';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
 /** Same stone, terracotta, timber and flat shading as the campaign models. */
-export function cityKit(faction: Faction = 'roman') {
+export function cityKit(faction: Faction = 'roman', animated = false) {
     const palette=FACTIONS[faction];
     const group = new THREE.Group();
     const material = (color: number) => new THREE.MeshStandardMaterial({ color, roughness: 1, flatShading: true });
@@ -12,7 +12,7 @@ export function cityKit(faction: Faction = 'roman') {
         roof: material(0x995536), roofLight: material(0xb46a45), slate: material(0x5c7274),
         wood: material(0x65503b), timber: material(0x9c784e), dark: material(0x3c4036),
         road: material(0xc3ae80), green: material(0x547442), leaf: material(0x71884c),
-        gold: material(0xcfa657), earth: material(0x8e8260), wheat: material(0xb8ac64), water: material(0x4c9299),
+        gold: material(0xcfa657), earth: material(0x8e8260), wheat: material(0xb8ac64), water: material(0x4c9299), skin: material(palette.skin),
     };
     for(const key of Object.keys(palette) as (keyof typeof palette)[]) if(key in m) (m[key as keyof typeof m]).color.set(palette[key] as number);
     const shapes = {
@@ -66,8 +66,14 @@ export function cityKit(faction: Faction = 'roman') {
     }
     function flag(x: number, bottom: number, z: number, h = .9) {
         cylinder(.025, h, x, bottom, z, m.wood);
-        box(.36, .26, .025, x + .18, bottom + h - .3, z, m.roof);
-        box(.05, .2, .035, x + .15, bottom + h - .27, z + .014, m.gold);
+        const cloth = new THREE.Group(); cloth.position.set(x, bottom + h - .3, z); group.add(cloth);
+        const fabric = box(.36, .26, .025, .18, 0, 0, m.roof); cloth.add(fabric);
+        const trim = box(.05, .2, .035, .15, .03, .014, m.gold); cloth.add(trim);
+        motion(cloth, 'flag');
+    }
+    function motion<T extends THREE.Object3D>(object: T, kind: string): T {
+        if (animated) object.userData.cityMotion = kind;
+        return object;
     }
     function fence(x: number, z: number, length: number, angle = 0) {
         const local = (dx: number) => [x + dx * Math.cos(angle), z - dx * Math.sin(angle)];
@@ -90,23 +96,32 @@ export function cityKit(faction: Faction = 'roman') {
     function finish() {
         group.updateMatrixWorld(true);
         const batches = new Map<THREE.Material, THREE.BufferGeometry[]>();
+        const moving: THREE.Object3D[] = [], movingMaterials = new Set<THREE.Material>();
+        group.traverse(object => { if (object.userData.cityMotion) moving.push(object); });
+        const dynamic = (object: THREE.Object3D) => { for (let node: THREE.Object3D | null = object; node && node !== group; node = node.parent) if (node.userData.cityMotion) return true; return false; };
         group.traverse(object => {
             if (!(object instanceof THREE.Mesh) || Array.isArray(object.material)) return;
+            if (dynamic(object)) {
+                // Kit geometries are disposed below. Moving parts own their copies.
+                object.geometry = object.geometry.clone(); object.castShadow = false;
+                movingMaterials.add(object.material); return;
+            }
             const shape = object.geometry.index ? object.geometry.toNonIndexed() : object.geometry.clone();
             shape.applyMatrix4(object.matrixWorld); shape.deleteAttribute('uv');
             const batch = batches.get(object.material) ?? []; batch.push(shape); batches.set(object.material, batch);
         });
         group.clear();
+        moving.forEach(object => group.add(object));
         for (const [surface, batch] of batches) {
             const shape = mergeGeometries(batch, false)!;
             const object = new THREE.Mesh(shape, surface); object.castShadow = true; object.receiveShadow = true;
             group.add(object); batch.forEach(item => item.dispose());
         }
         Object.values(shapes).forEach(shape => shape.dispose()); roofShape.dispose();
-        Object.values(m).filter(surface => !batches.has(surface)).forEach(surface => surface.dispose());
+        Object.values(m).filter(surface => !batches.has(surface) && !movingMaterials.has(surface)).forEach(surface => surface.dispose());
         return group;
     }
-    return { group, m, box, cylinder, cone, rock, roof, house, tower, flag, fence, heraldry, finish };
+    return { group, m, box, cylinder, cone, rock, roof, house, tower, flag, fence, heraldry, motion, finish };
 }
 
 export function disposeCityObject(object: THREE.Object3D) {

@@ -6,8 +6,8 @@ import { cityKit } from './modelKit';
 export const visualLevel = (level: number) => Number.isFinite(level) ? Math.max(0, Math.min(5, Math.floor(level))) : 0;
 
 /** Zero is an empty plot; levels 1–5 change the actual geometry, not an image tint. */
-export function createBuildingModel(type: BuildingType, value: number, faction:Faction='roman') {
-    const level = visualLevel(value), k = cityKit(faction);
+export function createBuildingModel(type: BuildingType, value: number, faction:Faction='roman', animated=false) {
+    const level = visualLevel(value), k = cityKit(faction,animated);
     const { group, m, box, cylinder, cone, rock, roof, house, tower, flag, fence } = k;
     group.name = `${type} level ${level}`;
     if (!level) {
@@ -22,7 +22,7 @@ export function createBuildingModel(type: BuildingType, value: number, faction:F
         }
         return k.finish();
     }
-    if(type==='market'&&faction!=='roman')return createFactionHall(level,faction);
+    if(type==='market'&&faction!=='roman')return createFactionHall(level,faction,animated);
     const stone = level >= 3;
     if (type === 'lumber') {
         house(-.25, -.15, 1.05 + level * .06, .9, .65 + level * .06, stone);
@@ -32,7 +32,7 @@ export function createBuildingModel(type: BuildingType, value: number, faction:F
             log.rotation.z = Math.PI / 2; log.position.y = .12 + Math.floor(i / 3) * .2;
         }
         if (level >= 2) {
-            const wheel = cylinder(.4, .1, .72, .25, .3, m.wood); wheel.rotation.x = Math.PI / 2; wheel.position.y = .43;
+            const wheel = cylinder(.4, .1, .72, .25, .3, m.wood); wheel.rotation.x = Math.PI / 2; wheel.position.y = .43; k.motion(wheel,'spin');
             const hub = cylinder(.08, .12, .72, .25, .37, m.gold); hub.rotation.x = Math.PI / 2; hub.position.y = .43;
         }
         if (level >= 3) { house(-1.15, -.3, .55, .85, .6); fence(0, -1, 2.3); }
@@ -46,12 +46,12 @@ export function createBuildingModel(type: BuildingType, value: number, faction:F
         for (let i = 0; i < level + 1; i++) box(.32, .22, .28, -.65 + i % 3 * .39, Math.floor(i / 3) * .24, .65, m.stone);
         if (level >= 2) {
             box(.15, 1.65, .15, -.65, 0, -.35, m.wood); box(1.5, .14, .14, -.13, 1.5, -.35, m.wood);
-            cylinder(.022, 1, .54, .5, -.35, m.timber); box(.4, .32, .4, .54, .28, -.35, m.light);
+            cylinder(.022, 1, .54, .5, -.35, m.timber); k.motion(box(.4, .32, .4, .54, .28, -.35, m.light),'lift');
         }
         if (level >= 3) house(1.03, -.28, .65, .9, .9, true);
         if (level >= 4) {
             box(.15, 2.15, .15, -.85, 0, -.95, m.wood); box(2.3, .15, .15, -.15, 2, -.95, m.wood);
-            cylinder(.02, 1.35, .85, .6, -.95, m.timber); box(.45, .32, .45, .85, .4, -.95, m.stone);
+            cylinder(.02, 1.35, .85, .6, -.95, m.timber); k.motion(box(.45, .32, .45, .85, .4, -.95, m.stone),'lift');
         }
         if (level >= 5) { house(1.12, -.32, .85, 1, 1.4, true, m.slate); flag(1.15, 1.9, -.35); }
     } else if (type === 'farm') {
@@ -64,7 +64,7 @@ export function createBuildingModel(type: BuildingType, value: number, faction:F
             cylinder(.26, 1.7, -.95, 0, -.55, m.light); cone(.36, .42, -.95, 1.7, -.55, m.roof);
             box(.09, .1, .25, -.95, 1.25, -.24, m.wood);
             for (const angle of [Math.PI / 4, -Math.PI / 4]) {
-                const blade = box(1.5, .13, .05, -.95, 1.25, -.1, m.light); blade.rotation.z = angle;
+                const blade = box(1.5, .13, .05, -.95, 1.25, -.1, m.light); blade.rotation.z = angle; k.motion(blade,'spinSlow');
             }
         }
         if (level >= 4) { fence(0, 1.4, 2.8); fence(-1.4, .3, 2.2, Math.PI / 2); }

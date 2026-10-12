@@ -1,8 +1,8 @@
 import type {Faction} from '../../../factions/domain/factions';
 import {cityKit} from './modelKit';
 /** Culture-specific main halls keep the same plot size and five-stage progression. */
-export function createFactionHall(level:number,faction:Faction){
- const k=cityKit(faction),{m,box,cylinder,cone,roof,house,tower,flag}=k,h=.8+level*.16;
+export function createFactionHall(level:number,faction:Faction,animated=false){
+ const k=cityKit(faction,animated),{m,box,cylinder,cone,roof,house,tower,flag}=k,h=.8+level*.16;
  box(2,.12,1.7,0,0,0,m.stone);
  if(faction==='spartan'){
   box(1.5,h,.75,0,.12,-.25,m.light);

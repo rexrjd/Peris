@@ -1,8 +1,8 @@
 import type {Faction} from '../../../factions/domain/factions';
 import {cityKit} from './modelKit';
 /** Five native geometry stages, sharing each faction's materials and roof language. */
-export function createAcademy(level:number,faction:Faction){
- const k=cityKit(faction),{m,box,cylinder,house,roof}=k;
+export function createAcademy(level:number,faction:Faction,animated=false){
+ const k=cityKit(faction,animated),{m,box,cylinder,house,roof}=k;
  const l=Math.max(1,Math.min(5,level));box(1.8,.12,1.55,0,0,0,m.stone);house(0,-.25,1.3,1,.7+l*.08,true,m.slate);
  for(const x of [-.5,0,.5]){cylinder(.06,.55,x,.12,.52,m.light);box(.2,.09,.22,x,.1,.52,m.stone);}
  box(.45,.08,.25,0,.52,.9,m.gold);box(.18,.045,.24,-.1,.61,.9,m.light);box(.18,.045,.24,.1,.61,.9,m.light);

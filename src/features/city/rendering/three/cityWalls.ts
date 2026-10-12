@@ -4,8 +4,8 @@ import { cityKit } from './modelKit';
 import { cityFootprint, riverX } from './layout';
 
 /** Enclose the city; roads and the river retain real openings through the walls. */
-export function createCityWalls(value: number, mainLevel = 0,faction:Faction='roman') {
-    const level = visualLevel(value), k = cityKit(faction);
+export function createCityWalls(value: number, mainLevel = 0,faction:Faction='roman',animated=false) {
+    const level = visualLevel(value), k = cityKit(faction,animated);
     const { m, box, cone, tower } = k;
     // Coordinates are relative to the northern gate at (-.4, -9).
     const footprint=cityFootprint(mainLevel);
@@ -51,7 +51,7 @@ export function createCityWalls(value: number, mainLevel = 0,faction:Faction='ro
     if (level >= 3) for (const x of [-.75, .95]) tower(x, front, 1.2 + level * .1, .23);
     if (level === 5) for (const x of [left, right]) k.flag(x, 2.35, back);
     const perimeter = k.finish();
-    const gate = createBuildingModel('wall', level,faction);
+    const gate = createBuildingModel('wall', level,faction,animated);
     // Flatten both groups so every wall segment uses the existing building picker.
     perimeter.add(...[...gate.children]);
     perimeter.name = `City perimeter level ${level}`;

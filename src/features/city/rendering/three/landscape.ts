@@ -15,13 +15,13 @@ export function createCityLandscape(mainLevel = 0,faction:Faction='roman') {
     const palette=FACTIONS[faction];
     const points: number[] = [], colors: number[] = [];
     const grid = (x: number, z: number): [number, number, number] => {
-        const px = -24 + x * 2, pz = -23 + z * 2;
+        const px = -28 + x * 2, pz = -27 + z * 2;
         const town = px > -15 && px < 16 && pz > -9 && pz < footprint.fishingZ+1;
         const streamBank = Math.abs(px - streamX(pz)) < 2;
         const hill = Math.max(0, -pz - 8) * .13 + Math.max(0, Math.abs(px) - 10) * .07;
         return [px + (random(x * 23 + z * 71) - .5) * .45, town || streamBank ? -.035 : hill + random(x * 83 + z) * .32 - .08, pz];
     };
-    for (let z = 0; z < 24; z++) for (let x = 0; x < 24; x++) {
+    for (let z = 0; z < 28; z++) for (let x = 0; x < 28; x++) {
         const a = grid(x, z), b = grid(x + 1, z), c = grid(x, z + 1), d = grid(x + 1, z + 1);
         const triangles = (x + z) % 2 ? [[a, c, b], [b, c, d]] : [[a, d, b], [a, c, d]];
         for (const triangle of triangles) {
@@ -48,7 +48,7 @@ export function createCityLandscape(mainLevel = 0,faction:Faction='roman') {
     road(-.3,.1,.1,front,.7);road(-.4,-6.8,-.4,-12,.65);
     // A restrained stream and bridge at the eastern edge.
     const waterPoints: number[] = [], bankPoints: number[] = [];
-    for (let z = -24; z < 26; z++) {
+    for (let z = -28; z < 30; z++) {
         const a = streamX(z), b = streamX(z + 1);
         for (const [target, width, y] of [[waterPoints, .43, .025], [bankPoints, .67, .006]] as const) target.push(a-width,y,z, a+width,y,z, b+width,y,z+1, a-width,y,z, b+width,y,z+1, b-width,y,z+1);
     }
