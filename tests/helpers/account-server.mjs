@@ -49,7 +49,26 @@ export async function accountServer(){
    });
   }catch(error){return result(/^PT\d{3}$/.test(error.code??'')?Number(error.code.slice(2)):400,{code:error.code,message:error.message});}
  }
- return {request,logins,async seedReports(owner,quantity=2){
+ return {request,logins,async cityRaidFixture(owner,rival){
+  const army=(await db.query('select * from public.armies where owner_id=$1 order by id limit 1',[owner])).rows[0];
+  const city=(await db.query('select * from public.settlements where owner_id=$1 order by id limit 1',[rival])).rows[0];
+  const camp=(await db.query('select * from public.peris_camps where bandit order by power(public.peris_wrapped_delta(x,$1),2)+power(public.peris_wrapped_delta(y,$2),2)limit 1',[army.target_x,army.target_y])).rows[0];
+  await db.query('update public.settlements set x=$1,y=$2,wood=3000,stone=3000,food=3000,gold=3000 where id=$3',[camp.x,camp.y,city.id]);
+  await db.query('update public.armies set start_x=$1,target_x=$1,start_y=$2,target_y=$2 where owner_id=$3',[camp.x,camp.y,rival]);
+  await db.query("update public.buildings set level=case building_type when 'wall'then 2 when 'market'then 3 else 0 end where settlement_id=$1",[city.id]);
+  await db.query("insert into public.peris_city_slots(settlement_id,slot_index,building_type,level)values($1,0,'smithy',2)on conflict(settlement_id,slot_index)do update set building_type='smithy',level=2",[city.id]);
+  const roster={infantry:100,spearmen:80,archers:90,elite:60,cavalry:20,scout:10,heavyCavalry:25,ram:30,catapult:40};
+  await db.query('select public.peris_write_roster($1,$2)',[army.id,JSON.stringify(roster)]);
+  await db.query("select public.peris_write_roster(id,'{\"infantry\":30,\"archers\":0,\"cavalry\":0}')from public.armies where owner_id=$1",[rival]);
+  return {city:{...city,x:camp.x,y:camp.y},armyId:army.id,roster};
+ },async raidArmy(id){return(await db.query('select * from public.armies where id=$1',[id])).rows[0];},async resolveCityRaid(id){
+  const army=(await db.query('select * from public.armies where id=$1',[id])).rows[0];
+  await db.query("update public.armies set march_sent_at=now()-interval '35 seconds',march_cancel_until=now()-interval '5 seconds',departure_at=now()-interval '5 seconds',arrival_at=now()-interval '1 second'where id=$1",[id]);
+  await db.query('select public.peris_sync_owner($1)',[army.owner_id]);
+  const battle=(await db.query("select id from public.battles where attacker_army_id=$1 and status='active'and raid_city_id is not null",[id])).rows[0];
+  await db.query("update public.battle_formations set soldiers=0,status='routed'where battle_id=$1 and side='defender'",[battle.id]);
+  await db.query("select public.peris_finish($1,'attacker','Army routed')",[battle.id]);
+ },async seedReports(owner,quantity=2){
   const army=(await db.query('select id from public.armies where owner_id=$1 order by id limit 1',[owner])).rows[0].id;
   const result={attacker_initial:20,defender_initial:10,attacker_survivors:20,defender_survivors:0,attacker_losses:0,defender_losses:10,loot:{wood:0,stone:0,food:0,gold:0},duration:12,reason:'Army routed'};
   for(let i=0;i<quantity;i++){

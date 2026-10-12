@@ -43,7 +43,7 @@ export function settleLocal(w: World, owner: string, now = Date.now(), travel = 
     if (travel) for (const army of w.armies.filter(a => a.owner_id === owner)) {
         const arriving = army.status === 'moving' && Date.parse(army.arrival_at) <= now;
         completeTravel(army, now);
-        if (arriving && army.raid_target_id === null) {
+        if (arriving && army.raid_target_id === null && army.raid_city_id==null) {
             deliverCampLoot(w, army);
             mergeStationGarrison(w, army);
             army.march_origin = null; army.march_returning = false;

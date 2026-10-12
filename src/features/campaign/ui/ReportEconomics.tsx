@@ -14,7 +14,7 @@ export function ReportEconomics({ result, side = 'attacker', returning = false, 
     const economics = reportEconomics(result, side);
     return <section className={`report-economics ${compact ? 'compact' : ''}`} aria-label="Raid economics">
         <div title="Resources needed to recruit the soldiers lost in this battle. Stored receipts preserve the prices at settlement."><span>Replacement cost</span>{economics.replacementCost ? <Cost cost={economics.replacementCost} compact showZero/> : <small>Troop identities not recorded</small>}</div>
-        <div title="Resources actually delivered home minus the cost of replacing casualties. Travel and training time are excluded."><span>Net resources</span>{economics.profit ? <SignedResources values={economics.profit}/> : <small>{returning ? 'Available after return' : economics.deliveryUnrecorded ? 'Delivery not recorded yet' : 'Replacement cost unavailable'}</small>}</div>
+        <div title={side==='defender'&&result.raid_city?'Resources stolen plus the cost of replacing casualties.':'Resources actually delivered home minus the cost of replacing casualties. Travel and training time are excluded.'}><span>Net resources</span>{economics.profit ? <SignedResources values={economics.profit}/> : <small>{returning ? 'Available after return' : economics.deliveryUnrecorded ? 'Delivery not recorded yet' : 'Replacement cost unavailable'}</small>}</div>
         {!compact && economics.capacity !== null && <p title="The surviving party's maximum carrying capacity, before storage overflow.">Surviving carrying capacity: {economics.capacity.toLocaleString()} resources.</p>}
     </section>;
 }

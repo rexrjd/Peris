@@ -61,6 +61,7 @@
     "build:report-reads": "node scripts/build-report-read-upgrade.mjs",
     "check:report-reads": "node scripts/build-report-read-upgrade.mjs --check",
     "test:report-reads-db": "node tests/report-reads-database.test.mjs",
+    "test:player-raids-db": "node --import tsx tests/player-city-raids-database.test.mts",
     "build:ui-icons": "node scripts/build-ui-icons.mjs",
     "check:ui-icons": "node scripts/build-ui-icons.mjs --check"
   },

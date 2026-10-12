@@ -10,7 +10,7 @@ begin
  if not pg_try_advisory_xact_lock(204215)then return jsonb_build_object('busy',true);end if;
  if exists(select 1 from public.peris_settler_expeditions where status='travelling'and arrival_at<=now())then perform pg_advisory_xact_lock(204200);end if;
  for owner in select q.owner_id from(
-  select owner_id,min(arrival_at)as due from public.armies where (status='moving' or raid_target_id is not null)and arrival_at<=now() group by owner_id
+  select owner_id,min(arrival_at)as due from public.armies where (status='moving' or raid_target_id is not null or raid_city_id is not null)and arrival_at<=now() group by owner_id
   union all select owner_id,min(arrival_at)from public.peris_settler_expeditions where status='travelling'and arrival_at<=now()group by owner_id
   union all select owner_id,min(finish_at)from public.peris_orders where finish_at<=now()group by owner_id
   union all select owner_id,min(next_at)from public.peris_campaign_farms where enabled and next_at<=now()group by owner_id

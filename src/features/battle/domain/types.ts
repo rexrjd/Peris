@@ -18,6 +18,9 @@ export type Battle = {
     defender_ready: boolean;
     mode: 'pve' | 'pvp' | 'practice';
     camp_id: number | null;
+    raid_city_id?: number | null;
+    siege_target?: import('../../city/domain/siege').SiegeTarget;
+    city_defenders?: {army_id?:number;col?:number;row?:number;troops:import('../../army/domain/roster').UnitRoster}[];
     terrain: Terrain;
     difficulty: Difficulty;
     enemy_name: string;
@@ -70,6 +73,9 @@ export type Formation = {
     updated_at: string;
 };
 export type BattleResult = {
+    report_side?: 'attacker'|'defender';
+    raid_city?: {id:number;name:string};
+    siege_damage?: import('../../city/domain/siege').SiegeDamage[];
     defender_roster?: import('../../army/domain/roster').UnitRoster; defender_survivor_roster?: import('../../army/domain/roster').UnitRoster; defender_faction?: Faction;
     attacker_roster?: import('../../army/domain/roster').UnitRoster; attacker_survivor_roster?: import('../../army/domain/roster').UnitRoster; attacker_faction?: Faction;
     delivered?: Resources; overflow?: Resources; delivered_at?: string;

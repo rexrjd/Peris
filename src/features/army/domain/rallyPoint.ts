@@ -82,7 +82,7 @@ function movement(world: World, army: Army, now: number): RallyMovement {
     const startedAt = timestamp(army.departure_at), endsAt = timestamp(army.arrival_at);
     return {
         armyId: army.id, armyName: army.name, homeCityId: army.home_settlement_id,
-        kind: returning ? 'return' : army.raid_target_id !== null ? 'raid' : 'march',
+        kind: returning ? 'return' : army.raid_target_id !== null||army.raid_city_id!=null ? 'raid' : 'march',
         from, to: camp ? { ...to, kind: 'camp', name: camp.name, campId: camp.id } : to,
         troops: readRoster(army), startedAt, endsAt,
         ...(cancellable ? { cancel: { armyId: army.id, sentAt: army.march_sent_at!, until: until! } } : {}),

@@ -1,0 +1,5 @@
+.report-siege-damage{margin:18px 0;padding:12px 0;border-block:1px solid #ffffff0c;font-size:11px}
+.report-siege-damage h3{font:500 12px/1.5 'Open Sans',Arial,sans-serif;margin:0 0 10px;color:#bfccdf}
+.report-siege-damage>div{display:flex;align-items:center;gap:8px;padding:5px 0;color:#a6b9d1}
+.report-siege-damage>div>span{flex:1;min-width:0}.report-siege-damage small{font-size:9px;color:#7f93b0}
+.report-siege-damage b{font-weight:500;white-space:nowrap;color:#d1a09a}.report-siege-damage b span{color:#7e91ab}

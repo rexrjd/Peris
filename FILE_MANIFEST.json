@@ -1,35 +1,410 @@
 {
-  "base_commit": "12012a4b1da51cef4783cce93c73e4ee26887b28",
+  "base_commit": "71a18700030ed74cd672eeb9484f17587eafeec5",
   "files": [
     {
-      "path": "REPORTS_ICON_CONTROLS.md",
-      "bytes": 1882,
-      "sha256": "b0cec50e51f22799321273416179b836cb81d34a47e276449c028a80b6e4df99"
+      "path": "PLAYER_RAIDS_SIEGE_UPDATE.md",
+      "bytes": 4469,
+      "sha256": "d3ced9d3d8135f064e364912d8dde3c8615e208b468a9d21ef804b2305270671"
     },
     {
-      "path": "src/features/campaign/styles/report-inbox.css",
-      "bytes": 13659,
-      "sha256": "d78a26d0b96400b87255945966753826aa8399571d6b097dc8c8e958b005e027"
+      "path": "package.json",
+      "bytes": 4934,
+      "sha256": "bdbacfa656d85b5b74e862f8d9aea4d7bd114237346f674b4116c0e21ea27155"
     },
     {
-      "path": "src/features/campaign/styles/reports-popup.css",
-      "bytes": 4310,
-      "sha256": "9806b8f3486585f05b0f13dece212623ca957c0675a57cfea7d7e2eb20b98147"
+      "path": "src/app/App.tsx",
+      "bytes": 28972,
+      "sha256": "2d1a537b962bf1adc537f956724e32a43f1dffefa92a89f0298ab6121b0840ce"
     },
     {
-      "path": "src/features/campaign/ui/ReportInbox.tsx",
-      "bytes": 10692,
-      "sha256": "847a1fb135a722fd7b23686d23b8b67080904c5fc2fe289bb3f1877d38cb5ee6"
+      "path": "src/app/styles/index.css",
+      "bytes": 2074,
+      "sha256": "2b69e9289ab4416874f071646650e926c1eeb4bb1f2fb6d4783dd42c6bd71301"
+    },
+    {
+      "path": "src/engine/local/LocalEngine.ts",
+      "bytes": 12179,
+      "sha256": "3b8605a346cb40bd181e11694fe30ae2be3725b73e6a19e86e70836d8b688fcc"
+    },
+    {
+      "path": "src/engine/online/OnlineEngine.ts",
+      "bytes": 24176,
+      "sha256": "8ce0f83958776eb800a03935fe7449955d1ae44af1503a21190e6a37cf84e89f"
+    },
+    {
+      "path": "src/engine/online/rpcCommands.ts",
+      "bytes": 4147,
+      "sha256": "f1be61eb8ae4fdad42e7532b0923d14370a403afb6338aef724783048df492c6"
+    },
+    {
+      "path": "src/features/army/domain/commandRoom.ts",
+      "bytes": 7330,
+      "sha256": "6bfb5668d3b3b6e6950295212affe1958263d5c254ac5eb77a053be1b41df932"
+    },
+    {
+      "path": "src/features/army/domain/commands.ts",
+      "bytes": 2974,
+      "sha256": "4b3df8aa08946f4e89206edbfd980a99fd4cdb9fd213c2e1a6ec7930cd107aff"
+    },
+    {
+      "path": "src/features/army/domain/rallyPoint.ts",
+      "bytes": 7606,
+      "sha256": "9c74929479631cf5aae9b1d54a529126536b9b7b986456501caf82c6aca5550b"
+    },
+    {
+      "path": "src/features/army/domain/types.ts",
+      "bytes": 1782,
+      "sha256": "1d356de2afe9630b33c8a0c7ef8b96dca6453fbb8d32bd5d45d958778db6f675"
+    },
+    {
+      "path": "src/features/battle/domain/types.ts",
+      "bytes": 4407,
+      "sha256": "aa810e2d0e6ab23ffc12123902d9b164b7a549314307afef5c487817811b46b1"
+    },
+    {
+      "path": "src/features/campaign/domain/battleSettlement.ts",
+      "bytes": 5546,
+      "sha256": "c106e793bfcff175f7342a410990bebd187fd68dcd3d86a8f43334b041eb7d32"
+    },
+    {
+      "path": "src/features/campaign/domain/cityRaids.ts",
+      "bytes": 8423,
+      "sha256": "7c62c6215a4e05bcb91fef0c6c8d1471c2e365f31feef30dcbe54cc52a686a7d"
+    },
+    {
+      "path": "src/features/campaign/domain/reportEconomics.ts",
+      "bytes": 5141,
+      "sha256": "f757f9e5aa838a2712cac2af94e3bcc91f4f53260bc163a432dc9814a9b10e49"
+    },
+    {
+      "path": "src/features/campaign/domain/settlement.ts",
+      "bytes": 3419,
+      "sha256": "3c749f401b7fc1d7d42cd6201628c357efa9efcdf02d1efde63ad08215691969"
+    },
+    {
+      "path": "src/features/campaign/styles/siege-summary.css",
+      "bytes": 515,
+      "sha256": "f8cc74cf6e8ed319234d06ef5ab6cb5015ba2b3a654a7fbc5209d0dbe5ba2261"
+    },
+    {
+      "path": "src/features/campaign/ui/Chronicle.tsx",
+      "bytes": 13540,
+      "sha256": "82e97af97d2a7c8c8fabf94c7765935ebfa97740c5d115e2848902b3cd8717a3"
+    },
+    {
+      "path": "src/features/campaign/ui/ReportDetails.tsx",
+      "bytes": 5919,
+      "sha256": "c26e77f03e940195087f2a7f118509f20397e7e84455009f62994db7cdf3553f"
+    },
+    {
+      "path": "src/features/campaign/ui/ReportEconomics.tsx",
+      "bytes": 2113,
+      "sha256": "9368364bc7887ba68f800550ab2d9153a3efcb85851a3ebaceed833246ee3961"
+    },
+    {
+      "path": "src/features/campaign/ui/SiegeSummary.tsx",
+      "bytes": 648,
+      "sha256": "5af8c0ad9311575e1ca0bca560b30942196156df76ddea239d32f075ec3561f4"
+    },
+    {
+      "path": "src/features/city/domain/siege.ts",
+      "bytes": 3092,
+      "sha256": "8e4b2307e66bdfdb2e9dab4ff62931ee39e788263326df666344e300effa9cd6"
+    },
+    {
+      "path": "src/features/heroes/domain/commands.ts",
+      "bytes": 5736,
+      "sha256": "39d1f2946c0573146480945962a553aa4cac4567ba1a5dc4797884bbf453fc8a"
+    },
+    {
+      "path": "src/features/map/domain/activity.ts",
+      "bytes": 9639,
+      "sha256": "593e187656243c313eefd05a00b82cb92b0f16a7ebb6aa1f8c5c2a95929ba1ac"
+    },
+    {
+      "path": "src/features/map/domain/commands.ts",
+      "bytes": 8590,
+      "sha256": "f5594f8db036ed910229150b814aa69e7575ac400502c4c8d45baf1c1fcebdc3"
+    },
+    {
+      "path": "src/features/map/domain/garrisons.ts",
+      "bytes": 5379,
+      "sha256": "53c6329f2ce5e001b39e28f2c462cdc203b35fd695dcff31f429be735865d927"
+    },
+    {
+      "path": "src/features/map/domain/movement.ts",
+      "bytes": 3952,
+      "sha256": "88a8d9cbfa181bd1b7374332d7d6ddff130dd18ede222496c80677d0ca708255"
+    },
+    {
+      "path": "src/features/map/styles/march-compact.css",
+      "bytes": 6032,
+      "sha256": "b2030d29598f70a4db13905fd28c239a3f104d319bd9fa6314149a5ab55aff48"
+    },
+    {
+      "path": "src/features/map/ui/MapArmyDetails.tsx",
+      "bytes": 4355,
+      "sha256": "91b9d9ea477197c17890f7fe43c29784a072bc7a894ade3c46a1a326bae01cb9"
+    },
+    {
+      "path": "src/features/map/ui/MarchDialog.tsx",
+      "bytes": 10978,
+      "sha256": "c1b3321a11e6e1e1d63bfb984843293bf57c484e264805c13bdd217508643812"
+    },
+    {
+      "path": "src/features/map/ui/MarchTroopPicker.tsx",
+      "bytes": 2379,
+      "sha256": "d7b8176f829978e1582847db655e8bd65fcb49d40e8716486bfe62f818698d21"
+    },
+    {
+      "path": "src/features/map/ui/WorldView.tsx",
+      "bytes": 36684,
+      "sha256": "3106542df4994d8743dc259f5a34c9040a4454f42a58a2911c7e5e93f9b8c729"
+    },
+    {
+      "path": "src/shared/model/commands.ts",
+      "bytes": 3852,
+      "sha256": "1a9b371d2036dc6d38d9a31ac5bbd12ca24f22382a842ab8434d4398711ee3b2"
     },
     {
       "path": "src/shared/ui/Icons.tsx",
-      "bytes": 5335,
-      "sha256": "45dab6789e25d80bb0fbb6235e87beff88fa1d369505407a61864e20ea38d47c"
+      "bytes": 5372,
+      "sha256": "93c6dbfaeca53aa8598dd02079be2bcb43758ea0d8b91a23ac3643c61b89e84b"
     },
     {
-      "path": "tests/e2e/report-inbox.spec.ts",
-      "bytes": 7981,
-      "sha256": "1441d358bffea9f0473caaa037d88cf55af96c93836bb225ec2f4284cbc1f88b"
+      "path": "supabase/FRESH_INSTALL_V10.sql",
+      "bytes": 584484,
+      "sha256": "5be671811473bd59a201c82f32bb98adee9ec102b646dafb048f54823e6641ec"
+    },
+    {
+      "path": "supabase/FRESH_INSTALL_V11.sql",
+      "bytes": 584484,
+      "sha256": "5be671811473bd59a201c82f32bb98adee9ec102b646dafb048f54823e6641ec"
+    },
+    {
+      "path": "supabase/FRESH_INSTALL_V12.sql",
+      "bytes": 584484,
+      "sha256": "5be671811473bd59a201c82f32bb98adee9ec102b646dafb048f54823e6641ec"
+    },
+    {
+      "path": "supabase/FRESH_INSTALL_V13.sql",
+      "bytes": 584484,
+      "sha256": "5be671811473bd59a201c82f32bb98adee9ec102b646dafb048f54823e6641ec"
+    },
+    {
+      "path": "supabase/FRESH_INSTALL_V14.sql",
+      "bytes": 584484,
+      "sha256": "5be671811473bd59a201c82f32bb98adee9ec102b646dafb048f54823e6641ec"
+    },
+    {
+      "path": "supabase/FRESH_INSTALL_V15.sql",
+      "bytes": 584484,
+      "sha256": "5be671811473bd59a201c82f32bb98adee9ec102b646dafb048f54823e6641ec"
+    },
+    {
+      "path": "supabase/FRESH_INSTALL_V16.sql",
+      "bytes": 584484,
+      "sha256": "5be671811473bd59a201c82f32bb98adee9ec102b646dafb048f54823e6641ec"
+    },
+    {
+      "path": "supabase/FRESH_INSTALL_V17.sql",
+      "bytes": 584484,
+      "sha256": "5be671811473bd59a201c82f32bb98adee9ec102b646dafb048f54823e6641ec"
+    },
+    {
+      "path": "supabase/FRESH_INSTALL_V6.sql",
+      "bytes": 584484,
+      "sha256": "5be671811473bd59a201c82f32bb98adee9ec102b646dafb048f54823e6641ec"
+    },
+    {
+      "path": "supabase/FRESH_INSTALL_V7.sql",
+      "bytes": 584484,
+      "sha256": "5be671811473bd59a201c82f32bb98adee9ec102b646dafb048f54823e6641ec"
+    },
+    {
+      "path": "supabase/FRESH_INSTALL_V8.sql",
+      "bytes": 584484,
+      "sha256": "5be671811473bd59a201c82f32bb98adee9ec102b646dafb048f54823e6641ec"
+    },
+    {
+      "path": "supabase/FRESH_INSTALL_V9.sql",
+      "bytes": 584484,
+      "sha256": "5be671811473bd59a201c82f32bb98adee9ec102b646dafb048f54823e6641ec"
+    },
+    {
+      "path": "supabase/UPGRADE_TO_V10.sql",
+      "bytes": 544321,
+      "sha256": "0a2fca63b86863a4edf9fd06d7b107acbe71c5ccab69ca6a9348102d71043e35"
+    },
+    {
+      "path": "supabase/UPGRADE_TO_V11.sql",
+      "bytes": 544321,
+      "sha256": "0a2fca63b86863a4edf9fd06d7b107acbe71c5ccab69ca6a9348102d71043e35"
+    },
+    {
+      "path": "supabase/UPGRADE_TO_V12.sql",
+      "bytes": 544321,
+      "sha256": "0a2fca63b86863a4edf9fd06d7b107acbe71c5ccab69ca6a9348102d71043e35"
+    },
+    {
+      "path": "supabase/UPGRADE_TO_V13.sql",
+      "bytes": 544321,
+      "sha256": "0a2fca63b86863a4edf9fd06d7b107acbe71c5ccab69ca6a9348102d71043e35"
+    },
+    {
+      "path": "supabase/UPGRADE_TO_V14.sql",
+      "bytes": 544321,
+      "sha256": "0a2fca63b86863a4edf9fd06d7b107acbe71c5ccab69ca6a9348102d71043e35"
+    },
+    {
+      "path": "supabase/UPGRADE_TO_V15.sql",
+      "bytes": 544321,
+      "sha256": "0a2fca63b86863a4edf9fd06d7b107acbe71c5ccab69ca6a9348102d71043e35"
+    },
+    {
+      "path": "supabase/UPGRADE_TO_V16.sql",
+      "bytes": 544321,
+      "sha256": "0a2fca63b86863a4edf9fd06d7b107acbe71c5ccab69ca6a9348102d71043e35"
+    },
+    {
+      "path": "supabase/UPGRADE_TO_V17.sql",
+      "bytes": 544321,
+      "sha256": "0a2fca63b86863a4edf9fd06d7b107acbe71c5ccab69ca6a9348102d71043e35"
+    },
+    {
+      "path": "supabase/UPGRADE_TO_V7.sql",
+      "bytes": 544321,
+      "sha256": "0a2fca63b86863a4edf9fd06d7b107acbe71c5ccab69ca6a9348102d71043e35"
+    },
+    {
+      "path": "supabase/UPGRADE_TO_V8.sql",
+      "bytes": 544321,
+      "sha256": "0a2fca63b86863a4edf9fd06d7b107acbe71c5ccab69ca6a9348102d71043e35"
+    },
+    {
+      "path": "supabase/UPGRADE_TO_V9.sql",
+      "bytes": 544321,
+      "sha256": "0a2fca63b86863a4edf9fd06d7b107acbe71c5ccab69ca6a9348102d71043e35"
+    },
+    {
+      "path": "supabase/UPGRADE_V5_TO_V6.sql",
+      "bytes": 544321,
+      "sha256": "0a2fca63b86863a4edf9fd06d7b107acbe71c5ccab69ca6a9348102d71043e35"
+    },
+    {
+      "path": "supabase/modules/army/peris_queue_recruit.sql",
+      "bytes": 5420,
+      "sha256": "4a9df61dc521d1743fedbf1ad76a7837dff22f15bdc9b775d146535682c46e3d"
+    },
+    {
+      "path": "supabase/modules/battle/peris_add_formations.sql",
+      "bytes": 3096,
+      "sha256": "536239f654f9d6ff5299b6a81fa626cf9419378acda79bc241ab8d678b415682"
+    },
+    {
+      "path": "supabase/modules/battle/peris_finish.sql",
+      "bytes": 9707,
+      "sha256": "b05f43740509adfa557580b629d3dd50157857165212cc00467dc353734464e7"
+    },
+    {
+      "path": "supabase/modules/battle/peris_tick.sql",
+      "bytes": 13980,
+      "sha256": "bc6bc0801f212199e9f28d7044a61e4c4696e07e72392440812abf8d81157333"
+    },
+    {
+      "path": "supabase/modules/campaign/game-worker.sql",
+      "bytes": 3700,
+      "sha256": "241cd5b8f302610f443a28d32c59689e3441c83379dae783ecabc554dd98aa88"
+    },
+    {
+      "path": "supabase/modules/campaign/player-raids.sql",
+      "bytes": 18016,
+      "sha256": "c23d32459eff799825c12a5b95e7719ceb31ae9a88a583a07ef27ed1ea12e442"
+    },
+    {
+      "path": "supabase/modules/campaign/sync_my_state.sql",
+      "bytes": 1877,
+      "sha256": "73c95a8f1b0c3f7dff23273064c29928a663551c1d2cf3010b6900741ceb04d3"
+    },
+    {
+      "path": "supabase/modules/city/peris_settle.sql",
+      "bytes": 4708,
+      "sha256": "2c3bfff7d1762050740a059f1dde17a69f0880c69cb66c11118732f2a5c6c423"
+    },
+    {
+      "path": "supabase/modules/empire/gameplay.sql",
+      "bytes": 25241,
+      "sha256": "f4b637eae27f0280237f5dd14822a22bca5ffda571e44e003d8e7f1090112f16"
+    },
+    {
+      "path": "supabase/modules/manifest.json",
+      "bytes": 1586,
+      "sha256": "2ad6ffc31cc6bbbead215d069870b59f4dafe0a97fd8fef6f6c5ba17c596a63b"
+    },
+    {
+      "path": "supabase/modules/map/garrisons.sql",
+      "bytes": 8227,
+      "sha256": "511d3560fd910af3b771e95c9e53510a3576e2c3187ee526def8421a04ffb36e"
+    },
+    {
+      "path": "supabase/modules/map/march-orders.sql",
+      "bytes": 6707,
+      "sha256": "ff6a44263e316fe04b1464e4fd5be1170b0ced533d306df79a7315f246c7e830"
+    },
+    {
+      "path": "supabase/modules/map/peris_march.sql",
+      "bytes": 6844,
+      "sha256": "3add5de93bced8a72332528589434a2c2bb19a6133303717acc90bbe0c3d4546"
+    },
+    {
+      "path": "supabase/modules/map/player-raid-schema.sql",
+      "bytes": 608,
+      "sha256": "9cdda3e54204d8c364e3090ad9ee8f097d8f03e0f429b361c73dcbd0a1462f17"
+    },
+    {
+      "path": "supabase/modules/multiplayer/peris_challenge.sql",
+      "bytes": 1240,
+      "sha256": "a21c36a2f339bc94117d93e0351c7bfa36df255cfa443cf7b11b47a0517c186c"
+    },
+    {
+      "path": "supabase/modules/multiplayer/peris_respond.sql",
+      "bytes": 3158,
+      "sha256": "464623d7a1b104c51567e600363db5a3f1a3574ae384d3ef3bd3ca9b0c437b61"
+    },
+    {
+      "path": "supabase/schema.sql",
+      "bytes": 544321,
+      "sha256": "0a2fca63b86863a4edf9fd06d7b107acbe71c5ccab69ca6a9348102d71043e35"
+    },
+    {
+      "path": "tests/e2e/compact-raid-layout.spec.ts",
+      "bytes": 2909,
+      "sha256": "268ae98131f89c03046a1cbbb0d25af3994ab2e4158fa73b44a5f4a1afd0bf2e"
+    },
+    {
+      "path": "tests/e2e/player-city-raids.spec.ts",
+      "bytes": 5386,
+      "sha256": "52e86ccc95b5c768efa6ff4a715ad6071a914a79317e0b91816e53b9d5520095"
+    },
+    {
+      "path": "tests/e2e/report-economics.spec.ts",
+      "bytes": 9107,
+      "sha256": "754eabae2895f014f01a2edecf1bfc9867a772db7e7e7b0213085c0ac93904f3"
+    },
+    {
+      "path": "tests/helpers/account-server.mjs",
+      "bytes": 9102,
+      "sha256": "aa5d19eba1a8409cf38514cf3c92774b034e79736b8295316928ff6d65062d7e"
+    },
+    {
+      "path": "tests/player-city-raids-database.test.mts",
+      "bytes": 9876,
+      "sha256": "99d6d111cf91800934007775977bb3e56513a47dcf9cf942cc069db52aed2098"
+    },
+    {
+      "path": "tests/player-city-raids.test.ts",
+      "bytes": 7607,
+      "sha256": "e0e86462ec81a7c73c0dd205ad2fa13215ffa75a3d16dda3b06838e9089a3721"
     }
   ]
 }

@@ -36,6 +36,11 @@ export function addStationGarrison(world: World, owner: string, point: { x: numb
 /** Merge up to the legion capacity; an overflowing station keeps its remaining troops. */
 export function mergeStationGarrison(world: World, army: Army, troops?: ArmyTroops) {
     const point = { x: army.target_x, y: army.target_y };
+    const cell=stationCell(point);
+    if(world.battles.some(battle=>{
+        const city=world.settlements.find(row=>row.id===battle.raid_city_id);
+        return battle.status==='active'&&battle.defender_owner_id===army.owner_id&&city&&stationCell(city).col===cell.col&&stationCell(city).row===cell.row;
+    }))return;
     if (!ownedStation(world, army.owner_id, point)) return;
     const garrison = garrisonAt(world, army.owner_id, point);
     if (!garrison) {
@@ -56,7 +61,7 @@ export function collectGarrison(context: LocalCommandContext, cmd: Extract<Comma
         throw new Error('Finish training before collecting stationed troops.');
     if (cmd.troops !== undefined && (!cmd.troops || typeof cmd.troops !== 'object' || Array.isArray(cmd.troops)))
         throw new Error('Choose whole stationed troop counts.');
-    if (army.status !== 'idle' || army.raid_target_id !== null || context.world.battles.some(b => b.status === 'active' && [b.attacker_army_id, b.defender_army_id].includes(army.id)))
+    if (army.status !== 'idle' || army.raid_target_id !== null || army.raid_city_id!=null || context.world.battles.some(b => b.status === 'active' && (b.attacker_owner_id===context.playerId||b.defender_owner_id===context.playerId)))
         throw new Error('Bring an idle legion to this station before collecting troops.');
     if (!ownedStation(context.world, context.playerId, armyPosition(army, Date.parse(context.now))))
         throw new Error('Troops can only station in your own villages and fields.');

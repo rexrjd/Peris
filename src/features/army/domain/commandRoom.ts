@@ -49,7 +49,7 @@ export function recruitmentPlan(world: World, army: Army, city: Settlement, type
 export function transferReason(world: World, source: Army, target: Army | undefined, troops: ArmyTroops, now: number, exactRoles = false) {
     if (!target || target.id === source.id || target.owner_id !== source.owner_id) return 'Choose another army from your roster.';
     if (source.status !== 'idle' || target.status !== 'idle') return 'Both armies must be stopped before transferring.';
-    if (source.raid_target_id !== null || target.raid_target_id !== null || source.raid_reserve || target.raid_reserve || world.battles.some(battle => battle.status === 'active' && [source.id, target.id].some(id => battle.attacker_army_id === id || battle.defender_army_id === id))) return 'Finish both legions’ battles before transferring.';
+    if (source.raid_target_id !== null || target.raid_target_id !== null || source.raid_city_id!=null||target.raid_city_id!=null||source.raid_reserve || target.raid_reserve || world.battles.some(battle => battle.status === 'active' && [source.id, target.id].some(id => battle.attacker_army_id === id || battle.defender_army_id === id))) return 'Finish both legions’ battles before transferring.';
     const a = armyPosition(source, now), b = armyPosition(target, now);
     if (Math.hypot(wrappedWorldDelta(a.x, b.x), wrappedWorldDelta(a.y, b.y)) > 90) return 'Bring these two armies together on the map.';
     if (trainingOrders(world, source).length || trainingOrders(world, target).length) return 'Finish both training queues before transferring.';

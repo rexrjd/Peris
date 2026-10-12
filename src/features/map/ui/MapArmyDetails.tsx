@@ -26,7 +26,7 @@ export function MapArmyDetails({ world, army, playerId, now, busy, outgoing, onM
     const position = activityField(armyPosition(army, now));
     const moving = army.status === 'moving';
     const arrival = Date.parse(army.arrival_at);
-    const status = fighting ? 'In battle' : moving ? army.march_returning ? 'Returning' : army.raid_target_id != null ? 'Raiding' : 'Marching' : training ? 'Training' : 'Ready for orders';
+    const status = fighting ? 'In battle' : moving ? army.march_returning ? 'Returning' : army.raid_target_id != null||army.raid_city_id!=null ? 'Raiding' : 'Marching' : army.raid_city_id!=null?'Awaiting city battle':training ? 'Training' : 'Ready for orders';
     return <div className="ops-army-details">
         <div className="ops-identity"><HeroPortrait compact heroId={hero?.id} heroClass={hero?.class} faction={faction}/>
             <div><h2>{army.name}</h2><p>{hero ? hero.name + ' · Lv. ' + heroLevel(hero) : playerName(world.players, army.owner_id)}</p></div>

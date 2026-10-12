@@ -1,4 +1,5 @@
 import { accrueCamp } from './campStock';
+import { settleCityRaid } from './cityRaids';
 import { recruitDelay } from '../../frontier/domain/camps';
 import { DEFAULT_CONFIG } from '../../frontier/domain/balance';
 import { carryingCapacity } from '../../frontier/domain/balance';
@@ -18,6 +19,7 @@ import { recordBattleEconomics } from './reportEconomics';
 /** Apply permanent casualties, spoils, reports and home regrouping once per battle. */
 export function settleBattle(w: World, id: number, owner: string, nextId: () => number) {
     const b = w.battles.find(b => b.id === id)!, result = b.result!, won = b.winner_side === 'attacker';
+    if(b.raid_city_id){settleCityRaid(w,b,nextId);return;}
     settleLocal(w, owner);
     const a = w.armies.find(a=>a.id===b.attacker_army_id&&a.owner_id===owner)!, s = w.settlements.find(s=>s.id===a.home_settlement_id)!, p = w.players.find(p=>p.id===owner)!;
     if(w.reports.some(r=>r.battle_id===id&&r.owner_id===owner))return;

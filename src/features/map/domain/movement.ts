@@ -49,6 +49,6 @@ export function completeTravel(a: Army, now: number) {
         a.start_x = a.target_x;
         a.start_y = a.target_y;
         // An attack keeps its validated outbound route until the return journey is prepared.
-        if (!a.raid_target_id) { a.march_path = null; a.march_distance = null; }
+        if (!a.raid_target_id && !a.raid_city_id) { a.march_path = null; a.march_distance = null; }
     }
 }

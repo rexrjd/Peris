@@ -12,6 +12,7 @@ begin
  if exists(select 1 from public.battles where status='active'and(attacker_owner_id in(c.attacker_owner_id,c.defender_owner_id)or defender_owner_id in(c.attacker_owner_id,c.defender_owner_id)))then raise exception 'One army is already fighting';end if;
 
  select * into a from public.armies where id=coalesce(c.attacker_army_id,(select min(id)from public.armies where owner_id=c.attacker_owner_id))and owner_id=c.attacker_owner_id;select * into d from public.armies where id=public.peris_army_id(u);
+ if a.raid_city_id is not null or d.raid_city_id is not null then raise exception 'Finish the city raid before accepting a duel';end if;
  if exists(select 1 from public.peris_orders where army_id in(a.id,d.id)and kind='recruit')then raise exception 'Finish training before a duel';end if;
  if a.id is null or d.id is null or a.infantry+a.archers+a.cavalry=0 or d.infantry+d.archers+d.cavalry=0 then raise exception 'Both armies need soldiers';end if;
  insert into public.battles(attacker_owner_id,defender_owner_id,attacker_army_id,defender_army_id,mode,phase,terrain,enemy_name)

@@ -6,7 +6,7 @@ language sql stable security definer set search_path='' as $$
 $$;
 revoke all on function public.peris_march_speed(bigint,jsonb)from public,anon,authenticated;
 
-create or replace function public.peris_march_for(p_owner uuid,p_army bigint,p_target_x integer,p_target_y integer,p_path jsonb,p_raid integer default null)returns jsonb
+create or replace function public.peris_march_for_target(p_owner uuid,p_army bigint,p_target_x integer,p_target_y integer,p_path jsonb,p_raid integer,p_city bigint)returns jsonb
 language plpgsql security definer set search_path='' as $$
 declare u uuid:=p_owner;a public.armies%rowtype;position jsonb;point jsonb;route jsonb;
  tx integer:=public.peris_wrap_world(p_target_x);ty integer:=public.peris_wrap_world(p_target_y);
@@ -23,11 +23,12 @@ begin
  if exists(select 1 from public.peris_orders where owner_id=u and army_id=p_army and kind='recruit') then raise exception 'Let training finish before marching';end if;
  select * into a from public.armies where id=p_army and owner_id=u for update;
  if a.id is null then raise exception 'Army not found';end if;
- if a.status<>'idle' or a.raid_target_id is not null or a.raid_reserve is not null then raise exception 'This legion already has a march or raid. Cancel within 30 seconds or wait for its return';end if;
+ if a.status<>'idle' or a.raid_target_id is not null or a.raid_city_id is not null or a.raid_reserve is not null then raise exception 'This legion already has a march or raid. Cancel within 30 seconds or wait for its return';end if;
  position:=public.peris_army_position(a);
  px:=(position->>'x')::numeric;py:=(position->>'y')::numeric;
- if raid_target is not null and not public.peris_station_owned(u,floor(px/128)::integer,floor(py/128)::integer)then raise exception 'Depart from one of your own villages or claimed fields';end if;
- if not public.peris_station_owned(u,floor(tx/128.0)::integer,floor(ty/128.0)::integer) and not exists(select 1 from public.peris_camps c where c.id=raid_target and c.x=tx and c.y=ty)then raise exception 'Troops can only station in your own villages and fields';end if;
+ if (raid_target is not null or p_city is not null) and not public.peris_station_owned(u,floor(px/128)::integer,floor(py/128)::integer)then raise exception 'Depart from one of your own villages or claimed fields';end if;
+ if p_city is not null and not exists(select 1 from public.settlements c where c.id=p_city and c.owner_id<>u and c.x=tx and c.y=ty)then raise exception 'Choose another player''s city';end if;
+ if not public.peris_station_owned(u,floor(tx/128.0)::integer,floor(ty/128.0)::integer) and not exists(select 1 from public.peris_camps c where c.id=raid_target and c.x=tx and c.y=ty)and p_city is null then raise exception 'Troops can only station in your own villages and fields';end if;
  if not public.peris_world_walkable(px,py) then raise exception 'The army must start on land';end if;
  pcx:=floor(px/128)::integer;pcy:=floor(py/128)::integer;
  route:=jsonb_build_array(jsonb_build_array(px,py));
@@ -58,9 +59,14 @@ begin
   march_path=route,march_distance=distance,march_map_version=4,march_sent_at=now(),march_cancel_until=now()+interval '30 seconds',
   march_origin=jsonb_build_object('col',floor((position->>'x')::numeric/128),'row',floor((position->>'y')::numeric/128),'x',round((position->>'x')::numeric),'y',round((position->>'y')::numeric)),march_returning=false,
   departure_at=now()+interval '30 seconds',arrival_at=now()+interval '30 seconds'+make_interval(secs=>seconds::double precision),
-  status='moving',raid_target_id=null,farm_list_id=null,updated_at=now() where id=a.id;
+  status='moving',raid_target_id=null,raid_city_id=p_city,siege_target='auto',farm_list_id=null,updated_at=now() where id=a.id;
  return jsonb_build_object('ok',true);
 end $$;
+
+create or replace function public.peris_march_for(p_owner uuid,p_army bigint,p_target_x integer,p_target_y integer,p_path jsonb,p_raid integer default null)returns jsonb
+language sql security definer set search_path='' as $$
+ select public.peris_march_for_target(p_owner,p_army,p_target_x,p_target_y,p_path,p_raid,null)
+$$;
 
 create or replace function public.peris_march(p_target_x integer,p_target_y integer,p_path jsonb)returns jsonb
 language plpgsql security definer set search_path='' as $$

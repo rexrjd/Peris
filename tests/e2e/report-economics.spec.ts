@@ -102,6 +102,7 @@ test('camp inspector and reviewed party show land route, stock limits and select
     const dialog = page.getByRole('dialog', { name: 'Prepare camp raid', exact: true });
     const route = findMarchPath({ x: army.start_x, y: army.start_y }, f.camp)!;
     const party = dialog.getByLabel('Party travel and resources');
+    await dialog.locator('.march-trip-details > summary').click();
     await expect(dialog.locator('.march-review')).toContainText(clock(Math.max(2, route.distance / marchSpeed(f.world, army))));
     await expect(party).toContainText('Out & back estimate');
     await expect(party).toContainText('Party replacement value');

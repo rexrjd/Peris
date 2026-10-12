@@ -59,7 +59,7 @@ export function mapActivity(world: World, owner: string, now: number): MapActivi
         const camp = world.camps.find(c => c.id === battle.camp_id);
         const formations = world.formations.filter(f => f.battle_id === battle.id && f.owner_id === owner);
         events.push({ id: 'battle:' + battle.id, kind: 'battle', category: 'armies', title: army.name,
-            detail: battle.mode === 'pvp' ? 'Live duel' : 'Automatic battle', destination: camp?.name ?? battle.enemy_name,
+            detail: battle.raid_city_id?'City raid':battle.mode === 'pvp' ? 'Live duel' : 'Automatic battle', destination: camp?.name ?? battle.enemy_name,
             troops: formations.length ? formations.reduce((n, f) => n + f.soldiers, 0) : soldierTotal(army),
             armyId: army.id, cityId: army.home_settlement_id, startedAt: timestamp(battle.started_at), endsAt: null, live: true,
             selection: { kind: 'army', id: army.id }, point: camp ?? armyPosition(army, now) });
@@ -71,7 +71,7 @@ export function mapActivity(world: World, owner: string, now: number): MapActivi
         const camp = world.camps.find(c => c.id === army.raid_target_id);
         const until = timestamp(army.march_cancel_until);
         const staged = !returning && !!army.march_sent_at && until !== null && now < until;
-        events.push({ id: 'army:' + army.id, kind: returning ? 'return' : army.raid_target_id != null ? 'raid' : 'march',
+        events.push({ id: 'army:' + army.id, kind: returning ? 'return' : army.raid_target_id != null||army.raid_city_id!=null ? 'raid' : 'march',
             category: 'armies', title: army.name, detail: staged ? 'Preparing departure' : soldierTotal(army).toLocaleString('en-US') + ' soldiers',
             destination: returning ? placeName(world, destination) : camp?.name ?? placeName(world, destination),
             troops: soldierTotal(army), armyId: army.id, cityId: army.home_settlement_id,

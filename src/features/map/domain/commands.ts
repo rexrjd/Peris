@@ -1,4 +1,5 @@
 import { commandArmy } from '../../empire/domain/context';
+import { SIEGE_TARGETS } from '../../city/domain/siege';
 import { heroBonuses } from '../../heroes/domain/heroes';
 import { type Command, type LocalCommandContext } from '../../../shared/model/commands';
 import { soldierTotal } from '../../army/domain/units';
@@ -31,6 +32,7 @@ export function startRaidReturn(world: LocalCommandContext['world'], army: Army,
     if (army.march_returning) return true;
     const origin = army.march_origin, path = army.march_path, distance = army.march_distance;
     army.raid_target_id = null; army.march_sent_at = null; army.march_cancel_until = null;
+    army.raid_city_id=null;army.siege_target='auto';
     if (!origin || !path || distance == null) return false;
     army.start_x = army.target_x; army.start_y = army.target_y;
     army.target_x = origin.x; army.target_y = origin.y;
@@ -46,6 +48,7 @@ export function cancelMarch(context: LocalCommandContext, cmd: Extract<Command, 
     if (!canCancelMarch(army, Date.parse(context.now))) throw new Error('Marches can only be cancelled during the first 30 seconds.');
     restoreRaidReserve(army);
     army.status = 'idle'; army.raid_target_id = null;
+    army.raid_city_id=null;army.siege_target='auto';
     army.target_x = army.start_x; army.target_y = army.start_y;
     mergeStationGarrison(context.world, army);
     army.departure_at = context.now; army.arrival_at = context.now;
@@ -55,7 +58,7 @@ export function cancelMarch(context: LocalCommandContext, cmd: Extract<Command, 
     army.updated_at = context.now;
 }
 export function marchArmy(context: LocalCommandContext, cmd: Extract<Command, {
-    type: 'move' | 'raid';
+    type: 'move' | 'raid' | 'raidCity';
 }>) {
     const w = context.world, a = commandArmy(context), now = context.now, clock = Date.parse(now);
     if (w.battles.some(battle => battle.status === 'active' && (battle.attacker_owner_id === context.playerId || battle.defender_owner_id === context.playerId))) throw new Error('Finish the current battle first.');
@@ -74,12 +77,18 @@ export function marchArmy(context: LocalCommandContext, cmd: Extract<Command, {
         y = c.y;
         raidTargetId = c.id;
     }
-    else {
+    else if(cmd.type==='raidCity'){
+        const city=w.settlements.find(row=>row.id===cmd.targetCityId);
+        if(!city||city.owner_id===context.playerId)throw new Error('Choose another player’s city.');
+        if(cmd.siegeTarget!==undefined&&!Object.hasOwn(SIEGE_TARGETS,cmd.siegeTarget))throw new Error('Choose a valid catapult target.');
+        if(!soldierTotal(a))throw new Error('Recruit soldiers before starting a raid.');
+        x=city.x;y=city.y;
+    } else {
         if (!Number.isFinite(cmd.x) || !Number.isFinite(cmd.y))
             throw new Error('Choose a destination.');
         const target = wrapWorldPoint(cmd); x = target.x; y = target.y;
     }
-    if (a.status !== 'idle' || a.raid_target_id !== null || a.raid_reserve)
+    if (a.status !== 'idle' || a.raid_target_id !== null || a.raid_city_id!=null || a.raid_reserve)
         throw new Error('This legion already has a march or raid. Cancel within 30 seconds or wait for its return.');
     const available = readRoster(a);
     const troops = cmd.troops;
@@ -92,7 +101,7 @@ export function marchArmy(context: LocalCommandContext, cmd: Extract<Command, {
     const pos = wrapWorldPoint(armyPosition(a, clock));
     // Legacy saves may already have an army resting on neutral land. Let it
     // travel back to an owned station, without allowing a new raid from there.
-    if (cmd.type === 'raid' && !ownedStation(w, context.playerId, pos)) throw new Error('Depart from one of your own villages or claimed fields.');
+    if (cmd.type !== 'move' && !ownedStation(w, context.playerId, pos)) throw new Error('Depart from one of your own villages or claimed fields.');
     if (troops && rosterTotal(troops) < rosterTotal(available) && !ownedStation(w, context.playerId, pos)) throw new Error('Leave reinforcements only at your own village or field.');
     if (cmd.type === 'move' && !ownedStation(w, context.playerId, { x, y })) throw new Error('Troops can only station in your own villages and fields.');
     const route = findMarchPath(pos, { x, y });
@@ -100,6 +109,8 @@ export function marchArmy(context: LocalCommandContext, cmd: Extract<Command, {
     const seconds = Math.max(2, route.distance / marchSpeed(w, a, troops ?? available));
     // Every guard and route calculation succeeds before the existing army changes.
     a.raid_target_id = raidTargetId;
+    a.raid_city_id=cmd.type==='raidCity'?cmd.targetCityId:null;
+    a.siege_target=cmd.type==='raidCity'?cmd.siegeTarget??'auto':'auto';
     if (troops) {
         const leftBehind = addRosters(available, troops, -1);
         if (rosterTotal(leftBehind)) addStationGarrison(w, context.playerId, pos, leftBehind);

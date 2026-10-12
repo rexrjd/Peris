@@ -21,7 +21,8 @@ export function reportEconomics(result: BattleResult, side: ReportSide = 'attack
     const losses = reportLossRoster(result, side);
     const replacementCost = side === 'attacker' && result.replacement_cost ? result.replacement_cost : losses ? troopCost(losses) : null;
     const delivered = side === 'attacker' ? result.delivered ?? (result.loot && resourceTotal(result.loot) === 0 ? emptyResources() : null) : emptyResources();
-    const profit = replacementCost && delivered ? resourceDifference(delivered, replacementCost) : null;
+    const spent=side==='defender'&&result.raid_city&&replacementCost?Object.fromEntries(RESOURCES.map(key=>[key,replacementCost[key]+result.loot[key]])) as Resources:replacementCost;
+    const profit = spent && delivered ? resourceDifference(delivered, spent) : null;
     const survivorRoster = result[`${side}_survivor_roster`];
     const capacity = side === 'attacker' && result.carrying_capacity !== undefined ? result.carrying_capacity : survivorRoster ? carryingCapacity(survivorRoster) : null;
     return { replacementCost, delivered, profit, capacity, deliveryUnrecorded: side === 'attacker' && resourceTotal(result.loot) > 0 && !result.delivered };
@@ -37,6 +38,7 @@ export function recordBattleEconomics(result: BattleResult) {
 
 export function reportSide(world: World, report: Report, owner: string): ReportSide | null {
     if (report.owner_id !== owner) return null;
+    if(report.result.report_side)return report.result.report_side;
     const battle = world.battles.find(row => row.id === report.battle_id);
     if (battle?.attacker_owner_id === owner) return 'attacker';
     if (battle?.defender_owner_id === owner) return 'defender';

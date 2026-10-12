@@ -11,6 +11,7 @@ import { settleLocal } from '../../features/campaign/domain/settlement';
 import { SAVE_KEY } from '../../platform/storage/solo';
 import { stepBattle } from '../../features/battle/domain/simulation';
 import { beginRaid } from '../../features/campaign/domain/raids';
+import { beginCityRaid } from '../../features/campaign/domain/cityRaids';
 import { startPractice } from '../../features/battle/domain/practice';
 import { type Difficulty, type Terrain } from '../../features/battle/domain/types';
 import { settleBattle } from '../../features/campaign/domain/battleSettlement';
@@ -99,6 +100,10 @@ export class LocalEngine implements GameEngine {
         if (Math.floor(now / 250) !== Math.floor((now - dt * 1000) / 250)) {
             settleLocal(this.snapshot, this.playerId);
             this.advanceFarms();
+            for(const army of this.snapshot.armies.filter(row=>row.owner_id===this.playerId&&row.raid_city_id&&row.status==='idle'))if(!this.active()){
+                if(!this.snapshot.settlements.some(city=>city.id===army.raid_city_id&&city.owner_id!==this.playerId))startRaidReturn(this.snapshot,army);
+                else beginCityRaid(this.snapshot,this.playerId,army.id,()=>++this.nextId);
+            }
             for (const army of this.snapshot.armies.filter(a => a.owner_id === this.playerId)) if (!this.active() && army.raid_target_id && army.status === 'idle') {
                 const camp = this.snapshot.camps.find(c => c.id === army.raid_target_id);
                 if (camp && (camp.bandit || !this.snapshot.progress.some(p=>p.owner_id===this.playerId&&p.camp_id===camp.id&&Date.parse(p.available_at)>Date.now()))) {
@@ -133,7 +138,7 @@ export class LocalEngine implements GameEngine {
         settleLocal(this.snapshot, this.playerId);
         this.advanceFarms();
         const active = this.active();
-        if (['claimField', 'buildField', 'researchSpell', 'upgrade', 'buildSlot', 'upgradeSlot', 'recruit', 'researchUnit', 'move', 'raid', 'trainSettlers', 'foundCity', 'recruitHero', 'heroSkill', 'equipArtifact', 'transferTroops', 'rebaseArmy'].includes(cmd.type) && active)
+        if (['claimField', 'buildField', 'researchSpell', 'upgrade', 'buildSlot', 'upgradeSlot', 'recruit', 'researchUnit', 'move', 'raid', 'raidCity', 'trainSettlers', 'foundCity', 'recruitHero', 'heroSkill', 'equipArtifact', 'transferTroops', 'rebaseArmy'].includes(cmd.type) && active)
             throw new Error('Finish the current battle first.');
         const context: LocalCommandContext = { world: this.snapshot, playerId: this.playerId, settlementId: cmd.settlementId, armyId: cmd.armyId, nextId: () => this.nextId = Math.max(this.nextId + 1, nextEntityId(this.snapshot)), active, now: new Date().toISOString(), paused: value => { this.paused = value; }, finalize: id => this.finalize(id) };
         switch (cmd.type) {
@@ -165,6 +170,7 @@ export class LocalEngine implements GameEngine {
                 break;
             case 'move':
             case 'raid':
+            case 'raidCity':
                 marchArmy(context, cmd);
                 break;
             case 'cancelMarch': cancelMarch(context, cmd); break;

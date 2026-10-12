@@ -10,7 +10,7 @@ begin
  select * into a from public.armies where id=public.peris_army_id(u) and owner_id=u for update;
  if s.id is null or a.id is null then raise exception 'Realm not found';end if;
  home:=public.peris_home_army_position(s.x,s.y);
- if a.status='moving' or a.raid_target_id is not null or a.raid_reserve is not null or sqrt(power(a.target_x-(home->>'x')::integer,2)+power(a.target_y-(home->>'y')::integer,2))>90 then raise exception 'Bring your army home to recruit';end if;
+ if a.status='moving' or a.raid_target_id is not null or a.raid_city_id is not null or a.raid_reserve is not null or sqrt(power(a.target_x-(home->>'x')::integer,2)+power(a.target_y-(home->>'y')::integer,2))>90 then raise exception 'Bring your army home to recruit';end if;
  if (select count(*)from public.peris_orders where owner_id=u and army_id=a.id and kind='recruit')>=3 then raise exception 'Training queue is full';end if;
  select coalesce(sum(quantity),0)into queued from public.peris_orders where owner_id=u and army_id=a.id and kind='recruit';
  if a.infantry+a.archers+a.cavalry+queued+p_quantity>1000 then raise exception 'Army capacity is 1,000 soldiers';end if;

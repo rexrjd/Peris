@@ -23,6 +23,8 @@ export type Army = {
     status: 'idle' | 'moving';
     updated_at: string;
     raid_target_id: number | null;
+    raid_city_id?: number | null;
+    siege_target?: import('../../city/domain/siege').SiegeTarget;
     /** Optional for compatibility with old saves and pre-coastal servers. */
     march_path?: [number, number][] | null;
     march_distance?: number | null;

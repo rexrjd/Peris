@@ -41,6 +41,7 @@ export function Icon({ name, size = 20 }: {
         arrow: <path d="M4 12h16m-6-6 6 6-6 6"/>,
         chevron: <path d="m6 9 6 6 6-6"/>,
         plus: <path d="M12 5v14M5 12h14"/>,
+        minus: <path d="M5 12h14"/>,
         sparkles: <><path d="m12 3 2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5Z"/><path d="M21 2v4M19 4h4"/></>,
         transfer: <><path d="M3 7h17m-4-4 4 4-4 4M21 17H4m4-4-4 4 4 4"/></>,
         people: <><circle cx="9" cy="7" r="3"/><path d="M3 21v-3c0-7 12-7 12 0v3M16 4a3 3 0 0 1 0 6M18 13c3 1 3 4 3 8"/></>,

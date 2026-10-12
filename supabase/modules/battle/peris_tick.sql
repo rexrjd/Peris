@@ -6,6 +6,11 @@ begin
  select * into b from public.battles where id=p_battle_id for update;
  if u is null or b.id is null or(u is distinct from b.attacker_owner_id and u is distinct from b.defender_owner_id)then raise exception 'Not your battle';end if;
  if b.status<>'active'then return jsonb_build_object('ok',true);end if;
+ if b.raid_city_id is not null then
+  if exists(select 1 from public.peris_settler_expeditions where owner_id in(b.attacker_owner_id,b.defender_owner_id)and status='travelling'and arrival_at<=now())and not pg_try_advisory_xact_lock(204200)then return jsonb_build_object('busy',true);end if;
+  begin perform 1 from public.players where id in(b.attacker_owner_id,b.defender_owner_id)order by id for update nowait;
+  exception when lock_not_available then return jsonb_build_object('busy',true);end;
+ end if;
  if b.phase='deployment'then b.phase:='combat';update public.battles set phase='combat',attacker_ready=true,defender_ready=true where id=b.id;end if;
  remain:=least(10,greatest(0,extract(epoch from(now()-b.last_tick_at))));
  if remain<.15 then return jsonb_build_object('ok',true);end if;

@@ -330,9 +330,9 @@ export class OnlineEngine implements GameEngine {
                 prepared = { ...cmd, ...target, route: route.path };
             }
         }
-        if (cmd.type === 'raid' && currentMap(this.core.map)) {
+        if ((cmd.type === 'raid'||cmd.type==='raidCity') && currentMap(this.core.map)) {
             const army = this.core.armies.find(a => a.owner_id === this.playerId && (cmd.armyId === undefined || a.id === cmd.armyId));
-            const camp = this.core.camps.find(c => c.id === cmd.campId);
+            const camp = cmd.type==='raid'?this.core.camps.find(c => c.id === cmd.campId):this.snapshot.settlements.find(city=>city.id===cmd.targetCityId&&city.owner_id!==this.playerId);
             if (!army || !camp) throw new Error('Choose your army and a campaign camp.');
             const offset = Date.parse(this.core.server_now) - this.lastCoreSnapshotAt;
             const route = findMarchPath(armyPosition(army, Date.now() + offset), camp);

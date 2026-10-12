@@ -53,7 +53,7 @@ declare a public.armies%rowtype;g public.peris_garrisons%rowtype;v_col integer;v
 begin
  select * into a from public.armies where id=p_army and owner_id=p_owner for update;
  if a.id is null then raise exception 'Choose one of your armies';end if;
- if a.status<>'idle' or a.raid_target_id is not null or exists(select 1 from public.battles b where b.status='active'and(b.attacker_army_id=a.id or b.defender_army_id=a.id))then raise exception 'Bring an idle legion to this station before collecting troops';end if;
+ if a.status<>'idle' or a.raid_target_id is not null or a.raid_city_id is not null or exists(select 1 from public.battles b where b.status='active'and(b.attacker_army_id=a.id or b.defender_army_id=a.id))then raise exception 'Bring an idle legion to this station before collecting troops';end if;
  if exists(select 1 from public.peris_orders o where o.owner_id=p_owner and o.kind='recruit'and coalesce(o.army_id,(select min(id)from public.armies where owner_id=p_owner))=a.id)then raise exception 'Finish training before collecting stationed troops';end if;
  v_col:=public.peris_wrap_cell(floor(a.target_x/128.0)::integer);v_row:=public.peris_wrap_cell(floor(a.target_y/128.0)::integer);
  if not public.peris_station_owned(p_owner,v_col,v_row)then raise exception 'Troops can only station in your own villages and fields';end if;
@@ -81,6 +81,7 @@ returns jsonb language plpgsql security definer set search_path='' as $$
 declare u uuid:=public.peris_player_id();
 begin
  if u is null then raise exception 'Authentication required';end if;
+ if exists(select 1 from public.battles where status='active'and(attacker_owner_id=u or defender_owner_id=u))then raise exception 'Finish the current battle first';end if;
  return public.peris_garrison_collect_for(u,p_army,p_troops);
 end $$;
 
@@ -89,7 +90,7 @@ returns void language plpgsql security definer set search_path='' as $$
 declare a public.armies%rowtype;
 begin
  select * into a from public.armies where id=p_army for update;
- if a.id is null or a.status<>'idle' or a.raid_target_id is not null then return;end if;
+ if a.id is null or a.status<>'idle' or a.raid_target_id is not null or a.raid_city_id is not null then return;end if;
  if not public.peris_station_owned(a.owner_id,floor(a.target_x/128.0)::integer,floor(a.target_y/128.0)::integer)then return;end if;
  if exists(select 1 from public.battles b where b.status='active' and (b.attacker_army_id=a.id or b.defender_army_id=a.id))then return;end if;
  perform public.peris_garrison_collect_for(a.owner_id,a.id);

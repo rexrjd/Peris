@@ -1,5 +1,6 @@
 import type { Command } from '../../shared/model/commands';
 export function rpcCommand(cmd: Command) {
+    if(cmd.type==='raidCity')return {fn:'peris_empire_command',args:{p_command:cmd}};
     if (cmd.type === 'readAllReports') return { fn: 'peris_read_all_reports', args: {} };
     if (cmd.type === 'readReports') return { fn: 'peris_read_reports', args: { p_report_ids: cmd.reportIds } };
     if (cmd.type === 'researchUnit') return { fn: 'peris_research_unit', args: { p_city: cmd.settlementId, p_unit: cmd.item } };

@@ -36,7 +36,7 @@ export function transferTroops(ctx: LocalCommandContext, cmd: Extract<Command, {
     const source = commandArmy(ctx), target = ownedArmy(ctx.world, ctx.playerId, cmd.targetArmyId);
     if (source.id === target.id) throw new Error('Choose a different army.');
     const a = armyPosition(source, Date.parse(ctx.now)), b = armyPosition(target, Date.parse(ctx.now));
-    if (source.status !== 'idle' || target.status !== 'idle' || source.raid_reserve || target.raid_reserve || source.raid_target_id !== null || target.raid_target_id !== null || Math.hypot(wrappedWorldDelta(a.x, b.x), wrappedWorldDelta(a.y, b.y)) > 90) throw new Error('Bring both armies together and stop them before transferring troops.');
+    if (source.status !== 'idle' || target.status !== 'idle' || source.raid_reserve || target.raid_reserve || source.raid_target_id !== null || target.raid_target_id !== null || source.raid_city_id!=null||target.raid_city_id!=null||Math.hypot(wrappedWorldDelta(a.x, b.x), wrappedWorldDelta(a.y, b.y)) > 90) throw new Error('Bring both armies together and stop them before transferring troops.');
     if (ctx.world.orders.some(o => o.kind === 'recruit' && [source.id, target.id].includes(o.army_id!))) throw new Error('Finish both training queues before transferring troops.');
     const available = readRoster(source), types = ['infantry', 'archers', 'cavalry'] as const;
     let selected;
@@ -54,7 +54,7 @@ export function transferTroops(ctx: LocalCommandContext, cmd: Extract<Command, {
 }
 export function rebaseArmy(ctx: LocalCommandContext) {
     const army = commandArmy(ctx), city = commandCity(ctx), point = armyPosition(army, Date.parse(ctx.now)), home = homeArmyPosition(city);
-    if (army.status !== 'idle' || Math.hypot(wrappedWorldDelta(point.x, home.x), wrappedWorldDelta(point.y, home.y)) > 90) throw new Error('Bring this army to the selected city first.');
+    if (army.status !== 'idle' || army.raid_city_id!=null || Math.hypot(wrappedWorldDelta(point.x, home.x), wrappedWorldDelta(point.y, home.y)) > 90) throw new Error('Bring this army to the selected city first.');
     if (ctx.world.orders.some(o => o.kind === 'recruit' && o.army_id === army.id)) throw new Error('Finish training before changing the home city.');
     army.home_settlement_id = city.id;
 }

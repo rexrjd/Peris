@@ -11,6 +11,7 @@ import type { Report } from '../domain/types';
 import { reportIsReturning, reportSide } from '../domain/reportEconomics';
 import { ReportEconomics } from './ReportEconomics';
 import { ReportInbox } from './ReportInbox';
+import { SiegeSummary } from './SiegeSummary';
 import { type World } from '../../../shared/model/world';
 import { type Command } from '../../../shared/model/commands';
 import { conquered } from '../domain/progression';
@@ -42,6 +43,7 @@ export function ResultBody({ result, won, draw = false, side = 'attacker', enemy
     return <>
         <header className="battle-result-heading"><span className={`result-outcome ${won ? 'won' : ''}`}><Icon name={won ? 'check' : 'shield'} size={23}/></span><div><span className="result-kicker">BATTLE COMPLETE</span><h2>{title}</h2><p>{enemyName}</p></div></header>
         <div className="result-caption"><span><Icon name="time" size={13}/>{clock(result.duration)}</span><span>{result.reason === 'Army routed' ? won ? 'Enemy army routed' : 'Your army routed' : result.reason}</span></div>
+        <SiegeSummary damage={result.siege_damage}/>
         {reward && <section className="result-hero-reward" aria-label="Hero experience">
             <div className="result-hero-line"><HeroPortrait compact heroId={reward.hero_id} heroClass={reward.hero_class} faction={reward.faction}/><div><strong>{reward.hero_name}</strong><small>{HERO_CLASSES[reward.hero_class]?.name ?? 'Commander'} · Level {reward.level_after}</small>{levelled && <span className="result-level-up">Level {reward.level_before} → {reward.level_after}</span>}</div><span className="result-xp-gain"><b>+{count(reward.experience)}</b><small>Hero XP</small></span></div>
             <div className="result-xp-progress" role="progressbar" aria-label="Hero level progress" aria-valuenow={Math.round(progress)} aria-valuemin={0} aria-valuemax={100}><i style={{width:`${progress}%`}}/></div>
