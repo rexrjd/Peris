@@ -1,0 +1,106 @@
+{
+  "version": "19.5",
+  "base_commit": "ecb151ed9c5038adcdc1ce27904f7235eef833e4",
+  "sql_required": false,
+  "files": [
+    {
+      "path": "ARTWORK.md",
+      "sha256": "a27087b91262223c61b474b32ea8583a63f028bef8f3ce71af8d1130514bc0dd",
+      "base_sha256": "a6e06d8e2581f0da4b6047e21b061f603f8f292c755b19afeffd0849e6ccbba2"
+    },
+    {
+      "path": "src/app/styles/index.css",
+      "sha256": "7ac08cf38401cbc13c7a5628171a59fb6c1f860290220296bdfe98d7580e4815",
+      "base_sha256": "85ea684c78bfce5b9e258dad3aa0636b5127d059b2e318ce18cb8c1062fc204e"
+    },
+    {
+      "path": "src/features/city/rendering/three/CityCamera.ts",
+      "sha256": "82ea5fffba768a0e26c7f0382ff45beb917a44d693c02a8088fcccf31d7c445b",
+      "base_sha256": "38aca3f0872950f25099bf079a9fca44671d154571b57b3f875274c4dec78997"
+    },
+    {
+      "path": "src/features/city/rendering/three/CityScene.ts",
+      "sha256": "b4330c3046d90f0c2d028ca10dacff3bec5165662b59dd9e3f5c78470b7b9e33",
+      "base_sha256": "34a7c825ecb53dbaa52d696223a93da22a4baebac8ca089d374d052fd97f7a9f"
+    },
+    {
+      "path": "src/features/city/rendering/three/cityDistricts.ts",
+      "sha256": "f80d7d1ccca46b396ffaf01796f8ad880d9af7a8c6350462d083a2bc66a071f2",
+      "base_sha256": null
+    },
+    {
+      "path": "src/features/city/rendering/three/cityFoliage.ts",
+      "sha256": "264e0ba6d6519dce9ac11c4a548898368edf81c791871b6c083b2faeb3fff963",
+      "base_sha256": null
+    },
+    {
+      "path": "src/features/city/rendering/three/cityStreets.ts",
+      "sha256": "4f92948ae55c11883c467f9bb63a6ee959de666e5edd81018f1c26c90998e3b6",
+      "base_sha256": null
+    },
+    {
+      "path": "src/features/city/rendering/three/cityWalls.ts",
+      "sha256": "6628ac913b519f2b5978ff40d028926b73d86844362af1c4e600fa456839cc52",
+      "base_sha256": "9d64bd7a4ca172762a7a3abd713f226891825b5c86f5519a19a743e175f218e7"
+    },
+    {
+      "path": "src/features/city/rendering/three/landscape.ts",
+      "sha256": "8fec855d9fc79f121811476f70a54d66b1413696e84008960f7cd029ebd9c482",
+      "base_sha256": "f887cd9644acb9f59884d065a78bef4070d6f383f970eacfa5c7284648c0d4b1"
+    },
+    {
+      "path": "src/features/city/rendering/three/layout.ts",
+      "sha256": "cd958ec6f71c5f75d895ffc1e647adfb2ade0c3f85961a01727d4c550ae5c168",
+      "base_sha256": "bf4df78f3f3508762872a8c51110ae539f5a9343123658da0e6a34b9d7232628"
+    },
+    {
+      "path": "src/features/city/rendering/three/modelKit.ts",
+      "sha256": "7614a2974b06bb9fa407743f636695619a1ce3a501158a9fa3437afc0454ddc5",
+      "base_sha256": "81cab327c0d5e9543b1b29667966df204fe30b75966e55bf3235cb30b87014c5"
+    },
+    {
+      "path": "src/features/city/rendering/three/slotModels.ts",
+      "sha256": "3555c4313a48526c9ba2fa60d68470da8f7a70fe700fb3ec42c2316b1ed7573a",
+      "base_sha256": "317ac996c5cde9af43c587cf6c9227fe9317a1f28735fcbbb0a7650832910abe"
+    },
+    {
+      "path": "src/features/city/rendering/three/villagers.ts",
+      "sha256": "772ebfe16af99d582b704ef7cdde55c02113d737ed114fc8d012c8a17a59dca4",
+      "base_sha256": "fd3dc8ac89e28dd0d2af31df0b304a9babb85d2a9c425dfa68a069f41e042724"
+    },
+    {
+      "path": "src/features/city/styles/city-art-direction.css",
+      "sha256": "c2d058b37d648783d1c8dc7287617b3fd39628380a6036b7fa2a660f175e948e",
+      "base_sha256": null
+    },
+    {
+      "path": "src/features/city/ui/CitySceneWorkspace.tsx",
+      "sha256": "ab8f78de8ebc7f2dc7d813615f994803a6610db4a094e5449df666f05de80385",
+      "base_sha256": "7e79d70353196c262ec12046c35ede9a9aebf93e2cc8fac4770ef985bf849f57"
+    },
+    {
+      "path": "src/shared/ui/Icons.tsx",
+      "sha256": "debf4c55bf02badefd83ffcb79e4e88c3b603d09543b385a3a425f7b9dede3b7",
+      "base_sha256": "2127748a36b3dac508605d84cbaa29ff699675663e586572d3d6a100edb49d99"
+    },
+    {
+      "path": "tests/city-art-direction.test.ts",
+      "sha256": "2375d9a6ef06bd66bea80dd2c164f2eb81cf554ac75dd6b535fbc6eb907ffefc",
+      "base_sha256": null
+    },
+    {
+      "path": "tests/e2e/city-art-direction.spec.ts",
+      "sha256": "2f674b79c23ade124af6d3e1b35a7275a9607e4e3d0383704bedd73616d7de0c",
+      "base_sha256": null
+    }
+  ],
+  "validation": {
+    "unit_checks_passed": 450,
+    "unit_skipped": 1,
+    "browser_passed": 12,
+    "browser_skipped": 4,
+    "tooling_passed": 4,
+    "registered_models_checked": 46,
+    "production_build": "passed"
+  }
+}

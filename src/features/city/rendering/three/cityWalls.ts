@@ -10,7 +10,7 @@ export function createCityWalls(value: number, mainLevel = 0,faction:Faction='ro
     // Coordinates are relative to the northern gate at (-.4, -9).
     const footprint=cityFootprint(mainLevel);
     const left=footprint.left+.4,right=footprint.right+.4,back=0,front=footprint.front+9;
-    const river=riverX(footprint.front)+.4;
+    const river=riverX(footprint.front)+.4,northRiver=riverX(footprint.back)+.4;
     function section(x1: number, z1: number, x2: number, z2: number, foreground = false) {
         const length = Math.hypot(x2 - x1, z2 - z1), angle = -Math.atan2(z2 - z1, x2 - x1);
         const height = foreground ? .36 + level * .14 : .4 + level * .23;
@@ -35,10 +35,13 @@ export function createCityWalls(value: number, mainLevel = 0,faction:Faction='ro
     }
     const gateWidth = 2.9 + level * .08;
     section(left, back, -gateWidth / 2, back);
-    section(gateWidth / 2, back, 8.95, back);
-    section(10.5, back, right, back); // Northern water passage.
+    section(gateWidth / 2, back, northRiver-.98, back);
+    section(northRiver+.98, back, right, back); // Northern water passage.
     section(left, back, left, front);
-    section(right, back, right, front);
+    const eastGate=2.4+9;
+    section(right,back,right,eastGate-.7);
+    section(right,eastGate+.7,right,front);
+    if(level>=2)for(const z of [eastGate-.75,eastGate+.75])tower(right,z,.9+level*.14,.2);
     section(left, front, -.65, front, true);
     section(.85, front, river-.9, front, true);
     section(river+.9, front, right, front, true); // Southern water passage.

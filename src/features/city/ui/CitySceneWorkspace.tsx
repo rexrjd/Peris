@@ -26,7 +26,7 @@ export function CitySceneWorkspace({ world, owner, sid, now, plots, scene, viewC
     onSelect: (key: string) => void; onEmpire?: () => void;
 }) {
     const [panel, setPanel] = useState<Panel | null>(null), [report, setReport] = useState<CityReportTab | null>(null);
-    const [markers, setMarkers] = useState(true), [query, setQuery] = useState('');
+    const [markers, setMarkers] = useState(true), [levelsVisible,setLevelsVisible]=useState(false), [query, setQuery] = useState('');
     const panelRef = useRef<HTMLElement>(null), triggers = useRef<Partial<Record<Panel, HTMLButtonElement>>>({});
     const model = cityOverview(world, sid, now), { town } = model;
     const military = cityMilitaryOverview(world, sid, owner, now), ready = rosterTotal(military.totals);
@@ -58,7 +58,7 @@ export function CitySceneWorkspace({ world, owner, sid, now, plots, scene, viewC
         document.addEventListener('keydown', dismiss); document.addEventListener('pointerdown', outside);
         return () => { document.removeEventListener('keydown', dismiss); document.removeEventListener('pointerdown', outside); };
     }, [panel]);
-    return <section className={`city-scene-workspace ${markers ? '' : 'hide-city-markers'}`} aria-label="3D city workspace">
+    return <section className={`city-scene-workspace ${markers ? '' : 'hide-city-markers'} ${levelsVisible?'show-city-levels':''}`} aria-label="3D city workspace">
         <div className="city-scene-surface">{scene}</div>
         <div className="city-scene-top">
             <header className="city-scene-identity city-scene-plate">
@@ -86,7 +86,7 @@ export function CitySceneWorkspace({ world, owner, sid, now, plots, scene, viewC
             {order && <div className="city-scene-construction-progress" role="progressbar" aria-label="Construction progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.floor(progress)}><i style={{ width: `${progress}%` }}/></div>}
         </div>
         <div className="city-scene-dock city-scene-plate">{viewControls}<button ref={element => { if (element) triggers.current.buildings = element; }} data-city-panel="buildings" className="city-scene-icon-button" title="Buildings & plots" aria-label="Open city building list" aria-controls="city-scene-buildings" aria-expanded={panel === 'buildings'} onClick={() => toggle('buildings')}><Icon name="storehouse" size={18}/></button><button className="city-scene-build" disabled={!model.freePlots && model.main >= 5} onClick={() => choose(buildTarget)} title={model.freePlots ? `${model.freePlots} empty plots available` : model.main < 5 ? 'Upgrade the main building to unlock more plots' : 'All building plots are occupied'}><Icon name={model.freePlots ? 'plus' : 'expand'} size={17}/>{model.freePlots ? 'Build' : model.main < 5 ? 'Expand' : 'City full'}{model.freePlots > 0 && <small>{model.freePlots}</small>}</button></div>
-        <div className="city-scene-utilities city-scene-plate"><button className="city-scene-icon-button" aria-label="Show building markers" aria-pressed={markers} title={markers ? 'Hide building markers' : 'Show building markers'} onClick={() => setMarkers(current => !current)}><Icon name="focus" size={17}/></button>{onEmpire && <button className="city-scene-icon-button" aria-label="Open city territory" title={`Territory: ${claimed} / ${allowance} fields claimed`} onClick={onEmpire}><Icon name="world" size={17}/></button>}</div>
+        <div className="city-scene-utilities city-scene-plate"><button className="city-scene-icon-button" aria-label="Show building markers" aria-pressed={markers} title={markers ? 'Hide building markers' : 'Show building markers'} onClick={() => setMarkers(current => !current)}><Icon name="focus" size={17}/></button><button className="city-scene-icon-button" aria-label="Show building levels" aria-pressed={levelsVisible} disabled={!markers} title={levelsVisible?'Show levels on hover':'Show all building levels'} onClick={()=>setLevelsVisible(current=>!current)}><Icon name="levels" size={17}/></button>{onEmpire && <button className="city-scene-icon-button" aria-label="Open city territory" title={`Territory: ${claimed} / ${allowance} fields claimed`} onClick={onEmpire}><Icon name="world" size={17}/></button>}</div>
         {report && <CityReport key={`${sid}:${report}`} world={world} sid={sid} now={now} initialTab={report} onSelect={choose} onClose={() => setReport(null)}/>}
     </section>;
 }

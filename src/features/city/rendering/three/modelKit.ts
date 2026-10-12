@@ -54,6 +54,14 @@ export function cityKit(faction: Faction = 'roman', animated = false) {
         box(w * .22, h * .57, .035, x, 0, z + d / 2 + .012, m.dark);
         for (const side of [-1, 1]) box(.13, .17, .04, x + side * w * .29, h * .56, z + d / 2 + .018, m.dark);
         if (!stone) for (const side of [-1, 1]) box(.065, h, .045, x + side * (w / 2 - .035), 0, z + d / 2 + .023, m.wood);
+        if (animated) {
+            box(w + .08, .065, d + .06, x, 0, z, m.stone);
+            box(w + .03, .05, .045, x, h - .06, z + d / 2 + .026, m.wood);
+            for (const side of [-1, 1]) {
+                box(.2, .025, .075, x + side * w * .29, h * .54 - .03, z + d / 2 + .04, m.light);
+                for (const shutter of [-1, 1]) box(.04, .19, .045, x + side * w * .29 + shutter * .09, h * .56 - .01, z + d / 2 + .041, m.roofLight);
+            }
+        }
     }
     function tower(x: number, z: number, h: number, r = .3, pointed = false) {
         if(faction==='dwarf'||faction==='egyptian')box(r*2,h,r*2,x,0,z,m.stone);else cylinder(r,h,x,0,z,m.stone); cylinder(r*1.12,.13,x,h-.12,z,m.light);

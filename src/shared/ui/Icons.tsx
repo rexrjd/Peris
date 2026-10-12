@@ -10,6 +10,7 @@ export function Icon({ name, size = 20 }: {
         pause:<><path d="M8 4v16M16 4v16" strokeWidth="3"/></>,
         world: <><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c-6 6-6 12 0 18M12 3c6 6 6 12 0 18"/></>,
         focus: <><circle cx="12" cy="12" r="5"/><path d="M12 2v5M12 17v5M2 12h5M17 12h5"/></>,
+        levels: <><rect x="4" y="3" width="16" height="18" rx="5"/><path d="m9 8 3-2v12M9 18h6"/></>,
         settings: <><path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="3" fill="currentColor" stroke="none"/><circle cx="15" cy="17" r="3" fill="currentColor" stroke="none"/></>,
         book: <><path d="M12 5C8 2 3 3 2 4v15c3-2 6-1 10 1 4-2 7-3 10-1V4c-1-1-6-2-10 1v15M6 8h3M15 8h3M6 12h3M15 12h3"/></>,
         expand: <path d="M3 9V3h6M15 3h6v6M21 15v6h-6M9 21H3v-6"/>,

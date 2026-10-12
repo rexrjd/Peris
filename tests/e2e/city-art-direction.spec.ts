@@ -1,0 +1,50 @@
+import { test, expect } from '@playwright/test';
+import * as THREE from 'three';
+import { createSolo } from '../../src/features/campaign/domain/newRealm';
+import { refreshCityEconomy, type SlotType } from '../../src/features/city/domain/slots';
+import { FACTIONS, type Faction } from '../../src/features/factions/domain/factions';
+import { cityLayout } from '../../src/features/city/rendering/three/layout';
+import { CityCamera } from '../../src/features/city/rendering/three/CityCamera';
+
+for (const faction of ['roman', 'elf', 'undead'] as Faction[]) test(`redesigned ${faction} districts stay playable in a developing city`, async ({ page, isMobile }, info) => {
+    test.skip(isMobile, 'Desktop checks multiple art styles; the existing city suites exercise mobile interactions.');
+    test.setTimeout(90_000);
+    const errors: string[] = []; page.on('pageerror', error => errors.push(error.message));
+        const world = createSolo('Willowford'), main = 2;
+        world.settlements[0].faction=faction;
+        world.buildings.forEach(building => { building.level = building.building_type === 'market' ? main : building.building_type === 'wall' ? 1 : 4; });
+        const types: SlotType[] = ['warehouse', 'housing', 'granary', 'academy', 'smithy', 'workshop'];
+        world.city_slots = types.map((building_type, slot_index) => ({ settlement_id: 1, slot_index, building_type, level: 5 }));
+        refreshCityEconomy(world, 1);
+        await page.addInitScript(w => {
+            localStorage.setItem('peris-campaign-v6', JSON.stringify(w));
+            localStorage.setItem('peris-settings', JSON.stringify({ sound: false, music: false, reducedMotion: true }));
+            localStorage.setItem(`peris-welcome:${w.players[0].id}:${w.players[0].created_at}`, 'yes');
+        }, world);
+        await page.goto('/');
+        await page.getByRole('button', { name: 'Continue campaign', exact: true }).click();
+        await page.getByRole('button', { name: 'City', exact: true }).click();
+        await page.getByRole('button', { name: '3D', exact: true }).click();
+        const canvas = page.locator('.city-3d-scene.ready canvas');
+        await expect(canvas).toHaveAttribute('data-city-zoom', '1.000');
+        await expect(page.locator('.city-scene-identity')).toContainText(FACTIONS[faction].name);
+        const badge = page.locator('[data-building="slot:3"] .city-level-badge');
+        await expect(badge).toHaveCSS('opacity', '0');
+        await page.getByRole('button', { name: 'Show building levels', exact: true }).click();
+        await expect(badge).toHaveCSS('opacity', '1');
+        await page.getByRole('button', { name: 'Show building levels', exact: true }).click();
+        await expect(badge).toHaveCSS('opacity', '0');
+        await page.screenshot({ path: info.outputPath(`city-${faction}.png`) });
+        // A real roof click validates scene picking, independently of the DOM marker buttons.
+        const rect = (await canvas.boundingBox())!, camera = new CityCamera(); camera.resize(rect.width, rect.height, main);
+        const plot = cityLayout({ market: main }, world.city_slots).find(plot => plot.key === 'slot:3')!;
+        const point = new THREE.Vector3(plot.x, 1.1, plot.z - .2).project(camera.camera);
+        await page.mouse.click(rect.x + (point.x + 1) * rect.width / 2, rect.y + (1 - point.y) * rect.height / 2);
+        await expect(page.getByRole('dialog')).toContainText('Academy');
+        await page.keyboard.press('Escape');
+        await page.locator('[data-building="slot:8"]').click();
+        await expect(page.getByRole('dialog')).toContainText('Choose a building');
+        await page.keyboard.press('Escape');
+        expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    expect(errors).toEqual([]);
+});

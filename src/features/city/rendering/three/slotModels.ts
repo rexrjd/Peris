@@ -42,6 +42,21 @@ export function createSlotModel(type:SlotType|null,level:number,faction:Faction=
   for(let i=0;i<Math.min(3,level);i++){const x=-.7+i*.65;cylinder(.25,.75+level*.12,x,0,.5,m.wheat);cone(.32,.3,x,.75+level*.12,.5,m.slate);}
   if(level>=4)k.fence(0,1.1,2.3);
   if(level>=5)k.flag(0,1.05,-.45);
+ } else if(type==='workshop') {
+  house(-.4,-.35,1.35,.85,.7+level*.06,level>=3,m.slate);
+  // Siege workshop: a wheeled timber ram and a visibly growing catapult yard.
+  box(.85,.08,.45,.25,.25,.7,m.wood);
+  const ram=cylinder(.1,.8,.25,.3,.7,m.timber);ram.rotation.z=Math.PI/2;
+  for(const x of [-.1,.6])for(const z of [.42,.97]){const wheel=cylinder(.14,.06,x,.04,z,m.dark);wheel.rotation.x=Math.PI/2;}
+  if(level>=2){
+   box(.6,.09,.5,.9,.16,-.35,m.wood);box(.07,.55,.07,.9,.25,-.35,m.timber);
+   const beam=box(.08,.8,.07,.9,.4,-.35,m.wood);beam.rotation.z=-.55;
+   box(.25,.07,.25,.68,1.05,-.35,m.timber);
+   for(const x of [.65,1.15])for(const z of [-.62,-.08]){const wheel=cylinder(.12,.06,x,.05,z,m.dark);wheel.rotation.x=Math.PI/2;}
+  }
+  if(level>=3)for(let i=0;i<4;i++)box(.22,.18,.22,-1.1+i*.24,0,.8,m.stone);
+  if(level>=4){box(.08,1.4,.08,-1.2,0,-.55,m.wood);box(.8,.08,.08,-.85,1.3,-.55,m.timber);}
+  if(level>=5)k.flag(-.4,1.7,-.35,.7);
  } else {
   house(-.45,-.3,.65,.75,.65,level>=3,m.slate);
   const width=1.2+level*.13;

@@ -56,10 +56,10 @@ export class CityCamera {
         const aspect = this.width / this.height;
         // A closer default framing makes the buildings larger; zoom out reveals the extended landscape.
         // Diagonal views need a little more room for the river plot and opposite corners.
-        const diagonalRoom = 1 + Math.abs(Math.sin(this.rotation * 2)) * .14;
+        const diagonalRoom = 1 + Math.abs(Math.sin((this.rotation + Math.PI/7) * 2)) * .14;
         const halfHeight = Math.max(11.5 * diagonalRoom, 15 / aspect) * this.growth;
         Object.assign(this.camera, { left: -halfHeight * aspect, right: halfHeight * aspect, top: halfHeight, bottom: -halfHeight });
-        const angle = this.rotation + Math.atan2(3.6, 24.2), radius = Math.hypot(3.6, 24.2);
+        const angle = this.rotation + Math.PI/7, radius = Math.hypot(3.6, 24.2);
         this.camera.position.set(this.target.x + Math.sin(angle) * radius, 22, this.target.z + Math.cos(angle) * radius);
         this.camera.lookAt(this.target); this.camera.updateProjectionMatrix(); this.camera.updateMatrixWorld();
     }

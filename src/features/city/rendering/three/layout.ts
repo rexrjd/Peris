@@ -8,7 +8,7 @@ export const CITY_PLOTS = [
  {type:'quarry' as const,x:13,z:-4,radius:1.9},
  {type:'farm' as const,x:-12,z:5,radius:2},
 ];
-export const riverX = (z:number) => 8.8 + Math.sin(z * .44) * .7;
+export const riverX = (z:number) => 9.3 + Math.sin(z * .44) * .3;
 /** Bounds in landscape coordinates; reserve an open street beyond the last plot row. */
 export function cityFootprint(main:number) {
  const level=Math.max(0,Math.min(5,main)),rows=Math.ceil(slotCount(level)/4);

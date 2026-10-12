@@ -1,32 +1,28 @@
 import * as THREE from 'three';
-import {FACTIONS,type Faction} from '../../../factions/domain/factions';
+import { FACTIONS, type Faction } from '../../../factions/domain/factions';
 import { cityKit } from './modelKit';
-import { CITY_PLOTS, cityFootprint, cityLayout, riverX } from './layout';
-import { cityGrowth } from '../../domain/slots';
+import { cityFootprint, riverX } from './layout';
+import { cityStreets, cityTerrainHeight } from './cityStreets';
+import { createCityFoliage } from './cityFoliage';
 
 const random = (n: number) => { const value = Math.sin(n * 127.1 + 19.7) * 43758.5453; return value - Math.floor(value); };
-const streamX = riverX;
 
-/** A small, fixed settlement landscape, independent of the campaign simulation. */
-export function createCityLandscape(mainLevel = 0,faction:Faction='roman') {
-    const footprint=cityFootprint(mainLevel),growth=cityGrowth(mainLevel);
-    const group = new THREE.Group(), k = cityKit(faction);
-    const { m, box, cylinder, cone, rock } = k;
-    const palette=FACTIONS[faction];
+/** Broad rolling scenery around a readable settlement, with shared street geometry. */
+export function createCityLandscape(mainLevel = 0, faction: Faction = 'roman') {
+    const footprint = cityFootprint(mainLevel), group = new THREE.Group(), k = cityKit(faction);
+    const { m, box, cylinder, rock } = k, palette = FACTIONS[faction];
+    const groundTone = new THREE.Color(palette.ground).lerp(new THREE.Color(palette.road), .24);
+    const hillTone = new THREE.Color(palette.hill).lerp(groundTone, .3);
     const points: number[] = [], colors: number[] = [];
     const grid = (x: number, z: number): [number, number, number] => {
-        const px = -28 + x * 2, pz = -27 + z * 2;
-        const town = px > -15 && px < 16 && pz > -9 && pz < footprint.fishingZ+1;
-        const streamBank = Math.abs(px - streamX(pz)) < 2;
-        const hill = Math.max(0, -pz - 8) * .13 + Math.max(0, Math.abs(px) - 10) * .07;
-        return [px + (random(x * 23 + z * 71) - .5) * .45, town || streamBank ? -.035 : hill + random(x * 83 + z) * .32 - .08, pz];
+        const px = -64 + x * 3.2, pz = -63 + z * 3.2;
+        return [px, cityTerrainHeight(px, pz, mainLevel), pz];
     };
-    for (let z = 0; z < 28; z++) for (let x = 0; x < 28; x++) {
+    for (let z = 0; z < 40; z++) for (let x = 0; x < 40; x++) {
         const a = grid(x, z), b = grid(x + 1, z), c = grid(x, z + 1), d = grid(x + 1, z + 1);
-        const triangles = (x + z) % 2 ? [[a, c, b], [b, c, d]] : [[a, d, b], [a, c, d]];
-        for (const triangle of triangles) {
-            const color = new THREE.Color(triangle[0][2] < -9 ? palette.hill : palette.ground).multiplyScalar(.94 + random(x * 39 + z * 271 + triangle[0][0]) * .1);
-            for (const point of triangle) { points.push(...point); colors.push(color.r, color.g, color.b); }
+        for (const triangle of (x + z) % 2 ? [[a, c, b], [b, c, d]] : [[a, d, b], [a, c, d]]) {
+            const tone = (triangle[0][2] < -14 ? hillTone : groundTone).clone().multiplyScalar(.98 + random(x * 39 + z * 271) * .035);
+            for (const point of triangle) { points.push(...point); colors.push(tone.r, tone.g, tone.b); }
         }
     }
     const groundShape = new THREE.BufferGeometry();
@@ -34,55 +30,69 @@ export function createCityLandscape(mainLevel = 0,faction:Faction='roman') {
     groundShape.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3)); groundShape.computeVertexNormals();
     const ground = new THREE.Mesh(groundShape, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 1, flatShading: true }));
     ground.receiveShadow = true; group.add(ground);
-    // Roads connect the actual plots. Thin strips sit on the level town floor.
-    const road = (x1: number, z1: number, x2: number, z2: number, width = .48) => {
-        box(Math.hypot(x2 - x1, z2 - z1), .018, width, (x1 + x2) / 2, -.006, (z1 + z2) / 2, m.road, -Math.atan2(z2 - z1, x2 - x1));
-    };
-    const front=footprint.front,outside=footprint.outsideRoad,fishingX=streamX(footprint.fishingZ);
-    road(.1,front,fishingX-1,footprint.fishingZ);road(fishingX-1,footprint.fishingZ,fishingX,footprint.fishingZ);
-    for(const plot of cityLayout({market:mainLevel},[]).filter(p=>p.slot!==undefined&&p.slot<16)) road(0,.1,plot.x/growth,plot.z/growth,.26);
-    for (const plot of CITY_PLOTS) {
-        if(Math.abs(plot.x)>11) {road(.1,front,plot.x,outside);road(plot.x,outside,plot.x,plot.z);}
-        else road(-.3,.1,plot.x,plot.z);
-    }
-    road(-.3,.1,.1,front,.7);road(-.4,-6.8,-.4,-12,.65);
-    // A restrained stream and bridge at the eastern edge.
-    const waterPoints: number[] = [], bankPoints: number[] = [];
-    for (let z = -28; z < 30; z++) {
-        const a = streamX(z), b = streamX(z + 1);
-        for (const [target, width, y] of [[waterPoints, .43, .025], [bankPoints, .67, .006]] as const) target.push(a-width,y,z, a+width,y,z, b+width,y,z+1, a-width,y,z, b+width,y,z+1, b-width,y,z+1);
-    }
-    const waterMaterial = new THREE.MeshStandardMaterial({ color: palette.water, roughness: 1, flatShading: true });
-    for (const [positions, surface] of [[bankPoints, m.road], [waterPoints, waterMaterial]] as const) {
-        const shape = new THREE.BufferGeometry(); shape.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3)); shape.computeVertexNormals();
-        const mesh = new THREE.Mesh(shape, surface); mesh.material.side = THREE.DoubleSide; group.add(mesh);
-    }
-    const bridgeX = streamX(2.4);
-    box(1.8, .16, .65, bridgeX, .07, 2.4, m.wood);
-    for (const z of [2.04, 2.76]) { box(1.8, .07, .065, bridgeX, .5, z, m.timber); for (const side of [-1, 1]) box(.08, .5, .08, bridgeX + side * .8, .08, z, m.wood); }
-    road(6.4, 2.4, 11, 2.4);
-    // Trees frame the playable town; no clutter is placed between its landmarks.
-    for (let i = 0; i < 56; i++) {
-        const side = i % 4;
-        const x = side < 2 ? -12 + random(i * 11) * 4 : 10.5 + random(i * 7) * 4;
-        const z = -8 + random(i * 29) * 18;
-        if (Math.abs(x - streamX(z)) < 1 || CITY_PLOTS.some(p=>Math.hypot(x-p.x,z-p.z)<2.6)) continue;
-        const h = .85 + random(i * 37) * 1.1;
-        if(faction==='pandaren'){
-            for(const dx of [-.14,.14]){cylinder(.045,h*1.6,x+dx,0,z,m.green);for(let j=1;j<4;j++)box(.3,.04,.07,x+dx,h*j*.4,z,m.leaf,j*.7);}
-        }else if(faction==='egyptian'||faction==='persian'){
-            cylinder(.07,h,x,0,z,m.timber);for(let j=0;j<5;j++){const angle=j*Math.PI*.4;box(.75,.07,.17,x+Math.cos(angle)*.22,h,z+Math.sin(angle)*.22,m.leaf,angle);}
-        }else if(faction==='undead'||faction==='demon'){
-            cylinder(.07,h,x,0,z,m.wood);for(const side of [-1,1]){const branch=box(.06,h*.5,.06,x+side*.14,h*.55,z,m.wood);branch.rotation.z=-side*.5;}
-        }else if(faction==='gnome'&&i%3===0){cylinder(.09,h*.6,x,0,z,m.light);k.rock(.42,x,h*.5,z,m.roof);}
-        else if(faction==='dwarf'&&i%2===0)rock(h*.55,x,0,z,m.darkStone);
-        else{cylinder(.07,h*.42,x,0,z,m.wood);cone(h*.48,h*.9,x,h*.25,z,i%2?m.green:m.leaf);if(i%3===0)cone(h*.35,h*.7,x,h*.68,z,m.green);}
 
+    m.road.color.lerp(m.light.color, .25);
+    const roadPiece=(x1:number,z1:number,x2:number,z2:number,width:number)=>{
+        const length = Math.hypot(x2 - x1, z2 - z1), angle = -Math.atan2(z2 - z1, x2 - x1);
+        box(length, .025, width + .08, (x1 + x2) / 2, -.009, (z1 + z2) / 2, m.earth, angle);
+        box(length, .025, width, (x1 + x2) / 2, .01, (z1 + z2) / 2, m.road, angle);
+    };
+    for (const { from: [x1, z1], to: [x2, z2], width } of cityStreets(mainLevel)) {
+        const river=riverX(z1);
+        if(z1===z2&&Math.min(x1,x2)<river-1.1&&Math.max(x1,x2)>river+1.1){
+            roadPiece(Math.min(x1,x2),z1,river-1.1,z1,width);
+            roadPiece(river+1.1,z1,Math.max(x1,x2),z1,width);
+        }else roadPiece(x1,z1,x2,z2,width);
     }
-    for (let i = 0; i < 22; i++) {
-        const x = -13 + random(i * 97) * 27, z = -11 - random(i * 31) * 3;
-        rock(.28 + random(i * 53) * .5, x, .15, z);
-        if (i % 2) { cylinder(.07, .8, x + .6, .15, z, m.wood); cone(.6, 1.7, x + .6, .5, z, m.green); }
+    // A broad central walk with discreet paving seams and garden verges.
+    for (let z = -3.6; z < footprint.front - .5; z += .72) box(1.02, .008, .025, 0, .037, z, m.light);
+    for (const x of [-.76, .76]) for (let z = .9; z < footprint.front - 1; z += 4) {
+        box(.34, .12, .8, x, .01, z, m.stone);
+        for (const dz of [-.2, .2]) rock(.18, x, .12, z + dz, m.leaf);
     }
-    group.add(k.finish()); group.name = 'Low-poly city landscape'; return group;
+    const waterPoints: number[] = [], bankPoints: number[] = [], foam: number[] = [];
+    for (let z = -64; z < 65; z++) {
+        const a = riverX(z), b = riverX(z + 1);
+        for (const [target, width, y] of [[waterPoints, .72, .022], [bankPoints, 1.04, -.005]] as const)
+            target.push(a - width, y, z, a + width, y, z, b + width, y, z + 1, a - width, y, z, b + width, y, z + 1, b - width, y, z + 1);
+        if (z % 2 === 0) for (const side of [-1, 1]) {
+            const x = a + side * .7, nx = b + side * .7;
+            foam.push(x, .026, z, x + side * .025, .026, z, nx, .026, z + .7);
+        }
+    }
+    const waterTone = new THREE.Color(palette.water).lerp(new THREE.Color('#77b7bd'), .3);
+    for (const [positions, surface] of [
+        [bankPoints, new THREE.MeshStandardMaterial({ color: new THREE.Color(palette.road).lerp(new THREE.Color(palette.light), .4), roughness: 1 })],
+        [waterPoints, new THREE.MeshStandardMaterial({ color: waterTone, roughness: .48, metalness: .08, flatShading: true })],
+        [foam, new THREE.MeshBasicMaterial({ color: '#d4eee5', transparent: true, opacity: .4, depthWrite: false })],
+    ] as const) {
+        const shape = new THREE.BufferGeometry(); shape.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3)); shape.computeVertexNormals();
+        surface.side = THREE.DoubleSide; const mesh = new THREE.Mesh(shape, surface); group.add(mesh);
+    }
+    // The bridge has a readable deck, supports and railings instead of a single plank.
+    const bridge = (z: number, stone: boolean) => {
+        const bridgeX = riverX(z);
+        for (let i = 0; i < 9; i++) {
+            const dx = -1.15 + i * .2875, height = .12 + Math.sin(i / 8 * Math.PI) * .15;
+            box(.3, .09, .78, bridgeX + dx, height, z, stone ? m.light : m.timber);
+            for (const side of [-1, 1]) box(.3, .07, .06, bridgeX + dx, height + .37, z + side * .43, stone ? m.stone : m.wood);
+        }
+        for (const side of [-1, 1]) for (const dx of [-1.15, 0, 1.15]) cylinder(.04, .48, bridgeX + dx, .1, z + side * .43, stone ? m.stone : m.wood);
+        for (const dx of [-.9, .9]) box(.15, .32, .9, bridgeX + dx, -.12, z, stone ? m.stone : m.wood);
+    };
+    bridge(2.4, mainLevel >= 3); bridge(footprint.outsideRoad, false);
+
+    // Reeds, bankside stones and warm ground details frame the water without covering landmarks.
+    for (let i = 0; i < 52; i++) {
+        const z = -19 + random(i * 7 + 5) * (footprint.fishingZ + 38), side = i % 2 ? -1 : 1, x = riverX(z) + side * (1.15 + random(i + 8) * .4);
+        if (Math.abs(z - 2.4) < 1.5 || Math.abs(z - footprint.fishingZ) < 2) continue;
+        if (i % 3) for (let stem = 0; stem < 3; stem++) cylinder(.013, .15 + stem * .08, x + stem * .05, -.02, z, m.wheat);
+        else rock(.12 + random(i) * .16, x, -.03, z, m.light);
+    }
+    for (let i = 0; i < 26; i++) {
+        const x = -22 + random(i * 97) * 45, z = -15 - random(i * 31) * 5;
+        rock(.2 + random(i * 53) * .42, x, cityTerrainHeight(x, z, mainLevel), z, i % 3 ? m.darkStone : m.light);
+    }
+    group.add(k.finish(), createCityFoliage(mainLevel, faction));
+    group.name = 'Living low-poly city landscape'; return group;
 }
