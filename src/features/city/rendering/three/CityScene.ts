@@ -13,6 +13,7 @@ import { CityCamera } from './CityCamera';
 import { createCityActivities } from './cityActivities';
 import { createCityDistricts, createEmptyCityPlot } from './cityDistricts';
 import { CityTrainingYard } from './cityTraining';
+import { createCityResource, isCityResource } from './resourceModels';
 import type { CityTraining } from '../../domain/training';
 
 /** Presentation only. Selection returns through React; upgrades stay in the engine. */
@@ -106,7 +107,7 @@ export class CityScene {
             const level=plot.type==='mage_tower'?Math.max(0,Math.min(10,Math.round(plot.level))):visualLevel(plot.level), previous=this.models.get(plot.key);
             if (changed || !previous || previous.level!==level || previous.type!==plot.type || plot.type==='wall' && resized) {
                 if(previous) {this.scene.remove(previous.model);disposeCityObject(previous.model);}
-                const model=plot.slot!==undefined && !level ? createEmptyCityPlot(faction,plot.slot===16) : plot.slot!==undefined ? createSlotModel(plot.type as SlotType|null,level,faction,true) : plot.type==='wall' ? createCityWalls(level,this.mainLevel,faction,true) : createBuildingModel(plot.type as BuildingType,level,faction,true);
+                const model=plot.slot!==undefined && !level ? createEmptyCityPlot(faction,plot.slot===16) : isCityResource(plot.type) ? createCityResource(plot.type,level,faction,true) : plot.slot!==undefined ? createSlotModel(plot.type as SlotType|null,level,faction,true) : plot.type==='wall' ? createCityWalls(level,this.mainLevel,faction,true) : createBuildingModel(plot.type as BuildingType,level,faction,true);
                 this.scene.add(model); this.models.set(plot.key,{level,type:plot.type,model});
             }
             const model=this.models.get(plot.key)!.model;

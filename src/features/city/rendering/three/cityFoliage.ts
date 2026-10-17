@@ -29,7 +29,7 @@ export function createCityFoliage(mainLevel: number, faction: Faction) {
         const z = distant ? -90 + random(i * 17 + 5) * 180 : side < 2 ? -29 + random(i * 3 + 1) * (f.front + 58) : side === 2 ? -32 + random(i + 13) * 20 : f.fishingZ + 4 + random(i + 17) * 19;
         if (x > f.left - 1.4 && x < f.right + 1.4 && z > f.back - 1.4 && z < f.front + 1.5) continue;
         if (Math.abs(x - riverX(z)) < 1.7 || cityStreetClearance(x, z, mainLevel) < 1.1) continue;
-        if (plots.some(plot => Math.hypot(x - plot.x / growth, z - plot.z / growth) < (plot.type === 'farm' ? 5.4 : plot.type === 'quarry' ? 4.8 : 3.3))) continue;
+        if (plots.some(plot => Math.hypot(x - plot.x / growth, z - plot.z / growth) < (plot.type === 'farm' ? 6.2 : plot.type === 'quarry' ? 5 : plot.type === 'lumber' ? 4.3 : 3.3))) continue;
         if (positions.some(tree => Math.hypot(tree.x - x, tree.z - z) < 1.25)) continue;
         positions.push({ x, z, h: 1.2 + random(i * 7 + 6) * 1.9 });
     }

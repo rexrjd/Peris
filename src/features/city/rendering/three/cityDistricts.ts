@@ -2,14 +2,54 @@ import * as THREE from 'three';
 import { cityKit } from './modelKit';
 import { type CityPlot } from './layout';
 import type { Faction } from '../../../factions/domain/factions';
+import { isCityResource } from './resourceModels';
 
 /** Shared material batches dress actual built plots. No decorative building fills an empty slot. */
 export function createCityDistricts(plots: CityPlot[], faction: Faction) {
     const k = cityKit(faction), { m, box, cylinder, rock } = k;
     m.road.color.lerp(m.light.color, .35);
+    m.earth.color.lerp(m.wood.color, .2); m.wheat.color.lerp(m.gold.color, .24);
     for (const plot of plots) {
         if (!plot.level || plot.type === 'wall') continue;
         const { x, z, type } = plot, main = type === 'market', inside = plot.slot !== undefined && plot.slot < 16;
+        if (isCityResource(type)) {
+            // Working country yards use soil, crops and stock instead of civic paving.
+            if (type === 'fishery') {
+                const bank = cylinder(1, .025, x - 1.5, -.015, z - .25, m.earth); bank.scale.set(.48, .025, 1.1);
+                for (const dx of [-1.4, -.65]) for (const dz of [-.8, .1]) cylinder(.045, .35, x + dx, -.2, z + dz, m.wood);
+            } else {
+                const yard = cylinder(1, .026, x, -.015, z + .1, m.earth); yard.scale.set(2.2, .026, 1.8);
+                box(1.15, .025, .8, x, -.008, z + 1.65, m.road);
+            }
+            if (type === 'lumber') {
+                k.fence(x - 2, z - .2, 2.8, Math.PI / 2);
+                for (let i = 0; i < 3; i++) { cylinder(.17, .16, x - 2.35 - i * .3, -.01, z - 1.4 + i * .6, m.timber); }
+                box(.48, .28, .46, x + 1.75, 0, z + .95, m.wood);
+            }
+            if (type === 'quarry') {
+                for (let i = 0; i < 7; i++) rock(.26 + i % 3 * .12, x + 1.95 + i % 2 * .55, -.04, z - 1.6 + Math.floor(i / 2) * .55, i % 2 ? m.light : m.darkStone);
+                box(.65, .12, .5, x - 1.5, 0, z - 1.8, m.darkStone);
+            }
+            if (type === 'farm') {
+                for (const [dx, dz, w, d] of [[-3, .05, 2.5, 3.4], [-.3, 3.8, 3.3, 2.25]]) {
+                    const fx = x + dx, fz = z + dz;
+                    box(w, .035, d, fx, -.016, fz, m.earth);
+                    for (let row = 0; row < 7; row++) {
+                        const pz = fz - d * .42 + row * d * .14;
+                        box(w * .92, .026, .11, fx, .01, pz, m.timber);
+                        box(w * .9, .12, .14, fx, .045, pz, m.wheat);
+                        for (let stalk = 0; stalk < 9; stalk++) {
+                            const px = fx - w * .43 + stalk * w * .107, h = .14 + (stalk + row) % 3 * .025;
+                            cylinder(.018, h, px, .035, pz, m.wheat);
+                            const head = k.cone(.055, .13, px, h, pz, (row + stalk) % 4 ? m.wheat : m.leaf); head.rotation.z = .2;
+                        }
+                    }
+                    k.fence(fx - w / 2 - .12, fz, d + .2, Math.PI / 2);
+                    box(.35, .17, .35, fx - w / 2 + .25, .02, fz + d / 2 + .05, m.wheat);
+                }
+            }
+            continue;
+        }
         const width = main ? 4.3 : inside ? 3.2 : 3.5, depth = main ? 3.65 : 3.2;
         box(width, .045, depth, x, -.02, z, m.road);
         // Low kerbs, entrance steps and planting ground every district visually.
@@ -30,20 +70,6 @@ export function createCityDistricts(plots: CityPlot[], faction: Faction) {
                 rock(.16, x + side * 1.65, .87, z + 2.65, m.gold);
                 box(.85, .07, .22, x + side * 1.1, .25, z + 3.1, m.wood);
                 for (const dx of [-.3, .3]) box(.05, .25, .05, x + side * 1.1 + dx, 0, z + 3.1, m.wood);
-            }
-        }
-        if (type === 'lumber') {
-            box(3.6, .018, 1.65, x - .5, -.01, z + 2.6, m.earth);
-            for (let i = 0; i < 5; i++) {
-                const log = cylinder(.1, 1, x - 1.8 + i * .23, .1, z + 2.4, m.timber);
-                log.rotation.z = Math.PI / 2;
-            }
-        }
-        if (type === 'quarry') for (let i = 0; i < 8; i++) rock(.32 + i % 3 * .16, x + 2 + i % 3 * .65, -.04, z - 2 + Math.floor(i / 3) * .65, i % 2 ? m.light : m.darkStone);
-        if (type === 'farm') {
-            for (const [dx, dz] of [[-2.45, .3], [0, 3.45]]) {
-                box(2.4, .025, 2.5, x + dx, -.015, z + dz, m.earth);
-                for (let row = 0; row < 9; row++) box(2.15, .09 + plot.level * .009, .09, x + dx, .01, z + dz - 1.1 + row * .25, m.wheat);
             }
         }
         if (type === 'academy') {

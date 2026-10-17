@@ -234,3 +234,26 @@ New construction allows one barracks per city in the picker, campaign commands
 and the authoritative row-locked server function. Earlier repeated barracks,
 troops, levels and pending work remain intact. Generated complete installers and
 UPGRADE_UNIQUE_BARRACKS.sql contain the same rule; SQL is not deployed by this patch.
+
+## V19.9 walls and working resource sites
+
+The native 3D city uses thicker stepped fortifications with stone footings,
+buttresses, inset wall walks, corner towers, access steps and an open front
+gatehouse. Early levels retain timber palisades. River passages have open arches;
+the front avenue, northern postern and eastern bridge gate stay clear at every
+city growth stage. The foreground wall remains lower so it frames the city.
+
+City resource models have five original procedural development stages: a sawmill
+with a flywheel and cut logs, a terraced quarry with lifting gear, a barn and
+windmill, and a fishing landing with a boat and covered dock. Faction palettes,
+roof shapes and heraldry carry through all eleven factions. Country yards use
+soil, stock and fenced golden crop rows instead of civic paving. Their larger
+clearings reserve the existing service roads and keep resource sites outside
+the walls. Equipment uses the existing reduced-motion-aware activity system.
+
+These changes affect city presentation and its model thumbnails. Strategic field
+models, the painted village, building locations, costs, production and saved
+state retain their current rules. No new image, GLB, external source, license or
+SQL migration is introduced. Visual review covered desktop and phone framing,
+rotation, early and mature development, and all eleven faction styles. Frame
+rate targets remain unmeasured.
