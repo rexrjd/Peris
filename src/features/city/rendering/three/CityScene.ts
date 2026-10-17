@@ -14,6 +14,7 @@ import { createCityActivities } from './cityActivities';
 import { createCityDistricts, createEmptyCityPlot } from './cityDistricts';
 import { CityTrainingYard } from './cityTraining';
 import { createCityResource, isCityResource } from './resourceModels';
+import { createCityLife } from './cityLife';
 import type { CityTraining } from '../../domain/training';
 
 /** Presentation only. Selection returns through React; upgrades stay in the engine. */
@@ -46,8 +47,10 @@ export class CityScene {
     private faction:Faction='roman';
     private landscape = createCityLandscape();
     private districts = new THREE.Group();
+    private townLife = createCityLife([], 'roman', 0);
     private villagers = createVillagers();
     private lastFrame = 0;
+    private lastReduced: boolean | undefined;
     private layoutSignature = "";
     private down: { x: number; y: number } | null = null;
 
@@ -62,7 +65,7 @@ export class CityScene {
         const sun = new THREE.DirectionalLight(0xffe6bd, 2.2); sun.position.set(-18, 28, 12); sun.castShadow = true;
         sun.shadow.mapSize.set(1024, 1024); Object.assign(sun.shadow.camera, { left: -36, right: 36, top: 36, bottom: -36, near: .1, far: 100 });
         sun.shadow.bias = -.0004; sun.shadow.normalBias = .035;
-        this.scene.add(sun, sun.target, this.landscape, this.villagers.group, this.activities.group, this.districts, this.training.group);
+        this.scene.add(sun, sun.target, this.landscape, this.villagers.group, this.activities.group, this.districts, this.training.group, this.townLife.group);
 
         const ring = (color: number, opacity: number) => {
             const mesh = new THREE.Mesh(new THREE.RingGeometry(.985, 1, 4), new THREE.MeshBasicMaterial({ color, opacity, transparent: true, depthWrite: false, side: THREE.DoubleSide }));
@@ -119,6 +122,8 @@ export class CityScene {
         }
         this.scene.remove(this.districts);disposeCityObject(this.districts);
         this.districts=createCityDistricts(this.plots,faction);this.scene.add(this.districts);
+        this.scene.remove(this.townLife.group);disposeCityObject(this.townLife.group);
+        this.townLife=createCityLife(this.plots,faction,this.mainLevel);this.scene.add(this.townLife.group);
         this.villagers.setPlots(this.plots,growth,this.mainLevel);
         this.activities.setModels(this.models, this.plots, faction);
         this.training.setTraining(training,this.plots,faction);
@@ -146,6 +151,8 @@ export class CityScene {
         this.frame = requestAnimationFrame(time => {
             this.frame = 0; if (this.destroyed || document.hidden) return;
             const reduced = this.reduced;
+            // Draw the resting pose even when preference changes inside the 33ms throttle.
+            if (reduced !== this.lastReduced) { this.lastReduced = reduced; this.dirty = true; }
             if (time - this.lastFrame >= 33 || this.dirty) {
                 const delta = this.lastFrame ? Math.min(.1, (time - this.lastFrame) / 1000) : 0;
                 this.lastFrame = time; this.dirty = false;
@@ -154,12 +161,16 @@ export class CityScene {
                 if (this.scene.fog instanceof THREE.Fog) { this.scene.fog.near = this.view.distance + 45; this.scene.fog.far = this.view.distance + 150; }
                 this.villagers.animate(reduced ? 0 : this.animationTime * 1000);
                 this.activities.animate(this.animationTime, reduced);
+                this.townLife.animate(this.animationTime, reduced);
                 this.training.animate(this.animationTime, reduced);
                 this.renderer.render(this.scene, this.camera);
                 this.canvas.dataset.cityZoom = this.camera.zoom.toFixed(3);
                 this.canvas.dataset.cityRotation = this.view.rotation.toFixed(3);
                 this.canvas.dataset.cityTraining = this.training.state;
                 this.canvas.dataset.cityTrainingPhase = (reduced ? 0 : this.animationTime).toFixed(2);
+                this.canvas.dataset.cityLanterns = String(this.townLife.group.userData.cityLife.lanterns);
+                this.canvas.dataset.cityFlowers = String(this.townLife.group.userData.cityLife.flowers);
+                this.canvas.dataset.cityLifePhase = (reduced ? 0 : this.animationTime).toFixed(2);
                 for (const plot of this.plots) {
                     const button = this.labelRoot.querySelector<HTMLElement>(`[data-building="${plot.key}"]`);
                     if (!button) continue;

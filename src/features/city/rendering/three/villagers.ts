@@ -5,7 +5,7 @@ import { cityWalkRoute } from './cityStreets';
 /** Small moving silhouettes; paths follow streets and use the southern gate. */
 export function createVillagers(faction:Faction='roman') {
  const palette=FACTIONS[faction];
- const group=new THREE.Group(),count=18,bodyShape=new THREE.BoxGeometry(.16,.25,.13),headShape=new THREE.IcosahedronGeometry(.09,0),legShape=new THREE.BoxGeometry(.055,.19,.055);
+ const group=new THREE.Group(),count=22,bodyShape=new THREE.BoxGeometry(.16,.25,.13),headShape=new THREE.IcosahedronGeometry(.09,0),legShape=new THREE.BoxGeometry(.055,.19,.055);
  const body=new THREE.InstancedMesh(bodyShape,new THREE.MeshStandardMaterial({color:0xffffff,flatShading:true}),count);
  const head=new THREE.InstancedMesh(headShape,new THREE.MeshStandardMaterial({color:palette.skin,flatShading:true}),count);
  const legs=new THREE.InstancedMesh(legShape,new THREE.MeshStandardMaterial({color:0x65503b,flatShading:true}),count*2);
@@ -27,15 +27,18 @@ export function createVillagers(faction:Faction='roman') {
   for(let i=0;i<count;i++){
    const {points:path,lengths,total}=paths[i%paths.length];
    if(!path)continue;
-   const phase=((time*.00065+i*.73)%(total*2)),distance=phase>total?total*2-phase:phase;
+   // Different paces and short stops at each destination keep the town from marching in sync.
+   const pause=.65+(i%3)*.2,phase=(time*(.00048+(i%5)*.000035)+i*2.173)%(total*2+pause*2);
+   const returning=phase>total+pause*2,waiting=phase<pause||phase>total+pause&&phase<=total+pause*2;
+   const distance=phase<pause?0:phase<=total+pause?phase-pause:phase<=total+pause*2?total:total*2+pause*2-phase;
    let remaining=distance,index=0;while(index<lengths.length-1&&remaining>lengths[index])remaining-=lengths[index++];
    const from=path[index],to=path[index+1];position.lerpVectors(from,to,remaining/Math.max(.001,lengths[index]));
-   const angle=Math.atan2(to.x-from.x,to.z-from.z)+(phase>total?Math.PI:0),step=Math.sin(time*.009+i)*.045;
+   const angle=Math.atan2(to.x-from.x,to.z-from.z)+(returning?Math.PI:0),step=waiting?0:Math.sin(time*.009+i)*.045;
    dummy.scale.set(palette.scale,palette.scale,palette.scale);dummy.rotation.set(0,angle,0);dummy.position.set(position.x,.32*palette.scale,position.z);dummy.updateMatrix();body.setMatrixAt(i,dummy.matrix);
    dummy.position.y=.53*palette.scale;dummy.updateMatrix();head.setMatrixAt(i,dummy.matrix);
    for(let side=0;side<2;side++){dummy.position.set(position.x+(side?1:-1)*.047,.105*palette.scale,position.z+(side?step:-step));dummy.updateMatrix();legs.setMatrixAt(i*2+side,dummy.matrix);}
    if(ears)for(const side of [-1,1]){dummy.position.set(position.x+side*.065*palette.scale,.6*palette.scale,position.z);dummy.updateMatrix();ears.setMatrixAt(i*2+(side+1)/2,dummy.matrix);}
-   dummy.position.set(position.x+.12,.32,position.z+.06);dummy.updateMatrix();parcels.setMatrixAt(i,dummy.matrix);
+   dummy.position.set(position.x+Math.cos(angle)*.12,.32*palette.scale,position.z-Math.sin(angle)*.12);if(i%3)dummy.scale.setScalar(0);dummy.updateMatrix();parcels.setMatrixAt(i,dummy.matrix);
   }
   for(const mesh of [body,head,legs,parcels])mesh.instanceMatrix.needsUpdate=true;
   if(ears)ears.instanceMatrix.needsUpdate=true;

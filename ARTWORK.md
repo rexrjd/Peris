@@ -272,3 +272,26 @@ material-batched; custom arch source geometries are disposed after batching.
 The accepted wall sections, resource sites, city growth and gameplay rules are
 preserved. All geometry is original procedural Peris artwork, with no new image,
 GLB, external asset or SQL migration.
+
+## V19.11 living town details
+
+The native 3D city adds hanging street lanterns, flower baskets, coordinated
+flower beds, terracotta pots, courtyard barrels and crates, and a striped produce
+stall in the existing civic square. The square's benches have backrests and one
+resident reading; a shopkeeper gestures beside the stall. Street lights use shared
+instanced meshes and emissive glass rather than individual dynamic lights. Flower
+stems, petals and centres are instanced with faction-aware colours. All props are
+original procedural Peris geometry and use the existing faction material family.
+
+Lantern bases avoid the rendered streets and every reserved city lot. Flowers and
+household props follow completed buildings; empty or unfinished plots retain their
+normal construction presentation. The town details rebuild with city growth,
+construction, demolition or faction changes and release their geometry/materials.
+Twenty-two resident silhouettes walk at varied speeds, stop briefly at destinations
+and carry fewer identical parcels. The existing route geometry remains unchanged.
+
+Town gestures and subtle lantern flicker follow the scene's existing reduced-motion
+and hidden-tab scheduling. The painted village, world map, building selection,
+production, population, saves and multiplayer rules retain their existing behaviour.
+No new image, GLB, dependency or SQL migration is introduced. GPU frame rate has
+not been benchmarked.
