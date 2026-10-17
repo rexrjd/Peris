@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { FACTIONS, type Faction } from '../../../factions/domain/factions';
 import { cityKit } from './modelKit';
 import { cityFootprint, riverX } from './layout';
-import { cityStreets, cityTerrainHeight } from './cityStreets';
+import { CITY_LANDSCAPE_EDGE, cityStreets, cityTerrainHeight } from './cityStreets';
 import { createCityFoliage } from './cityFoliage';
 
 const random = (n: number) => { const value = Math.sin(n * 127.1 + 19.7) * 43758.5453; return value - Math.floor(value); };
@@ -12,13 +12,13 @@ export function createCityLandscape(mainLevel = 0, faction: Faction = 'roman') {
     const footprint = cityFootprint(mainLevel), group = new THREE.Group(), k = cityKit(faction);
     const { m, box, cylinder, rock } = k, palette = FACTIONS[faction];
     const groundTone = new THREE.Color(palette.ground).lerp(new THREE.Color(palette.road), .24);
-    const hillTone = new THREE.Color(palette.hill).lerp(groundTone, .3);
+    const hillTone = new THREE.Color(palette.hill).lerp(groundTone, .8);
     const points: number[] = [], colors: number[] = [];
     const grid = (x: number, z: number): [number, number, number] => {
-        const px = -64 + x * 3.2, pz = -63 + z * 3.2;
+        const px = -CITY_LANDSCAPE_EDGE + x * 3.2, pz = -CITY_LANDSCAPE_EDGE + z * 3.2;
         return [px, cityTerrainHeight(px, pz, mainLevel), pz];
     };
-    for (let z = 0; z < 40; z++) for (let x = 0; x < 40; x++) {
+    for (let z = 0; z < 60; z++) for (let x = 0; x < 60; x++) {
         const a = grid(x, z), b = grid(x + 1, z), c = grid(x, z + 1), d = grid(x + 1, z + 1);
         for (const triangle of (x + z) % 2 ? [[a, c, b], [b, c, d]] : [[a, d, b], [a, c, d]]) {
             const tone = (triangle[0][2] < -14 ? hillTone : groundTone).clone().multiplyScalar(.98 + random(x * 39 + z * 271) * .035);
@@ -32,10 +32,21 @@ export function createCityLandscape(mainLevel = 0, faction: Faction = 'roman') {
     ground.receiveShadow = true; group.add(ground);
 
     m.road.color.lerp(m.light.color, .25);
+    const roadLayers = [{ vertices: [] as number[], extra: .08, lift: .018, material: m.earth.clone() }, { vertices: [] as number[], extra: 0, lift: .035, material: m.road.clone() }];
     const roadPiece=(x1:number,z1:number,x2:number,z2:number,width:number)=>{
-        const length = Math.hypot(x2 - x1, z2 - z1), angle = -Math.atan2(z2 - z1, x2 - x1);
-        box(length, .025, width + .08, (x1 + x2) / 2, -.009, (z1 + z2) / 2, m.earth, angle);
-        box(length, .025, width, (x1 + x2) / 2, .01, (z1 + z2) / 2, m.road, angle);
+        const length = Math.hypot(x2 - x1, z2 - z1), steps = Math.ceil(length / 1.5);
+        const nx = -(z2 - z1) / length, nz = (x2 - x1) / length;
+        for (const { vertices, extra, lift } of roadLayers) {
+            const w = width + extra;
+            const edge = (step: number, side: number) => {
+                const t = step / steps, x = x1 + (x2 - x1) * t + nx * w * side / 2, z = z1 + (z2 - z1) * t + nz * w * side / 2;
+                return [x, cityTerrainHeight(x, z, mainLevel) + lift, z];
+            };
+            for (let step = 0; step < steps; step++) {
+                const a = edge(step, -1), b = edge(step, 1), c = edge(step + 1, -1), d = edge(step + 1, 1);
+                vertices.push(...a, ...b, ...c, ...b, ...d, ...c);
+            }
+        }
     };
     for (const { from: [x1, z1], to: [x2, z2], width } of cityStreets(mainLevel)) {
         const river=riverX(z1);
@@ -44,6 +55,10 @@ export function createCityLandscape(mainLevel = 0, faction: Faction = 'roman') {
             roadPiece(river+1.1,z1,Math.max(x1,x2),z1,width);
         }else roadPiece(x1,z1,x2,z2,width);
     }
+    for (const { vertices, material } of roadLayers) {
+        const shape = new THREE.BufferGeometry(); shape.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3)); shape.computeVertexNormals();
+        const mesh = new THREE.Mesh(shape, material); mesh.receiveShadow = true; group.add(mesh);
+    }
     // A broad central walk with discreet paving seams and garden verges.
     for (let z = -3.6; z < footprint.front - .5; z += .72) box(1.02, .008, .025, 0, .037, z, m.light);
     for (const x of [-.76, .76]) for (let z = .9; z < footprint.front - 1; z += 4) {
@@ -51,7 +66,7 @@ export function createCityLandscape(mainLevel = 0, faction: Faction = 'roman') {
         for (const dz of [-.2, .2]) rock(.18, x, .12, z + dz, m.leaf);
     }
     const waterPoints: number[] = [], bankPoints: number[] = [], foam: number[] = [];
-    for (let z = -64; z < 65; z++) {
+    for (let z = -CITY_LANDSCAPE_EDGE; z < CITY_LANDSCAPE_EDGE; z++) {
         const a = riverX(z), b = riverX(z + 1);
         for (const [target, width, y] of [[waterPoints, .72, .022], [bankPoints, 1.04, -.005]] as const)
             target.push(a - width, y, z, a + width, y, z, b + width, y, z + 1, a - width, y, z, b + width, y, z + 1, b - width, y, z + 1);

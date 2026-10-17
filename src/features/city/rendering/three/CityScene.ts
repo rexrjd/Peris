@@ -12,6 +12,8 @@ import { createCityWalls } from './cityWalls';
 import { CityCamera } from './CityCamera';
 import { createCityActivities } from './cityActivities';
 import { createCityDistricts, createEmptyCityPlot } from './cityDistricts';
+import { CityTrainingYard } from './cityTraining';
+import type { CityTraining } from '../../domain/training';
 
 /** Presentation only. Selection returns through React; upgrades stay in the engine. */
 export class CityScene {
@@ -20,6 +22,7 @@ export class CityScene {
     private readonly view = new CityCamera();
     private readonly camera = this.view.camera;
     private readonly activities = createCityActivities();
+    private readonly training = new CityTrainingYard(() => { this.renderer.shadowMap.needsUpdate = true; this.render(); });
     private animationTime = 0;
     private dirty = true;
     private readonly motionPreference = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -58,7 +61,7 @@ export class CityScene {
         const sun = new THREE.DirectionalLight(0xffe6bd, 2.2); sun.position.set(-18, 28, 12); sun.castShadow = true;
         sun.shadow.mapSize.set(1024, 1024); Object.assign(sun.shadow.camera, { left: -36, right: 36, top: 36, bottom: -36, near: .1, far: 100 });
         sun.shadow.bias = -.0004; sun.shadow.normalBias = .035;
-        this.scene.add(sun, sun.target, this.landscape, this.villagers.group, this.activities.group, this.districts);
+        this.scene.add(sun, sun.target, this.landscape, this.villagers.group, this.activities.group, this.districts, this.training.group);
 
         const ring = (color: number, opacity: number) => {
             const mesh = new THREE.Mesh(new THREE.RingGeometry(.985, 1, 4), new THREE.MeshBasicMaterial({ color, opacity, transparent: true, depthWrite: false, side: THREE.DoubleSide }));
@@ -76,9 +79,10 @@ export class CityScene {
         this.settingsObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
         this.resize = new ResizeObserver(() => this.setSize()); this.resize.observe(canvas.parentElement!); this.setSize();
     }
-    update(levels: Record<string, number>, selected: string, slots: CitySlot[],faction:Faction='roman') {
+    update(levels: Record<string, number>, selected: string, slots: CitySlot[],faction:Faction='roman',training:CityTraining=null) {
         const signature=JSON.stringify([levels,slots,faction]);
         if(signature===this.layoutSignature) {
+            this.training.setTraining(training,this.plots,faction);
             if(selected!==this.selected) {this.selected=selected;const p=this.plots.find(p=>p.key===selected);this.ring.visible=!!p;if(p){this.ring.position.set(p.x,.06,p.z);this.ring.scale.set(p.radius*Math.SQRT2,p.radius*Math.SQRT2,1);}this.render();}
             return;
         }
@@ -116,6 +120,7 @@ export class CityScene {
         this.districts=createCityDistricts(this.plots,faction);this.scene.add(this.districts);
         this.villagers.setPlots(this.plots,growth,this.mainLevel);
         this.activities.setModels(this.models, this.plots, faction);
+        this.training.setTraining(training,this.plots,faction);
         this.selected=selected;
         const plot=this.plots.find(p=>p.key===selected);
         this.ring.visible=!!plot;
@@ -145,11 +150,15 @@ export class CityScene {
                 this.lastFrame = time; this.dirty = false;
                 if (!reduced) this.animationTime += delta;
                 this.view.step(delta, reduced);
+                if (this.scene.fog instanceof THREE.Fog) { this.scene.fog.near = this.view.distance + 45; this.scene.fog.far = this.view.distance + 150; }
                 this.villagers.animate(reduced ? 0 : this.animationTime * 1000);
                 this.activities.animate(this.animationTime, reduced);
+                this.training.animate(this.animationTime, reduced);
                 this.renderer.render(this.scene, this.camera);
                 this.canvas.dataset.cityZoom = this.camera.zoom.toFixed(3);
                 this.canvas.dataset.cityRotation = this.view.rotation.toFixed(3);
+                this.canvas.dataset.cityTraining = this.training.state;
+                this.canvas.dataset.cityTrainingPhase = (reduced ? 0 : this.animationTime).toFixed(2);
                 for (const plot of this.plots) {
                     const button = this.labelRoot.querySelector<HTMLElement>(`[data-building="${plot.key}"]`);
                     if (!button) continue;
@@ -219,6 +228,6 @@ export class CityScene {
         this.canvas.parentElement?.removeEventListener('wheel', this.wheel);
         window.removeEventListener('keydown', this.key); document.removeEventListener('visibilitychange', this.resume);
         this.motionPreference.removeEventListener('change', this.resume);
-        disposeCityObject(this.scene); this.renderer.dispose(); this.renderer.forceContextLoss(); this.models.clear();
+        this.training.dispose(); disposeCityObject(this.scene); this.renderer.dispose(); this.renderer.forceContextLoss(); this.models.clear();
     }
 }

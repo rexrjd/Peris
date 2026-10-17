@@ -211,3 +211,26 @@ Egyptian Bird, Orc Head and Pagoda. `public/licenses/peris-rally-point-icons.txt
 records each original artist and primary icon page, the CC BY 3.0 artwork license,
 interface color/size adaptations and the complete react-icons 5.5.0 MIT software
 notice. These licensed vectors are distinct from the original generated paintings.
+
+## V19.7 city roads and barracks training
+
+The native city removes its screen vignette and softens the northern terrain tone.
+Terrain-following roads extend to all four landscape edges. The orthographic camera retreats along its existing viewing direction to keep the foreground ahead of its near plane when zoomed out on narrow phones; framing and zoom controls remain the same. Up to 1,100 instanced
+faction trees fill the wider countryside while avoiding streets, the river, city
+walls and working yards. The main gate sits on the front avenue. The city-only
+barracks has five larger development stages and an open drill yard; Orc halls use
+paired tents to keep their broad roofs inside the lot.
+
+An instructor and up to six trainees reuse the existing classic faction battle
+GLBs, their skeletal clips, and the shared instanced animation palette. There are
+two small visual batches, independent of gameplay formation state. Activity reads
+only the selected owner's current city recruitment, ignores future/expired work
+and other recruitment buildings, pauses with reduced motion or a hidden tab, and
+releases visual/source resources when the scene closes or its faction changes.
+The existing battle compatibility geometry remains available if a model fails to
+load. No new image, GLB, external source or license is introduced.
+
+New construction allows one barracks per city in the picker, campaign commands
+and the authoritative row-locked server function. Earlier repeated barracks,
+troops, levels and pending work remain intact. Generated complete installers and
+UPGRADE_UNIQUE_BARRACKS.sql contain the same rule; SQL is not deployed by this patch.

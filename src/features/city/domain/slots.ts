@@ -10,7 +10,7 @@ export type CitySlot = { settlement_id: number; slot_index: number; building_typ
 export const SLOT_BUILDINGS: Record<SlotType, { name: string; description: string; effect: string; cost: Resources }> = {
     academy:{name:'Academy',description:'Scholars develop technologies for every city and army in your account.',effect:'12 / 28 / 48 / 72 / 100 science per minute. Multiple Academies stack.',cost:{wood:220,stone:260,food:100,gold:80}},
     housing:{name:'Housing',description:'Homes for the civilians who work in your city. Each level adds room for thirty residents.',effect:'+30 population capacity per level. Housing can be repeated.',cost:{wood:140,stone:110,food:60,gold:20}},
-    barracks: { name: 'Barracks', description: 'Train infantry and archers.', effect: 'Each level improves training speed.', cost: { wood:180, stone:160, food:100, gold:30 } },
+    barracks: { name: 'Barracks', description: 'Your city’s unique garrison and training yard for infantry and archers.', effect: 'Each level improves training speed. One barracks per city.', cost: { wood:180, stone:160, food:100, gold:30 } },
     stables: { name: 'Stables', description: 'Raise cavalry.', effect: 'Each level improves cavalry training speed.', cost: { wood:200, stone:120, food:180, gold:45 } },
     workshop: { name: 'Workshop', description: 'Research and train rams and catapults.', effect: 'Each level improves siege training speed.', cost: { wood: 260, stone: 220, food: 120, gold: 60 } },
     smithy: { name: 'Smithy', description: 'Forge stronger weapons for your soldiers.', effect: '+4% army damage per level, up to +60% across smithies.', cost: { wood:180, stone:220, food:80, gold:60 } },

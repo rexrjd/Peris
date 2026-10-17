@@ -5,10 +5,12 @@ import { createBuildingModel } from './buildingModels';
 import {createMageTower} from './mageTower';
 import { cityKit } from './modelKit';
 import * as THREE from 'three';
+import { createCityBarracks } from './barracks';
 export function createSlotModel(type:SlotType|null,level:number,faction:Faction='roman', animated=false) {
  if(!type || !level)return createBuildingModel('barracks',0,faction);
  if(type==='academy')return createAcademy(level,faction,animated);
  if(type==='mage_tower')return createMageTower(level,faction,animated);
+ if(type==='barracks'&&animated)return createCityBarracks(level,faction,animated);
  if(type==='barracks'||type==='stables')return createBuildingModel(type,level,faction,animated);
  if(type==='warehouse')return createBuildingModel('storehouse',level,faction,animated);
  const k=cityKit(faction,animated),{m,box,cylinder,cone,house}=k;

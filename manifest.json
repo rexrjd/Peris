@@ -1,10 +1,222 @@
 {
-  "base_commit": "7f7094942fd16926d63c912f65275de45b095caa",
-  "version": "19.6",
+  "version": "19.7",
+  "base_commit": "11ccee7b843c41b7515dcb561e72b82442a16b52",
   "files": [
     {
-      "path": "src/app/styles/compact-header.css",
-      "sha256": "698145cd46a2563ff1b7f62f61776654022cb41d61b865fb419e459ec02df0cb"
+      "path": "ARTWORK.md",
+      "sha256": "3e63779c590d9eade77195789bc0129b5b43e1232adda357d2f45fc305cfdfe6"
+    },
+    {
+      "path": "scripts/build-sql.mjs",
+      "sha256": "65af1f3cdcc49c69dcccc0694f843ef7af87c81ea26f9c6257a6d27f72282559"
+    },
+    {
+      "path": "src/features/battle/rendering/three/armyAssets.ts",
+      "sha256": "93a9d22cf750d208e4f922d2bc6d558b1b9a17b08fe92108d67cc339b2555cb5"
+    },
+    {
+      "path": "src/features/city/domain/slotCommands.ts",
+      "sha256": "edac8078589103516b1df268dfd64d2ac05fe436febb950095569386e4f0ccbc"
+    },
+    {
+      "path": "src/features/city/domain/slots.ts",
+      "sha256": "4c13e2dfd43c89b417193c7ba91978ce9f47ca3cbc68cc0a813b4586ca6c7ea7"
+    },
+    {
+      "path": "src/features/city/domain/training.ts",
+      "sha256": "9634a4bb48ba357ca047d163bf4d354aa161d690c387f089905306b5bf704276"
+    },
+    {
+      "path": "src/features/city/rendering/SettlementScene.tsx",
+      "sha256": "8a6c502fd1cbe0f04c5a67d472f74d0d9ed257a3fdd0be3bac0967bf1f0abf1a"
+    },
+    {
+      "path": "src/features/city/rendering/three/CityCamera.ts",
+      "sha256": "bf5be882996609c93c5f5ad177dd97d583769191cd7fc6b1352d9bdeb3b2f9cc"
+    },
+    {
+      "path": "src/features/city/rendering/three/CityScene.ts",
+      "sha256": "bcbdbdb9693d236a7836aa499f35d86b9bae8e04a3ab41e10eac5e021e6adf4b"
+    },
+    {
+      "path": "src/features/city/rendering/three/barracks.ts",
+      "sha256": "58fbb1f80336d03d9eaac0c6c3777bdc293053025dd413185d12fc50d72a71f5"
+    },
+    {
+      "path": "src/features/city/rendering/three/cityFoliage.ts",
+      "sha256": "96cf92ecdcdf01b1ea0e395459938a522bc363c5f30b4cc8cd870b3132c6b67c"
+    },
+    {
+      "path": "src/features/city/rendering/three/cityStreets.ts",
+      "sha256": "afc813c489935d21c052f28ce783272cd672963953b9acbb4f289ccefba1cde2"
+    },
+    {
+      "path": "src/features/city/rendering/three/cityTraining.ts",
+      "sha256": "b3914f6a94e0a7df6ca58a84da1497bad913f8e6da79747d4ea4e64396d72a45"
+    },
+    {
+      "path": "src/features/city/rendering/three/cityWalls.ts",
+      "sha256": "e7cde8d637883c02d823b958058855cee0fc46c71a768305cba61335b19694b7"
+    },
+    {
+      "path": "src/features/city/rendering/three/landscape.ts",
+      "sha256": "f231c56d212819407ef28e1bea6f0331c5c5044b768b2413aaa60d1823b00d46"
+    },
+    {
+      "path": "src/features/city/rendering/three/slotModels.ts",
+      "sha256": "417dba5233ef23bee35a7239db0656f47413f612a3107bd846c5c3db15a94d3d"
+    },
+    {
+      "path": "src/features/city/styles/city-art-direction.css",
+      "sha256": "79c6c40077879b46aa8053c1742eee51d4a937a57832ff1b0db424760917ece7"
+    },
+    {
+      "path": "src/features/city/ui/BuildingDialog.tsx",
+      "sha256": "5e5ddc71a67b31be23a6e3f03de807ba4c52d52693f0fbeb01db23fa38efe5ec"
+    },
+    {
+      "path": "src/features/city/ui/BuildingPicker.tsx",
+      "sha256": "9d732661bc873c8d78394bc60c440fb9eee5d2bfdd8663e08a26cad13fe8a28a"
+    },
+    {
+      "path": "src/features/city/ui/SettlementView.tsx",
+      "sha256": "68b4599ba6b3ed18e7a760fe2568715393bb8464b606c9944aad36f1a3e2c64e"
+    },
+    {
+      "path": "supabase/FRESH_INSTALL_V10.sql",
+      "sha256": "107b85652be0d4553a06d18ba94c75154d789753d2e9ebce3038e484a5678924"
+    },
+    {
+      "path": "supabase/FRESH_INSTALL_V11.sql",
+      "sha256": "107b85652be0d4553a06d18ba94c75154d789753d2e9ebce3038e484a5678924"
+    },
+    {
+      "path": "supabase/FRESH_INSTALL_V12.sql",
+      "sha256": "107b85652be0d4553a06d18ba94c75154d789753d2e9ebce3038e484a5678924"
+    },
+    {
+      "path": "supabase/FRESH_INSTALL_V13.sql",
+      "sha256": "107b85652be0d4553a06d18ba94c75154d789753d2e9ebce3038e484a5678924"
+    },
+    {
+      "path": "supabase/FRESH_INSTALL_V14.sql",
+      "sha256": "107b85652be0d4553a06d18ba94c75154d789753d2e9ebce3038e484a5678924"
+    },
+    {
+      "path": "supabase/FRESH_INSTALL_V15.sql",
+      "sha256": "107b85652be0d4553a06d18ba94c75154d789753d2e9ebce3038e484a5678924"
+    },
+    {
+      "path": "supabase/FRESH_INSTALL_V16.sql",
+      "sha256": "107b85652be0d4553a06d18ba94c75154d789753d2e9ebce3038e484a5678924"
+    },
+    {
+      "path": "supabase/FRESH_INSTALL_V17.sql",
+      "sha256": "107b85652be0d4553a06d18ba94c75154d789753d2e9ebce3038e484a5678924"
+    },
+    {
+      "path": "supabase/FRESH_INSTALL_V18.sql",
+      "sha256": "107b85652be0d4553a06d18ba94c75154d789753d2e9ebce3038e484a5678924"
+    },
+    {
+      "path": "supabase/FRESH_INSTALL_V19.sql",
+      "sha256": "107b85652be0d4553a06d18ba94c75154d789753d2e9ebce3038e484a5678924"
+    },
+    {
+      "path": "supabase/FRESH_INSTALL_V6.sql",
+      "sha256": "107b85652be0d4553a06d18ba94c75154d789753d2e9ebce3038e484a5678924"
+    },
+    {
+      "path": "supabase/FRESH_INSTALL_V7.sql",
+      "sha256": "107b85652be0d4553a06d18ba94c75154d789753d2e9ebce3038e484a5678924"
+    },
+    {
+      "path": "supabase/FRESH_INSTALL_V8.sql",
+      "sha256": "107b85652be0d4553a06d18ba94c75154d789753d2e9ebce3038e484a5678924"
+    },
+    {
+      "path": "supabase/FRESH_INSTALL_V9.sql",
+      "sha256": "107b85652be0d4553a06d18ba94c75154d789753d2e9ebce3038e484a5678924"
+    },
+    {
+      "path": "supabase/UPGRADE_TO_V10.sql",
+      "sha256": "79f712702a24998d96d93b4be709426a966f2e7f8dcf07791391792d980e0ba2"
+    },
+    {
+      "path": "supabase/UPGRADE_TO_V11.sql",
+      "sha256": "79f712702a24998d96d93b4be709426a966f2e7f8dcf07791391792d980e0ba2"
+    },
+    {
+      "path": "supabase/UPGRADE_TO_V12.sql",
+      "sha256": "79f712702a24998d96d93b4be709426a966f2e7f8dcf07791391792d980e0ba2"
+    },
+    {
+      "path": "supabase/UPGRADE_TO_V13.sql",
+      "sha256": "79f712702a24998d96d93b4be709426a966f2e7f8dcf07791391792d980e0ba2"
+    },
+    {
+      "path": "supabase/UPGRADE_TO_V14.sql",
+      "sha256": "79f712702a24998d96d93b4be709426a966f2e7f8dcf07791391792d980e0ba2"
+    },
+    {
+      "path": "supabase/UPGRADE_TO_V15.sql",
+      "sha256": "79f712702a24998d96d93b4be709426a966f2e7f8dcf07791391792d980e0ba2"
+    },
+    {
+      "path": "supabase/UPGRADE_TO_V16.sql",
+      "sha256": "79f712702a24998d96d93b4be709426a966f2e7f8dcf07791391792d980e0ba2"
+    },
+    {
+      "path": "supabase/UPGRADE_TO_V17.sql",
+      "sha256": "79f712702a24998d96d93b4be709426a966f2e7f8dcf07791391792d980e0ba2"
+    },
+    {
+      "path": "supabase/UPGRADE_TO_V18.sql",
+      "sha256": "79f712702a24998d96d93b4be709426a966f2e7f8dcf07791391792d980e0ba2"
+    },
+    {
+      "path": "supabase/UPGRADE_TO_V19.sql",
+      "sha256": "79f712702a24998d96d93b4be709426a966f2e7f8dcf07791391792d980e0ba2"
+    },
+    {
+      "path": "supabase/UPGRADE_TO_V7.sql",
+      "sha256": "79f712702a24998d96d93b4be709426a966f2e7f8dcf07791391792d980e0ba2"
+    },
+    {
+      "path": "supabase/UPGRADE_TO_V8.sql",
+      "sha256": "79f712702a24998d96d93b4be709426a966f2e7f8dcf07791391792d980e0ba2"
+    },
+    {
+      "path": "supabase/UPGRADE_TO_V9.sql",
+      "sha256": "79f712702a24998d96d93b4be709426a966f2e7f8dcf07791391792d980e0ba2"
+    },
+    {
+      "path": "supabase/UPGRADE_UNIQUE_BARRACKS.sql",
+      "sha256": "1efdd7fe9bdefb17b6c332b8463804958e263acbc3dc3bfa9c01cd4cd5dbba56"
+    },
+    {
+      "path": "supabase/UPGRADE_V5_TO_V6.sql",
+      "sha256": "79f712702a24998d96d93b4be709426a966f2e7f8dcf07791391792d980e0ba2"
+    },
+    {
+      "path": "supabase/modules/city/city-slots.sql",
+      "sha256": "9d57b7a25ca9b120c7bd0b19752f15f7f6919f44f3aaa6abae9b3b6c282b0b57"
+    },
+    {
+      "path": "supabase/schema.sql",
+      "sha256": "79f712702a24998d96d93b4be709426a966f2e7f8dcf07791391792d980e0ba2"
+    },
+    {
+      "path": "tests/city-barracks-database.test.mjs",
+      "sha256": "2b5be1a3ca7247e2bb214e20a1573edc11e9b07e95cec1d24c1567c3e4b93327"
+    },
+    {
+      "path": "tests/city-training.test.ts",
+      "sha256": "a1b92af82bed700d7e93ce59f0763bcef736e012dc39f771250a9f32ffa61e89"
+    },
+    {
+      "path": "tests/e2e/city-training.spec.ts",
+      "sha256": "1d23353e610918fb1b5fab31fb97ee31c3d3cfedef2f05ef479e3c1de63f88c8"
     }
   ]
 }

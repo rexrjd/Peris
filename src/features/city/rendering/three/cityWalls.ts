@@ -33,17 +33,17 @@ export function createCityWalls(value: number, mainLevel = 0,faction:Faction='ro
             }
         }
     }
-    const gateWidth = 2.9 + level * .08;
-    section(left, back, -gateWidth / 2, back);
-    section(gateWidth / 2, back, northRiver-.98, back);
+    const gateWidth = 2.9 + level * .08, gateX = .4;
+    section(left, back, -.55, back);
+    section(.55, back, northRiver-.98, back);
     section(northRiver+.98, back, right, back); // Northern water passage.
     section(left, back, left, front);
     const eastGate=2.4+9;
     section(right,back,right,eastGate-.7);
     section(right,eastGate+.7,right,front);
     if(level>=2)for(const z of [eastGate-.75,eastGate+.75])tower(right,z,.9+level*.14,.2);
-    section(left, front, -.65, front, true);
-    section(.85, front, river-.9, front, true);
+    section(left, front, gateX-gateWidth/2, front, true);
+    section(gateX+gateWidth/2, front, river-.9, front, true);
     section(river+.9, front, right, front, true); // Southern water passage.
     if (level >= 2) for (const x of [left, right]) for (const z of [back, front]) {
         const height = z === front ? .95 + level * .16 : 1.05 + level * .24;
@@ -51,12 +51,11 @@ export function createCityWalls(value: number, mainLevel = 0,faction:Faction='ro
             box(.5, height, .5, x, 0, z, m.wood); k.roof(.7, .3, .7, x, height, z);
         } else tower(x, z, height, .34, level === 4);
     }
-    if (level >= 3) for (const x of [-.75, .95]) tower(x, front, 1.2 + level * .1, .23);
     if (level === 5) for (const x of [left, right]) k.flag(x, 2.35, back);
     const perimeter = k.finish();
     const gate = createBuildingModel('wall', level,faction,animated);
-    // Flatten both groups so every wall segment uses the existing building picker.
-    perimeter.add(...[...gate.children]);
+    gate.position.set(gateX, 0, front); gate.rotation.y = Math.PI;
+    gate.name = 'Front city gate'; perimeter.add(gate);
     perimeter.name = `City perimeter level ${level}`;
     return perimeter;
 }

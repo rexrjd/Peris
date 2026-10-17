@@ -6,17 +6,19 @@ import { SLOT_BUILDINGS, type CitySlot, type SlotType, riversideSlot } from '../
 import { CityScene } from './three/CityScene';
 import { cityLayout } from './three/layout';
 import { Icon } from '../../../shared/ui/Icons';
-type SceneProps = { selected:string; onSelect:(key:string)=>void; levels:Record<string,number>; slots:CitySlot[]; faction?:Faction };
-export function SettlementScene({selected,onSelect,levels,slots,faction='roman'}:SceneProps) {
- const canvas=useRef<HTMLCanvasElement>(null),labels=useRef<HTMLDivElement>(null),renderer=useRef<CityScene|null>(null),props=useRef({selected,onSelect,levels,slots,faction});
- const [failed,setFailed]=useState(false),[ready,setReady]=useState(false); props.current={selected,onSelect,levels,slots,faction};
+import type { CityTraining } from '../domain/training';
+type SceneProps = { selected:string; onSelect:(key:string)=>void; levels:Record<string,number>; slots:CitySlot[]; faction?:Faction; training?:CityTraining };
+export function SettlementScene({selected,onSelect,levels,slots,faction='roman',training=null}:SceneProps) {
+ const canvas=useRef<HTMLCanvasElement>(null),labels=useRef<HTMLDivElement>(null),renderer=useRef<CityScene|null>(null),props=useRef({selected,onSelect,levels,slots,faction,training});
+ const [failed,setFailed]=useState(false),[ready,setReady]=useState(false); props.current={selected,onSelect,levels,slots,faction,training};
  useEffect(()=>{
   if(failed||!canvas.current||!labels.current)return;
   const surface=canvas.current;let instance:CityScene|null=null;const lost=()=>setFailed(true);surface.addEventListener('citygraphicslost',lost);
-  const frame=requestAnimationFrame(()=>{try{instance=new CityScene(surface,labels.current!,key=>props.current.onSelect(key));renderer.current=instance;instance.update(props.current.levels,props.current.selected,props.current.slots,props.current.faction);setReady(true);}catch(error){console.warn('City graphics unavailable',error);setFailed(true);}});
+  const frame=requestAnimationFrame(()=>{try{instance=new CityScene(surface,labels.current!,key=>props.current.onSelect(key));renderer.current=instance;instance.update(props.current.levels,props.current.selected,props.current.slots,props.current.faction,props.current.training);setReady(true);}catch(error){console.warn('City graphics unavailable',error);setFailed(true);}});
   return()=>{cancelAnimationFrame(frame);surface.removeEventListener('citygraphicslost',lost);instance?.destroy();if(renderer.current===instance)renderer.current=null;};
  },[failed]);
- useEffect(()=>{renderer.current?.update(levels,selected,slots,faction);},[levels,selected,slots,faction]);
+ const trainingKey=JSON.stringify(training);
+ useEffect(()=>{renderer.current?.update(levels,selected,slots,faction,training);},[levels,selected,slots,faction,trainingKey]);
  const plots=cityLayout(levels,slots);
  const name=(p:typeof plots[number])=>p.slot===undefined?BUILDINGS[p.type as BuildingType].name:p.type?SLOT_BUILDINGS[p.type as SlotType].name:`Empty plot ${p.slot+1}`;
  const hint=(p:typeof plots[number])=>!p.type?'Choose a building for this plot.':`${p.level?`Level ${p.level}.`:'Not built yet.'} ${p.slot===undefined?BUILDINGS[p.type as BuildingType].effect:SLOT_BUILDINGS[p.type as SlotType].effect}${p.slot===16?' Riverside site outside the wall.':''}`;

@@ -5,14 +5,15 @@ import { Cost } from '../../../shared/ui/Shared';
 import { affordable } from '../domain/economy';
 import { SLOT_BUILDINGS, slotCost, type SlotType } from '../domain/slots';
 
-export function BuildingPicker({ slot, resources, hasTower, busy, building, run, initialChoice = 'housing' }: {
-  slot: number; resources: Resources; hasTower: boolean; busy: boolean; building: boolean;
+export function BuildingPicker({ slot, resources, hasTower, hasBarracks = false, busy, building, run, initialChoice = 'housing' }: {
+  slot: number; resources: Resources; hasTower: boolean; hasBarracks?: boolean; busy: boolean; building: boolean;
   run: (command: Command, message?: string) => void;
   initialChoice?: SlotType;
 }) {
   const [choice, setChoice] = useState<SlotType>(initialChoice);
   const item = SLOT_BUILDINGS[choice], cost = slotCost(choice, 0);
   const reason = choice === 'mage_tower' && hasTower ? 'One mage tower per city'
+    : choice === 'barracks' && hasBarracks ? 'One barracks per city'
     : building ? 'Builders are working' : busy ? 'Issuing orders…'
     : !affordable(resources, cost) ? 'More supplies needed' : null;
   return <div className="building-picker">
@@ -20,7 +21,7 @@ export function BuildingPicker({ slot, resources, hasTower, busy, building, run,
       {(Object.entries(SLOT_BUILDINGS) as [SlotType, typeof item][]).filter(([key]) => key !== 'fishery').map(([key, option]) =>
         <label key={key} className={choice === key ? 'chosen' : ''}>
           <input type="radio" name={`plot-${slot}-building`} value={key} checked={choice === key} onChange={() => setChoice(key)}/>
-          <span>{option.name}<small>{key === 'mage_tower' ? hasTower ? 'Already built' : 'Unique · 10 levels' : 'Repeatable · 5 levels'}</small></span>
+          <span>{option.name}<small>{key === 'mage_tower' ? hasTower ? 'Already built' : 'Unique · 10 levels' : key === 'barracks' ? hasBarracks ? 'Already built' : 'Unique · 5 levels' : 'Repeatable · 5 levels'}</small></span>
         </label>)}
     </div></fieldset>
     <div className="building-preview"><h3>{item.name}</h3><p>{item.description}</p><div className="benefit">{item.effect}</div>

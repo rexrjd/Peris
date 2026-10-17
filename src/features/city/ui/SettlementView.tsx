@@ -15,6 +15,7 @@ import { CityHeader } from './CityHeader';
 import { CitySceneWorkspace } from './CitySceneWorkspace';
 import { BuildingDialog } from './BuildingDialog';
 import { CityArmySummary, CityEconomySummary } from './CitySummary';
+import { activeCityTraining } from '../domain/training';
 
 export function SettlementView({ world, playerId, run, busy, now, cityId, onCity, onEmpire, shortcut }: {
     world: World; playerId: string; cityId?: number; onCity?: (id: number) => void; onEmpire?: () => void;
@@ -52,7 +53,7 @@ export function SettlementView({ world, playerId, run, busy, now, cityId, onCity
     const sceneProps = { selected, onSelect: choose, levels, slots, faction: factionOf(town.faction) };
     const dialog = dialogOpen && <BuildingDialog key={plot.key} appearance={mode === '3d' ? 'scene' : undefined} world={world} owner={playerId} sid={town.id} plot={plot} initialChoice={buildChoice} note={shortcutNote} busy={busy} now={now} run={run} onSelect={choose} onClose={() => setDialogOpen(false)}/>;
     if (mode === '3d') return <div className="settlement-layout city-stage city-scene-screen">
-        <CitySceneWorkspace world={world} owner={playerId} sid={town.id} now={now} plots={plots} onCity={onCity} onSelect={choose} onEmpire={onEmpire} scene={<SettlementScene {...sceneProps}/>} viewControls={<div className="city-scene-views" aria-label="City views">{paintedAvailable && <button aria-pressed={false} onClick={() => setMode('city')} title="Painted village view"><Icon name="town" size={16}/><span>Village</span></button>}<button aria-pressed={true} title="Live 3D city"><Icon name="expand" size={16}/><span>3D</span></button></div>}/>
+        <CitySceneWorkspace world={world} owner={playerId} sid={town.id} now={now} plots={plots} onCity={onCity} onSelect={choose} onEmpire={onEmpire} scene={<SettlementScene {...sceneProps} training={activeCityTraining(world,town.id,playerId,now)}/>} viewControls={<div className="city-scene-views" aria-label="City views">{paintedAvailable && <button aria-pressed={false} onClick={() => setMode('city')} title="Painted village view"><Icon name="town" size={16}/><span>Village</span></button>}<button aria-pressed={true} title="Live 3D city"><Icon name="expand" size={16}/><span>3D</span></button></div>}/>
         {dialog}
     </div>;
     return <div className="settlement-layout city-stage city-command-ui village-screen">
