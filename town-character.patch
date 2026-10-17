@@ -1,0 +1,497 @@
+diff --git a/ARTWORK.md b/ARTWORK.md
+index 89ed7e5..05af74a 100644
+--- a/ARTWORK.md
++++ b/ARTWORK.md
+@@ -295,3 +295,29 @@ and hidden-tab scheduling. The painted village, world map, building selection,
+ production, population, saves and multiplayer rules retain their existing behaviour.
+ No new image, GLB, dependency or SQL migration is introduced. GPU frame rate has
+ not been benchmarked.
++
++## V19.12 town stonework and building identity
++
++The native 3D city's main avenue, civic square and completed building approaches
++use staggered flagstones with restrained colour variation. Working courtyards
++retain earth floors; broad, softly blended grass patches break up the surrounding
++lawn. Surface generation follows city growth and leaves every unbuilt reserved
++plot clear. Stonework and lawn variation use two vertex-coloured material batches,
++with no textures or individual tile meshes.
++
++The Roman main hall has a taller columned facade, entrance stairs and an upgraded
++bell tower. The other ten faction halls retain their architectural forms with a
++taller civic silhouette and entrance steps. The smithy is an open forge with a
++banded chimney, bellows, furnace, anvil and the existing animated blacksmith.
++Warehouses have twin loading sheds, platforms, stock and a hoist; granaries have
++raised grain silos, bands, chutes, sacks and an access ladder. Barracks retain
++their accepted drill yard and gain military standards and a facade shield.
++All five levels use original procedural geometry and the existing faction palette
++and roof family. Building inspector previews use the same new resting models.
++
++The strategic map's settlement factories, resource sites, walls, gates, painted
++village, walking routes, recruitment animation and existing flowers and lanterns
++retain their behaviour. All changes are presentation-only, release owned render
++resources, and use the existing reduced-motion-aware scene lifecycle. No SQL,
++dependency, external asset, image, GLB or license change is required. Frame-rate
++targets remain unmeasured.
+diff --git a/src/features/city/rendering/BuildingPreview.tsx b/src/features/city/rendering/BuildingPreview.tsx
+index 881eeb3..1970471 100644
+--- a/src/features/city/rendering/BuildingPreview.tsx
++++ b/src/features/city/rendering/BuildingPreview.tsx
+@@ -11,6 +11,7 @@ import { createSlotModel } from './three/slotModels';
+ import { disposeCityObject } from './three/modelKit';
+ import { createCityResource, isCityResource } from './three/resourceModels';
+ import { createCityGate } from './three/gateModels';
++import { createCityHall } from './three/cityHall';
+ 
+ export type BuildingPreviewProps = {
+     type: BuildingType | SlotType;
+@@ -43,7 +44,7 @@ export function BuildingPreview({ type, level, faction, label }: BuildingPreview
+             renderer.toneMapping = THREE.ACESFilmicToneMapping;
+             renderer.toneMappingExposure = .95;
+             const scene = new THREE.Scene();
+-            model = type === 'wall' ? createCityGate(level, faction) : isCityResource(type) ? createCityResource(type, level, faction) : type in SLOT_BUILDINGS ? createSlotModel(type as SlotType, level, faction) : createBuildingModel(type as BuildingType, level, faction);
++            model = type === 'wall' ? createCityGate(level, faction) : isCityResource(type) ? createCityResource(type, level, faction) : type==='market' && level>0 ? createCityHall(level,faction) : type in SLOT_BUILDINGS ? createSlotModel(type as SlotType, level, faction) : createBuildingModel(type as BuildingType, level, faction);
+             scene.add(model, new THREE.HemisphereLight(0xe5f1ef, FACTIONS[faction].earth, 1.5));
+             sun = new THREE.DirectionalLight(0xffedd1, 2.5);
+             sun.position.set(-6, 12, 9); scene.add(sun);
+diff --git a/src/features/city/rendering/three/barracks.ts b/src/features/city/rendering/three/barracks.ts
+index c344ec8..374af83 100644
+--- a/src/features/city/rendering/three/barracks.ts
++++ b/src/features/city/rendering/three/barracks.ts
+@@ -17,6 +17,12 @@ export function createCityBarracks(level: number, faction: Faction, animated = f
+         const target = cylinder(.17, .045, x, .43, -.34, m.wheat); target.rotation.x = Math.PI / 2;
+         const centre = cylinder(.065, .05, x, .43, -.31, m.roof); centre.rotation.x = Math.PI / 2;
+     }
++    // Standards and a facade shield make the garrison recognisable at city zoom.
++    box(.48,.6,.04,0,.57,-.515,m.roof);
++    const crest=cylinder(.16,.055,0,.7,-.474,m.gold);crest.rotation.x=Math.PI/2;
++    for(const x of [-1.3,1.3]){
++        cylinder(.03,.9,x,.02,1.13,m.wood);box(.22,.36,.035,x+.08,.51,1.13,m.roof);box(.045,.2,.04,x+.08,.59,1.155,m.gold);
++    }
+     if (level >= 2) {
+         box(.06, .55, .06, 1.4, .02, .8, m.wood); box(.65, .06, .06, 1.15, .43, .8, m.timber);
+         for (const x of [.95, 1.15, 1.35]) box(.025, .57, .025, x, .04, .8, m.dark);
+diff --git a/src/features/city/rendering/three/buildingModels.ts b/src/features/city/rendering/three/buildingModels.ts
+index c53c68d..ec64182 100644
+--- a/src/features/city/rendering/three/buildingModels.ts
++++ b/src/features/city/rendering/three/buildingModels.ts
+@@ -2,12 +2,15 @@ import { type BuildingType } from '../../domain/types';
+ import type {Faction} from '../../../factions/domain/factions';
+ import {createFactionHall} from './factionHall';
+ import { cityKit } from './modelKit';
++import { createCityHall } from './cityHall';
+ 
+ export const visualLevel = (level: number) => Number.isFinite(level) ? Math.max(0, Math.min(5, Math.floor(level))) : 0;
+ 
+ /** Zero is an empty plot; levels 1–5 change the actual geometry, not an image tint. */
+ export function createBuildingModel(type: BuildingType, value: number, faction:Faction='roman', animated=false) {
+-    const level = visualLevel(value), k = cityKit(faction,animated);
++    const level = visualLevel(value);
++    if(level && type==='market' && animated)return createCityHall(level,faction,animated);
++    const k = cityKit(faction,animated);
+     const { group, m, box, cylinder, cone, rock, roof, house, tower, flag, fence } = k;
+     group.name = `${type} level ${level}`;
+     if (!level) {
+diff --git a/src/features/city/rendering/three/cityDistricts.ts b/src/features/city/rendering/three/cityDistricts.ts
+index 8bc346d..6801d44 100644
+--- a/src/features/city/rendering/three/cityDistricts.ts
++++ b/src/features/city/rendering/three/cityDistricts.ts
+@@ -3,6 +3,7 @@ import { cityKit } from './modelKit';
+ import { type CityPlot } from './layout';
+ import type { Faction } from '../../../factions/domain/factions';
+ import { isCityResource } from './resourceModels';
++import { createCitySurfaces } from './citySurfaces';
+ 
+ /** Shared material batches dress actual built plots. No decorative building fills an empty slot. */
+ export function createCityDistricts(plots: CityPlot[], faction: Faction) {
+@@ -51,7 +52,8 @@ export function createCityDistricts(plots: CityPlot[], faction: Faction) {
+             continue;
+         }
+         const width = main ? 4.3 : inside ? 3.2 : 3.5, depth = main ? 3.65 : 3.2;
+-        box(width, .045, depth, x, -.02, z, m.road);
++        const working = type==='smithy'||type==='workshop'||type==='barracks'||type==='stables';
++        box(width, .045, depth, x, -.02, z, working ? m.earth : m.road);
+         // Low kerbs, entrance steps and planting ground every district visually.
+         box(width, .08, .07, x, .005, z - depth / 2, m.light);
+         for (const side of [-1, 1]) box(.07, .08, depth, x + side * width / 2, .005, z, m.light);
+@@ -77,7 +79,9 @@ export function createCityDistricts(plots: CityPlot[], faction: Faction) {
+             for (const dx of [-.28, .28]) box(.035, .15, .05, x - 1.2 + dx, 0, z + 1.1, m.wood);
+         }
+     }
+-    const group = k.finish(); group.name = 'Paved city districts and working yards'; return group;
++    const group = k.finish(), surfaces=createCitySurfaces(plots,faction);
++    if(surfaces.children.length)group.add(surfaces);
++    group.name = 'Paved city districts and working yards'; return group;
+ }
+ 
+ export function createEmptyCityPlot(faction: Faction, riverside = false) {
+diff --git a/src/features/city/rendering/three/cityHall.ts b/src/features/city/rendering/three/cityHall.ts
+new file mode 100644
+index 0000000..0526493
+--- /dev/null
++++ b/src/features/city/rendering/three/cityHall.ts
+@@ -0,0 +1,36 @@
++import type { Faction } from '../../../factions/domain/factions';
++import { createFactionHall } from './factionHall';
++import { cityKit } from './modelKit';
++
++/** A city-only civic landmark; strategic villages keep their existing models. */
++export function createCityHall(level: number, faction: Faction, animated = false) {
++    if (faction !== 'roman') {
++        const k = cityKit(faction,animated), hall=createFactionHall(level,faction,animated);
++        hall.scale.y=1.12;
++        // A broad entrance stair makes the taller faction hall feel grounded.
++        for(let step=0;step<3;step++)k.box(1.05-step*.12,.055,.2,0,step*.055,.97-step*.14,k.m.stone);
++        const group=k.finish();group.add(hall);group.name=`City ${faction} hall level ${level}`;return group;
++    }
++    const k=cityKit(faction,animated),{m,box,cylinder,roof,house}=k,h=1.04+level*.13;
++    box(2.65,.14,1.92,0,0,-.3,m.stone);
++    box(1.95,h,1.08,0,.14,-.54,m.light);
++    box(.46,.78,.035,0,.14,.018,m.dark);
++    for(const x of [-.96,-.32,.32,.96]) {
++        cylinder(.09,h,x,.14,.48,m.light);cylinder(.13,.07,x,.14,.48,m.stone);cylinder(.13,.09,x,h+.05,.48,m.light);
++    }
++    box(2.4,.14,1.65,0,h+.14,-.22,m.light);roof(2.58,.46,1.85,0,h+.28,-.22);
++    for(let step=0;step<3;step++)box(1.5-step*.12,.05,.21,0,step*.05,.88-step*.13,m.light);
++    for(const side of [-1,1])box(.22,.46,.04,side*.7,.55,.025,m.gold);
++    if(level>=2)for(const x of [-1.03,1.03]){box(.42,.82,.62,x,.14,-.93,m.stone);roof(.56,.25,.76,x,.96,-.93,m.slate);}
++    if(level>=3){
++        const top=h+.38,th=.65+(level-3)*.12;
++        box(.62,th,.62,0,top,-.7,m.light);
++        for(const side of [-1,1])box(.12,.3,.035,side*.15,top+.14,-.376,m.dark);
++        box(.72,.09,.72,0,top+th,-.7,m.stone);roof(.82,.3,.84,0,top+th+.09,-.7,m.slate);
++        if(level>=5)k.flag(0,top+th+.36,-.7,.65);
++    }
++    if(level>=4)for(const x of [-1.03,1.03])house(x,-.85,.48,.8,1.1,true,m.slate);
++    // Retain a small fountain at the front of the existing civic square.
++    if(level>=2){cylinder(.36,.16,0,0,1.17,m.stone);cylinder(.27,.025,0,.16,1.17,m.water);cylinder(.06,.4,0,.18,1.17,m.light);}
++    const group=k.finish();group.name=`City Roman hall level ${level}`;return group;
++}
+diff --git a/src/features/city/rendering/three/citySurfaces.ts b/src/features/city/rendering/three/citySurfaces.ts
+new file mode 100644
+index 0000000..3996a78
+--- /dev/null
++++ b/src/features/city/rendering/three/citySurfaces.ts
+@@ -0,0 +1,77 @@
++import * as THREE from 'three';
++import { FACTIONS, type Faction } from '../../../factions/domain/factions';
++import { cityGrowth } from '../../domain/slots';
++import { cityFootprint, riverX, type CityPlot } from './layout';
++import { cityStreetClearance } from './cityStreets';
++
++const noise = (n: number) => { const v = Math.sin(n * 127.1 + 43.7) * 43758.5453; return v - Math.floor(v); };
++
++/** Flat, material-batched town surfaces. Reserved plots never become decorative gardens. */
++export function createCitySurfaces(plots: CityPlot[], faction: Faction) {
++    const group = new THREE.Group(); group.name = 'Town stonework and ground variation';
++    const main = plots.find(p => p.type === 'market')?.level ?? 0, g = cityGrowth(main), f = cityFootprint(main), palette = FACTIONS[faction];
++    const points: number[] = [], colors: number[] = [], paving: number[] = [], stoneColors: number[] = [];
++    const stone = new THREE.Color(palette.light).lerp(new THREE.Color(palette.stone), .35);
++    const grass = new THREE.Color(palette.ground).lerp(new THREE.Color(palette.road), .24);
++    let stones = 0, patches = 0;
++    const tile = (x: number, z: number, w: number, d: number, tone: THREE.Color, y = .032) => {
++        if(plots.some(p=>p.slot!==undefined&&p.slot<16&&!p.level&&x<p.x+1.6&&x+w>p.x-1.6&&z<p.z+1.6&&z+d>p.z-1.6))return;
++        paving.push(x,y,z, x,y,z+d, x+w,y,z+d, x,y,z, x+w,y,z+d, x+w,y,z);
++        for (let i = 0; i < 6; i++) stoneColors.push(tone.r,tone.g,tone.b);
++        stones++;
++    };
++    const paved = (x: number, z: number, w: number, d: number, tileW = .36, tileD = .26) => {
++        for (let row = 0, dz = 0; dz < d; row++, dz += tileD) {
++            if(Math.min(tileD,d-dz)<=.024)continue;
++            for (let dx = row % 2 ? -tileW / 2 : 0; dx < w; dx += tileW) {
++                const left = Math.max(0,dx), right = Math.min(w,dx+tileW);
++                if (right-left < .05) continue;
++                tile(x-w/2+left+.012,z-d/2+dz+.012,right-left-.024,Math.min(tileD,d-dz)-.024,stone.clone().multiplyScalar(.94+noise(stones)*.10));
++            }
++        }
++    };
++    const built = plots.filter(p => p.level > 0 && p.type !== 'wall');
++    if (main > 0) {
++        // One continuous avenue ties the gate to the civic square.
++        const start = -4.2*g, end = f.front*g;
++        paved(0,(start+end)/2,(main>=2?1.04:.75)*g,end-start,.33,.3);
++    }
++    for (const p of built) {
++        if (p.type === 'market') {
++            paved(p.x,p.z,4.24,3.59,.42,.32);
++            paved(p.x,p.z+2.5,4.24,1.74,.42,.32);
++            // A restrained geometric inlay gives the square a recognisable centre.
++            for(const side of [-1,1]) tile(p.x+side*1.52-.035,p.z+1.68,.07,1.64,stone.clone().multiplyScalar(.74),.035);
++        } else if (p.slot !== undefined && p.slot < 16) {
++            // A worn stone approach connects the actual doorway to its cross-street.
++            const end = p.z+1.75*g;
++            paved(p.x,(p.z+.92+end)/2,.72,end-(p.z+.92),.35,.26);
++            if (['housing','academy','mage_tower'].includes(p.type ?? '')) paved(p.x,p.z+1.17,2.25,.64,.36,.3);
++            if (p.type === 'warehouse' || p.type === 'granary') paved(p.x,p.z+.95,2.65,.95,.42,.32);
++        }
++    }
++    // Broad, irregular grass tones soften the lawn, staying clear of lots, roads and water.
++    if (built.length) for (let i = 0; i < 140; i++) {
++        const x = (f.left+.65+noise(i*13)*(riverX(0)-1.5-f.left-.65))*g;
++        const z = (f.back+.65+noise(i*29+9)*(f.front-f.back-1.3))*g;
++        const r = (.5+noise(i*17)*.55)*g;
++        if (cityStreetClearance(x/g,z/g,main)*g < r+.15) continue;
++        if (plots.some(p=>p.type!=='wall'&&Math.abs(x-p.x)<(p.type==='market'?2.4:1.8)+r&&Math.abs(z-p.z)<(p.type==='market'?3.5:1.8)+r)) continue;
++        if (x+r>(riverX(z/g)-1.1)*g) continue;
++        const tone = grass.clone().lerp(new THREE.Color(i%3 ? palette.hill : palette.road), i%3 ? .13 : .17);
++        for(let j=0;j<7;j++) {
++            const a=j*Math.PI*2/7,b=(j+1)*Math.PI*2/7,ra=r*(.75+noise(i*7+j)*.25),rb=r*(.75+noise(i*7+(j+1)%7)*.25);
++            points.push(x,-.032,z,x+Math.cos(b)*rb,-.032,z+Math.sin(b)*rb*.65,x+Math.cos(a)*ra,-.032,z+Math.sin(a)*ra*.65);
++            // Fade into the existing lawn rather than leaving hard polygon edges.
++            colors.push(tone.r,tone.g,tone.b,grass.r,grass.g,grass.b,grass.r,grass.g,grass.b);
++        }
++        patches++;
++    }
++    for (const [vertices, tones, name] of [[paving,stoneColors,'Town flagstone'],[points,colors,'Meadow patches']] as const) {
++        if (!vertices.length) continue;
++        const geometry = new THREE.BufferGeometry();
++        geometry.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));geometry.setAttribute('color',new THREE.Float32BufferAttribute(tones,3));geometry.computeVertexNormals();
++        const mesh = new THREE.Mesh(geometry,new THREE.MeshStandardMaterial({vertexColors:true,roughness:1,flatShading:true}));mesh.receiveShadow=true;mesh.name=name;group.add(mesh);
++    }
++    group.userData.citySurfaces = {stones,patches}; return group;
++}
+diff --git a/src/features/city/rendering/three/cityWorkplaces.ts b/src/features/city/rendering/three/cityWorkplaces.ts
+new file mode 100644
+index 0000000..be9d9d2
+--- /dev/null
++++ b/src/features/city/rendering/three/cityWorkplaces.ts
+@@ -0,0 +1,77 @@
++import * as THREE from 'three';
++import type { Faction } from '../../../factions/domain/factions';
++import { cityKit } from './modelKit';
++
++export type CityWorkplace = 'smithy' | 'warehouse' | 'granary';
++
++/** Working silhouettes fill the same lots: forge, loading shed and raised grain silos. */
++export function createCityWorkplace(type: CityWorkplace, level: number, faction: Faction, animated = false) {
++    const k=cityKit(faction,animated),{m,box,cylinder,cone,roof,house}=k;
++    if(type==='smithy') {
++        const h=1.35+level*.12;
++        // An open-sided canopy leaves the furnace and anvil visible from the street.
++        box(.88,.72+level*.035,.8,.42,0,-.34,m.darkStone);
++        box(.38,.32,.035,.42,.12,.075,m.dark);
++        const fire=m.gold.clone();fire.emissive.copy(m.roofLight.color).multiplyScalar(.65);
++        box(.27,.15,.04,.42,.13,.1,fire);box(.35,.045,.18,.42,.08,.15,m.dark);
++        box(.32,h,.34,.4,0,-.25,m.darkStone);box(.43,.1,.44,.4,h-.12,-.25,m.stone);box(.25,.025,.26,.4,h-.01,-.25,m.dark);
++        for(const x of [-1.1,-.03])box(.065,.9,.065,x,0,-.43,m.wood);
++        roof(1.25,.27,1.3,-.56,.9,-.38,m.slate);
++        box(.68,.13,.3,-.65,.17,-.6,m.timber);
++        for(let i=0;i<4;i++)box(.55,.025,.26,-.65,.28+i*.055,-.6,m.dark);
++        // The existing blacksmith and hammer keep their familiar rest coordinates.
++        box(.45,.12,.23,-.8,.3,.65,m.dark);box(.22,.3,.16,-.8,0,.65,m.darkStone);
++        if(animated){
++            for(const x of [-.84,-.76])box(.05,.18,.055,x,0,.96,m.dark);
++            box(.16,.24,.13,-.8,.18,.96,m.wood);k.rock(.085,-.8,.43,.96,m.skin);
++            const arm=new THREE.Group();arm.position.set(-.8,.37,.88);k.group.add(arm);
++            arm.add(box(.055,.06,.22,0,-.03,-.08,m.skin));arm.add(box(.03,.16,.03,0,-.04,-.19,m.timber));arm.add(box(.18,.08,.1,0,.04,-.19,m.dark));k.motion(arm,'hammer');
++        }
++        if(level>=2){cylinder(.18,.22,1.02,0,.55,m.dark);cylinder(.14,.018,1.02,.22,.55,m.water);}
++        if(level>=3){box(.07,.64,.07,1.15,0,-.63,m.wood);box(.57,.065,.07,1.1,.48,-.63,m.timber);for(let i=0;i<4;i++)box(.045,.52,.045,.86+i*.13,0,-.63,m.dark);}
++        if(level>=4){box(.62,.11,.5,.85,0,-.96,m.stone);for(let i=0;i<3;i++)box(.14,.08,.25,.65+i*.18,.11,-.96,m.dark);}
++        if(level>=5)k.flag(-1.1,.92,-.43,.65);
++    } else if(type==='warehouse') {
++        const h=.83+level*.09;
++        // Twin gabled loading sheds read differently from homes and grain silos.
++        for(const x of [-.57,.57]){
++            house(x,-.48,.98,1.04,h,level>=3,m.slate);
++            box(.64,.68,.04,x,.13,.064,m.dark);
++            for(const dx of [-.32,.32])box(.07,.74,.08,x+dx,.1,.1,m.timber);
++            box(.78,.08,.09,x,.8,.1,m.timber);
++        }
++        box(2.52,.17,.7,0,0,.52,m.stone);box(2.57,.055,.74,0,.17,.52,m.timber);
++        for(const side of [-1,1])box(.46,.075,.24,side*.96,0,1.0,m.stone);
++        for(let i=0;i<Math.min(5,level+1);i++){
++            const x=-.88+(i%3)*.3,z=.45+(i%2)*.25,y=i>=3?.48:.225;
++            box(.27,.25,.26,x,y,z,m.timber);for(const dx of [-.09,.09])box(.035,.25,.28,x+dx,y,z,m.wood);
++        }
++        cylinder(.16,.4,.93,.225,.54,m.timber);
++        if(level>=2){box(.085,1.62,.085,1.14,0,-.22,m.wood);box(.1,.09,.85,1.14,1.48,.16,m.timber);cylinder(.017,.55,1.14,.96,.55,m.dark);box(.18,.08,.16,1.14,.89,.55,m.dark);}
++        if(level>=3)for(const x of [-.58,.58])box(.28,.18,.045,x,h*.68,.1,m.gold);
++        if(level>=4){
++            for(const x of [-1.17,1.17])box(.055,1.05,.055,x,0,.9,m.wood);
++            // A long Orc tent roof is circular; a lean-to keeps this awning off the street.
++            if(faction==='orc'){const awning=box(2.55,.07,.86,0,1.05,.55,m.roofLight);awning.rotation.x=.08;}
++            else roof(2.55,.14,.86,0,1.05,.55,m.roofLight);
++        }
++        if(level>=5)k.flag(0,h+.35,-.6,.65);
++    } else {
++        box(2.44,.18,1.48,0,0,-.15,m.stone);
++        // Grain is raised above damp ground, with dark bands and pointed silo caps.
++        for(let i=0;i<Math.min(3,level+1);i++){
++            const x=-.72+i*.72,h=.86+level*.12+(i===1?.18:0);
++            for(const side of [-1,1])box(.08,.34,.08,x+side*.19,.18,.04,m.wood);
++            cylinder(.285,h,x,.4,-.18,m.wheat);
++            for(const y of [.48,.4+h*.75])cylinder(.3,.045,x,y,-.18,m.timber);
++            cone(.36,.33,x,.4+h,-.18,m.slate);
++            box(.11,.23,.22,x,.32,.16,m.timber);
++        }
++        for(let i=0;i<Math.min(4,level);i++){const sack=cylinder(.125,.24,-.87+i*.24,0,.8,m.wheat);sack.rotation.z=(i%2?1:-1)*.08;}
++        if(level>=2){box(1.02,.08,.55,0,.18,.76,m.timber);box(.72,.08,.25,0,.08,1.02,m.wood);}
++        if(level>=3){box(.055,1.45,.055,1.16,0,-.45,m.wood);for(let i=0;i<6;i++)box(.27,.035,.055,1.04,.23+i*.2,-.45,m.timber);box(.055,1.45,.055,.91,0,-.45,m.wood);}
++        if(level>=4)k.fence(0,-1.04,2.45);
++        if(level>=5)k.flag(-1.1,1.3,-.6,.7);
++    }
++    k.heraldry(level);const model=k.finish();model.name=`City ${type} level ${level}`;return model;
++}
+diff --git a/src/features/city/rendering/three/landscape.ts b/src/features/city/rendering/three/landscape.ts
+index c8ae5f5..a6b543b 100644
+--- a/src/features/city/rendering/three/landscape.ts
++++ b/src/features/city/rendering/three/landscape.ts
+@@ -59,8 +59,7 @@ export function createCityLandscape(mainLevel = 0, faction: Faction = 'roman') {
+         const shape = new THREE.BufferGeometry(); shape.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3)); shape.computeVertexNormals();
+         const mesh = new THREE.Mesh(shape, material); mesh.receiveShadow = true; group.add(mesh);
+     }
+-    // A broad central walk with discreet paving seams and garden verges.
+-    for (let z = -3.6; z < footprint.front - .5; z += .72) box(1.02, .008, .025, 0, .037, z, m.light);
++    // Garden verges frame the stone avenue, which follows completed town development.
+     for (const x of [-.76, .76]) for (let z = .9; z < footprint.front - 1; z += 4) {
+         box(.34, .12, .8, x, .01, z, m.stone);
+         for (const dz of [-.2, .2]) rock(.18, x, .12, z + dz, m.leaf);
+diff --git a/src/features/city/rendering/three/slotModels.ts b/src/features/city/rendering/three/slotModels.ts
+index 07230e0..d2a8566 100644
+--- a/src/features/city/rendering/three/slotModels.ts
++++ b/src/features/city/rendering/three/slotModels.ts
+@@ -4,46 +4,22 @@ import type { SlotType } from '../../domain/slots';
+ import { createBuildingModel } from './buildingModels';
+ import {createMageTower} from './mageTower';
+ import { cityKit } from './modelKit';
+-import * as THREE from 'three';
+ import { createCityBarracks } from './barracks';
++import { createCityWorkplace } from './cityWorkplaces';
+ export function createSlotModel(type:SlotType|null,level:number,faction:Faction='roman', animated=false) {
+  if(!type || !level)return createBuildingModel('barracks',0,faction);
+  if(type==='academy')return createAcademy(level,faction,animated);
+  if(type==='mage_tower')return createMageTower(level,faction,animated);
+- if(type==='barracks'&&animated)return createCityBarracks(level,faction,animated);
+- if(type==='barracks'||type==='stables')return createBuildingModel(type,level,faction,animated);
+- if(type==='warehouse')return createBuildingModel('storehouse',level,faction,animated);
+- const k=cityKit(faction,animated),{m,box,cylinder,cone,house}=k;
++ if(type==='smithy'||type==='warehouse'||type==='granary')return createCityWorkplace(type,level,faction,animated);
++ if(type==='barracks')return createCityBarracks(level,faction,animated);
++ if(type==='stables')return createBuildingModel(type,level,faction,animated);
++ const k=cityKit(faction,animated),{m,box,cylinder,house}=k;
+  if(type==='housing'){
+   house(0,-.1,1.15,.9,.55+level*.13,level>=3);
+   if(level>=2)house(-.85,.15,.55,.65,.55+level*.08,level>=3,m.roofLight);
+   if(level>=3)house(.85,.15,.55,.65,.55+level*.08,true,m.slate);
+   if(level>=4){k.fence(0,.85,2.35);box(.22,.7,.22,-.3,0,-.3,m.darkStone);}
+   if(level>=5){house(0,-.8,1,.55,1.25,true);k.flag(0,1.8,-.8,.6);}
+- }else if(type==='smithy') {
+-  house(-.2,0,1.2,.9,.7+level*.06,level>=3,m.slate);
+-  box(.28,1.35+level*.12,.28,.4,0,-.25,m.darkStone);
+-  box(.45,.4,.45,.85,0,.6,m.darkStone);box(.26,.15,.03,.85,.15,.85,m.gold);
+-  box(.45,.12,.23,-.8,.3,.65,m.dark);
+-  box(.22,.3,.16,-.8,0,.65,m.darkStone);
+-  if(animated){
+-   // A grounded blacksmith operates the hammer; the workshop itself stays still.
+-   for(const x of [-.84,-.76])box(.05,.18,.055,x,0,.96,m.dark);
+-   box(.16,.24,.13,-.8,.18,.96,m.wood);k.rock(.085,-.8,.43,.96,m.skin);
+-   const arm=new THREE.Group();arm.position.set(-.8,.37,.88);k.group.add(arm);
+-   arm.add(box(.055,.06,.22,0,-.03,-.08,m.skin));
+-   arm.add(box(.03,.16,.03,0,-.04,-.19,m.timber));
+-   arm.add(box(.18,.08,.1,0,.04,-.19,m.dark));k.motion(arm,'hammer');
+-  }
+-  if(level>=2)k.fence(-.2,-.8,2);
+-  if(level>=3)house(-1.05,-.25,.6,.7,.7,true);
+-  if(level>=4)box(.7,.25,.5,.8,0,-.85,m.stone);
+-  if(level>=5)k.flag(.4,1.95,-.25);
+- } else if(type==='granary') {
+-  house(0,-.45,.95,.7,.65,level>=3);
+-  for(let i=0;i<Math.min(3,level);i++){const x=-.7+i*.65;cylinder(.25,.75+level*.12,x,0,.5,m.wheat);cone(.32,.3,x,.75+level*.12,.5,m.slate);}
+-  if(level>=4)k.fence(0,1.1,2.3);
+-  if(level>=5)k.flag(0,1.05,-.45);
+  } else if(type==='workshop') {
+   house(-.4,-.35,1.35,.85,.7+level*.06,level>=3,m.slate);
+   // Siege workshop: a wheeled timber ram and a visibly growing catapult yard.
+diff --git a/tests/city-character.test.ts b/tests/city-character.test.ts
+new file mode 100644
+index 0000000..40b3305
+--- /dev/null
++++ b/tests/city-character.test.ts
+@@ -0,0 +1,55 @@
++import { test } from 'node:test';
++import assert from 'node:assert/strict';
++import { createHash } from 'node:crypto';
++import * as THREE from 'three';
++import { FACTIONS, type Faction } from '../src/features/factions/domain/factions';
++import { createSlotModel } from '../src/features/city/rendering/three/slotModels';
++import { createCityHall } from '../src/features/city/rendering/three/cityHall';
++import { createCitySurfaces } from '../src/features/city/rendering/three/citySurfaces';
++import { cityLayout } from '../src/features/city/rendering/three/layout';
++import { disposeCityObject } from '../src/features/city/rendering/three/modelKit';
++
++test('native civic and working buildings have five distinct, bounded stages across all factions',()=>{
++    for(const faction of Object.keys(FACTIONS) as Faction[])for(const type of ['market','smithy','warehouse','granary','barracks'] as const){
++        const stages=new Set<string>();
++        for(let level=1;level<=5;level++){
++            const model=type==='market'?createCityHall(level,faction,true):createSlotModel(type,level,faction,true);
++            const bounds=new THREE.Box3().setFromObject(model),hash=createHash('sha256');let draws=0,vertices=0;
++            assert.ok(bounds.min.x>-1.8&&bounds.max.x<1.8&&bounds.min.z>-1.8&&bounds.max.z<1.6,`${faction} ${type} must fit its lot`);
++            model.traverse(o=>{if(o instanceof THREE.Mesh){draws++;const p=o.geometry.getAttribute('position');vertices+=p.count;assert.ok([...p.array].every(Number.isFinite));hash.update(Buffer.from(p.array.buffer,p.array.byteOffset,p.array.byteLength));}});
++            assert.ok(draws<=22&&vertices<12000,`${faction} ${type} stays material-batched`);stages.add(hash.digest('hex'));disposeCityObject(model);
++        }
++        assert.equal(stages.size,5,`${faction} ${type} changes actual geometry on every upgrade`);
++    }
++});
++
++test('town paving leaves reserved empty lots untouched, stays deterministic and releases its resources',()=>{
++    for(let level=0;level<=5;level++){
++        const plots=cityLayout({market:level,lumber:1},[{settlement_id:1,slot_index:0,building_type:'housing',level:2}]);
++        const before=structuredClone(plots),a=createCitySurfaces(plots,'roman'),b=createCitySurfaces(plots,'roman');
++        assert.deepEqual(plots,before);assert.deepEqual(a.userData.citySurfaces,b.userData.citySurfaces);assert.ok(a.children.length<=2);
++        const paving=a.getObjectByName('Town flagstone') as THREE.Mesh|undefined;
++        if(paving){const p=paving.geometry.getAttribute('position');assert.ok(p.count<36000);
++            for(let i=0;i<p.count;i+=6){
++                const xs=Array.from({length:6},(_,n)=>p.getX(i+n)),zs=Array.from({length:6},(_,n)=>p.getZ(i+n));
++                for(const slot of plots.filter(p=>p.slot!==undefined&&p.slot<16&&!p.level))assert.ok(Math.max(...xs)<=slot.x-1.599||Math.min(...xs)>=slot.x+1.599||Math.max(...zs)<=slot.z-1.599||Math.min(...zs)>=slot.z+1.599,'stonework must not consume an empty slot');
++            }
++        }
++        let geometries=0,materials=0;
++        a.traverse(o=>{if(o instanceof THREE.Mesh){assert.ok([...o.geometry.getAttribute('color').array].every(Number.isFinite));o.geometry.addEventListener('dispose',()=>geometries++);(o.material as THREE.Material).addEventListener('dispose',()=>materials++);}});
++        const count=a.children.length;disposeCityObject(a);disposeCityObject(b);assert.equal(geometries,count);assert.equal(materials,count);
++    }
++    const empty=createCitySurfaces(cityLayout({},[]),'roman');assert.equal(empty.children.length,0);disposeCityObject(empty);
++});
++
++test('building previews use resting workplace models and animation remains opt-in',()=>{
++    for(const type of ['smithy','warehouse','granary','barracks'] as const){
++        const preview=createSlotModel(type,5,'roman'),working=createSlotModel(type,5,'roman',true);let motion=0;
++        preview.traverse(o=>{if(o.userData.cityMotion)motion++;});assert.equal(motion,0);
++        assert.equal(preview.name,working.name);
++        // Previews omit the animated blacksmith; the structure keeps the same footprint.
++        const a=new THREE.Box3().setFromObject(preview),b=new THREE.Box3().setFromObject(working);
++        assert.ok(a.getSize(new THREE.Vector3()).distanceTo(b.getSize(new THREE.Vector3()))<.3);
++        disposeCityObject(preview);disposeCityObject(working);
++    }
++});
+diff --git a/tests/e2e/city-character.spec.ts b/tests/e2e/city-character.spec.ts
+new file mode 100644
+index 0000000..f70a06e
+--- /dev/null
++++ b/tests/e2e/city-character.spec.ts
+@@ -0,0 +1,26 @@
++import { test, expect } from '@playwright/test';
++import * as THREE from 'three';
++import { createSolo } from '../../src/features/campaign/domain/newRealm';
++import { refreshCityEconomy } from '../../src/features/city/domain/slots';
++import { cityLayout } from '../../src/features/city/rendering/three/layout';
++import { CityCamera } from '../../src/features/city/rendering/three/CityCamera';
++
++test('civic hall and working silhouettes keep roof selection, compact previews and free building lots',async({page},info)=>{
++    const world=createSolo('Stonebridge'),town=world.settlements[0],errors:string[]=[];
++    world.buildings.forEach(b=>b.level=3);
++    world.city_slots=(['smithy','warehouse','granary','barracks'] as const).map((building_type,slot_index)=>({settlement_id:town.id,slot_index,building_type,level:3}));refreshCityEconomy(world,town.id);
++    page.on('pageerror',e=>errors.push(e.message));
++    await page.addInitScript(w=>{localStorage.setItem('peris-campaign-v6',JSON.stringify(w));localStorage.setItem('peris-settings',JSON.stringify({sound:false,music:false,reducedMotion:true}));localStorage.setItem(`peris-welcome:${w.players[0].id}:${w.players[0].created_at}`,'yes');},world);
++    await page.goto('/');await page.getByRole('button',{name:'Continue campaign',exact:true}).click();await page.getByRole('button',{name:'City',exact:true}).click();await page.getByRole('button',{name:'3D',exact:true}).click();
++    const canvas=page.locator('.city-3d-scene.ready canvas');await expect(canvas).toHaveAttribute('data-city-zoom','1.000');
++    const rect=(await canvas.boundingBox())!,camera=new CityCamera();camera.resize(rect.width,rect.height,3);
++    const plots=cityLayout({market:3},world.city_slots);
++    for(const [key,title,dx,y,dz] of [['market','Main building',0,2.5,-.7],['slot:0','Smithy',.4,1.55,-.25],['slot:1','Warehouse',-.57,1.22,-.48],['slot:2','Granary',0,1.5,-.18],['slot:3','Barracks',0,1.25,-1]] as const){
++        const plot=plots.find(p=>p.key===key)!,scale=key==='market'?1.2:.98,sy=key==='market'?1.35:1.12,p=new THREE.Vector3(plot.x+dx*scale,y*sy+.015,plot.z+dz*scale).project(camera.camera);
++        await page.mouse.click(rect.x+(p.x+1)*rect.width/2,rect.y+(1-p.y)*rect.height/2);
++        const panel=page.locator('.building-inspector');await expect(panel.getByRole('heading',{name:title,exact:true})).toBeVisible();await expect(panel.getByRole('img',{name:`${title}, level 3`,exact:true})).toBeVisible();await page.keyboard.press('Escape');
++    }
++    await page.locator('[data-building="slot:5"]').click();await expect(page.getByRole('radio',{name:/^Housing/})).toBeVisible();await page.keyboard.press('Escape');
++    await page.getByRole('button',{name:'Rotate city right',exact:true}).click();await expect(canvas).toHaveAttribute('data-city-rotation','0.393');
++    await page.screenshot({path:info.outputPath('town-character.png')});expect(errors).toEqual([]);
++});

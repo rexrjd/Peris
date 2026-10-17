@@ -59,8 +59,7 @@ export function createCityLandscape(mainLevel = 0, faction: Faction = 'roman') {
         const shape = new THREE.BufferGeometry(); shape.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3)); shape.computeVertexNormals();
         const mesh = new THREE.Mesh(shape, material); mesh.receiveShadow = true; group.add(mesh);
     }
-    // A broad central walk with discreet paving seams and garden verges.
-    for (let z = -3.6; z < footprint.front - .5; z += .72) box(1.02, .008, .025, 0, .037, z, m.light);
+    // Garden verges frame the stone avenue, which follows completed town development.
     for (const x of [-.76, .76]) for (let z = .9; z < footprint.front - 1; z += 4) {
         box(.34, .12, .8, x, .01, z, m.stone);
         for (const dz of [-.2, .2]) rock(.18, x, .12, z + dz, m.leaf);

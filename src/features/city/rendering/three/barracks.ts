@@ -17,6 +17,12 @@ export function createCityBarracks(level: number, faction: Faction, animated = f
         const target = cylinder(.17, .045, x, .43, -.34, m.wheat); target.rotation.x = Math.PI / 2;
         const centre = cylinder(.065, .05, x, .43, -.31, m.roof); centre.rotation.x = Math.PI / 2;
     }
+    // Standards and a facade shield make the garrison recognisable at city zoom.
+    box(.48,.6,.04,0,.57,-.515,m.roof);
+    const crest=cylinder(.16,.055,0,.7,-.474,m.gold);crest.rotation.x=Math.PI/2;
+    for(const x of [-1.3,1.3]){
+        cylinder(.03,.9,x,.02,1.13,m.wood);box(.22,.36,.035,x+.08,.51,1.13,m.roof);box(.045,.2,.04,x+.08,.59,1.155,m.gold);
+    }
     if (level >= 2) {
         box(.06, .55, .06, 1.4, .02, .8, m.wood); box(.65, .06, .06, 1.15, .43, .8, m.timber);
         for (const x of [.95, 1.15, 1.35]) box(.025, .57, .025, x, .04, .8, m.dark);

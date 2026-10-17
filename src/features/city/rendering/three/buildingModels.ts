@@ -2,12 +2,15 @@ import { type BuildingType } from '../../domain/types';
 import type {Faction} from '../../../factions/domain/factions';
 import {createFactionHall} from './factionHall';
 import { cityKit } from './modelKit';
+import { createCityHall } from './cityHall';
 
 export const visualLevel = (level: number) => Number.isFinite(level) ? Math.max(0, Math.min(5, Math.floor(level))) : 0;
 
 /** Zero is an empty plot; levels 1–5 change the actual geometry, not an image tint. */
 export function createBuildingModel(type: BuildingType, value: number, faction:Faction='roman', animated=false) {
-    const level = visualLevel(value), k = cityKit(faction,animated);
+    const level = visualLevel(value);
+    if(level && type==='market' && animated)return createCityHall(level,faction,animated);
+    const k = cityKit(faction,animated);
     const { group, m, box, cylinder, cone, rock, roof, house, tower, flag, fence } = k;
     group.name = `${type} level ${level}`;
     if (!level) {

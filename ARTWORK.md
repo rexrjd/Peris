@@ -295,3 +295,29 @@ and hidden-tab scheduling. The painted village, world map, building selection,
 production, population, saves and multiplayer rules retain their existing behaviour.
 No new image, GLB, dependency or SQL migration is introduced. GPU frame rate has
 not been benchmarked.
+
+## V19.12 town stonework and building identity
+
+The native 3D city's main avenue, civic square and completed building approaches
+use staggered flagstones with restrained colour variation. Working courtyards
+retain earth floors; broad, softly blended grass patches break up the surrounding
+lawn. Surface generation follows city growth and leaves every unbuilt reserved
+plot clear. Stonework and lawn variation use two vertex-coloured material batches,
+with no textures or individual tile meshes.
+
+The Roman main hall has a taller columned facade, entrance stairs and an upgraded
+bell tower. The other ten faction halls retain their architectural forms with a
+taller civic silhouette and entrance steps. The smithy is an open forge with a
+banded chimney, bellows, furnace, anvil and the existing animated blacksmith.
+Warehouses have twin loading sheds, platforms, stock and a hoist; granaries have
+raised grain silos, bands, chutes, sacks and an access ladder. Barracks retain
+their accepted drill yard and gain military standards and a facade shield.
+All five levels use original procedural geometry and the existing faction palette
+and roof family. Building inspector previews use the same new resting models.
+
+The strategic map's settlement factories, resource sites, walls, gates, painted
+village, walking routes, recruitment animation and existing flowers and lanterns
+retain their behaviour. All changes are presentation-only, release owned render
+resources, and use the existing reduced-motion-aware scene lifecycle. No SQL,
+dependency, external asset, image, GLB or license change is required. Frame-rate
+targets remain unmeasured.

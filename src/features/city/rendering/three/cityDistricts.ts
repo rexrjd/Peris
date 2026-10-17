@@ -3,6 +3,7 @@ import { cityKit } from './modelKit';
 import { type CityPlot } from './layout';
 import type { Faction } from '../../../factions/domain/factions';
 import { isCityResource } from './resourceModels';
+import { createCitySurfaces } from './citySurfaces';
 
 /** Shared material batches dress actual built plots. No decorative building fills an empty slot. */
 export function createCityDistricts(plots: CityPlot[], faction: Faction) {
@@ -51,7 +52,8 @@ export function createCityDistricts(plots: CityPlot[], faction: Faction) {
             continue;
         }
         const width = main ? 4.3 : inside ? 3.2 : 3.5, depth = main ? 3.65 : 3.2;
-        box(width, .045, depth, x, -.02, z, m.road);
+        const working = type==='smithy'||type==='workshop'||type==='barracks'||type==='stables';
+        box(width, .045, depth, x, -.02, z, working ? m.earth : m.road);
         // Low kerbs, entrance steps and planting ground every district visually.
         box(width, .08, .07, x, .005, z - depth / 2, m.light);
         for (const side of [-1, 1]) box(.07, .08, depth, x + side * width / 2, .005, z, m.light);
@@ -77,7 +79,9 @@ export function createCityDistricts(plots: CityPlot[], faction: Faction) {
             for (const dx of [-.28, .28]) box(.035, .15, .05, x - 1.2 + dx, 0, z + 1.1, m.wood);
         }
     }
-    const group = k.finish(); group.name = 'Paved city districts and working yards'; return group;
+    const group = k.finish(), surfaces=createCitySurfaces(plots,faction);
+    if(surfaces.children.length)group.add(surfaces);
+    group.name = 'Paved city districts and working yards'; return group;
 }
 
 export function createEmptyCityPlot(faction: Faction, riverside = false) {
