@@ -2,6 +2,7 @@ import type { Faction } from '../../../factions/domain/factions';
 import { visualLevel } from './buildingModels';
 import { cityKit } from './modelKit';
 import { cityFootprint, riverX } from './layout';
+import { createCityGate, createCityWaterGate } from './gateModels';
 
 /** Open gateways and water arches; thicker walls keep the playable plots clear. */
 export function createCityWalls(value: number, mainLevel = 0, faction: Faction = 'roman', animated = false) {
@@ -51,58 +52,33 @@ export function createCityWalls(value: number, mainLevel = 0, faction: Faction =
         else { k.tower(x, z, h, r); cylinder(r * 1.04, .1, x, h * .43, z, m.darkStone); }
         if (level >= 4 && !riverside) k.flag(x, h + .18, z, .65);
     }
-    function waterPassage(x: number, z: number) {
-        if (!level) return;
-        if (level < 3) {
-            for (const side of [-1, 1]) box(.16, .94, .3, x + side * .94, 0, z, m.wood);
-            box(2.1, .17, .34, x, .9, z, m.timber); return;
-        }
-        for (const side of [-1, 1]) box(.23, .48, .62, x + side * .96, .02, z, m.darkStone);
-        for (let i = 0; i < 11; i++) {
-            const angle = i * Math.PI / 10;
-            const stone = box(.28, .22, .62, x + Math.cos(angle) * .94, .38 + Math.sin(angle) * .78, z, i % 2 ? m.stone : m.light);
-            stone.rotation.z = angle - Math.PI / 2;
-        }
-    }
     const gateWidth = 3.1 + level * .12, gateX = .4, eastGate = 11.4;
-    section(left, back, -.7, back, 0, -1);
-    section(.7, back, northRiver - 1.08, back, 0, -1);
+    section(left, back, -1.1, back, 0, -1);
+    section(1.1, back, northRiver - 1.08, back, 0, -1);
     section(northRiver + 1.08, back, right, back, 0, -1);
     section(left, back, left, front, -1, 0);
-    section(right, back, right, eastGate - .8, 1, 0);
-    section(right, eastGate + .8, right, front, 1, 0);
+    section(right, back, right, eastGate - 1.1, 1, 0);
+    section(right, eastGate + 1.1, right, front, 1, 0);
     section(left, front, gateX - gateWidth / 2, front, 0, 1, true);
     section(gateX + gateWidth / 2, front, river - 1.08, front, 0, 1, true);
     section(river + 1.08, front, right, front, 0, 1, true);
-    waterPassage(northRiver, back); waterPassage(river, front);
-    if (level >= 2) {
-        for (const z of [back, front]) { bastion(left, z, z === front); bastion(right + .15, z, z === front, true); }
-        // Rear postern and bridge gate frame their roads without blocking them.
-        for (const side of [-1, 1]) {
-            box(.2, 1.05 + level * .06, .45, side * .8, 0, back, level < 3 ? m.wood : m.stone);
-            box(.45, .95 + level * .05, .2, right, 0, eastGate + side * .93, level < 3 ? m.wood : m.stone);
-        }
-        box(1.8, .16, .5, 0, 1.05 + level * .06, back, level < 3 ? m.timber : m.light);
-    }
+    if (level >= 2) for (const z of [back, front]) { bastion(left, z, z === front); bastion(right + .15, z, z === front, true); }
     if (level >= 3) {
         // Wall access stays in the spare northern border, away from building lots.
         const h = wallHeight(false);
         for (let step = 0; step < 6; step++) box(.58, h * (step + 1) / 6, .24, left + .65, .08, back + 1.6 - step * .24, m.stone);
     }
-    const perimeter = k.finish(), g = cityKit(faction, animated), { m: gm } = g;
-    // An open twin-tower gatehouse on the front avenue. No geometry closes the road.
-    const h = .95 + level * .19, spacing = gateWidth / 2 - .43;
-    for (const side of [-1, 1]) {
-        if (level < 3) { g.box(.3, level ? h : .2, .4, side * spacing, 0, 0, gm.wood); if (level) g.roof(.8, .3, .85, side * spacing, h, 0, gm.slate); }
-        else { g.box(1.02, .18, 1.18, side * spacing, 0, 0, gm.darkStone); g.tower(side * spacing, 0, h + .35, .43); }
-    }
-    if (level) {
-        g.box(gateWidth - .2, .22, .62, 0, h - .25, 0, level < 3 ? gm.timber : gm.stone);
-        g.box(1.4, .13, .7, 0, h - .03, 0, level < 3 ? gm.wood : gm.light);
-        g.box(.24, .32, .05, 0, h + .1, -.34, gm.roof);
-        if (level >= 3) for (let i = 0; i < 7; i++) g.box(.035, .3, .035, -.55 + i * .185, h - .47, .1, gm.dark);
-        if (level >= 4) for (const side of [-1, 1]) g.flag(side * spacing, h + .55, 0, .7);
-    }
-    const gate = g.finish(); gate.position.set(gateX, 0, front); gate.rotation.y = Math.PI; gate.name = 'Front city gate';
-    perimeter.add(gate); perimeter.name = `City perimeter level ${level}`; return perimeter;
+    const perimeter = k.finish();
+    const gate = createCityGate(level, faction, animated);
+    gate.position.set(gateX, 0, front); gate.rotation.y = Math.PI; gate.name = 'Front city gate';
+    const rear = createCityGate(level, faction, animated, 'postern');
+    rear.position.set(0, 0, back); rear.name = 'Rear city gate';
+    const bridge = createCityGate(level, faction, animated, 'bridge');
+    bridge.position.set(right, 0, eastGate); bridge.rotation.y = -Math.PI / 2; bridge.name = 'Bridge city gate';
+    const northWater = createCityWaterGate(level, wallHeight(false), faction);
+    northWater.position.set(northRiver, 0, back);
+    const southWater = createCityWaterGate(level, wallHeight(true), faction);
+    southWater.position.set(river, 0, front); southWater.rotation.y = Math.PI;
+    perimeter.add(gate, rear, bridge, northWater, southWater);
+    perimeter.name = `City perimeter level ${level}`; return perimeter;
 }

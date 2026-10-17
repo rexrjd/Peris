@@ -257,3 +257,18 @@ state retain their current rules. No new image, GLB, external source, license or
 SQL migration is introduced. Visual review covered desktop and phone framing,
 rotation, early and mature development, and all eleven faction styles. Frame
 rate targets remain unmeasured.
+
+## V19.10 city entrances
+
+The main city entrance is a solid arched gatehouse with flanking watchtowers,
+open timber doors, stone jambs, a raised portcullis and faction roof details.
+Smaller covered gateways finish the northern service road and eastern bridge.
+River portals use solid spandrels above open channels, so they read as part of
+the fortifications rather than freestanding bridge arches. Early wall levels
+use timber gateways; level zero retains only low construction markers.
+
+The native wall preview uses the same gatehouse factory. Static geometry remains
+material-batched; custom arch source geometries are disposed after batching.
+The accepted wall sections, resource sites, city growth and gameplay rules are
+preserved. All geometry is original procedural Peris artwork, with no new image,
+GLB, external asset or SQL migration.

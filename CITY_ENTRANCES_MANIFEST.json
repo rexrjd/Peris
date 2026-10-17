@@ -1,0 +1,20 @@
+{
+  "name": "Peris City Entrances V19.10",
+  "base_commit": "c0b2c3108276b64bb9f3121cb183c340f06ea267",
+  "unit": {
+    "passed": 467,
+    "skipped": 1
+  },
+  "browser": {
+    "passed": 21,
+    "skipped": 1
+  },
+  "sha256": {
+    "ARTWORK.md": "748c04e0a21e9bfdaf20531cc8093e7693b3bc3a0a724f8e6ad1001495ebb599",
+    "src/features/city/rendering/BuildingPreview.tsx": "aa0c8e5f7ea66ad792eca74472f6d546cc4e13a51696be5960ecfbd6680cdfda",
+    "src/features/city/rendering/three/cityWalls.ts": "b608e70d2d8dbc0bf0d027609416f506907851d039991422317ae921ba8179db",
+    "src/features/city/rendering/three/gateModels.ts": "a5881d0b1be6c8217b79b9306acf1bcb27ec0dbfa50a7f4888b92b41150e42ad",
+    "tests/city-gates.test.ts": "6f5b44f90d727e75eb9790a43e4cc475b6fc4d13d492d071352f22879b339b1c",
+    "tests/e2e/city-gates.spec.ts": "fea79d9d9e2c5ba366f1a55f3dcef28879185b8e4b55a807ae31128a97988cc4"
+  }
+}

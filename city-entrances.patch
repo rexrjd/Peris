@@ -1,0 +1,336 @@
+diff --git a/ARTWORK.md b/ARTWORK.md
+index 8e9dcc1..dc6ca2e 100644
+--- a/ARTWORK.md
++++ b/ARTWORK.md
+@@ -257,3 +257,18 @@ state retain their current rules. No new image, GLB, external source, license or
+ SQL migration is introduced. Visual review covered desktop and phone framing,
+ rotation, early and mature development, and all eleven faction styles. Frame
+ rate targets remain unmeasured.
++
++## V19.10 city entrances
++
++The main city entrance is a solid arched gatehouse with flanking watchtowers,
++open timber doors, stone jambs, a raised portcullis and faction roof details.
++Smaller covered gateways finish the northern service road and eastern bridge.
++River portals use solid spandrels above open channels, so they read as part of
++the fortifications rather than freestanding bridge arches. Early wall levels
++use timber gateways; level zero retains only low construction markers.
++
++The native wall preview uses the same gatehouse factory. Static geometry remains
++material-batched; custom arch source geometries are disposed after batching.
++The accepted wall sections, resource sites, city growth and gameplay rules are
++preserved. All geometry is original procedural Peris artwork, with no new image,
++GLB, external asset or SQL migration.
+diff --git a/src/features/city/rendering/BuildingPreview.tsx b/src/features/city/rendering/BuildingPreview.tsx
+index 39ea6b7..881eeb3 100644
+--- a/src/features/city/rendering/BuildingPreview.tsx
++++ b/src/features/city/rendering/BuildingPreview.tsx
+@@ -10,6 +10,7 @@ import { createBuildingModel } from './three/buildingModels';
+ import { createSlotModel } from './three/slotModels';
+ import { disposeCityObject } from './three/modelKit';
+ import { createCityResource, isCityResource } from './three/resourceModels';
++import { createCityGate } from './three/gateModels';
+ 
+ export type BuildingPreviewProps = {
+     type: BuildingType | SlotType;
+@@ -42,7 +43,7 @@ export function BuildingPreview({ type, level, faction, label }: BuildingPreview
+             renderer.toneMapping = THREE.ACESFilmicToneMapping;
+             renderer.toneMappingExposure = .95;
+             const scene = new THREE.Scene();
+-            model = isCityResource(type) ? createCityResource(type, level, faction) : type in SLOT_BUILDINGS ? createSlotModel(type as SlotType, level, faction) : createBuildingModel(type as BuildingType, level, faction);
++            model = type === 'wall' ? createCityGate(level, faction) : isCityResource(type) ? createCityResource(type, level, faction) : type in SLOT_BUILDINGS ? createSlotModel(type as SlotType, level, faction) : createBuildingModel(type as BuildingType, level, faction);
+             scene.add(model, new THREE.HemisphereLight(0xe5f1ef, FACTIONS[faction].earth, 1.5));
+             sun = new THREE.DirectionalLight(0xffedd1, 2.5);
+             sun.position.set(-6, 12, 9); scene.add(sun);
+diff --git a/src/features/city/rendering/three/cityWalls.ts b/src/features/city/rendering/three/cityWalls.ts
+index 1aafa88..1123577 100644
+--- a/src/features/city/rendering/three/cityWalls.ts
++++ b/src/features/city/rendering/three/cityWalls.ts
+@@ -2,6 +2,7 @@ import type { Faction } from '../../../factions/domain/factions';
+ import { visualLevel } from './buildingModels';
+ import { cityKit } from './modelKit';
+ import { cityFootprint, riverX } from './layout';
++import { createCityGate, createCityWaterGate } from './gateModels';
+ 
+ /** Open gateways and water arches; thicker walls keep the playable plots clear. */
+ export function createCityWalls(value: number, mainLevel = 0, faction: Faction = 'roman', animated = false) {
+@@ -51,58 +52,33 @@ export function createCityWalls(value: number, mainLevel = 0, faction: Faction =
+         else { k.tower(x, z, h, r); cylinder(r * 1.04, .1, x, h * .43, z, m.darkStone); }
+         if (level >= 4 && !riverside) k.flag(x, h + .18, z, .65);
+     }
+-    function waterPassage(x: number, z: number) {
+-        if (!level) return;
+-        if (level < 3) {
+-            for (const side of [-1, 1]) box(.16, .94, .3, x + side * .94, 0, z, m.wood);
+-            box(2.1, .17, .34, x, .9, z, m.timber); return;
+-        }
+-        for (const side of [-1, 1]) box(.23, .48, .62, x + side * .96, .02, z, m.darkStone);
+-        for (let i = 0; i < 11; i++) {
+-            const angle = i * Math.PI / 10;
+-            const stone = box(.28, .22, .62, x + Math.cos(angle) * .94, .38 + Math.sin(angle) * .78, z, i % 2 ? m.stone : m.light);
+-            stone.rotation.z = angle - Math.PI / 2;
+-        }
+-    }
+     const gateWidth = 3.1 + level * .12, gateX = .4, eastGate = 11.4;
+-    section(left, back, -.7, back, 0, -1);
+-    section(.7, back, northRiver - 1.08, back, 0, -1);
++    section(left, back, -1.1, back, 0, -1);
++    section(1.1, back, northRiver - 1.08, back, 0, -1);
+     section(northRiver + 1.08, back, right, back, 0, -1);
+     section(left, back, left, front, -1, 0);
+-    section(right, back, right, eastGate - .8, 1, 0);
+-    section(right, eastGate + .8, right, front, 1, 0);
++    section(right, back, right, eastGate - 1.1, 1, 0);
++    section(right, eastGate + 1.1, right, front, 1, 0);
+     section(left, front, gateX - gateWidth / 2, front, 0, 1, true);
+     section(gateX + gateWidth / 2, front, river - 1.08, front, 0, 1, true);
+     section(river + 1.08, front, right, front, 0, 1, true);
+-    waterPassage(northRiver, back); waterPassage(river, front);
+-    if (level >= 2) {
+-        for (const z of [back, front]) { bastion(left, z, z === front); bastion(right + .15, z, z === front, true); }
+-        // Rear postern and bridge gate frame their roads without blocking them.
+-        for (const side of [-1, 1]) {
+-            box(.2, 1.05 + level * .06, .45, side * .8, 0, back, level < 3 ? m.wood : m.stone);
+-            box(.45, .95 + level * .05, .2, right, 0, eastGate + side * .93, level < 3 ? m.wood : m.stone);
+-        }
+-        box(1.8, .16, .5, 0, 1.05 + level * .06, back, level < 3 ? m.timber : m.light);
+-    }
++    if (level >= 2) for (const z of [back, front]) { bastion(left, z, z === front); bastion(right + .15, z, z === front, true); }
+     if (level >= 3) {
+         // Wall access stays in the spare northern border, away from building lots.
+         const h = wallHeight(false);
+         for (let step = 0; step < 6; step++) box(.58, h * (step + 1) / 6, .24, left + .65, .08, back + 1.6 - step * .24, m.stone);
+     }
+-    const perimeter = k.finish(), g = cityKit(faction, animated), { m: gm } = g;
+-    // An open twin-tower gatehouse on the front avenue. No geometry closes the road.
+-    const h = .95 + level * .19, spacing = gateWidth / 2 - .43;
+-    for (const side of [-1, 1]) {
+-        if (level < 3) { g.box(.3, level ? h : .2, .4, side * spacing, 0, 0, gm.wood); if (level) g.roof(.8, .3, .85, side * spacing, h, 0, gm.slate); }
+-        else { g.box(1.02, .18, 1.18, side * spacing, 0, 0, gm.darkStone); g.tower(side * spacing, 0, h + .35, .43); }
+-    }
+-    if (level) {
+-        g.box(gateWidth - .2, .22, .62, 0, h - .25, 0, level < 3 ? gm.timber : gm.stone);
+-        g.box(1.4, .13, .7, 0, h - .03, 0, level < 3 ? gm.wood : gm.light);
+-        g.box(.24, .32, .05, 0, h + .1, -.34, gm.roof);
+-        if (level >= 3) for (let i = 0; i < 7; i++) g.box(.035, .3, .035, -.55 + i * .185, h - .47, .1, gm.dark);
+-        if (level >= 4) for (const side of [-1, 1]) g.flag(side * spacing, h + .55, 0, .7);
+-    }
+-    const gate = g.finish(); gate.position.set(gateX, 0, front); gate.rotation.y = Math.PI; gate.name = 'Front city gate';
+-    perimeter.add(gate); perimeter.name = `City perimeter level ${level}`; return perimeter;
++    const perimeter = k.finish();
++    const gate = createCityGate(level, faction, animated);
++    gate.position.set(gateX, 0, front); gate.rotation.y = Math.PI; gate.name = 'Front city gate';
++    const rear = createCityGate(level, faction, animated, 'postern');
++    rear.position.set(0, 0, back); rear.name = 'Rear city gate';
++    const bridge = createCityGate(level, faction, animated, 'bridge');
++    bridge.position.set(right, 0, eastGate); bridge.rotation.y = -Math.PI / 2; bridge.name = 'Bridge city gate';
++    const northWater = createCityWaterGate(level, wallHeight(false), faction);
++    northWater.position.set(northRiver, 0, back);
++    const southWater = createCityWaterGate(level, wallHeight(true), faction);
++    southWater.position.set(river, 0, front); southWater.rotation.y = Math.PI;
++    perimeter.add(gate, rear, bridge, northWater, southWater);
++    perimeter.name = `City perimeter level ${level}`; return perimeter;
+ }
+diff --git a/src/features/city/rendering/three/gateModels.ts b/src/features/city/rendering/three/gateModels.ts
+new file mode 100644
+index 0000000..dd99fcc
+--- /dev/null
++++ b/src/features/city/rendering/three/gateModels.ts
+@@ -0,0 +1,116 @@
++import * as THREE from 'three';
++import type { Faction } from '../../../factions/domain/factions';
++import { cityKit } from './modelKit';
++import { visualLevel } from './buildingModels';
++
++type Kit = ReturnType<typeof cityKit>;
++type GateKind = 'main' | 'postern' | 'bridge';
++
++/** An actual open-bottom arch, with solid spandrels above the curved passage. */
++function arch(k: Kit, owned: THREE.BufferGeometry[], width: number, height: number, depth: number, halfOpening: number, spring: number, rise: number) {
++    const outline = new THREE.Shape();
++    outline.moveTo(-width / 2, 0); outline.lineTo(-width / 2, height);
++    outline.lineTo(width / 2, height); outline.lineTo(width / 2, 0);
++    outline.lineTo(halfOpening, 0); outline.lineTo(halfOpening, spring);
++    for (let i = 1; i <= 16; i++) { const a = i * Math.PI / 16; outline.lineTo(Math.cos(a) * halfOpening, spring + Math.sin(a) * rise); }
++    outline.lineTo(-halfOpening, 0); outline.closePath();
++    const geometry = new THREE.ExtrudeGeometry(outline, { depth, bevelEnabled: false, steps: 1 }); owned.push(geometry);
++    const face = new THREE.Mesh(geometry, k.m.stone); face.position.z = -depth / 2;
++    face.castShadow = face.receiveShadow = true; k.group.add(face);
++    // Voussoirs follow the opening on both faces, rather than floating above it.
++    for (const side of [-1, 1]) for (let i = 0; i < 11; i++) {
++        const a = i * Math.PI / 10;
++        const stone = k.box(.22, .18, .07, Math.cos(a) * (halfOpening + .08), spring + Math.sin(a) * (rise + .08) - .09, side * (depth / 2 + .025), i % 2 ? k.m.stone : k.m.light);
++        stone.rotation.z = a - Math.PI / 2;
++    }
++}
++
++function openDoors(k: Kit, halfOpening: number, height: number, depth: number) {
++    for (const side of [-1, 1]) {
++        const leaf = new THREE.Group(); leaf.position.set(side * (halfOpening + .025), 0, -depth / 2 - .06); leaf.rotation.y = -side * Math.PI * .46; k.group.add(leaf);
++        const width = halfOpening * .92, center = -side * width / 2;
++        leaf.add(k.box(width, height, .065, center, .05, 0, k.m.wood));
++        for (let i = 1; i < 4; i++) leaf.add(k.box(.016, height - .1, .012, -side * i * width / 4, .1, -.04, k.m.timber));
++        for (const y of [.24, height - .14]) leaf.add(k.box(width + .03, .06, .085, center, y, 0, k.m.dark));
++        leaf.add(k.box(.045, .1, .035, -side * width * .85, height * .47, -.06, k.m.gold));
++    }
++}
++
++/** Main gatehouse and quieter service gates share one architectural language. */
++export function createCityGate(value: number, faction: Faction = 'roman', animated = false, kind: GateKind = 'main') {
++    const level = visualLevel(value), k = cityKit(faction, animated), { m, box } = k, owned: THREE.BufferGeometry[] = [];
++    m.light.color.lerp(m.stone.color, .3); m.stone.color.multiplyScalar(.95);
++    const main = kind === 'main', width = main ? 3.1 + level * .12 : 2.2, opening = main ? .75 : .61;
++    const depth = main ? 1.15 : kind === 'bridge' ? .6 : .8, h = main ? 1.75 + level * .12 : 1.35 + level * .085;
++    const compactRoof = ['persian','gnome','orc'].includes(faction);
++    const canopy = (span: number, rise: number, roofDepth: number, bottom: number) => {
++        if (compactRoof) {
++            box(span, .11, roofDepth, 0, bottom, 0, m.slate);
++            k.roof(main ? 1.25 : .95, rise, Math.min(roofDepth,main?1.25:.95), 0, bottom+.11, 0, m.slate);
++        } else k.roof(span, rise, roofDepth, 0, bottom, 0, m.slate);
++    };
++    if (!level) {
++        for (const side of [-1, 1]) box(.14, .18, .2, side * (width / 2 - .3), 0, 0, m.wood);
++    } else if (level < 3) {
++        const top = main ? 1.22 + level * .16 : 1.05 + level * .12;
++        const spacing = main ? width / 2 - .34 : .87;
++        for (const side of [-1, 1]) {
++            box(main ? .52 : .3, top, depth, side * spacing, 0, 0, m.wood);
++            box(main ? .62 : .38, .12, depth + .1, side * spacing, .2, 0, m.timber);
++            if (level === 2 && main) box(.7, .18, depth + .15, side * spacing, top - .1, 0, m.timber);
++        }
++        box(width - .15, .22, depth, 0, top - .12, 0, m.timber);
++        canopy(width + .08, main ? .35 : .24, depth + .3, top + .1);
++        openDoors(k, opening, .9, depth);
++        if (level === 2 && main) k.flag(width / 2 - .34, top + .35, 0, .65);
++    } else {
++        const bodyWidth = main ? 2.5 : width, spring = main ? .92 : .78, rise = main ? .72 : .54;
++        arch(k, owned, bodyWidth, h, depth, opening, spring, rise);
++        // Clear threshold and substantial jambs connect the structure to the street.
++        box(opening * 2, .045, depth + .32, 0, .005, 0, m.road);
++        for (const side of [-1, 1]) {
++            const x = side * (opening + .19);
++            box(.3, spring, depth + .12, x, 0, 0, m.light);
++            box(.42, .12, depth + .24, x, 0, 0, m.darkStone);
++            box(.38, .1, depth + .18, x, spring - .05, 0, m.light);
++        }
++        box(bodyWidth + .12, .12, depth + .18, 0, h, 0, m.light);
++        if (main) {
++            const spacing = width / 2 - .4;
++            for (const side of [-1, 1]) {
++                box(1.05, .16, 1.4, side * spacing, 0, .12, m.darkStone);
++                k.tower(side * spacing, .12, h + .28, .46);
++                box(.075, .3, .035, side * spacing, h * .61, -.36, m.dark);
++                box(.14, .055, .08, side * spacing, h * .61 + .3, -.36, m.light);
++                box(.2, .4, .035, side * .98, h - .62, -depth / 2 - .09, m.roof);
++                box(.2, .035, .045, side * .98, h - .25, -depth / 2 - .1, m.gold);
++            }
++            if (['roman', 'spartan', 'egyptian', 'dwarf'].includes(faction)) {
++                for (const x of [-.9, -.45, 0, .45, .9]) box(.22, .23, .2, x, h + .12, -depth / 2, m.light);
++                box(1.9, .17, .16, 0, h + .12, depth / 2, m.stone);
++            } else canopy(2.55, .28, depth + .28, h + .12);
++            if (level >= 4) for (const side of [-1, 1]) k.flag(side * spacing, h + .5, .12, .7);
++            // Raised portcullis sits above head height, inside the passage.
++            for (let i = 0; i < 7; i++) box(.035, .22, .035, -.54 + i * .18, 1.43, -.05, m.dark);
++            box(1.2, .055, .055, 0, 1.6, -.05, m.dark);
++        } else canopy(width + .14, .25, depth + .28, h + .12);
++        openDoors(k, opening, main ? 1.18 : .96, depth);
++    }
++    const model = k.finish(); owned.forEach(geometry => geometry.dispose()); model.name = `City ${kind} gate level ${level}`; return model;
++}
++
++/** Solid water portals replace the bridge-like bare arch rings. */
++export function createCityWaterGate(value: number, wallHeight: number, faction: Faction = 'roman') {
++    const level = visualLevel(value), k = cityKit(faction), { m, box } = k, owned: THREE.BufferGeometry[] = [];
++    m.light.color.lerp(m.stone.color, .3); m.stone.color.multiplyScalar(.95);
++    if (level >= 3) {
++        const h = Math.max(1.1, wallHeight + .14);
++        arch(k, owned, 2.16, h, .54, .81, .22, .67);
++        box(2.2, .085, .66, 0, h, 0, m.light);
++        for (const x of [-.75, 0, .75]) box(.23, .2, .22, x, h + .085, -.23, m.light);
++    } else if (level) {
++        for (const side of [-1, 1]) box(.18, .95, .3, side * .98, 0, 0, m.wood);
++        box(2.16, .18, .38, 0, .9, 0, m.timber);
++    }
++    const model = k.finish(); owned.forEach(geometry => geometry.dispose()); model.name = `City water portal level ${level}`; return model;
++}
+diff --git a/tests/city-gates.test.ts b/tests/city-gates.test.ts
+new file mode 100644
+index 0000000..a395709
+--- /dev/null
++++ b/tests/city-gates.test.ts
+@@ -0,0 +1,46 @@
++import { test } from 'node:test';
++import assert from 'node:assert/strict';
++import * as THREE from 'three';
++import { FACTIONS, type Faction } from '../src/features/factions/domain/factions';
++import { createCityGate, createCityWaterGate } from '../src/features/city/rendering/three/gateModels';
++import { createCityWalls } from '../src/features/city/rendering/three/cityWalls';
++import { disposeCityObject } from '../src/features/city/rendering/three/modelKit';
++
++function hits(object: THREE.Object3D, x: number, y: number, z: number, direction: THREE.Vector3) {
++    object.updateMatrixWorld(true);
++    return new THREE.Raycaster(new THREE.Vector3(x, y, z), direction, 0, 4).intersectObject(object, true).length;
++}
++
++test('all faction gate stages have clear pedestrian passages in both directions and solid arch spandrels', () => {
++    for (const faction of Object.keys(FACTIONS) as Faction[]) for (const kind of ['main','postern','bridge'] as const) {
++        const stages = new Set<string>();
++        for (let level = 0; level <= 5; level++) {
++            const model = createCityGate(level, faction, false, kind), bounds = new THREE.Box3().setFromObject(model);
++            let vertices = 0, draws = 0;
++            model.traverse(object => { if (object instanceof THREE.Mesh) { draws++; const p=object.geometry.getAttribute('position'); vertices+=p.count; assert.ok([...p.array].every(Number.isFinite)); } });
++            assert.ok(draws <= 12 && vertices < 20_000, 'gates remain material-batched');
++            if (!level) assert.ok(bounds.max.y <= .2, 'unbuilt walls have no finished gatehouse');
++            else {
++                stages.add(`${vertices}:${bounds.max.y}`);
++                for (const x of kind === 'main' ? [-.45,0,.45] : [-.35,0,.35]) for (const y of [.22,.8]) for (const side of [-1,1]) {
++                    assert.equal(hits(model,x,y,side*2,new THREE.Vector3(0,0,-side)),0,`${faction} ${kind} ${level}: open passage`);
++                }
++                if (level>=3) assert.ok(hits(model,0,kind==='main'?1.85:1.45,-2,new THREE.Vector3(0,0,1)), 'masonry closes the space above the arch');
++            }
++            disposeCityObject(model);
++        }
++        assert.equal(stages.size,5,`${faction} ${kind} evolves through five wall levels`);
++    }
++});
++
++test('rear and bridge gates retain road alignment, and water portals leave the flowing channel open', () => {
++    for (let level=1;level<=5;level++) {
++        const walls=createCityWalls(level,5),rear=walls.getObjectByName('Rear city gate')!,bridge=walls.getObjectByName('Bridge city gate')!;
++        for(const x of [-.35,0,.35])assert.equal(hits(walls,x,.8,-1.5,new THREE.Vector3(0,0,1)),0,'northern service road');
++        for(const dz of [-.25,0,.25])assert.equal(hits(walls,bridge.position.x+1.5,.8,bridge.position.z+dz,new THREE.Vector3(-1,0,0)),0,'bridge road');
++        assert.equal(rear.position.x,0);assert.equal(bridge.rotation.y,-Math.PI/2);
++        const portal=createCityWaterGate(level,1.3);
++        for(const x of [-.6,0,.6])assert.equal(hits(portal,x,.22,-1.5,new THREE.Vector3(0,0,1)),0,'river must remain visible through portal');
++        disposeCityObject(walls);disposeCityObject(portal);
++    }
++});
+diff --git a/tests/e2e/city-gates.spec.ts b/tests/e2e/city-gates.spec.ts
+new file mode 100644
+index 0000000..8cf20bd
+--- /dev/null
++++ b/tests/e2e/city-gates.spec.ts
+@@ -0,0 +1,23 @@
++import { test, expect } from '@playwright/test';
++import * as THREE from 'three';
++import { createSolo } from '../../src/features/campaign/domain/newRealm';
++import { refreshCityEconomy, cityGrowth } from '../../src/features/city/domain/slots';
++import { BUILDINGS } from '../../src/features/city/domain/buildings';
++import { cityFootprint } from '../../src/features/city/rendering/three/layout';
++import { CityCamera } from '../../src/features/city/rendering/three/CityCamera';
++
++test('front gatehouse is selectable from its masonry and keeps the compact wall preview',async({page},info)=>{
++    const world=createSolo('Gatehouse'),errors:string[]=[];world.buildings.forEach(b=>b.level=3);refreshCityEconomy(world,world.settlements[0].id);
++    page.on('pageerror',e=>errors.push(e.message));
++    await page.addInitScript(w=>{localStorage.setItem('peris-campaign-v6',JSON.stringify(w));localStorage.setItem('peris-settings',JSON.stringify({sound:false,music:false,reducedMotion:true}));localStorage.setItem(`peris-welcome:${w.players[0].id}:${w.players[0].created_at}`,'yes');},world);
++    await page.goto('/');await page.getByRole('button',{name:'Continue campaign',exact:true}).click();await page.getByRole('button',{name:'City',exact:true}).click();await page.getByRole('button',{name:'3D',exact:true}).click();
++    const canvas=page.locator('.city-3d-scene.ready canvas');await expect(canvas).toHaveAttribute('data-city-zoom','1.000');
++    const rect=(await canvas.boundingBox())!,camera=new CityCamera();camera.resize(rect.width,rect.height,3);
++    const p=new THREE.Vector3(0,1.85,cityFootprint(3).front*cityGrowth(3)).project(camera.camera);
++    await page.mouse.click(rect.x+(p.x+1)*rect.width/2,rect.y+(1-p.y)*rect.height/2);
++    const panel=page.locator('.building-inspector');await expect(panel.getByRole('heading',{name:BUILDINGS.wall.name,exact:true})).toBeVisible();
++    await expect(panel.getByRole('img')).toHaveAttribute('aria-label',/level 3/);
++    await page.keyboard.press('Escape');await expect(panel).toHaveCount(0);
++    await page.getByRole('button',{name:'Rotate city right',exact:true}).click();await expect(canvas).toHaveAttribute('data-city-rotation','0.393');
++    await page.screenshot({path:info.outputPath('city-gatehouses.png')});expect(errors).toEqual([]);
++});
