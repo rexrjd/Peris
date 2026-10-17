@@ -56,6 +56,7 @@
 
 @import "../../features/city/styles/city-art-direction.css";
 @import '../../features/army/styles/rally-faction.css';
+@import '../../features/city/styles/building-inspector.css';
 
 .realm-presentation { display: contents; }
 .rp-art-status { color: var(--rp-paper); font-size: 12px; }

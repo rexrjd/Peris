@@ -2,12 +2,12 @@ import {ACADEMY_SCIENCE,scienceRate} from '../../research/domain/science';
 import {researchFactor,trainingBoost} from '../../research/domain/effects';
 import {useResearchNavigation} from '../../research/ui/ResearchNavigation';
 import { createPortal } from 'react-dom';
-import { useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 import type { World } from '../../../shared/model/world';
 import type { Command } from '../../../shared/model/commands';
 import { RESOURCES } from '../../../shared/model/resources';
 import { Icon } from '../../../shared/ui/Icons';
-import { Cost, Modal } from '../../../shared/ui/Shared';
+import { Cost } from '../../../shared/ui/Shared';
 import { clock } from '../../../shared/time/clock';
 import { BUILDINGS } from '../domain/buildings';
 import { buildingCost, MAX_BUILDING_LEVEL, upgradeSeconds } from '../domain/construction';
@@ -22,8 +22,11 @@ import { factionOf } from '../../factions/domain/factions';
 import { CityDebugPanel } from '../../factions/ui/CityDebugPanel';
 import { MageTowerPanel } from '../../magic/ui/MageTowerPanel';
 import { recruitSeconds } from '../../army/domain/recruitment';
-import { BuildingPicker } from './BuildingPicker';
-import { CityConstructionQueue } from './CityConstructionQueue';
+import { BuildingChoices, buildingChoiceReason } from './BuildingPicker';
+import { BuildingInspector } from './BuildingInspector';
+import { RECRUIT_RULES, type RecruitUnit } from '../../army/domain/roster';
+import { factionTroopName } from '../../frontier/ui/roster';
+import { CityConstructionQueue, constructionTarget, constructionName } from './CityConstructionQueue';
 import { RecruitmentPanel } from '../../army/ui/RecruitmentPanel';
 import { atRecruitmentCity } from '../../army/domain/commandRoom';
 import { soldierTotal } from '../../army/domain/units';
@@ -67,40 +70,70 @@ export function BuildingDialog({ world, owner, sid, plot, initialChoice, note, b
     world: World; owner: string; sid: number; plot: CityPlot; initialChoice: SlotType; note?: string; busy: boolean; now: number; appearance?: 'scene';
     run: (command: Command, message?: string) => void; onSelect: (key: string) => void; onClose: () => void;
 }) {
-    const openResearch=useResearchNavigation();
+    const openResearch = useResearchNavigation(), id = useId();
     const town = world.settlements.find(s => s.id === sid)!, slots = citySlots(world, sid), resources = liveResources(town, now);
+    const faction = factionOf(town.faction), type = plot.type, empty = plot.slot !== undefined && !type;
+    const military = type === 'barracks' || type === 'stables' || type === 'workshop';
+    const [tab, setTab] = useState<'upgrade' | 'train' | 'spells'>(() => military && plot.level ? 'train' : type === 'mage_tower' && plot.level ? 'spells' : 'upgrade');
+    const activeTab = tab === 'train' && military || tab === 'spells' && type === 'mage_tower' ? tab : 'upgrade';
+    const [choice, setChoice] = useState(initialChoice), [actionContainer, setActionContainer] = useState<HTMLDivElement | null>(null), [settingsOpen,setSettingsOpen] = useState(false);
+    useEffect(() => { setChoice(initialChoice); }, [sid, plot.key, initialChoice]);
     const legions = world.armies.filter(army => army.owner_id === owner);
-    const [legionId,setLegionId] = useState(() => (legions.find(army => atRecruitmentCity(army,town,now)) ?? legions[0])?.id);
-    const [marchRequest,setMarchRequest] = useState<{armyId:number;destination:MarchDestination}|null>(null);
+    const [legionId, setLegionId] = useState(() => (legions.find(army => atRecruitmentCity(army,town,now)) ?? legions[0])?.id);
+    const [marchRequest, setMarchRequest] = useState<{armyId:number;destination:MarchDestination}|null>(null);
     const legion = legions.find(army => army.id === legionId) ?? legions[0];
-    const type = plot.type, empty = plot.slot !== undefined && !type;
     const meta = type ? plot.slot === undefined ? BUILDINGS[type as BuildingType] : SLOT_BUILDINGS[type as SlotType] : null;
     const max = type && plot.slot !== undefined ? slotMaxLevel(type as SlotType) : MAX_BUILDING_LEVEL, maxed = plot.level >= max;
     const order = world.orders.find(o => o.owner_id === owner && o.kind === 'upgrade' && (o.settlement_id ?? world.settlements[0].id) === sid);
-    const cost = type ? plot.slot === undefined ? buildingCost(type as BuildingType, plot.level) : slotCost(type as SlotType, plot.level) : null;
-    const shortages = cost ? RESOURCES.filter(resource => resources[resource] < cost[resource]).map(resource => `${(cost[resource] - resources[resource]).toLocaleString()} ${resource === 'wood' ? 'timber' : resource}`) : [];
-    const reason = maxed ? 'Fully developed' : order ? 'Builders are working' : busy ? 'Issuing order…' : cost && !affordable(resources, cost) ? 'More supplies needed' : null;
+    const upgradingThis = !!order && constructionTarget(order) === plot.key;
+    const hasTower = slots.some(slot => slot.building_type === 'mage_tower'), hasBarracks = slots.some(slot => slot.building_type === 'barracks');
+    const picked = SLOT_BUILDINGS[choice];
+    const cost = empty ? slotCost(choice,0) : type ? plot.slot === undefined ? buildingCost(type as BuildingType, plot.level) : slotCost(type as SlotType, plot.level) : null;
+    const shortages = cost ? RESOURCES.filter(resource => resources[resource] < cost[resource]).map(resource => `${Math.ceil(cost[resource] - resources[resource]).toLocaleString()} ${resource === 'wood' ? 'timber' : resource}`) : [];
+    const reason = empty ? buildingChoiceReason(choice,resources,hasTower,hasBarracks,busy,!!order) : maxed ? 'Fully developed' : order ? 'Builders are working' : busy ? 'Issuing order…' : cost && !affordable(resources,cost) ? 'More supplies needed' : null;
     const fishingUnbuilt = plot.slot === 16 && !slots.some(slot => slot.slot_index === 16);
     const orderLevel = order ? order.item.startsWith('slot:') ? slots.find(slot => slot.slot_index === Number(order.item.split(':')[1]))?.level ?? 0 : world.buildings.find(building => building.settlement_id === sid && building.building_type === order.item)?.level ?? 0 : 0;
     const name = meta?.name ?? `Empty plot ${plot.slot! + 1}`;
     const close = () => { if (typeof document === 'undefined' || !document.querySelector('.mage-spellbook')) onClose(); };
-    const rows = benefits(world, sid, plot);
-    const Preview = appearance === 'scene' ? BuildingPreview : BuildingArtwork;
-    const dialog = <Modal title={type==='academy'?'Academy':'Selected building'} className={`village-building-dialog ${appearance === 'scene' ? 'city-scene-building-dialog' : ''} ${type==='academy'?'academy-dialog':''}`} heading={false} onClose={close}>
-        <header className="village-building-heading"><span className="eyebrow">{town.name} · {empty ? `PLOT ${plot.slot! + 1}` : plot.slot === 16 ? 'RIVERSIDE SITE' : 'VILLAGE DEVELOPMENT'}</span><h2>{name}</h2>{!empty && <p>{plot.level ? `Level ${plot.level}` : 'Not built'} <span>→ {maxed ? 'Fully developed' : `Level ${plot.level + 1}`}</span></p>}</header>
-        {note && <p className="village-building-note">{note}</p>}
-        {empty ? <><p className="village-building-intro">Develop this plot with a building of your choice. Your main building unlocks additional plots as the village grows.</p><BuildingPicker key={`${plot.key}:${initialChoice}`} initialChoice={initialChoice} slot={plot.slot!} resources={resources} hasTower={slots.some(slot => slot.building_type === 'mage_tower')} hasBarracks={slots.some(slot => slot.building_type === 'barracks')} busy={busy} building={!!order} run={run}/><p className="village-building-footnote"><Icon name="time" size={14}/> {clock(upgradeSeconds(0,researchFactor(world,owner,'construction')))} construction time · one construction project at a time.</p></> : <>
-            <section className="village-building-hero"><Preview type={type!} level={Math.max(1, plot.level)} faction={factionOf(town.faction)} label={`${name}, ${plot.level ? `level ${plot.level}` : 'appearance after construction'}`}/><div className="village-building-hero-info"><span>{maxed ? 'MASTERED' : plot.level ? 'NEXT UPGRADE' : 'NEW CONSTRUCTION'}</span><strong>{maxed ? `Level ${plot.level}` : `Level ${plot.level + 1}`}</strong><p>{maxed ? 'This building is fully developed.' : `${clock(upgradeSeconds(plot.level,researchFactor(world,owner,'construction')))} construction time`}</p>{!plot.level && <small>Preview of the completed building</small>}</div></section>
-            <section className="village-building-description"><h3>Description</h3><p>{meta!.description}</p></section>
-            {rows.length > 0 && <section className="village-building-effects"><h3>{maxed ? 'Current benefits' : 'What improves'}</h3><table><thead><tr><th>Benefit</th><th>Current</th>{!maxed && <th>Level {plot.level + 1}</th>}</tr></thead><tbody>{rows.map(row => <tr key={row.name} title={row.help}><th scope="row">{row.name}</th><td>{row.current}</td>{!maxed && <td>{row.next}</td>}</tr>)}</tbody></table>{type && type in WORKERS_PER_LEVEL && <p className="village-building-footnote">Production bonuses are shown before staffing. Keep enough residents and food to run them.</p>}</section>}
-            {!maxed && <section className="village-upgrade-box"><h3>{plot.level ? 'Upgrade cost' : 'Construction cost'}</h3><Cost cost={cost!} resources={resources}/>{shortages.length > 0 && <p className="village-shortages">Missing {shortages.join(', ')}.</p>}<div className="village-upgrade-action"><button className="button gold" disabled={!!reason} title={reason ?? `${plot.level ? 'Upgrade' : 'Construct'} ${name}. Supplies are paid once when the command is accepted.`} onClick={() => run(plot.slot === undefined ? { type: 'upgrade', item: type as BuildingType } : fishingUnbuilt ? { type: 'buildSlot', slot: 16, item: 'fishery' } : { type: 'upgradeSlot', slot: plot.slot }, `${name} ${plot.level ? 'upgrade' : 'construction'} started`)}>{reason ?? (plot.level ? `Upgrade to level ${plot.level + 1}` : `Construct ${name}`)}</button><span><Icon name="time" size={17}/>{clock(upgradeSeconds(plot.level,researchFactor(world,owner,'construction')))}</span></div><small>One construction project at a time in this village.</small></section>}
-        </>}
-        {type==='academy'&&<section className="academy-science"><strong>+{(ACADEMY_SCIENCE[plot.level]??0)*researchFactor(world,owner,'science')} science / min</strong><p>Account total: {scienceRate(world,owner).toLocaleString(undefined,{maximumFractionDigits:1})} / min across all cities.</p><button className="tech-primary" onClick={()=>{onClose();openResearch();}}>Open technology tree <Icon name="arrow" size={16}/></button></section>}
-        {order && <CityConstructionQueue order={order} level={orderLevel} now={now} onSelect={onSelect}/>}
-        {type === 'mage_tower' && <MageTowerPanel world={world} sid={sid} level={plot.level} run={run} busy={busy} now={now}/>}
-        {(type === 'barracks' || type === 'stables' || type === 'workshop') && <section className="village-building-recruitment" aria-label={`${meta?.name} recruitment`}><h3>Recruit &amp; research</h3>{legion ? <><label className="command-label">Recruiting legion<select aria-label="Recruiting legion" value={legion.id} onChange={event=>setLegionId(Number(event.target.value))}>{legions.map(army=><option key={army.id} value={army.id}>{army.name} · {soldierTotal(army)} troops{atRecruitmentCity(army,town,now)?' · At this city':' · Away'}</option>)}</select></label><div className="army-command village-recruitment"><RecruitmentPanel key={`${sid}:${type}:${legion.id}`} embedded buildingOnly={type} world={world} army={legion} city={town} busy={busy} now={now} run={(command,message)=>{if(command.type==='move')setMarchRequest({armyId:command.armyId??legion.id,destination:{kind:'move',x:command.x,y:command.y,label:town.name}});else run(command,message);}}/></div></> : <p>Raise a legion from Armies to recruit troops here.</p>}</section>}
-        <details className="village-building-settings"><summary>City settings &amp; debug</summary><CityDebugPanel world={world} owner={owner} cityId={sid} target={type ? plot.slot !== undefined && !fishingUnbuilt ? `slot:${plot.slot}` : fishingUnbuilt ? '' : type : ''} name={name} level={plot.level} max={max} busy={busy} run={run}/></details>
-    </Modal>;
+    const rows = benefits(world,sid,plot), Preview = appearance === 'scene' ? BuildingPreview : BuildingArtwork;
+    const training = military ? world.orders.filter(o => o.owner_id === owner && o.kind === 'recruit' && (o.settlement_id ?? world.settlements[0].id) === sid && RECRUIT_RULES[o.item as RecruitUnit]?.building === type).sort((a,b) => Date.parse(a.finish_at)-Date.parse(b.finish_at)) : [];
+    const tabs = [{key:'upgrade' as const,label:empty?'Build':'Upgrade'}, ...(military?[{key:'train' as const,label:'Train'}]:[]), ...(type==='mage_tower'?[{key:'spells' as const,label:'Spells'}]:[])];
+    const upgrade = () => run(empty ? {type:'buildSlot',slot:plot.slot!,item:choice} : plot.slot === undefined ? {type:'upgrade',item:type as BuildingType} : fishingUnbuilt ? {type:'buildSlot',slot:16,item:'fishery'} : {type:'upgradeSlot',slot:plot.slot!}, `${empty?picked.name:name} ${empty||!plot.level?'construction':'upgrade'} started`);
+    const dialog = <BuildingInspector title={type==='academy'?'Academy':'Selected building'} onClose={close} returnFocusSelector={`[data-building="${plot.key}"]`}>
+        <button className="building-inspector-settings-toggle" aria-label="Building settings" aria-expanded={settingsOpen} title="City settings & debug" onClick={()=>setSettingsOpen(!settingsOpen)}><Icon name="settings" size={14}/></button>
+        <header className="building-inspector-heading">
+            <div className="building-inspector-art">{empty ? <Icon name="town" size={36}/> : <Preview type={type!} level={Math.max(1,plot.level)} faction={faction} label={`${name}, ${plot.level?`level ${plot.level}`:'appearance after construction'}`}/>}</div>
+            <div><small>{town.name}{empty?` · Plot ${plot.slot!+1}`:plot.slot===16?' · Riverside':''}</small><h2>{name}</h2><p>{empty?'Choose what to build':<>Level {plot.level} / {max}<span>{upgradingThis?'Upgrading':maxed?'Complete':!plot.level?'Unbuilt':''}</span></>}</p></div>
+        </header>
+        {tabs.length>1 && <nav className="building-inspector-tabs" role="tablist" aria-label="Building actions">{tabs.map(item=><button key={item.key} role="tab" id={`${id}-${item.key}`} aria-selected={activeTab===item.key} aria-controls={`${id}-panel-${item.key}`} tabIndex={activeTab===item.key?0:-1} onKeyDown={event=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;event.preventDefault();const index=tabs.findIndex(t=>t.key===activeTab),next=event.key==='Home'?0:event.key==='End'?tabs.length-1:(index+(event.key==='ArrowRight'?1:-1)+tabs.length)%tabs.length;setTab(tabs[next].key);document.getElementById(`${id}-${tabs[next].key}`)?.focus();}} onClick={()=>setTab(item.key)}>{item.label}{item.key==='train'&&training.length>0&&<span>{training.length}</span>}</button>)}</nav>}
+        <div className="building-inspector-body">
+            {note && <p className="building-inspector-note">{note}</p>}
+            <div id={`${id}-panel-upgrade`} role={tabs.length>1?'tabpanel':undefined} aria-labelledby={tabs.length>1?`${id}-upgrade`:undefined} hidden={activeTab!=='upgrade'}>
+                {empty ? <div className="building-inspector-picker"><BuildingChoices slot={plot.slot!} choice={choice} onChange={setChoice} hasTower={hasTower} hasBarracks={hasBarracks}/><p className="building-inspector-picked"><strong>{picked.name}</strong>{picked.description}</p></div> : <>
+                    <p className="building-inspector-description">{meta!.description}</p>
+                    {rows.length>0 && <table className="building-inspector-effects"><thead><tr><th>{maxed?'Benefit':'Next level'}</th><th>Now</th>{!maxed&&<th>Lv. {plot.level+1}</th>}</tr></thead><tbody>{rows.map(row=><tr key={row.name} title={row.help}><th scope="row">{row.name}</th><td>{row.current}</td>{!maxed&&<td><span aria-hidden="true">→</span> {row.next}</td>}</tr>)}</tbody></table>}
+                    {type && type in WORKERS_PER_LEVEL && <small className="building-inspector-hint">Production before staffing.</small>}
+                    {type==='academy' && <div className="building-inspector-science"><span><strong>+{(ACADEMY_SCIENCE[plot.level]??0)*researchFactor(world,owner,'science')} / min</strong><small>{scienceRate(world,owner).toLocaleString(undefined,{maximumFractionDigits:1})} account total</small></span><button onClick={()=>{onClose();openResearch();}}>Research <Icon name="arrow" size={14}/></button></div>}
+                    {maxed && <p className="building-inspector-complete"><Icon name="check" size={15}/> Fully developed</p>}
+                </>}
+            </div>
+            {military && <div id={`${id}-panel-train`} role="tabpanel" aria-labelledby={`${id}-train`} hidden={activeTab!=='train'}>
+                {legion ? <><label className="building-inspector-legion">Legion<select aria-label="Recruiting legion" value={legion.id} onChange={event=>setLegionId(Number(event.target.value))}>{legions.map(army=><option key={army.id} value={army.id}>{army.name} · {soldierTotal(army)}{atRecruitmentCity(army,town,now)?'':' · Away'}</option>)}</select></label><div className="army-command building-inspector-recruitment"><RecruitmentPanel key={`${sid}:${type}:${legion.id}`} embedded formOnly actionContainer={actionContainer} buildingOnly={type} world={world} army={legion} city={town} busy={busy} now={now} run={(command,message)=>{if(command.type==='move')setMarchRequest({armyId:command.armyId??legion.id,destination:{kind:'move',x:command.x,y:command.y,label:town.name}});else run(command,message);}}/></div></> : <p>Raise a legion from Armies to recruit here.</p>}
+                {training.length>0 && <details className="building-inspector-training-queue"><summary>Training queue <b>{training.length}</b></summary><ol>{training.map(job=><li key={job.id}><span>{job.quantity} {factionTroopName(faction,job.item as RecruitUnit)}<small>{world.armies.find(army=>army.id===job.army_id)?.name}{Date.parse(job.started_at)>now?' · Queued':''}</small></span><time>{clock(Math.max(0,(Date.parse(job.finish_at)-now)/1000))}</time></li>)}</ol></details>}
+            </div>}
+            {type==='mage_tower' && <div id={`${id}-panel-spells`} role="tabpanel" aria-labelledby={`${id}-spells`} hidden={activeTab!=='spells'}><MageTowerPanel world={world} sid={sid} level={plot.level} run={run} busy={busy} now={now}/></div>}
+            {settingsOpen&&<section className="building-inspector-settings" aria-label="City settings and debug"><CityDebugPanel world={world} owner={owner} cityId={sid} target={type ? plot.slot!==undefined&&!fishingUnbuilt?`slot:${plot.slot}`:fishingUnbuilt?'':type:''} name={name} level={plot.level} max={max} busy={busy} run={run}/></section>}
+        </div>
+        <footer className="building-inspector-footer" hidden={activeTab==='spells'||activeTab==='upgrade'&&maxed&&!order}>
+            <div hidden={activeTab!=='upgrade'}>
+                {upgradingThis ? <><p className="building-inspector-work-label">Builders are working</p><CityConstructionQueue order={order} level={orderLevel} now={now} onSelect={onSelect}/></> : <>
+                    {!maxed && <><div className="building-inspector-price"><Cost cost={cost!} resources={resources} compact/><span title="Construction time"><Icon name="time" size={13}/>{clock(upgradeSeconds(empty?0:plot.level,researchFactor(world,owner,'construction')))}</span></div>{shortages.length>0&&<p className="building-inspector-shortages" role="status">Need {shortages.join(', ')}.</p>}<button className="building-inspector-primary" disabled={!!reason} onClick={upgrade}>{reason ?? (empty?`Build ${picked.name}`:plot.level?`Upgrade to level ${plot.level+1}`:`Construct ${name}`)}{!reason&&<Icon name="arrow" size={15}/>}</button></>}
+                    {order && <button className="building-inspector-builder-link" onClick={()=>onSelect(constructionTarget(order))}><Icon name="time" size={12}/>{constructionName(order)} is building <span>{clock(Math.max(0,(Date.parse(order.finish_at)-now)/1000))} →</span></button>}
+                </>}
+            </div>
+            <div ref={setActionContainer} hidden={activeTab!=='train'} className="building-inspector-training-action"/>
+        </footer>
+    </BuildingInspector>;
     const shown = marchRequest ? <MarchDialog world={world} playerId={owner} now={now} busy={busy} initialArmyId={marchRequest.armyId} destination={marchRequest.destination} run={run} onClose={()=>setMarchRequest(null)}/> : dialog;
-    return typeof document === 'undefined' ? shown : createPortal(shown, document.body);
+    return typeof document==='undefined' ? shown : createPortal(shown,document.body);
 }
