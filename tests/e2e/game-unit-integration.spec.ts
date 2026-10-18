@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 import { createSolo } from '../../src/features/campaign/domain/newRealm';
 import { startPractice } from '../../src/features/battle/domain/practice';
 import {unitRule} from '../../src/features/army/domain/unitBalance';
+import {emptySocial} from '../../src/features/social/domain/social';
 
 test.beforeEach(async ({ page }) => {
     await page.addInitScript(() => localStorage.setItem('peris-settings', JSON.stringify({ sound: false, music: false, reducedMotion: true })));
@@ -98,6 +99,9 @@ test('shared-world map and defender battle use the correct published factions', 
     const battle = duel.battles[0]; battle.mode = 'pvp'; battle.attacker_owner_id = rival; battle.defender_owner_id = me;
     battle.attacker_army_id = 900; battle.defender_army_id = world.armies[0].id; battle.defender_ready = false;
     delete battle.attacker_faction; delete battle.defender_faction;
+    // The faction fallback is a legacy-server contract; v2 requires captured doctrines.
+    delete battle.balance_version;
+    for(const formation of duel.formations){const rule=unitRule(formation.recruit_unit??formation.unit_type,1);formation.unit_attack=rule.attack;formation.unit_defence=rule.defence;}
     duel.formations.forEach(f => { f.owner_id = f.side === 'attacker' ? rival : me; });
     const session = { access_token: 'eyJhbGciOiJIUzI1NiJ9.eyJleHAiOjQxMDI0NDQ4MDAsInN1YiI6IjExMTExMTExLTExMTEtNDExMS04MTExLTExMTExMTExMTExMSJ9.test', token_type: 'bearer', expires_in: 3600, refresh_token: 'test-refresh', user: { id: me, aud: 'authenticated', role: 'authenticated', is_anonymous: true, app_metadata: {}, user_metadata: {}, created_at: new Date().toISOString() } };
     await page.route('**/auth/v1/**', route => route.fulfill({ json: session }));
@@ -109,6 +113,7 @@ test('shared-world map and defender battle use the correct published factions', 
         if (path.endsWith('/armies')) { selects.push(url.searchParams.get('select')!); return route.fulfill({ json: [{ id: 900, owner_id: rival, home_settlement_id: 901 }] }); }
         if (path.endsWith('/settlements')) { selects.push(url.searchParams.get('select')!); return route.fulfill({ json: [{ id: world.settlements[0].id, faction: 'dwarf' }, { id: 901, faction: 'demon' }] }); }
         if (path.endsWith('/peris_snapshot')) return route.fulfill({ json: fighting ? duel : privateWorld });
+        if (path.endsWith('/peris_social_snapshot')) return route.fulfill({ json: {...emptySocial(),server_now:world.server_now} });
         if (path.endsWith('/peris_map_snapshot')) return route.fulfill({ json: { server_now: world.server_now, players: world.players, settlements: world.settlements, armies: [world.armies[0], opponent], map_plots: [], total_players: 2, total_settlements: 2, settlements_truncated: false, armies_truncated: false, plots_truncated: false } });
         return route.fulfill({ json: null });
     });

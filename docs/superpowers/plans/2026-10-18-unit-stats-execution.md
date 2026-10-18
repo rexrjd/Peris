@@ -6,11 +6,11 @@ Pre-flight: versioned catalog feeds formation construction, recruitment, validat
 
 Ruling: the skill's Bash task helpers cannot execute because Git Bash is unavailable on this Windows host (command failed). Use this checked-in ledger and PowerShell verification logs for task bases, decisions and actual results instead. Cost: manual bookkeeping, no gameplay difference.
 
-Task 1: in progress — versioned canonical catalog and reference stats.
-Task 2: pending — captured local/SQL doctrines.
-Task 3: pending — recruitment and comparison UI.
-Task 4: pending — save/report compatibility and upgrade.
-Task 5: pending — calibration, repository/browser checks and review.
+Task 1: complete — versioned canonical catalog and reference stats.
+Task 2: complete — captured local/SQL doctrines.
+Task 3: complete — recruitment and comparison UI.
+Task 4: complete — save/report compatibility and upgrade.
+Task 5: calibration/review complete; final broad browser verification in progress.
 
 Tasks 2–4 interface ruling: implement save version validation and report pricing alongside battle metadata, before enabling new local economics. Otherwise an intermediate commit would create battles that its own importer rejects. Keep separate domain/UI commits after the shared boundary is tested.
 
@@ -39,3 +39,21 @@ Review scope rulings: hosted SQL installation/concurrency remains unverified and
 Browser-run incident: stopping superseded Playwright runs removed their owned Vite server after another run had reused it; errors were ERR_CONNECTION_REFUSED at page.goto. Discard those infrastructure-failed runs as verification evidence. The final run uses a separately owned stable Vite session, verified HTTP 200 and the changed module before launch. Direct Playwright CLI forwarding ensures three workers; PowerShell npm.ps1 had consumed forwarded arguments in earlier runs.
 
 Post-review source verification: npm test completed with 492 passed, 1 skipped, 0 failed (493 tests; review-unit-tests.log). Production build passed after the price fix (review-build.log), retaining the existing >500 kB chunk warning. The superseded verified-e2e CLI was still spawning workers after its children were stopped; verified its exact command line and stopped only that owned process tree. Early stable-run timeouts under that contention must be rerun after the full run, without weakening timeout/assertion settings.
+
+Final calibration report: 1,452 actual simulations, 990 baseline, zero timeouts; no factions outside either baseline or additional starting pooled 40–60% gates. Catalog SHA-256 f495526496bccaec611c84d11a4d08cd729cef51bf50c1646bc02fe571949651. Both duration and every scenario are recorded in calibration.json (307,467 ms for the final run).
+
+Repository checks passed: tooling (5 tests), assets (46 GLBs and 33 Rally paintings), build, check:sql, check:world, check:bandits, check:unit-balance, and git diff --check. Isolated database suites passed: db, fresh, automatic, world-battles, player-raids, magic, integration, report-reads, hero-loot, command-receipts, army-parity, research, social (58 checks), unit-balance (198 stats, 99 recruitment batches and twice-applied populated upgrade).
+
+Pre-existing database failures: test:accounts-db and test:account-compatibility-db compare a frozen pre-raid army shape against added neutral raid_city_id/siege_target columns. The same assertions fail using original f075876 generated SQL (prior-main-accounts-check.log and prior-main-account-check.log). Their assertions were not weakened.
+
+Broad E2E diagnosis so far: campaign-marches' quiet-farming case expects the unused Battle report ledger after Chronicle already switched to ReportInbox; city-preview expects visible debug text where BuildingDialog already uses an icon named Building settings; city-village expects an obsolete disabled Builders are working button, a table training row and Current benefits heading. These tests and controlling UI files (including CitySummary) are unchanged from f075876; git diff --exit-code confirmed this. Keep those failures separate from stat/recruitment verification, without changing unrelated UI or weakening checks. Final actual counts and reruns follow below.
+
+Further browser diagnosis: Vite's console proves that trace HTML emitted under output/unit-balance triggered global page reloads. This explains intermittent Preparing Peris/navigation timeouts beyond the initial process contention. Ruling: use an ignored temporary Vite configuration (tmp/unit-balance-vite.config.ts) adding **/output/** to the original watch exclusions; no application/config source change. Restarted only the owned 4173 server and verified HTTP 200. Follow-up artifacts use already-ignored test-results paths. Failed cases require actual reruns after this environment correction.
+
+Browser fixture correction: the second legacy-doctrine scenario (online defender in game-unit-integration) also removed metadata from a freshly created v2 battle; corrected it to a real v1 battle with historical multipliers. The malformed-v2 validator remains strict. A clean follow-up trace identified the actual online renderer disappearance: the test returned null for peris_social_snapshot, causing useSocial to throw while reading server_now. The fixture now supplies the real empty-social contract. Added unit-balance-online E2E coverage that deliberately omits only snapshot version advertisement and checks literal v1/v2 archer base attack, gold cost and ten-soldier training time after upgrading the advertised metadata. This fixture does not claim to install an old hosted server; actual SQL historical behavior is covered by the isolated suites.
+
+First completed broad browser run: 172 passed, 22 skipped, 28 failed in 28.6 minutes. Eight distinct city/report/navigation selector cases are stale against unchanged main UI; other failures require follow-up after correcting the trace-output watcher and incomplete social fixture. No blanket browser-pass claim is made.
+
+New user instruction: "Push and merge everything with main when you are done" authorizes pushing/merging this feature after verification, superseding the earlier keep-branch/no-merge integration boundary. SQL deployment remains prohibited. Fetched main at e3220accede6d33f5f087b13576858e4a6a0aad4: inspected a5c119c (Rally ledger) and e3220ac (unit stat cards/tooltips), including the new ARTWORK rules. These overlap our UI and require preserving the layouts while connecting card base/doctrine/research values to the versioned catalog. Primary checkout changes remain untouched. CLI gh is unavailable; the connected GitHub Meds account matches this repository's configured Git author and is the only connected account with push permission.
+
+Compatibility follow-ups before integration: both missing-version/upgraded-version browser cases passed (desktop/mobile); both legacy defender browser cases passed after supplying emptySocial for the missing mock response (legacy-online-fixture-e2e.log, 2/2). To make the merge checks meaningful, updated the two inherited account migration fixtures to assert exact neutral additive defaults (raid_city_id null, siege_target auto, five research multipliers 1). Recursive assertion diagnostics confirmed only those missing fields, with no existing value differences. Both complete account migration suites now pass, including repeated upgrades, fresh-device login, ownership, queues, raids and once-only cancellation; no keys/assertions were omitted or relaxed.
