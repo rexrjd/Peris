@@ -88,7 +88,7 @@
 - [x] Tune catalog candidates only in response to a named failing economic/tactical case. Preserve role/faction directions and modifier bounds; record before/after values and their effects. A mathematically equal reference score is insufficient. If the bounds cannot meet the target, report the limitation and request a design revision instead of weakening the check.
 - [x] Run `npm test`, `npm run test:tooling`, `npm run assets:check`, `npm run build`, `npm run check:sql`, `npm run check:world`, `npm run check:bandits`, new generation/balance checks and all affected isolated database suites. Regeneration should repair the known checkout CRLF research-catalog check without changing the checker. Broaden testing only for new failures/changes.
 - [ ] Run `npm run test:e2e`, exercise unit selection, inspection, recruitment and Rally comparisons with actual pointer interactions, and inspect desktop/mobile screenshots. Test the older online-server fixture. Do not claim real hosted database installation or browser functionality from static markup alone.
-- [ ] Use verification-before-completion, review `git diff --check` and the branch diff, commit the measured catalog/documentation, and report passes, skips, pre-existing failures and unverified environments. Stop on the review branch; do not deploy SQL, merge main or push.
+- [ ] Use verification-before-completion, review `git diff --check` and the branch diff, commit the measured catalog/documentation, and report passes, skips, pre-existing failures and unverified environments. The subsequent chat instruction authorizes pushing a review PR and merging main after verification; SQL deployment remains prohibited.
 
 ## Review and execution handoff
 
