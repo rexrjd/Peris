@@ -1,0 +1,95 @@
+{
+  "version": "19.12",
+  "title": "Town stonework and building identity",
+  "base_commit": "4fc2bf71a613e4a9fdae9b619ca19fe8f371e00d",
+  "latest_main_checked": "4fc2bf71a613e4a9fdae9b619ca19fe8f371e00d",
+  "created": "2026-10-17",
+  "files": [
+    {
+      "path": "ARTWORK.md",
+      "bytes": 30834,
+      "sha256": "27200bf557c24da6be594e148709f1ff13b971268641a632a39c4273924ed17a"
+    },
+    {
+      "path": "src/features/city/rendering/BuildingPreview.tsx",
+      "bytes": 5427,
+      "sha256": "50fe89c730573acedee0138f73d927ce939c0d1e93550667a7a6a5bf6292510a"
+    },
+    {
+      "path": "src/features/city/rendering/three/barracks.ts",
+      "bytes": 2308,
+      "sha256": "3f339bc2584bdfda76edc3bd493e464e635a0ea5677fb4a3648b71c8b9bd163e"
+    },
+    {
+      "path": "src/features/city/rendering/three/buildingModels.ts",
+      "bytes": 9259,
+      "sha256": "43720a83052d01c72601f61057c97ba45c9c2ca257a03078764d6ce8c5d70d6f"
+    },
+    {
+      "path": "src/features/city/rendering/three/cityDistricts.ts",
+      "bytes": 5981,
+      "sha256": "458b9326bf6fef1d64499031bb94b819728e081908c93a412281e818b125ddc4"
+    },
+    {
+      "path": "src/features/city/rendering/three/landscape.ts",
+      "bytes": 7535,
+      "sha256": "c002d70ea45b09cbd1a4135fc7373d55814d621bd5775c0fcb484399fc696ab8"
+    },
+    {
+      "path": "src/features/city/rendering/three/slotModels.ts",
+      "bytes": 2881,
+      "sha256": "126f9cd5ba768c3f15cfbc71f771b6df13410d9bf6559a2d295961b7da34b2e1"
+    },
+    {
+      "path": "src/features/city/rendering/three/cityHall.ts",
+      "bytes": 2208,
+      "sha256": "ba3fcad572f71eec1882f443324672292b247d78163f4e55f0b6b6e694302c90"
+    },
+    {
+      "path": "src/features/city/rendering/three/citySurfaces.ts",
+      "bytes": 5071,
+      "sha256": "696a249910974927fb007c1a8088bc03630ef012d3c0e748c059c41cdd799b08"
+    },
+    {
+      "path": "src/features/city/rendering/three/cityWorkplaces.ts",
+      "bytes": 4991,
+      "sha256": "adf4eb9abb148bc6b9f98d3c8c963ddb6ce789e65383558f057c3aec708c5380"
+    },
+    {
+      "path": "tests/city-character.test.ts",
+      "bytes": 4372,
+      "sha256": "7b7c96bfc7be4d93e6a99e41b1cfcddb072ad2593c96a9d00554305144a31c2a"
+    },
+    {
+      "path": "tests/e2e/city-character.spec.ts",
+      "bytes": 2903,
+      "sha256": "2b6ec802c609f7fc3c56d0a8476f2d8badc7feb164f2b6c5366e802a987c6558"
+    },
+    {
+      "path": "town-character.patch",
+      "bytes": 33529,
+      "sha256": "8fcab59f0c0e4489f0c3bcace7aa6ccc89e2cceefcd67125b95c5f0aecd94190"
+    },
+    {
+      "path": "TOWN_CHARACTER_README.txt",
+      "bytes": 2674,
+      "sha256": "5ac0629cc532c2a5ae16455be983f173612ae85a1e83b15c5507d2ae685b36e6"
+    }
+  ],
+  "validation": {
+    "build": "passed",
+    "unit": {
+      "passed": 473,
+      "skipped": 1,
+      "failed": 0
+    },
+    "desktop_mobile_browser": {
+      "skipped": 4,
+      "expected": 30
+    },
+    "asset_tooling_passed": 5,
+    "registered_glbs_verified": 46,
+    "rally_point_paintings_verified": 33,
+    "diff_and_patch_checks": "passed"
+  }
+}

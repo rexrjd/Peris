@@ -238,6 +238,11 @@ export function createArmyFactory(own: Army, enemy: Army, playerId: string, form
     };
 }
 
+/** Reuse the battle rig and animation palette for small presentation-only groups. */
+export function createArmyRoleVisual(army: Army, role: ArmyRole) {
+    return createArmyVisual(army.parts.get(role)!);
+}
+
 function createArmyVisual(parts: Part[], bounds?: Box3) {
     const object = new Group(), clock = { value: 0 }, dummy = new Object3D(), local = new Matrix4(), instance = new Matrix4();
     const footprint:RenderFootprint={depthScale:1,widthScale:1},unitBounds=new Box3();

@@ -1,0 +1,127 @@
+/* A compact tool over the city; no full-screen backdrop or blur. */
+.building-inspector{position:fixed;z-index:180;right:16px;top:142px;display:flex;flex-direction:column;width:374px;max-width:calc(100vw - 32px);max-height:calc(100dvh - 164px);overflow:hidden;box-sizing:border-box;border:1px solid #ffffff20;border-radius:15px;background:#1c232ef5;color:#e6ebf2;box-shadow:0 12px 40px #080d1745,0 1px 0 #ffffff08 inset;font-family:'Open Sans',Arial,sans-serif;font-size:12px;line-height:1.45;text-align:left;--cmd-muted:#98a8ba;--cmd-border:#ffffff18;--cmd-accent:#e4c697;--cmd-bg:#1c232e;--cmd-panel:transparent}
+.building-inspector *{box-sizing:border-box}
+.building-inspector [hidden]{display:none!important}
+.building-inspector button,.building-inspector input,.building-inspector select{font-family:inherit}
+.building-inspector button:focus-visible,.building-inspector summary:focus-visible,.building-inspector input:focus-visible,.building-inspector select:focus-visible{outline:2px solid #d9bd8b;outline-offset:2px}
+.building-inspector-close{position:absolute;right:10px;top:10px;z-index:2;width:28px;height:28px;min-height:0;padding:0;border:0;border-radius:7px;background:transparent;color:#acb8c6;font-size:23px;line-height:1;cursor:pointer}
+.building-inspector-close:hover{background:#ffffff0c;color:#fff}
+.building-inspector-minimize,.building-inspector-settings-toggle{position:absolute;right:74px;top:10px;z-index:2;display:grid;place-items:center;width:28px;height:28px;min-height:0;padding:0;border:0;border-radius:7px;background:transparent;color:#8999ad;font-size:18px;cursor:pointer}
+.building-inspector-settings-toggle{right:42px}
+.building-inspector-minimize:hover,.building-inspector-settings-toggle:hover{background:#ffffff09;color:#d3dce8}
+.building-inspector.is-collapsed>:not(.building-inspector-heading):not(button){display:none}
+.building-inspector.is-collapsed .building-inspector-heading{border:0}
+.building-inspector-heading small{padding-right:47px}
+.building-inspector-heading{display:flex;align-items:center;gap:10px;flex:none;min-height:86px;padding:12px 40px 12px 10px;border-bottom:1px solid #ffffff10}
+.building-inspector-art{width:64px;height:64px;flex:none;display:grid;place-items:center;color:#cdb58a}
+.building-inspector-art>*{width:100%;height:100%}
+.building-inspector-art .city-building-model-preview{overflow:hidden;background:transparent}
+.building-inspector-art .city-building-model-fallback{display:grid;place-items:center;height:100%}
+.building-inspector-art .city-building-model-fallback svg{width:28px;height:28px}
+.building-inspector-art .city-building-model-fallback>span,.building-inspector-art .city-building-model-fallback>small{display:none}
+.building-inspector-heading>div:last-child{min-width:0}
+.building-inspector-heading small{display:block;max-width:235px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#91a0b2;font-size:10px}
+.building-inspector h2{margin:3px 0 5px;font-size:18px;font-weight:650;line-height:1.25;letter-spacing:-.03em;color:#f0f3f7}
+.building-inspector-heading p{display:flex;gap:9px;align-items:center;margin:0;color:#bac6d3;font-size:10px}
+.building-inspector-heading p span:not(:empty){color:#e1c493;border-left:1px solid #ffffff20;padding-left:9px}
+.building-inspector-tabs{flex:none;display:flex;gap:4px;padding:6px 12px 0;border-bottom:1px solid #ffffff10}
+.building-inspector-tabs button{display:flex;align-items:center;gap:7px;position:relative;flex:1;min-height:32px;padding:6px 8px 9px;border:0;border-radius:6px 6px 0 0;background:transparent;color:#91a1b3;font-size:11px;font-weight:600;cursor:pointer}
+.building-inspector-tabs button[aria-selected=true]{color:#e8cba0;background:#ffffff04}
+.building-inspector-tabs button[aria-selected=true]:after{content:'';position:absolute;left:8px;right:8px;bottom:-1px;height:2px;border-radius:2px;background:#dcc08d}
+.building-inspector-tabs button span{margin-left:auto;font-size:9px;padding:1px 5px;background:#ffffff0d;border-radius:4px;color:#c3cedb}
+.building-inspector-body{flex:1 1 auto;min-height:0;overflow:auto;overscroll-behavior:contain;padding:13px 15px 10px;scrollbar-width:thin;scrollbar-color:#61708455 transparent}
+.building-inspector-description{margin:0 0 13px;font-size:12px;color:#afbdcc;line-height:1.5}
+.building-inspector-effects{border-collapse:collapse;width:100%;font-size:11px;font-variant-numeric:tabular-nums}
+.building-inspector-effects thead th{padding:0 0 7px;color:#8595a7;font-size:9px;font-weight:500;text-align:right}
+.building-inspector-effects thead th:first-child{text-align:left}
+.building-inspector-effects tbody th,.building-inspector-effects td{padding:9px 0;border-top:1px solid #ffffff0b;line-height:1.35}
+.building-inspector-effects tbody th{text-align:left;font-weight:400;color:#b5c1cf;width:52%;padding-right:10px}
+.building-inspector-effects td{text-align:right;white-space:nowrap;color:#8b9bad}
+.building-inspector-effects td:last-child{color:#e9cfaa;font-weight:600}
+.building-inspector-effects td span{color:#6a7a8c;font-size:10px;margin-right:5px}
+.building-inspector-hint{display:block;margin-top:8px;font-size:9px;color:#7e8fa2}
+.building-inspector-footer{flex:none;padding:11px 14px 13px;border-top:1px solid #ffffff12;background:#171e28a0}
+.building-inspector-price{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+.building-inspector-price .cost{display:flex;gap:13px;margin:0;flex-wrap:wrap;color:#bfac8c}
+.building-inspector-price .cost>span{display:inline-flex;align-items:center;gap:4px}
+.building-inspector-price .cost b{font-size:11px;font-weight:600;color:#d3dce7}
+.building-inspector-price .cost .short,.building-inspector-price .cost .short b{color:#e9a18d}
+.building-inspector-price>span{display:flex;align-items:center;gap:4px;flex:none;color:#92a2b5;font-size:10px;font-variant-numeric:tabular-nums}
+.building-inspector-primary,.building-inspector-training-action .command-button.primary{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:37px;margin:0;border:1px solid #e8cfaa44;border-radius:7px;background:#dfc397;color:#24282f;padding:9px 12px;font-size:12px;font-weight:650;line-height:1.4;cursor:pointer;box-shadow:0 1px 2px #0002}
+.building-inspector-primary:not(:disabled):hover,.building-inspector-training-action .command-button.primary:not(:disabled):hover{background:#edd5b2}
+.building-inspector-primary:disabled,.building-inspector-training-action .command-button.primary:disabled{opacity:1;background:#ffffff07;border-color:#ffffff0c;color:#8291a4;cursor:default;box-shadow:none}
+.building-inspector-shortages,.building-inspector-note,.building-inspector .recruit-blocked{margin:0 0 8px;color:#e9aa95;font-size:10px;line-height:1.5}
+.building-inspector .recruit-blocked{margin:6px 0 0}
+.building-inspector-builder-link{display:flex;align-items:center;gap:5px;width:100%;padding:9px 0 0;background:none;border:0;color:#8e9eb1;font-size:9px;text-align:left;cursor:pointer}
+.building-inspector-builder-link span{margin-left:auto;white-space:nowrap}
+.building-inspector-work-label{margin:0 0 5px;color:#a7b5c4;font-size:10px}
+.building-inspector .village-construction{margin:0;padding:0;border:0;background:none}
+.building-inspector .village-construction h3{display:none}
+.building-inspector .village-queue-open{display:flex;align-items:center;justify-content:space-between;width:100%;padding:0 0 6px;border:0;background:none;color:#e5cba4;text-align:left;font-size:11px}
+.building-inspector .village-queue-open strong{font-size:11px}
+.building-inspector .village-queue-progress{height:3px;border:0;border-radius:2px;background:#ffffff0c;overflow:hidden}
+.building-inspector .village-queue-progress i{display:block;height:100%;background:#cfb789}
+.building-inspector .village-queue-time{display:flex;justify-content:space-between;gap:10px;margin-top:6px;color:#8798ac;font-size:9px}
+.building-inspector .village-queue-time b{font-size:10px;color:#d9c19a}
+.building-inspector-settings{margin:11px 0 0;padding:9px 0 0;border-top:1px solid #ffffff0a;font-size:10px;color:#8192a6}
+.building-inspector-settings>summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:7px}
+.building-inspector-settings>summary:before{content:'+';font-size:13px;color:#8798ab}
+.building-inspector-settings[open]>summary:before{content:'−'}
+.building-inspector-settings>summary::-webkit-details-marker{display:none}
+.building-inspector .city-faction-controls{padding:10px 0 0;border:0;background:none;color:#b4c1d0}
+.building-inspector .city-faction-controls select{max-width:100%;font-size:11px;background:#232d3a;color:#d9e0e9;border:1px solid #ffffff20}
+.building-inspector .city-faction-controls .button{font-size:10px;min-height:30px}
+.building-inspector-science{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px;padding-top:12px;border-top:1px solid #ffffff10}
+.building-inspector-science strong{display:block;font-size:13px;color:#c8d5ef}
+.building-inspector-science small{display:block;margin-top:3px;font-size:9px;color:#8d9db0}
+.building-inspector-science button{display:flex;align-items:center;gap:6px;border:1px solid #ffffff14;border-radius:6px;background:#ffffff04;color:#cbd7e7;padding:7px 9px;font-size:10px;cursor:pointer}
+.building-inspector-complete{display:flex;align-items:center;gap:7px;margin:12px 0 0;color:#d2bd9b;font-size:11px}
+.building-inspector-picker fieldset{border:0;padding:0;margin:0;min-width:0}
+.building-inspector-picker legend{padding:0 0 9px;color:#8497ac;font-size:10px}
+.building-inspector-picker .building-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.building-inspector-picker .building-options label{display:flex;align-items:center;gap:7px;min-height:44px;padding:7px 9px;border:1px solid #ffffff10;border-radius:7px;background:#ffffff02;cursor:pointer;color:#b9c6d6}
+.building-inspector-picker .building-options label.chosen{border-color:#cfb68b80;background:#dfc39708;color:#f3dec0}
+.building-inspector-picker .building-options input{flex:none;width:12px;height:12px;margin:0;accent-color:#d6ba89}
+.building-inspector-picker .building-options label>span{font-size:11px;font-weight:550;line-height:1.3}
+.building-inspector-picker .building-options small{display:block;margin-top:2px;color:#74869b;font-size:8px;font-weight:400}
+.building-inspector-picked{margin:11px 0 0;padding-top:10px;border-top:1px solid #ffffff0b;color:#96a8bc;font-size:10px;line-height:1.5}
+.building-inspector-picked strong{display:block;margin-bottom:3px;color:#cdd9e5;font-size:11px}
+.building-inspector-legion{display:flex;align-items:center;gap:10px;margin:0 0 12px;color:#8ea0b4;font-size:10px}
+.building-inspector-legion select{min-width:0;flex:1;height:30px;padding:3px 7px;border:1px solid #ffffff15;border-radius:6px;background:#ffffff04;color:#c4d0df;font-size:10px}
+.building-inspector .army-command{padding:0;margin:0;min-width:0;background:none;color:#cdd6e3}
+.building-inspector .army-recruit-layout{display:block;max-width:none;margin:0}
+.building-inspector .command-panel{padding:0;border:0;border-radius:0;background:none;box-shadow:none}
+.building-inspector .command-recruit-form>h2{display:none}
+.building-inspector .game-unit-choices{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;margin:0 0 10px}
+.building-inspector .game-unit-choices>button{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:4px;min-width:0;min-height:63px;padding:5px 3px;border:1px solid #ffffff10;border-radius:7px;background:#ffffff02;color:#a4b3c5}
+.building-inspector .game-unit-choices>button[aria-pressed=true]{border-color:#ceb38790;background:#dfc39708;color:#ebd2af}
+.building-inspector .game-unit-choices>button>span{font-size:9px;line-height:1.25;min-width:0}
+.building-inspector .game-unit-choices small{display:none}
+.building-inspector .game-unit-choices .fw-troop-icon{width:30px;height:30px;flex:none}
+.building-inspector .command-recruit-form>h3{font-size:12px;margin:0 0 3px;color:#d9e1eb}
+.building-inspector .command-recruit-form>.command-muted{font-size:9px;margin:0 0 10px;color:#7f93a9}
+.building-inspector .command-label{font-size:10px;color:#8ea1b7;margin:0 0 5px}
+.building-inspector .command-quantity{display:flex;gap:5px;margin:0}
+.building-inspector .command-quantity>button{height:30px;min-height:30px;width:32px;padding:2px;background:#ffffff05;border:1px solid #ffffff10;border-radius:5px;color:#b5c4d7;font-size:15px}
+.building-inspector .command-quantity input{height:30px;min-width:0;flex:1;padding:3px 8px;border:1px solid #ffffff14;border-radius:5px;background:#ffffff03;color:#d6e0eb;font-size:12px;text-align:center}
+.building-inspector .recruit-presets{display:flex;gap:5px;margin:6px 0 10px}
+.building-inspector .recruit-presets button{flex:1;min-height:23px;padding:3px 5px;border:1px solid #ffffff0c;border-radius:4px;background:transparent;color:#8398b0;font-size:9px}
+.building-inspector .recruit-presets button[aria-pressed=true]{color:#d8bd93;border-color:#d8bd9340}
+.building-inspector .command-recruit-form>.cost{display:flex;gap:16px;flex-wrap:wrap;font-size:11px;margin:0 0 10px;color:#b2a17e}
+.building-inspector .command-recruit-form>.cost b{color:#cbd6e3;font-size:11px}
+.building-inspector .recruit-timing{display:flex;gap:14px;margin:0;border-top:1px solid #ffffff0b;padding-top:8px}
+.building-inspector .recruit-timing>span{display:flex;gap:7px;align-items:center;flex:1;font-size:8px;color:#7c90a7}
+.building-inspector .recruit-timing b{font-size:10px;color:#b0c0d3}
+.building-inspector-training-queue{margin-top:12px;border-top:1px solid #ffffff0c;padding-top:9px;color:#90a3ba;font-size:10px}
+.building-inspector-training-queue summary{cursor:pointer}
+.building-inspector-training-queue summary b{float:right;color:#d2bc98}
+.building-inspector-training-queue ol{list-style:none;padding:0;margin:8px 0 0;max-height:120px;overflow:auto}
+.building-inspector-training-queue li{display:flex;gap:10px;justify-content:space-between;padding:6px 0;border-top:1px solid #ffffff08;font-size:10px;color:#b7c7d9}
+.building-inspector-training-queue li small{display:block;font-size:8px;color:#768ca7}
+.building-inspector-training-queue time{font-variant-numeric:tabular-nums;color:#c8b189}
+.building-inspector .mage-tower-panel{padding:0;background:none;border:0}
+.building-inspector .mage-tower-panel>p{margin:0 0 14px;font-size:11px;color:#adbed2;line-height:1.6}
+.building-inspector .mage-tower-panel>p small{font-size:10px;color:#8196b1}
+.building-inspector .mage-tower-panel>.button{width:100%;min-height:36px;margin:0;background:#dfc397;border-color:#dfc397;color:#24282f;border-radius:7px;font-size:11px}
+@media(max-width:760px){.building-inspector{top:auto;bottom:calc(72px + env(safe-area-inset-bottom));left:8px;right:8px;width:auto;max-width:none;max-height:min(560px,68dvh);border-radius:15px}.building-inspector-heading{min-height:76px;padding-top:8px;padding-bottom:8px}.building-inspector-art{width:54px;height:54px}.building-inspector h2{font-size:17px}.building-inspector-body{padding:11px 13px 9px}.building-inspector-footer{padding:10px 12px 12px}.building-inspector-effects tbody th,.building-inspector-effects td{padding-top:7px;padding-bottom:7px}.building-inspector-picker .building-options label{min-height:42px}.building-inspector-settings{margin-top:9px;padding-top:8px}}
+@media(max-height:540px) and (min-width:761px){.building-inspector{top:62px;max-height:calc(100dvh - 76px)}}

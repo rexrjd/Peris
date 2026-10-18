@@ -1,0 +1,31 @@
+import { test, expect } from '@playwright/test';
+import * as THREE from 'three';
+import { createSolo } from '../../src/features/campaign/domain/newRealm';
+import { refreshCityEconomy } from '../../src/features/city/domain/slots';
+import { cityLayout } from '../../src/features/city/rendering/three/layout';
+import { CityCamera } from '../../src/features/city/rendering/three/CityCamera';
+
+test('town flowers and lanterns follow the selected city, preserve building selection and respect reduced motion',async({page},info)=>{
+    const world=createSolo('Willowford'),town=world.settlements[0],errors:string[]=[];
+    world.buildings.forEach(b=>b.level=3);
+    world.city_slots=[{settlement_id:town.id,slot_index:0,building_type:'housing',level:3},{settlement_id:town.id,slot_index:1,building_type:'academy',level:2}];
+    world.settlements.push({...town,id:2,name:'Quiet town',x:town.x+128,y:town.y+128});
+    world.buildings.push(...world.buildings.map(b=>({...b,id:b.id+100,settlement_id:2,level:1})));
+    refreshCityEconomy(world,town.id);refreshCityEconomy(world,2);
+    page.on('pageerror',e=>errors.push(e.message));
+    await page.addInitScript(w=>{localStorage.setItem('peris-campaign-v6',JSON.stringify(w));localStorage.setItem('peris-settings',JSON.stringify({sound:false,music:false,reducedMotion:true}));localStorage.setItem(`peris-welcome:${w.players[0].id}:${w.players[0].created_at}`,'yes');},world);
+    await page.goto('/');await page.getByRole('button',{name:'Continue campaign',exact:true}).click();await page.getByRole('button',{name:'City',exact:true}).click();await page.getByRole('button',{name:'3D',exact:true}).click();
+    const canvas=page.locator('.city-3d-scene.ready canvas');await expect(canvas).toHaveAttribute('data-city-life-phase','0.00');
+    const flowers=Number(await canvas.getAttribute('data-city-flowers'));expect(flowers).toBeGreaterThan(30);expect(Number(await canvas.getAttribute('data-city-lanterns'))).toBeGreaterThan(3);
+    const rect=(await canvas.boundingBox())!,camera=new CityCamera();camera.resize(rect.width,rect.height,3);
+    const plot=cityLayout({market:3},world.city_slots).find(p=>p.key==='slot:0')!,p=new THREE.Vector3(plot.x,.65,plot.z).project(camera.camera);
+    await page.mouse.click(rect.x+(p.x+1)*rect.width/2,rect.y+(1-p.y)*rect.height/2);
+    await expect(page.locator('.building-inspector').getByRole('heading',{name:'Housing',exact:true})).toBeVisible();await page.keyboard.press('Escape');
+    await page.locator('[data-building="slot:3"]').click();await expect(page.getByRole('radio',{name:/^Housing/})).toBeVisible();await page.keyboard.press('Escape');
+    await page.getByLabel('Current city',{exact:true}).selectOption('2');await expect.poll(async()=>Number(await canvas.getAttribute('data-city-flowers'))).toBeLessThan(flowers);
+    await page.getByLabel('Current city',{exact:true}).selectOption(String(town.id));await expect(canvas).toHaveAttribute('data-city-flowers',String(flowers));
+    await page.emulateMedia({reducedMotion:'no-preference'});await page.evaluate(()=>document.documentElement.classList.remove('reduced-motion'));
+    await expect.poll(async()=>Number(await canvas.getAttribute('data-city-life-phase'))).toBeGreaterThan(.1);
+    await page.emulateMedia({reducedMotion:'reduce'});await expect(canvas).toHaveAttribute('data-city-life-phase','0.00');
+    await page.screenshot({path:info.outputPath('living-town.png')});expect(errors).toEqual([]);
+});

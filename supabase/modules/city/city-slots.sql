@@ -64,6 +64,7 @@ begin
   if l is not null then raise exception 'This plot is already occupied';end if;
   if p_type not in ('barracks','stables','workshop','smithy','warehouse','granary','fishery','mage_tower','housing','academy') then raise exception 'Unknown building';end if;
   if p_type='mage_tower' and exists(select 1 from public.peris_city_slots where settlement_id=s.id and building_type='mage_tower') then raise exception 'Only one mage tower can be built in your city';end if;
+  if p_type='barracks' and exists(select 1 from public.peris_city_slots where settlement_id=s.id and building_type='barracks') then raise exception 'Only one barracks can be built in your city';end if;
   if (p_type='fishery')<>(p_slot=16) then raise exception 'A fishery needs a riverside plot';end if;
   t:=p_type;l:=0;
  elsif l is null or l=0 then raise exception 'This building is not ready';end if;

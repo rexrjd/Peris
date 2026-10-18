@@ -1,10 +1,13 @@
 {
-  "base_commit": "7f7094942fd16926d63c912f65275de45b095caa",
-  "version": "19.6",
-  "files": [
-    {
-      "path": "src/app/styles/compact-header.css",
-      "sha256": "698145cd46a2563ff1b7f62f61776654022cb41d61b865fb419e459ec02df0cb"
-    }
-  ]
+  "name": "Peris Compact Building Inspector V19.8",
+  "base_commit": "1d36a786da4f5c5ed6ab4e47a601d6d742af565b",
+  "files": {
+    "src/app/styles/index.css": "e962b7c849bab75f5d11085807afb3eb663ae4614bb96d3aba1630fce9fdc16e",
+    "src/features/army/ui/RecruitmentPanel.tsx": "834d5e4f2cbeae565408ef571ca9ca77d1660ada29299266cbbc10944aa878b8",
+    "src/features/city/ui/BuildingDialog.tsx": "6ab6910696042fb192436e05f3effc69cf61da0413367a4f0c4285543bfa7fc9",
+    "src/features/city/ui/BuildingPicker.tsx": "02a8dc755343b19cb577f939bdff252e9b00a96fc33c667308e8186f857a30ed",
+    "src/features/city/ui/BuildingInspector.tsx": "c067a2144930219c761dc9a0ddd00f63bddfad17f9ff9fe1a54d3944c0d5c548",
+    "src/features/city/styles/building-inspector.css": "5f3c34005d70aa6c5d4b54d741b3c198b9dc58572377c93a72b89eff865ff88b",
+    "tests/e2e/building-inspector.spec.ts": "aa878cb19870bbea5317d960a47a6b8cfadadadd7d77809f9957b298244e7dd6"
+  }
 }

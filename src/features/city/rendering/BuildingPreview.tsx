@@ -9,6 +9,9 @@ import { Icon, buildingIcon } from '../../../shared/ui/Icons';
 import { createBuildingModel } from './three/buildingModels';
 import { createSlotModel } from './three/slotModels';
 import { disposeCityObject } from './three/modelKit';
+import { createCityResource, isCityResource } from './three/resourceModels';
+import { createCityGate } from './three/gateModels';
+import { createCityHall } from './three/cityHall';
 
 export type BuildingPreviewProps = {
     type: BuildingType | SlotType;
@@ -41,7 +44,7 @@ export function BuildingPreview({ type, level, faction, label }: BuildingPreview
             renderer.toneMapping = THREE.ACESFilmicToneMapping;
             renderer.toneMappingExposure = .95;
             const scene = new THREE.Scene();
-            model = type in SLOT_BUILDINGS ? createSlotModel(type as SlotType, level, faction) : createBuildingModel(type as BuildingType, level, faction);
+            model = type === 'wall' ? createCityGate(level, faction) : isCityResource(type) ? createCityResource(type, level, faction) : type==='market' && level>0 ? createCityHall(level,faction) : type in SLOT_BUILDINGS ? createSlotModel(type as SlotType, level, faction) : createBuildingModel(type as BuildingType, level, faction);
             scene.add(model, new THREE.HemisphereLight(0xe5f1ef, FACTIONS[faction].earth, 1.5));
             sun = new THREE.DirectionalLight(0xffedd1, 2.5);
             sun.position.set(-6, 12, 9); scene.add(sun);

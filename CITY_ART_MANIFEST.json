@@ -1,0 +1,24 @@
+{
+  "name": "Peris City Walls and Resource Design V19.9",
+  "base_commit": "9bcd43041c26df515c762ead8e563be3fea3bb27",
+  "unit": {
+    "passed": 465,
+    "skipped": 1
+  },
+  "browser": {
+    "passed": 22,
+    "skipped": 4
+  },
+  "sha256": {
+    "ARTWORK.md": "78dd34ec7a1913d0bfb211d8e27325442694f7eb826452583fc27a92a8e51d11",
+    "src/features/city/rendering/BuildingPreview.tsx": "2e6f3e7ff7de44a0712830f734190421efaa5161c3c3bdeeee62c4f41bc94bca",
+    "src/features/city/rendering/three/CityScene.ts": "4283f8ab58eb82f31122c7e9a67565c5e86a8574255a975b20389b0c16de062d",
+    "src/features/city/rendering/three/cityActivities.ts": "aa33e14a2a6407f85eeadcbc0671a980224ccce10b583566db9b33008db399ec",
+    "src/features/city/rendering/three/cityDistricts.ts": "8d717667f331242fd01025406824bdc42f8a4c1f6f50f0c908f90699e6904181",
+    "src/features/city/rendering/three/cityFoliage.ts": "b6a846e20616d7dbb3936c0b8550fcefb813174259fe51f1262dbb71b7259412",
+    "src/features/city/rendering/three/cityWalls.ts": "3992025959217b0dc0af4507f99cec825bb702497ee1bdab6e7dd2d99bc0f9fc",
+    "src/features/city/rendering/three/resourceModels.ts": "b0b6ae53f154cbb38e218742eff3a7c0dbcd7192fe5911ba85385b12c289d59d",
+    "tests/city-resource-art.test.ts": "4f3f17a14d9e91b1ea558af4dbdde6d385fd3106b7fd38579588f148b43f10bd",
+    "tests/e2e/city-resource-art.spec.ts": "f57cc321e94ad641d4471a90b676a273f742add295796744982b11975ec7d867"
+  }
+}

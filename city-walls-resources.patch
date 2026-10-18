@@ -1,0 +1,568 @@
+diff --git a/ARTWORK.md b/ARTWORK.md
+index da9ac43..8e9dcc1 100644
+--- a/ARTWORK.md
++++ b/ARTWORK.md
+@@ -234,3 +234,26 @@ New construction allows one barracks per city in the picker, campaign commands
+ and the authoritative row-locked server function. Earlier repeated barracks,
+ troops, levels and pending work remain intact. Generated complete installers and
+ UPGRADE_UNIQUE_BARRACKS.sql contain the same rule; SQL is not deployed by this patch.
++
++## V19.9 walls and working resource sites
++
++The native 3D city uses thicker stepped fortifications with stone footings,
++buttresses, inset wall walks, corner towers, access steps and an open front
++gatehouse. Early levels retain timber palisades. River passages have open arches;
++the front avenue, northern postern and eastern bridge gate stay clear at every
++city growth stage. The foreground wall remains lower so it frames the city.
++
++City resource models have five original procedural development stages: a sawmill
++with a flywheel and cut logs, a terraced quarry with lifting gear, a barn and
++windmill, and a fishing landing with a boat and covered dock. Faction palettes,
++roof shapes and heraldry carry through all eleven factions. Country yards use
++soil, stock and fenced golden crop rows instead of civic paving. Their larger
++clearings reserve the existing service roads and keep resource sites outside
++the walls. Equipment uses the existing reduced-motion-aware activity system.
++
++These changes affect city presentation and its model thumbnails. Strategic field
++models, the painted village, building locations, costs, production and saved
++state retain their current rules. No new image, GLB, external source, license or
++SQL migration is introduced. Visual review covered desktop and phone framing,
++rotation, early and mature development, and all eleven faction styles. Frame
++rate targets remain unmeasured.
+diff --git a/src/features/city/rendering/BuildingPreview.tsx b/src/features/city/rendering/BuildingPreview.tsx
+index 27636a3..39ea6b7 100644
+--- a/src/features/city/rendering/BuildingPreview.tsx
++++ b/src/features/city/rendering/BuildingPreview.tsx
+@@ -9,6 +9,7 @@ import { Icon, buildingIcon } from '../../../shared/ui/Icons';
+ import { createBuildingModel } from './three/buildingModels';
+ import { createSlotModel } from './three/slotModels';
+ import { disposeCityObject } from './three/modelKit';
++import { createCityResource, isCityResource } from './three/resourceModels';
+ 
+ export type BuildingPreviewProps = {
+     type: BuildingType | SlotType;
+@@ -41,7 +42,7 @@ export function BuildingPreview({ type, level, faction, label }: BuildingPreview
+             renderer.toneMapping = THREE.ACESFilmicToneMapping;
+             renderer.toneMappingExposure = .95;
+             const scene = new THREE.Scene();
+-            model = type in SLOT_BUILDINGS ? createSlotModel(type as SlotType, level, faction) : createBuildingModel(type as BuildingType, level, faction);
++            model = isCityResource(type) ? createCityResource(type, level, faction) : type in SLOT_BUILDINGS ? createSlotModel(type as SlotType, level, faction) : createBuildingModel(type as BuildingType, level, faction);
+             scene.add(model, new THREE.HemisphereLight(0xe5f1ef, FACTIONS[faction].earth, 1.5));
+             sun = new THREE.DirectionalLight(0xffedd1, 2.5);
+             sun.position.set(-6, 12, 9); scene.add(sun);
+diff --git a/src/features/city/rendering/three/CityScene.ts b/src/features/city/rendering/three/CityScene.ts
+index 4e92dd4..bdaf52d 100644
+--- a/src/features/city/rendering/three/CityScene.ts
++++ b/src/features/city/rendering/three/CityScene.ts
+@@ -13,6 +13,7 @@ import { CityCamera } from './CityCamera';
+ import { createCityActivities } from './cityActivities';
+ import { createCityDistricts, createEmptyCityPlot } from './cityDistricts';
+ import { CityTrainingYard } from './cityTraining';
++import { createCityResource, isCityResource } from './resourceModels';
+ import type { CityTraining } from '../../domain/training';
+ 
+ /** Presentation only. Selection returns through React; upgrades stay in the engine. */
+@@ -106,7 +107,7 @@ export class CityScene {
+             const level=plot.type==='mage_tower'?Math.max(0,Math.min(10,Math.round(plot.level))):visualLevel(plot.level), previous=this.models.get(plot.key);
+             if (changed || !previous || previous.level!==level || previous.type!==plot.type || plot.type==='wall' && resized) {
+                 if(previous) {this.scene.remove(previous.model);disposeCityObject(previous.model);}
+-                const model=plot.slot!==undefined && !level ? createEmptyCityPlot(faction,plot.slot===16) : plot.slot!==undefined ? createSlotModel(plot.type as SlotType|null,level,faction,true) : plot.type==='wall' ? createCityWalls(level,this.mainLevel,faction,true) : createBuildingModel(plot.type as BuildingType,level,faction,true);
++                const model=plot.slot!==undefined && !level ? createEmptyCityPlot(faction,plot.slot===16) : isCityResource(plot.type) ? createCityResource(plot.type,level,faction,true) : plot.slot!==undefined ? createSlotModel(plot.type as SlotType|null,level,faction,true) : plot.type==='wall' ? createCityWalls(level,this.mainLevel,faction,true) : createBuildingModel(plot.type as BuildingType,level,faction,true);
+                 this.scene.add(model); this.models.set(plot.key,{level,type:plot.type,model});
+             }
+             const model=this.models.get(plot.key)!.model;
+diff --git a/src/features/city/rendering/three/cityActivities.ts b/src/features/city/rendering/three/cityActivities.ts
+index 67f92a9..294ff48 100644
+--- a/src/features/city/rendering/three/cityActivities.ts
++++ b/src/features/city/rendering/three/cityActivities.ts
+@@ -31,7 +31,9 @@ export function createCityActivities() {
+             });
+             if (plot.type === 'smithy') chimneys.push(model.localToWorld(new THREE.Vector3(.4, 1.35 + plot.level * .12, -.25)));
+             if (plot.type === 'housing') chimneys.push(model.localToWorld(new THREE.Vector3(0, 1 + plot.level * .13, -.1)));
+-            if (plot.type === 'lumber') chimneys.push(model.localToWorld(new THREE.Vector3(-.25, 1.15 + plot.level * .06, -.15)));
++            const smokePoint = model.userData.citySmoke;
++            if (Array.isArray(smokePoint)) chimneys.push(model.localToWorld(new THREE.Vector3(smokePoint[0], smokePoint[1], smokePoint[2])));
++            else if (plot.type === 'lumber' && smokePoint !== null) chimneys.push(model.localToWorld(new THREE.Vector3(-.25, 1.15 + plot.level * .06, -.15)));
+             if (plot.type === 'mage_tower') magic.push(model.localToWorld(new THREE.Vector3(0, 1.4 + plot.level * .2, 0)));
+         }
+         smoke.count = Math.min(smoke.instanceMatrix.count, chimneys.length * 6);
+diff --git a/src/features/city/rendering/three/cityDistricts.ts b/src/features/city/rendering/three/cityDistricts.ts
+index f481c8e..8bc346d 100644
+--- a/src/features/city/rendering/three/cityDistricts.ts
++++ b/src/features/city/rendering/three/cityDistricts.ts
+@@ -2,14 +2,54 @@ import * as THREE from 'three';
+ import { cityKit } from './modelKit';
+ import { type CityPlot } from './layout';
+ import type { Faction } from '../../../factions/domain/factions';
++import { isCityResource } from './resourceModels';
+ 
+ /** Shared material batches dress actual built plots. No decorative building fills an empty slot. */
+ export function createCityDistricts(plots: CityPlot[], faction: Faction) {
+     const k = cityKit(faction), { m, box, cylinder, rock } = k;
+     m.road.color.lerp(m.light.color, .35);
++    m.earth.color.lerp(m.wood.color, .2); m.wheat.color.lerp(m.gold.color, .24);
+     for (const plot of plots) {
+         if (!plot.level || plot.type === 'wall') continue;
+         const { x, z, type } = plot, main = type === 'market', inside = plot.slot !== undefined && plot.slot < 16;
++        if (isCityResource(type)) {
++            // Working country yards use soil, crops and stock instead of civic paving.
++            if (type === 'fishery') {
++                const bank = cylinder(1, .025, x - 1.5, -.015, z - .25, m.earth); bank.scale.set(.48, .025, 1.1);
++                for (const dx of [-1.4, -.65]) for (const dz of [-.8, .1]) cylinder(.045, .35, x + dx, -.2, z + dz, m.wood);
++            } else {
++                const yard = cylinder(1, .026, x, -.015, z + .1, m.earth); yard.scale.set(2.2, .026, 1.8);
++                box(1.15, .025, .8, x, -.008, z + 1.65, m.road);
++            }
++            if (type === 'lumber') {
++                k.fence(x - 2, z - .2, 2.8, Math.PI / 2);
++                for (let i = 0; i < 3; i++) { cylinder(.17, .16, x - 2.35 - i * .3, -.01, z - 1.4 + i * .6, m.timber); }
++                box(.48, .28, .46, x + 1.75, 0, z + .95, m.wood);
++            }
++            if (type === 'quarry') {
++                for (let i = 0; i < 7; i++) rock(.26 + i % 3 * .12, x + 1.95 + i % 2 * .55, -.04, z - 1.6 + Math.floor(i / 2) * .55, i % 2 ? m.light : m.darkStone);
++                box(.65, .12, .5, x - 1.5, 0, z - 1.8, m.darkStone);
++            }
++            if (type === 'farm') {
++                for (const [dx, dz, w, d] of [[-3, .05, 2.5, 3.4], [-.3, 3.8, 3.3, 2.25]]) {
++                    const fx = x + dx, fz = z + dz;
++                    box(w, .035, d, fx, -.016, fz, m.earth);
++                    for (let row = 0; row < 7; row++) {
++                        const pz = fz - d * .42 + row * d * .14;
++                        box(w * .92, .026, .11, fx, .01, pz, m.timber);
++                        box(w * .9, .12, .14, fx, .045, pz, m.wheat);
++                        for (let stalk = 0; stalk < 9; stalk++) {
++                            const px = fx - w * .43 + stalk * w * .107, h = .14 + (stalk + row) % 3 * .025;
++                            cylinder(.018, h, px, .035, pz, m.wheat);
++                            const head = k.cone(.055, .13, px, h, pz, (row + stalk) % 4 ? m.wheat : m.leaf); head.rotation.z = .2;
++                        }
++                    }
++                    k.fence(fx - w / 2 - .12, fz, d + .2, Math.PI / 2);
++                    box(.35, .17, .35, fx - w / 2 + .25, .02, fz + d / 2 + .05, m.wheat);
++                }
++            }
++            continue;
++        }
+         const width = main ? 4.3 : inside ? 3.2 : 3.5, depth = main ? 3.65 : 3.2;
+         box(width, .045, depth, x, -.02, z, m.road);
+         // Low kerbs, entrance steps and planting ground every district visually.
+@@ -32,20 +72,6 @@ export function createCityDistricts(plots: CityPlot[], faction: Faction) {
+                 for (const dx of [-.3, .3]) box(.05, .25, .05, x + side * 1.1 + dx, 0, z + 3.1, m.wood);
+             }
+         }
+-        if (type === 'lumber') {
+-            box(3.6, .018, 1.65, x - .5, -.01, z + 2.6, m.earth);
+-            for (let i = 0; i < 5; i++) {
+-                const log = cylinder(.1, 1, x - 1.8 + i * .23, .1, z + 2.4, m.timber);
+-                log.rotation.z = Math.PI / 2;
+-            }
+-        }
+-        if (type === 'quarry') for (let i = 0; i < 8; i++) rock(.32 + i % 3 * .16, x + 2 + i % 3 * .65, -.04, z - 2 + Math.floor(i / 3) * .65, i % 2 ? m.light : m.darkStone);
+-        if (type === 'farm') {
+-            for (const [dx, dz] of [[-2.45, .3], [0, 3.45]]) {
+-                box(2.4, .025, 2.5, x + dx, -.015, z + dz, m.earth);
+-                for (let row = 0; row < 9; row++) box(2.15, .09 + plot.level * .009, .09, x + dx, .01, z + dz - 1.1 + row * .25, m.wheat);
+-            }
+-        }
+         if (type === 'academy') {
+             box(.7, .04, .22, x - 1.2, .15, z + 1.1, m.wood);
+             for (const dx of [-.28, .28]) box(.035, .15, .05, x - 1.2 + dx, 0, z + 1.1, m.wood);
+diff --git a/src/features/city/rendering/three/cityFoliage.ts b/src/features/city/rendering/three/cityFoliage.ts
+index 5e140f3..ab9b603 100644
+--- a/src/features/city/rendering/three/cityFoliage.ts
++++ b/src/features/city/rendering/three/cityFoliage.ts
+@@ -29,7 +29,7 @@ export function createCityFoliage(mainLevel: number, faction: Faction) {
+         const z = distant ? -90 + random(i * 17 + 5) * 180 : side < 2 ? -29 + random(i * 3 + 1) * (f.front + 58) : side === 2 ? -32 + random(i + 13) * 20 : f.fishingZ + 4 + random(i + 17) * 19;
+         if (x > f.left - 1.4 && x < f.right + 1.4 && z > f.back - 1.4 && z < f.front + 1.5) continue;
+         if (Math.abs(x - riverX(z)) < 1.7 || cityStreetClearance(x, z, mainLevel) < 1.1) continue;
+-        if (plots.some(plot => Math.hypot(x - plot.x / growth, z - plot.z / growth) < (plot.type === 'farm' ? 5.4 : plot.type === 'quarry' ? 4.8 : 3.3))) continue;
++        if (plots.some(plot => Math.hypot(x - plot.x / growth, z - plot.z / growth) < (plot.type === 'farm' ? 6.2 : plot.type === 'quarry' ? 5 : plot.type === 'lumber' ? 4.3 : 3.3))) continue;
+         if (positions.some(tree => Math.hypot(tree.x - x, tree.z - z) < 1.25)) continue;
+         positions.push({ x, z, h: 1.2 + random(i * 7 + 6) * 1.9 });
+     }
+diff --git a/src/features/city/rendering/three/cityWalls.ts b/src/features/city/rendering/three/cityWalls.ts
+index 1bfea3f..1aafa88 100644
+--- a/src/features/city/rendering/three/cityWalls.ts
++++ b/src/features/city/rendering/three/cityWalls.ts
+@@ -1,61 +1,108 @@
+-import type {Faction} from '../../../factions/domain/factions';
+-import { createBuildingModel, visualLevel } from './buildingModels';
++import type { Faction } from '../../../factions/domain/factions';
++import { visualLevel } from './buildingModels';
+ import { cityKit } from './modelKit';
+ import { cityFootprint, riverX } from './layout';
+ 
+-/** Enclose the city; roads and the river retain real openings through the walls. */
+-export function createCityWalls(value: number, mainLevel = 0,faction:Faction='roman',animated=false) {
+-    const level = visualLevel(value), k = cityKit(faction,animated);
+-    const { m, box, cone, tower } = k;
+-    // Coordinates are relative to the northern gate at (-.4, -9).
+-    const footprint=cityFootprint(mainLevel);
+-    const left=footprint.left+.4,right=footprint.right+.4,back=0,front=footprint.front+9;
+-    const river=riverX(footprint.front)+.4,northRiver=riverX(footprint.back)+.4;
+-    function section(x1: number, z1: number, x2: number, z2: number, foreground = false) {
+-        const length = Math.hypot(x2 - x1, z2 - z1), angle = -Math.atan2(z2 - z1, x2 - x1);
+-        const height = foreground ? .36 + level * .14 : .4 + level * .23;
+-        const centerX = (x1 + x2) / 2, centerZ = (z1 + z2) / 2;
+-        if (!level) { box(length, .055, .2, centerX, 0, centerZ, m.darkStone, angle); return; }
++/** Open gateways and water arches; thicker walls keep the playable plots clear. */
++export function createCityWalls(value: number, mainLevel = 0, faction: Faction = 'roman', animated = false) {
++    const level = visualLevel(value), k = cityKit(faction, animated), { m, box, cylinder, cone } = k;
++    m.light.color.lerp(m.stone.color, .3); m.stone.color.multiplyScalar(.95);
++    const f = cityFootprint(mainLevel);
++    // The scene anchors this object at the historical northern wall selector.
++    const left = f.left + .4, right = f.right + .4, back = 0, front = f.front + 9;
++    const river = riverX(f.front) + .4, northRiver = riverX(f.back) + .4;
++    const wallHeight = (foreground: boolean) => foreground ? .48 + level * .15 : .57 + level * .19;
++    function section(x1: number, z1: number, x2: number, z2: number, nx: number, nz: number, foreground = false) {
++        const length = Math.hypot(x2 - x1, z2 - z1); if (length < .05) return;
++        const angle = -Math.atan2(z2 - z1, x2 - x1), h = wallHeight(foreground), x = (x1 + x2) / 2, z = (z1 + z2) / 2;
++        if (!level) { box(length, .045, .26, x, -.005, z, m.darkStone, angle); return; }
++        box(length, .12, level < 3 ? .4 : .72, x, 0, z, level < 3 ? m.earth : m.darkStone, angle);
+         if (level <= 2) {
+-            const count = Math.ceil(length / .26);
++            const count = Math.ceil(length / .28);
+             for (let i = 0; i < count; i++) {
+-                const t = (i + .5) / count, x = x1 + (x2 - x1) * t, z = z1 + (z2 - z1) * t;
+-                box(.2, height, .2, x, 0, z, m.wood, angle); cone(.14, .16, x, height, z, m.timber);
++                const t = (i + .5) / count, px = x1 + (x2 - x1) * t, pz = z1 + (z2 - z1) * t;
++                box(.23, h, .25, px, .08, pz, i % 4 ? m.wood : m.timber, angle); cone(.16, .2, px, h + .08, pz, m.timber);
+             }
+-            if (level === 2) for (const y of [.2, height * .68]) box(length, .08, .24, centerX, y, centerZ, m.timber, angle);
++            for (const y of [.24, h * .72]) box(length, .09, .3, x - nx * .03, y, z - nz * .03, m.timber, angle);
+         } else {
+-            box(length, height, .32, centerX, 0, centerZ, m.stone, angle);
+-            box(length, .1, .38, centerX, height - .1, centerZ, m.light, angle);
+-            const count = Math.ceil(length / .55);
++            box(length, h, .54, x, .1, z, m.stone, angle);
++            box(length, .085, .66, x, h + .06, z, m.light, angle);
++            // Inset wall walk and parapet: the top no longer reads as a razor edge.
++            box(length, .16, .17, x + nx * .24, h + .14, z + nz * .24, m.stone, angle);
++            const count = Math.ceil(length / .67);
+             for (let i = 0; i < count; i++) {
+                 const t = (i + .5) / count;
+-                box(.24, .2, .38, x1 + (x2 - x1) * t, height, z1 + (z2 - z1) * t, m.light, angle);
++                box(.29, .22, .23, x1 + (x2 - x1) * t + nx * .24, h + .3, z1 + (z2 - z1) * t + nz * .24, m.light, angle);
+             }
++            // Sparse stone courses and projecting buttresses break up long flat runs.
++            box(length, .035, .565, x, .36, z, m.darkStone, angle);
++            const bays = Math.ceil(length / 3.2);
++            for (let i = 1; i < bays; i++) {
++                const t = i / bays, px = x1 + (x2 - x1) * t + nx * .23, pz = z1 + (z2 - z1) * t + nz * .23;
++                box(.28, h * .78, .44, px, .1, pz, m.darkStone, angle);
++                box(.34, .09, .48, px, .1 + h * .78, pz, m.stone, angle);
++            }
++        }
++    }
++    function bastion(x: number, z: number, foreground: boolean, riverside = false) {
++        const h = wallHeight(foreground) + .5, r = riverside ? .32 : .49;
++        box(r * 2.45, .18, r * 2.45, x, 0, z, level < 3 ? m.wood : m.darkStone);
++        if (level < 3) { box(r * 1.8, h, r * 1.8, x, .15, z, m.wood); k.roof(r * 2.6, .33, r * 2.6, x, h + .15, z, m.slate); }
++        else { k.tower(x, z, h, r); cylinder(r * 1.04, .1, x, h * .43, z, m.darkStone); }
++        if (level >= 4 && !riverside) k.flag(x, h + .18, z, .65);
++    }
++    function waterPassage(x: number, z: number) {
++        if (!level) return;
++        if (level < 3) {
++            for (const side of [-1, 1]) box(.16, .94, .3, x + side * .94, 0, z, m.wood);
++            box(2.1, .17, .34, x, .9, z, m.timber); return;
++        }
++        for (const side of [-1, 1]) box(.23, .48, .62, x + side * .96, .02, z, m.darkStone);
++        for (let i = 0; i < 11; i++) {
++            const angle = i * Math.PI / 10;
++            const stone = box(.28, .22, .62, x + Math.cos(angle) * .94, .38 + Math.sin(angle) * .78, z, i % 2 ? m.stone : m.light);
++            stone.rotation.z = angle - Math.PI / 2;
+         }
+     }
+-    const gateWidth = 2.9 + level * .08, gateX = .4;
+-    section(left, back, -.55, back);
+-    section(.55, back, northRiver-.98, back);
+-    section(northRiver+.98, back, right, back); // Northern water passage.
+-    section(left, back, left, front);
+-    const eastGate=2.4+9;
+-    section(right,back,right,eastGate-.7);
+-    section(right,eastGate+.7,right,front);
+-    if(level>=2)for(const z of [eastGate-.75,eastGate+.75])tower(right,z,.9+level*.14,.2);
+-    section(left, front, gateX-gateWidth/2, front, true);
+-    section(gateX+gateWidth/2, front, river-.9, front, true);
+-    section(river+.9, front, right, front, true); // Southern water passage.
+-    if (level >= 2) for (const x of [left, right]) for (const z of [back, front]) {
+-        const height = z === front ? .95 + level * .16 : 1.05 + level * .24;
+-        if (level === 2) {
+-            box(.5, height, .5, x, 0, z, m.wood); k.roof(.7, .3, .7, x, height, z);
+-        } else tower(x, z, height, .34, level === 4);
++    const gateWidth = 3.1 + level * .12, gateX = .4, eastGate = 11.4;
++    section(left, back, -.7, back, 0, -1);
++    section(.7, back, northRiver - 1.08, back, 0, -1);
++    section(northRiver + 1.08, back, right, back, 0, -1);
++    section(left, back, left, front, -1, 0);
++    section(right, back, right, eastGate - .8, 1, 0);
++    section(right, eastGate + .8, right, front, 1, 0);
++    section(left, front, gateX - gateWidth / 2, front, 0, 1, true);
++    section(gateX + gateWidth / 2, front, river - 1.08, front, 0, 1, true);
++    section(river + 1.08, front, right, front, 0, 1, true);
++    waterPassage(northRiver, back); waterPassage(river, front);
++    if (level >= 2) {
++        for (const z of [back, front]) { bastion(left, z, z === front); bastion(right + .15, z, z === front, true); }
++        // Rear postern and bridge gate frame their roads without blocking them.
++        for (const side of [-1, 1]) {
++            box(.2, 1.05 + level * .06, .45, side * .8, 0, back, level < 3 ? m.wood : m.stone);
++            box(.45, .95 + level * .05, .2, right, 0, eastGate + side * .93, level < 3 ? m.wood : m.stone);
++        }
++        box(1.8, .16, .5, 0, 1.05 + level * .06, back, level < 3 ? m.timber : m.light);
++    }
++    if (level >= 3) {
++        // Wall access stays in the spare northern border, away from building lots.
++        const h = wallHeight(false);
++        for (let step = 0; step < 6; step++) box(.58, h * (step + 1) / 6, .24, left + .65, .08, back + 1.6 - step * .24, m.stone);
++    }
++    const perimeter = k.finish(), g = cityKit(faction, animated), { m: gm } = g;
++    // An open twin-tower gatehouse on the front avenue. No geometry closes the road.
++    const h = .95 + level * .19, spacing = gateWidth / 2 - .43;
++    for (const side of [-1, 1]) {
++        if (level < 3) { g.box(.3, level ? h : .2, .4, side * spacing, 0, 0, gm.wood); if (level) g.roof(.8, .3, .85, side * spacing, h, 0, gm.slate); }
++        else { g.box(1.02, .18, 1.18, side * spacing, 0, 0, gm.darkStone); g.tower(side * spacing, 0, h + .35, .43); }
++    }
++    if (level) {
++        g.box(gateWidth - .2, .22, .62, 0, h - .25, 0, level < 3 ? gm.timber : gm.stone);
++        g.box(1.4, .13, .7, 0, h - .03, 0, level < 3 ? gm.wood : gm.light);
++        g.box(.24, .32, .05, 0, h + .1, -.34, gm.roof);
++        if (level >= 3) for (let i = 0; i < 7; i++) g.box(.035, .3, .035, -.55 + i * .185, h - .47, .1, gm.dark);
++        if (level >= 4) for (const side of [-1, 1]) g.flag(side * spacing, h + .55, 0, .7);
+     }
+-    if (level === 5) for (const x of [left, right]) k.flag(x, 2.35, back);
+-    const perimeter = k.finish();
+-    const gate = createBuildingModel('wall', level,faction,animated);
+-    gate.position.set(gateX, 0, front); gate.rotation.y = Math.PI;
+-    gate.name = 'Front city gate'; perimeter.add(gate);
+-    perimeter.name = `City perimeter level ${level}`;
+-    return perimeter;
++    const gate = g.finish(); gate.position.set(gateX, 0, front); gate.rotation.y = Math.PI; gate.name = 'Front city gate';
++    perimeter.add(gate); perimeter.name = `City perimeter level ${level}`; return perimeter;
+ }
+diff --git a/src/features/city/rendering/three/resourceModels.ts b/src/features/city/rendering/three/resourceModels.ts
+new file mode 100644
+index 0000000..ff0f970
+--- /dev/null
++++ b/src/features/city/rendering/three/resourceModels.ts
+@@ -0,0 +1,100 @@
++import * as THREE from 'three';
++import type { Faction } from '../../../factions/domain/factions';
++import { cityKit } from './modelKit';
++import { visualLevel } from './buildingModels';
++
++export type CityResource = 'lumber' | 'quarry' | 'farm' | 'fishery';
++export const isCityResource = (type: string | null): type is CityResource => type === 'lumber' || type === 'quarry' || type === 'farm' || type === 'fishery';
++
++/** City-only working silhouettes. The world map keeps its bounded field models. */
++export function createCityResource(type: CityResource, value: number, faction: Faction = 'roman', animated = false) {
++    const level = visualLevel(value), k = cityKit(faction, animated);
++    const { m, box, cylinder, cone, house, roof } = k;
++    if (!level) {
++        box(2.4, .025, 2.2, 0, -.015, 0, m.earth);
++        for (const x of [-1.1, 1.1]) for (const z of [-1, 1]) box(.055, .2, .055, x, 0, z, m.wood);
++    } else if (type === 'lumber') {
++        house(-.45, -.5, 1.55, 1.2, .8 + level * .07, level >= 4, m.slate);
++        // Open cutting shed, big flywheel and bark-on logs are readable from above.
++        for (const x of [.55, 1.55]) for (const z of [-.75, .25]) box(.085, .95, .085, x, 0, z, m.wood);
++        roof(1.2, .28, 1.2, 1.05, .95, -.25, m.roofLight);
++        box(1.2, .09, .45, .9, .35, .65, m.wood);
++        for (const x of [.45, 1.35]) box(.08, .35, .4, x, 0, .65, m.wood);
++        for (let i = 0; i < 3 + level; i++) {
++            const x = -.95 + (i % 3) * .12, y = .15 + Math.floor(i / 3) * .24, z = .62 + (i % 3) * .26;
++            const bark = cylinder(.135, 1.25, x, 0, z, m.wood); bark.rotation.z = Math.PI / 2; bark.position.y = y;
++            for (const end of [-1, 1]) { const cut = cylinder(.105, .018, x + end * .63, 0, z, m.timber); cut.rotation.z = Math.PI / 2; cut.position.y = y; }
++        }
++        if (level >= 2) {
++            const wheel = new THREE.Group(); wheel.position.set(1.18, .57, .31); k.group.add(wheel);
++            const rim = cylinder(.46, .12, 0, 0, 0, m.dark); rim.rotation.x = Math.PI / 2; rim.position.y = 0; wheel.add(rim);
++            for (let i = 0; i < 8; i++) {
++                const angle = i * Math.PI / 4, spoke = box(.07, .72, .045, 0, -.36, .075, m.timber); spoke.rotation.z = angle; wheel.add(spoke);
++                const tooth = box(.12, .13, .15, Math.sin(angle) * .46, Math.cos(angle) * .46 - .065, 0, m.wood); tooth.rotation.z = -angle; wheel.add(tooth);
++            }
++            const hub = cylinder(.09, .07, 0, 0, .11, m.gold); hub.rotation.x = Math.PI / 2; hub.position.y = 0; wheel.add(hub); k.motion(wheel, 'spinSlow');
++        }
++        if (level >= 3) { box(.24, 1.5, .25, -.85, 0, -.65, m.darkStone); box(.32, .08, .33, -.85, 1.5, -.65, m.stone); }
++        if (level >= 4) for (let i = 0; i < 4; i++) box(.12, .1, 1.15, 1.12 + i * .14, i * .1, -1.1, m.timber);
++        if (level >= 5) { roof(1.7, .25, .8, -.6, 1.1, 1.0, m.slate); for (const x of [-1.35, .15]) box(.065, 1.1, .065, x, 0, 1.25, m.wood); k.flag(-.7, 1.4, -.9, .65); }
++    } else if (type === 'quarry') {
++        // Broad stepped cut faces, rather than a heap of round stones.
++        for (let tier = 0; tier < 2 + Math.floor(level / 2); tier++) {
++            const width = 3.35 - tier * .45, z = -.6 - tier * .22;
++            box(width, .27, 1.75 - tier * .29, -.05 + tier * .08, tier * .27, z, tier % 2 ? m.stone : m.darkStone);
++            for (let cut = 0; cut < 4; cut++) box(.025, .22, .02, -width / 2 + .4 + cut * width / 4, tier * .27 + .025, z + (1.75 - tier * .29) / 2 + .012, m.darkStone);
++        }
++        for (let i = 0; i < 4; i++) k.rock(.22 + i % 2 * .12, -1.3 + i * .77, .5 + level * .1, -1.15, m.stone);
++        for (let i = 0; i < level + 2; i++) box(.31, .23, .38, .65 + i % 3 * .35, Math.floor(i / 3) * .24, 1, m.light);
++        if (level >= 2) {
++            const h = 1.5 + level * .13;
++            box(.17, h, .17, -.5, 0, .15, m.wood); box(2.15, .16, .19, .2, h - .16, .15, m.timber);
++            const brace = box(.1, .95, .1, -.18, h - .97, .15, m.wood); brace.rotation.z = -.55;
++            cylinder(.025, h - .62, 1.05, .62, .15, m.dark);
++            const pulley = cylinder(.13, .11, 1.05, h - .27, .15, m.dark); pulley.rotation.x = Math.PI / 2;
++            k.motion(box(.39, .34, .41, 1.05, .33, .15, m.stone), 'lift');
++        }
++        if (level >= 3) { house(-1.05, .8, .7, .62, .52, false, m.slate); box(.6, .08, .35, -.8, .3, 1.25, m.wood); }
++        if (level >= 4) for (const x of [-.13, .13]) { box(.045, .045, .95, x, .025, .9, m.dark); }
++        if (level >= 5) { box(.55, .22, .5, 0, .1, .95, m.timber); for (const x of [-.3, .3]) { const wheel = cylinder(.12, .06, x, .02, 1.0, m.dark); wheel.rotation.z = Math.PI / 2; } k.flag(-.5, 2.15, .15, .65); }
++    } else if (type === 'farm') {
++        house(.35, -.6, 1.45, 1.1, .78 + level * .055, level >= 4, m.roof);
++        // Barn doors and an open loading canopy make this distinct from housing.
++        box(.6, .58, .045, .35, 0, -.025, m.wood);
++        for (const x of [.08, .62]) box(.035, .58, .055, x, 0, 0, m.timber);
++        roof(1.55, .15, .6, .35, .72, .3, m.roofLight);
++        for (const x of [-.3, 1]) box(.055, .72, .055, x, 0, .5, m.wood);
++        for (let i = 0; i < Math.min(4, level + 1); i++) { cylinder(.15, .24, .65 + i % 2 * .33, Math.floor(i / 2) * .24, 1.02, m.wheat); }
++        if (level >= 2) {
++            const x = -1.12, z = -.48, h = 1.35 + level * .13;
++            cylinder(.32 + level * .018, h, x, 0, z, level >= 3 ? m.light : m.timber); roof(.92, .45, .92, x, h, z, m.slate);
++            const sails = new THREE.Group(); sails.position.set(x, h * .74, z + .48); k.group.add(sails);
++            for (const angle of [Math.PI / 4, -Math.PI / 4]) {
++                const spar = box(1.95, .075, .065, 0, -.0375, 0, m.wood); spar.rotation.z = angle; sails.add(spar);
++                for (const side of [-1, 1]) { const sail = box(.65, .2, .035, Math.cos(angle) * side * .58, Math.sin(angle) * side * .58 - .1, .05, m.light); sail.rotation.z = angle; sails.add(sail); }
++            }
++            const hub = cylinder(.1, .1, 0, 0, .1, m.gold); hub.rotation.x = Math.PI / 2; hub.position.y = 0; sails.add(hub); k.motion(sails, 'spinSlow');
++        }
++        if (level >= 3) { cylinder(.25, 1.25, 1.4, 0, -.75, m.wheat); cone(.34, .32, 1.4, 1.25, -.75, m.slate); }
++        if (level >= 4) { box(.55, .25, .5, -1.0, 0, 1.0, m.wheat); box(.65, .25, .5, -1.02, .25, 1.0, m.wheat); }
++        if (level >= 5) k.flag(.7, 1.38, -.7, .7);
++    } else {
++        // A real bankside hut, landing and moored boat; river flows underneath.
++        house(-1.03, -.38, .85, 1.05, .65 + level * .04, level >= 4, m.slate);
++        for (let i = 0; i < 10; i++) box(1.55, .075, .13, .15, .16, -.62 + i * .15, m.timber);
++        for (const x of [-.56, .85]) for (const z of [-.65, .8]) { cylinder(.055, .65, x, -.2, z, m.wood); cylinder(.085, .055, x, .45, z, m.timber); }
++        box(1.05, .08, .55, -.85, .14, .4, m.wood);
++        box(.45, .13, 1.25, .1, .04, 1.4, m.wood);
++        for (const x of [-.22, .22]) box(.065, .16, 1.12, .1 + x, .12, 1.4, m.timber);
++        for (const z of [1.1, 1.7]) box(.45, .055, .1, .1, .2, z, m.timber);
++        if (level >= 2) { box(.035, .85, .035, .5, .25, .25, m.wood); k.motion(box(.8, .035, .035, .83, 1.05, .25, m.timber, -.2), 'fishing'); }
++        if (level >= 3) { roof(1.1, .18, .8, .05, 1.15, -.3, m.roofLight); for (const x of [-.45, .55]) box(.045, .95, .045, x, .2, -.6, m.wood); }
++        for (let i = 0; i < level; i++) cylinder(.1, .18, -1.4 + i % 3 * .23, Math.floor(i / 3) * .18, .65, m.timber);
++        if (level >= 4) for (let i = 0; i < 6; i++) box(.03, .45, .03, -.62 + i * .22, .55, -.7, m.light);
++        if (level >= 5) k.flag(-1.05, 1.15, -.65, .6);
++    }
++    if (level) k.heraldry(level);
++    const model = k.finish(); model.name = `City ${type} level ${level}`;
++    model.userData.citySmoke = type === 'lumber' && level >= 3 ? [-.85, 1.6, -.65] : null;
++    return model;
++}
+diff --git a/tests/city-resource-art.test.ts b/tests/city-resource-art.test.ts
+new file mode 100644
+index 0000000..5d4d9f9
+--- /dev/null
++++ b/tests/city-resource-art.test.ts
+@@ -0,0 +1,78 @@
++import { test } from 'node:test';
++import assert from 'node:assert/strict';
++import * as THREE from 'three';
++import { FACTIONS, type Faction } from '../src/features/factions/domain/factions';
++import { createCityWalls } from '../src/features/city/rendering/three/cityWalls';
++import { createCityResource, type CityResource } from '../src/features/city/rendering/three/resourceModels';
++import { cityLayout, cityFootprint, riverX } from '../src/features/city/rendering/three/layout';
++import { cityGrowth } from '../src/features/city/domain/slots';
++import { createCityActivities } from '../src/features/city/rendering/three/cityActivities';
++import { disposeCityObject } from '../src/features/city/rendering/three/modelKit';
++
++const factions = Object.keys(FACTIONS) as Faction[];
++const resources: CityResource[] = ['lumber', 'quarry', 'farm', 'fishery'];
++function clear(model: THREE.Object3D, x: number, z: number, direction: THREE.Vector3) {
++    model.updateMatrixWorld(true);
++    return new THREE.Raycaster(new THREE.Vector3(x, .22, z), direction, 0, 2.5).intersectObject(model, true).length === 0;
++}
++
++test('fortifications leave ground-level avenues, river channels and city plots open at every growth stage', () => {
++    for (let main = 0; main <= 5; main++) for (const faction of factions) {
++        const walls = createCityWalls(5, main, faction), f = cityFootprint(main), front = f.front + 9;
++        for (const dx of [-.45, 0, .45]) assert.ok(clear(walls, .4 + dx, front + 1.2, new THREE.Vector3(0, 0, -1)), `${faction}: front avenue`);
++        for (const z of [0, front]) for (const dx of [-.6, 0, .6]) {
++            const x = riverX(z - 9) + .4 + dx;
++            assert.ok(clear(walls, x, z + 1.2, new THREE.Vector3(0, 0, -1)), `${faction}: river at ${z}`);
++        }
++        for (const plot of cityLayout({ market: main }, []).filter(p => p.slot !== undefined && p.slot < 16)) {
++            const g = cityGrowth(main);
++            for (const dx of [-1.6, 1.6]) for (const dz of [-1.6, 1.6]) {
++                const ray = new THREE.Raycaster(new THREE.Vector3(plot.x / g + .4 + dx / g, 8, plot.z / g + 9 + dz / g), new THREE.Vector3(0, -1, 0));
++                assert.equal(ray.intersectObject(walls, true).length, 0, `${faction}: ${plot.key} remains buildable`);
++            }
++        }
++        disposeCityObject(walls);
++    }
++});
++
++test('resource models have five distinct stages, finite bounded geometry and no finished building at zero', () => {
++    for (const faction of factions) for (const type of resources) {
++        const signatures = new Set<string>();
++        for (let level = 0; level <= 5; level++) {
++            const model = createCityResource(type, level, faction), bounds = new THREE.Box3().setFromObject(model);
++            let draws = 0, vertices = 0;
++            model.traverse(object => {
++                if (!(object instanceof THREE.Mesh)) return;
++                draws++; vertices += object.geometry.getAttribute('position').count;
++                assert.ok([...object.geometry.getAttribute('position').array].every(Number.isFinite));
++                assert.equal(object.userData.cityMotion, undefined, 'previews stay static');
++            });
++            assert.ok(draws <= 16 && vertices < 25_000, `${faction} ${type} stays material-batched`);
++            assert.ok(bounds.max.x < 2.8 && bounds.min.x > -2.8 && bounds.max.z < 2.3 && bounds.min.z > -2.3, `${faction} ${type} footprint`);
++            if (!level) assert.ok(bounds.max.y <= .21);
++            else signatures.add(`${vertices}:${bounds.max.y}`);
++            for (const main of [0, 5]) {
++                const g = cityGrowth(main), f = cityFootprint(main), p = cityLayout({ market: main }, []).find(p => p.type === type)!;
++                const right = p.x + bounds.max.x * (type === 'fishery' ? .98 : 1.05), left = p.x + bounds.min.x * (type === 'fishery' ? .98 : 1.05), back = p.z + bounds.min.z * .98;
++                assert.ok(right < f.left * g || left > f.right * g || back > f.front * g, `${type} stays beyond the wall`);
++            }
++            disposeCityObject(model);
++        }
++        assert.equal(signatures.size, 5, `${faction} ${type} evolves at every completed level`);
++    }
++});
++
++test('resource working parts animate together and return to rest for reduced motion', () => {
++    for (const type of resources) {
++        const model = createCityResource(type, 5, 'roman', true), plots = cityLayout({ [type]: 5 }, [{ settlement_id: 1, slot_index: 16, building_type: 'fishery', level: 5 }]);
++        const activities = createCityActivities(); activities.setModels(new Map([[type, { model }]]), plots, 'roman');
++        let moving: THREE.Object3D | undefined;
++        model.traverse(object => { if (object.userData.cityMotion && object.userData.cityMotion !== 'flag') moving ??= object; });
++        assert.ok(moving, `${type} has working equipment`);
++        const position = moving.position.clone(), rotation = moving.rotation.clone();
++        activities.animate(2);
++        assert.ok(!moving.position.equals(position) || !moving.rotation.equals(rotation));
++        activities.animate(2, true); assert.ok(moving.position.equals(position) && moving.rotation.equals(rotation));
++        disposeCityObject(model); disposeCityObject(activities.group);
++    }
++});
+diff --git a/tests/e2e/city-resource-art.spec.ts b/tests/e2e/city-resource-art.spec.ts
+new file mode 100644
+index 0000000..ff6f8c7
+--- /dev/null
++++ b/tests/e2e/city-resource-art.spec.ts
+@@ -0,0 +1,31 @@
++import { test, expect } from '@playwright/test';
++import * as THREE from 'three';
++import { createSolo } from '../../src/features/campaign/domain/newRealm';
++import { refreshCityEconomy } from '../../src/features/city/domain/slots';
++import { cityLayout } from '../../src/features/city/rendering/three/layout';
++import { CityCamera } from '../../src/features/city/rendering/three/CityCamera';
++
++test('working resource yards remain selectable through their actual 3D geometry', async ({page,isMobile},info) => {
++    const world=createSolo('Working yards'),town=world.settlements[0],errors:string[]=[];
++    page.on('pageerror',error=>errors.push(error.message));
++    world.buildings.forEach(b=>b.level=3);
++    world.city_slots=[{settlement_id:town.id,slot_index:16,building_type:'fishery',level:3}];refreshCityEconomy(world,town.id);
++    await page.addInitScript(w=>{localStorage.setItem('peris-campaign-v6',JSON.stringify(w));localStorage.setItem('peris-settings',JSON.stringify({sound:false,music:false,reducedMotion:true}));localStorage.setItem(`peris-welcome:${w.players[0].id}:${w.players[0].created_at}`,'yes');},world);
++    await page.goto('/');await page.getByRole('button',{name:'Continue campaign',exact:true}).click();await page.getByRole('button',{name:'City',exact:true}).click();await page.getByRole('button',{name:'3D',exact:true}).click();
++    const canvas=page.locator('.city-3d-scene.ready canvas');await expect(canvas).toHaveAttribute('data-city-zoom','1.000');
++    const rect=(await canvas.boundingBox())!,camera=new CityCamera();camera.resize(rect.width,rect.height,3);
++    for(const key of ['lumber','quarry','farm','fishery']){
++        const plot=cityLayout({market:3},world.city_slots).find(p=>p.key===key)!;
++        // Mobile's narrow view can put an outside yard behind its HUD; its marker
++        // remains a normal alternative. Desktop clicks use projected roof geometry.
++        if(isMobile)await page.locator(`[data-building="${key}"]`).click();
++        else{const p=new THREE.Vector3(plot.x, .6, plot.z).project(camera.camera);await page.mouse.click(rect.x+(p.x+1)*rect.width/2,rect.y+(1-p.y)*rect.height/2);}
++        const panel=page.locator('.building-inspector');await expect(panel).toBeVisible();
++        await expect(panel.getByRole('img')).toHaveAttribute('aria-label',/level 3/);
++        await expect(panel.getByRole('button',{name:'Upgrade to level 4',exact:true})).toBeVisible();
++        await page.keyboard.press('Escape');await expect(panel).toHaveCount(0);
++    }
++    await page.getByRole('button',{name:'Rotate city right',exact:true}).click();await expect(canvas).toHaveAttribute('data-city-rotation','0.393');
++    await page.screenshot({path:info.outputPath('fortifications-and-resource-yards.png')});
++    expect(errors).toEqual([]);
++});

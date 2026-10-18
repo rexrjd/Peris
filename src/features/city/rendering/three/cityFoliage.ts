@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { FACTIONS, type Faction } from '../../../factions/domain/factions';
 import { cityLayout, cityFootprint, riverX } from './layout';
 import { cityGrowth } from '../../domain/slots';
-import { cityTerrainHeight } from './cityStreets';
+import { cityStreetClearance, cityTerrainHeight } from './cityStreets';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
 const random = (n: number) => { const r = Math.sin(n * 127.1 + 19.7) * 43758.5453; return r - Math.floor(r); };
@@ -22,14 +22,16 @@ export function createCityFoliage(mainLevel: number, faction: Faction) {
     const palm = faction === 'egyptian' || faction === 'persian', bare = faction === 'undead' || faction === 'demon', bamboo = faction === 'pandaren';
     const pine = faction === 'dwarf' || faction === 'orc';
     const positions: { x: number; z: number; h: number }[] = [], plots = cityLayout({ market: mainLevel }, []);
-    for (let i = 0; i < 440 && positions.length < 170; i++) {
+    for (let i = 0; i < 4200 && positions.length < 1100; i++) {
         const side = i % 4;
-        const x = side === 0 ? -22 + random(i + 3) * 7 : side === 1 ? 12.6 + random(i + 5) * 10 : -23 + random(i + 7) * 47;
-        const z = side < 2 ? -18 + random(i * 3 + 1) * (f.front + 37) : side === 2 ? -21 + random(i + 13) * 9 : f.fishingZ + 4 + random(i + 17) * 9;
+        const distant = i >= 650;
+        const x = distant ? -90 + random(i * 13 + 3) * 180 : side === 0 ? -30 + random(i + 3) * 15 : side === 1 ? 12.6 + random(i + 5) * 18 : -31 + random(i + 7) * 64;
+        const z = distant ? -90 + random(i * 17 + 5) * 180 : side < 2 ? -29 + random(i * 3 + 1) * (f.front + 58) : side === 2 ? -32 + random(i + 13) * 20 : f.fishingZ + 4 + random(i + 17) * 19;
         if (x > f.left - 1.4 && x < f.right + 1.4 && z > f.back - 1.4 && z < f.front + 1.5) continue;
-        if (Math.abs(x - riverX(z)) < 1.7 || Math.abs(x) < 1.5 || Math.abs(z - f.outsideRoad) < .9) continue;
-        if (plots.some(plot => Math.hypot(x - plot.x / growth, z - plot.z / growth) < (plot.type === 'farm' ? 5.4 : plot.type === 'quarry' ? 4.8 : 3.3))) continue;
-        positions.push({ x, z, h: 1.05 + random(i * 7 + 6) * 1.7 });
+        if (Math.abs(x - riverX(z)) < 1.7 || cityStreetClearance(x, z, mainLevel) < 1.1) continue;
+        if (plots.some(plot => Math.hypot(x - plot.x / growth, z - plot.z / growth) < (plot.type === 'farm' ? 6.2 : plot.type === 'quarry' ? 5 : plot.type === 'lumber' ? 4.3 : 3.3))) continue;
+        if (positions.some(tree => Math.hypot(tree.x - x, tree.z - z) < 1.25)) continue;
+        positions.push({ x, z, h: 1.2 + random(i * 7 + 6) * 1.9 });
     }
     const count = positions.length, group = new THREE.Group(), dummy = new THREE.Object3D();
     const material = (color: number) => new THREE.MeshStandardMaterial({ color, roughness: 1, flatShading: true });

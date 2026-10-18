@@ -211,3 +211,113 @@ Egyptian Bird, Orc Head and Pagoda. `public/licenses/peris-rally-point-icons.txt
 records each original artist and primary icon page, the CC BY 3.0 artwork license,
 interface color/size adaptations and the complete react-icons 5.5.0 MIT software
 notice. These licensed vectors are distinct from the original generated paintings.
+
+## V19.7 city roads and barracks training
+
+The native city removes its screen vignette and softens the northern terrain tone.
+Terrain-following roads extend to all four landscape edges. The orthographic camera retreats along its existing viewing direction to keep the foreground ahead of its near plane when zoomed out on narrow phones; framing and zoom controls remain the same. Up to 1,100 instanced
+faction trees fill the wider countryside while avoiding streets, the river, city
+walls and working yards. The main gate sits on the front avenue. The city-only
+barracks has five larger development stages and an open drill yard; Orc halls use
+paired tents to keep their broad roofs inside the lot.
+
+An instructor and up to six trainees reuse the existing classic faction battle
+GLBs, their skeletal clips, and the shared instanced animation palette. There are
+two small visual batches, independent of gameplay formation state. Activity reads
+only the selected owner's current city recruitment, ignores future/expired work
+and other recruitment buildings, pauses with reduced motion or a hidden tab, and
+releases visual/source resources when the scene closes or its faction changes.
+The existing battle compatibility geometry remains available if a model fails to
+load. No new image, GLB, external source or license is introduced.
+
+New construction allows one barracks per city in the picker, campaign commands
+and the authoritative row-locked server function. Earlier repeated barracks,
+troops, levels and pending work remain intact. Generated complete installers and
+UPGRADE_UNIQUE_BARRACKS.sql contain the same rule; SQL is not deployed by this patch.
+
+## V19.9 walls and working resource sites
+
+The native 3D city uses thicker stepped fortifications with stone footings,
+buttresses, inset wall walks, corner towers, access steps and an open front
+gatehouse. Early levels retain timber palisades. River passages have open arches;
+the front avenue, northern postern and eastern bridge gate stay clear at every
+city growth stage. The foreground wall remains lower so it frames the city.
+
+City resource models have five original procedural development stages: a sawmill
+with a flywheel and cut logs, a terraced quarry with lifting gear, a barn and
+windmill, and a fishing landing with a boat and covered dock. Faction palettes,
+roof shapes and heraldry carry through all eleven factions. Country yards use
+soil, stock and fenced golden crop rows instead of civic paving. Their larger
+clearings reserve the existing service roads and keep resource sites outside
+the walls. Equipment uses the existing reduced-motion-aware activity system.
+
+These changes affect city presentation and its model thumbnails. Strategic field
+models, the painted village, building locations, costs, production and saved
+state retain their current rules. No new image, GLB, external source, license or
+SQL migration is introduced. Visual review covered desktop and phone framing,
+rotation, early and mature development, and all eleven faction styles. Frame
+rate targets remain unmeasured.
+
+## V19.10 city entrances
+
+The main city entrance is a solid arched gatehouse with flanking watchtowers,
+open timber doors, stone jambs, a raised portcullis and faction roof details.
+Smaller covered gateways finish the northern service road and eastern bridge.
+River portals use solid spandrels above open channels, so they read as part of
+the fortifications rather than freestanding bridge arches. Early wall levels
+use timber gateways; level zero retains only low construction markers.
+
+The native wall preview uses the same gatehouse factory. Static geometry remains
+material-batched; custom arch source geometries are disposed after batching.
+The accepted wall sections, resource sites, city growth and gameplay rules are
+preserved. All geometry is original procedural Peris artwork, with no new image,
+GLB, external asset or SQL migration.
+
+## V19.11 living town details
+
+The native 3D city adds hanging street lanterns, flower baskets, coordinated
+flower beds, terracotta pots, courtyard barrels and crates, and a striped produce
+stall in the existing civic square. The square's benches have backrests and one
+resident reading; a shopkeeper gestures beside the stall. Street lights use shared
+instanced meshes and emissive glass rather than individual dynamic lights. Flower
+stems, petals and centres are instanced with faction-aware colours. All props are
+original procedural Peris geometry and use the existing faction material family.
+
+Lantern bases avoid the rendered streets and every reserved city lot. Flowers and
+household props follow completed buildings; empty or unfinished plots retain their
+normal construction presentation. The town details rebuild with city growth,
+construction, demolition or faction changes and release their geometry/materials.
+Twenty-two resident silhouettes walk at varied speeds, stop briefly at destinations
+and carry fewer identical parcels. The existing route geometry remains unchanged.
+
+Town gestures and subtle lantern flicker follow the scene's existing reduced-motion
+and hidden-tab scheduling. The painted village, world map, building selection,
+production, population, saves and multiplayer rules retain their existing behaviour.
+No new image, GLB, dependency or SQL migration is introduced. GPU frame rate has
+not been benchmarked.
+
+## V19.12 town stonework and building identity
+
+The native 3D city's main avenue, civic square and completed building approaches
+use staggered flagstones with restrained colour variation. Working courtyards
+retain earth floors; broad, softly blended grass patches break up the surrounding
+lawn. Surface generation follows city growth and leaves every unbuilt reserved
+plot clear. Stonework and lawn variation use two vertex-coloured material batches,
+with no textures or individual tile meshes.
+
+The Roman main hall has a taller columned facade, entrance stairs and an upgraded
+bell tower. The other ten faction halls retain their architectural forms with a
+taller civic silhouette and entrance steps. The smithy is an open forge with a
+banded chimney, bellows, furnace, anvil and the existing animated blacksmith.
+Warehouses have twin loading sheds, platforms, stock and a hoist; granaries have
+raised grain silos, bands, chutes, sacks and an access ladder. Barracks retain
+their accepted drill yard and gain military standards and a facade shield.
+All five levels use original procedural geometry and the existing faction palette
+and roof family. Building inspector previews use the same new resting models.
+
+The strategic map's settlement factories, resource sites, walls, gates, painted
+village, walking routes, recruitment animation and existing flowers and lanterns
+retain their behaviour. All changes are presentation-only, release owned render
+resources, and use the existing reduced-motion-aware scene lifecycle. No SQL,
+dependency, external asset, image, GLB or license change is required. Frame-rate
+targets remain unmeasured.

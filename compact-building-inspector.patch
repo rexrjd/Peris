@@ -1,0 +1,487 @@
+diff --git a/src/app/styles/index.css b/src/app/styles/index.css
+index 6e19bde..5aab08e 100644
+--- a/src/app/styles/index.css
++++ b/src/app/styles/index.css
+@@ -56,6 +56,7 @@
+ 
+ @import "../../features/city/styles/city-art-direction.css";
+ @import '../../features/army/styles/rally-faction.css';
++@import '../../features/city/styles/building-inspector.css';
+ 
+ .realm-presentation { display: contents; }
+ .rp-art-status { color: var(--rp-paper); font-size: 12px; }
+diff --git a/src/features/army/ui/RecruitmentPanel.tsx b/src/features/army/ui/RecruitmentPanel.tsx
+index 390f6c0..ba2c661 100644
+--- a/src/features/army/ui/RecruitmentPanel.tsx
++++ b/src/features/army/ui/RecruitmentPanel.tsx
+@@ -1,3 +1,4 @@
++import { createPortal } from 'react-dom';
+ import {unitUnlocked,unitTechnology} from '../../research/domain/effects';
+ import {useResearchNavigation} from '../../research/ui/ResearchNavigation';
+ import { useState } from 'react';
+@@ -17,7 +18,7 @@ import { slotLevels } from '../../city/domain/slots';
+ import { homeArmyPosition } from '../../map/domain/garrisons';
+ import type { RecruitmentBuilding } from '../../frontier/domain/units';
+ 
+-export function RecruitmentPanel({ world, army, city, run, busy, now, onCity, onOpenCity, onLogistics, buildingOnly, embedded = false, formOnly = false, initialUnit }: { world: World; army: Army; city: Settlement; run: (c: Command, message?: string) => void; busy: boolean; now: number; onCity?: (id: number) => void; onOpenCity?: (id: number) => void; onLogistics?: () => void; buildingOnly?: RecruitmentBuilding; embedded?: boolean; formOnly?: boolean; initialUnit?: RecruitUnit }) {
++export function RecruitmentPanel({ world, army, city, run, busy, now, onCity, onOpenCity, onLogistics, buildingOnly, embedded = false, formOnly = false, initialUnit, actionContainer }: { world: World; army: Army; city: Settlement; run: (c: Command, message?: string) => void; busy: boolean; now: number; onCity?: (id: number) => void; onOpenCity?: (id: number) => void; onLogistics?: () => void; buildingOnly?: RecruitmentBuilding; embedded?: boolean; formOnly?: boolean; initialUnit?: RecruitUnit; actionContainer?: HTMLElement | null }) {
+  const openResearch=useResearchNavigation();
+  const [type, setType] = useState<RecruitUnit>(() => initialUnit ?? RECRUIT_UNITS.find(unit => RECRUIT_RULES[unit].building === (buildingOnly ?? 'barracks'))!), [quantity, setQuantity] = useState(20);
+  const [building, setBuilding] = useState<RecruitmentBuilding>(buildingOnly ?? (initialUnit ? RECRUIT_RULES[initialUnit].building : 'barracks'));
+@@ -43,11 +44,11 @@ export function RecruitmentPanel({ world, army, city, run, busy, now, onCity, on
+    return <button key={unit} aria-pressed={type === unit} title={`${factionTroopName(faction, unit)} · ${ready ? 'Ready to recruit' : entry ? 'Research in progress' : 'Research required'}`} onClick={() => setType(unit)}><TroopIcon faction={faction} unit={unit}/><span>{factionTroopName(faction, unit)}<small>{ready ? 'Ready to recruit' : entry ? 'Researching' : 'Research required'}</small></span></button>;
+   })}</div>
+   <h3>{name}</h3><p className="command-muted" title="Statistics used by automatic combat and loot rules">Attack ×{rule.attack} · Defence ×{rule.defence} · Carry {rule.carry} · Speed {rule.speed}</p>
+-  {!researched ? <><Cost cost={rule.researchCost} resources={liveResources(city, now)} compact/>{research ? <p role="status">Research completes in {clock(Math.max(0, (Date.parse(research.completes_at) - now) / 1000))}</p> : <button className="command-button primary" onClick={()=>openResearch(unitTechnology(type)?.id)}>Unlock in Research <span>→</span></button>}</> : <>
++  {!researched ? <><Cost cost={rule.researchCost} resources={liveResources(city, now)} compact/>{research ? <p role="status">Research completes in {clock(Math.max(0, (Date.parse(research.completes_at) - now) / 1000))}</p> : actionContainer ? createPortal(<button className="command-button primary" onClick={()=>openResearch(unitTechnology(type)?.id)}>Unlock in Research <span>→</span></button>,actionContainer) : <button className="command-button primary" onClick={()=>openResearch(unitTechnology(type)?.id)}>Unlock in Research <span>→</span></button>}</> : <>
+    <label className="command-label" htmlFor="recruit-quantity">Soldiers to train</label><div className="command-quantity"><button aria-label="Train fewer soldiers" onClick={() => changeQuantity(quantity - 5)}>−</button><input id="recruit-quantity" type="number" min={1} max={200} value={quantity} onChange={event => changeQuantity(Number(event.target.value))}/><button aria-label="Train more soldiers" onClick={() => changeQuantity(quantity + 5)}>+</button></div>
+    <div className="recruit-presets">{[10, 25, 50].map(n => <button key={n} aria-pressed={quantity === n} onClick={() => changeQuantity(n)}>{n}</button>)}<button disabled={!plan.max} onClick={() => changeQuantity(plan.max)}>Max {plan.max}</button></div><Cost cost={plan.cost} resources={plan.resources} compact/>
+    <div className="recruit-timing"><span>Training time<b>{clock(plan.seconds)}</b></span><span>Ready with queue<b>{clock(plan.finishSeconds)}</b></span></div>
+-   <button className="command-button primary" disabled={busy || !!plan.reason} onClick={() => run({ type: 'recruit', armyId: army.id, settlementId: city.id, item: type, quantity }, `${quantity} ${name} added to ${army.name}’s training`)}>Train {quantity} {name}</button>{plan.reason && <p className="recruit-blocked" role="status">{plan.reason}</p>}
++   {actionContainer ? createPortal(<><button className="command-button primary" disabled={busy || !!plan.reason} onClick={() => run({ type: 'recruit', armyId: army.id, settlementId: city.id, item: type, quantity }, `${quantity} ${name} added to ${army.name}’s training`)}>Train {quantity} {name}</button>{plan.reason && <p className="recruit-blocked" role="status">{plan.reason}</p>}</>,actionContainer) : <><button className="command-button primary" disabled={busy || !!plan.reason} onClick={() => run({ type: 'recruit', armyId: army.id, settlementId: city.id, item: type, quantity }, `${quantity} ${name} added to ${army.name}’s training`)}>Train {quantity} {name}</button>{plan.reason && <p className="recruit-blocked" role="status">{plan.reason}</p>}</>}
+   </>}
+   {!plan.near && <button className="command-button secondary" disabled={busy || army.status !== 'idle'} onClick={() => run({ type: 'move', armyId: army.id, ...homeArmyPosition(city) })}>Bring army to {city.name}</button>}{!plan.level && <button className="command-text-button" onClick={() => onOpenCity?.(city.id)}>Open village buildings</button>}
+  </section></div>;
+diff --git a/src/features/city/styles/building-inspector.css b/src/features/city/styles/building-inspector.css
+new file mode 100644
+index 0000000..57ce7c4
+--- /dev/null
++++ b/src/features/city/styles/building-inspector.css
+@@ -0,0 +1,127 @@
++/* A compact tool over the city; no full-screen backdrop or blur. */
++.building-inspector{position:fixed;z-index:180;right:16px;top:142px;display:flex;flex-direction:column;width:374px;max-width:calc(100vw - 32px);max-height:calc(100dvh - 164px);overflow:hidden;box-sizing:border-box;border:1px solid #ffffff20;border-radius:15px;background:#1c232ef5;color:#e6ebf2;box-shadow:0 12px 40px #080d1745,0 1px 0 #ffffff08 inset;font-family:'Open Sans',Arial,sans-serif;font-size:12px;line-height:1.45;text-align:left;--cmd-muted:#98a8ba;--cmd-border:#ffffff18;--cmd-accent:#e4c697;--cmd-bg:#1c232e;--cmd-panel:transparent}
++.building-inspector *{box-sizing:border-box}
++.building-inspector [hidden]{display:none!important}
++.building-inspector button,.building-inspector input,.building-inspector select{font-family:inherit}
++.building-inspector button:focus-visible,.building-inspector summary:focus-visible,.building-inspector input:focus-visible,.building-inspector select:focus-visible{outline:2px solid #d9bd8b;outline-offset:2px}
++.building-inspector-close{position:absolute;right:10px;top:10px;z-index:2;width:28px;height:28px;min-height:0;padding:0;border:0;border-radius:7px;background:transparent;color:#acb8c6;font-size:23px;line-height:1;cursor:pointer}
++.building-inspector-close:hover{background:#ffffff0c;color:#fff}
++.building-inspector-minimize,.building-inspector-settings-toggle{position:absolute;right:74px;top:10px;z-index:2;display:grid;place-items:center;width:28px;height:28px;min-height:0;padding:0;border:0;border-radius:7px;background:transparent;color:#8999ad;font-size:18px;cursor:pointer}
++.building-inspector-settings-toggle{right:42px}
++.building-inspector-minimize:hover,.building-inspector-settings-toggle:hover{background:#ffffff09;color:#d3dce8}
++.building-inspector.is-collapsed>:not(.building-inspector-heading):not(button){display:none}
++.building-inspector.is-collapsed .building-inspector-heading{border:0}
++.building-inspector-heading small{padding-right:47px}
++.building-inspector-heading{display:flex;align-items:center;gap:10px;flex:none;min-height:86px;padding:12px 40px 12px 10px;border-bottom:1px solid #ffffff10}
++.building-inspector-art{width:64px;height:64px;flex:none;display:grid;place-items:center;color:#cdb58a}
++.building-inspector-art>*{width:100%;height:100%}
++.building-inspector-art .city-building-model-preview{overflow:hidden;background:transparent}
++.building-inspector-art .city-building-model-fallback{display:grid;place-items:center;height:100%}
++.building-inspector-art .city-building-model-fallback svg{width:28px;height:28px}
++.building-inspector-art .city-building-model-fallback>span,.building-inspector-art .city-building-model-fallback>small{display:none}
++.building-inspector-heading>div:last-child{min-width:0}
++.building-inspector-heading small{display:block;max-width:235px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#91a0b2;font-size:10px}
++.building-inspector h2{margin:3px 0 5px;font-size:18px;font-weight:650;line-height:1.25;letter-spacing:-.03em;color:#f0f3f7}
++.building-inspector-heading p{display:flex;gap:9px;align-items:center;margin:0;color:#bac6d3;font-size:10px}
++.building-inspector-heading p span:not(:empty){color:#e1c493;border-left:1px solid #ffffff20;padding-left:9px}
++.building-inspector-tabs{flex:none;display:flex;gap:4px;padding:6px 12px 0;border-bottom:1px solid #ffffff10}
++.building-inspector-tabs button{display:flex;align-items:center;gap:7px;position:relative;flex:1;min-height:32px;padding:6px 8px 9px;border:0;border-radius:6px 6px 0 0;background:transparent;color:#91a1b3;font-size:11px;font-weight:600;cursor:pointer}
++.building-inspector-tabs button[aria-selected=true]{color:#e8cba0;background:#ffffff04}
++.building-inspector-tabs button[aria-selected=true]:after{content:'';position:absolute;left:8px;right:8px;bottom:-1px;height:2px;border-radius:2px;background:#dcc08d}
++.building-inspector-tabs button span{margin-left:auto;font-size:9px;padding:1px 5px;background:#ffffff0d;border-radius:4px;color:#c3cedb}
++.building-inspector-body{flex:1 1 auto;min-height:0;overflow:auto;overscroll-behavior:contain;padding:13px 15px 10px;scrollbar-width:thin;scrollbar-color:#61708455 transparent}
++.building-inspector-description{margin:0 0 13px;font-size:12px;color:#afbdcc;line-height:1.5}
++.building-inspector-effects{border-collapse:collapse;width:100%;font-size:11px;font-variant-numeric:tabular-nums}
++.building-inspector-effects thead th{padding:0 0 7px;color:#8595a7;font-size:9px;font-weight:500;text-align:right}
++.building-inspector-effects thead th:first-child{text-align:left}
++.building-inspector-effects tbody th,.building-inspector-effects td{padding:9px 0;border-top:1px solid #ffffff0b;line-height:1.35}
++.building-inspector-effects tbody th{text-align:left;font-weight:400;color:#b5c1cf;width:52%;padding-right:10px}
++.building-inspector-effects td{text-align:right;white-space:nowrap;color:#8b9bad}
++.building-inspector-effects td:last-child{color:#e9cfaa;font-weight:600}
++.building-inspector-effects td span{color:#6a7a8c;font-size:10px;margin-right:5px}
++.building-inspector-hint{display:block;margin-top:8px;font-size:9px;color:#7e8fa2}
++.building-inspector-footer{flex:none;padding:11px 14px 13px;border-top:1px solid #ffffff12;background:#171e28a0}
++.building-inspector-price{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
++.building-inspector-price .cost{display:flex;gap:13px;margin:0;flex-wrap:wrap;color:#bfac8c}
++.building-inspector-price .cost>span{display:inline-flex;align-items:center;gap:4px}
++.building-inspector-price .cost b{font-size:11px;font-weight:600;color:#d3dce7}
++.building-inspector-price .cost .short,.building-inspector-price .cost .short b{color:#e9a18d}
++.building-inspector-price>span{display:flex;align-items:center;gap:4px;flex:none;color:#92a2b5;font-size:10px;font-variant-numeric:tabular-nums}
++.building-inspector-primary,.building-inspector-training-action .command-button.primary{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:37px;margin:0;border:1px solid #e8cfaa44;border-radius:7px;background:#dfc397;color:#24282f;padding:9px 12px;font-size:12px;font-weight:650;line-height:1.4;cursor:pointer;box-shadow:0 1px 2px #0002}
++.building-inspector-primary:not(:disabled):hover,.building-inspector-training-action .command-button.primary:not(:disabled):hover{background:#edd5b2}
++.building-inspector-primary:disabled,.building-inspector-training-action .command-button.primary:disabled{opacity:1;background:#ffffff07;border-color:#ffffff0c;color:#8291a4;cursor:default;box-shadow:none}
++.building-inspector-shortages,.building-inspector-note,.building-inspector .recruit-blocked{margin:0 0 8px;color:#e9aa95;font-size:10px;line-height:1.5}
++.building-inspector .recruit-blocked{margin:6px 0 0}
++.building-inspector-builder-link{display:flex;align-items:center;gap:5px;width:100%;padding:9px 0 0;background:none;border:0;color:#8e9eb1;font-size:9px;text-align:left;cursor:pointer}
++.building-inspector-builder-link span{margin-left:auto;white-space:nowrap}
++.building-inspector-work-label{margin:0 0 5px;color:#a7b5c4;font-size:10px}
++.building-inspector .village-construction{margin:0;padding:0;border:0;background:none}
++.building-inspector .village-construction h3{display:none}
++.building-inspector .village-queue-open{display:flex;align-items:center;justify-content:space-between;width:100%;padding:0 0 6px;border:0;background:none;color:#e5cba4;text-align:left;font-size:11px}
++.building-inspector .village-queue-open strong{font-size:11px}
++.building-inspector .village-queue-progress{height:3px;border:0;border-radius:2px;background:#ffffff0c;overflow:hidden}
++.building-inspector .village-queue-progress i{display:block;height:100%;background:#cfb789}
++.building-inspector .village-queue-time{display:flex;justify-content:space-between;gap:10px;margin-top:6px;color:#8798ac;font-size:9px}
++.building-inspector .village-queue-time b{font-size:10px;color:#d9c19a}
++.building-inspector-settings{margin:11px 0 0;padding:9px 0 0;border-top:1px solid #ffffff0a;font-size:10px;color:#8192a6}
++.building-inspector-settings>summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:7px}
++.building-inspector-settings>summary:before{content:'+';font-size:13px;color:#8798ab}
++.building-inspector-settings[open]>summary:before{content:'−'}
++.building-inspector-settings>summary::-webkit-details-marker{display:none}
++.building-inspector .city-faction-controls{padding:10px 0 0;border:0;background:none;color:#b4c1d0}
++.building-inspector .city-faction-controls select{max-width:100%;font-size:11px;background:#232d3a;color:#d9e0e9;border:1px solid #ffffff20}
++.building-inspector .city-faction-controls .button{font-size:10px;min-height:30px}
++.building-inspector-science{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px;padding-top:12px;border-top:1px solid #ffffff10}
++.building-inspector-science strong{display:block;font-size:13px;color:#c8d5ef}
++.building-inspector-science small{display:block;margin-top:3px;font-size:9px;color:#8d9db0}
++.building-inspector-science button{display:flex;align-items:center;gap:6px;border:1px solid #ffffff14;border-radius:6px;background:#ffffff04;color:#cbd7e7;padding:7px 9px;font-size:10px;cursor:pointer}
++.building-inspector-complete{display:flex;align-items:center;gap:7px;margin:12px 0 0;color:#d2bd9b;font-size:11px}
++.building-inspector-picker fieldset{border:0;padding:0;margin:0;min-width:0}
++.building-inspector-picker legend{padding:0 0 9px;color:#8497ac;font-size:10px}
++.building-inspector-picker .building-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
++.building-inspector-picker .building-options label{display:flex;align-items:center;gap:7px;min-height:44px;padding:7px 9px;border:1px solid #ffffff10;border-radius:7px;background:#ffffff02;cursor:pointer;color:#b9c6d6}
++.building-inspector-picker .building-options label.chosen{border-color:#cfb68b80;background:#dfc39708;color:#f3dec0}
++.building-inspector-picker .building-options input{flex:none;width:12px;height:12px;margin:0;accent-color:#d6ba89}
++.building-inspector-picker .building-options label>span{font-size:11px;font-weight:550;line-height:1.3}
++.building-inspector-picker .building-options small{display:block;margin-top:2px;color:#74869b;font-size:8px;font-weight:400}
++.building-inspector-picked{margin:11px 0 0;padding-top:10px;border-top:1px solid #ffffff0b;color:#96a8bc;font-size:10px;line-height:1.5}
++.building-inspector-picked strong{display:block;margin-bottom:3px;color:#cdd9e5;font-size:11px}
++.building-inspector-legion{display:flex;align-items:center;gap:10px;margin:0 0 12px;color:#8ea0b4;font-size:10px}
++.building-inspector-legion select{min-width:0;flex:1;height:30px;padding:3px 7px;border:1px solid #ffffff15;border-radius:6px;background:#ffffff04;color:#c4d0df;font-size:10px}
++.building-inspector .army-command{padding:0;margin:0;min-width:0;background:none;color:#cdd6e3}
++.building-inspector .army-recruit-layout{display:block;max-width:none;margin:0}
++.building-inspector .command-panel{padding:0;border:0;border-radius:0;background:none;box-shadow:none}
++.building-inspector .command-recruit-form>h2{display:none}
++.building-inspector .game-unit-choices{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;margin:0 0 10px}
++.building-inspector .game-unit-choices>button{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:4px;min-width:0;min-height:63px;padding:5px 3px;border:1px solid #ffffff10;border-radius:7px;background:#ffffff02;color:#a4b3c5}
++.building-inspector .game-unit-choices>button[aria-pressed=true]{border-color:#ceb38790;background:#dfc39708;color:#ebd2af}
++.building-inspector .game-unit-choices>button>span{font-size:9px;line-height:1.25;min-width:0}
++.building-inspector .game-unit-choices small{display:none}
++.building-inspector .game-unit-choices .fw-troop-icon{width:30px;height:30px;flex:none}
++.building-inspector .command-recruit-form>h3{font-size:12px;margin:0 0 3px;color:#d9e1eb}
++.building-inspector .command-recruit-form>.command-muted{font-size:9px;margin:0 0 10px;color:#7f93a9}
++.building-inspector .command-label{font-size:10px;color:#8ea1b7;margin:0 0 5px}
++.building-inspector .command-quantity{display:flex;gap:5px;margin:0}
++.building-inspector .command-quantity>button{height:30px;min-height:30px;width:32px;padding:2px;background:#ffffff05;border:1px solid #ffffff10;border-radius:5px;color:#b5c4d7;font-size:15px}
++.building-inspector .command-quantity input{height:30px;min-width:0;flex:1;padding:3px 8px;border:1px solid #ffffff14;border-radius:5px;background:#ffffff03;color:#d6e0eb;font-size:12px;text-align:center}
++.building-inspector .recruit-presets{display:flex;gap:5px;margin:6px 0 10px}
++.building-inspector .recruit-presets button{flex:1;min-height:23px;padding:3px 5px;border:1px solid #ffffff0c;border-radius:4px;background:transparent;color:#8398b0;font-size:9px}
++.building-inspector .recruit-presets button[aria-pressed=true]{color:#d8bd93;border-color:#d8bd9340}
++.building-inspector .command-recruit-form>.cost{display:flex;gap:16px;flex-wrap:wrap;font-size:11px;margin:0 0 10px;color:#b2a17e}
++.building-inspector .command-recruit-form>.cost b{color:#cbd6e3;font-size:11px}
++.building-inspector .recruit-timing{display:flex;gap:14px;margin:0;border-top:1px solid #ffffff0b;padding-top:8px}
++.building-inspector .recruit-timing>span{display:flex;gap:7px;align-items:center;flex:1;font-size:8px;color:#7c90a7}
++.building-inspector .recruit-timing b{font-size:10px;color:#b0c0d3}
++.building-inspector-training-queue{margin-top:12px;border-top:1px solid #ffffff0c;padding-top:9px;color:#90a3ba;font-size:10px}
++.building-inspector-training-queue summary{cursor:pointer}
++.building-inspector-training-queue summary b{float:right;color:#d2bc98}
++.building-inspector-training-queue ol{list-style:none;padding:0;margin:8px 0 0;max-height:120px;overflow:auto}
++.building-inspector-training-queue li{display:flex;gap:10px;justify-content:space-between;padding:6px 0;border-top:1px solid #ffffff08;font-size:10px;color:#b7c7d9}
++.building-inspector-training-queue li small{display:block;font-size:8px;color:#768ca7}
++.building-inspector-training-queue time{font-variant-numeric:tabular-nums;color:#c8b189}
++.building-inspector .mage-tower-panel{padding:0;background:none;border:0}
++.building-inspector .mage-tower-panel>p{margin:0 0 14px;font-size:11px;color:#adbed2;line-height:1.6}
++.building-inspector .mage-tower-panel>p small{font-size:10px;color:#8196b1}
++.building-inspector .mage-tower-panel>.button{width:100%;min-height:36px;margin:0;background:#dfc397;border-color:#dfc397;color:#24282f;border-radius:7px;font-size:11px}
++@media(max-width:760px){.building-inspector{top:auto;bottom:calc(72px + env(safe-area-inset-bottom));left:8px;right:8px;width:auto;max-width:none;max-height:min(560px,68dvh);border-radius:15px}.building-inspector-heading{min-height:76px;padding-top:8px;padding-bottom:8px}.building-inspector-art{width:54px;height:54px}.building-inspector h2{font-size:17px}.building-inspector-body{padding:11px 13px 9px}.building-inspector-footer{padding:10px 12px 12px}.building-inspector-effects tbody th,.building-inspector-effects td{padding-top:7px;padding-bottom:7px}.building-inspector-picker .building-options label{min-height:42px}.building-inspector-settings{margin-top:9px;padding-top:8px}}
++@media(max-height:540px) and (min-width:761px){.building-inspector{top:62px;max-height:calc(100dvh - 76px)}}
+diff --git a/src/features/city/ui/BuildingDialog.tsx b/src/features/city/ui/BuildingDialog.tsx
+index 69a3d4b..93967f5 100644
+--- a/src/features/city/ui/BuildingDialog.tsx
++++ b/src/features/city/ui/BuildingDialog.tsx
+@@ -2,12 +2,12 @@ import {ACADEMY_SCIENCE,scienceRate} from '../../research/domain/science';
+ import {researchFactor,trainingBoost} from '../../research/domain/effects';
+ import {useResearchNavigation} from '../../research/ui/ResearchNavigation';
+ import { createPortal } from 'react-dom';
+-import { useState } from 'react';
++import { useEffect, useId, useState } from 'react';
+ import type { World } from '../../../shared/model/world';
+ import type { Command } from '../../../shared/model/commands';
+ import { RESOURCES } from '../../../shared/model/resources';
+ import { Icon } from '../../../shared/ui/Icons';
+-import { Cost, Modal } from '../../../shared/ui/Shared';
++import { Cost } from '../../../shared/ui/Shared';
+ import { clock } from '../../../shared/time/clock';
+ import { BUILDINGS } from '../domain/buildings';
+ import { buildingCost, MAX_BUILDING_LEVEL, upgradeSeconds } from '../domain/construction';
+@@ -22,8 +22,11 @@ import { factionOf } from '../../factions/domain/factions';
+ import { CityDebugPanel } from '../../factions/ui/CityDebugPanel';
+ import { MageTowerPanel } from '../../magic/ui/MageTowerPanel';
+ import { recruitSeconds } from '../../army/domain/recruitment';
+-import { BuildingPicker } from './BuildingPicker';
+-import { CityConstructionQueue } from './CityConstructionQueue';
++import { BuildingChoices, buildingChoiceReason } from './BuildingPicker';
++import { BuildingInspector } from './BuildingInspector';
++import { RECRUIT_RULES, type RecruitUnit } from '../../army/domain/roster';
++import { factionTroopName } from '../../frontier/ui/roster';
++import { CityConstructionQueue, constructionTarget, constructionName } from './CityConstructionQueue';
+ import { RecruitmentPanel } from '../../army/ui/RecruitmentPanel';
+ import { atRecruitmentCity } from '../../army/domain/commandRoom';
+ import { soldierTotal } from '../../army/domain/units';
+@@ -67,40 +70,70 @@ export function BuildingDialog({ world, owner, sid, plot, initialChoice, note, b
+     world: World; owner: string; sid: number; plot: CityPlot; initialChoice: SlotType; note?: string; busy: boolean; now: number; appearance?: 'scene';
+     run: (command: Command, message?: string) => void; onSelect: (key: string) => void; onClose: () => void;
+ }) {
+-    const openResearch=useResearchNavigation();
++    const openResearch = useResearchNavigation(), id = useId();
+     const town = world.settlements.find(s => s.id === sid)!, slots = citySlots(world, sid), resources = liveResources(town, now);
++    const faction = factionOf(town.faction), type = plot.type, empty = plot.slot !== undefined && !type;
++    const military = type === 'barracks' || type === 'stables' || type === 'workshop';
++    const [tab, setTab] = useState<'upgrade' | 'train' | 'spells'>(() => military && plot.level ? 'train' : type === 'mage_tower' && plot.level ? 'spells' : 'upgrade');
++    const activeTab = tab === 'train' && military || tab === 'spells' && type === 'mage_tower' ? tab : 'upgrade';
++    const [choice, setChoice] = useState(initialChoice), [actionContainer, setActionContainer] = useState<HTMLDivElement | null>(null), [settingsOpen,setSettingsOpen] = useState(false);
++    useEffect(() => { setChoice(initialChoice); }, [sid, plot.key, initialChoice]);
+     const legions = world.armies.filter(army => army.owner_id === owner);
+-    const [legionId,setLegionId] = useState(() => (legions.find(army => atRecruitmentCity(army,town,now)) ?? legions[0])?.id);
+-    const [marchRequest,setMarchRequest] = useState<{armyId:number;destination:MarchDestination}|null>(null);
++    const [legionId, setLegionId] = useState(() => (legions.find(army => atRecruitmentCity(army,town,now)) ?? legions[0])?.id);
++    const [marchRequest, setMarchRequest] = useState<{armyId:number;destination:MarchDestination}|null>(null);
+     const legion = legions.find(army => army.id === legionId) ?? legions[0];
+-    const type = plot.type, empty = plot.slot !== undefined && !type;
+     const meta = type ? plot.slot === undefined ? BUILDINGS[type as BuildingType] : SLOT_BUILDINGS[type as SlotType] : null;
+     const max = type && plot.slot !== undefined ? slotMaxLevel(type as SlotType) : MAX_BUILDING_LEVEL, maxed = plot.level >= max;
+     const order = world.orders.find(o => o.owner_id === owner && o.kind === 'upgrade' && (o.settlement_id ?? world.settlements[0].id) === sid);
+-    const cost = type ? plot.slot === undefined ? buildingCost(type as BuildingType, plot.level) : slotCost(type as SlotType, plot.level) : null;
+-    const shortages = cost ? RESOURCES.filter(resource => resources[resource] < cost[resource]).map(resource => `${(cost[resource] - resources[resource]).toLocaleString()} ${resource === 'wood' ? 'timber' : resource}`) : [];
+-    const reason = maxed ? 'Fully developed' : order ? 'Builders are working' : busy ? 'Issuing order…' : cost && !affordable(resources, cost) ? 'More supplies needed' : null;
++    const upgradingThis = !!order && constructionTarget(order) === plot.key;
++    const hasTower = slots.some(slot => slot.building_type === 'mage_tower'), hasBarracks = slots.some(slot => slot.building_type === 'barracks');
++    const picked = SLOT_BUILDINGS[choice];
++    const cost = empty ? slotCost(choice,0) : type ? plot.slot === undefined ? buildingCost(type as BuildingType, plot.level) : slotCost(type as SlotType, plot.level) : null;
++    const shortages = cost ? RESOURCES.filter(resource => resources[resource] < cost[resource]).map(resource => `${Math.ceil(cost[resource] - resources[resource]).toLocaleString()} ${resource === 'wood' ? 'timber' : resource}`) : [];
++    const reason = empty ? buildingChoiceReason(choice,resources,hasTower,hasBarracks,busy,!!order) : maxed ? 'Fully developed' : order ? 'Builders are working' : busy ? 'Issuing order…' : cost && !affordable(resources,cost) ? 'More supplies needed' : null;
+     const fishingUnbuilt = plot.slot === 16 && !slots.some(slot => slot.slot_index === 16);
+     const orderLevel = order ? order.item.startsWith('slot:') ? slots.find(slot => slot.slot_index === Number(order.item.split(':')[1]))?.level ?? 0 : world.buildings.find(building => building.settlement_id === sid && building.building_type === order.item)?.level ?? 0 : 0;
+     const name = meta?.name ?? `Empty plot ${plot.slot! + 1}`;
+     const close = () => { if (typeof document === 'undefined' || !document.querySelector('.mage-spellbook')) onClose(); };
+-    const rows = benefits(world, sid, plot);
+-    const Preview = appearance === 'scene' ? BuildingPreview : BuildingArtwork;
+-    const dialog = <Modal title={type==='academy'?'Academy':'Selected building'} className={`village-building-dialog ${appearance === 'scene' ? 'city-scene-building-dialog' : ''} ${type==='academy'?'academy-dialog':''}`} heading={false} onClose={close}>
+-        <header className="village-building-heading"><span className="eyebrow">{town.name} · {empty ? `PLOT ${plot.slot! + 1}` : plot.slot === 16 ? 'RIVERSIDE SITE' : 'VILLAGE DEVELOPMENT'}</span><h2>{name}</h2>{!empty && <p>{plot.level ? `Level ${plot.level}` : 'Not built'} <span>→ {maxed ? 'Fully developed' : `Level ${plot.level + 1}`}</span></p>}</header>
+-        {note && <p className="village-building-note">{note}</p>}
+-        {empty ? <><p className="village-building-intro">Develop this plot with a building of your choice. Your main building unlocks additional plots as the village grows.</p><BuildingPicker key={`${plot.key}:${initialChoice}`} initialChoice={initialChoice} slot={plot.slot!} resources={resources} hasTower={slots.some(slot => slot.building_type === 'mage_tower')} hasBarracks={slots.some(slot => slot.building_type === 'barracks')} busy={busy} building={!!order} run={run}/><p className="village-building-footnote"><Icon name="time" size={14}/> {clock(upgradeSeconds(0,researchFactor(world,owner,'construction')))} construction time · one construction project at a time.</p></> : <>
+-            <section className="village-building-hero"><Preview type={type!} level={Math.max(1, plot.level)} faction={factionOf(town.faction)} label={`${name}, ${plot.level ? `level ${plot.level}` : 'appearance after construction'}`}/><div className="village-building-hero-info"><span>{maxed ? 'MASTERED' : plot.level ? 'NEXT UPGRADE' : 'NEW CONSTRUCTION'}</span><strong>{maxed ? `Level ${plot.level}` : `Level ${plot.level + 1}`}</strong><p>{maxed ? 'This building is fully developed.' : `${clock(upgradeSeconds(plot.level,researchFactor(world,owner,'construction')))} construction time`}</p>{!plot.level && <small>Preview of the completed building</small>}</div></section>
+-            <section className="village-building-description"><h3>Description</h3><p>{meta!.description}</p></section>
+-            {rows.length > 0 && <section className="village-building-effects"><h3>{maxed ? 'Current benefits' : 'What improves'}</h3><table><thead><tr><th>Benefit</th><th>Current</th>{!maxed && <th>Level {plot.level + 1}</th>}</tr></thead><tbody>{rows.map(row => <tr key={row.name} title={row.help}><th scope="row">{row.name}</th><td>{row.current}</td>{!maxed && <td>{row.next}</td>}</tr>)}</tbody></table>{type && type in WORKERS_PER_LEVEL && <p className="village-building-footnote">Production bonuses are shown before staffing. Keep enough residents and food to run them.</p>}</section>}
+-            {!maxed && <section className="village-upgrade-box"><h3>{plot.level ? 'Upgrade cost' : 'Construction cost'}</h3><Cost cost={cost!} resources={resources}/>{shortages.length > 0 && <p className="village-shortages">Missing {shortages.join(', ')}.</p>}<div className="village-upgrade-action"><button className="button gold" disabled={!!reason} title={reason ?? `${plot.level ? 'Upgrade' : 'Construct'} ${name}. Supplies are paid once when the command is accepted.`} onClick={() => run(plot.slot === undefined ? { type: 'upgrade', item: type as BuildingType } : fishingUnbuilt ? { type: 'buildSlot', slot: 16, item: 'fishery' } : { type: 'upgradeSlot', slot: plot.slot }, `${name} ${plot.level ? 'upgrade' : 'construction'} started`)}>{reason ?? (plot.level ? `Upgrade to level ${plot.level + 1}` : `Construct ${name}`)}</button><span><Icon name="time" size={17}/>{clock(upgradeSeconds(plot.level,researchFactor(world,owner,'construction')))}</span></div><small>One construction project at a time in this village.</small></section>}
+-        </>}
+-        {type==='academy'&&<section className="academy-science"><strong>+{(ACADEMY_SCIENCE[plot.level]??0)*researchFactor(world,owner,'science')} science / min</strong><p>Account total: {scienceRate(world,owner).toLocaleString(undefined,{maximumFractionDigits:1})} / min across all cities.</p><button className="tech-primary" onClick={()=>{onClose();openResearch();}}>Open technology tree <Icon name="arrow" size={16}/></button></section>}
+-        {order && <CityConstructionQueue order={order} level={orderLevel} now={now} onSelect={onSelect}/>}
+-        {type === 'mage_tower' && <MageTowerPanel world={world} sid={sid} level={plot.level} run={run} busy={busy} now={now}/>}
+-        {(type === 'barracks' || type === 'stables' || type === 'workshop') && <section className="village-building-recruitment" aria-label={`${meta?.name} recruitment`}><h3>Recruit &amp; research</h3>{legion ? <><label className="command-label">Recruiting legion<select aria-label="Recruiting legion" value={legion.id} onChange={event=>setLegionId(Number(event.target.value))}>{legions.map(army=><option key={army.id} value={army.id}>{army.name} · {soldierTotal(army)} troops{atRecruitmentCity(army,town,now)?' · At this city':' · Away'}</option>)}</select></label><div className="army-command village-recruitment"><RecruitmentPanel key={`${sid}:${type}:${legion.id}`} embedded buildingOnly={type} world={world} army={legion} city={town} busy={busy} now={now} run={(command,message)=>{if(command.type==='move')setMarchRequest({armyId:command.armyId??legion.id,destination:{kind:'move',x:command.x,y:command.y,label:town.name}});else run(command,message);}}/></div></> : <p>Raise a legion from Armies to recruit troops here.</p>}</section>}
+-        <details className="village-building-settings"><summary>City settings &amp; debug</summary><CityDebugPanel world={world} owner={owner} cityId={sid} target={type ? plot.slot !== undefined && !fishingUnbuilt ? `slot:${plot.slot}` : fishingUnbuilt ? '' : type : ''} name={name} level={plot.level} max={max} busy={busy} run={run}/></details>
+-    </Modal>;
++    const rows = benefits(world,sid,plot), Preview = appearance === 'scene' ? BuildingPreview : BuildingArtwork;
++    const training = military ? world.orders.filter(o => o.owner_id === owner && o.kind === 'recruit' && (o.settlement_id ?? world.settlements[0].id) === sid && RECRUIT_RULES[o.item as RecruitUnit]?.building === type).sort((a,b) => Date.parse(a.finish_at)-Date.parse(b.finish_at)) : [];
++    const tabs = [{key:'upgrade' as const,label:empty?'Build':'Upgrade'}, ...(military?[{key:'train' as const,label:'Train'}]:[]), ...(type==='mage_tower'?[{key:'spells' as const,label:'Spells'}]:[])];
++    const upgrade = () => run(empty ? {type:'buildSlot',slot:plot.slot!,item:choice} : plot.slot === undefined ? {type:'upgrade',item:type as BuildingType} : fishingUnbuilt ? {type:'buildSlot',slot:16,item:'fishery'} : {type:'upgradeSlot',slot:plot.slot!}, `${empty?picked.name:name} ${empty||!plot.level?'construction':'upgrade'} started`);
++    const dialog = <BuildingInspector title={type==='academy'?'Academy':'Selected building'} onClose={close} returnFocusSelector={`[data-building="${plot.key}"]`}>
++        <button className="building-inspector-settings-toggle" aria-label="Building settings" aria-expanded={settingsOpen} title="City settings & debug" onClick={()=>setSettingsOpen(!settingsOpen)}><Icon name="settings" size={14}/></button>
++        <header className="building-inspector-heading">
++            <div className="building-inspector-art">{empty ? <Icon name="town" size={36}/> : <Preview type={type!} level={Math.max(1,plot.level)} faction={faction} label={`${name}, ${plot.level?`level ${plot.level}`:'appearance after construction'}`}/>}</div>
++            <div><small>{town.name}{empty?` · Plot ${plot.slot!+1}`:plot.slot===16?' · Riverside':''}</small><h2>{name}</h2><p>{empty?'Choose what to build':<>Level {plot.level} / {max}<span>{upgradingThis?'Upgrading':maxed?'Complete':!plot.level?'Unbuilt':''}</span></>}</p></div>
++        </header>
++        {tabs.length>1 && <nav className="building-inspector-tabs" role="tablist" aria-label="Building actions">{tabs.map(item=><button key={item.key} role="tab" id={`${id}-${item.key}`} aria-selected={activeTab===item.key} aria-controls={`${id}-panel-${item.key}`} tabIndex={activeTab===item.key?0:-1} onKeyDown={event=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;event.preventDefault();const index=tabs.findIndex(t=>t.key===activeTab),next=event.key==='Home'?0:event.key==='End'?tabs.length-1:(index+(event.key==='ArrowRight'?1:-1)+tabs.length)%tabs.length;setTab(tabs[next].key);document.getElementById(`${id}-${tabs[next].key}`)?.focus();}} onClick={()=>setTab(item.key)}>{item.label}{item.key==='train'&&training.length>0&&<span>{training.length}</span>}</button>)}</nav>}
++        <div className="building-inspector-body">
++            {note && <p className="building-inspector-note">{note}</p>}
++            <div id={`${id}-panel-upgrade`} role={tabs.length>1?'tabpanel':undefined} aria-labelledby={tabs.length>1?`${id}-upgrade`:undefined} hidden={activeTab!=='upgrade'}>
++                {empty ? <div className="building-inspector-picker"><BuildingChoices slot={plot.slot!} choice={choice} onChange={setChoice} hasTower={hasTower} hasBarracks={hasBarracks}/><p className="building-inspector-picked"><strong>{picked.name}</strong>{picked.description}</p></div> : <>
++                    <p className="building-inspector-description">{meta!.description}</p>
++                    {rows.length>0 && <table className="building-inspector-effects"><thead><tr><th>{maxed?'Benefit':'Next level'}</th><th>Now</th>{!maxed&&<th>Lv. {plot.level+1}</th>}</tr></thead><tbody>{rows.map(row=><tr key={row.name} title={row.help}><th scope="row">{row.name}</th><td>{row.current}</td>{!maxed&&<td><span aria-hidden="true">→</span> {row.next}</td>}</tr>)}</tbody></table>}
++                    {type && type in WORKERS_PER_LEVEL && <small className="building-inspector-hint">Production before staffing.</small>}
++                    {type==='academy' && <div className="building-inspector-science"><span><strong>+{(ACADEMY_SCIENCE[plot.level]??0)*researchFactor(world,owner,'science')} / min</strong><small>{scienceRate(world,owner).toLocaleString(undefined,{maximumFractionDigits:1})} account total</small></span><button onClick={()=>{onClose();openResearch();}}>Research <Icon name="arrow" size={14}/></button></div>}
++                    {maxed && <p className="building-inspector-complete"><Icon name="check" size={15}/> Fully developed</p>}
++                </>}
++            </div>
++            {military && <div id={`${id}-panel-train`} role="tabpanel" aria-labelledby={`${id}-train`} hidden={activeTab!=='train'}>
++                {legion ? <><label className="building-inspector-legion">Legion<select aria-label="Recruiting legion" value={legion.id} onChange={event=>setLegionId(Number(event.target.value))}>{legions.map(army=><option key={army.id} value={army.id}>{army.name} · {soldierTotal(army)}{atRecruitmentCity(army,town,now)?'':' · Away'}</option>)}</select></label><div className="army-command building-inspector-recruitment"><RecruitmentPanel key={`${sid}:${type}:${legion.id}`} embedded formOnly actionContainer={actionContainer} buildingOnly={type} world={world} army={legion} city={town} busy={busy} now={now} run={(command,message)=>{if(command.type==='move')setMarchRequest({armyId:command.armyId??legion.id,destination:{kind:'move',x:command.x,y:command.y,label:town.name}});else run(command,message);}}/></div></> : <p>Raise a legion from Armies to recruit here.</p>}
++                {training.length>0 && <details className="building-inspector-training-queue"><summary>Training queue <b>{training.length}</b></summary><ol>{training.map(job=><li key={job.id}><span>{job.quantity} {factionTroopName(faction,job.item as RecruitUnit)}<small>{world.armies.find(army=>army.id===job.army_id)?.name}{Date.parse(job.started_at)>now?' · Queued':''}</small></span><time>{clock(Math.max(0,(Date.parse(job.finish_at)-now)/1000))}</time></li>)}</ol></details>}
++            </div>}
++            {type==='mage_tower' && <div id={`${id}-panel-spells`} role="tabpanel" aria-labelledby={`${id}-spells`} hidden={activeTab!=='spells'}><MageTowerPanel world={world} sid={sid} level={plot.level} run={run} busy={busy} now={now}/></div>}
++            {settingsOpen&&<section className="building-inspector-settings" aria-label="City settings and debug"><CityDebugPanel world={world} owner={owner} cityId={sid} target={type ? plot.slot!==undefined&&!fishingUnbuilt?`slot:${plot.slot}`:fishingUnbuilt?'':type:''} name={name} level={plot.level} max={max} busy={busy} run={run}/></section>}
++        </div>
++        <footer className="building-inspector-footer" hidden={activeTab==='spells'||activeTab==='upgrade'&&maxed&&!order}>
++            <div hidden={activeTab!=='upgrade'}>
++                {upgradingThis ? <><p className="building-inspector-work-label">Builders are working</p><CityConstructionQueue order={order} level={orderLevel} now={now} onSelect={onSelect}/></> : <>
++                    {!maxed && <><div className="building-inspector-price"><Cost cost={cost!} resources={resources} compact/><span title="Construction time"><Icon name="time" size={13}/>{clock(upgradeSeconds(empty?0:plot.level,researchFactor(world,owner,'construction')))}</span></div>{shortages.length>0&&<p className="building-inspector-shortages" role="status">Need {shortages.join(', ')}.</p>}<button className="building-inspector-primary" disabled={!!reason} onClick={upgrade}>{reason ?? (empty?`Build ${picked.name}`:plot.level?`Upgrade to level ${plot.level+1}`:`Construct ${name}`)}{!reason&&<Icon name="arrow" size={15}/>}</button></>}
++                    {order && <button className="building-inspector-builder-link" onClick={()=>onSelect(constructionTarget(order))}><Icon name="time" size={12}/>{constructionName(order)} is building <span>{clock(Math.max(0,(Date.parse(order.finish_at)-now)/1000))} →</span></button>}
++                </>}
++            </div>
++            <div ref={setActionContainer} hidden={activeTab!=='train'} className="building-inspector-training-action"/>
++        </footer>
++    </BuildingInspector>;
+     const shown = marchRequest ? <MarchDialog world={world} playerId={owner} now={now} busy={busy} initialArmyId={marchRequest.armyId} destination={marchRequest.destination} run={run} onClose={()=>setMarchRequest(null)}/> : dialog;
+-    return typeof document === 'undefined' ? shown : createPortal(shown, document.body);
++    return typeof document==='undefined' ? shown : createPortal(shown,document.body);
+ }
+diff --git a/src/features/city/ui/BuildingInspector.tsx b/src/features/city/ui/BuildingInspector.tsx
+new file mode 100644
+index 0000000..3f860f6
+--- /dev/null
++++ b/src/features/city/ui/BuildingInspector.tsx
+@@ -0,0 +1,25 @@
++import { useEffect, useRef, useState, type ReactNode } from 'react';
++
++/** Nonmodal: the city remains selectable and the camera remains usable. */
++export function BuildingInspector({ title, onClose, children, returnFocusSelector }: { title: string; onClose: () => void; children: ReactNode; returnFocusSelector?: string }) {
++    const [collapsed,setCollapsed] = useState(false);
++    const panel = useRef<HTMLElement>(null), origin = useRef<HTMLElement | null>(null), close = useRef(onClose);
++    close.current = onClose;
++    const dismiss = () => { close.current(); requestAnimationFrame(() => { const target = returnFocusSelector ? document.querySelector<HTMLElement>(returnFocusSelector) : origin.current; if (target?.isConnected) target.focus({ preventScroll: true }); }); };
++    useEffect(() => {
++        origin.current = document.activeElement as HTMLElement | null;
++        panel.current?.querySelector<HTMLButtonElement>('.building-inspector-close')?.focus({ preventScroll: true });
++        const key = (event: KeyboardEvent) => {
++            if (!event.ctrlKey && !event.altKey && !event.metaKey && ['q','e'].includes(event.key.toLowerCase()) && panel.current?.contains(document.activeElement)) { event.stopPropagation(); return; }
++            if (event.key !== 'Escape' || document.querySelector('[role="dialog"][aria-modal="true"]')) return;
++            event.preventDefault(); event.stopPropagation(); dismiss();
++        };
++        window.addEventListener('keydown', key, true);
++        return () => window.removeEventListener('keydown', key, true);
++    }, []);
++    return <section className={`building-inspector${collapsed?' is-collapsed':''}`} ref={panel} role="dialog" aria-modal="false" aria-label={title}>
++        <button className="building-inspector-close" aria-label="Close" title="Close (Esc)" onClick={dismiss}>×</button>
++        <button className="building-inspector-minimize" aria-label={collapsed?'Expand building panel':'Minimize building panel'} title={collapsed?'Expand':'Minimize'} aria-expanded={!collapsed} onClick={()=>setCollapsed(!collapsed)}>{collapsed?'+':'−'}</button>
++        {children}
++    </section>;
++}
+diff --git a/src/features/city/ui/BuildingPicker.tsx b/src/features/city/ui/BuildingPicker.tsx
+index e992d08..de21050 100644
+--- a/src/features/city/ui/BuildingPicker.tsx
++++ b/src/features/city/ui/BuildingPicker.tsx
+@@ -5,6 +5,23 @@ import { Cost } from '../../../shared/ui/Shared';
+ import { affordable } from '../domain/economy';
+ import { SLOT_BUILDINGS, slotCost, type SlotType } from '../domain/slots';
+ 
++export function buildingChoiceReason(choice: SlotType, resources: Resources, hasTower: boolean, hasBarracks: boolean, busy: boolean, building: boolean) {
++  return choice === 'mage_tower' && hasTower ? 'One mage tower per city'
++    : choice === 'barracks' && hasBarracks ? 'One barracks per city'
++    : building ? 'Builders are working' : busy ? 'Issuing orders…'
++    : !affordable(resources, slotCost(choice, 0)) ? 'More supplies needed' : null;
++}
++
++export function BuildingChoices({ slot, choice, onChange, hasTower, hasBarracks }: { slot: number; choice: SlotType; onChange: (type: SlotType) => void; hasTower: boolean; hasBarracks: boolean }) {
++  return <fieldset><legend>Choose a building</legend><div className="building-options">
++    {(Object.entries(SLOT_BUILDINGS) as [SlotType, typeof SLOT_BUILDINGS[SlotType]][]).filter(([key]) => key !== 'fishery').map(([key, option]) =>
++      <label key={key} className={choice === key ? 'chosen' : ''}>
++        <input type="radio" name={`plot-${slot}-building`} value={key} checked={choice === key} onChange={() => onChange(key)}/>
++        <span>{option.name}<small>{key === 'mage_tower' ? hasTower ? 'Already built' : 'Unique · 10 levels' : key === 'barracks' ? hasBarracks ? 'Already built' : 'Unique · 5 levels' : 'Repeatable · 5 levels'}</small></span>
++      </label>)}
++  </div></fieldset>;
++}
++
+ export function BuildingPicker({ slot, resources, hasTower, hasBarracks = false, busy, building, run, initialChoice = 'housing' }: {
+   slot: number; resources: Resources; hasTower: boolean; hasBarracks?: boolean; busy: boolean; building: boolean;
+   run: (command: Command, message?: string) => void;
+@@ -12,18 +29,9 @@ export function BuildingPicker({ slot, resources, hasTower, hasBarracks = false,
+ }) {
+   const [choice, setChoice] = useState<SlotType>(initialChoice);
+   const item = SLOT_BUILDINGS[choice], cost = slotCost(choice, 0);
+-  const reason = choice === 'mage_tower' && hasTower ? 'One mage tower per city'
+-    : choice === 'barracks' && hasBarracks ? 'One barracks per city'
+-    : building ? 'Builders are working' : busy ? 'Issuing orders…'
+-    : !affordable(resources, cost) ? 'More supplies needed' : null;
++  const reason = buildingChoiceReason(choice, resources, hasTower, hasBarracks, busy, building);
+   return <div className="building-picker">
+-    <fieldset><legend>Choose a building</legend><div className="building-options">
+-      {(Object.entries(SLOT_BUILDINGS) as [SlotType, typeof item][]).filter(([key]) => key !== 'fishery').map(([key, option]) =>
+-        <label key={key} className={choice === key ? 'chosen' : ''}>
+-          <input type="radio" name={`plot-${slot}-building`} value={key} checked={choice === key} onChange={() => setChoice(key)}/>
+-          <span>{option.name}<small>{key === 'mage_tower' ? hasTower ? 'Already built' : 'Unique · 10 levels' : key === 'barracks' ? hasBarracks ? 'Already built' : 'Unique · 5 levels' : 'Repeatable · 5 levels'}</small></span>
+-        </label>)}
+-    </div></fieldset>
++    <BuildingChoices slot={slot} choice={choice} onChange={setChoice} hasTower={hasTower} hasBarracks={hasBarracks}/>
+     <div className="building-preview"><h3>{item.name}</h3><p>{item.description}</p><div className="benefit">{item.effect}</div>
+       <label className="field-label">Construction cost</label><Cost cost={cost} resources={resources}/>
+       <button className="button gold" disabled={!!reason} onClick={() => run({ type: 'buildSlot', slot, item: choice }, `${item.name} construction started`)}>{reason ?? `Build ${item.name}`}</button>
+diff --git a/tests/e2e/building-inspector.spec.ts b/tests/e2e/building-inspector.spec.ts
+new file mode 100644
+index 0000000..05c5e44
+--- /dev/null
++++ b/tests/e2e/building-inspector.spec.ts
+@@ -0,0 +1,95 @@
++import { test, expect, type Page } from '@playwright/test';
++import { createSolo } from '../../src/features/campaign/domain/newRealm';
++import { refreshCityEconomy } from '../../src/features/city/domain/slots';
++import { BUILDINGS } from '../../src/features/city/domain/buildings';
++
++async function start(page: Page, painted = false) {
++    const world = createSolo('Inspector'), town = world.settlements[0];
++    world.buildings.forEach(building => { building.level = building.building_type === 'market' ? 2 : 3; });
++    world.city_slots = [{settlement_id:town.id,slot_index:0,building_type:'barracks',level:3},{settlement_id:town.id,slot_index:1,building_type:'mage_tower',level:4},{settlement_id:town.id,slot_index:2,building_type:'academy',level:2}];
++    refreshCityEconomy(world,town.id);
++    await page.addInitScript(w => {
++        if(!localStorage.getItem('peris-campaign-v6'))localStorage.setItem('peris-campaign-v6',JSON.stringify(w));
++        localStorage.setItem('peris-settings',JSON.stringify({sound:false,music:false,reducedMotion:true}));
++        localStorage.setItem(`peris-welcome:${w.players[0].id}:${w.players[0].created_at}`,'yes');
++    },world);
++    await page.goto('/'); await page.getByRole('button',{name:'Continue campaign',exact:true}).click();
++    await page.getByRole('button',{name:'City',exact:true}).click();
++    if(!painted)await page.getByRole('button',{name:'3D',exact:true}).click();
++    if(!painted)await expect(page.locator('.city-3d-scene.ready canvas')).toBeVisible();
++    return world;
++}
++const panel = (page: Page) => page.locator('.building-inspector');
++
++test('compact upgrades leave the city visible and allow direct selection of another building', async ({page,isMobile},info) => {
++    await start(page); await page.locator('[data-building="market"]').click();
++    await expect(panel(page)).toHaveAttribute('aria-modal','false');
++    await expect(page.locator('.modal-backdrop')).toHaveCount(0);
++    const rect=(await panel(page).boundingBox())!, size=page.viewportSize()!;
++    expect(rect.width).toBeLessThanOrEqual(isMobile?size.width-12:390);
++    expect(rect.height).toBeLessThan(460);
++    expect(rect.width*rect.height/(size.width*size.height)).toBeLessThan(isMobile?.65:.18);
++    await expect(panel(page).getByRole('button',{name:'Upgrade to level 3',exact:true})).toBeInViewport();
++    await expect(panel(page).getByRole('table')).toContainText('Building plots');
++    await page.screenshot({path:info.outputPath('main-building.png')});
++    if(isMobile){await panel(page).getByRole('button',{name:'Minimize building panel',exact:true}).click();expect((await panel(page).boundingBox())!.height).toBeLessThan(100);}
++    await page.locator('[data-building="lumber"]').click();
++    await expect(panel(page).getByRole('heading',{name:BUILDINGS.lumber.name,exact:true})).toBeVisible();
++    await expect(page.locator('.building-inspector')).toHaveCount(1);
++    await page.keyboard.press('Escape'); await expect(panel(page)).toHaveCount(0);
++    await expect(page.locator('[data-building="lumber"]')).toBeFocused();
++    await page.locator('[data-building="market"]').click();
++    await panel(page).getByRole('button',{name:'Upgrade to level 3',exact:true}).click();
++    await expect(panel(page)).toContainText('Builders are working');
++    await expect(panel(page).getByRole('progressbar')).toBeVisible();
++    const orders=await page.evaluate(()=>JSON.parse(localStorage.getItem('peris-campaign-v6')!).orders);
++    expect(orders.filter((order:{kind:string;item:string})=>order.kind==='upgrade'&&order.item==='market')).toHaveLength(1);
++    await page.screenshot({path:info.outputPath('construction.png')});
++});
++
++test('plot picker has a pinned build action and preserves unique building rules', async ({page},info) => {
++    await start(page); await page.locator('[data-building="slot:3"]').click();
++    await expect(panel(page).getByRole('radio')).toHaveCount(9);
++    await panel(page).getByRole('radio',{name:/^Barracks/}).check();
++    await expect(panel(page).getByRole('button',{name:'One barracks per city',exact:true})).toBeDisabled();
++    await panel(page).getByRole('radio',{name:/^Housing/}).check();
++    await expect(panel(page).getByRole('button',{name:'Build Housing',exact:true})).toBeInViewport();
++    await page.screenshot({path:info.outputPath('empty-plot.png')});
++    await panel(page).getByRole('button',{name:'Build Housing',exact:true}).click();
++    await expect(panel(page)).toContainText('Builders are working');
++    expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('peris-campaign-v6')!).city_slots.find((slot:{slot_index:number})=>slot.slot_index===3)?.building_type)).toBe('housing');
++});
++
++test('training keeps its action visible, preserves quantity across tabs and nests the spellbook safely', async ({page,isMobile},info) => {
++    const errors:string[]=[];page.on('pageerror',error=>errors.push(error.message));
++    await start(page); await page.locator('[data-building="slot:0"]').click();
++    await expect(panel(page).getByRole('tab',{name:'Train',exact:true})).toHaveAttribute('aria-selected','true');
++    await panel(page).getByLabel('Soldiers to train',{exact:true}).fill('10');
++    await panel(page).getByRole('tab',{name:'Upgrade',exact:true}).click();
++    await expect(panel(page).getByRole('button',{name:'Upgrade to level 4',exact:true})).toBeInViewport();
++    await panel(page).getByRole('tab',{name:'Train',exact:true}).click();
++    await expect(panel(page).getByLabel('Soldiers to train',{exact:true})).toHaveValue('10');
++    await expect(panel(page).getByRole('button',{name:/^Train 10 /})).toBeInViewport();
++    await page.screenshot({path:info.outputPath('barracks.png')});
++    await panel(page).getByRole('button',{name:/^Train 10 /}).click();
++    await expect(panel(page).locator('.building-inspector-training-queue')).toBeVisible();
++    if(isMobile)await panel(page).getByRole('button',{name:'Minimize building panel',exact:true}).click();
++    await page.locator('[data-building="slot:1"]').click();
++    await panel(page).getByRole('button',{name:/Open spellbook/}).click();
++    const spellbook=page.getByRole('dialog',{name:'Mage tower · Spellbook',exact:true});
++    await expect(spellbook).toBeVisible(); await page.keyboard.press('Escape');
++    await expect(spellbook).toHaveCount(0); await expect(panel(page)).toBeVisible();
++    await page.keyboard.press('Escape'); await expect(panel(page)).toHaveCount(0);
++    expect(errors).toEqual([]);
++});
++
++test('short screens keep actions above the bottom navigation and painted view shares the inspector',async({page,isMobile},info)=>{
++    await page.setViewportSize(isMobile?{width:320,height:640}:{width:1280,height:600});
++    await start(page,true);
++    await page.getByRole('button',{name:/^Main building,/}).click();
++    await expect(panel(page).getByRole('button',{name:'Upgrade to level 3',exact:true})).toBeInViewport();
++    await expect(panel(page).getByRole('img')).toBeVisible();
++    const rect=(await panel(page).boundingBox())!;expect(rect.y).toBeGreaterThan(50);expect(rect.y+rect.height).toBeLessThan(page.viewportSize()!.height-10);
++    expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
++    await page.screenshot({path:info.outputPath('painted-small-screen.png')});
++});

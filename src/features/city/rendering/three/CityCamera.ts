@@ -4,9 +4,10 @@ import { cityGrowth } from '../../domain/slots';
 
 /** Local presentation camera. Never changes settlement or plot coordinates. */
 export class CityCamera {
-    readonly camera = new THREE.OrthographicCamera(-12, 12, 8, -8, .1, 160);
+    readonly camera = new THREE.OrthographicCamera(-12, 12, 8, -8, .1, 400);
     readonly target = new THREE.Vector3();
     rotation = 0;
+    distance = 70;
     private desiredRotation = 0;
     private width = 1;
     private height = 1;
@@ -60,7 +61,11 @@ export class CityCamera {
         const halfHeight = Math.max(11.5 * diagonalRoom, 15 / aspect) * this.growth;
         Object.assign(this.camera, { left: -halfHeight * aspect, right: halfHeight * aspect, top: halfHeight, bottom: -halfHeight });
         const angle = this.rotation + Math.PI/7, radius = Math.hypot(3.6, 24.2);
-        this.camera.position.set(this.target.x + Math.sin(angle) * radius, 22, this.target.z + Math.cos(angle) * radius);
+        // Orthographic framing is independent of distance. Retreat along the same
+        // viewing direction so wide portrait views cannot cross the near plane.
+        this.distance = Math.max(70, halfHeight / this.camera.zoom * 1.8);
+        const retreat = this.distance / Math.hypot(radius, 22);
+        this.camera.position.set(this.target.x + Math.sin(angle) * radius * retreat, 22 * retreat, this.target.z + Math.cos(angle) * radius * retreat);
         this.camera.lookAt(this.target); this.camera.updateProjectionMatrix(); this.camera.updateMatrixWorld();
     }
 }

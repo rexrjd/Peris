@@ -1,0 +1,76 @@
+{
+  "version": "19.11",
+  "title": "A living town",
+  "base_commit": "b790d22c61c2c383b7aad2dd71ce000165ac74c4",
+  "latest_main_checked": "b790d22c61c2c383b7aad2dd71ce000165ac74c4",
+  "created": "2026-10-17",
+  "files": [
+    {
+      "path": "ARTWORK.md",
+      "bytes": 29195,
+      "sha256": "bd730e58b72ffacdee2186ed4f5bf38ceb3503bd3c1991346129a3b5ede90783"
+    },
+    {
+      "path": "src/features/city/rendering/three/CityScene.ts",
+      "bytes": 17880,
+      "sha256": "2054e90a1293df0a37c9d4a89d067ad4502ce4576b208bcbdad384b641707d70"
+    },
+    {
+      "path": "src/features/city/rendering/three/villagers.ts",
+      "bytes": 4084,
+      "sha256": "810e18a035f461fbc4e9532260667c59bb3eb0e181821eafdae83be3742985f0"
+    },
+    {
+      "path": "src/features/city/rendering/three/cityLife.ts",
+      "bytes": 10680,
+      "sha256": "a210630f4caca6ee563831bba430531bec6c0605815f428bfd220ab93d6b4e52"
+    },
+    {
+      "path": "tests/city-life.test.ts",
+      "bytes": 4383,
+      "sha256": "6296d1007571116fbe5f10870e45e84487c09e46d090c55373fc75fe6049c38e"
+    },
+    {
+      "path": "tests/e2e/city-life.spec.ts",
+      "bytes": 3450,
+      "sha256": "ab9295414bf336f90260bba040830c62563f5e4255685eca2376ad751ad93ea0"
+    },
+    {
+      "path": "living-town.patch",
+      "bytes": 29434,
+      "sha256": "f9da693a3472c387c9301e7d0e258b0e1ae5026753419b4bd79e75ff3a275645"
+    },
+    {
+      "path": "LIVING_TOWN_README.txt",
+      "bytes": 2531,
+      "sha256": "fae360f801d2021b165abb1f8e389cf18f6acf16519f59d97eeb2b9cafd04d32"
+    }
+  ],
+  "validation": {
+    "production_build": "passed",
+    "unit_tests": {
+      "passed": 470,
+      "skipped": 1,
+      "failed": 0
+    },
+    "final_focused_tests": {
+      "passed": 7,
+      "failed": 0
+    },
+    "desktop_mobile_browser_tests": {
+      "passed": 23,
+      "skipped": 1,
+      "failed": 0
+    },
+    "asset_tooling_tests": {
+      "passed": 5,
+      "failed": 0
+    },
+    "assets": {
+      "glb_models_verified": 46,
+      "rally_point_paintings_verified": 33
+    },
+    "git_diff_check": "passed",
+    "patch_reverse_check": "passed"
+  }
+}

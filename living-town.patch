@@ -1,0 +1,369 @@
+diff --git a/ARTWORK.md b/ARTWORK.md
+index dc6ca2e..89ed7e5 100644
+--- a/ARTWORK.md
++++ b/ARTWORK.md
+@@ -272,3 +272,26 @@ material-batched; custom arch source geometries are disposed after batching.
+ The accepted wall sections, resource sites, city growth and gameplay rules are
+ preserved. All geometry is original procedural Peris artwork, with no new image,
+ GLB, external asset or SQL migration.
++
++## V19.11 living town details
++
++The native 3D city adds hanging street lanterns, flower baskets, coordinated
++flower beds, terracotta pots, courtyard barrels and crates, and a striped produce
++stall in the existing civic square. The square's benches have backrests and one
++resident reading; a shopkeeper gestures beside the stall. Street lights use shared
++instanced meshes and emissive glass rather than individual dynamic lights. Flower
++stems, petals and centres are instanced with faction-aware colours. All props are
++original procedural Peris geometry and use the existing faction material family.
++
++Lantern bases avoid the rendered streets and every reserved city lot. Flowers and
++household props follow completed buildings; empty or unfinished plots retain their
++normal construction presentation. The town details rebuild with city growth,
++construction, demolition or faction changes and release their geometry/materials.
++Twenty-two resident silhouettes walk at varied speeds, stop briefly at destinations
++and carry fewer identical parcels. The existing route geometry remains unchanged.
++
++Town gestures and subtle lantern flicker follow the scene's existing reduced-motion
++and hidden-tab scheduling. The painted village, world map, building selection,
++production, population, saves and multiplayer rules retain their existing behaviour.
++No new image, GLB, dependency or SQL migration is introduced. GPU frame rate has
++not been benchmarked.
+diff --git a/src/features/city/rendering/three/CityScene.ts b/src/features/city/rendering/three/CityScene.ts
+index bdaf52d..e1b9979 100644
+--- a/src/features/city/rendering/three/CityScene.ts
++++ b/src/features/city/rendering/three/CityScene.ts
+@@ -14,6 +14,7 @@ import { createCityActivities } from './cityActivities';
+ import { createCityDistricts, createEmptyCityPlot } from './cityDistricts';
+ import { CityTrainingYard } from './cityTraining';
+ import { createCityResource, isCityResource } from './resourceModels';
++import { createCityLife } from './cityLife';
+ import type { CityTraining } from '../../domain/training';
+ 
+ /** Presentation only. Selection returns through React; upgrades stay in the engine. */
+@@ -46,8 +47,10 @@ export class CityScene {
+     private faction:Faction='roman';
+     private landscape = createCityLandscape();
+     private districts = new THREE.Group();
++    private townLife = createCityLife([], 'roman', 0);
+     private villagers = createVillagers();
+     private lastFrame = 0;
++    private lastReduced: boolean | undefined;
+     private layoutSignature = "";
+     private down: { x: number; y: number } | null = null;
+ 
+@@ -62,7 +65,7 @@ export class CityScene {
+         const sun = new THREE.DirectionalLight(0xffe6bd, 2.2); sun.position.set(-18, 28, 12); sun.castShadow = true;
+         sun.shadow.mapSize.set(1024, 1024); Object.assign(sun.shadow.camera, { left: -36, right: 36, top: 36, bottom: -36, near: .1, far: 100 });
+         sun.shadow.bias = -.0004; sun.shadow.normalBias = .035;
+-        this.scene.add(sun, sun.target, this.landscape, this.villagers.group, this.activities.group, this.districts, this.training.group);
++        this.scene.add(sun, sun.target, this.landscape, this.villagers.group, this.activities.group, this.districts, this.training.group, this.townLife.group);
+ 
+         const ring = (color: number, opacity: number) => {
+             const mesh = new THREE.Mesh(new THREE.RingGeometry(.985, 1, 4), new THREE.MeshBasicMaterial({ color, opacity, transparent: true, depthWrite: false, side: THREE.DoubleSide }));
+@@ -119,6 +122,8 @@ export class CityScene {
+         }
+         this.scene.remove(this.districts);disposeCityObject(this.districts);
+         this.districts=createCityDistricts(this.plots,faction);this.scene.add(this.districts);
++        this.scene.remove(this.townLife.group);disposeCityObject(this.townLife.group);
++        this.townLife=createCityLife(this.plots,faction,this.mainLevel);this.scene.add(this.townLife.group);
+         this.villagers.setPlots(this.plots,growth,this.mainLevel);
+         this.activities.setModels(this.models, this.plots, faction);
+         this.training.setTraining(training,this.plots,faction);
+@@ -146,6 +151,8 @@ export class CityScene {
+         this.frame = requestAnimationFrame(time => {
+             this.frame = 0; if (this.destroyed || document.hidden) return;
+             const reduced = this.reduced;
++            // Draw the resting pose even when preference changes inside the 33ms throttle.
++            if (reduced !== this.lastReduced) { this.lastReduced = reduced; this.dirty = true; }
+             if (time - this.lastFrame >= 33 || this.dirty) {
+                 const delta = this.lastFrame ? Math.min(.1, (time - this.lastFrame) / 1000) : 0;
+                 this.lastFrame = time; this.dirty = false;
+@@ -154,12 +161,16 @@ export class CityScene {
+                 if (this.scene.fog instanceof THREE.Fog) { this.scene.fog.near = this.view.distance + 45; this.scene.fog.far = this.view.distance + 150; }
+                 this.villagers.animate(reduced ? 0 : this.animationTime * 1000);
+                 this.activities.animate(this.animationTime, reduced);
++                this.townLife.animate(this.animationTime, reduced);
+                 this.training.animate(this.animationTime, reduced);
+                 this.renderer.render(this.scene, this.camera);
+                 this.canvas.dataset.cityZoom = this.camera.zoom.toFixed(3);
+                 this.canvas.dataset.cityRotation = this.view.rotation.toFixed(3);
+                 this.canvas.dataset.cityTraining = this.training.state;
+                 this.canvas.dataset.cityTrainingPhase = (reduced ? 0 : this.animationTime).toFixed(2);
++                this.canvas.dataset.cityLanterns = String(this.townLife.group.userData.cityLife.lanterns);
++                this.canvas.dataset.cityFlowers = String(this.townLife.group.userData.cityLife.flowers);
++                this.canvas.dataset.cityLifePhase = (reduced ? 0 : this.animationTime).toFixed(2);
+                 for (const plot of this.plots) {
+                     const button = this.labelRoot.querySelector<HTMLElement>(`[data-building="${plot.key}"]`);
+                     if (!button) continue;
+diff --git a/src/features/city/rendering/three/cityLife.ts b/src/features/city/rendering/three/cityLife.ts
+new file mode 100644
+index 0000000..fa8aaef
+--- /dev/null
++++ b/src/features/city/rendering/three/cityLife.ts
+@@ -0,0 +1,138 @@
++import * as THREE from 'three';
++import { FACTIONS, type Faction } from '../../../factions/domain/factions';
++import { cityGrowth } from '../../domain/slots';
++import { cityFootprint, type CityPlot } from './layout';
++import { cityStreetClearance } from './cityStreets';
++import { cityKit } from './modelKit';
++
++type Placement = { x: number; z: number; y?: number; angle?: number; scale?: number; tone?: number };
++type LanternPlacement = Placement & { kind: 'street' | 'gate' | 'square' };
++
++/** Clear of walking surfaces and every reserved building lot, including empty ones. */
++export function cityLanternPlacements(plots: CityPlot[], mainLevel: number): LanternPlacement[] {
++    if (!plots.some(p => p.level > 0 && p.type !== 'wall')) return [];
++    const g = cityGrowth(mainLevel), f = cityFootprint(mainLevel), result: LanternPlacement[] = [];
++    const add = (x: number, z: number, angle: number, kind: LanternPlacement['kind']) => {
++        x *= g; z *= g;
++        if (cityStreetClearance(x / g, z / g, mainLevel) * g < .1) return;
++        if (plots.some(p => p.slot !== undefined && p.slot < 16 && Math.abs(x - p.x) < 1.69 && Math.abs(z - p.z) < 1.69)) return;
++        result.push({ x, z, angle, kind });
++    };
++    const rows = Math.ceil(plots.filter(p => p.slot !== undefined && p.slot < 16).length / 4);
++    for (let row = 0; row < rows; row++) for (const side of [-1, 1]) {
++        add(side * .8, row * 4 + .23, side < 0 ? 0 : Math.PI, 'street');
++        if (row % 2 === 0) add(side * 7.1, row * 4 + .23, side < 0 ? Math.PI : 0, 'street');
++    }
++    for (const side of [-1, 1]) add(side * 1.2, f.front + 1.12, side < 0 ? 0 : Math.PI, 'gate');
++    return result;
++}
++
++/** Repeated props share geometry/materials; no separate light or draw per lantern. */
++function instances(prototype: THREE.Group, positions: Placement[], name: string, petalColors?: readonly number[]) {
++    const group = new THREE.Group(), transform = new THREE.Object3D(); group.name = name;
++    for (const source of prototype.children) {
++        if (!(source instanceof THREE.Mesh)) continue;
++        const mesh = new THREE.InstancedMesh(source.geometry, source.material, positions.length);
++        mesh.castShadow = name === 'Street lanterns'; mesh.receiveShadow = true;
++        positions.forEach((p, i) => {
++            transform.position.set(p.x, p.y ?? 0, p.z); transform.rotation.set(0, p.angle ?? 0, 0); transform.scale.setScalar(p.scale ?? 1); transform.updateMatrix(); mesh.setMatrixAt(i, transform.matrix);
++            if (petalColors && !Array.isArray(source.material) && source.material.name === 'Town flower petals') mesh.setColorAt(i, new THREE.Color(petalColors[(p.tone ?? i) % petalColors.length]));
++        });
++        mesh.computeBoundingSphere(); group.add(mesh);
++    }
++    prototype.clear(); return group;
++}
++
++function lantern(faction: Faction) {
++    const k = cityKit(faction), { m, box, cylinder, cone } = k;
++    const glow = new THREE.MeshStandardMaterial({ color: faction === 'undead' ? 0xc6b8e4 : faction === 'demon' ? 0xf1ad73 : 0xffd998, emissive: faction === 'undead' ? 0x9e7bbf : 0xffb15c, emissiveIntensity: .8, roughness: .65, flatShading: true });
++    glow.name = 'Town lantern glass';
++    cylinder(.09, .12, 0, 0, 0, m.darkStone); cylinder(.045, 1.37, 0, .08, 0, faction === 'elf' || faction === 'orc' || faction === 'pandaren' ? m.wood : m.dark);
++    box(.38, .055, .055, .15, 1.32, 0, m.dark); box(.035, .14, .035, .28, 1.19, 0, m.dark);
++    if (faction === 'pandaren') {
++        cylinder(.13, .25, .28, .94, 0, glow); cylinder(.145, .045, .28, 1.19, 0, m.roof); cylinder(.13, .04, .28, .91, 0, m.gold); cylinder(.012, .13, .28, .78, 0, m.roof);
++    } else {
++        box(.19, .24, .19, .28, .95, 0, glow);
++        for (const dx of [-.105, .105]) for (const dz of [-.105, .105]) box(.023, .29, .023, .28 + dx, .92, dz, m.dark);
++        box(.25, .045, .25, .28, .91, 0, m.dark); cone(.18, .12, .28, 1.2, 0, m.slate);
++    }
++    return { prototype: k.finish(), glow };
++}
++
++function flower(faction: Faction) {
++    const k = cityKit(faction), { m, cylinder, box } = k;
++    const petals = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 1, flatShading: true }); petals.name = 'Town flower petals';
++    cylinder(.012, .27, 0, 0, 0, m.leaf);
++    for (const side of [-1, 1]) { const leaf = box(.1, .016, .05, side * .04, .12, 0, m.leaf); leaf.rotation.z = side * .35; }
++    for (let i = 0; i < 5; i++) { const a = i * Math.PI * 2 / 5; box(.095, .033, .07, Math.cos(a) * .055, .27, Math.sin(a) * .055, petals, -a); }
++    cylinder(.035, .038, 0, .28, 0, m.gold); return k.finish();
++}
++
++/** Native-city dressing only. Nothing is serialized or added to the economy. */
++export function createCityLife(plots: CityPlot[], faction: Faction, mainLevel: number) {
++    const group = new THREE.Group(); group.name = 'Living town details';
++    const k = cityKit(faction, true), { m, box, cylinder, rock } = k, g = cityGrowth(mainLevel), f = cityFootprint(mainLevel);
++    const flowers: Placement[] = [], lanterns = cityLanternPlacements(plots, mainLevel), gestures: THREE.Group[] = [];
++    const colors = faction === 'undead' ? [0xa28ab9, 0xded4dd, 0xb78fa4] : faction === 'demon' ? [0xd97e48, 0xc34b46, 0xefd195] : [0xc95d68, 0xe8be79, 0xe9daca, 0xa68ab4];
++    let bouquetIndex = 0;
++    const bouquet = (x: number, y: number, z: number, n = 5) => {
++        const tone = bouquetIndex++ % colors.length;
++        for (let i = 0; i < n; i++) { const a = i * Math.PI * 2 / n; flowers.push({ x: x + Math.cos(a) * .1, z: z + Math.sin(a) * .1, y, scale: .85 + i % 3 * .12, angle: a, tone }); }
++    };
++    const pot = (x: number, z: number, y = 0) => { cylinder(.145, .23, x, y, z, m.roofLight); cylinder(.18, .045, x, y + .2, z, m.roof); cylinder(.13, .025, x, y + .23, z, m.earth); bouquet(x, y + .24, z); };
++    const barrel = (x: number, z: number) => { cylinder(.15, .35, x, 0, z, m.timber); for (const y of [.07,.26]) cylinder(.16, .035, x, y, z, m.dark); };
++    const crate = (x: number, z: number, y = 0) => { box(.3, .28, .3, x, y, z, m.timber); for (const side of [-1,1]) box(.035, .28, .32, x + side * .12, y, z, m.wood); box(.32,.04,.32,x,y+.25,z,m.wood); };
++    // Blooms sit above the existing shrubs, following their existing courtyards.
++    for (const plot of plots) {
++        if (!plot.level || plot.type === 'wall' || ['lumber','quarry','farm','fishery'].includes(plot.type ?? '')) continue;
++        const main = plot.type === 'market', w = main ? 4.3 : 3.2, d = main ? 3.65 : 3.2;
++        for (const side of [-1,1]) bouquet(plot.x + side * (w / 2 - .3), .4, plot.z + d / 2 - .34, 4);
++        if (plot.type === 'housing') { pot(plot.x - .65, plot.z + 1.0); barrel(plot.x + .85,plot.z + 1.0); }
++        if (plot.type === 'warehouse' || plot.type === 'granary') { crate(plot.x + 1.05,plot.z + .8); crate(plot.x + 1.05,plot.z + .8,.28); barrel(plot.x - .95,plot.z + .8); }
++        if (plot.type === 'academy') { pot(plot.x + .8,plot.z + 1.0); box(.22,.025,.16,plot.x-1.2,.235,plot.z+1.1,m.roof); }
++        if (main) {
++            for (const side of [-1,1]) {
++                pot(plot.x + side * 1.92,plot.z + 3.1);
++                // Backrests complete the benches already built into the square.
++                box(.85,.18,.045,plot.x+side*1.1,.43,plot.z+3.0,m.timber);
++                for(const dx of [-.3,.3])box(.035,.43,.045,plot.x+side*1.1+dx,.18,plot.z+3.0,m.wood);
++            }
++            if (plot.level >= 2) {
++                // A reader occupies one of the existing benches, clear of its approach.
++                const rx=plot.x+1.1,rz=plot.z+3.1,sit=FACTIONS[faction].scale;
++                box(.17*sit,.22*sit,.14*sit,rx,.28,rz,m.roof);rock(.09*sit,rx,.28+.25*sit,rz,m.skin);
++                for(const side of [-1,1]){box(.055*sit,.055,.2*sit,rx+side*.05*sit,.25,rz+.09*sit,m.wood);box(.055*sit,.23,.055*sit,rx+side*.05*sit,.02,rz+.18*sit,m.wood);box(.05*sit,.17*sit,.055*sit,rx+side*.11*sit,.31,rz+.035*sit,m.skin);}
++                box(.17,.025,.14,rx,.4,rz+.12,m.light);box(.015,.03,.14,rx,.4,rz+.12,m.roof);
++                const x = plot.x - 1.25, z = plot.z + 1.7;
++                // A small striped produce stall belongs to the existing civic square.
++                for(const dx of [-.49,.49])for(const dz of [-.37,.37])box(.045,1.08,.045,x+dx,0,z+dz,m.wood);
++                for(let i=0;i<7;i++){const cloth=box(1.16/7,.04,.94,x-.58+(i+.5)*1.16/7,1.08,z,i%2?m.light:m.roofLight);cloth.rotation.x=.12;box(1.16/7,.12,.035,x-.58+(i+.5)*1.16/7,.92,z+.47,i%2?m.light:m.roofLight);}
++                box(.93,.4,.42,x,0,z+.14,m.wood);box(1.02,.065,.5,x,.4,z+.14,m.timber);
++                for(const dx of [-.29,0,.29]){cylinder(.1,.045,x+dx,.465,z+.14,m.timber);for(let i=0;i<3;i++)rock(.045,x+dx+(i-1)*.04,.51,z+.14,i%2?m.gold:m.roofLight);}
++                barrel(x-.7,z+.12);crate(x+.65,z+.12);
++                // One shopkeeper gestures gently, using the existing tiny resident style.
++                const vx=x,vz=z-.16,s=FACTIONS[faction].scale;
++                box(.17*s,.24*s,.14*s,vx,.18*s,vz,m.slate);rock(.09*s,vx,.45*s,vz,m.skin);
++                for(const dx of [-.05,.05])box(.055*s,.18*s,.06*s,vx+dx*s,0,vz,m.wood);
++                const arm=new THREE.Group();arm.position.set(vx+.11*s,.36*s,vz);k.group.add(arm);arm.add(box(.055*s,.21*s,.055*s,0,-.17*s,0,m.skin));k.motion(arm,'townGreeting');gestures.push(arm);
++            }
++        }
++    }
++    // The avenue gets roses in its existing beds, never on an unoccupied lot.
++    if (plots.some(p=>p.level>0&&p.type!=='wall')) for(const side of [-1,1])for(let z=.9;z<f.front-1;z+=4) {
++        const x=side*.76*g,pz=z*g;
++        if(plots.some(p=>p.slot!==undefined&&p.slot<16&&Math.abs(x-p.x)<1.8&&Math.abs(pz-p.z)<1.8))continue;
++        for(const dz of [-.16,.16])bouquet(x,.28,pz+dz*g,3);
++    }
++    // Hanging baskets give a few street lamps a softer silhouette.
++    lanterns.forEach((p,i)=>{if(i%4)return;const a=p.angle??0;pot(p.x-Math.cos(a)*.15,p.z+Math.sin(a)*.15,.72);});
++    const dressed = k.finish(); group.add(dressed);
++    let glow: THREE.MeshStandardMaterial | undefined;
++    if (lanterns.length) { const lamp=lantern(faction);glow=lamp.glow;group.add(instances(lamp.prototype,lanterns,'Street lanterns')); }
++    if (flowers.length) group.add(instances(flower(faction),flowers,'Town flowers',colors));
++    group.userData.cityLife = { lanterns: lanterns.length, flowers: flowers.length, shopkeepers: gestures.length };
++    return { group, animate(seconds: number, reduced: boolean) {
++        if (glow) glow.emissiveIntensity = reduced ? .8 : .8 + Math.sin(seconds*2.1)*.035;
++        gestures.forEach((arm,i)=>{arm.rotation.z=reduced?0:Math.max(0,Math.sin(seconds*.85+i))*.5;});
++    } };
++}
+diff --git a/src/features/city/rendering/three/villagers.ts b/src/features/city/rendering/three/villagers.ts
+index d63283c..6be407a 100644
+--- a/src/features/city/rendering/three/villagers.ts
++++ b/src/features/city/rendering/three/villagers.ts
+@@ -5,7 +5,7 @@ import { cityWalkRoute } from './cityStreets';
+ /** Small moving silhouettes; paths follow streets and use the southern gate. */
+ export function createVillagers(faction:Faction='roman') {
+  const palette=FACTIONS[faction];
+- const group=new THREE.Group(),count=18,bodyShape=new THREE.BoxGeometry(.16,.25,.13),headShape=new THREE.IcosahedronGeometry(.09,0),legShape=new THREE.BoxGeometry(.055,.19,.055);
++ const group=new THREE.Group(),count=22,bodyShape=new THREE.BoxGeometry(.16,.25,.13),headShape=new THREE.IcosahedronGeometry(.09,0),legShape=new THREE.BoxGeometry(.055,.19,.055);
+  const body=new THREE.InstancedMesh(bodyShape,new THREE.MeshStandardMaterial({color:0xffffff,flatShading:true}),count);
+  const head=new THREE.InstancedMesh(headShape,new THREE.MeshStandardMaterial({color:palette.skin,flatShading:true}),count);
+  const legs=new THREE.InstancedMesh(legShape,new THREE.MeshStandardMaterial({color:0x65503b,flatShading:true}),count*2);
+@@ -27,15 +27,18 @@ export function createVillagers(faction:Faction='roman') {
+   for(let i=0;i<count;i++){
+    const {points:path,lengths,total}=paths[i%paths.length];
+    if(!path)continue;
+-   const phase=((time*.00065+i*.73)%(total*2)),distance=phase>total?total*2-phase:phase;
++   // Different paces and short stops at each destination keep the town from marching in sync.
++   const pause=.65+(i%3)*.2,phase=(time*(.00048+(i%5)*.000035)+i*2.173)%(total*2+pause*2);
++   const returning=phase>total+pause*2,waiting=phase<pause||phase>total+pause&&phase<=total+pause*2;
++   const distance=phase<pause?0:phase<=total+pause?phase-pause:phase<=total+pause*2?total:total*2+pause*2-phase;
+    let remaining=distance,index=0;while(index<lengths.length-1&&remaining>lengths[index])remaining-=lengths[index++];
+    const from=path[index],to=path[index+1];position.lerpVectors(from,to,remaining/Math.max(.001,lengths[index]));
+-   const angle=Math.atan2(to.x-from.x,to.z-from.z)+(phase>total?Math.PI:0),step=Math.sin(time*.009+i)*.045;
++   const angle=Math.atan2(to.x-from.x,to.z-from.z)+(returning?Math.PI:0),step=waiting?0:Math.sin(time*.009+i)*.045;
+    dummy.scale.set(palette.scale,palette.scale,palette.scale);dummy.rotation.set(0,angle,0);dummy.position.set(position.x,.32*palette.scale,position.z);dummy.updateMatrix();body.setMatrixAt(i,dummy.matrix);
+    dummy.position.y=.53*palette.scale;dummy.updateMatrix();head.setMatrixAt(i,dummy.matrix);
+    for(let side=0;side<2;side++){dummy.position.set(position.x+(side?1:-1)*.047,.105*palette.scale,position.z+(side?step:-step));dummy.updateMatrix();legs.setMatrixAt(i*2+side,dummy.matrix);}
+    if(ears)for(const side of [-1,1]){dummy.position.set(position.x+side*.065*palette.scale,.6*palette.scale,position.z);dummy.updateMatrix();ears.setMatrixAt(i*2+(side+1)/2,dummy.matrix);}
+-   dummy.position.set(position.x+.12,.32,position.z+.06);dummy.updateMatrix();parcels.setMatrixAt(i,dummy.matrix);
++   dummy.position.set(position.x+Math.cos(angle)*.12,.32*palette.scale,position.z-Math.sin(angle)*.12);if(i%3)dummy.scale.setScalar(0);dummy.updateMatrix();parcels.setMatrixAt(i,dummy.matrix);
+   }
+   for(const mesh of [body,head,legs,parcels])mesh.instanceMatrix.needsUpdate=true;
+   if(ears)ears.instanceMatrix.needsUpdate=true;
+diff --git a/tests/city-life.test.ts b/tests/city-life.test.ts
+new file mode 100644
+index 0000000..a589135
+--- /dev/null
++++ b/tests/city-life.test.ts
+@@ -0,0 +1,49 @@
++import { test } from 'node:test';
++import assert from 'node:assert/strict';
++import * as THREE from 'three';
++import { createCityLife, cityLanternPlacements } from '../src/features/city/rendering/three/cityLife';
++import { cityLayout } from '../src/features/city/rendering/three/layout';
++import { cityStreetClearance } from '../src/features/city/rendering/three/cityStreets';
++import { cityGrowth } from '../src/features/city/domain/slots';
++import { disposeCityObject } from '../src/features/city/rendering/three/modelKit';
++import { FACTIONS, type Faction } from '../src/features/factions/domain/factions';
++
++test('lantern bases stay off every road and reserved slot at all city growth levels',()=>{
++    for(let level=0;level<=5;level++){
++        const plots=cityLayout({market:level,lumber:1},[]),g=cityGrowth(level),positions=cityLanternPlacements(plots,level);
++        assert.ok(positions.length>=4&&positions.length<=20);
++        assert.deepEqual(positions,cityLanternPlacements(plots,level),'placement is deterministic');
++        for(const p of positions){
++            assert.ok(cityStreetClearance(p.x/g,p.z/g,level)*g>=.1);
++            for(const plot of plots.filter(p=>p.slot!==undefined&&p.slot<16))assert.ok(Math.abs(p.x-plot.x)>=1.69||Math.abs(p.z-plot.z)>=1.69,`${plot.key} must stay available`);
++        }
++    }
++});
++
++test('town dressing follows completed buildings, stays bounded and uses instanced flowers and lanterns',()=>{
++    for(const faction of Object.keys(FACTIONS) as Faction[]){
++        const empty=createCityLife(cityLayout({},[]),faction,0);assert.deepEqual(empty.group.userData.cityLife,{lanterns:0,flowers:0,shopkeepers:0});disposeCityObject(empty.group);
++        const plots=cityLayout({market:3,lumber:3,quarry:3,farm:3},[{settlement_id:1,slot_index:0,building_type:'housing',level:3},{settlement_id:1,slot_index:1,building_type:'warehouse',level:3},{settlement_id:1,slot_index:2,building_type:'academy',level:2}]);
++        const before=structuredClone(plots),town=createCityLife(plots,faction,3),stats=town.group.userData.cityLife;
++        assert.deepEqual(plots,before,'presentation must not mutate game-derived plots');
++        assert.ok(stats.flowers>40&&stats.flowers<300);assert.ok(stats.lanterns>=6&&stats.lanterns<=20);assert.equal(stats.shopkeepers,1);
++        let draws=0,instanced=0,lights=0;
++        town.group.traverse(object=>{if(object instanceof THREE.Light)lights++;if(object instanceof THREE.Mesh){draws++;const positions=object.geometry.getAttribute('position');assert.ok([...positions.array].every(Number.isFinite));if(object instanceof THREE.InstancedMesh){instanced++;assert.ok([...object.instanceMatrix.array].every(Number.isFinite));}}});
++        assert.ok(draws<=30&&instanced>=6);assert.equal(lights,0,'decorative lanterns do not allocate individual lights');
++        const removed=createCityLife(plots.filter(p=>p.key!=='slot:0'),faction,3);assert.ok(removed.group.userData.cityLife.flowers<stats.flowers,'demolished housing loses its flowers');
++        disposeCityObject(removed.group);disposeCityObject(town.group);
++    }
++});
++
++test('town gestures and glow freeze for reduced motion, and all owned resources are released',()=>{
++    const town=createCityLife(cityLayout({market:3},[]),'roman',3);let arm:THREE.Object3D|undefined,glow:THREE.MeshStandardMaterial|undefined;
++    const geometry=new Set<THREE.BufferGeometry>(),materials=new Set<THREE.Material>();
++    town.group.traverse(object=>{
++        if(object.userData.cityMotion==='townGreeting')arm=object;
++        if(object instanceof THREE.Mesh){geometry.add(object.geometry);for(const material of Array.isArray(object.material)?object.material:[object.material]){materials.add(material);if(material.name==='Town lantern glass')glow=material as THREE.MeshStandardMaterial;}}
++    });
++    assert.ok(arm&&glow);town.animate(2,false);assert.notEqual(arm.rotation.z,0);assert.notEqual(glow.emissiveIntensity,.8);
++    town.animate(2,true);assert.equal(arm.rotation.z,0);assert.equal(glow.emissiveIntensity,.8);
++    let disposedGeometry=0,disposedMaterials=0;geometry.forEach(g=>g.addEventListener('dispose',()=>disposedGeometry++));materials.forEach(m=>m.addEventListener('dispose',()=>disposedMaterials++));
++    disposeCityObject(town.group);assert.equal(disposedGeometry,geometry.size);assert.equal(disposedMaterials,materials.size);assert.equal(town.group.children.length,0);
++});
+diff --git a/tests/e2e/city-life.spec.ts b/tests/e2e/city-life.spec.ts
+new file mode 100644
+index 0000000..fc36235
+--- /dev/null
++++ b/tests/e2e/city-life.spec.ts
+@@ -0,0 +1,31 @@
++import { test, expect } from '@playwright/test';
++import * as THREE from 'three';
++import { createSolo } from '../../src/features/campaign/domain/newRealm';
++import { refreshCityEconomy } from '../../src/features/city/domain/slots';
++import { cityLayout } from '../../src/features/city/rendering/three/layout';
++import { CityCamera } from '../../src/features/city/rendering/three/CityCamera';
++
++test('town flowers and lanterns follow the selected city, preserve building selection and respect reduced motion',async({page},info)=>{
++    const world=createSolo('Willowford'),town=world.settlements[0],errors:string[]=[];
++    world.buildings.forEach(b=>b.level=3);
++    world.city_slots=[{settlement_id:town.id,slot_index:0,building_type:'housing',level:3},{settlement_id:town.id,slot_index:1,building_type:'academy',level:2}];
++    world.settlements.push({...town,id:2,name:'Quiet town',x:town.x+128,y:town.y+128});
++    world.buildings.push(...world.buildings.map(b=>({...b,id:b.id+100,settlement_id:2,level:1})));
++    refreshCityEconomy(world,town.id);refreshCityEconomy(world,2);
++    page.on('pageerror',e=>errors.push(e.message));
++    await page.addInitScript(w=>{localStorage.setItem('peris-campaign-v6',JSON.stringify(w));localStorage.setItem('peris-settings',JSON.stringify({sound:false,music:false,reducedMotion:true}));localStorage.setItem(`peris-welcome:${w.players[0].id}:${w.players[0].created_at}`,'yes');},world);
++    await page.goto('/');await page.getByRole('button',{name:'Continue campaign',exact:true}).click();await page.getByRole('button',{name:'City',exact:true}).click();await page.getByRole('button',{name:'3D',exact:true}).click();
++    const canvas=page.locator('.city-3d-scene.ready canvas');await expect(canvas).toHaveAttribute('data-city-life-phase','0.00');
++    const flowers=Number(await canvas.getAttribute('data-city-flowers'));expect(flowers).toBeGreaterThan(30);expect(Number(await canvas.getAttribute('data-city-lanterns'))).toBeGreaterThan(3);
++    const rect=(await canvas.boundingBox())!,camera=new CityCamera();camera.resize(rect.width,rect.height,3);
++    const plot=cityLayout({market:3},world.city_slots).find(p=>p.key==='slot:0')!,p=new THREE.Vector3(plot.x,.65,plot.z).project(camera.camera);
++    await page.mouse.click(rect.x+(p.x+1)*rect.width/2,rect.y+(1-p.y)*rect.height/2);
++    await expect(page.locator('.building-inspector').getByRole('heading',{name:'Housing',exact:true})).toBeVisible();await page.keyboard.press('Escape');
++    await page.locator('[data-building="slot:3"]').click();await expect(page.getByRole('radio',{name:/^Housing/})).toBeVisible();await page.keyboard.press('Escape');
++    await page.getByLabel('Current city',{exact:true}).selectOption('2');await expect.poll(async()=>Number(await canvas.getAttribute('data-city-flowers'))).toBeLessThan(flowers);
++    await page.getByLabel('Current city',{exact:true}).selectOption(String(town.id));await expect(canvas).toHaveAttribute('data-city-flowers',String(flowers));
++    await page.emulateMedia({reducedMotion:'no-preference'});await page.evaluate(()=>document.documentElement.classList.remove('reduced-motion'));
++    await expect.poll(async()=>Number(await canvas.getAttribute('data-city-life-phase'))).toBeGreaterThan(.1);
++    await page.emulateMedia({reducedMotion:'reduce'});await expect(canvas).toHaveAttribute('data-city-life-phase','0.00');
++    await page.screenshot({path:info.outputPath('living-town.png')});expect(errors).toEqual([]);
++});

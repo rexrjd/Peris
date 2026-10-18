@@ -24,7 +24,7 @@
 .city-scene-screen .city-landmark-label .city-landmark-tooltip{border-color:#ffffff2a;border-radius:12px;backdrop-filter:blur(12px)}
 .city-scene-screen .city-landmark-label:focus-visible{outline:none}
 .city-scene-screen .city-landmark-label:focus-visible .city-level-badge{outline:2px solid #fff1ce;outline-offset:3px}
-.city-scene-surface:after{box-shadow:inset 0 55px 65px -55px #172d3a60,inset 0 -55px 70px -55px #172d3a50}
+.city-scene-surface:after{box-shadow:none}
 @media(max-width:720px){.city-scene-workspace .city-scene-status>button{padding:7px 6px}.city-scene-workspace .city-scene-identity{padding:8px 10px}.city-scene-workspace .city-scene-construction{width:min(216px,calc(100% - 94px))}.city-scene-town-icon{display:none}.city-scene-workspace .city-scene-name h1{font-size:12px}.city-scene-screen .city-landmark-label .city-level-badge{width:20px;height:20px}}
 @media(prefers-reduced-motion:reduce){.city-scene-screen .city-landmark-label .city-level-badge{transition:none}}
 .reduced-motion .city-scene-screen .city-landmark-label .city-level-badge{transition:none}

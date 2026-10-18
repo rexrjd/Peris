@@ -31,7 +31,9 @@ export function createCityActivities() {
             });
             if (plot.type === 'smithy') chimneys.push(model.localToWorld(new THREE.Vector3(.4, 1.35 + plot.level * .12, -.25)));
             if (plot.type === 'housing') chimneys.push(model.localToWorld(new THREE.Vector3(0, 1 + plot.level * .13, -.1)));
-            if (plot.type === 'lumber') chimneys.push(model.localToWorld(new THREE.Vector3(-.25, 1.15 + plot.level * .06, -.15)));
+            const smokePoint = model.userData.citySmoke;
+            if (Array.isArray(smokePoint)) chimneys.push(model.localToWorld(new THREE.Vector3(smokePoint[0], smokePoint[1], smokePoint[2])));
+            else if (plot.type === 'lumber' && smokePoint !== null) chimneys.push(model.localToWorld(new THREE.Vector3(-.25, 1.15 + plot.level * .06, -.15)));
             if (plot.type === 'mage_tower') magic.push(model.localToWorld(new THREE.Vector3(0, 1.4 + plot.level * .2, 0)));
         }
         smoke.count = Math.min(smoke.instanceMatrix.count, chimneys.length * 6);
