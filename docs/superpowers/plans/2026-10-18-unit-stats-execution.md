@@ -10,7 +10,7 @@ Task 1: complete — versioned canonical catalog and reference stats.
 Task 2: complete — captured local/SQL doctrines.
 Task 3: complete — recruitment and comparison UI.
 Task 4: complete — save/report compatibility and upgrade.
-Task 5: calibration/review complete; final broad browser verification in progress.
+Task 5: calibration, review and local verification complete; PR CI is the remaining merge gate.
 
 Tasks 2–4 interface ruling: implement save version validation and report pricing alongside battle metadata, before enabling new local economics. Otherwise an intermediate commit would create battles that its own importer rejects. Keep separate domain/UI commits after the shared boundary is tested.
 
@@ -67,3 +67,7 @@ CI-equivalent local batch: all 35 commands now have passing results, after three
 Focused installer review found an Important inherited downgrade: pre-balance V18/V19 already has city-raid and research rules, so missing balance_version alone cannot select V16 battle replacements. Added exact before/after definition assertions on the frozen pre-balance fixture (artifact-preservation-red.log fails); separated legacy economics from battle replacements and preserve installed battle functions when research or city-raid capabilities exist (artifact-preservation-green.log passes). The final focused review found no remaining Important/Critical issue. Current and pre-balance fixtures preserve battle definitions, troops, private helpers, camp stock, equipment and receipts across repeated updates. The actual original V16 database path remains unexecuted; its frozen function definitions match the published updater. No live SQL was used.
 
 Pre-push check: fetched origin/main again; no commits beyond the integrated e3220ac. SQL, camp/artifact generation and fast balance checks pass; full calibration source/hash is unchanged. GitHub PR CI remains the final broad browser gate before the authorized merge.
+
+Final local browser follow-up: account login/refresh/tabs, the full recruitment queue, advanced transfers, return shortcuts, social messaging/diplomacy, and both gallery tests passed. A newly exposed inherited guild-crest test race captured the old banner glyph once before polling the updated navigation glyph; confirmed both UI/test source are unchanged from main. Polling both live values preserves the equality requirement. Before: 9/10 desktop cases pass, crest equality fails with moon versus stale sun. After: crest edit/reload/disband passes desktop and mobile (2/2, crest-e2e.log). The original broad run's failures have passing focused follow-ups; its 22 intentional skips remain reported, without claiming a single clean full local invocation.
+
+Integration: review branch pushed and PR #12 opened against main using the existing Git account after the connected integration returned HTTP 403 for PR creation. Dedicated game-integration CI passed on ac70ebb. A final test-only commit refreshes the PR CI gate; main merge remains pending its actual results. No force push or SQL deployment occurred.

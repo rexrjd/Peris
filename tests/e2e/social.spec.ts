@@ -53,7 +53,7 @@ test('navigation shows the current guild crest, follows edits and restores the d
  await page.getByLabel('Crest color #ab646d',{exact:true}).click();await page.getByLabel('Crest moon',{exact:true}).click();
  await page.getByRole('button',{name:'Save guild',exact:true}).click();
  await expect(crest.locator('path').first()).toHaveAttribute('fill','#ab646d');
- await expect.poll(async()=>crest.locator('g').innerHTML()).toBe(await page.locator('.guild-banner .guild-crest g').innerHTML());
+ await expect.poll(async()=>(await crest.locator('g').innerHTML())===(await page.locator('.guild-banner .guild-crest g').innerHTML())).toBe(true);
  await close(page);await page.reload();await expect(page.getByLabel('Game menu')).toBeVisible();
  await expect(crest.locator('path').first()).toHaveAttribute('fill','#ab646d');
  await page.screenshot({path:info.outputPath('guild-navigation-crest.png')});
