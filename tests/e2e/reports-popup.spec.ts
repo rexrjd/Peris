@@ -31,6 +31,7 @@ test('reports popup preserves every background view and dismisses by keyboard, o
   const box=(await popup.boundingBox())!;expect(box.width).toBeLessThanOrEqual(560);expect(box.height).toBeLessThanOrEqual(540);
   await expect(popup.locator('.report-inbox-list')).toBeVisible();
   await expect(popup.locator('.report-inbox-detail')).not.toBeVisible();
+  if(index===2)await page.screenshot({path:info.outputPath('reports-popup-rally.png')});
   if(index===0){
    await page.screenshot({path:info.outputPath('reports-popup-map.png')});
    await page.keyboard.press('Escape');await expect(trigger).toBeFocused();
