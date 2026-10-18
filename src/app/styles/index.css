@@ -55,7 +55,7 @@
 @import '../../features/army/styles/troop-details.css';
 
 @import "../../features/city/styles/city-art-direction.css";
-@import '../../features/army/styles/rally-faction.css';
+@import '../../features/army/styles/rally-ledger.css';
 @import '../../features/city/styles/building-inspector.css';
 
 .realm-presentation { display: contents; }

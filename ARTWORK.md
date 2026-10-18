@@ -1,5 +1,20 @@
 # Original Peris artwork
 
+## Rally Point operations ledger
+
+The Rally Point uses the approved ivory operations-ledger presentation in
+`src/features/army/styles/rally-ledger.css`: light paper surfaces, oxblood accents,
+fine gold rules, and the bundled Cinzel and Crimson Text fonts. Existing faction
+crests, commander portraits, and nine-role troop icons remain tied to the actual
+city and legion. The earlier faction paintings are retained as artwork sources;
+the ledger no longer downloads or waits for those large background/frame images.
+
+On phones, four Rally sections occupy the bottom navigation. Movements combines
+owned incoming and outgoing orders with filters, arrival countdowns, carried
+spoils, and expandable troop breakdowns. Reports adds a camp filter and keeps full
+resource receipts one tap away. These are presentation changes over the existing movement, privacy,
+cancellation, save, and reporting rules.
+
 ## Compact command header
 
 Nine original transparent low-poly pictures depict the map, city, armies,
