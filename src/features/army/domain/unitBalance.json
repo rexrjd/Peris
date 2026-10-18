@@ -1,0 +1,595 @@
+{
+  "classes": {
+    "infantry": {
+      "speed": 40,
+      "range": 44,
+      "rate": 0.02
+    },
+    "archers": {
+      "speed": 34,
+      "range": 220,
+      "rate": 0.012
+    },
+    "cavalry": {
+      "speed": 76,
+      "range": 50,
+      "rate": 0.031
+    }
+  },
+  "versions": {
+    "1": {
+      "infantry": {
+        "role": "line_infantry",
+        "building": "barracks",
+        "combatClass": "infantry",
+        "cost": {
+          "wood": 4,
+          "stone": 2,
+          "food": 6,
+          "gold": 1
+        },
+        "carry": 20,
+        "speed": 40,
+        "trainSeconds": 2,
+        "attack": 1,
+        "defence": 1,
+        "researchSeconds": 0,
+        "researchCost": {
+          "wood": 0,
+          "stone": 0,
+          "food": 0,
+          "gold": 0
+        }
+      },
+      "spearmen": {
+        "role": "spear_guard",
+        "building": "barracks",
+        "combatClass": "infantry",
+        "cost": {
+          "wood": 5,
+          "stone": 3,
+          "food": 7,
+          "gold": 1
+        },
+        "carry": 15,
+        "speed": 36,
+        "trainSeconds": 3,
+        "attack": 0.9,
+        "defence": 1.2,
+        "researchSeconds": 30,
+        "researchCost": {
+          "wood": 40,
+          "stone": 30,
+          "food": 50,
+          "gold": 10
+        }
+      },
+      "archers": {
+        "role": "archer",
+        "building": "barracks",
+        "combatClass": "archers",
+        "cost": {
+          "wood": 6,
+          "stone": 2,
+          "food": 5,
+          "gold": 2
+        },
+        "carry": 15,
+        "speed": 34,
+        "trainSeconds": 2,
+        "attack": 1,
+        "defence": 1,
+        "researchSeconds": 0,
+        "researchCost": {
+          "wood": 0,
+          "stone": 0,
+          "food": 0,
+          "gold": 0
+        }
+      },
+      "elite": {
+        "role": "elite",
+        "building": "barracks",
+        "combatClass": "infantry",
+        "cost": {
+          "wood": 8,
+          "stone": 6,
+          "food": 12,
+          "gold": 3
+        },
+        "carry": 15,
+        "speed": 38,
+        "trainSeconds": 4,
+        "attack": 1.4,
+        "defence": 1.35,
+        "researchSeconds": 60,
+        "researchCost": {
+          "wood": 100,
+          "stone": 80,
+          "food": 120,
+          "gold": 30
+        }
+      },
+      "cavalry": {
+        "role": "light_cavalry",
+        "building": "stables",
+        "combatClass": "cavalry",
+        "cost": {
+          "wood": 4,
+          "stone": 7,
+          "food": 12,
+          "gold": 4
+        },
+        "carry": 40,
+        "speed": 76,
+        "trainSeconds": 5,
+        "attack": 1,
+        "defence": 1,
+        "researchSeconds": 0,
+        "researchCost": {
+          "wood": 0,
+          "stone": 0,
+          "food": 0,
+          "gold": 0
+        }
+      },
+      "scout": {
+        "role": "scout",
+        "building": "stables",
+        "combatClass": "cavalry",
+        "cost": {
+          "wood": 3,
+          "stone": 5,
+          "food": 9,
+          "gold": 3
+        },
+        "carry": 10,
+        "speed": 92,
+        "trainSeconds": 4,
+        "attack": 0.45,
+        "defence": 0.75,
+        "researchSeconds": 30,
+        "researchCost": {
+          "wood": 40,
+          "stone": 20,
+          "food": 50,
+          "gold": 10
+        }
+      },
+      "heavyCavalry": {
+        "role": "heavy_cavalry",
+        "building": "stables",
+        "combatClass": "cavalry",
+        "cost": {
+          "wood": 8,
+          "stone": 12,
+          "food": 20,
+          "gold": 7
+        },
+        "carry": 35,
+        "speed": 60,
+        "trainSeconds": 8,
+        "attack": 1.45,
+        "defence": 1.35,
+        "researchSeconds": 60,
+        "researchCost": {
+          "wood": 100,
+          "stone": 120,
+          "food": 150,
+          "gold": 40
+        }
+      },
+      "ram": {
+        "role": "ram",
+        "building": "workshop",
+        "combatClass": "infantry",
+        "cost": {
+          "wood": 20,
+          "stone": 15,
+          "food": 15,
+          "gold": 6
+        },
+        "carry": 0,
+        "speed": 16,
+        "trainSeconds": 12,
+        "attack": 0.6,
+        "defence": 2,
+        "researchSeconds": 90,
+        "researchCost": {
+          "wood": 180,
+          "stone": 120,
+          "food": 80,
+          "gold": 35
+        }
+      },
+      "catapult": {
+        "role": "catapult",
+        "building": "workshop",
+        "combatClass": "archers",
+        "cost": {
+          "wood": 30,
+          "stone": 20,
+          "food": 18,
+          "gold": 10
+        },
+        "carry": 0,
+        "speed": 12,
+        "trainSeconds": 18,
+        "attack": 2.4,
+        "defence": 0.7,
+        "researchSeconds": 120,
+        "researchCost": {
+          "wood": 220,
+          "stone": 180,
+          "food": 100,
+          "gold": 60
+        }
+      }
+    },
+    "2": {
+      "infantry": {
+        "role": "line_infantry",
+        "building": "barracks",
+        "combatClass": "infantry",
+        "cost": {
+          "wood": 4,
+          "stone": 2,
+          "food": 6,
+          "gold": 1
+        },
+        "carry": 20,
+        "speed": 40,
+        "trainSeconds": 2,
+        "attack": 1,
+        "defence": 1,
+        "researchSeconds": 0,
+        "researchCost": {
+          "wood": 0,
+          "stone": 0,
+          "food": 0,
+          "gold": 0
+        }
+      },
+      "spearmen": {
+        "role": "spear_guard",
+        "building": "barracks",
+        "combatClass": "infantry",
+        "cost": {
+          "wood": 5,
+          "stone": 3,
+          "food": 7,
+          "gold": 1
+        },
+        "carry": 15,
+        "speed": 36,
+        "trainSeconds": 3,
+        "attack": 0.9,
+        "defence": 1.3,
+        "researchSeconds": 30,
+        "researchCost": {
+          "wood": 40,
+          "stone": 30,
+          "food": 50,
+          "gold": 10
+        }
+      },
+      "archers": {
+        "role": "archer",
+        "building": "barracks",
+        "combatClass": "archers",
+        "cost": {
+          "wood": 6,
+          "stone": 2,
+          "food": 5,
+          "gold": 1
+        },
+        "carry": 15,
+        "speed": 34,
+        "trainSeconds": 3,
+        "attack": 1.25,
+        "defence": 0.9,
+        "researchSeconds": 0,
+        "researchCost": {
+          "wood": 0,
+          "stone": 0,
+          "food": 0,
+          "gold": 0
+        }
+      },
+      "elite": {
+        "role": "elite",
+        "building": "barracks",
+        "combatClass": "infantry",
+        "cost": {
+          "wood": 7,
+          "stone": 5,
+          "food": 10,
+          "gold": 1
+        },
+        "carry": 15,
+        "speed": 38,
+        "trainSeconds": 4,
+        "attack": 1.6,
+        "defence": 1.6,
+        "researchSeconds": 60,
+        "researchCost": {
+          "wood": 100,
+          "stone": 80,
+          "food": 120,
+          "gold": 30
+        }
+      },
+      "cavalry": {
+        "role": "light_cavalry",
+        "building": "stables",
+        "combatClass": "cavalry",
+        "cost": {
+          "wood": 5,
+          "stone": 6,
+          "food": 10,
+          "gold": 3
+        },
+        "carry": 40,
+        "speed": 76,
+        "trainSeconds": 5,
+        "attack": 1,
+        "defence": 1,
+        "researchSeconds": 0,
+        "researchCost": {
+          "wood": 0,
+          "stone": 0,
+          "food": 0,
+          "gold": 0
+        }
+      },
+      "scout": {
+        "role": "scout",
+        "building": "stables",
+        "combatClass": "cavalry",
+        "cost": {
+          "wood": 3,
+          "stone": 2,
+          "food": 4,
+          "gold": 1
+        },
+        "carry": 10,
+        "speed": 92,
+        "trainSeconds": 2,
+        "attack": 0.45,
+        "defence": 0.75,
+        "researchSeconds": 30,
+        "researchCost": {
+          "wood": 40,
+          "stone": 20,
+          "food": 50,
+          "gold": 10
+        }
+      },
+      "heavyCavalry": {
+        "role": "heavy_cavalry",
+        "building": "stables",
+        "combatClass": "cavalry",
+        "cost": {
+          "wood": 8,
+          "stone": 10,
+          "food": 16,
+          "gold": 4
+        },
+        "carry": 35,
+        "speed": 60,
+        "trainSeconds": 8,
+        "attack": 1.45,
+        "defence": 1.4,
+        "researchSeconds": 60,
+        "researchCost": {
+          "wood": 100,
+          "stone": 120,
+          "food": 150,
+          "gold": 40
+        }
+      },
+      "ram": {
+        "role": "ram",
+        "building": "workshop",
+        "combatClass": "infantry",
+        "cost": {
+          "wood": 18,
+          "stone": 12,
+          "food": 12,
+          "gold": 4
+        },
+        "carry": 0,
+        "speed": 16,
+        "trainSeconds": 12,
+        "attack": 0.6,
+        "defence": 2,
+        "researchSeconds": 90,
+        "researchCost": {
+          "wood": 180,
+          "stone": 120,
+          "food": 80,
+          "gold": 35
+        }
+      },
+      "catapult": {
+        "role": "catapult",
+        "building": "workshop",
+        "combatClass": "archers",
+        "cost": {
+          "wood": 25,
+          "stone": 18,
+          "food": 14,
+          "gold": 6
+        },
+        "carry": 0,
+        "speed": 12,
+        "trainSeconds": 18,
+        "attack": 2.4,
+        "defence": 0.7,
+        "researchSeconds": 120,
+        "researchCost": {
+          "wood": 220,
+          "stone": 180,
+          "food": 100,
+          "gold": 60
+        }
+      }
+    }
+  },
+  "profiles": {
+    "roman": [
+      [
+        1,
+        1
+      ],
+      [
+        1,
+        1
+      ],
+      [
+        1,
+        1
+      ]
+    ],
+    "spartan": [
+      [
+        1,
+        1.03
+      ],
+      [
+        0.98,
+        0.98
+      ],
+      [
+        0.98,
+        0.98
+      ]
+    ],
+    "persian": [
+      [
+        0.98,
+        0.98
+      ],
+      [
+        1.04,
+        1
+      ],
+      [
+        1.04,
+        1
+      ]
+    ],
+    "egyptian": [
+      [
+        1,
+        1.02
+      ],
+      [
+        1,
+        1.02
+      ],
+      [
+        0.96,
+        0.96
+      ]
+    ],
+    "orc": [
+      [
+        1.03,
+        0.99
+      ],
+      [
+        0.965,
+        0.965
+      ],
+      [
+        1.03,
+        0.99
+      ]
+    ],
+    "elf": [
+      [
+        0.99,
+        0.99
+      ],
+      [
+        1.06,
+        1.02
+      ],
+      [
+        0.99,
+        0.99
+      ]
+    ],
+    "dwarf": [
+      [
+        0.99,
+        1.05
+      ],
+      [
+        0.99,
+        0.99
+      ],
+      [
+        0.965,
+        0.965
+      ]
+    ],
+    "gnome": [
+      [
+        0.99,
+        0.99
+      ],
+      [
+        1.05,
+        1.02
+      ],
+      [
+        0.99,
+        0.99
+      ]
+    ],
+    "pandaren": [
+      [
+        1,
+        1.02
+      ],
+      [
+        0.99,
+        0.99
+      ],
+      [
+        0.99,
+        0.99
+      ]
+    ],
+    "undead": [
+      [
+        0.99,
+        1.02
+      ],
+      [
+        0.97,
+        0.97
+      ],
+      [
+        1.02,
+        1.01
+      ]
+    ],
+    "demon": [
+      [
+        1.04,
+        0.97
+      ],
+      [
+        1.06,
+        0.99
+      ],
+      [
+        1,
+        0.95
+      ]
+    ]
+  }
+}
