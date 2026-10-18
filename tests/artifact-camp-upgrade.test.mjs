@@ -17,12 +17,14 @@ try {
     const oldItem=(await db.query('select id from public.peris_hero_artifacts where hero_id=$1',[hero.id])).rows[0].id;
     await admin(`update public.peris_camp_stock set resources='{"wood":12,"stone":8,"food":3,"gold":1}',recruit_sequence=19,next_recruit_at=now()+interval '1 hour'where camp_id=${camp.id}`);
     const savedStock=(await db.query('select resources,recruit_sequence,next_recruit_at from public.peris_camp_stock where camp_id=$1',[camp.id])).rows[0];
-    // Older V16 installations lack V17 economics helpers; the focused update must
-    // provide the dependencies of its replacement battle finish function privately.
+    const battleDefinitions=async()=> (await db.query("select proname,pg_get_functiondef(oid)definition from pg_proc where oid in('public.peris_finish(bigint,text,text)'::regprocedure,'public.peris_start_raid(uuid,integer)'::regprocedure)order by proname")).rows;
+    const installedBattleDefinitions=await battleDefinitions();
+    // Restore missing helpers without downgrading current battle definitions.
     await admin('drop function public.peris_roster_loss_cost(jsonb,jsonb);drop function public.peris_resource_difference(jsonb,jsonb)');
     const upgrade=await readFile('supabase/UPDATE_ARTIFACTS_AND_CAMPS.sql','utf8');
     await admin(upgrade);const busy=(await db.query('select tier,infantry from public.peris_camps where id=$1',[camp.id])).rows[0];assert.deepEqual(busy,{tier:1,infantry:8});
     await admin(`update public.armies set status='idle',raid_target_id=null where id=${army.id}`);await admin(upgrade);await admin(upgrade);
+    assert.deepEqual(await battleDefinitions(),installedBattleDefinitions,'artifact updates cannot replace versioned raid/finalization rules');
     const restored=(await db.query('select tier,x,y,infantry,archers,cavalry from public.peris_camps where id=$1',[camp.id])).rows[0];
     assert.deepEqual(restored,{tier:camp.tier,x:camp.x,y:camp.y,infantry:8,archers:2,cavalry:0});
     assert.deepEqual((await db.query('select resources,recruit_sequence,next_recruit_at from public.peris_camp_stock where camp_id=$1',[camp.id])).rows[0],savedStock);
@@ -38,10 +40,12 @@ try {
     console.log('PASS · ten-level camp recruitment caps and resource production agree with the normal game domain');
     await login();
     await assert.rejects(()=>rpc('peris_roster_loss_cost',[{scout:3,catapult:2},{scout:2,catapult:1}]),/permission/);
+    await assert.rejects(()=>rpc('peris_roster_loss_cost',[{scout:3,catapult:2},{scout:2,catapult:1},1]),/permission/);
     await assert.rejects(()=>rpc('peris_resource_difference',[{wood:1},{wood:2}]),/permission/);
     await admin('select 1');
-    assert.deepEqual(await rpc('peris_roster_loss_cost',[{scout:3,catapult:2},{scout:2,catapult:1}]),{wood:33,stone:25,food:27,gold:13});
-    console.log('PASS · focused V16 update installs its economics dependencies without exposing private helpers');
+    assert.deepEqual(await rpc('peris_roster_loss_cost',[{scout:3,catapult:2},{scout:2,catapult:1}]),{wood:28,stone:20,food:18,gold:7});
+    assert.deepEqual(await rpc('peris_roster_loss_cost',[{scout:3,catapult:2},{scout:2,catapult:1},1]),{wood:33,stone:25,food:27,gold:13});
+    console.log('PASS · focused update retains current battle rules and private v1/v2 economics');
     for (const [id,item] of Object.entries(ARTIFACTS)) {
         await admin(`insert into public.peris_hero_artifacts(owner_id,artifact_id,slot)select '${owner}',id,slot from public.peris_artifact_catalog where id='${id}'`);
         const artifact=(await db.query('select max(id) as id from public.peris_hero_artifacts where artifact_id=$1',[id])).rows[0].id;
@@ -52,3 +56,22 @@ try {
     }
     console.log('PASS · all 24 catalog entries can be equipped and unequipped through authenticated commands');
 } finally { await db.close(); }
+
+// A real pre-balance schema must not silently acquire v2 rules from this update.
+const legacy=new PGlite();
+try{
+ await legacy.exec(`create schema auth;create table auth.users(id uuid primary key);create role anon;create role authenticated;create role service_role;create function auth.uid()returns uuid language sql as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;grant usage on schema public,auth to authenticated,anon;grant execute on function auth.uid()to authenticated,anon;create publication supabase_realtime`);
+ await legacy.exec(await readFile('tests/fixtures/v18-pre-social.sql','utf8'));
+ await legacy.exec(`insert into auth.users values('${owner}');set role authenticated;select set_config('request.jwt.claim.sub','${owner}',false);select public.create_player('Legacy artifact QA');reset role`);
+ const saved=(await legacy.query('select id,owner_id,infantry,archers,cavalry from public.armies order by id')).rows;
+ const installedBattleDefinitions=(await legacy.query("select proname,pg_get_functiondef(oid)definition from pg_proc where oid in('public.peris_finish(bigint,text,text)'::regprocedure,'public.peris_start_raid(uuid,integer)'::regprocedure)order by proname")).rows;
+ await legacy.exec('drop function if exists public.peris_roster_loss_cost(jsonb,jsonb);drop function if exists public.peris_resource_difference(jsonb,jsonb)');
+ const upgrade=await readFile('supabase/UPDATE_ARTIFACTS_AND_CAMPS.sql','utf8');await legacy.exec(upgrade);await legacy.exec(upgrade);
+ assert.deepEqual((await legacy.query("select proname,pg_get_functiondef(oid)definition from pg_proc where oid in('public.peris_finish(bigint,text,text)'::regprocedure,'public.peris_start_raid(uuid,integer)'::regprocedure)order by proname")).rows,installedBattleDefinitions,'pre-balance city raids and carry research cannot be replaced with V16 battle rules');
+ assert.deepEqual((await legacy.query('select id,owner_id,infantry,archers,cavalry from public.armies order by id')).rows,saved);
+ assert.equal((await legacy.query("select to_regclass('public.peris_unit_balance')name")).rows[0].name,null);
+ assert.equal((await legacy.query("select count(*)::integer n from information_schema.columns where table_schema='public'and table_name='battles'and column_name='balance_version'")).rows[0].n,0);
+ assert.deepEqual((await legacy.query(`select public.peris_roster_loss_cost('{"scout":3,"catapult":2}','{"scout":2,"catapult":1}')value`)).rows[0].value,{wood:33,stone:25,food:27,gold:13});
+ await legacy.exec('set role authenticated');await assert.rejects(()=>legacy.query("select public.peris_roster_loss_cost('{}','{}')"),/permission/);
+ console.log('PASS · twice-applied pre-balance artifact update retains v1 prices, player troops and private helpers without installing v2');
+}finally{await legacy.close();}

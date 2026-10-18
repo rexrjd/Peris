@@ -23,6 +23,11 @@ try {
         march_sent_at: null, march_cancel_until: null, raid_reserve: null,
         march_origin: null, march_returning: false,
         unit_roster: null, carried_loot: null, farm_list_id: null, loot_report_id: null,
+        raid_city_id: null, siege_target: 'auto',
+    });
+    for (const settlement of previous.settlements) Object.assign(settlement, {
+        wood_research: 1, stone_research: 1, food_research: 1,
+        gold_research: 1, trade_research: 1,
     });
     const upgrade = await readFile('supabase/UPGRADE_TO_V15.sql', 'utf8');
     await admin(upgrade); await admin(upgrade);
