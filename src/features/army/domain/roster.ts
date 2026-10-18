@@ -1,9 +1,10 @@
 import type { ArmyTroops, UnitType } from './types';
-import { FRONTIER_UNITS, FRONTIER_UNIT_TYPES, type FrontierUnitType } from '../../frontier/domain/units';
+import { FRONTIER_UNIT_TYPES, type FrontierUnitType } from '../../frontier/domain/units';
+import {rulesForVersion} from './unitBalance';
 export type RecruitUnit = FrontierUnitType;
 export type UnitRoster = Record<RecruitUnit, number>;
 export const RECRUIT_UNITS = FRONTIER_UNIT_TYPES;
-export const RECRUIT_RULES = FRONTIER_UNITS;
+export const RECRUIT_RULES = rulesForVersion(2);
 export const emptyRoster = (): UnitRoster => Object.fromEntries(RECRUIT_UNITS.map(unit => [unit, 0])) as UnitRoster;
 export const rosterTotal = (troops: ArmyTroops) => RECRUIT_UNITS.reduce((sum, unit) => sum + (troops[unit] ?? 0), 0);
 /** Legacy class counters remain aggregate presentation data. The roster owns identities. */

@@ -3,6 +3,7 @@ import {unitUnlocked,unitTechnology} from '../../research/domain/effects';
 import {useResearchNavigation} from '../../research/ui/ResearchNavigation';
 import { useState } from 'react';
 import { armyFaction } from '../domain/faction';
+import {troopDetails} from '../domain/troopDetails';
 import type { World } from '../../../shared/model/world';
 import type { Command } from '../../../shared/model/commands';
 import type { Army } from '../domain/types';
@@ -22,7 +23,7 @@ export function RecruitmentPanel({ world, army, city, run, busy, now, onCity, on
  const openResearch=useResearchNavigation();
  const [type, setType] = useState<RecruitUnit>(() => initialUnit ?? RECRUIT_UNITS.find(unit => RECRUIT_RULES[unit].building === (buildingOnly ?? 'barracks'))!), [quantity, setQuantity] = useState(20);
  const [building, setBuilding] = useState<RecruitmentBuilding>(buildingOnly ?? (initialUnit ? RECRUIT_RULES[initialUnit].building : 'barracks'));
- const rule = RECRUIT_RULES[type], roster = readRoster(army), faction = armyFaction(world, army);
+ const stats=troopDetails(world,army,city,type,now),rule = stats.rule, roster = readRoster(army), faction = armyFaction(world, army);
  const name = factionTroopName(faction, type), overview = armyOverview(world, army, now), plan = recruitmentPlan(world, army, city, type, quantity, now);
  const research = world.unit_research?.find(entry => entry.settlement_id === city.id && entry.unit === type);
  const researched = unitUnlocked(world,army.owner_id,city.id,type,now);
@@ -43,13 +44,14 @@ export function RecruitmentPanel({ world, army, city, run, busy, now, onCity, on
    const entry = world.unit_research?.find(r => r.settlement_id === city.id && r.unit === unit), ready = unitUnlocked(world,army.owner_id,city.id,unit,now);
    return <button key={unit} aria-pressed={type === unit} title={`${factionTroopName(faction, unit)} · ${ready ? 'Ready to recruit' : entry ? 'Research in progress' : 'Research required'}`} onClick={() => setType(unit)}><TroopIcon faction={faction} unit={unit}/><span>{factionTroopName(faction, unit)}<small>{ready ? 'Ready to recruit' : entry ? 'Researching' : 'Research required'}</small></span></button>;
   })}</div>
-  <h3>{name}</h3><p className="command-muted" title="Statistics used by automatic combat and loot rules">Attack ×{rule.attack} · Defence ×{rule.defence} · Carry {rule.carry} · Speed {rule.speed}</p>
+  <h3>{name}</h3><p className="command-muted" title="Reference ratings with permanent army bonuses; infantry baseline is 100. Range, charges and terrain still matter.">Attack {Math.round(stats.attackPoints*100)/100} · Protection {Math.round(stats.protectionPoints*100)/100} · Carry {stats.carry} · Speed {stats.speed}</p>
   {!researched ? <><Cost cost={rule.researchCost} resources={liveResources(city, now)} compact/>{research ? <p role="status">Research completes in {clock(Math.max(0, (Date.parse(research.completes_at) - now) / 1000))}</p> : actionContainer ? createPortal(<button className="command-button primary" onClick={()=>openResearch(unitTechnology(type)?.id)}>Unlock in Research <span>→</span></button>,actionContainer) : <button className="command-button primary" onClick={()=>openResearch(unitTechnology(type)?.id)}>Unlock in Research <span>→</span></button>}</> : <>
    <label className="command-label" htmlFor="recruit-quantity">Soldiers to train</label><div className="command-quantity"><button aria-label="Train fewer soldiers" onClick={() => changeQuantity(quantity - 5)}>−</button><input id="recruit-quantity" type="number" min={1} max={200} value={quantity} onChange={event => changeQuantity(Number(event.target.value))}/><button aria-label="Train more soldiers" onClick={() => changeQuantity(quantity + 5)}>+</button></div>
    <div className="recruit-presets">{[10, 25, 50].map(n => <button key={n} aria-pressed={quantity === n} onClick={() => changeQuantity(n)}>{n}</button>)}<button disabled={!plan.max} onClick={() => changeQuantity(plan.max)}>Max {plan.max}</button></div><Cost cost={plan.cost} resources={plan.resources} compact/>
    <div className="recruit-timing"><span>Training time<b>{clock(plan.seconds)}</b></span><span>Ready with queue<b>{clock(plan.finishSeconds)}</b></span></div>
    {actionContainer ? createPortal(<><button className="command-button primary" disabled={busy || !!plan.reason} onClick={() => run({ type: 'recruit', armyId: army.id, settlementId: city.id, item: type, quantity }, `${quantity} ${name} added to ${army.name}’s training`)}>Train {quantity} {name}</button>{plan.reason && <p className="recruit-blocked" role="status">{plan.reason}</p>}</>,actionContainer) : <><button className="command-button primary" disabled={busy || !!plan.reason} onClick={() => run({ type: 'recruit', armyId: army.id, settlementId: city.id, item: type, quantity }, `${quantity} ${name} added to ${army.name}’s training`)}>Train {quantity} {name}</button>{plan.reason && <p className="recruit-blocked" role="status">{plan.reason}</p>}</>}
   </>}
+  {embedded&&formOnly&&researching.length>0&&<section className="command-research-queue" aria-label="Building research queue"><h3>Research queue</h3><ol className="command-queue-list">{researching.map(entry=><li key={entry.unit}><TroopIcon faction={city.faction??faction} unit={entry.unit}/><div><strong>{factionTroopName(city.faction??faction,entry.unit)}</strong><small>Ready in {clock(Math.max(0,(Date.parse(entry.completes_at)-now)/1000))}</small></div></li>)}</ol></section>}
   {!plan.near && <button className="command-button secondary" disabled={busy || army.status !== 'idle'} onClick={() => run({ type: 'move', armyId: army.id, ...homeArmyPosition(city) })}>Bring army to {city.name}</button>}{!plan.level && <button className="command-text-button" onClick={() => onOpenCity?.(city.id)}>Open village buildings</button>}
  </section></div>;
 }

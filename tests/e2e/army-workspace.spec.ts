@@ -151,7 +151,8 @@ test('every troop opens real stats, locked roles remain inspectable and recruitm
     await page.locator('.army-troop-grid>button[data-unit="infantry"]').click();
     const stats = page.getByRole('dialog', { name: / stats$/ });
     const actual = troopDetails(world, world.armies[0], world.settlements[0], 'infantry', Date.parse(world.server_now));
-    await expect(stats.locator('.troop-dossier-combat dl>div').filter({ has: page.getByText('Attack', { exact: true }) }).locator('dd').last()).toHaveText(`×${actual.attack.toLocaleString(undefined, { maximumFractionDigits: 3 })}`);
+    expect(actual.attackPoints).toBeCloseTo(116.64,8);
+    await expect(stats.locator('.troop-dossier-combat dl>div').filter({ has: page.getByText('Attack', { exact: true }) }).locator('dd').last()).toHaveText('116.64');
     await capture(page, info, 'troop-stats-desktop');
     await stats.getByText('More combat details', { exact: true }).click();
     await expect(stats.locator('.troop-combat-details')).toContainText('separate health stat');

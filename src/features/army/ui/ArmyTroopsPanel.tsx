@@ -15,7 +15,8 @@ import { clock } from '../../../shared/time/clock';
 import { RecruitmentPanel } from './RecruitmentPanel';
 import { unitUnlocked } from '../../research/domain/effects';
 import { TroopStatsDialog } from './TroopStatsDialog';
-import { TROOP_PRESENTATION, troopMultiplier } from './troopPresentation';
+import { TROOP_PRESENTATION, troopNumber } from './troopPresentation';
+import {unitStats,worldBalanceVersion} from '../domain/unitBalance';
 
 export function ArmyTroopsPanel({ world, army, city, now, run, busy, onCity, onOpenCity, onLogistics }: {
     world: World; army: Army; city: Settlement; now: number; busy: boolean; run: (command: Command, message?: string) => void;
@@ -29,8 +30,8 @@ export function ArmyTroopsPanel({ world, army, city, now, run, busy, onCity, onO
     return <div className="army-troops-workspace">
         <section className="army-troops-section" aria-label="Army composition"><header><div><h2>Troops</h2><span>{count(overview.free)} spaces available{overview.queued > 0 ? ` · ${overview.queued} in training` : ''}</span></div><div><button className="command-button primary" onClick={() => setRecruit('infantry')}><Icon name="plus" size={16}/>Recruitment</button></div></header>
             <div className="army-troop-grid">{RECRUIT_UNITS.map(unit => {
-                const unlocked = unitUnlocked(world, army.owner_id, city.id, unit, now), rule = RECRUIT_RULES[unit];
-                return <button key={unit} data-unit={unit} data-empty={!roster[unit]} aria-haspopup="dialog" aria-label={`${factionTroopName(faction, unit)} · ${count(roster[unit])} in army · View stats`} title={`View ${factionTroopName(faction, unit)} stats${unlocked ? '' : ' · Research required to recruit'}`} onClick={() => setInspect(unit)}><TroopIcon faction={faction} unit={unit}/><span><strong>{factionTroopName(faction, unit)}</strong><small>{TROOP_PRESENTATION[unit].category}</small><b>{count(roster[unit])}</b><span className="army-troop-quick-stats"><span title="Base attack"><Icon name="army" size={11}/>{troopMultiplier(rule.attack)}</span><span title="Base defence"><Icon name="shield" size={11}/>{troopMultiplier(rule.defence)}</span></span></span><span className="army-troop-card-hint" title={unlocked ? 'View full stats' : 'Research required'}><Icon name={unlocked ? 'arrow' : 'book'} size={13}/></span></button>;
+                const unlocked = unitUnlocked(world, army.owner_id, city.id, unit, now), stats = unitStats(unit,{version:worldBalanceVersion(world),faction});
+                return <button key={unit} data-unit={unit} data-empty={!roster[unit]} aria-haspopup="dialog" aria-label={`${factionTroopName(faction, unit)} · ${count(roster[unit])} in army · View stats`} title={`View ${factionTroopName(faction, unit)} stats${unlocked ? '' : ' · Research required to recruit'}`} onClick={() => setInspect(unit)}><TroopIcon faction={faction} unit={unit}/><span><strong>{factionTroopName(faction, unit)}</strong><small>{TROOP_PRESENTATION[unit].category}</small><b>{count(roster[unit])}</b><span className="army-troop-quick-stats"><span title="Faction reference attack"><Icon name="army" size={11}/>{troopNumber(stats.attackPoints)}</span><span title="Faction reference protection"><Icon name="shield" size={11}/>{troopNumber(stats.protectionPoints)}</span></span></span><span className="army-troop-card-hint" title={unlocked ? 'View full stats' : 'Research required'}><Icon name={unlocked ? 'arrow' : 'book'} size={13}/></span></button>;
             })}</div>
             {!overview.total && <div className="army-troop-empty-note"><span>Recruit soldiers or bring troops from a nearby army.</span><button className="command-text-button" onClick={onLogistics}>Transfer troops<Icon name="arrow" size={15}/></button></div>}
         </section>

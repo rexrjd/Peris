@@ -1,4 +1,4 @@
-import catalog from './unitBalance.json';
+import catalog from './unitBalance.json' with {type:'json'};
 import type { UnitType } from './types';
 import type { Faction } from '../../factions/domain/factions';
 import type { Resources } from '../../../shared/model/resources';

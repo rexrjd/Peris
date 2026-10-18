@@ -8,6 +8,7 @@ import { dist } from '../../../shared/math/geometry';
 import { armyPosition } from '../../map/domain/movement';
 import { soldierTotal } from './units';
 import { RECRUIT_RULES, RECRUIT_UNITS } from './roster';
+import {unitRule,worldBalanceVersion} from './unitBalance';
 import { recruitSeconds } from './recruitment';
 import { slotLevels } from '../../city/domain/slots';
 import { homeArmyPosition } from '../../map/domain/garrisons';
@@ -16,7 +17,7 @@ export function recruitSoldiers(context: LocalCommandContext, cmd: Extract<Comma
 }>) {
     const w = context.world, s = commandCity(context), a = commandArmy(context), now = context.now;
     if (!RECRUIT_UNITS.includes(cmd.item)) throw new Error('Choose a known unit.');
-    const rule = RECRUIT_RULES[cmd.item];
+    const version=worldBalanceVersion(w),rule = unitRule(cmd.item,version);
     if (!unitUnlocked(w,context.playerId,s.id,cmd.item,Date.parse(now))) throw new Error('Research this unit in the technology tree first.');
     const spend = (cost: ReturnType<typeof buildingCost>) => { if (!affordable(s, cost))
         throw new Error('Your stores cannot cover this cost.'); for (const key of RESOURCES)
@@ -33,5 +34,5 @@ export function recruitSoldiers(context: LocalCommandContext, cmd: Extract<Comma
     if (!level) throw new Error(`Build ${rule.building} first.`);
     spend(multiply(rule.cost, cmd.quantity));
     const start = Math.max(Date.parse(now), ...w.orders.filter(o => o.kind === 'recruit' && o.settlement_id === s.id && RECRUIT_RULES[o.item as keyof typeof RECRUIT_RULES]?.building === rule.building).map(o => Date.parse(o.finish_at)));
-    w.orders.push({ id: context.nextId(), owner_id: context.playerId, settlement_id: s.id, army_id: a.id, kind: 'recruit', item: cmd.item, quantity: cmd.quantity, started_at: new Date(start).toISOString(), finish_at: new Date(start + recruitSeconds(cmd.item, cmd.quantity, level,trainingBoost(w,context.playerId)) * 1000).toISOString() });
+    w.orders.push({ id: context.nextId(), owner_id: context.playerId, settlement_id: s.id, army_id: a.id, kind: 'recruit', item: cmd.item, quantity: cmd.quantity, started_at: new Date(start).toISOString(), finish_at: new Date(start + recruitSeconds(cmd.item, cmd.quantity, level,trainingBoost(w,context.playerId),version) * 1000).toISOString() });
 }

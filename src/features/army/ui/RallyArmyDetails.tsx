@@ -9,6 +9,9 @@ import { TroopIcon } from '../../frontier/ui/TroopIcon';
 import { HERO_CLASSES, heroForArmy, heroLevel } from '../../heroes/domain/heroes';
 import { HeroPortrait } from '../../heroes/ui/HeroPortrait';
 import { clock } from '../../../shared/time/clock';
+import {unitRule,worldBalanceVersion} from '../domain/unitBalance';
+import {troopDetails} from '../domain/troopDetails';
+import {armyStrength} from '../domain/strength';
 
 type RallyArmyDetailsProps = {
     world: World;
@@ -28,7 +31,10 @@ export function RallyArmyDetails({ world, playerId, armyId, now, busy, onManage,
     const roster = army ? readRoster(army) : undefined;
     const [selection, setSelection] = useState<{ armyId: number | undefined; unit: RecruitUnit }>({ armyId, unit: RECRUIT_UNITS.find(unit => (roster?.[unit] ?? 0) > 0) ?? 'infantry' });
     const selectedUnit = selection.armyId === armyId ? selection.unit : RECRUIT_UNITS.find(unit => (roster?.[unit] ?? 0) > 0) ?? 'infantry';
-    const rule = RECRUIT_RULES[selectedUnit];
+    const rule = unitRule(selectedUnit,worldBalanceVersion(world));
+    const home=army&&world.settlements.find(s=>s.id===army.home_settlement_id&&s.owner_id===playerId);
+    const stats=army&&home?troopDetails(world,army,home,selectedUnit,now):null;
+    const strength=army?armyStrength(world,army,playerId):null;
     const presentation = TROOP_PRESENTATION[selectedUnit];
     const troopCount = RECRUIT_UNITS.reduce((sum, unit) => sum + (roster?.[unit] ?? 0), 0);
     const carry = RECRUIT_UNITS.reduce((sum, unit) => sum + (roster?.[unit] ?? 0) * RECRUIT_RULES[unit].carry, 0);
@@ -82,6 +88,7 @@ export function RallyArmyDetails({ world, playerId, armyId, now, busy, onManage,
         </div>
 
         <div className="rp-army-summary" aria-label="Whole legion totals">
+            {strength&&<><div className="rp-stat-row"><span>Reference attack</span><strong>{troopNumber(strength.attackPoints)}</strong></div><div className="rp-stat-row"><span>Reference protection</span><strong>{troopNumber(strength.protectionPoints)}</strong></div><div className="rp-stat-row"><span>Carrying capacity with research</span><strong>{troopNumber(strength.carryingCapacity)}</strong></div></>}
             <div className="rp-stat-row"><span><Icon name="army" size={16}/>Troops</span><strong>{troopCount.toLocaleString()}</strong></div>
             <div className="rp-stat-row"><span><Icon name="transfer" size={16}/>Base carrying capacity</span><strong>{carry.toLocaleString()}</strong></div>
             <div className="rp-stat-row"><span><Icon name="horse" size={16}/>Slowest troop speed</span><strong>{slowestSpeed === undefined ? '—' : troopNumber(slowestSpeed)}</strong></div>
@@ -90,6 +97,7 @@ export function RallyArmyDetails({ world, playerId, armyId, now, busy, onManage,
         <div className="rp-unit-inspector" aria-live="polite" aria-label="Selected troop statistics">
             <header><h3>{factionTroopName(faction, selectedUnit)}</h3><span>{presentation.category} · {rule.building}</span></header>
             <div className="rp-stat-row"><span>In this legion</span><strong>{(roster?.[selectedUnit] ?? 0).toLocaleString()}</strong></div>
+            {stats&&<><div className="rp-stat-row"><span>Army attack / protection</span><strong>{troopNumber(stats.attackPoints)} / {troopNumber(stats.protectionPoints)}</strong></div><div className="rp-stat-row"><span>Faction attack / protection</span><strong>{troopNumber(stats.factionAttackPoints)} / {troopNumber(stats.factionProtectionPoints)}</strong></div><div className="rp-stat-row"><span>Train 10 soldiers</span><strong>{clock(stats.trainTenSeconds)}</strong></div></>}
             <div className="rp-stat-row"><span><Icon name="army" size={16}/>Base attack multiplier</span><strong>{troopMultiplier(rule.attack)}</strong></div>
             <div className="rp-stat-row"><span><Icon name="shield" size={16}/>Base defence multiplier</span><strong>{troopMultiplier(rule.defence)}</strong></div>
             <div className="rp-stat-row"><span><Icon name="horse" size={16}/>Combat speed</span><strong>{troopNumber(rule.speed)}</strong></div>
@@ -108,6 +116,6 @@ export function RallyArmyDetails({ world, playerId, armyId, now, busy, onManage,
             <button type="button" className="button gold" disabled={!!orderReason} title={orderReason || 'Choose and confirm this legion’s next march'} onClick={() => onOrders(army.id)}><Icon name="army" size={17}/>Issue orders</button>
             <button type="button" className="button outline" disabled={busy} onClick={() => onManage(army.id)}><Icon name="crown" size={17}/>Manage commander</button>
         </div>
-        <p className="rp-rule-note">Capacity is the base carry of this legion’s troops. Troop speed governs combat movement; the commander governs world travel.</p>
+        <p className="rp-rule-note">Reference ratings include permanent bonuses; range, charges and terrain still matter. World travel uses the slowest troop, commander and research.</p>
     </section>;
 }

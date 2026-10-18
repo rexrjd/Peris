@@ -27,9 +27,9 @@ export function TroopStatsDialog({ world, army, city, unit, now, onClose, onUnit
     const heading = useRef<HTMLElement>(null);
     useEffect(() => { const panel = heading.current?.closest('.army-troop-modal'); if (panel) panel.scrollTop = 0; }, [unit]);
     const rows = [
-        { label: 'Attack', icon: 'army', base: troopMultiplier(rule.attack), current: troopMultiplier(stats.attack), help: 'Unit attack with account research, commander equipment and home-city smithies.' },
-        { label: 'Defence', icon: 'shield', base: troopMultiplier(rule.defence), current: troopMultiplier(stats.defence), help: 'Unit protection with account research and commander equipment.' },
-        { label: 'Battle speed', icon: 'horse', base: `${troopNumber(rule.speed)} /s`, current: `${troopNumber(stats.speed)} /s`, help: 'Tactical distance per second on open ground. World travel follows the army commander.' },
+        { label: 'Attack', icon: 'army', base: troopNumber(stats.baseAttackPoints), current: troopNumber(stats.attackPoints), help: 'Reference attack includes class damage rate. Army values include faction, research, commander equipment and home-city smithies.' },
+        { label: 'Protection', icon: 'shield', base: troopNumber(stats.baseProtectionPoints), current: troopNumber(stats.protectionPoints), help: 'Reference protection includes faction, research and commander equipment.' },
+        { label: 'Battle speed', icon: 'horse', base: `${troopNumber(rule.speed)} /s`, current: `${troopNumber(stats.speed)} /s`, help: 'Tactical distance per second on open ground. World travel uses the slowest troop, commander and research.' },
         { label: 'Attack range', icon: 'bow', base: stats.range ? troopNumber(stats.range) : 'Contact', current: stats.range ? troopNumber(stats.range) : 'Contact', help: 'Ranged distance in tactical units. Melee reach depends on formation size.' },
         { label: 'Loot capacity', icon: 'gold', base: troopNumber(rule.carry), current: troopNumber(stats.carry), help: 'Resources carried per surviving soldier, including account carry research.' },
         { label: 'Hero morale', icon: 'flag', base: '+0', current: `+${troopNumber(stats.commander.morale)}`, help: 'Commander morale bonus. Starting morale also depends on the battle and walls.' },
@@ -42,7 +42,7 @@ export function TroopStatsDialog({ world, army, city, unit, now, onClose, onUnit
         <section className="troop-dossier-combat" aria-label="Troop combat stats">
             <div className="troop-stat-head"><span>Combat & supply</span><span>Base</span><span>Army</span></div>
             <dl>{rows.map(row => <div key={row.label} title={row.help}><dt><Icon name={row.icon} size={15}/>{row.label}</dt><dd>{row.base}</dd><dd>{row.current}</dd></div>)}</dl>
-            <p className="troop-stat-note">Army values include permanent bonuses. Terrain, stance, walls and spells apply during battle.</p>
+            <p className="troop-stat-note">Infantry reference: 100 attack / 100 protection. Faction doctrine: {troopNumber(stats.factionAttackPoints)} / {troopNumber(stats.factionProtectionPoints)}. Army values include permanent bonuses; range, terrain, stance, charges, walls and spells still matter.</p>
         </section>
         <section className="troop-dossier-recruit" aria-label="Troop recruitment requirements">
             <header><h3>Recruitment</h3><span>{stats.unlocked ? 'Unlocked' : 'Research required'}</span></header>
