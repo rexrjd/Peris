@@ -1,4 +1,5 @@
 import { FRONTIER_UNITS, FRONTIER_UNIT_TYPES as UNIT_TYPES } from './units';
+import {unitRule,type UnitBalanceVersion} from '../../army/domain/unitBalance';
 import { emptyResources, RESOURCES, type Resources } from '../../../shared/model/resources';
 import type { CampTier, FrontierConfig, Troops } from './types';
 
@@ -58,11 +59,11 @@ function count(value: number | undefined): number {
     return typeof value === 'number' && Number.isFinite(value) ? Math.min(Number.MAX_SAFE_INTEGER, Math.max(0, Math.floor(value))) : 0;
 }
 
-export function troopCost(troops: Troops): Resources {
+export function troopCost(troops: Troops,version:UnitBalanceVersion=1): Resources {
     const cost = emptyResources();
     for (const unit of UNIT_TYPES) {
         const soldiers = count(troops[unit]);
-        for (const resource of RESOURCES) cost[resource] += soldiers * FRONTIER_UNITS[unit].cost[resource];
+        for (const resource of RESOURCES) cost[resource] += soldiers * unitRule(unit,version).cost[resource];
     }
     return cost;
 }

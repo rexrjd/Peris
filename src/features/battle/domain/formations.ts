@@ -3,17 +3,18 @@ import { type Army } from '../../army/domain/types';
 import { FIELD_W, FIELD_H } from './dimensions';
 import { RECRUIT_UNITS, RECRUIT_RULES, readRoster } from '../../army/domain/roster';
 import { UNITS, UNIT_TYPES } from '../../army/domain/units';
+import { unitRule, unitStats, type UnitBalanceContext } from '../../army/domain/unitBalance';
 export function formationSize(f: Formation) { const cols = Math.min(f.columns, Math.max(1, f.soldiers)); return { width: cols * 8 + 12, depth: Math.ceil(Math.min(f.soldiers, 120) / cols) * 8 + 12 }; }
-export function makeFormations(battleId: number, army: Pick<Army, 'infantry' | 'archers' | 'cavalry' | 'unit_roster'>, owner: string | null, side: 'attacker' | 'defender', morale = 90, counts?: Partial<Record<'infantry' | 'archers' | 'cavalry', number>>): Formation[] {
+export function makeFormations(battleId: number, army: Pick<Army, 'infantry' | 'archers' | 'cavalry' | 'unit_roster'>, owner: string | null, side: 'attacker' | 'defender', morale = 90, counts?: Partial<Record<'infantry' | 'archers' | 'cavalry', number>>, context:UnitBalanceContext={version:2,faction:'roman'}): Formation[] {
     const roster = readRoster(army);
     if (army.unit_roster && RECRUIT_UNITS.some(unit => !UNIT_TYPES.includes(unit as typeof UNIT_TYPES[number]) && roster[unit] > 0)) {
         const result: Formation[] = [];
         for (const unit of RECRUIT_UNITS) {
-            const rule = RECRUIT_RULES[unit]; if (!roster[unit]) continue;
+            const rule = unitRule(unit,context.version),stats=unitStats(unit,context); if (!roster[unit]) continue;
             const force = { infantry: 0, archers: 0, cavalry: 0, [rule.combatClass]: roster[unit] };
-            for (const f of makeFormations(battleId, force, owner, side, morale)) {
+            for (const f of makeFormations(battleId, force, owner, side, morale,undefined,context)) {
                 f.id = battleId * 1000 + (side === 'attacker' ? 0 : 500) + result.length + 1;
-                f.recruit_unit = unit; f.label = unit; f.unit_attack = rule.attack; f.unit_defence = rule.defence;
+                f.recruit_unit = unit; f.label = unit; f.unit_attack = stats.attackMultiplier; f.unit_defence = stats.defenceMultiplier;
                 f.unit_speed = rule.speed / UNITS[rule.combatClass].speed; result.push(f);
             }
         }
@@ -34,5 +35,6 @@ export function makeFormations(battleId: number, army: Pick<Army, 'infantry' | '
             result.push({ id: battleId * 100 + (left ? 0 : 40) + (++index), battle_id: battleId, owner_id: owner, side, unit_type: type, label: `${UNITS[type].name} ${i + 1}`, initial_soldiers: soldiers, soldiers, kills: 0, morale, stamina: 100, facing: left ? 0 : 180, charge_ready: false, x, y, target_x: x, target_y: y, target_facing: null, target_formation_id: null, status: 'idle', damage_pool: 0, columns: type === 'cavalry' ? 6 : 10, stance: 'balanced', running: false, fire_at_will: true, updated_at: new Date().toISOString() });
         }
     }
+    for(const f of result){const stats=unitStats(f.unit_type,context);f.unit_attack=stats.attackMultiplier;f.unit_defence=stats.defenceMultiplier;f.unit_speed=stats.speed/UNITS[f.unit_type].speed;}
     return result;
 }

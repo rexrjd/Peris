@@ -4,6 +4,7 @@ import type { Faction } from '../../factions/domain/factions';
 export type Terrain = 'plains' | 'woods' | 'highlands' | 'river' | 'farmland' | 'desert' | 'snow' | 'marsh' | 'coast' | 'darkland';
 export type Difficulty = 'easy' | 'normal' | 'hard';
 export type Battle = {
+    balance_version?: import('../../army/domain/unitBalance').UnitBalanceVersion;
     id: number;
     attacker_owner_id: string;
     defender_owner_id: string | null;
@@ -73,6 +74,7 @@ export type Formation = {
     updated_at: string;
 };
 export type BattleResult = {
+    balance_version?: import('../../army/domain/unitBalance').UnitBalanceVersion;
     report_side?: 'attacker'|'defender';
     raid_city?: {id:number;name:string};
     siege_damage?: import('../../city/domain/siege').SiegeDamage[];

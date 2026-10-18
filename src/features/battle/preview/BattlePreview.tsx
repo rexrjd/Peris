@@ -15,7 +15,7 @@ export function previewWorld(faction: Faction, enemy: Faction, terrain: Terrain,
     const world = createSolo('Art preview');
     world.settlements[0].faction = faction;
     const army = world.armies[0]; Object.assign(army,{ infantry:180,archers:30,cavalry:60 });
-    const created = newBattle(id,'solo-ruler',army,{infantry:180,archers:30,cavalry:60},terrain,'normal',`${FACTIONS[faction].name} versus ${FACTIONS[enemy].name}`,'practice');
+    const created = newBattle(id,'solo-ruler',army,{infantry:180,archers:30,cavalry:60},terrain,'normal',`${FACTIONS[faction].name} versus ${FACTIONS[enemy].name}`,'practice',null,{version:2,attackerFaction:faction,defenderFaction:enemy});
     for (const f of created.formations) {
         const profile = rosters.roster.find(r => r.id === (f.owner_id ? faction : enemy))!;
         f.label = profile.troops.find(t => t.id === armyRole(f,created.formations))!.name;

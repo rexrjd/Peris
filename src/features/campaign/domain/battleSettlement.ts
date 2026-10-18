@@ -31,7 +31,8 @@ export function settleBattle(w: World, id: number, owner: string, nextId: () => 
     for (const formation of w.formations.filter(f => f.battle_id === id && f.side === 'attacker')) remaining[formation.recruit_unit ?? formation.unit_type] += formation.soldiers;
     result.attacker_roster = emptyRoster();
     for (const formation of w.formations.filter(f => f.battle_id === id && f.side === 'attacker')) result.attacker_roster[formation.recruit_unit ?? formation.unit_type] += formation.initial_soldiers;
-    result.attacker_survivor_roster = { ...remaining }; result.attacker_faction = a.faction ?? s.faction ?? 'roman';
+    result.balance_version=b.balance_version??1;
+    result.attacker_survivor_roster = { ...remaining }; result.attacker_faction = b.attacker_faction??a.faction ?? s.faction ?? 'roman';
     result.defender_roster = emptyRoster(); result.defender_survivor_roster = emptyRoster(); result.defender_faction = camp?.faction ?? b.defender_faction ?? 'orc';
     for (const formation of w.formations.filter(f => f.battle_id === id && f.side === 'defender')) { const unit = formation.recruit_unit ?? formation.unit_type; result.defender_roster[unit] += formation.initial_soldiers; result.defender_survivor_roster[unit] += formation.soldiers; }
     writeRoster(a, remaining);

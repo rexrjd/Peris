@@ -24,7 +24,7 @@ export function resolveRaidCombat(troops: Troops, defenders: Troops, position: P
     const army: Army = { ...troops, id: 1, owner_id: 'frontier-attacker', home_settlement_id: 1, name: 'Raid', status: 'idle',
         start_x: 0, start_y: 0, target_x: 0, target_y: 0, departure_at: date, arrival_at: date, updated_at: date, raid_target_id: null };
     const point = cellCenter(position.col, position.row);
-    const { battle, formations } = newBattle(1, army.owner_id, army, defenders, battleTerrainAtWorld(point.x, point.y), tier === 'low' ? 'easy' : tier === 'hard' ? 'hard' : 'normal', 'Camp');
+    const { battle, formations } = newBattle(1, army.owner_id, army, defenders, battleTerrainAtWorld(point.x, point.y), tier === 'low' ? 'easy' : tier === 'hard' ? 'hard' : 'normal', 'Camp','pve',null,{version:1,attackerFaction:'roman',defenderFaction:'roman'});
     const unitByFormation = new Map<number, FrontierUnitType>();
     for (const side of ['attacker', 'defender'] as const) {
         const force = side === 'attacker' ? troops : defenders;
@@ -35,7 +35,7 @@ export function resolveRaidCombat(troops: Troops, defenders: Troops, position: P
             if (!soldiers) continue;
             const rule = FRONTIER_UNITS[unit];
             const classes = { infantry: 0, archers: 0, cavalry: 0, [rule.combatClass]: soldiers };
-            for (const formation of makeFormations(1, classes, side === 'attacker' ? army.owner_id : null, side, side === 'attacker' ? 90 : tier === 'low' ? 78 : tier === 'hard' ? 100 : 90)) {
+            for (const formation of makeFormations(1, classes, side === 'attacker' ? army.owner_id : null, side, side === 'attacker' ? 90 : tier === 'low' ? 78 : tier === 'hard' ? 100 : 90,undefined,{version:1,faction:'roman'})) {
                 formation.id = (side === 'attacker' ? 1000 : 2000) + replacements.length;
                 formation.attack_multiplier = rule.attack;
                 formation.defence_multiplier = rule.defence;

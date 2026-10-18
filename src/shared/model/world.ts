@@ -21,6 +21,7 @@ export type Order = {
     finish_at: string;
 };
 export type World = {
+    unit_balance_version?: import('../../features/army/domain/unitBalance').UnitBalanceVersion;
     account_science?: import('../../features/research/domain/types').AccountScience[];
     research_progress?: import('../../features/research/domain/types').ResearchProgress[];
     unit_research?: { settlement_id: number; unit: import('../../features/army/domain/roster').RecruitUnit; completes_at: string }[];

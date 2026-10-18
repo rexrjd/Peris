@@ -16,7 +16,8 @@ try {
  await assert.rejects(()=>rpc('peris_roster_loss_cost',[{scout:3,catapult:2},{scout:2,catapult:1}]),/permission/);
  await assert.rejects(()=>rpc('peris_resource_difference',[{wood:1},{wood:2}]),/permission/);
  await admin('select 1');
- assert.deepEqual(await rpc('peris_roster_loss_cost',[{scout:3,catapult:2},{scout:2,catapult:1}]),{wood:33,stone:25,food:27,gold:13});
+ assert.deepEqual(await rpc('peris_roster_loss_cost',[{scout:3,catapult:2},{scout:2,catapult:1}]),{wood:28,stone:20,food:18,gold:7});
+ assert.deepEqual(await rpc('peris_roster_loss_cost',[{scout:3,catapult:2},{scout:2,catapult:1},1]),{wood:33,stone:25,food:27,gold:13});
  assert.equal(await rpc('peris_roster_loss_cost',[null,null]),null);
  assert.deepEqual(await rpc('peris_resource_difference',[{wood:20,stone:10,food:5,gold:0},{wood:33,stone:25,food:27,gold:13}]),{wood:-13,stone:-15,food:-22,gold:-13});
  await login();
@@ -39,7 +40,7 @@ try {
  await admin(`update public.battle_formations set soldiers=0,status='routed'where battle_id=${battle.id} and side='defender';update public.battles set last_tick_at=now()-interval '2 seconds'where id=${battle.id};update public.settlements set wood=100,stone=100,food=100,gold=100,resources_updated_at=now()where id=${city.id};select public.peris_game_tick(40);`);await login();world=await snap();assert.equal(world.battles[0].status,'resolved');assert.ok(world.armies[0].march_returning);assert.equal(Object.values(world.armies[0].carried_loot).reduce((n:any,v:any)=>n+v,0),40);assert.ok(world.settlements[0].wood<101);assert.equal(world.progress.some((p:any)=>p.camp_id===camp.id),false);assert.ok(world.reports[0].result.attacker_roster.scout===2);
  const pendingResult=world.reports[0].result;
  const lossRoster=Object.fromEntries(Object.keys(pendingResult.attacker_roster).map(unit=>[unit,Math.max(0,pendingResult.attacker_roster[unit]-pendingResult.attacker_survivor_roster[unit])]));
- assert.deepEqual(pendingResult.replacement_cost,troopCost(lossRoster));
+ assert.deepEqual(pendingResult.replacement_cost,troopCost(lossRoster,pendingResult.balance_version??1));
  assert.equal(pendingResult.carrying_capacity,carryingCapacity(pendingResult.attacker_survivor_roster));
  assert.equal(pendingResult.estimated_profit,undefined);assert.equal(pendingResult.delivered,undefined);
  await admin(`update public.armies set arrival_at=now()-interval '1 second'where id=${army.id};select public.peris_game_tick(40);`);await login();world=await snap();assert.equal(world.armies[0].carried_loot,null);assert.equal(readRoster(world.armies[0]).infantry,122);assert.equal(readRoster(world.armies[0]).scout,2);assert.equal(world.garrisons.length,0);assert.equal(Object.values(world.reports[0].result.delivered).reduce((n:any,v:any)=>n+v,0),40);

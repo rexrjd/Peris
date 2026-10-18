@@ -28,14 +28,15 @@ begin
  return jsonb_build_object('attack',a,'defence',d,'power',p,'knowledge',k,'speed',march_speed*public.peris_research_factor((select owner_id from public.armies where id=p_army),'march'),'damage',1+a*.02,'protection',1+d*.025,'morale',least(10,a+d),'mana',k*10,'spell',(1+p*.08)*public.peris_research_factor((select owner_id from public.armies where id=p_army),'spell_power'));
 end $$;
 create or replace function public.peris_apply_hero(p_battle bigint,p_owner uuid,p_side text)returns void language plpgsql security definer set search_path='' as $$
-declare aid bigint;sid bigint;bonus jsonb;tower integer;
+declare aid bigint;sid bigint;bonus jsonb;tower integer;v integer;faction text;
 begin
  if p_owner is null then return;end if;
  select case when p_side='attacker'then attacker_army_id else defender_army_id end into aid from public.battles where id=p_battle;
+ select balance_version,case when p_side='attacker'then coalesce(attacker_faction,'roman')else coalesce(defender_faction,'roman')end into v,faction from public.battles where id=p_battle;
  select home_settlement_id into sid from public.armies where id=aid and owner_id=p_owner;
  bonus:=public.peris_hero_bonuses(aid);
- update public.battle_formations f set unit_attack=coalesce((select attack from public.peris_unit_catalog where unit=coalesce(f.recruit_unit,f.unit_type)),1)*(1+public.peris_research_bonus(p_owner,'attack')+public.peris_research_bonus(p_owner,f.unit_type||'_attack')),
- unit_defence=coalesce((select defence from public.peris_unit_catalog where unit=coalesce(f.recruit_unit,f.unit_type)),1)*(1+public.peris_research_bonus(p_owner,'defence')+public.peris_research_bonus(p_owner,f.unit_type||'_defence')),attack_multiplier=(1+least(.6,coalesce((select sum(level)*.04 from public.peris_city_slots where settlement_id=sid and building_type='smithy'),0)))*(bonus->>'damage')::numeric,
+ update public.battle_formations f set unit_attack=(public.peris_unit_stats(coalesce(f.recruit_unit,f.unit_type),faction,v)->>'attack')::numeric*(1+public.peris_research_bonus(p_owner,'attack')+public.peris_research_bonus(p_owner,f.unit_type||'_attack')),
+ unit_defence=(public.peris_unit_stats(coalesce(f.recruit_unit,f.unit_type),faction,v)->>'defence')::numeric*(1+public.peris_research_bonus(p_owner,'defence')+public.peris_research_bonus(p_owner,f.unit_type||'_defence')),attack_multiplier=(1+least(.6,coalesce((select sum(level)*.04 from public.peris_city_slots where settlement_id=sid and building_type='smithy'),0)))*(bonus->>'damage')::numeric,
  defence_multiplier=(bonus->>'protection')::numeric,morale=least(100,morale+(bonus->>'morale')::numeric)where battle_id=p_battle and side=p_side;
  select coalesce(max(c.level),0)into tower from public.peris_city_slots c join public.settlements s on s.id=c.settlement_id where s.owner_id=p_owner and c.building_type='mage_tower';
  update public.battles set mana_attacker=case when p_side='attacker'then floor(((case when tower>0 then 20+tower*10 else 0 end)+(bonus->>'mana')::integer)*public.peris_research_factor(p_owner,'mana'))::integer else mana_attacker end,

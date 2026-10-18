@@ -10,7 +10,7 @@ export function finishBattle(b: Battle, fs: Formation[], winner: Battle['winner_
     b.winner_side = winner;
     b.winner_owner_id = winner === 'attacker' ? b.attacker_owner_id : winner === 'defender' ? b.defender_owner_id : null;
     b.ended_at = new Date().toISOString();
-    b.result = { attacker_initial: ai, defender_initial: di, attacker_survivors: as, defender_survivors: ds, attacker_losses: ai - as, defender_losses: di - ds, loot: emptyResources(), duration: Math.round(b.elapsed), reason } satisfies BattleResult;
+    b.result = { balance_version:b.balance_version??1,attacker_faction:b.attacker_faction,defender_faction:b.defender_faction,attacker_initial: ai, defender_initial: di, attacker_survivors: as, defender_survivors: ds, attacker_losses: ai - as, defender_losses: di - ds, loot: emptyResources(), duration: Math.round(b.elapsed), reason } satisfies BattleResult;
 }
 export function checkBattleOutcome(b: Battle, fs: Formation[]) {
     const attacker = fs.some(f => f.side === 'attacker' && f.soldiers > 0 && f.status !== 'routed');

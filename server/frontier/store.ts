@@ -163,7 +163,7 @@ export class FrontierStore {
                     const queue = (await tx.query<{ at: number; data: Training }>('select at,data from frontier.training where owner_id=$1 order by at desc', [owner])).rows;
                     if (queue.length >= 20) throw new RuleError('The training queue is full.');
                     const troops = emptyTroops(); troops[c.unit] = c.count;
-                    const cost = troopCost(troops);
+                    const cost = troopCost(troops,1);
                     accrue(village, this.config.villageRates, this.config.villageCapacity, now);
                     if (RESOURCES.some(k => village.resources[k] < cost[k])) throw new RuleError('Not enough village resources.');
                     for (const k of RESOURCES) village.resources[k] -= cost[k];
@@ -327,7 +327,7 @@ export class FrontierStore {
                 }
                 raid.survivors = outcome.survivors; camp.defenders = outcome.defenders;
                 const capacity = carryingCapacity(raid.survivors, this.config);
-                const loot = takeLoot(camp.resources, outcome.winner === 'attacker' ? capacity : 0), replacementCost = troopCost(losses);
+                const loot = takeLoot(camp.resources, outcome.winner === 'attacker' ? capacity : 0), replacementCost = troopCost(losses,1);
                 for (const k of RESOURCES) camp.resources[k] -= loot[k];
                 const estimatedProfit = Object.fromEntries(RESOURCES.map(k => [k, loot[k] - replacementCost[k]])) as typeof loot;
                 raid.report = { winner: outcome.winner, losses, defenderLosses, loot, replacementCost, estimatedProfit, capacity, battleSeconds: outcome.battleSeconds, reason: outcome.reason };
