@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { createSolo } from '../../src/features/campaign/domain/newRealm';
 import { startPractice } from '../../src/features/battle/domain/practice';
+import {unitRule} from '../../src/features/army/domain/unitBalance';
 
 test.beforeEach(async ({ page }) => {
     await page.addInitScript(() => localStorage.setItem('peris-settings', JSON.stringify({ sound: false, music: false, reducedMotion: true })));
@@ -47,6 +48,10 @@ test('a resumed campaign battle uses faction models and preserves saved troop ru
     startPractice(world, 'solo-ruler', () => 777, 'plains', 'normal');
     const battle = world.battles[0]; battle.mode = 'pve'; battle.camp_id = 1; battle.enemy_name = 'Campaign model check';
     delete battle.attacker_faction; delete battle.defender_faction;
+    // This scenario deliberately resumes an old save without doctrine metadata.
+    // Give it genuine v1 stats rather than stripping metadata from a v2 battle.
+    delete battle.balance_version;
+    for(const formation of world.formations){const rule=unitRule(formation.recruit_unit??formation.unit_type,1);formation.unit_attack=rule.attack;formation.unit_defence=rule.defence;}
     await page.addInitScript(world => {
         localStorage.setItem('peris-campaign-v6', JSON.stringify(world));
         localStorage.setItem(`peris-welcome:solo-ruler:${world.players[0].created_at}`, 'yes');

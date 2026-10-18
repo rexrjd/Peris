@@ -37,3 +37,10 @@ test('pruned historical report fallbacks retain v1 prices while new reports use 
     r.replacement_cost={wood:999,stone:0,food:0,gold:0};
     assert.equal(reportEconomics(r).replacementCost!.wood,999);
 });
+test('v2 snapshots cannot omit combat values and battle result versions are validated',()=>{
+ const fixture=()=>{const w=createSolo('Snapshot validation'),a=w.armies[0],made=newBattle(900,a.owner_id,a,{infantry:12,archers:0,cavalry:0},'plains','normal','Snapshot','pve',w.camps[0].id);w.battles=[made.battle];w.formations=made.formations;return w;};
+ const missing=fixture();delete missing.formations[0].unit_attack;
+ assert.throws(()=>validateSave(missing),/valid Peris/i);
+ const unknown=fixture();unknown.battles[0].result={balance_version:3} as any;
+ assert.throws(()=>validateSave(unknown),/valid Peris/i);
+});

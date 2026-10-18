@@ -1,7 +1,7 @@
 import { type Formation } from './types';
 import { type Army } from '../../army/domain/types';
 import { FIELD_W, FIELD_H } from './dimensions';
-import { RECRUIT_UNITS, RECRUIT_RULES, readRoster } from '../../army/domain/roster';
+import { RECRUIT_UNITS, readRoster } from '../../army/domain/roster';
 import { UNITS, UNIT_TYPES } from '../../army/domain/units';
 import { unitRule, unitStats, type UnitBalanceContext } from '../../army/domain/unitBalance';
 export function formationSize(f: Formation) { const cols = Math.min(f.columns, Math.max(1, f.soldiers)); return { width: cols * 8 + 12, depth: Math.ceil(Math.min(f.soldiers, 120) / cols) * 8 + 12 }; }

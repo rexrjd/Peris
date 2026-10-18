@@ -186,7 +186,7 @@ export function validateSave(data: unknown): World {
         if(!Array.isArray(w[key])||w[key].length>15000||w[key].some(r=>!r||typeof r!=='object'))invalid();
     if(w.settlements.length<1||w.settlements.length>10||w.armies.length<1||w.armies.length>20)invalid();
     if(w.unit_balance_version!==undefined&&w.unit_balance_version!==1&&w.unit_balance_version!==2)invalid();
-    for(const entry of [...w.battles,...w.reports.map(r=>r.result)]){
+    for(const entry of [...w.battles,...w.battles.flatMap(b=>b.result?[b.result]:[]),...w.reports.map(r=>r.result)]){
         if(entry.balance_version!==undefined&&entry.balance_version!==1&&entry.balance_version!==2)invalid();
         for(const side of ['attacker_faction','defender_faction'] as const)if(entry[side]!==undefined&&!isFaction(entry[side]))invalid();
     }
@@ -217,6 +217,7 @@ export function validateSave(data: unknown): World {
         const battle=w.battles.find(b=>b.id===formation.battle_id),version:UnitBalanceVersion=battle?.balance_version??1;
         const faction=(formation.side==='attacker'?battle?.attacker_faction:battle?.defender_faction)??'roman';
         if(version===2&&(!battle?.attacker_faction||!battle.defender_faction))invalid();
+        if(version===2&&[formation.unit_attack,formation.unit_defence,formation.unit_speed].some(value=>value===undefined))invalid();
         const rule = Object.hasOwn(RECRUIT_RULES, unit) ? unitRule(unit,version) : undefined;
         if(!rule||formation.unit_type!==rule.combatClass)invalid();
         const base=unitStats(unit,{version,faction});
