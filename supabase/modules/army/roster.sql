@@ -3,23 +3,6 @@ alter table public.armies add column if not exists unit_roster jsonb;
 alter table public.armies add column if not exists carried_loot jsonb;
 alter table public.armies add column if not exists farm_list_id bigint;
 alter table public.battle_formations add column if not exists recruit_unit text;
-create table if not exists public.peris_unit_catalog (
- unit text primary key, building text not null, combat_class text not null,
- cost jsonb not null, train_seconds integer not null, research_seconds integer not null,
- research_cost jsonb not null, attack numeric not null, defence numeric not null, speed integer not null, carry integer not null
-);
-insert into public.peris_unit_catalog values
- ('infantry','barracks','infantry','{"wood":4,"stone":2,"food":6,"gold":1}',2,0,'{"wood":0,"stone":0,"food":0,"gold":0}',1,1,40,20),
- ('spearmen','barracks','infantry','{"wood":5,"stone":3,"food":7,"gold":1}',3,30,'{"wood":40,"stone":30,"food":50,"gold":10}',.9,1.2,36,15),
- ('archers','barracks','archers','{"wood":6,"stone":2,"food":5,"gold":2}',2,0,'{"wood":0,"stone":0,"food":0,"gold":0}',1,1,34,15),
- ('elite','barracks','infantry','{"wood":8,"stone":6,"food":12,"gold":3}',4,60,'{"wood":100,"stone":80,"food":120,"gold":30}',1.4,1.35,38,15),
- ('cavalry','stables','cavalry','{"wood":4,"stone":7,"food":12,"gold":4}',5,0,'{"wood":0,"stone":0,"food":0,"gold":0}',1,1,76,40),
- ('scout','stables','cavalry','{"wood":3,"stone":5,"food":9,"gold":3}',4,30,'{"wood":40,"stone":20,"food":50,"gold":10}',.45,.75,92,10),
- ('heavyCavalry','stables','cavalry','{"wood":8,"stone":12,"food":20,"gold":7}',8,60,'{"wood":100,"stone":120,"food":150,"gold":40}',1.45,1.35,60,35),
- ('ram','workshop','infantry','{"wood":20,"stone":15,"food":15,"gold":6}',12,90,'{"wood":180,"stone":120,"food":80,"gold":35}',.6,2,16,0),
- ('catapult','workshop','archers','{"wood":30,"stone":20,"food":18,"gold":10}',18,120,'{"wood":220,"stone":180,"food":100,"gold":60}',2.4,.7,12,0)
- on conflict(unit) do update set building=excluded.building,combat_class=excluded.combat_class,cost=excluded.cost,train_seconds=excluded.train_seconds,research_seconds=excluded.research_seconds,research_cost=excluded.research_cost,attack=excluded.attack,defence=excluded.defence,speed=excluded.speed,carry=excluded.carry;
-revoke all on public.peris_unit_catalog from public,anon,authenticated;
 create table if not exists public.peris_unit_research (
  settlement_id bigint not null references public.settlements(id) on delete cascade,
  unit text not null references public.peris_unit_catalog(unit), completes_at timestamptz not null,

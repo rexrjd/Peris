@@ -30,7 +30,7 @@ export function TroopStatsDialog({ world, army, city, unit, now, onClose, onUnit
     const heading = useRef<HTMLElement>(null);
     useEffect(() => { const panel = heading.current?.closest('.army-troop-modal'); if (panel) panel.scrollTop = 0; }, [unit]);
     const rows = [
-        { label: 'Battle speed', icon: 'horse', base: `${troopNumber(rule.speed)} /s`, current: `${troopNumber(stats.speed)} /s`, help: 'Tactical distance per second on open ground. World travel follows the army commander.' },
+        { label: 'Battle speed', icon: 'horse', base: `${troopNumber(rule.speed)} /s`, current: `${troopNumber(stats.speed)} /s`, help: 'Tactical distance per second on open ground. World travel uses the slowest troop, commander and research.' },
         { label: 'Attack range', icon: 'bow', base: stats.range ? troopNumber(stats.range) : 'Contact', current: stats.range ? troopNumber(stats.range) : 'Contact', help: 'Ranged distance in tactical units. Melee reach depends on formation size.' },
         { label: 'Loot capacity', icon: 'gold', base: troopNumber(rule.carry), current: troopNumber(stats.carry), help: 'Resources carried per surviving soldier, including account carry research.' },
         { label: 'Hero morale', icon: 'flag', base: '+0', current: `+${troopNumber(stats.commander.morale)}`, help: 'Commander morale bonus. Starting morale also depends on the battle and walls.' },
@@ -44,7 +44,7 @@ export function TroopStatsDialog({ world, army, city, unit, now, onClose, onUnit
             <TroopStatSummary {...cardStats}/>
             <div className="troop-stat-head"><span>Combat & supply</span><span>Base</span><span>Army</span></div>
             <dl>{rows.map(row => <div key={row.label} title={row.help}><dt><Icon name={row.icon} size={15}/>{row.label}</dt><dd>{row.base}</dd><dd>{row.current}</dd></div>)}</dl>
-            <p className="troop-stat-note">Attack and defence points include research, commander equipment and home-city bonuses.{cardStats.source === 'battle' ? ' Current values use live formations and spells; ranges mean formations have different bonuses.' : ' Current values show this army’s permanent bonuses.'} Terrain, stance and the opponent also affect each hit.</p>
+            <p className="troop-stat-note">Infantry reference: 100 attack / 100 protection. Faction doctrine: {troopNumber(stats.factionAttackPoints)} / {troopNumber(stats.factionProtectionPoints)}. Attack and defence points include faction, research, commander equipment and home-city bonuses.{cardStats.source === 'battle' ? ' Current values use live formations and spells; ranges mean formations have different bonuses.' : ' Current values show this army’s permanent bonuses.'} Terrain, stance and the opponent also affect each hit.</p>
         </section>
         <section className="troop-dossier-recruit" aria-label="Troop recruitment requirements">
             <header><h3>Recruitment</h3><span>{stats.unlocked ? 'Unlocked' : 'Research required'}</span></header>
@@ -58,7 +58,7 @@ export function TroopStatsDialog({ world, army, city, unit, now, onClose, onUnit
             <div><dt>Retreat threshold</dt><dd>Morale below 18</dd></div>
             <div><dt>Commander attack / defence</dt><dd>{troopMultiplier(stats.commander.damage)} / {troopMultiplier(stats.commander.protection)}</dd></div>
             <div><dt>Home-city smithies</dt><dd>{troopMultiplier(stats.smithy)} attack</dd></div>
-            <div><dt>Research attack / defence</dt><dd>{troopMultiplier(stats.attack / (rule.attack * stats.commander.damage * stats.smithy))} / {troopMultiplier(stats.defence / (rule.defence * stats.commander.protection))}</dd></div>
+            <div><dt>Research attack / defence</dt><dd>{troopMultiplier(stats.attack / (rule.attack * (stats.factionAttackPoints/stats.baseAttackPoints) * stats.commander.damage * stats.smithy))} / {troopMultiplier(stats.defence / (rule.defence * (stats.factionProtectionPoints/stats.baseProtectionPoints) * stats.commander.protection))}</dd></div>
             <div><dt>Attack point scale</dt><dd>100 = base infantry damage rate</dd></div>
             {siege && <div><dt>Siege research</dt><dd>{troopMultiplier(stats.siege)} engines</dd></div>}
         </dl><p>Damage rate is the class coefficient per soldier before combat modifiers. Casualties depend on the opponent and formation; soldiers do not have a separate health stat.{siege && ` ${unit === 'ram' ? 'Wall' : 'Building'} damage can remove up to two levels per assault, depending on engine count and target level.`}</p></details>

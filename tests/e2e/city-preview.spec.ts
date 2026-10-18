@@ -47,7 +47,7 @@ test('building popup renders actual models through StrictMode, faction changes a
     const dialog = page.getByRole('dialog', { name: 'Selected building', exact: true });
     const preview = dialog.locator('.city-building-model-preview');
     const before = await modelPixels(preview, info, 'dwarf-hall-preview');
-    await dialog.getByText('City settings & debug', { exact: true }).click();
+    await dialog.getByRole('button', { name: 'Building settings', exact: true }).click();
     await dialog.getByLabel('CITY FACTION', { exact: true }).selectOption('persian');
     await expect.poll(async () => page.evaluate(() => JSON.parse(localStorage.getItem('peris-campaign-v6')!).settlements[0].faction)).toBe('persian');
     const after = await modelPixels(preview, info, 'persian-hall-preview');
@@ -57,10 +57,10 @@ test('building popup renders actual models through StrictMode, faction changes a
     await expect(preview.locator('.city-building-model-fallback')).toContainText('Main building');
     await page.keyboard.press('Escape');
     await page.getByRole('button', { name: /^Main building/ }).click();
-    await modelPixels(page.locator('.village-building-dialog .city-building-model-preview'), info, 'reopened-hall-preview');
+    await modelPixels(dialog.locator('.city-building-model-preview'), info, 'reopened-hall-preview');
     await page.keyboard.press('Escape');
     await page.getByRole('button', { name: /^Mage tower/ }).click();
-    await modelPixels(page.locator('.village-building-dialog .city-building-model-preview'), info, 'level-ten-mage-preview');
+    await modelPixels(dialog.locator('.city-building-model-preview'), info, 'level-ten-mage-preview');
     expect(errors).toEqual([]);
 });
 

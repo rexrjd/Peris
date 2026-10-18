@@ -7,6 +7,10 @@ import { citySlots } from '../../city/domain/slots';
 
 /** Add new data without replacing existing cities, armies, orders, or saves. */
 export function normalizeRealm(world: World, now = world.server_now, associateOrders = true) {
+    // Only local campaigns pass through this normalizer. Existing formations and
+    // receipts retain their old version; future local commands use the new rules.
+    for(const battle of world.battles)battle.balance_version??=1;
+    world.unit_balance_version=2;
     if(world.version===6){
         if (world.camp_balance_version !== 1) {
             const definitions = new Map([...CAMPS, ...BANDIT_CAMPS].map(camp => [camp.id, camp]));

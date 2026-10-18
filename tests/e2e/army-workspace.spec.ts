@@ -192,6 +192,7 @@ test('every troop opens real stats, locked roles remain inspectable and recruitm
     await page.locator('.army-troop-grid .army-troop-inspect[data-unit="infantry"]').click();
     const stats = page.getByRole('dialog', { name: / stats$/ });
     const actual = troopDetails(world, world.armies[0], world.settlements[0], 'infantry', Date.parse(world.server_now));
+    expect(actual.attackPoints).toBeCloseTo(116.64,8);
     await expect(stats.locator('.troop-dossier-combat [data-stat=attack]')).toHaveAttribute('data-current', String(Math.round(actual.attack * 1000) / 10));
     await capture(page, info, 'troop-stats-desktop');
     await stats.getByText('More combat details', { exact: true }).click();

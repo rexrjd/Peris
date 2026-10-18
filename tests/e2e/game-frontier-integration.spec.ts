@@ -8,6 +8,7 @@ const factionTroopName=(_faction:string,unit:RecruitUnit):string=>[...roman.troo
 import { findMarchPath } from '../../src/features/map/domain/pathfinding';
 import { refreshCityEconomy } from '../../src/features/city/domain/slots';
 import type { World } from '../../src/shared/model/world';
+import {ensureScience} from '../../src/features/research/domain/science';
 
 function fixture() {
  const world=createSolo('Integrated Peris'), army=world.armies[0], city=world.settlements[0];
@@ -30,19 +31,22 @@ const saved=(page:Page):Promise<World>=>page.evaluate(()=>JSON.parse(localStorag
 async function lists(page:Page) {await page.getByRole('button',{name:'Quick access',exact:true}).click();await page.getByRole('navigation',{name:'Quick access shortcuts'}).getByRole('button',{name:/^Farm lists/}).click();return page.getByRole('dialog',{name:'Farm lists',exact:true});}
 
 test('Frontier units recruit inside the existing Peris city and legion',async({page},info)=>{
- const {world}=fixture(),requests=await start(page,world),errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
+ const {world}=fixture();ensureScience(world,world.players[0].id,Date.parse(world.server_now));world.account_science![0].points=2000;
+ const requests=await start(page,world),errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
  await page.getByRole('button',{name:'Armies',exact:true}).click();
-
+ await page.getByRole('button',{name:'Recruitment',exact:true}).click();
  const buildings=page.getByRole('navigation',{name:'Recruitment buildings'});
  await buildings.getByRole('button',{name:/Stables/}).click();await expect(page.locator('.game-unit-choices button')).toHaveCount(3);
- const scout=factionTroopName('roman','scout');await page.locator('.game-unit-choices button').filter({hasText:scout}).click();await page.getByRole('button',{name:new RegExp('^Research '+scout)}).click();
- await expect.poll(async()=>(await saved(page)).unit_research?.some(r=>r.unit==='scout')).toBe(true);await expect(page.getByRole('status').filter({hasText:'Research completes'})).toBeVisible();
+ const scout=factionTroopName('roman','scout');await page.locator('.game-unit-choices button').filter({hasText:scout}).click();await page.getByRole('button',{name:/^Unlock in Research/}).click();
+ await expect(page.getByRole('complementary',{name:'Selected technology'})).toContainText('Scouting');await page.getByRole('button',{name:'Begin research',exact:true}).click();
+ await expect.poll(async()=>(await saved(page)).research_progress?.some(r=>r.technology_id==='scouting')).toBe(true);await expect(page.getByRole('progressbar',{name:'Research progress',exact:true})).toBeVisible();
+ await page.getByRole('navigation',{name:'Game navigation'}).getByRole('button',{name:'Armies',exact:true}).click();await page.getByRole('button',{name:'Recruitment',exact:true}).click();
  await buildings.getByRole('button',{name:/Workshop/}).click();await expect(page.locator('.game-unit-choices button')).toHaveCount(2);
- await page.locator('.game-unit-choices button').filter({hasText:factionTroopName('roman','catapult')}).click();await expect(page.getByRole('button',{name:new RegExp('^Research '+factionTroopName('roman','catapult'))})).toBeEnabled();
+ await page.locator('.game-unit-choices button').filter({hasText:factionTroopName('roman','catapult')}).click();await expect(page.getByRole('button',{name:/^Unlock in Research/})).toBeEnabled();
  await page.screenshot({path:info.outputPath('integrated-workshop.png'),fullPage:true});
  await buildings.getByRole('button',{name:/Barracks/}).click();await page.getByLabel('Soldiers to train').fill('2');await page.getByRole('button',{name:new RegExp('^Train 2 '+factionTroopName('roman','infantry'))}).click();
  await expect.poll(async()=>readRoster((await saved(page)).armies[0]).infantry).toBe(122);
- await page.getByRole('button',{name:'City',exact:true}).click();await expect(page.locator('[data-troop=scout]')).toHaveText('4');await expect(page.locator('[data-troop=catapult]')).toHaveText('1');
+ await page.keyboard.press('Escape');await page.getByRole('button',{name:'City',exact:true}).click();await expect(page.locator('[data-troop=scout]')).toHaveText('4');await expect(page.locator('[data-troop=catapult]')).toHaveText('1');
  await page.reload();await page.getByRole('button',{name:'Continue campaign',exact:true}).click();expect(readRoster((await saved(page)).armies[0]).catapult).toBe(1);expect(requests).toEqual([]);expect(errors).toEqual([]);
 });
 

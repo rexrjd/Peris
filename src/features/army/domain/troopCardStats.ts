@@ -1,7 +1,8 @@
 import type { World } from '../../../shared/model/world';
 import type { Army } from './types';
 import type { Settlement } from '../../city/domain/types';
-import { RECRUIT_RULES, type RecruitUnit } from './roster';
+import { type RecruitUnit } from './roster';
+import {CURRENT_UNIT_BALANCE,unitRule,worldBalanceVersion,type UnitBalanceVersion} from './unitBalance';
 import { UNITS } from './units';
 import { troopDetails } from './troopDetails';
 import { slotLevels } from '../../city/domain/slots';
@@ -11,8 +12,8 @@ export type TroopStat = { base: number; current: number; maximum?: number; sourc
     variants?: { label: string; current: number; sources: TroopStatSource[] }[] };
 /** Display points: 100 attack is an unmodified infantry soldier's damage rate.
  * These are comparisons of existing combat values, not new balance rules. */
-export function baseTroopStats(unit: RecruitUnit) {
-    const rule = RECRUIT_RULES[unit];
+export function baseTroopStats(unit: RecruitUnit,version:UnitBalanceVersion=CURRENT_UNIT_BALANCE) {
+    const rule = unitRule(unit,version);
     return { attack: 100 * (UNITS[rule.combatClass].rate / .020) * rule.attack,
         defence: 100 * rule.defence, speed: rule.speed, carry: rule.carry };
 }
@@ -20,7 +21,8 @@ export function baseTroopStats(unit: RecruitUnit) {
 export function troopCardStats(world: World, army: Army, city: Settlement, unit: RecruitUnit, now: number) {
     const ownedWorld = world.heroes?.some(hero => hero.army_id === army.id && hero.owner_id !== army.owner_id)
         ? { ...world, heroes: world.heroes.filter(hero => hero.army_id !== army.id || hero.owner_id === army.owner_id) } : world;
-    const base = baseTroopStats(unit), details = troopDetails(ownedWorld, army, city, unit, now);
+    const base = baseTroopStats(unit,worldBalanceVersion(world)), details = troopDetails(ownedWorld, army, city, unit, now);
+    const doctrineAttack=details.factionAttackPoints/base.attack,doctrineDefence=details.factionProtectionPoints/base.defence;
     const scale = 100 * (details.attackRate / .020);
     const battle = world.battles.find(b => b.status === 'active' && (b.attacker_army_id === army.id || b.defender_army_id === army.id || b.city_defenders?.some(party => party.army_id === army.id)));
     const formations = battle ? world.formations.filter(f => f.battle_id === battle.id && f.owner_id === army.owner_id &&
@@ -37,12 +39,14 @@ export function troopCardStats(world: World, army: Army, city: Settlement, unit:
     };
     const home = world.settlements.find(s => s.id === army.home_settlement_id);
     const permanentAttack = explain(base.attack, [
-        { label: 'Research', factor: details.attack / (details.rule.attack * details.smithy * details.commander.damage), detail: 'Completed account and troop-class attack research.' },
+        { label: 'Faction doctrine', factor: doctrineAttack, detail: 'The army home city’s faction profile.' },
+        { label: 'Research', factor: details.attack / (details.rule.attack * doctrineAttack * details.smithy * details.commander.damage), detail: 'Completed account and troop-class attack research.' },
         { label: 'Home-city smithies', factor: details.smithy, detail: `${home?.name ?? 'Home city'} · ${slotLevels(world, army.home_settlement_id, 'smithy')} completed smithy levels.` },
         { label: 'Commander & equipment', factor: details.commander.damage, detail: 'Commander attack attributes, including equipped artifacts.' },
     ]);
     const permanentDefence = explain(base.defence, [
-        { label: 'Research', factor: details.defence / (details.rule.defence * details.commander.protection), detail: 'Completed account and troop-class defence research.' },
+        { label: 'Faction doctrine', factor: doctrineDefence, detail: 'The army home city’s faction profile.' },
+        { label: 'Research', factor: details.defence / (details.rule.defence * doctrineDefence * details.commander.protection), detail: 'Completed account and troop-class defence research.' },
         { label: 'Commander & equipment', factor: details.commander.protection, detail: 'Commander defence attributes, including equipped artifacts.' },
     ]);
     const live = (original: number, permanent: ReturnType<typeof explain>, snapshot: number, magic: number) => {

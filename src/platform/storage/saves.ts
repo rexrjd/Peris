@@ -1,5 +1,6 @@
 import {validateResearch} from '../../features/research/domain/science';
 import {researchUnitStatLimit} from '../../features/research/domain/effects';
+import {unitRule,unitStats,type UnitBalanceVersion} from '../../features/army/domain/unitBalance';
 import { RECRUIT_UNITS, RECRUIT_RULES, validateRoster, writeRoster, rosterTotal, readRoster } from '../../features/army/domain/roster';
 import { RESOURCES } from '../../shared/model/resources';
 import { BATTLE_TERRAINS } from '../../features/battle/domain/terrain';
@@ -184,6 +185,11 @@ export function validateSave(data: unknown): World {
     for(const key of ['settlements','armies','buildings','camps','orders','battles','formations','reports','progress','claims','challenges'] as const)
         if(!Array.isArray(w[key])||w[key].length>15000||w[key].some(r=>!r||typeof r!=='object'))invalid();
     if(w.settlements.length<1||w.settlements.length>10||w.armies.length<1||w.armies.length>20)invalid();
+    if(w.unit_balance_version!==undefined&&w.unit_balance_version!==1&&w.unit_balance_version!==2)invalid();
+    for(const entry of [...w.battles,...w.battles.flatMap(b=>b.result?[b.result]:[]),...w.reports.map(r=>r.result)]){
+        if(entry.balance_version!==undefined&&entry.balance_version!==1&&entry.balance_version!==2)invalid();
+        for(const side of ['attacker_faction','defender_faction'] as const)if(entry[side]!==undefined&&!isFaction(entry[side]))invalid();
+    }
     for (const count of [w.report_count, w.hidden_report_count, w.unread_report_count]) if (count !== undefined && (!Number.isSafeInteger(count) || count < 0)) invalid();
     for (const report of w.reports) if (report.read_at != null && (typeof report.read_at !== 'string' || !Number.isFinite(Date.parse(report.read_at)))) invalid();
     for (const force of [...w.armies, ...(w.garrisons ?? []), ...w.camps]) if (force.unit_roster != null) {
@@ -208,8 +214,14 @@ export function validateSave(data: unknown): World {
     }
     for (const formation of w.formations) {
         const unit=formation.recruit_unit??formation.unit_type;
-        const rule = Object.hasOwn(RECRUIT_RULES, unit) ? RECRUIT_RULES[unit] : undefined;
-        if (!rule || formation.unit_type !== rule.combatClass || formation.unit_attack !== undefined && (!Number.isFinite(formation.unit_attack)||formation.unit_attack<rule.attack||formation.unit_attack>researchUnitStatLimit(unit,'attack')+1e-8) || formation.unit_defence !== undefined && (!Number.isFinite(formation.unit_defence)||formation.unit_defence<rule.defence||formation.unit_defence>researchUnitStatLimit(unit,'defence')+1e-8) || formation.unit_speed !== undefined && (!Number.isFinite(formation.unit_speed) || Math.abs(formation.unit_speed - rule.speed / ({ infantry: 40, archers: 34, cavalry: 76 }[rule.combatClass])) > 1e-8)) invalid();
+        const battle=w.battles.find(b=>b.id===formation.battle_id),version:UnitBalanceVersion=battle?.balance_version??1;
+        const faction=(formation.side==='attacker'?battle?.attacker_faction:battle?.defender_faction)??'roman';
+        if(version===2&&(!battle?.attacker_faction||!battle.defender_faction))invalid();
+        if(version===2&&[formation.unit_attack,formation.unit_defence,formation.unit_speed].some(value=>value===undefined))invalid();
+        const rule = Object.hasOwn(RECRUIT_RULES, unit) ? unitRule(unit,version) : undefined;
+        if(!rule||formation.unit_type!==rule.combatClass)invalid();
+        const base=unitStats(unit,{version,faction});
+        if(formation.unit_attack!==undefined&&(!Number.isFinite(formation.unit_attack)||formation.unit_attack<base.attackMultiplier-1e-8||formation.unit_attack>researchUnitStatLimit(unit,'attack',version)*(base.attackMultiplier/rule!.attack)+1e-8)||formation.unit_defence!==undefined&&(!Number.isFinite(formation.unit_defence)||formation.unit_defence<base.defenceMultiplier-1e-8||formation.unit_defence>researchUnitStatLimit(unit,'defence',version)*(base.defenceMultiplier/rule!.defence)+1e-8)||formation.unit_speed!==undefined&&(!Number.isFinite(formation.unit_speed)||Math.abs(formation.unit_speed-rule!.speed/({infantry:40,archers:34,cavalry:76}[rule!.combatClass]))>1e-8))invalid();
     }
     for (const entry of [...w.battles, ...w.reports]) if (entry.result) {
         const result = entry.result;

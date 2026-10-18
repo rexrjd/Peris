@@ -19,7 +19,7 @@ export function reportLossRoster(result: BattleResult, side: ReportSide = 'attac
 
 export function reportEconomics(result: BattleResult, side: ReportSide = 'attacker') {
     const losses = reportLossRoster(result, side);
-    const replacementCost = side === 'attacker' && result.replacement_cost ? result.replacement_cost : losses ? troopCost(losses) : null;
+    const replacementCost = side === 'attacker' && result.replacement_cost ? result.replacement_cost : losses ? troopCost(losses,result.balance_version??1) : null;
     const delivered = side === 'attacker' ? result.delivered ?? (result.loot && resourceTotal(result.loot) === 0 ? emptyResources() : null) : emptyResources();
     const spent=side==='defender'&&result.raid_city&&replacementCost?Object.fromEntries(RESOURCES.map(key=>[key,replacementCost[key]+result.loot[key]])) as Resources:replacementCost;
     const profit = spent && delivered ? resourceDifference(delivered, spent) : null;

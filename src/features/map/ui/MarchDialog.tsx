@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import type { ArmyTroops } from '../../army/domain/types';
 import { soldierTotal } from '../../army/domain/units';
 import { RECRUIT_UNITS as UNIT_TYPES, readRoster, rosterTotal } from '../../army/domain/roster';
+import { worldBalanceVersion } from '../../army/domain/unitBalance';
 import { carryingCapacity, troopCost } from '../../frontier/domain/balance';
 import { TroopSummary } from '../../army/ui/TroopSummary';
 import { marchSpeed } from '../domain/commands';
@@ -53,7 +54,7 @@ export function MarchDialog({ world, playerId, now, busy, initialArmyId, destina
     const reason = !chosen ? 'Choose one of your legions.' : chosen.status === 'moving' ? 'This legion already has a march in progress.' : battle ? 'This legion is in battle.' : training ? 'Training must finish before this legion leaves.' : destination.kind !== 'move' && !originOwned ? 'Bring this legion to your village or an owned field before attacking.' : destination.kind === 'move' && target && !ownedStation(world, playerId, target) ? 'Reinforcements can only stop at your village or an owned field.' : destination.kind === 'move' && partialParty && !originOwned ? 'Bring this legion to an owned station before leaving troops behind.' : !valid ? 'Enter whole troop quantities up to the available amount.' : rosterTotal(troops) === 0 ? 'Choose at least one troop.' : !target || !route ? 'No connected land route is available.' : cooldown && Date.parse(cooldown.available_at) > now ? 'This camp is still regrouping.' : '';
     const faction = chosen?.faction ?? world.settlements.find(city => city.id === chosen?.home_settlement_id)?.faction ?? 'roman';
     const travel = chosen && route && valid ? Math.max(2, route.distance / marchSpeed(world, chosen, troops)) : null;
-    const capacity = valid ? carryingCapacity(troops) : null, replacementValue = valid ? troopCost(troops) : null;
+    const capacity = valid ? carryingCapacity(troops) : null, replacementValue = valid ? troopCost(troops, worldBalanceVersion(world)) : null;
     return <Modal title={destination.kind === 'raid' ? 'Prepare camp raid' : destination.kind==='raidCity'?'Prepare city raid':'Prepare march'} heading={false} className="march-dialog march-compact" backdropClassName="march-compact-backdrop" onClose={onClose}>
         <header className="march-compact-heading"><Icon name={destination.kind==='move'?'flag':'army'} size={20}/><div><h2>{destination.kind==='move'?'March':'Raid'}</h2><p>{label} {target&&<small>({Math.floor(target.x/CELL_SIZE)} | {Math.floor(target.y/CELL_SIZE)})</small>}</p></div></header>
         <form onSubmit={event => {

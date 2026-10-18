@@ -5,9 +5,26 @@ import { beginRaid } from '../src/features/campaign/domain/raids';
 import { emptyRoster, writeRoster } from '../src/features/army/domain/roster';
 import { baseTroopStats, troopCardStats } from '../src/features/army/domain/troopCardStats';
 
+test('faction doctrine on cards is explained separately from research',()=>{
+    const world=createSolo('Versioned cards'),army=world.armies[0],city=world.settlements[0];
+    world.heroes=[];city.faction='elf';
+    const current=troopCardStats(world,army,city,'archers',Date.parse(world.server_now));
+    assert.equal(current.attack.base,75);assert.equal(current.attack.current,79.5);
+    assert.equal(current.attack.sources?.[0].label,'Faction doctrine');
+    assert.ok(!current.attack.sources?.some(source=>source.label==='Research'));
+});
+
+test('card bases and current ratings honor an old server without balance metadata',()=>{
+    const world=createSolo('Legacy cards'),army=world.armies[0],city=world.settlements[0];
+    world.heroes=[];city.faction='elf';delete world.unit_balance_version;
+    const old=troopCardStats(world,army,city,'archers',Date.parse(world.server_now));
+    assert.equal(old.attack.base,60);assert.equal(old.attack.current,60);
+    assert.deepEqual(old.attack.sources,[]);
+});
+
 test('recruitment base points include class damage rate and stay separate from army bonuses', () => {
     assert.deepEqual(baseTroopStats('infantry'), { attack: 100, defence: 100, speed: 40, carry: 20 });
-    assert.equal(baseTroopStats('archers').attack, 60);
+    assert.equal(baseTroopStats('archers').attack, 75);
     assert.equal(baseTroopStats('cavalry').attack, 155);
     assert.equal(baseTroopStats('ram').carry, 0);
     const world = createSolo('Stat cards'), army = world.armies[0], city = world.settlements[0];

@@ -9,7 +9,7 @@ begin
  'debug_enabled',coalesce((select enabled from public.peris_debug_config where id),false),
  'map',jsonb_build_object('version',4,'cols',200,'rows',200,'cell_size',128,'seed',1346720329,
    'total_players',(select count(*) from public.players),'total_settlements',(select count(*) from public.settlements)),
- 'gameplay_version',1,
+ 'gameplay_version',1,'unit_balance_version',2,
  'account_science',coalesce((select jsonb_agg(s)from public.peris_account_science s where s.owner_id=u),'[]'::jsonb),
  'research_progress',coalesce((select jsonb_agg(p order by technology_id)from public.peris_research_progress p where p.owner_id=u),'[]'::jsonb),
  'heroes',coalesce((select jsonb_agg(h order by id)from public.peris_heroes h where owner_id=u),'[]'::jsonb),

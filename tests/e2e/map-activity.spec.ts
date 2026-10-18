@@ -101,7 +101,7 @@ test('realm activity shows every army/city, filters cleanly and selects the corr
     await panel.getByRole('button', { name: 'View returning: River watch', exact: true }).click();
     await expect(panel.locator('.ops-identity h2')).toBeInViewport();
     await panel.getByRole('button', { name: 'Manage troops', exact: true }).click();
-    await expect(page.locator('.army-selected-banner')).toContainText('River watch');
+    await expect(page.getByRole('group',{name:'Your armies',exact:true}).getByRole('button',{name:/^River watch,/})).toHaveAttribute('aria-pressed','true');
     expect((await saved(page)).armies.find(a => a.id === 300)!.march_returning).toBe(true);
     expect(errors).toEqual([]);
 });

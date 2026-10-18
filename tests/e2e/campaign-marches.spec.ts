@@ -182,5 +182,5 @@ test('bandit farming resolves quietly while the global map remains available', a
     await capture(page, info, 'campaign-quiet-farming');
     await expect.poll(async () => (await save(page)).reports.some(report => report.title === camp.name), { timeout: 90_000 }).toBe(true);
     await expect(page.getByRole('dialog', { name: 'Battle result', exact: true })).toHaveCount(0);
-    await expect(page.getByLabel('Battle report ledger')).toContainText(camp.name);
+    await expect(page.getByLabel('Report inbox').locator('.report-row').filter({hasText:camp.name})).toHaveCount(1);
 });

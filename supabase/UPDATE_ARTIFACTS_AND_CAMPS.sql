@@ -2,6 +2,7 @@
 -- Run UPGRADE_TO_V16.sql first on older databases.
 -- Preserves accounts, inventories, receipts, camp IDs/positions and farm targets.
 -- No table rebuilds. Existing camp stock/defenders are preserved; busy camp metadata is skipped.
+-- Retains current balance rules and battle finalizers on upgraded worlds.
 begin;
 do $$begin if to_regclass('public.peris_camp_stock') is null then raise exception 'Run UPGRADE_TO_V16.sql before this artifact/camp update';end if;end$$;
 -- Generated from heroes/domain/artifacts.ts. Keep catalog stats and loot pools identical.
@@ -714,9 +715,26 @@ begin
  end loop;
  update public.peris_camp_stock set resources=stock,stock_updated_at=greatest(p_until,s.stock_updated_at),next_recruit_at=s.next_recruit_at,recruit_sequence=s.recruit_sequence where camp_id=c.id;
 end $$;
-
--- Persist battle-time casualty value; signed profit is calculated only from delivery.
+do $peris_camp_upgrade$
+begin
+ if exists(select 1 from information_schema.columns where table_schema='public'and table_name='battles'and column_name='balance_version')then
+  execute $peris_current$create or replace function public.peris_roster_loss_cost(p_initial jsonb,p_survivors jsonb,p_version integer)returns jsonb
+language sql stable security definer set search_path='' as $$
+ select jsonb_object_agg(resource,amount)from(
+  select resource,coalesce(sum(greatest(0,coalesce((p_initial->>c.unit)::integer,0)-coalesce((p_survivors->>c.unit)::integer,0))*(public.peris_unit_stats(c.unit,'roman',p_version)->'cost'->>resource)::numeric),0)as amount
+  from unnest(array['wood','stone','food','gold'])keys(resource)cross join public.peris_unit_catalog c group by resource
+ )costs where jsonb_typeof(p_initial)='object'and jsonb_typeof(p_survivors)='object'
+$$;
 create or replace function public.peris_roster_loss_cost(p_initial jsonb,p_survivors jsonb)returns jsonb
+language sql stable security definer set search_path='' as $$select public.peris_roster_loss_cost(p_initial,p_survivors,2)$$;
+create or replace function public.peris_resource_difference(p_received jsonb,p_spent jsonb)returns jsonb
+language sql immutable set search_path='' as $$
+ select jsonb_object_agg(resource,coalesce((p_received->>resource)::numeric,0)-coalesce((p_spent->>resource)::numeric,0))from unnest(array['wood','stone','food','gold'])keys(resource)
+$$;
+revoke all on function public.peris_roster_loss_cost(jsonb,jsonb,integer)from public,anon,authenticated;
+$peris_current$;
+ else
+  execute $peris_legacy_economics$create or replace function public.peris_roster_loss_cost(p_initial jsonb,p_survivors jsonb)returns jsonb
 language sql stable security definer set search_path='' as $$
  select jsonb_object_agg(resource,amount)from(
   select resource,coalesce(sum(greatest(0,coalesce((p_initial->>c.unit)::integer,0)-coalesce((p_survivors->>c.unit)::integer,0))*(c.cost->>resource)::numeric),0)as amount
@@ -726,10 +744,12 @@ $$;
 create or replace function public.peris_resource_difference(p_received jsonb,p_spent jsonb)returns jsonb
 language sql immutable set search_path='' as $$
  select jsonb_object_agg(resource,coalesce((p_received->>resource)::numeric,0)-coalesce((p_spent->>resource)::numeric,0))from unnest(array['wood','stone','food','gold'])keys(resource)
-$$;
-
-
-create or replace function public.peris_start_raid(p_owner uuid,p_camp integer) returns bigint
+$$;$peris_legacy_economics$;
+  -- Pre-balance worlds may already have research and city-raid settlement rules.
+  -- Only the original V16 capabilities need the frozen battle replacements.
+  if to_regprocedure('public.peris_research_factor(uuid,text)')is null
+   and to_regprocedure('public.peris_finish_city_raid(bigint,text,text)')is null then
+   execute $peris_legacy_battles$create or replace function public.peris_start_raid(p_owner uuid,p_camp integer) returns bigint
 language plpgsql security definer set search_path='' as $$
 declare a public.armies%rowtype;c public.peris_camps%rowtype;bid bigint;mor numeric;shared_stock boolean;
 begin
@@ -754,8 +774,6 @@ begin
  update public.armies set raid_target_id=null where id=a.id;
  return bid;
 end $$;
-
-
 create or replace function public.peris_finish(p_bid bigint,p_winner text,p_reason text) returns void
 language plpgsql security definer set search_path='' as $$
 declare b public.battles%rowtype;ai integer;di integer;asur integer;dsur integer;r jsonb;loot jsonb:='{"wood":0,"stone":0,"food":0,"gold":0}';tier integer;u uuid;name text;a public.armies%rowtype;s public.settlements%rowtype;winner uuid;home jsonb;camp public.peris_camps%rowtype;stock jsonb;remaining jsonb;carry numeric;take numeric;key text;delivered jsonb;overflow jsonb;
@@ -836,9 +854,10 @@ begin
  insert into public.peris_reports(owner_id,battle_id,title,won,result,camp_id,farm_list_id)values(u,b.id,name,coalesce(u=winner,false),r,b.camp_id,a.farm_list_id)on conflict(owner_id,battle_id)do nothing;
  if camp.bandit and u=b.attacker_owner_id and not (select march_returning from public.armies where id=a.id)then perform public.peris_deliver_loot(a.id);end if;
  end loop;
-end $$;
-
-
+end $$;$peris_legacy_battles$;
+  end if;
+ end if;
+end $peris_camp_upgrade$;
 revoke all on function public.peris_roster_loss_cost(jsonb,jsonb),public.peris_resource_difference(jsonb,jsonb) from public,anon,authenticated;
 notify pgrst,'reload schema';
 commit;

@@ -72,7 +72,8 @@ test('city building popup spends once, shows a persisted queue and completes the
     for (const resource of RESOURCES) projected[resource] -= cost[resource];
     const paid = projectSettlement(projected, Date.parse(sent.settlements[0].resources_updated_at));
     for (const resource of RESOURCES) expect(Math.abs(sent.settlements[0][resource] - paid[resource])).toBeLessThan(.1);
-    await expect(dialog.getByRole('button', { name: 'Builders are working', exact: true })).toBeDisabled();
+    await expect(dialog.locator('.building-inspector-work-label')).toHaveText('Builders are working');
+    await expect(dialog.locator('.building-inspector-primary')).toHaveCount(0);
     await page.keyboard.press('Escape');
     await expect(page.getByRole('dialog', { name: 'Selected building', exact: true })).toHaveCount(0);
     await expect(page.locator('[data-building="market"]')).toBeFocused();
@@ -82,7 +83,8 @@ test('city building popup spends once, shows a persisted queue and completes the
     expect((await save(page)).orders.find(row => row.id === order.id)?.finish_at).toBe(order.finish_at);
     await page.getByRole('complementary', { name: 'Village resources and population' }).getByRole('button', { name: /Main building → 2/ }).click();
     dialog = page.getByRole('dialog', { name: 'Selected building', exact: true });
-    await expect(dialog.getByRole('button', { name: 'Builders are working', exact: true })).toBeDisabled();
+    await expect(dialog.locator('.building-inspector-work-label')).toHaveText('Builders are working');
+    await expect(dialog.locator('.building-inspector-primary')).toHaveCount(0);
     await capture(page, info, 'village-building-in-progress');
     await expect.poll(async () => (await save(page)).buildings.find(building => building.building_type === 'market')?.level, { timeout: 35_000 }).toBe(2);
     await expect(dialog.getByRole('button', { name: 'Upgrade to level 3', exact: true })).toBeEnabled();
@@ -131,7 +133,9 @@ test('city ledger counts only home troops and separates garrison, training and j
     await page.getByLabel('Search city buildings', { exact: true }).fill('barracks');
     await page.getByRole('button', { name: /^Barracks/ }).click();
     const dialog = page.getByRole('dialog', { name: 'Selected building', exact: true });
-    await expect(dialog.getByRole('row', { name: /Training 10 infantry/ })).toContainText('0:20');
+    await expect(dialog.locator('.building-inspector-training-queue')).toContainText('5 Legionary');
+    await dialog.getByLabel('Soldiers to train',{exact:true}).fill('10');
+    await expect(dialog.locator('.recruit-timing > span').filter({hasText:'Training time'}).locator('b')).toHaveText('0:20');
     await capture(page, info, 'village-barracks-popup');
 });
 
@@ -146,7 +150,8 @@ test('riverside fishery queue reopens the correct site and shows its actual next
     const dialog = page.getByRole('dialog', { name: 'Selected building', exact: true });
     await expect(dialog.getByRole('heading', { name: 'Fishery', exact: true })).toBeVisible();
     await expect(dialog.getByRole('button', { name: 'Fishery → 3', exact: true })).toBeVisible();
-    await expect(dialog.getByRole('button', { name: 'Builders are working', exact: true })).toBeDisabled();
+    await expect(dialog.locator('.building-inspector-work-label')).toHaveText('Builders are working');
+    await expect(dialog.locator('.building-inspector-primary')).toHaveCount(0);
     await capture(page, info, 'village-fishery-queue');
 });
 
@@ -165,14 +170,19 @@ test('city popup preserves building choices, shortages, max levels and mage spel
     await capture(page, info, 'village-empty-plot-picker');
     await page.keyboard.press('Escape');
     dialog = await selectPlot(page, 'market');
-    await expect(dialog.getByRole('heading', { name: 'Current benefits', exact: true })).toBeVisible();
+    await expect(dialog.getByRole('columnheader', { name: 'Benefit', exact: true })).toBeVisible();
+    await expect(dialog.locator('.building-inspector-complete')).toContainText('Fully developed');
     await expect(dialog.getByRole('button', { name: /Upgrade to level/ })).toHaveCount(0);
     await page.keyboard.press('Escape');
     dialog = await selectPlot(page, 'slot:1');
+    await dialog.getByRole('tab',{name:'Upgrade',exact:true}).click();
     await expect(dialog.getByRole('row', { name: /Spells available to research/ })).toContainText('20 / 20');
+    await dialog.getByRole('tab',{name:'Spells',exact:true}).click();
+    await expect(dialog.getByRole('tabpanel',{name:'Spells',exact:true})).toBeVisible();
     await dialog.getByRole('button', { name: /Open spellbook/ }).click();
     const spellbook = page.getByRole('dialog', { name: 'Mage tower · Spellbook', exact: true });
     await expect(spellbook).toBeVisible();
+    await expect(spellbook.getByRole('navigation',{name:'Spell levels',exact:true}).getByRole('button')).toHaveCount(10);
     await page.keyboard.press('Escape');
     await expect(spellbook).toHaveCount(0);
     await expect(dialog).toBeVisible();
