@@ -28,6 +28,10 @@ export function Modal({ title, children, onClose, className = '', heading = true
             const topmost = Array.from(document.querySelectorAll('[role="dialog"][aria-modal="true"]')).at(-1);
             if (topmost !== panel.current) return;
             if (e.key === 'Escape') {
+                // A tooltip owned by this dialog gets the first dismissal.
+                const tooltipOpen = Array.from(panel.current?.querySelectorAll('[aria-describedby]') ?? []).some(element =>
+                    element.getAttribute('aria-describedby')?.split(/\s+/).some(id => document.getElementById(id)?.getAttribute('role') === 'tooltip'));
+                if (tooltipOpen) return;
                 e.stopPropagation();
                 e.preventDefault();
                 close.current();

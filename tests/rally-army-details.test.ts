@@ -31,7 +31,7 @@ test('Rally tray presents nine recruited identities and base totals from the sav
     assert.ok(html.includes('Saved commander'));
     assert.ok(html.includes('Level 3 Mage'));
     assert.ok(html.includes('art/heroes/portraits/persian/08.webp'));
-    assert.ok(html.includes('Base attack multiplier'));
+    assert.match(html, /data-stat="attack" data-base="100" data-current="102"/);
     assert.equal(JSON.stringify(f.world), before);
 });
 

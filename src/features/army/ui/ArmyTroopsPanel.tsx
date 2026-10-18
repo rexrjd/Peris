@@ -4,7 +4,7 @@ import type { World } from '../../../shared/model/world';
 import type { Command } from '../../../shared/model/commands';
 import type { Army } from '../domain/types';
 import type { Settlement } from '../../city/domain/types';
-import { RECRUIT_UNITS, RECRUIT_RULES, readRoster, type RecruitUnit } from '../domain/roster';
+import { RECRUIT_UNITS, readRoster, type RecruitUnit } from '../domain/roster';
 import { armyOverview, count } from '../domain/commandRoom';
 import { armyFaction } from '../domain/faction';
 import { factionTroopName } from '../../frontier/ui/roster';
@@ -15,7 +15,9 @@ import { clock } from '../../../shared/time/clock';
 import { RecruitmentPanel } from './RecruitmentPanel';
 import { unitUnlocked } from '../../research/domain/effects';
 import { TroopStatsDialog } from './TroopStatsDialog';
-import { TROOP_PRESENTATION, troopMultiplier } from './troopPresentation';
+import { TROOP_PRESENTATION } from './troopPresentation';
+import { troopCardStats } from '../domain/troopCardStats';
+import { TroopStatSummary } from './TroopStatSummary';
 
 export function ArmyTroopsPanel({ world, army, city, now, run, busy, onCity, onOpenCity, onLogistics }: {
     world: World; army: Army; city: Settlement; now: number; busy: boolean; run: (command: Command, message?: string) => void;
@@ -29,8 +31,8 @@ export function ArmyTroopsPanel({ world, army, city, now, run, busy, onCity, onO
     return <div className="army-troops-workspace">
         <section className="army-troops-section" aria-label="Army composition"><header><div><h2>Troops</h2><span>{count(overview.free)} spaces available{overview.queued > 0 ? ` · ${overview.queued} in training` : ''}</span></div><div><button className="command-button primary" onClick={() => setRecruit('infantry')}><Icon name="plus" size={16}/>Recruitment</button></div></header>
             <div className="army-troop-grid">{RECRUIT_UNITS.map(unit => {
-                const unlocked = unitUnlocked(world, army.owner_id, city.id, unit, now), rule = RECRUIT_RULES[unit];
-                return <button key={unit} data-unit={unit} data-empty={!roster[unit]} aria-haspopup="dialog" aria-label={`${factionTroopName(faction, unit)} · ${count(roster[unit])} in army · View stats`} title={`View ${factionTroopName(faction, unit)} stats${unlocked ? '' : ' · Research required to recruit'}`} onClick={() => setInspect(unit)}><TroopIcon faction={faction} unit={unit}/><span><strong>{factionTroopName(faction, unit)}</strong><small>{TROOP_PRESENTATION[unit].category}</small><b>{count(roster[unit])}</b><span className="army-troop-quick-stats"><span title="Base attack"><Icon name="army" size={11}/>{troopMultiplier(rule.attack)}</span><span title="Base defence"><Icon name="shield" size={11}/>{troopMultiplier(rule.defence)}</span></span></span><span className="army-troop-card-hint" title={unlocked ? 'View full stats' : 'Research required'}><Icon name={unlocked ? 'arrow' : 'book'} size={13}/></span></button>;
+                const unlocked = unitUnlocked(world, army.owner_id, city.id, unit, now), stats = troopCardStats(world, army, city, unit, now);
+                return <article key={unit} className="army-troop-card" data-unit={unit} data-empty={!roster[unit]}><button className="army-troop-inspect" data-unit={unit} data-empty={!roster[unit]} aria-haspopup="dialog" aria-label={`${factionTroopName(faction, unit)} · ${count(roster[unit])} in army · View stats`} title={`View ${factionTroopName(faction, unit)} stats${unlocked ? '' : ' · Research required to recruit'}`} onClick={() => setInspect(unit)}><TroopIcon faction={faction} unit={unit}/><span><strong>{factionTroopName(faction, unit)}</strong><small>{TROOP_PRESENTATION[unit].category}</small><b>{count(roster[unit])}</b></span><span className="army-troop-card-hint" title={unlocked ? 'View full stats' : 'Research required'}><Icon name={unlocked ? 'arrow' : 'book'} size={13}/></span></button><TroopStatSummary {...stats}/></article>;
             })}</div>
             {!overview.total && <div className="army-troop-empty-note"><span>Recruit soldiers or bring troops from a nearby army.</span><button className="command-text-button" onClick={onLogistics}>Transfer troops<Icon name="arrow" size={15}/></button></div>}
         </section>

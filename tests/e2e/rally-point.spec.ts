@@ -108,6 +108,30 @@ function presentationFixture() {
     return f;
 }
 
+test('Rally unit cards explain bonuses on hover or tap without changing the selected troop', async ({ page, isMobile }, info) => {
+    const f = presentationFixture();
+    f.world.city_slots = [{ settlement_id: 1, slot_index: 0, building_type: 'smithy', level: 5 }];
+    Object.assign(f.world.heroes![0], { class: 'knight', attack: 0, defence: 0, power: 0, knowledge: 0 });
+    f.world.hero_artifacts = [];
+    const errors = await start(page, f.world);
+    const card = page.locator('.rp-unit-card').nth(1), select = card.locator('.rp-unit-inspect');
+    await expect(select).toHaveAttribute('aria-pressed', 'false');
+    await card.scrollIntoViewIfNeeded();
+    await card.screenshot({ path: info.outputPath('rally-stat-card.png') });
+    const trigger = card.getByRole('button', { name: 'Explain Attack bonuses and penalties', exact: true });
+    if (isMobile) await trigger.click(); else await trigger.hover();
+    const tooltip = page.getByRole('tooltip');
+    await expect(tooltip).toHaveAttribute('data-theme', 'paper');
+    await expect(tooltip).toContainText('Home-city smithies');
+    await expect(tooltip).toContainText('Commander & equipment');
+    await expect(select).toHaveAttribute('aria-pressed', 'false');
+    await expect(tooltip).toBeInViewport();
+    await page.screenshot({ path: info.outputPath('rally-stat-breakdown.png') });
+    await page.keyboard.press('Escape');
+    await expect(tooltip).toHaveCount(0);
+    expect(errors).toEqual([]);
+});
+
 function campaignIdentity(world: World) {
     return {
         cities: world.settlements.map(({ id, name, owner_id, faction, x, y }) => ({ id, name, owner_id, faction, x, y })),

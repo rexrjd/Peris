@@ -3,10 +3,11 @@ import { createSolo } from '../../src/features/campaign/domain/newRealm';
 import { refreshCityEconomy } from '../../src/features/city/domain/slots';
 import { BUILDINGS } from '../../src/features/city/domain/buildings';
 
-async function start(page: Page, painted = false) {
+async function start(page: Page, painted = false, allMilitary = false) {
     const world = createSolo('Inspector'), town = world.settlements[0];
     world.buildings.forEach(building => { building.level = building.building_type === 'market' ? 2 : 3; });
     world.city_slots = [{settlement_id:town.id,slot_index:0,building_type:'barracks',level:3},{settlement_id:town.id,slot_index:1,building_type:'mage_tower',level:4},{settlement_id:town.id,slot_index:2,building_type:'academy',level:2}];
+    if (allMilitary) world.city_slots.push({settlement_id:town.id,slot_index:3,building_type:'stables',level:3},{settlement_id:town.id,slot_index:4,building_type:'workshop',level:3});
     refreshCityEconomy(world,town.id);
     await page.addInitScript(w => {
         if(!localStorage.getItem('peris-campaign-v6'))localStorage.setItem('peris-campaign-v6',JSON.stringify(w));
@@ -20,6 +21,29 @@ async function start(page: Page, painted = false) {
     return world;
 }
 const panel = (page: Page) => page.locator('.building-inspector');
+
+test('barracks stables and workshop show unboosted base stats on every recruitment choice', async ({ page }, info) => {
+    await start(page, true, true);
+    for (const [slot, unit, attack] of [[0, 'infantry', '100'], [3, 'cavalry', '155'], [4, 'ram', '60']] as const) {
+        await page.locator(`[data-building="slot:${slot}"]`).click();
+        const choice = panel(page).locator(`.game-unit-choices > button[data-unit="${unit}"]`);
+        await expect(choice.locator('[data-stat="attack"]')).toHaveAttribute('data-base', attack);
+        await expect(choice.locator('[data-stat="defence"]')).toBeVisible();
+        expect(await choice.evaluate(element => {
+            const outer = element.getBoundingClientRect();
+            return Array.from(element.querySelectorAll('.troop-card-stat')).every(row => {
+                const box = row.getBoundingClientRect();
+                return box.left >= outer.left && box.right <= outer.right && box.bottom <= outer.bottom;
+            });
+        })).toBe(true);
+        await expect(panel(page).locator('.game-unit-choices .troop-stat-breakdown-trigger')).toHaveCount(0);
+        await choice.click();
+        await expect(panel(page)).toContainText('Base stats per unit');
+        await page.screenshot({ path: info.outputPath(`base-stats-${unit}.png`) });
+        expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+        await page.keyboard.press('Escape');
+    }
+});
 
 test('compact upgrades leave the city visible and allow direct selection of another building', async ({page,isMobile},info) => {
     await start(page); await page.locator('[data-building="market"]').click();

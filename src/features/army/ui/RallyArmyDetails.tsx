@@ -3,12 +3,14 @@ import type { World } from '../../../shared/model/world';
 import { Icon } from '../../../shared/ui/Icons';
 import { armyFaction } from '../domain/faction';
 import { readRoster, RECRUIT_RULES, RECRUIT_UNITS, type RecruitUnit } from '../domain/roster';
-import { TROOP_PRESENTATION, troopMultiplier, troopNumber } from './troopPresentation';
+import { TROOP_PRESENTATION, troopNumber } from './troopPresentation';
 import { factionTroopName } from '../../frontier/ui/roster';
 import { TroopIcon } from '../../frontier/ui/TroopIcon';
 import { HERO_CLASSES, heroForArmy, heroLevel } from '../../heroes/domain/heroes';
 import { HeroPortrait } from '../../heroes/ui/HeroPortrait';
 import { clock } from '../../../shared/time/clock';
+import { troopCardStats } from '../domain/troopCardStats';
+import { TroopStatSummary } from './TroopStatSummary';
 
 type RallyArmyDetailsProps = {
     world: World;
@@ -26,6 +28,7 @@ export function RallyArmyDetails({ world, playerId, armyId, now, busy, onManage,
     const assignedHero = army ? heroForArmy(world, army.id) : undefined;
     const hero = assignedHero?.owner_id === playerId ? assignedHero : undefined;
     const roster = army ? readRoster(army) : undefined;
+    const home = army && world.settlements.find(city => city.id === army.home_settlement_id);
     const [selection, setSelection] = useState<{ armyId: number | undefined; unit: RecruitUnit }>({ armyId, unit: RECRUIT_UNITS.find(unit => (roster?.[unit] ?? 0) > 0) ?? 'infantry' });
     const selectedUnit = selection.armyId === armyId ? selection.unit : RECRUIT_UNITS.find(unit => (roster?.[unit] ?? 0) > 0) ?? 'infantry';
     const rule = RECRUIT_RULES[selectedUnit];
@@ -72,12 +75,14 @@ export function RallyArmyDetails({ world, playerId, armyId, now, busy, onManage,
             {RECRUIT_UNITS.map(unit => {
                 const name = factionTroopName(faction, unit);
                 const quantity = roster?.[unit] ?? 0;
-                return <button key={unit} type="button" className={`rp-unit-card${selectedUnit === unit ? ' active' : ''}`} aria-pressed={selectedUnit === unit} aria-label={`Inspect ${name}, ${quantity.toLocaleString()} in this legion`} title={`${name} · ${TROOP_PRESENTATION[unit].category} · ${quantity.toLocaleString()} troops`} onClick={() => setSelection({ armyId, unit })}>
+                return <article key={unit} className={`rp-unit-card${selectedUnit === unit ? ' active' : ''}`}><button type="button" className="rp-unit-inspect" aria-pressed={selectedUnit === unit} aria-label={`Inspect ${name}, ${quantity.toLocaleString()} in this legion`} title={`${name} · ${TROOP_PRESENTATION[unit].category} · ${quantity.toLocaleString()} troops`} onClick={() => setSelection({ armyId, unit })}>
                     <span className="rp-unit-count">{quantity.toLocaleString()}</span>
                     <TroopIcon faction={faction} unit={unit} portrait />
                     <span className="rp-unit-name">{name}</span>
                     <small>{TROOP_PRESENTATION[unit].category}</small>
-                </button>;
+                    </button>
+                    {home && <TroopStatSummary {...troopCardStats(world, army, home, unit, now)}/>}
+                </article>;
             })}
         </div>
 
@@ -90,8 +95,7 @@ export function RallyArmyDetails({ world, playerId, armyId, now, busy, onManage,
         <div className="rp-unit-inspector" aria-live="polite" aria-label="Selected troop statistics">
             <header><h3>{factionTroopName(faction, selectedUnit)}</h3><span>{presentation.category} · {rule.building}</span></header>
             <div className="rp-stat-row"><span>In this legion</span><strong>{(roster?.[selectedUnit] ?? 0).toLocaleString()}</strong></div>
-            <div className="rp-stat-row"><span><Icon name="army" size={16}/>Base attack multiplier</span><strong>{troopMultiplier(rule.attack)}</strong></div>
-            <div className="rp-stat-row"><span><Icon name="shield" size={16}/>Base defence multiplier</span><strong>{troopMultiplier(rule.defence)}</strong></div>
+            {home && <TroopStatSummary {...troopCardStats(world, army, home, selectedUnit, now)}/>}
             <div className="rp-stat-row"><span><Icon name="horse" size={16}/>Combat speed</span><strong>{troopNumber(rule.speed)}</strong></div>
             <div className="rp-stat-row"><span><Icon name="transfer" size={16}/>Base carry per troop</span><strong>{troopNumber(rule.carry)}</strong></div>
             <div className="rp-stat-row"><span><Icon name="time" size={16}/>Base training per troop</span><strong>{rule.trainSeconds}s</strong></div>

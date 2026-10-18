@@ -39,6 +39,47 @@ async function start(page: Page, world: World) {
     await page.getByRole('button', { name: 'Armies', exact: true }).click();
 }
 const save = (page: Page): Promise<World> => page.evaluate(() => JSON.parse(localStorage.getItem('peris-campaign-v6')!));
+
+test('unit card bonus breakdown explains multiplied smithy and commander gains without opening the inspector', async ({ page, isMobile }, info) => {
+    const world = fixture(), errors: string[] = [];
+    page.on('pageerror', error => errors.push(error.message));
+    Object.assign(world.heroes![0], { class: 'knight', attack: 0, defence: 0, power: 0, knowledge: 0 });
+    world.hero_artifacts = [];
+    world.city_slots!.find(slot => slot.building_type === 'smithy')!.level = 5;
+    await start(page, world);
+    const card = page.locator('.army-troop-card[data-unit="infantry"]');
+    await expect(card.locator('[data-stat="attack"]')).toHaveAttribute('data-base', '100');
+    await expect(card.locator('[data-stat="attack"]')).toHaveAttribute('data-current', '127.2');
+    const trigger = card.getByRole('button', { name: 'Explain Attack bonuses and penalties', exact: true });
+    await trigger.scrollIntoViewIfNeeded();
+    if (isMobile) await trigger.click(); else await trigger.hover();
+    const tooltip = page.getByRole('tooltip');
+    await expect(tooltip).toContainText('Home-city smithies');
+    await expect(tooltip).toContainText('+20');
+    await expect(tooltip).toContainText('Commander & equipment');
+    await expect(tooltip).toContainText('+7.2');
+    await expect(tooltip).toBeInViewport();
+    await expect(page.getByRole('dialog', { name: / stats$/ })).toHaveCount(0);
+    await page.screenshot({ path: info.outputPath('unit-bonus-breakdown.png') });
+    await page.keyboard.press('Escape');
+    await expect(tooltip).toHaveCount(0);
+    await page.getByRole('heading', { name: 'Armies', exact: true }).click();
+    await trigger.focus();
+    await expect(page.getByRole('tooltip')).toBeVisible();
+    await page.getByRole('heading', { name: 'Armies', exact: true }).click();
+    await expect(page.getByRole('tooltip')).toHaveCount(0);
+    await card.locator('.army-troop-inspect').click();
+    const inspector = page.getByRole('dialog', { name: / stats$/ });
+    await inspector.getByRole('button', { name: 'Explain Attack bonuses and penalties', exact: true }).click();
+    await expect(page.getByRole('tooltip')).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(page.getByRole('tooltip')).toHaveCount(0);
+    await expect(inspector).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(inspector).toHaveCount(0);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    expect(errors).toEqual([]);
+});
 const manage = (page: Page, tab: string) => page.getByRole('navigation', { name: 'Army management' }).getByRole('button', { name: tab, exact: true }).click();
 async function capture(page: Page, info: TestInfo, name: string) {
     await page.screenshot({ path: info.outputPath(name + '.png') });
@@ -51,7 +92,7 @@ test('army workspace keeps one hero identity, real troops and army-specific recr
     const card = page.getByRole('complementary', { name: 'Selected army', exact: true });
     await expect(card.getByRole('heading', { name: 'Aurelia', exact: true })).toBeVisible();
     await expect(card.locator('img')).toHaveAttribute('src', heroPortraitUrl('roman', 'ranger', world.heroes![0].id));
-    await expect(page.locator('.army-troop-grid>button')).toHaveCount(9);
+    await expect(page.locator('.army-troop-grid .army-troop-inspect')).toHaveCount(9);
     await expect(page.getByRole('dialog', { name: 'Recruit troops', exact: true })).toHaveCount(0);
     await capture(page, info, 'armies-troops');
     await page.getByRole('button', { name: 'Recruitment', exact: true }).click();
@@ -67,8 +108,8 @@ test('army workspace keeps one hero identity, real troops and army-specific recr
     await expect(page.getByLabel('Give orders', { exact: true })).toBeDisabled();
     await page.getByRole('group', { name: 'Your armies', exact: true }).getByRole('button', { name: /^Ash guard/ }).click();
     await expect(card.getByRole('heading', { name: 'Korga', exact: true })).toBeVisible();
-    await expect(page.locator('.army-troop-grid>button')).toHaveCount(9);
-    await expect(page.locator('.army-troop-grid>button[data-empty=true]')).toHaveCount(8);
+    await expect(page.locator('.army-troop-grid .army-troop-inspect')).toHaveCount(9);
+    await expect(page.locator('.army-troop-grid .army-troop-inspect[data-empty=true]')).toHaveCount(8);
     await expect(page.getByRole('region', { name: 'Army training queue', exact: true })).toContainText('No active orders');
     await manage(page, 'Commander');
     await expect(page.locator('.commander-dossier')).toHaveCount(0);
@@ -116,8 +157,8 @@ test('raising a commander selects the new empty army and narrow layouts keep eve
     await capture(page, info, 'armies-raise');
     await dialog.getByRole('button', { name: 'Raise army · 500 gold', exact: true }).click();
     await expect(page.getByRole('complementary', { name: 'Selected army' })).toContainText('River scout');
-    await expect(page.locator('.army-troop-grid>button')).toHaveCount(9);
-    await expect(page.locator('.army-troop-grid>button[data-empty=true]')).toHaveCount(9);
+    await expect(page.locator('.army-troop-grid .army-troop-inspect')).toHaveCount(9);
+    await expect(page.locator('.army-troop-grid .army-troop-inspect[data-empty=true]')).toHaveCount(9);
     await expect(page.getByRole('button', { name: 'Transfer troops', exact: true })).toBeVisible();
     await page.setViewportSize({ width: 320, height: 700 });
     await expect(page.getByRole('group', { name: 'Your armies', exact: true }).getByRole('button', { name: /^River scout/ })).toBeInViewport();
@@ -136,7 +177,7 @@ test('every troop opens real stats, locked roles remain inspectable and recruitm
     await capture(page, info, 'troop-catalog-desktop');
     const before = await save(page);
     for (const unit of RECRUIT_UNITS) {
-        const card = page.locator(`.army-troop-grid>button[data-unit="${unit}"]`);
+        const card = page.locator(`.army-troop-grid .army-troop-inspect[data-unit="${unit}"]`);
         await card.click();
         const dialog = page.getByRole('dialog', { name: `${factionTroopName('roman', unit)} stats`, exact: true });
         await expect(dialog).toBeVisible();
@@ -148,10 +189,10 @@ test('every troop opens real stats, locked roles remain inspectable and recruitm
     }
     expect((await save(page)).orders).toEqual(before.orders);
     expect((await save(page)).armies.map(army => army.unit_roster)).toEqual(before.armies.map(army => army.unit_roster));
-    await page.locator('.army-troop-grid>button[data-unit="infantry"]').click();
+    await page.locator('.army-troop-grid .army-troop-inspect[data-unit="infantry"]').click();
     const stats = page.getByRole('dialog', { name: / stats$/ });
     const actual = troopDetails(world, world.armies[0], world.settlements[0], 'infantry', Date.parse(world.server_now));
-    await expect(stats.locator('.troop-dossier-combat dl>div').filter({ has: page.getByText('Attack', { exact: true }) }).locator('dd').last()).toHaveText(`×${actual.attack.toLocaleString(undefined, { maximumFractionDigits: 3 })}`);
+    await expect(stats.locator('.troop-dossier-combat [data-stat=attack]')).toHaveAttribute('data-current', String(Math.round(actual.attack * 1000) / 10));
     await capture(page, info, 'troop-stats-desktop');
     await stats.getByText('More combat details', { exact: true }).click();
     await expect(stats.locator('.troop-combat-details')).toContainText('separate health stat');
@@ -167,7 +208,7 @@ test('every troop opens real stats, locked roles remain inspectable and recruitm
     await expect(recruit.locator('.game-unit-choices>button[aria-pressed=true]')).toContainText(factionTroopName('roman', 'infantry'));
     await page.keyboard.press('Escape');
     await page.setViewportSize({ width: 320, height: 700 });
-    await page.locator('.army-troop-grid>button[data-unit="catapult"]').click();
+    await page.locator('.army-troop-grid .army-troop-inspect[data-unit="catapult"]').click();
     const narrow = page.getByRole('dialog', { name: `${factionTroopName('roman', 'catapult')} stats`, exact: true });
     await expect(narrow).toBeVisible();
     expect(await narrow.evaluate(el => el.scrollWidth <= el.clientWidth)).toBe(true);
