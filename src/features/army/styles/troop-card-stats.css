@@ -1,0 +1,54 @@
+/* Shared per-soldier comparisons. Bonuses retain a sign as well as a color. */
+.troop-card-stats { display: grid; grid-template-columns: minmax(42px, 1fr) repeat(3, auto); gap: 5px 7px; width: 100%; min-width: 0; margin-top: 10px; font: inherit; font-variant-numeric: tabular-nums; }
+.troop-card-stats .troop-card-stat { display: grid; grid-column: 1 / -1; grid-template-columns: subgrid; align-items: baseline; font-size: 12px; line-height: 1.45; color: inherit; }
+.troop-card-stats .troop-card-stat-head { font-size: 10px; opacity: .75; border-bottom: 1px solid #a7804344; padding-bottom: 4px; }
+.troop-card-stat > :not(:first-child) { text-align: right; }
+.troop-card-stats .troop-stat-current { display: inline; margin: 0; color: inherit; font-family: inherit; font-size: 12px; line-height: 1.45; font-weight: 700; }
+.troop-stat-delta[data-change='positive'] { color: var(--troop-positive, #a6d69a); }
+.troop-stat-delta[data-change='negative'] { color: var(--troop-negative, #ffaba5); }
+.troop-stat-delta[data-change='neutral'] { opacity: .55; }
+.troop-stat-bonus { white-space: nowrap; }
+.troop-card-stats .troop-stat-breakdown-trigger { display: inline-block; width: auto; min-width: 0; min-height: 24px; margin: 0; padding: 0 1px; border: 0; border-bottom: 1px dotted currentColor; border-radius: 0; background: transparent; color: inherit; font: inherit; cursor: help; }
+.troop-stat-breakdown-trigger:focus-visible { outline: 2px solid #a78043; outline-offset: 2px; }
+.troop-card-stats.base-only { grid-template-columns: minmax(0, 1fr) auto; }
+.troop-dossier-combat > .troop-card-stats { margin-bottom: 18px; padding: 12px; border: 1px solid #a7804344; border-radius: 4px; }
+.troop-dossier-combat > .troop-card-stats .troop-card-stat { font-size: 15px; }
+.troop-dossier-combat > .troop-card-stats .troop-stat-current { font-size: 16px; }
+.army-troop-card { min-width: 0; padding: 14px; border: 1px solid #ffffff20; border-radius: 8px; background: #242e3d; color: #edf0f6; }
+.army-troop-card .army-troop-inspect { display: flex; align-items: center; gap: 12px; position: relative; width: 100%; min-width: 0; padding: 0; border: 0; background: transparent; color: inherit; text-align: left; font: inherit; }
+.army-troop-inspect > span:not(.fw-troop-icon):not(.army-troop-card-hint) { min-width: 0; flex: 1; }
+.army-troop-inspect .army-troop-card-hint { position: absolute; right: 0; bottom: 0; color: #8295b3; }
+.army-troop-inspect:focus-visible { outline: 2px solid #e3c48f; outline-offset: 3px; }
+.armies-workspace .army-troop-grid .troop-stat-current { font-size: 12px; color: #edf0f6; }
+.rp-shell { --troop-positive: #37682e; --troop-negative: #a32b2b; }
+.rp-shell .rp-unit-cards { grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); }
+.rp-shell .rp-unit-card > .troop-card-stats { padding: 7px 3px 3px; margin-top: 7px; border-top: 1px solid var(--rp-border); }
+.rp-shell .rp-unit-inspect { display: flex; flex-direction: column; align-items: stretch; padding: 0; width: 100%; border: 0; background: transparent; color: inherit; font: inherit; }
+.rp-shell .rp-unit-inspect > small { color: var(--rp-muted); font-size: 13px; text-align: center; }
+.rp-shell .rp-unit-inspector > .troop-card-stats { grid-column: 1 / -1; margin: 0; }
+.game-unit-choices > button { flex-wrap: wrap; }
+.game-unit-choices > button > .troop-card-stats { flex-basis: 100%; padding-top: 5px; border-top: 1px solid #a7804344; }
+.building-inspector .game-unit-choices > button > .troop-card-stats { margin-top: auto; width: 100%; font-size: 12px; }
+.building-inspector .game-unit-choices { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.building-inspector .game-unit-choices > button { flex-wrap: nowrap; }
+.building-inspector .game-unit-choices > button > .troop-card-stats { flex: none; }
+.building-inspector .game-unit-choices .troop-card-stat { display: grid; font-size: 12px; }
+.building-inspector .game-unit-choices > button > span:not(.fw-troop-icon):not(.troop-card-stats) { font-size: 12px; }
+.building-inspector .game-unit-choices .troop-stat-base { font-weight: 600; }
+.troop-stat-tooltip { position: fixed; z-index: 10000; width: min(320px, calc(100vw - 16px)); overflow: auto; padding: 15px; border: 1px solid #b79a68; border-radius: 5px; background: #202a38; color: #edf0f6; box-shadow: 0 8px 30px #0005; font: 13px/1.45 'Open Sans', sans-serif; }
+.troop-stat-tooltip[data-theme='paper'] { background: #fcf9f1; color: #30231e; --troop-positive: #37682e; --troop-negative: #a32b2b; font-family: 'Crimson Text', Georgia, serif; font-size: 16px; }
+.troop-stat-tooltip > strong { display: block; font-size: 15px; }
+.troop-stat-tooltip p { margin: 5px 0 12px; font-size: inherit; }
+.troop-stat-tooltip dl { margin: 0; }
+.troop-stat-tooltip dl > div { display: flex; justify-content: space-between; gap: 14px; padding: 8px 0; border-top: 1px solid #a7804333; }
+.troop-stat-tooltip dt { min-width: 0; }
+.troop-stat-tooltip dd { margin: 0; flex: none; text-align: right; font-weight: 600; }
+.troop-stat-tooltip small { display: block; margin-top: 3px; color: inherit; opacity: .75; font-size: 11px; font-weight: 400; }
+.troop-stat-tooltip [data-change='positive'] { color: var(--troop-positive, #a6d69a); }
+.troop-stat-tooltip [data-change='negative'] { color: var(--troop-negative, #ffaba5); }
+.troop-stat-tooltip .troop-stat-tooltip-note { margin: 12px 0 0; font-size: 11px; opacity: .8; }
+.troop-stat-tooltip h4 { margin: 10px 0 4px; font-size: inherit; }
+@media (max-width: 600px) {
+  .armies-workspace .army-troop-grid { grid-template-columns: 1fr; }
+  .troop-card-stats .troop-card-stat { column-gap: 5px; }
+}

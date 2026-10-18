@@ -28,11 +28,11 @@ test('missing online balance metadata retains legacy inspection until the server
   for(const version of [1,2]){
    if(version===2){upgraded=true;await page.reload();await expect(page.getByLabel('Game menu')).toBeVisible();}
    await page.getByRole('navigation',{name:'Game navigation'}).getByRole('button',{name:'Armies',exact:true}).click();
-   await page.locator('.army-troop-grid>button[data-unit="archers"]').click();
+   await page.locator('.army-troop-grid .army-troop-inspect[data-unit="archers"]').click();
    const dialog=page.getByRole('dialog',{name:/ stats$/});await expect(dialog).toBeVisible();
    await expect(dialog.locator('.troop-unit-cost [title="gold per soldier"] b')).toHaveText(version===1?'2':'1');
    await expect(dialog.locator('.troop-dossier-recruit dl>div').filter({has:page.getByText('Train 10 soldiers',{exact:true})}).locator('dd')).toContainText(version===1?'0:20':'0:30');
-   await expect(dialog.locator('.troop-dossier-combat dl>div').filter({has:page.getByText('Attack',{exact:true})}).locator('dd').first()).toHaveText(version===1?'60':'75');
+   await expect(dialog.locator('.troop-dossier-combat [data-stat="attack"]')).toHaveAttribute('data-base',version===1?'60':'75');
    await page.screenshot({path:info.outputPath(`online-balance-v${version}.png`),fullPage:true});
    expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
   }

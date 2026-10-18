@@ -15,6 +15,8 @@ import { RESOURCES } from '../../../shared/model/resources';
 import { clock } from '../../../shared/time/clock';
 import { useResearchNavigation } from '../../research/ui/ResearchNavigation';
 import { TROOP_PRESENTATION, troopMultiplier, troopNumber } from './troopPresentation';
+import { troopCardStats } from '../domain/troopCardStats';
+import { TroopStatSummary } from './TroopStatSummary';
 
 export function TroopStatsDialog({ world, army, city, unit, now, onClose, onUnit, onRecruit }: {
     world: World; army: Army; city: Settlement; unit: RecruitUnit; now: number;
@@ -22,13 +24,12 @@ export function TroopStatsDialog({ world, army, city, unit, now, onClose, onUnit
 }) {
     const faction = armyFaction(world, army), name = factionTroopName(faction, unit);
     const stats = troopDetails(world, army, city, unit, now), { rule, plan } = stats;
+    const cardStats = troopCardStats(world, army, city, unit, now);
     const presentation = TROOP_PRESENTATION[unit], openResearch = useResearchNavigation();
     const index = RECRUIT_UNITS.indexOf(unit), siege = unit === 'ram' || unit === 'catapult';
     const heading = useRef<HTMLElement>(null);
     useEffect(() => { const panel = heading.current?.closest('.army-troop-modal'); if (panel) panel.scrollTop = 0; }, [unit]);
     const rows = [
-        { label: 'Attack', icon: 'army', base: troopNumber(stats.baseAttackPoints), current: troopNumber(stats.attackPoints), help: 'Reference attack includes class damage rate. Army values include faction, research, commander equipment and home-city smithies.' },
-        { label: 'Protection', icon: 'shield', base: troopNumber(stats.baseProtectionPoints), current: troopNumber(stats.protectionPoints), help: 'Reference protection includes faction, research and commander equipment.' },
         { label: 'Battle speed', icon: 'horse', base: `${troopNumber(rule.speed)} /s`, current: `${troopNumber(stats.speed)} /s`, help: 'Tactical distance per second on open ground. World travel uses the slowest troop, commander and research.' },
         { label: 'Attack range', icon: 'bow', base: stats.range ? troopNumber(stats.range) : 'Contact', current: stats.range ? troopNumber(stats.range) : 'Contact', help: 'Ranged distance in tactical units. Melee reach depends on formation size.' },
         { label: 'Loot capacity', icon: 'gold', base: troopNumber(rule.carry), current: troopNumber(stats.carry), help: 'Resources carried per surviving soldier, including account carry research.' },
@@ -40,9 +41,10 @@ export function TroopStatsDialog({ world, army, city, unit, now, onClose, onUnit
             <div><span>{FACTIONS[faction].name} · {presentation.category}</span><h2>{name}</h2><p>{presentation.description}</p><small><b>{troopNumber(stats.count)}</b> in {army.name}</small></div>
         </header>
         <section className="troop-dossier-combat" aria-label="Troop combat stats">
+            <TroopStatSummary {...cardStats}/>
             <div className="troop-stat-head"><span>Combat & supply</span><span>Base</span><span>Army</span></div>
             <dl>{rows.map(row => <div key={row.label} title={row.help}><dt><Icon name={row.icon} size={15}/>{row.label}</dt><dd>{row.base}</dd><dd>{row.current}</dd></div>)}</dl>
-            <p className="troop-stat-note">Infantry reference: 100 attack / 100 protection. Faction doctrine: {troopNumber(stats.factionAttackPoints)} / {troopNumber(stats.factionProtectionPoints)}. Army values include permanent bonuses; range, terrain, stance, charges, walls and spells still matter.</p>
+            <p className="troop-stat-note">Infantry reference: 100 attack / 100 protection. Faction doctrine: {troopNumber(stats.factionAttackPoints)} / {troopNumber(stats.factionProtectionPoints)}. Attack and defence points include faction, research, commander equipment and home-city bonuses.{cardStats.source === 'battle' ? ' Current values use live formations and spells; ranges mean formations have different bonuses.' : ' Current values show this army’s permanent bonuses.'} Terrain, stance and the opponent also affect each hit.</p>
         </section>
         <section className="troop-dossier-recruit" aria-label="Troop recruitment requirements">
             <header><h3>Recruitment</h3><span>{stats.unlocked ? 'Unlocked' : 'Research required'}</span></header>
@@ -56,6 +58,8 @@ export function TroopStatsDialog({ world, army, city, unit, now, onClose, onUnit
             <div><dt>Retreat threshold</dt><dd>Morale below 18</dd></div>
             <div><dt>Commander attack / defence</dt><dd>{troopMultiplier(stats.commander.damage)} / {troopMultiplier(stats.commander.protection)}</dd></div>
             <div><dt>Home-city smithies</dt><dd>{troopMultiplier(stats.smithy)} attack</dd></div>
+            <div><dt>Research attack / defence</dt><dd>{troopMultiplier(stats.attack / (rule.attack * (stats.factionAttackPoints/stats.baseAttackPoints) * stats.commander.damage * stats.smithy))} / {troopMultiplier(stats.defence / (rule.defence * (stats.factionProtectionPoints/stats.baseProtectionPoints) * stats.commander.protection))}</dd></div>
+            <div><dt>Attack point scale</dt><dd>100 = base infantry damage rate</dd></div>
             {siege && <div><dt>Siege research</dt><dd>{troopMultiplier(stats.siege)} engines</dd></div>}
         </dl><p>Damage rate is the class coefficient per soldier before combat modifiers. Casualties depend on the opponent and formation; soldiers do not have a separate health stat.{siege && ` ${unit === 'ram' ? 'Wall' : 'Building'} damage can remove up to two levels per assault, depending on engine count and target level.`}</p></details>
         <footer className="troop-dossier-footer"><div className="troop-browse"><button aria-label="Previous troop type" onClick={() => onUnit(RECRUIT_UNITS[(index + RECRUIT_UNITS.length - 1) % RECRUIT_UNITS.length])}><Icon name="arrow" size={16}/></button><span>{index + 1} / {RECRUIT_UNITS.length}</span><button aria-label="Next troop type" onClick={() => onUnit(RECRUIT_UNITS[(index + 1) % RECRUIT_UNITS.length])}><Icon name="arrow" size={16}/></button></div><button className="troop-dossier-action" onClick={() => { if (stats.unlocked) onRecruit(unit); else { onClose(); openResearch(stats.technology?.id); } }}><Icon name={stats.unlocked ? 'plus' : 'book'} size={16}/>{stats.unlocked ? 'Recruit this troop' : 'Unlock in Research'}</button></footer>

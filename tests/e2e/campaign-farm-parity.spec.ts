@@ -57,6 +57,6 @@ test('reviewed batches show sent/skipped counters and bulk edits do not change t
     await expect.poll(async()=> (await saved(page)).armies[0].status).toBe('moving');await expect(near).toContainText('1 sent · 0 skipped');await expect(near).toContainText('0 sent · 1 skipped');
     const travelling=readRoster((await saved(page)).armies[0]);await near.getByRole('button',{name:'Apply preset to all',exact:true}).click();await expect.poll(async()=> (await saved(page)).campaign_farms![0].troops.heavyCavalry).toBe(3);expect(readRoster((await saved(page)).armies[0])).toEqual(travelling);
     await near.getByLabel('Select all targets in Nearby camps').check();await near.getByRole('button',{name:'Delete selected',exact:true}).click();await expect.poll(async()=> (await saved(page)).campaign_farms!.filter(f=>f.list_id===1).length).toBe(0);expect((await saved(page)).armies[0].status).toBe('moving');expect(readRoster((await saved(page)).armies[0])).toEqual(travelling);
-    await page.getByRole('tab',{name:/^Outgoing/}).click();await expect(page.getByRole('button',{name:'Cancel order',exact:true})).toBeVisible();
+    await page.getByRole('tab',{name:'Movements',exact:true}).click();await page.getByRole('button',{name:/^Outgoing [0-9]+$/}).click();await expect(page.getByRole('button',{name:'Cancel order',exact:true})).toBeVisible();
     await page.screenshot({path:info.outputPath('farm-batch-movement.png'),fullPage:true});expect(errors).toEqual([]);
 });

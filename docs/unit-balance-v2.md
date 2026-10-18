@@ -70,4 +70,4 @@ Resource utility regressions also exercise both orientations: the basket `{wood:
 - Historical report fallback prices use their recorded version even if the battle has been pruned. Stored replacement costs take priority, including later loot delivery and overflow calculations.
 - Catalogs/helpers remain private. The authoritative server computes recruitment and battle state. Existing once-only finalization and command receipts remain intact.
 
-SQL deployment is a separate action. No live SQL, scheduler activation, main merge or push is part of this implementation. The unattended-worker proposal remains separate.
+SQL deployment and scheduler activation are separate actions. The unattended-worker proposal remains separate.

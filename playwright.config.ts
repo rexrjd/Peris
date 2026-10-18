@@ -1,5 +1,8 @@
 import { defineConfig, devices } from '@playwright/test';
 
+const testPort = process.env.PERIS_TEST_PORT ?? '4173';
+const testUrl = `http://127.0.0.1:${testPort}`;
+
 export default defineConfig({
   testDir: './tests/e2e',
   fullyParallel: false,
@@ -13,7 +16,7 @@ export default defineConfig({
     // Full Chromium uses the machine's graphics driver; the old headless shell
     // renders these WebGL armies through SwiftShader on the CPU.
     channel: process.env.PERIS_BROWSER_CHANNEL ?? 'chromium',
-    baseURL: 'http://127.0.0.1:4173',
+    baseURL: testUrl,
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
@@ -23,9 +26,9 @@ export default defineConfig({
     { name: 'mobile-chromium', use: { ...devices['Pixel 7'] } },
   ],
   webServer: {
-    command: 'npm run dev -- --host 127.0.0.1 --port 4173 --strictPort',
-    url: 'http://127.0.0.1:4173',
-    reuseExistingServer: !process.env.CI,
+    command: `npm run dev -- --host 127.0.0.1 --port ${testPort} --strictPort`,
+    url: testUrl,
+    reuseExistingServer: !process.env.CI && !process.env.PERIS_TEST_PORT,
     timeout: 60_000,
   },
 });
