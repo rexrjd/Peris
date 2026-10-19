@@ -25,7 +25,7 @@ async function capture(page: Page, info: TestInfo, name: string) {
 }
 const save = (page: Page): Promise<World> => page.evaluate(() => JSON.parse(localStorage.getItem('peris-campaign-v6')!));
 
-test('3D city gives the scene space and opens compact production, troops and building panels', async ({ page }, info) => {
+test('3D city keeps reports and building interactions reachable without extra overlay panels', async ({ page }, info) => {
     const world = createSolo('City Scene'), town = world.settlements[0], base = world.armies[0];
     world.buildings.forEach(building => { building.level = 5; });
     const types: SlotType[] = ['barracks', 'housing', 'academy', 'warehouse', 'stables', 'smithy', 'granary', 'workshop', 'mage_tower', 'housing', 'academy', 'warehouse', 'barracks', 'housing', 'granary', 'smithy'];
@@ -44,40 +44,24 @@ test('3D city gives the scene space and opens compact production, troops and bui
     const frame = await page.locator('.city-scene-surface').boundingBox();
     expect(frame!.width).toBeGreaterThan(page.viewportSize()!.width * .95);
     expect(frame!.height).toBeGreaterThan(page.viewportSize()!.height * .6);
-    await expect(page.getByRole('button', { name: 'City full', exact: true })).toBeDisabled();
+    await expect(page.locator('.city-selector')).toContainText('Army 198');
+    await expect(page.locator('.city-scene-dock,.city-scene-status,.city-scene-utilities')).toHaveCount(0);
     await expect(page.locator('[data-building="wall"]')).toBeInViewport();
     await capture(page, info, 'city-scene-clean');
-    await page.getByLabel('City production', { exact: true }).click();
-    await expect(page.getByRole('complementary', { name: 'City production details' })).toBeVisible();
+    await page.getByRole('button', {name:'Open city economy report'}).click();
+    const report = page.getByRole('dialog', {name:/city report/});
+    await report.getByRole('button', {name:'Production',exact:true}).click();
+    await expect(report).toContainText('Income & storage');
     await capture(page, info, 'city-scene-production');
-    await page.getByRole('button', { name: 'Production & storage details', exact: true }).click();
-    await expect(page.getByRole('dialog', { name: /city report/ })).toBeVisible();
-    await page.getByRole('button', { name: 'Residents', exact: true }).click();
+    await report.getByRole('button', {name:'Residents',exact:true}).click();
+    await expect(report).toContainText('Housing');
     await page.keyboard.press('Escape');
-    await expect(page.getByRole('complementary', { name: 'City production details' })).toBeVisible();
-    await page.getByLabel('City troops: 198 at home', { exact: true }).click();
-    await expect(page.getByRole('complementary', { name: 'City production details' })).toHaveCount(0);
-    const troops = page.getByLabel('Troops stationed in this village', { exact: true });
-    await expect(troops.locator('[data-troop="infantry"]')).toHaveText('127');
-    await expect(troops.locator('[data-troop="archers"]')).toHaveText('53');
-    await expect(troops.locator('[data-troop="cavalry"]')).toHaveText('18');
-    await expect(page.locator('.village-movements')).toContainText('Returning home');
-    await expect(page.locator('.village-training')).toContainText('5 Legionary');
-    await capture(page, info, 'city-scene-troops');
-    await page.keyboard.press('Escape');
-    await expect(page.getByLabel('City troops: 198 at home', { exact: true })).toBeFocused();
-    await page.getByLabel('Open city building list', { exact: true }).click();
-    await page.getByLabel('Find a city building', { exact: true }).fill('mage');
-    await page.locator('.city-scene-building-list').getByRole('button', { name: /Mage tower/ }).click();
+    await page.locator('[data-building="slot:8"]').click();
     const dialog = page.getByRole('dialog', { name: 'Selected building', exact: true });
     await expect(dialog.locator('.city-building-model-preview canvas')).toBeVisible();
     await expect(dialog).toContainText('Level 10');
     await capture(page, info, 'city-scene-mage-dialog');
     await page.keyboard.press('Escape');
-    await page.getByLabel('Show building markers', { exact: true }).click();
-    await expect(page.locator('.city-landmark-labels')).toBeHidden();
-    await page.getByLabel('Show building markers', { exact: true }).click();
-    await expect(page.locator('.city-landmark-labels')).toBeVisible();
     await page.locator('[data-building="market"]').click();
     await expect(page.getByRole('dialog', { name: 'Selected building', exact: true })).toContainText('Main building');
     await page.keyboard.press('Escape');
@@ -85,11 +69,9 @@ test('3D city gives the scene space and opens compact production, troops and bui
     await page.setViewportSize({ width: 320, height: 700 });
     await page.locator('.city-3d-scene canvas').click({ position: { x: 2, y: 220 } });
     await capture(page, info, 'city-scene-320');
-    await expect(page.getByLabel('Open city building list', { exact: true })).toBeInViewport();
-    await page.getByLabel('Open city building list', { exact: true }).click();
-    await expect(page.getByLabel('Find a city building', { exact: true })).toBeInViewport();
-    await page.keyboard.press('Escape');
-    await page.getByRole('button', { name: 'Village', exact: true }).click();
+    await expect(page.getByRole('group',{name:'City camera'})).toBeInViewport();
+    await page.getByRole('button',{name:/^Current city:/}).click();
+    await page.getByRole('menuitem',{name:'Village',exact:true}).click();
     await expect(page.getByRole('complementary', { name: 'Village resources and population' })).toBeVisible();
     await expect(page.locator('.city-scene-workspace')).toHaveCount(0);
     expect(errors).toEqual([]);
@@ -99,9 +81,10 @@ test('3D plot construction uses the real command and compact queue through reloa
     const world = createSolo('Build Scene');
     world.buildings.find(building => building.building_type === 'market')!.level = 1;
     refreshCityEconomy(world, 1);
+    await page.clock.setFixedTime(Date.parse(world.server_now));
     await start(page, world);
     await expect(page.locator('.city-3d-scene.ready')).toBeVisible();
-    await page.getByRole('button', { name: /^Build \d+$/ }).click();
+    await page.locator('[data-building="slot:0"]').click();
     const dialog = page.getByRole('dialog', { name: 'Selected building', exact: true });
     await expect(dialog).toContainText('Empty plot');
     await dialog.getByRole('radio', { name: /^Academy/ }).check();
@@ -115,7 +98,6 @@ test('3D plot construction uses the real command and compact queue through reloa
     const order = (await save(page)).orders.find(order => order.kind === 'upgrade')!;
     await page.reload(); await page.getByRole('button', { name: 'Continue campaign', exact: true }).click();
     await page.getByRole('button', { name: 'City', exact: true }).click();
-    await page.getByRole('button', { name: '3D', exact: true }).click();
     expect((await save(page)).orders.find(row => row.id === order.id)?.finish_at).toBe(order.finish_at);
     await page.getByRole('region', { name: 'Construction queue', exact: true }).getByRole('button').click();
     await expect(page.getByRole('dialog', { name: 'Academy', exact: true })).toContainText('Builders are working');

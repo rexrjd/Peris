@@ -5,6 +5,7 @@ import { cityEnvironment } from './environment';
 import { citySlots } from './slots';
 import { cityOverview } from './overview';
 import { cityMilitaryOverview } from './militaryOverview';
+import { territoryAllowance, territoryPopulation } from '../../map/domain/territory';
 
 /** Appearance contains no private army state, resource balances or wall-clock values. */
 export function cityPreviewState(world: World, sid: number) {
@@ -26,6 +27,8 @@ export function citySelectorEntries(world: World, owner: string, now: number) {
         id: city.id, name: city.name,
         population: Math.floor(cityOverview(world, city.id, now).population),
         army: rosterTotal(cityMilitaryOverview(world, city.id, owner, now).totals),
+        land: (world.map_plots ?? []).filter(plot => plot.owner_id === owner && plot.settlement_id === city.id).length,
+        landAllowance: territoryAllowance(territoryPopulation(world, owner, city.id)),
     }));
 }
 

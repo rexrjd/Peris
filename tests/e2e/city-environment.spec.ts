@@ -89,7 +89,7 @@ test('city geography, seeded boundaries and fishery access stay consistent in bo
         await page.getByRole('button', { name: 'Rotate city right', exact: true }).click();
         await expect(scene.locator('canvas')).toHaveAttribute('data-city-rotation', '0.393');
         await page.screenshot({ path: info.outputPath(`${town.id}-${town.name}-3d.png`) });
-        await page.getByRole('button', { name: 'Village', exact: true }).click();
+        await page.getByRole('button',{name:/^Current city:/}).click();await page.getByRole('menuitem',{name:'Village',exact:true}).click();
     }
     // The last city has the same faction and levels as the first, so switching must still rebuild its scene.
     await page.getByRole('combobox', { name: 'Current city', exact: true }).selectOption('1');

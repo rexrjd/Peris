@@ -1,5 +1,15 @@
 # Original Peris artwork
 
+## Shared map and 3D city interface
+
+The map and live 3D city reuse the eleven existing faction frame and texture
+paintings from `public/art/ui/rally-point-v1/`. The selected city controls the
+materials across navigation, resources, city and army choosers, minimap controls,
+activity, building inspectors, and city reports. Elven leafwork, Roman bronze,
+and Orc hide and tusks retain their original artwork; the small Orc skull
+ornament in `public/art/ui/orc-skull.svg` is original vector geometry. No external
+game assets or new model dependencies are introduced.
+
 ## Persistent city environments
 
 City and Village views derive their scenery from the settlement's canonical world

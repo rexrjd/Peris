@@ -20,7 +20,6 @@ async function save(page: Page): Promise<World> {
     return page.evaluate(() => JSON.parse(localStorage.getItem('peris-campaign-v6')!));
 }
 async function chooseCamp(page: Page, camp: Camp) {
-    await page.getByRole('button', { name: /Layers/ }).click();
     await page.getByRole('button', { name: 'Find a field', exact: true }).click();
     await page.getByLabel(/Field X coordinate/).fill(String(Math.floor(camp.x / 128)));
     await page.getByLabel(/Field Y coordinate/).fill(String(Math.floor(camp.y / 128)));
@@ -139,7 +138,6 @@ test('reinforcement review blocks neutral fields and shows saved returning troop
     const world = createSolo('Station QA'), origin = { x: world.armies[0].target_x, y: world.armies[0].target_y };
     const field = [[2, 2], [2, 3], [3, 2]].map(([col, row]) => getCell(col, row)).find(cell => isWalkable(cell.col, cell.row))!;
     await start(page, world);
-    await page.getByRole('button', { name: /Layers/ }).click();
     await page.getByRole('button', { name: 'Find a field', exact: true }).click();
     await page.getByLabel(/Field X coordinate/).fill(String(field.col)); await page.getByLabel(/Field Y coordinate/).fill(String(field.row));
     await page.getByRole('button', { name: 'Go', exact: true }).click();

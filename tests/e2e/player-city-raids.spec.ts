@@ -16,8 +16,7 @@ test('compact city raid sends an exact party, cancels safely and shows siege dam
   });
   await page.goto('/');await page.getByRole('button',{name:'Shared world',exact:true}).click();await page.getByRole('button',{name:'Create account',exact:true}).click();await page.getByLabel('Name your ruler').fill('Raid Sender');await page.locator('.account-create .account-primary').click();await expect(page.getByLabel('Game menu')).toBeVisible();
   const owner=server.logins[0].player_id,rival=await server.seed('Raid Defender','orc'),fixture=await server.cityRaidFixture(owner,rival.player_id);
-  await page.reload();await expect(page.getByLabel('Game menu')).toBeVisible();
-  await page.getByRole('button',{name:/Layers/}).click();await page.getByRole('button',{name:'Find a field',exact:true}).click();
+  await page.reload();await expect(page.getByLabel('Game menu')).toBeVisible();await page.getByRole('button',{name:'Find a field',exact:true}).click();
   await page.getByLabel(/Field X coordinate/).fill(String(Math.floor(fixture.city.x/128)));await page.getByLabel(/Field Y coordinate/).fill(String(Math.floor(fixture.city.y/128)));await page.getByRole('button',{name:'Go',exact:true}).click();
   await page.getByText('Terrain & travel details',{exact:true}).click();
   await page.getByRole('button',{name:new RegExp(fixture.city.name+'.*Rival settlement')}).click();

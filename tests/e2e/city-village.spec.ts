@@ -238,7 +238,7 @@ test('painted city loads sixteen separate plots and retains progress through rel
     await page.keyboard.press('Escape');
     await page.getByRole('button',{name:'3D',exact:true}).click();
     await expect(village).toHaveCount(0);
-    await page.getByRole('button',{name:'Village',exact:true}).click();
+    await page.getByRole('button',{name:/^Current city:/}).click();await page.getByRole('menuitem',{name:'Village',exact:true}).click();
     await expect(village.locator('.city-building-artwork')).toHaveCount(21);
     await page.reload();await page.getByRole('button',{name:'Continue campaign',exact:true}).click();await page.getByRole('button',{name:'City',exact:true}).click();
     await expect(village.locator('.city-building-artwork')).toHaveCount(21);

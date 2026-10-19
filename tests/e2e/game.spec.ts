@@ -23,12 +23,13 @@ async function dragMap(page: Page, testInfo: TestInfo, name: string) {
   await expect.poll(async () => !(await field.screenshot()).equals(before)).toBe(true);
   await expect(page.locator('.atlas-inspector')).toHaveCount(selections);
   // Drag out and back while choosing a destination: release must never order a march.
-  await page.getByRole('button', { name: 'March', exact: true }).click();
+  await page.getByRole('button', { name: 'Inspect your legion', exact: true }).click();
+  await page.getByRole('button', { name: 'Give marching orders', exact: true }).click();
   await page.mouse.move(x, y); await page.mouse.down();
   await page.mouse.move(x + 90, y + 40, { steps: 10 });
   await page.mouse.move(x, y, { steps: 10 }); await page.mouse.up();
-  await expect(page.getByRole('button', { name: 'Cancel', exact: true })).toBeVisible();
-  await page.getByRole('button', { name: 'Cancel', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Cancel marching orders', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Cancel marching orders', exact: true }).click();
   await capture(page, testInfo, name);
 }
 

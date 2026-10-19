@@ -31,9 +31,11 @@ for (const faction of ['roman', 'elf', 'undead'] as Faction[]) test(`redesigned 
         await expect(page.locator('.city-selector-card .city-selector-preview')).toHaveAttribute('data-city-faction',faction);
         const badge = page.locator('[data-building="slot:3"] .city-level-badge');
         await expect(badge).toHaveCSS('opacity', '0');
-        await page.getByRole('button', { name: 'Show building levels', exact: true }).click();
+        await page.locator('[data-building="slot:3"]').focus();
+        await page.keyboard.press('Tab');
+        await page.keyboard.press('Shift+Tab');
         await expect(badge).toHaveCSS('opacity', '1');
-        await page.getByRole('button', { name: 'Show building levels', exact: true }).click();
+        await canvas.focus();
         await expect(badge).toHaveCSS('opacity', '0');
         await page.screenshot({ path: info.outputPath(`city-${faction}.png`) });
         // A real roof click validates scene picking, independently of the DOM marker buttons.

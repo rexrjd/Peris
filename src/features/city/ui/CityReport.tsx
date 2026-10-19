@@ -1,3 +1,5 @@
+import { factionOf } from '../../factions/domain/factions';
+import { rallyFactionStyle } from '../../army/ui/rallyFactionTheme';
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { World } from '../../../shared/model/world';
@@ -8,8 +10,8 @@ import { cityOverview, duration, number, signed } from '../domain/overview';
 
 export type CityReportTab = 'overview' | 'residents' | 'production';
 
-export function CityReport({ world, sid, now, initialTab = 'overview', onSelect, onClose }: {
-    world: World; sid: number; now: number; initialTab?: CityReportTab; onSelect: (key: string) => void; onClose: () => void;
+export function CityReport({ world, sid, now, initialTab = 'overview', onSelect, onClose, appearance }: {
+    world: World; sid: number; now: number; initialTab?: CityReportTab; onSelect: (key: string) => void; onClose: () => void; appearance?: 'scene';
 }) {
     const [tab, setTab] = useState(initialTab), model = cityOverview(world, sid, now);
     const { town, population, capacity, staffing, jobs, growth, issues } = model;
@@ -43,5 +45,6 @@ export function CityReport({ world, sid, now, initialTab = 'overview', onSelect,
         </div>
         <footer className="city-report-footer"><span>{model.freePlots} free building {model.freePlots === 1 ? 'plot' : 'plots'} · Main building {model.main}</span><button onClick={onClose}>Back to city<Icon name="arrow" size={13}/></button></footer>
     </Modal>;
-    return typeof document === 'undefined' ? dialog : createPortal(dialog, document.body);
+    const themed = appearance === 'scene' ? <div className="scene-theme" data-scene-faction={factionOf(town.faction)} style={rallyFactionStyle(factionOf(town.faction))}>{dialog}</div> : dialog;
+    return typeof document === 'undefined' ? themed : createPortal(themed, document.body);
 }

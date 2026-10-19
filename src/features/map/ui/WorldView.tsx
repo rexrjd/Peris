@@ -27,7 +27,6 @@ import { REALM_STORY, regionFor, siteFor } from '../domain/geography';
 import { WORLD_REGIONS, FIELD_COLORS, getCell, cellCenter, isWalkable, terrainName, worldRegionAt, type FieldTerrain } from '../domain/worldGrid';
 import { findMarchPath } from '../domain/pathfinding';
 import { CELL_SIZE, WORLD_COLS, WORLD_ROWS, wrapWorldCell } from '../domain/dimensions';
-import { territoryAllowance, territoryPopulation } from '../domain/territory';
 import { FieldInspector } from './FieldInspector';
 import { MapOperations } from './MapOperations';
 import { MapArmyDetails } from './MapArmyDetails';
@@ -44,7 +43,7 @@ import '../styles/atlas.css';
 import '../styles/territory.css';
 import '../styles/operations.css';
 type View = 'world' | 'settlement' | 'army' | 'chronicle';
-export function WorldView({ world, playerId, selection, setSelection, moveMode, setMoveMode, run, busy, now, navigate, clockOffset = 0, mapViewport, cityId, armyId, onCity, onArmy, onEmpire, farmOpen = false, onFarmClose, onReadReport }: {
+export function WorldView({ world, playerId, selection, setSelection, moveMode, setMoveMode, run, busy, now, navigate, clockOffset = 0, mapViewport, cityId, armyId, onCity, onArmy, onEmpire, farmOpen = false, onFarmClose, onReadReport, campaignOpen = false, onCampaignClose, mapClaimMode = false, setMapClaimMode = () => {} }: {
     world: World;
     cityId?:number; armyId?:number; onCity?:(id:number)=>void; onArmy?:(id:number)=>void; onEmpire?:()=>void;
     playerId: string;
@@ -60,6 +59,8 @@ export function WorldView({ world, playerId, selection, setSelection, moveMode, 
     mapViewport?: (bounds: { minX: number; minY: number; maxX: number; maxY: number }) => void;
     farmOpen?: boolean; onFarmClose?: () => void;
     onReadReport?: (battleId: number) => void;
+    campaignOpen?: boolean; onCampaignClose?: () => void;
+    mapClaimMode?: boolean; setMapClaimMode?: (active: boolean) => void;
 }) {
     const [operationsOpen, setOperationsOpen] = useState(() => (typeof window === 'undefined' || window.matchMedia('(min-width: 901px)').matches) && world.armies.some(a => a.owner_id === playerId && a.status === 'moving'));
     useEffect(() => { if (selection) setOperationsOpen(false); }, [selection]);
@@ -74,13 +75,10 @@ export function WorldView({ world, playerId, selection, setSelection, moveMode, 
         return point ? { x: point.x, y: point.y, key: 1, zoom: 13 / 11 } : undefined;
     });
     const [exploreOpen, setExploreOpen] = useState(false);
-    const [campaignOpen, setCampaignOpen] = useState(false);
     const [findOpen, setFindOpen] = useState(false);
-    const [layersOpen, setLayersOpen] = useState(false);
     const [mapLayers, setMapLayers] = useState({ grid: true, regions: false, resources: false });
     const [coordinateX, setCoordinateX] = useState('0'), [coordinateY, setCoordinateY] = useState('0');
     const [coordinateError, setCoordinateError] = useState('');
-    const [mapClaimMode, setMapClaimMode] = useState(false);
     const [marchRequest, setMarchRequest] = useState<{ destination: MarchDestination; armyId: number; troops?: ArmyTroops } | null>(null);
     const [farmRequest, setFarmRequest] = useState<{ campId: number; target?: CampaignFarmTarget } | null>(null);
     const [campReport, setCampReport] = useState<Report | null>(null);
@@ -108,8 +106,6 @@ export function WorldView({ world, playerId, selection, setSelection, moveMode, 
     const cellTowns = cell ? world.settlements.filter(inSelectedCell) : [];
     const cellArmies = cell ? world.armies.filter(a => inSelectedCell(armyPosition(a, now))) : [];
     const marchBlocked = busy || training.length > 0;
-    const population = territoryPopulation(world, playerId, town.id), allowance = territoryAllowance(population);
-    const plotCount = (world.map_plots ?? []).filter(p => p.settlement_id === town.id).length;
     const minCol = -WORLD_COLS / 2, maxCol = WORLD_COLS / 2 - 1, minRow = -WORLD_ROWS / 2, maxRow = WORLD_ROWS / 2 - 1;
     const fieldCount = (WORLD_COLS * WORLD_ROWS).toLocaleString('en-US');
     const chooseCamp = (id: number) => { setMoveMode(false); setMapClaimMode(false); setSelection({ kind: 'camp', id }); };
@@ -136,7 +132,7 @@ export function WorldView({ world, playerId, selection, setSelection, moveMode, 
     };
     return <>
   <div className={`scene-world ${campaignOpen ? 'campaign-open' : ''}`}>
-  {campaignOpen && <aside id="map-campaign-panel" className="campaign-sidebar atlas-sidebar" aria-label="Starting campaign and world regions"><div className="province-title"><span className="eyebrow">PERIS · THE WIDER WORLD</span><h1>The Hollow<br/>Crown</h1><p>{fieldCount} fields beyond the keep.<br/>Your story begins at the frontier.</p><div className="atlas-world-count"><strong>{WORLD_COLS} × {WORLD_ROWS}</strong><span>FIELDS TO EXPLORE</span></div><div className="campaign-progress"><div><i style={{ width: `${done.size / 6 * 100}%` }}/></div><span>{done.size} of 6 standards home · {campaignRank(done.size)}</span></div></div>
+  {campaignOpen && <aside id="map-campaign-panel" className="campaign-sidebar atlas-sidebar" aria-label="Starting campaign and world regions"><button className="campaign-close" aria-label="Close starting campaign" onClick={onCampaignClose}><Icon name="close" size={16}/></button><div className="province-title"><span className="eyebrow">PERIS · THE WIDER WORLD</span><h1>The Hollow<br/>Crown</h1><p>{fieldCount} fields beyond the keep.<br/>Your story begins at the frontier.</p><div className="atlas-world-count"><strong>{WORLD_COLS} × {WORLD_ROWS}</strong><span>FIELDS TO EXPLORE</span></div><div className="campaign-progress"><div><i style={{ width: `${done.size / 6 * 100}%` }}/></div><span>{done.size} of 6 standards home · {campaignRank(done.size)}</span></div></div>
    <div className="atlas-trail-heading"><span className="eyebrow">YOUR STARTING CAMPAIGN</span><span>01 — 06</span></div>
    <nav className="campaign-trail" aria-label="Explore the six campaign sites">{world.camps.filter(c=>!c.bandit&&c.id<=6).map(c => <button key={c.id} aria-pressed={camp?.id === c.id} className={`${camp?.id === c.id ? 'selected' : ''} ${done.has(c.id) ? 'conquered' : ''} ${next?.id === c.id ? 'next' : ''}`} onClick={() => chooseCamp(c.id)}><span className="trail-marker">{done.has(c.id) ? <Icon name="check" size={17}/> : String(c.id).padStart(2, '0')}</span><span><small>{done.has(c.id) ? 'STANDARD RECOVERED' : next?.id === c.id ? 'NEXT CAMPAIGN' : `CAMPAIGN ${c.id}`}</small><strong>{siteFor(c.id).title}</strong><em>{regionFor(c.id).name} · {c.terrain === 'woods' ? 'Woodland' : c.terrain === 'river' ? 'River crossing' : c.terrain === 'highlands' ? 'High country' : 'Open country'}</em></span><Icon name="arrow" size={13}/></button>)}</nav>
    <details className="atlas-journal"><summary><Icon name="world" size={15}/>Beyond the frontier<span>+</span></summary><p>{REALM_STORY}</p><div className="atlas-world-regions" aria-label="Travel the atlas camera to a region">{WORLD_REGIONS.map(r => <button key={r.id} onClick={() => exploreRegion(r)}><i style={{ background: r.color }}/><span><strong>{r.name}</strong><small>{r.subtitle}</small></span><Icon name="arrow" size={12}/></button>)}</div></details>
@@ -147,36 +143,18 @@ export function WorldView({ world, playerId, selection, setSelection, moveMode, 
   <section className="world-stage atlas-stage scene-stage" aria-label={`Interactive ${WORLD_COLS} by ${WORLD_ROWS} world map`}>
    <div className={`atlas-workspace operations-workspace ${operationsOpen ? 'ops-expanded' : 'ops-collapsed'} ${selection ? 'has-selection' : ''}`}>
    <div className="world-map-wrap">
-    <div className="map-city-card"><CitySelector world={world} owner={playerId} sid={town.id} now={now} onCity={id=>{const city=world.settlements.find(s=>s.id===id)!;onCity?.(id);setMapClaimMode(false);focusPoint(city.x,city.y,1.7);}}/></div>
-    <div className="map-hud" role="group" aria-label="Map controls">
-     <button className="map-land-control" aria-pressed={mapClaimMode} aria-label={mapClaimMode ? 'Finish choosing land' : `Choose land: ${plotCount} of ${allowance} fields claimed`} title={`${town.name} · ${plotCount} of ${allowance} fields claimed · Expansion ${population}. ${plotCount < 4 ? 'Start with four fields next to your city.' : 'Upgrade buildings to unlock more connected land.'}`} onClick={() => { setMapClaimMode(!mapClaimMode); setMoveMode(false); setLayersOpen(false); setFindOpen(false); if (!mapClaimMode) { setSelection(null); focusPoint(town.x, town.y, 1.7); } }}>
-      <span>{mapClaimMode ? 'Done' : 'Land'}</span><strong>{plotCount}<span>/ {allowance}</span></strong>{mapClaimMode ? <Icon name="check" size={16}/> : <span className="map-land-add" aria-hidden="true">+</span>}
-     </button>
-     <div className="map-hud-actions">
-      <button aria-expanded={campaignOpen} aria-controls="map-campaign-panel" aria-label="Toggle starting campaign" title="Campaign and rewards" onClick={() => { setCampaignOpen(!campaignOpen); setLayersOpen(false); }}><Icon name="flag" size={15}/><span className="map-campaign-label">Campaign</span>{claimable.length > 0 && <i className="scene-reward-dot"/>}</button>
-      <div className="scene-layers" onKeyDown={event => { if (event.key === 'Escape') setLayersOpen(false); }}>
-       <button aria-expanded={layersOpen} aria-controls="scene-layers-menu" onClick={() => { setLayersOpen(!layersOpen); setFindOpen(false); }}><Icon name="settings" size={15}/>Layers<span className="scene-chevron">⌄</span></button>
-       {layersOpen && <div className="scene-layers-menu" id="scene-layers-menu">
-        <span className="eyebrow">MAP LAYERS</span>
-        <label><input type="checkbox" checked={mapLayers.grid} onChange={event => setMapLayers(previous => ({ ...previous, grid: event.target.checked }))}/><span>Field grid<small>Trace the boundaries of each field</small></span></label>
-        <label><input type="checkbox" checked={mapLayers.regions} onChange={event => setMapLayers(previous => ({ ...previous, regions: event.target.checked }))}/><span>Region names<small>Show the realms across the landscape</small></span></label>
-        <label><input type="checkbox" checked={mapLayers.resources} onChange={event => setMapLayers(previous => ({ ...previous, resources: event.target.checked }))}/><span>Resource potential<small>Reveal natural resources as you explore</small></span></label>
-        <div className="scene-layers-navigation">
-         <button onClick={() => { setSelection(null); setMoveMode(false); setMapClaimMode(false); setLayersOpen(false); focusPoint(0, 0, 0); }}><Icon name="expand" size={15}/>World overview<Icon name="arrow" size={12}/></button>
-         <button onClick={() => { setExploreOpen(true); setLayersOpen(false); }}><Icon name="world" size={15}/>Explore regions<Icon name="arrow" size={12}/></button>
-         <button onClick={() => { setFindOpen(true); setLayersOpen(false); setMoveMode(false); setMapClaimMode(false); }}><Icon name="focus" size={15}/>Find a field<Icon name="arrow" size={12}/></button>
-        </div>
-       </div>}
-      </div>
-      <button aria-pressed={moveMode} disabled={!moveMode && marchBlocked} title={training.length ? 'Let training finish before marching' : 'Give marching orders'} onClick={() => { setMoveMode(!moveMode); setMapClaimMode(false); setLayersOpen(false); setFindOpen(false); if (!moveMode) setSelection(null); }}><Icon name="army" size={16}/>{moveMode ? 'Cancel' : 'March'}</button>
-     </div>
-    </div>
+    <div className="map-city-card"><CitySelector world={world} owner={playerId} sid={town.id} now={now} claimingLand={mapClaimMode} onLand={()=>{setMapClaimMode(!mapClaimMode);setMoveMode(false);setFindOpen(false);if(!mapClaimMode){setSelection(null);focusPoint(town.x,town.y,1.7);}}} onCity={id=>{const city=world.settlements.find(s=>s.id===id)!;onCity?.(id);setMapClaimMode(false);focusPoint(city.x,city.y,1.7);}}/></div>
     {findOpen && <div className="atlas-navigation map-field-search" role="group" aria-label="Find a field">
      <span className="atlas-coordinate-label"><Icon name="focus" size={14}/>Find a field</span>
      <form onSubmit={goToCoordinates}><label>X<input type="number" step={1} required value={coordinateX} aria-label={`Field X coordinate, ${minCol} to ${maxCol}`} onChange={event => setCoordinateX(event.target.value)}/></label><label>Y<input type="number" step={1} required value={coordinateY} aria-label={`Field Y coordinate, ${minRow} to ${maxRow}`} onChange={event => setCoordinateY(event.target.value)}/></label><button type="submit">Go<Icon name="arrow" size={13}/></button></form>
      <span className="atlas-coordinate-range">World coordinates: {minCol} to {maxCol}</span><button className="scene-find-close" aria-label="Close field search" onClick={() => setFindOpen(false)}>×</button>{coordinateError && <span className="atlas-coordinate-error" role="alert">{coordinateError}</span>}
     </div>}
-    <GameCanvas state={{ world, selectedSettlementId:town.id, selectedArmyId:army.id, playerId, mode: 'world', selection, selectedIds: [], moveMode: moveMode && !marchBlocked, mapFocus, clockOffset, mapLayers, mapClaimMode: mapClaimMode && !moveMode }} actions={{ selectMap: nextSelection => { setSelection(nextSelection); setLayersOpen(false); }, mapViewport, moveArmy: (x, y) => { if (marchBlocked) return; setMoveMode(false); setMarchRequest({ destination: { kind: 'move', x, y, label: 'Selected reinforcement destination' }, armyId: army.id }); }, cancelMove: () => { setMoveMode(false); setMapClaimMode(false); }, selectUnits: () => { }, order: () => { }, pause: () => { }, rally: () => { } }}/>
+    <GameCanvas viewControls={<>
+     <button aria-label="Show field grid" title="Field grid" aria-pressed={mapLayers.grid} onClick={()=>setMapLayers(previous=>({...previous,grid:!previous.grid}))}><Icon name="grid" size={16}/></button>
+     <button aria-label="Show region names" title="Region names" aria-pressed={mapLayers.regions} onClick={()=>setMapLayers(previous=>({...previous,regions:!previous.regions}))}><Icon name="flag" size={16}/></button>
+     <button aria-label="Show resource potential" title="Resource potential" aria-pressed={mapLayers.resources} onClick={()=>setMapLayers(previous=>({...previous,resources:!previous.resources}))}><Icon name="wood" size={16}/></button>
+     <button aria-label="Find a field" title="Find a field" aria-expanded={findOpen} onClick={()=>{setFindOpen(!findOpen);setMoveMode(false);setMapClaimMode(false);}}><Icon name="search" size={16}/></button>
+    </>} state={{ world, selectedSettlementId:town.id, selectedArmyId:army.id, playerId, mode: 'world', selection, selectedIds: [], moveMode: moveMode && !marchBlocked, mapFocus, clockOffset, mapLayers, mapClaimMode: mapClaimMode && !moveMode }} actions={{ selectMap: nextSelection => { setSelection(nextSelection); }, mapViewport, moveArmy: (x, y) => { if (marchBlocked) return; setMoveMode(false); setMarchRequest({ destination: { kind: 'move', x, y, label: 'Selected reinforcement destination' }, armyId: army.id }); }, cancelMove: () => { setMoveMode(false); setMapClaimMode(false); }, selectUnits: () => { }, order: () => { }, pause: () => { }, rally: () => { } }}/>
     {mapClaimMode && !moveMode && <div className="map-command-hint" role="status">Select a highlighted field, then claim it in the field panel. Land starts empty.<button aria-label="Close claim mode" onClick={() => setMapClaimMode(false)}>×</button></div>}
     {moveMode && <div className="map-command-hint" role="status"><Icon name="flag" size={17}/>{marchBlocked ? 'Marching unavailable while training or an order is pending.' : 'Choose a destination for your legion.'}<button aria-label="Cancel marching orders" onClick={() => setMoveMode(false)}>×</button></div>}
     {canCancel && <aside className="march-cancel-panel" aria-label="Cancellable march"><strong>{army.name} · Preparing departure</strong><small>Cancellation closes in {clock((cancelUntil - now) / 1000)}</small><button className="button outline" disabled={busy} onClick={() => run({ type: 'cancelMarch', armyId: army.id, sentAt: army.march_sent_at! }, 'March cancelled. Troops remain at their departure station.')}>Cancel march ({Math.ceil((cancelUntil - now) / 1000)}s)</button></aside>}

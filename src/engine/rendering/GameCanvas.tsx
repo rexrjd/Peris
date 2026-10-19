@@ -1,14 +1,15 @@
-import { useEffect } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import { useRef } from 'react';
 import { type RenderActions, type RenderState } from '../../shared/rendering/contracts';
 import { GameRenderer } from './CanvasRenderer';
 import { Icon } from '../../shared/ui/Icons';
 import { WorldCanvas } from '../../features/map/rendering/WorldCanvas';
-export function GameCanvas({ state, actions }: {
+export function GameCanvas({ state, actions, viewControls }: {
     state: RenderState;
     actions: RenderActions;
+    viewControls?: ReactNode;
 }) {
-    return state.mode === 'world' ? <WorldCanvas state={state} actions={actions}/> : <TacticalCanvas state={state} actions={actions}/>;
+    return state.mode === 'world' ? <WorldCanvas state={state} actions={actions} viewControls={viewControls}/> : <TacticalCanvas state={state} actions={actions}/>;
 }
 function TacticalCanvas({ state, actions }: { state: RenderState; actions: RenderActions }) {
     const canvas = useRef<HTMLCanvasElement>(null), renderer = useRef<GameRenderer | null>(null), refs = useRef({ state, actions });

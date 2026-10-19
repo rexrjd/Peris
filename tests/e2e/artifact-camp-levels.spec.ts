@@ -40,8 +40,7 @@ test('every artifact painting loads, rarity is visible, and legendary gear equip
 test('highest camp difficulty advertises legendary loot in the map card and raid review', async ({page},info) => {
     const world=createSolo('Camp difficulty QA'),camp=world.camps.find(c=>c.bandit&&c.tier===10)!;
     await page.addInitScript(w=>{localStorage.setItem('peris-campaign-v6',JSON.stringify(w));localStorage.setItem('peris-settings',JSON.stringify({sound:false,music:false,reducedMotion:true}));localStorage.setItem(`peris-welcome:${w.players[0].id}:${w.players[0].created_at}`,'yes');},world);
-    await page.goto('/');await page.getByRole('button',{name:'Continue campaign',exact:true}).click();
-    await page.getByRole('button',{name:/^Layers/}).click();await page.getByRole('button',{name:/^Find a field/}).click();
+    await page.goto('/');await page.getByRole('button',{name:'Continue campaign',exact:true}).click();await page.getByRole('button',{name:/^Find a field/}).click();
     await page.getByRole('spinbutton',{name:/^Field X coordinate/}).fill(String(Math.floor(camp.x/128)));
     await page.getByRole('spinbutton',{name:/^Field Y coordinate/}).fill(String(Math.floor(camp.y/128)));
     await page.getByRole('button',{name:'Go',exact:true}).click();

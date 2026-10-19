@@ -59,6 +59,7 @@
 @import '../../features/city/styles/building-inspector.css';
 @import '../../features/army/styles/troop-card-stats.css';
 @import '../../features/city/styles/city-selector.css';
+@import './scene-theme.css';
 
 .realm-presentation { display: contents; }
 .rp-art-status { color: var(--rp-paper); font-size: 12px; }

@@ -1,3 +1,4 @@
+import { rallyFactionStyle } from '../../army/ui/rallyFactionTheme';
 import {ACADEMY_SCIENCE,scienceRate} from '../../research/domain/science';
 import {researchFactor,trainingBoost} from '../../research/domain/effects';
 import {useResearchNavigation} from '../../research/ui/ResearchNavigation';
@@ -135,5 +136,6 @@ export function BuildingDialog({ world, owner, sid, plot, initialChoice, note, b
         </footer>
     </BuildingInspector>;
     const shown = marchRequest ? <MarchDialog world={world} playerId={owner} now={now} busy={busy} initialArmyId={marchRequest.armyId} destination={marchRequest.destination} run={run} onClose={()=>setMarchRequest(null)}/> : dialog;
-    return typeof document==='undefined' ? shown : createPortal(shown,document.body);
+    const themed = appearance === 'scene' ? <div className="scene-theme" data-scene-faction={faction} style={rallyFactionStyle(faction)}>{shown}</div> : shown;
+    return typeof document==='undefined' ? themed : createPortal(themed,document.body);
 }

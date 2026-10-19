@@ -18,8 +18,8 @@ import { CityArmySummary, CityEconomySummary } from './CitySummary';
 import { activeCityTraining } from '../domain/training';
 import { cityEnvironment } from '../domain/environment';
 
-export function SettlementView({ world, playerId, run, busy, now, cityId, onCity, onEmpire, shortcut }: {
-    world: World; playerId: string; cityId?: number; onCity?: (id: number) => void; onEmpire?: () => void;
+export function SettlementView({ world, playerId, run, busy, now, cityId, onCity, onEmpire, shortcut, onLand, onSceneChange }: {
+    world: World; playerId: string; cityId?: number; onCity?: (id: number) => void; onEmpire?: () => void; onLand?: () => void; onSceneChange?: (active: boolean) => void;
     shortcut?: { type: SlotType | 'market'; request: number }; run: (command: Command, message?: string) => void; busy: boolean; now: number;
 }) {
     const town = world.settlements.find(s => s.owner_id === playerId && (cityId === undefined || s.id === cityId))!;
@@ -40,6 +40,7 @@ export function SettlementView({ world, playerId, run, busy, now, cityId, onCity
     const plots = cityLayout(levels, slots,environment), plot = plots.find(p => p.key === selected) ?? plots.find(p => p.key === 'market')!;
     const emptyPlot = plots.find(p => p.slot !== undefined && p.slot < 16 && !p.type);
     const choose = (key: string) => { setShortcutNote(''); setSelected(key); setDialogOpen(true); };
+    useEffect(() => { onSceneChange?.(mode === '3d'); }, [mode, onSceneChange]);
     useEffect(() => { if (!paintedAvailable && mode === 'city') setMode('3d'); }, [paintedAvailable, mode]);
     useEffect(() => { try { sessionStorage.setItem(viewPreference, mode); } catch { /* View selection still works without storage. */ } }, [mode, viewPreference]);
     useEffect(() => {
@@ -56,7 +57,7 @@ export function SettlementView({ world, playerId, run, busy, now, cityId, onCity
     const sceneProps = { selected, onSelect: choose, levels, slots, faction: factionOf(town.faction),environment };
     const dialog = dialogOpen && <BuildingDialog key={plot.key} appearance={mode === '3d' ? 'scene' : undefined} world={world} owner={playerId} sid={town.id} plot={plot} initialChoice={buildChoice} note={shortcutNote} busy={busy} now={now} run={run} onSelect={choose} onClose={() => setDialogOpen(false)}/>;
     if (mode === '3d') return <div className="settlement-layout city-stage city-scene-screen">
-        <CitySceneWorkspace world={world} owner={playerId} sid={town.id} now={now} plots={plots} onCity={onCity} onSelect={choose} onEmpire={onEmpire} scene={<SettlementScene {...sceneProps} training={activeCityTraining(world,town.id,playerId,now)}/>} viewControls={<div className="city-scene-views" aria-label="City views">{paintedAvailable && <button aria-pressed={false} onClick={() => setMode('city')} title="Painted village view"><Icon name="town" size={16}/><span>Village</span></button>}<button aria-pressed={true} title="Live 3D city"><Icon name="expand" size={16}/><span>3D</span></button></div>}/>
+        <CitySceneWorkspace world={world} owner={playerId} sid={town.id} now={now} plots={plots} onCity={onCity} onSelect={choose} onLand={onLand} onVillage={paintedAvailable ? () => setMode('city') : undefined} scene={<SettlementScene {...sceneProps} training={activeCityTraining(world,town.id,playerId,now)}/>}/>
         {dialog}
     </div>;
     return <div className="settlement-layout city-stage city-command-ui village-screen">

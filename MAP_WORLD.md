@@ -25,10 +25,10 @@ This does not change strategic geography, movement, ownership or field productio
 ## Controls and rendering
 
 - Left or middle drag/arrows pan, including while choosing a march destination; a drag never issues a march. Click to inspect or confirm the destination.
-- Wheel/pinch zoom; Q/E rotate the 3D view. Home/Army focus owned entities; World frames one canonical realm.
+- Wheel/pinch zoom; Q/E or the centre arrows rotate the 3D view. Icon buttons beside the minimap zoom, focus the city or army, and frame the whole realm.
 - Edge navigation, claims, selection, routes and minimap footprints wrap consistently. Field search accepts whole-number aliases.
-- Choose land highlights eligible fields. Claim a selected field in its inspector, then construct separately. Ineligible fields explain the restriction.
-- Subtle field grid lines are enabled by default, matching the Frontier map. Layers can hide them or show contextual names/resource potential. The square minimap uses actual geography and splits seam-crossing camera footprints.
+- The shared city chooser shows claimed land and its allowance. Choose land opens the map and highlights eligible fields. Claim a selected field in its inspector, then construct separately. Ineligible fields explain the restriction.
+- Subtle field grid lines are enabled by default. Minimap view buttons toggle them, region names, and resource potential, or open field-coordinate search. Campaign and rewards are in Quick access. The square minimap uses actual geography and splits seam-crossing camera footprints.
 
 Native terrain and instanced scenery share assets across a bounded 3 × 3 display. A material-batched cache shares faction/stage models. Nearby owned villages remain detailed; other villages have a 48-model detail budget. Field compounds have a 96-visible-image budget, selected first, owned next and then nearest. Other completed fields use up to 2,048 pickable instanced markers with screen-space thinning. Wider views use markers; distant scenery hides by scale. Entity removal preserves borrowed cache assets; scene teardown frees them once. WebGL context restoration resumes the existing resources. The Canvas 2D fallback also supports wrapped navigation, fields, selection and routes. Tactical battle drawing retains its existing rules and art.
 

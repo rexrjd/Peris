@@ -44,14 +44,13 @@ test('shared city card previews actual cities and retains City and Map selection
     await trigger.click(); await page.getByRole('menuitemradio', { name: /^Willowford/ }).click();
     await expect(card).toContainText('Army 186');
     await expect(preview.locator('.city-selector-model')).toHaveAttribute('src', first!);
-    const toolbar = page.locator('.map-hud'), bounds = (await card.boundingBox())!, controls = (await toolbar.boundingBox())!;
-    expect(bounds.y + bounds.height).toBeLessThanOrEqual(controls.y + 1);
+    const bounds = (await card.boundingBox())!, controls = (await page.getByRole('group', {name:'Map view controls'}).boundingBox())!;
+    const minimap = (await page.locator('.scene-minimap').boundingBox())!;
+    expect(controls.x + controls.width).toBeLessThanOrEqual(minimap.x);
     const header = (await page.locator('.game-header').boundingBox())!;
     expect(bounds.y).toBeGreaterThanOrEqual(header.y + header.height);
     const focus = (await page.locator('.map-focus-controls').boundingBox())!;
     expect(focus.y).toBeGreaterThanOrEqual(bounds.y + bounds.height);
-    const events = (await page.locator('.map-operations').boundingBox())!;
-    expect(events.y).toBeGreaterThanOrEqual(controls.y + controls.height);
     await trigger.click(); await page.keyboard.press('Tab');
     await expect(page.getByRole('menu', { name: 'Your cities' })).toHaveCount(0);
     await page.getByRole('button', { name: 'Focus your army', exact: true }).click();

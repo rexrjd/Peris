@@ -49,10 +49,9 @@ test('wheel and bottom controls rotate and zoom the real 3D city; reset restores
     const rotation = await canvas.getAttribute('data-city-rotation');
     await page.keyboard.press('q'); await expect(canvas).toHaveAttribute('data-city-rotation', rotation!);
     await page.keyboard.press('Escape');
-    await page.getByRole('button', { name: 'Open city building list', exact: true }).click();
-    await page.getByRole('searchbox', { name: 'Find a city building' }).fill('qe');
+    await page.getByRole('button', { name: 'Open city economy report' }).click();
     await page.keyboard.press('q'); await expect(canvas).toHaveAttribute('data-city-rotation', rotation!);
-    await page.getByRole('button', { name: 'Close city panel', exact: true }).click();
+    await page.keyboard.press('Escape');
     await page.getByRole('button', { name: 'Reset city camera', exact: true }).click();
     await expect(canvas).toHaveAttribute('data-city-rotation', '0.000');
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);

@@ -9,7 +9,7 @@ test('compact raid keeps troop selection, travel and send usable with nine roles
  await page.addInitScript(w=>{
   localStorage.setItem('peris-campaign-v6',JSON.stringify(w));localStorage.setItem('peris-settings',JSON.stringify({sound:false,music:false,reducedMotion:true}));localStorage.setItem(`peris-welcome:${w.players[0].id}:${w.players[0].created_at}`,'yes');
  },world);
- await page.goto('/');await page.getByRole('button',{name:'Continue campaign',exact:true}).click();await page.getByRole('button',{name:/Layers/}).click();await page.getByRole('button',{name:'Find a field',exact:true}).click();
+ await page.goto('/');await page.getByRole('button',{name:'Continue campaign',exact:true}).click();await page.getByRole('button',{name:'Find a field',exact:true}).click();
  await page.getByLabel(/Field X coordinate/).fill(String(Math.floor(camp.x/128)));await page.getByLabel(/Field Y coordinate/).fill(String(Math.floor(camp.y/128)));await page.getByRole('button',{name:'Go',exact:true}).click();await page.getByText('Terrain & travel details',{exact:true}).click();await page.getByRole('button',{name:new RegExp(camp.name+'.*Bandit camp')}).click();await page.getByRole('button',{name:'March and engage',exact:true}).click();
  const dialog=page.getByRole('dialog',{name:'Prepare camp raid',exact:true}),send=dialog.getByRole('button',{name:'Confirm raid',exact:true});
  await expect(dialog.locator('.march-troop-grid input')).toHaveCount(9);await expect(dialog.locator('.march-review')).toContainText('455');
