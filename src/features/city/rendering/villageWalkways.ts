@@ -1,5 +1,6 @@
 import type { Faction } from '../../factions/domain/factions';
-import { cityBoundary } from './paintedLayout';
+import { cityBoundary, paintedBoundaryPaths } from './paintedLayout';
+import type { CityEnvironment } from '../domain/environment';
 
 export type VillagePatrolRoute = { path: string; surface: 'wall' | 'lane' };
 
@@ -19,8 +20,13 @@ function arc(from: number, to: number, rx: number, ry: number): string {
 }
 
 /** Open routes reverse direction at their ends. No route crosses the gate opening. */
-export function villagePatrolRoutes(faction: Faction): VillagePatrolRoute[] {
-    const boundary=cityBoundary(faction);
+export function villagePatrolRoutes(faction: Faction, environment?:CityEnvironment): VillagePatrolRoute[] {
+    const boundary=cityBoundary(faction,environment);
+    if(environment){
+        const sides=paintedBoundaryPaths(faction,environment),lane=['timber','bamboo','living','bone'].includes(boundary.material);
+        // Ground patrols use a separately cleared western lane; masonry guards use the actual wall.
+        return lane?[{path:'M125 190Q90 345 125 520',surface:'lane'},{path:'M125 535Q140 585 180 610',surface:'lane'}]:[{path:sides.west,surface:'wall'},{path:sides.east,surface:'wall'}];
+    }
     if(['timber','bamboo','living','bone'].includes(boundary.material)) {
         const living=boundary.material==='living';
         // The western lanes stay away from the river and fishing shore to the east.

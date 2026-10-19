@@ -5,6 +5,7 @@ import { refreshCityEconomy, cityGrowth } from '../../src/features/city/domain/s
 import { BUILDINGS } from '../../src/features/city/domain/buildings';
 import { cityFootprint } from '../../src/features/city/rendering/three/layout';
 import { CityCamera } from '../../src/features/city/rendering/three/CityCamera';
+import { cityEnvironment } from '../../src/features/city/domain/environment';
 
 test('front gatehouse is selectable from its masonry and keeps the compact wall preview',async({page},info)=>{
     const world=createSolo('Gatehouse'),errors:string[]=[];world.buildings.forEach(b=>b.level=3);refreshCityEconomy(world,world.settlements[0].id);
@@ -13,7 +14,7 @@ test('front gatehouse is selectable from its masonry and keeps the compact wall 
     await page.goto('/');await page.getByRole('button',{name:'Continue campaign',exact:true}).click();await page.getByRole('button',{name:'City',exact:true}).click();await page.getByRole('button',{name:'3D',exact:true}).click();
     const canvas=page.locator('.city-3d-scene.ready canvas');await expect(canvas).toHaveAttribute('data-city-zoom','1.000');
     const rect=(await canvas.boundingBox())!,camera=new CityCamera();camera.resize(rect.width,rect.height,3);
-    const p=new THREE.Vector3(0,1.85,cityFootprint(3).front*cityGrowth(3)).project(camera.camera);
+    const p=new THREE.Vector3(0,1.85,cityFootprint(3,cityEnvironment(world.settlements[0])).front*cityGrowth(3)).project(camera.camera);
     await page.mouse.click(rect.x+(p.x+1)*rect.width/2,rect.y+(1-p.y)*rect.height/2);
     const panel=page.locator('.building-inspector');await expect(panel.getByRole('heading',{name:BUILDINGS.wall.name,exact:true})).toBeVisible();
     await expect(panel.getByRole('img')).toHaveAttribute('aria-label',/level 3/);

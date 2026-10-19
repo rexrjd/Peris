@@ -1,6 +1,7 @@
 import { FACTIONS, type Faction } from '../../factions/domain/factions';
 import { cityBoundary, type PaintedCityPlot } from './paintedLayout';
 import { VILLAGE_WORK_AREAS, villagePatrolRoutes } from './villageWalkways';
+import type { CityEnvironment } from '../domain/environment';
 
 export const cityColor = (value: number) => `#${value.toString(16).padStart(6, '0')}`;
 
@@ -12,8 +13,8 @@ export const VILLAGE_ROADS = {
 } as const;
 
 // Trusted presentation data only. No server text or player names enter this SVG markup.
-export function villageWallSvg(faction: Faction, level: number, id: string): string {
-    const b = cityBoundary(faction), p = FACTIONS[faction], c = cityColor;
+export function villageWallSvg(faction: Faction, level: number, id: string, environment?:CityEnvironment): string {
+    const b = cityBoundary(faction,environment), p = FACTIONS[faction], c = cityColor;
     const living = b.material === 'living', timber = b.material === 'timber' || b.material === 'bamboo';
     const base = living ? p.timber : timber ? p.wood : b.material === 'bone' ? p.light : b.material === 'obsidian' ? p.darkStone : p.stone;
     const light = living ? p.leaf : timber ? p.timber : p.light;
@@ -85,10 +86,10 @@ function workplaceSvg(faction: Faction, kind: VillageActivity['kind']): string {
     return '';
 }
 
-export function villageActivitySvg(faction: Faction, plots: PaintedCityPlot[]): string {
+export function villageActivitySvg(faction: Faction, plots: PaintedCityPlot[], environment?:CityEnvironment): string {
     return villageActivities(plots).map((a, i) => {
         const npc = `<g class="city-npc city-npc-${a.kind}" data-npc-race="${faction}" data-city-activity="${a.kind}" data-activity-source="${a.source}" style="--npc-delay:${a.delay}s">${villageNpcSvg(faction, a.kind, i % 2)}</g>`;
-        const route=villagePatrolRoutes(faction)[i%2];
+        const route=villagePatrolRoutes(faction,environment)[i%2];
         return a.kind === 'patrol' ? `<g class="city-npc-travel" data-patrol-surface="${route.surface}" style="offset-path:path('${route.path}');animation-delay:${a.delay}s">${npc}</g>` : `<g transform="translate(${a.x} ${a.y})">${workplaceSvg(faction,a.kind)}${npc}</g>`;
     }).join('');
 }

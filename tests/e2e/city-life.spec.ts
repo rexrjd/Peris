@@ -4,6 +4,7 @@ import { createSolo } from '../../src/features/campaign/domain/newRealm';
 import { refreshCityEconomy } from '../../src/features/city/domain/slots';
 import { cityLayout } from '../../src/features/city/rendering/three/layout';
 import { CityCamera } from '../../src/features/city/rendering/three/CityCamera';
+import { cityEnvironment } from '../../src/features/city/domain/environment';
 
 test('town flowers and lanterns follow the selected city, preserve building selection and respect reduced motion',async({page},info)=>{
     const world=createSolo('Willowford'),town=world.settlements[0],errors:string[]=[];
@@ -18,7 +19,7 @@ test('town flowers and lanterns follow the selected city, preserve building sele
     const canvas=page.locator('.city-3d-scene.ready canvas');await expect(canvas).toHaveAttribute('data-city-life-phase','0.00');
     const flowers=Number(await canvas.getAttribute('data-city-flowers'));expect(flowers).toBeGreaterThan(30);expect(Number(await canvas.getAttribute('data-city-lanterns'))).toBeGreaterThan(3);
     const rect=(await canvas.boundingBox())!,camera=new CityCamera();camera.resize(rect.width,rect.height,3);
-    const plot=cityLayout({market:3},world.city_slots).find(p=>p.key==='slot:0')!,p=new THREE.Vector3(plot.x,.65,plot.z).project(camera.camera);
+    const plot=cityLayout({market:3},world.city_slots,cityEnvironment(town)).find(p=>p.key==='slot:0')!,p=new THREE.Vector3(plot.x,.65,plot.z).project(camera.camera);
     await page.mouse.click(rect.x+(p.x+1)*rect.width/2,rect.y+(1-p.y)*rect.height/2);
     await expect(page.locator('.building-inspector').getByRole('heading',{name:'Housing',exact:true})).toBeVisible();await page.keyboard.press('Escape');
     await page.locator('[data-building="slot:3"]').click();await expect(page.getByRole('radio',{name:/^Housing/})).toBeVisible();await page.keyboard.press('Escape');

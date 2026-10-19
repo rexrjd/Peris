@@ -66,6 +66,12 @@ begin
   if p_type='mage_tower' and exists(select 1 from public.peris_city_slots where settlement_id=s.id and building_type='mage_tower') then raise exception 'Only one mage tower can be built in your city';end if;
   if p_type='barracks' and exists(select 1 from public.peris_city_slots where settlement_id=s.id and building_type='barracks') then raise exception 'Only one barracks can be built in your city';end if;
   if (p_type='fishery')<>(p_slot=16) then raise exception 'A fishery needs a riverside plot';end if;
+  -- New fisheries need public map water in the same wrapped 3x3 neighbourhood as the client.
+  -- Existing buildings and pending orders remain valid, including earlier inland fisheries.
+  if p_type='fishery' and not exists(
+   select 1 from generate_series(-1,1) dx cross join generate_series(-1,1) dy
+   where public.peris_world_terrain(floor(public.peris_wrap_world(s.x)/128)::integer+dx,floor(public.peris_wrap_world(s.y)/128)::integer+dy) in (6,7,8,9)
+  ) then raise exception 'A fishery needs nearby river, lake or coastal water';end if;
   t:=p_type;l:=0;
  elsif l is null or l=0 then raise exception 'This building is not ready';end if;
  if l>=(case when t='mage_tower' then 10 else 5 end) then raise exception 'Maximum building level reached';end if;

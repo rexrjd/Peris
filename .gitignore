@@ -51,3 +51,4 @@ assets/references/units/downloads/
 assets/source/battle/**/*.blend
 assets/source/battle/**/*.glb
 assets/source/battle/**/textures/
+.continue/agents/new-config.yaml

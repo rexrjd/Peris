@@ -4,17 +4,18 @@ import { cityGrowth } from '../../domain/slots';
 import { cityFootprint, type CityPlot } from './layout';
 import { cityStreetClearance } from './cityStreets';
 import { cityKit } from './modelKit';
+import type { CityEnvironment } from '../../domain/environment';
 
 type Placement = { x: number; z: number; y?: number; angle?: number; scale?: number; tone?: number };
 type LanternPlacement = Placement & { kind: 'street' | 'gate' | 'square' };
 
 /** Clear of walking surfaces and every reserved building lot, including empty ones. */
-export function cityLanternPlacements(plots: CityPlot[], mainLevel: number): LanternPlacement[] {
+export function cityLanternPlacements(plots: CityPlot[], mainLevel: number, environment?:CityEnvironment): LanternPlacement[] {
     if (!plots.some(p => p.level > 0 && p.type !== 'wall')) return [];
-    const g = cityGrowth(mainLevel), f = cityFootprint(mainLevel), result: LanternPlacement[] = [];
+    const g = cityGrowth(mainLevel), f = cityFootprint(mainLevel,environment), result: LanternPlacement[] = [];
     const add = (x: number, z: number, angle: number, kind: LanternPlacement['kind']) => {
         x *= g; z *= g;
-        if (cityStreetClearance(x / g, z / g, mainLevel) * g < .1) return;
+        if (cityStreetClearance(x / g, z / g, mainLevel,environment) * g < .1) return;
         if (plots.some(p => p.slot !== undefined && p.slot < 16 && Math.abs(x - p.x) < 1.69 && Math.abs(z - p.z) < 1.69)) return;
         result.push({ x, z, angle, kind });
     };
@@ -69,10 +70,10 @@ function flower(faction: Faction) {
 }
 
 /** Native-city dressing only. Nothing is serialized or added to the economy. */
-export function createCityLife(plots: CityPlot[], faction: Faction, mainLevel: number) {
+export function createCityLife(plots: CityPlot[], faction: Faction, mainLevel: number, environment?:CityEnvironment) {
     const group = new THREE.Group(); group.name = 'Living town details';
-    const k = cityKit(faction, true), { m, box, cylinder, rock } = k, g = cityGrowth(mainLevel), f = cityFootprint(mainLevel);
-    const flowers: Placement[] = [], lanterns = cityLanternPlacements(plots, mainLevel), gestures: THREE.Group[] = [];
+    const k = cityKit(faction, true), { m, box, cylinder, rock } = k, g = cityGrowth(mainLevel), f = cityFootprint(mainLevel,environment);
+    const flowers: Placement[] = [], lanterns = cityLanternPlacements(plots, mainLevel,environment), gestures: THREE.Group[] = [];
     const colors = faction === 'undead' ? [0xa28ab9, 0xded4dd, 0xb78fa4] : faction === 'demon' ? [0xd97e48, 0xc34b46, 0xefd195] : [0xc95d68, 0xe8be79, 0xe9daca, 0xa68ab4];
     let bouquetIndex = 0;
     const bouquet = (x: number, y: number, z: number, n = 5) => {

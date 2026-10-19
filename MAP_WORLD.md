@@ -16,6 +16,12 @@ Population uses main's persisted completed-upgrade counter: 80 + 10 × completed
 
 Costs scale by 1.55 per completed level. Duration is 15 + 10 × current level seconds, maximum level five. Different fields can construct concurrently; each field has one pending order. Income is per minute and supplements city production. Client and server settle overdue jobs chronologically: old rate before completion, new rate afterward. Main's fisheries, separate storage capacities, faction choices, city slots, research and magic towers remain intact.
 
+City scenery reads the actual canonical field's biome and uses its location as a
+persistent visual seed. New internal fisheries require water (river, marsh, open
+water or coast) in the same wrapped 3×3 neighbourhood on the client and server.
+Existing fisheries and their queues remain valid, including older inland sites.
+This does not change strategic geography, movement, ownership or field production.
+
 ## Controls and rendering
 
 - Left or middle drag/arrows pan, including while choosing a march destination; a drag never issues a march. Click to inspect or confirm the destination.

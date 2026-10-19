@@ -4,6 +4,7 @@ import { createSolo } from '../../src/features/campaign/domain/newRealm';
 import { refreshCityEconomy } from '../../src/features/city/domain/slots';
 import { cityLayout } from '../../src/features/city/rendering/three/layout';
 import { CityCamera } from '../../src/features/city/rendering/three/CityCamera';
+import { cityEnvironment } from '../../src/features/city/domain/environment';
 
 test('civic hall and working silhouettes keep roof selection, compact previews and free building lots',async({page},info)=>{
     const world=createSolo('Stonebridge'),town=world.settlements[0],errors:string[]=[];
@@ -14,7 +15,7 @@ test('civic hall and working silhouettes keep roof selection, compact previews a
     await page.goto('/');await page.getByRole('button',{name:'Continue campaign',exact:true}).click();await page.getByRole('button',{name:'City',exact:true}).click();await page.getByRole('button',{name:'3D',exact:true}).click();
     const canvas=page.locator('.city-3d-scene.ready canvas');await expect(canvas).toHaveAttribute('data-city-zoom','1.000');
     const rect=(await canvas.boundingBox())!,camera=new CityCamera();camera.resize(rect.width,rect.height,3);
-    const plots=cityLayout({market:3},world.city_slots);
+    const plots=cityLayout({market:3},world.city_slots,cityEnvironment(town));
     for(const [key,title,dx,y,dz] of [['market','Main building',0,2.5,-.7],['slot:0','Smithy',.4,1.55,-.25],['slot:1','Warehouse',-.57,1.22,-.48],['slot:2','Granary',0,1.5,-.18],['slot:3','Barracks',0,1.25,-1]] as const){
         const plot=plots.find(p=>p.key===key)!,scale=key==='market'?1.2:.98,sy=key==='market'?1.35:1.12,p=new THREE.Vector3(plot.x+dx*scale,y*sy+.015,plot.z+dz*scale).project(camera.camera);
         await page.mouse.click(rect.x+(p.x+1)*rect.width/2,rect.y+(1-p.y)*rect.height/2);

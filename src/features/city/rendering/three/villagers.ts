@@ -2,6 +2,7 @@ import {FACTIONS,type Faction} from '../../../factions/domain/factions';
 import * as THREE from 'three';
 import { type CityPlot } from './layout';
 import { cityWalkRoute } from './cityStreets';
+import type { CityEnvironment } from '../../domain/environment';
 /** Small moving silhouettes; paths follow streets and use the southern gate. */
 export function createVillagers(faction:Faction='roman') {
  const palette=FACTIONS[faction];
@@ -15,9 +16,9 @@ export function createVillagers(faction:Faction='roman') {
  for(let i=0;i<count;i++)body.setColorAt(i,new THREE.Color([palette.green,palette.roof,palette.slate,palette.gold][i%4]));
  for(const mesh of [body,head,legs,parcels]) {mesh.frustumCulled=false;group.add(mesh);}
  let paths:{points:THREE.Vector3[];lengths:number[];total:number}[]=[];const dummy=new THREE.Object3D(),position=new THREE.Vector3();
- return {group,setPlots(plots:CityPlot[],growth:number,mainLevel:number){
+ return {group,setPlots(plots:CityPlot[],growth:number,mainLevel:number,environment?:CityEnvironment){
   paths=plots.filter(p=>p.type!=='wall'&&p.level>0).map(plot=>{
-   const points=cityWalkRoute(plot,growth,mainLevel).map(([x,z])=>new THREE.Vector3(x*growth,0,z*growth));
+   const points=cityWalkRoute(plot,growth,mainLevel,environment).map(([x,z])=>new THREE.Vector3(x*growth,0,z*growth));
    const lengths=points.slice(1).map((point,j)=>point.distanceTo(points[j]));
    return {points,lengths,total:lengths.reduce((sum,length)=>sum+length,0)};
   });

@@ -22,6 +22,7 @@
     "check:unit-balance": "node scripts/build-unit-balance.mjs --check && node --import tsx scripts/check-unit-balance.mts",
     "balance:units": "node --import tsx scripts/check-unit-balance.mts --full",
     "test:city-db": "node tests/city-slots-database.test.mjs",
+    "test:city-environment-db": "node --import tsx tests/city-environment-database.test.mts",
     "test:magic-db": "node --import tsx tests/magic-database.test.mjs",
     "test:factions-db": "node tests/factions-database.test.mjs",
     "test:territory-db": "node tests/map-territory-database.test.mjs",

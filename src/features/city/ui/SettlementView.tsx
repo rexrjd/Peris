@@ -16,6 +16,7 @@ import { CitySceneWorkspace } from './CitySceneWorkspace';
 import { BuildingDialog } from './BuildingDialog';
 import { CityArmySummary, CityEconomySummary } from './CitySummary';
 import { activeCityTraining } from '../domain/training';
+import { cityEnvironment } from '../domain/environment';
 
 export function SettlementView({ world, playerId, run, busy, now, cityId, onCity, onEmpire, shortcut }: {
     world: World; playerId: string; cityId?: number; onCity?: (id: number) => void; onEmpire?: () => void;
@@ -34,7 +35,9 @@ export function SettlementView({ world, playerId, run, busy, now, cityId, onCity
     }), [query, setQuery] = useState('');
     const [buildChoice, setBuildChoice] = useState<SlotType>('housing'), [shortcutNote, setShortcutNote] = useState('');
     const levels = Object.fromEntries(world.buildings.filter(b => b.settlement_id === town.id).map(b => [b.building_type, b.level]));
-    const slots = citySlots(world, town.id), plots = cityLayout(levels, slots), plot = plots.find(p => p.key === selected) ?? plots.find(p => p.key === 'market')!;
+    const slots = citySlots(world, town.id);
+    const environment = cityEnvironment(town,slots.some(s=>s.slot_index===16)||world.orders.some(o=>o.owner_id===playerId&&(o.settlement_id??world.settlements[0].id)===town.id&&o.kind==='upgrade'&&o.item==='slot:16:fishery'));
+    const plots = cityLayout(levels, slots,environment), plot = plots.find(p => p.key === selected) ?? plots.find(p => p.key === 'market')!;
     const emptyPlot = plots.find(p => p.slot !== undefined && p.slot < 16 && !p.type);
     const choose = (key: string) => { setShortcutNote(''); setSelected(key); setDialogOpen(true); };
     useEffect(() => { if (!paintedAvailable && mode === 'city') setMode('3d'); }, [paintedAvailable, mode]);
@@ -50,7 +53,7 @@ export function SettlementView({ world, playerId, run, busy, now, cityId, onCity
     const plotName = (p: typeof plots[number]) => p.type ? p.slot === undefined ? BUILDINGS[p.type as BuildingType].name : SLOT_BUILDINGS[p.type as SlotType].name : `Empty plot ${p.slot! + 1}`;
     const icon = (type: string | null) => buildingIcon((type === 'warehouse' || type === 'granary' ? 'storehouse' : type === 'smithy' ? 'barracks' : type === 'fishery' ? 'farm' : type === 'mage_tower' || type === 'housing' ? 'market' : type ?? 'market') as BuildingType);
     const visiblePlots = plots.filter(p => `${plotName(p)} ${p.slot !== undefined ? `plot ${p.slot + 1}` : ''}`.toLowerCase().includes(query.trim().toLowerCase()));
-    const sceneProps = { selected, onSelect: choose, levels, slots, faction: factionOf(town.faction) };
+    const sceneProps = { selected, onSelect: choose, levels, slots, faction: factionOf(town.faction),environment };
     const dialog = dialogOpen && <BuildingDialog key={plot.key} appearance={mode === '3d' ? 'scene' : undefined} world={world} owner={playerId} sid={town.id} plot={plot} initialChoice={buildChoice} note={shortcutNote} busy={busy} now={now} run={run} onSelect={choose} onClose={() => setDialogOpen(false)}/>;
     if (mode === '3d') return <div className="settlement-layout city-stage city-scene-screen">
         <CitySceneWorkspace world={world} owner={playerId} sid={town.id} now={now} plots={plots} onCity={onCity} onSelect={choose} onEmpire={onEmpire} scene={<SettlementScene {...sceneProps} training={activeCityTraining(world,town.id,playerId,now)}/>} viewControls={<div className="city-scene-views" aria-label="City views">{paintedAvailable && <button aria-pressed={false} onClick={() => setMode('city')} title="Painted village view"><Icon name="town" size={16}/><span>Village</span></button>}<button aria-pressed={true} title="Live 3D city"><Icon name="expand" size={16}/><span>3D</span></button></div>}/>

@@ -3,15 +3,16 @@ import { visualLevel } from './buildingModels';
 import { cityKit } from './modelKit';
 import { cityFootprint, riverX } from './layout';
 import { createCityGate, createCityWaterGate } from './gateModels';
+import { cityRandom, type CityEnvironment } from '../../domain/environment';
 
 /** Open gateways and water arches; thicker walls keep the playable plots clear. */
-export function createCityWalls(value: number, mainLevel = 0, faction: Faction = 'roman', animated = false) {
+export function createCityWalls(value: number, mainLevel = 0, faction: Faction = 'roman', animated = false, environment?:CityEnvironment) {
     const level = visualLevel(value), k = cityKit(faction, animated), { m, box, cylinder, cone } = k;
     m.light.color.lerp(m.stone.color, .3); m.stone.color.multiplyScalar(.95);
-    const f = cityFootprint(mainLevel);
+    const f = cityFootprint(mainLevel,environment), riverPresent=!environment||environment.water==='river';
     // The scene anchors this object at the historical northern wall selector.
     const left = f.left + .4, right = f.right + .4, back = 0, front = f.front + 9;
-    const river = riverX(f.front) + .4, northRiver = riverX(f.back) + .4;
+    const river = riverX(f.front,environment) + .4, northRiver = riverX(f.back,environment) + .4;
     const wallHeight = (foreground: boolean) => foreground ? .48 + level * .15 : .57 + level * .19;
     function section(x1: number, z1: number, x2: number, z2: number, nx: number, nz: number, foreground = false) {
         const length = Math.hypot(x2 - x1, z2 - z1); if (length < .05) return;
@@ -53,16 +54,26 @@ export function createCityWalls(value: number, mainLevel = 0, faction: Faction =
         if (level >= 4 && !riverside) k.flag(x, h + .18, z, .65);
     }
     const gateWidth = 3.1 + level * .12, gateX = .4, eastGate = 11.4;
-    section(left, back, -1.1, back, 0, -1);
-    section(1.1, back, northRiver - 1.08, back, 0, -1);
-    section(northRiver + 1.08, back, right, back, 0, -1);
-    section(left, back, left, front, -1, 0);
-    section(right, back, right, eastGate - 1.1, 1, 0);
-    section(right, eastGate + 1.1, right, front, 1, 0);
-    section(left, front, gateX - gateWidth / 2, front, 0, 1, true);
-    section(gateX + gateWidth / 2, front, river - 1.08, front, 0, 1, true);
-    section(river + 1.08, front, right, front, 0, 1, true);
-    if (level >= 2) for (const z of [back, front]) { bastion(left, z, z === front); bastion(right + .15, z, z === front, true); }
+    const northCut=environment ? .7+cityRandom(environment,20)*1.6 : 0;
+    const southCut=environment ? .7+cityRandom(environment,21)*1.4 : 0;
+    const eastCut=environment&&!riverPresent ? .55+cityRandom(environment,22)*.65 : 0;
+    section(left+northCut, back, -1.1, back, 0, -1);
+    if(riverPresent){section(1.1, back, northRiver - 1.08, back, 0, -1);section(northRiver + 1.08, back, right, back, 0, -1);}
+    else section(1.1,back,right-eastCut,back,0,-1);
+    if(environment){
+        const bend=back+(front-back)*(.35+cityRandom(environment,23)*.3), inset=.15+cityRandom(environment,24)*.2;
+        section(left+northCut,back,left,back+northCut,-.7,-.7);
+        section(left,back+northCut,left+inset,bend,-1,0);
+        section(left+inset,bend,left,front-southCut,-1,0);
+        section(left,front-southCut,left+southCut,front,-.7,.7,true);
+    }else section(left, back, left, front, -1, 0);
+    if(eastCut){section(right-eastCut,back,right,back+eastCut,.7,-.7);section(right,front-eastCut,right-eastCut,front,.7,.7,true);}
+    section(right, back+eastCut, right, eastGate - 1.1, 1, 0);
+    section(right, eastGate + 1.1, right, front-eastCut, 1, 0);
+    section(left+southCut, front, gateX - gateWidth / 2, front, 0, 1, true);
+    if(riverPresent){section(gateX + gateWidth / 2, front, river - 1.08, front, 0, 1, true);section(river + 1.08, front, right, front, 0, 1, true);}
+    else section(gateX+gateWidth/2,front,right-eastCut,front,0,1,true);
+    if (level >= 2) for (const z of [back, front]) { bastion(left+(z===back?northCut:southCut), z, z === front); bastion(right-eastCut+.15, z, z === front, true); }
     if (level >= 3) {
         // Wall access stays in the spare northern border, away from building lots.
         const h = wallHeight(false);
@@ -75,10 +86,13 @@ export function createCityWalls(value: number, mainLevel = 0, faction: Faction =
     rear.position.set(0, 0, back); rear.name = 'Rear city gate';
     const bridge = createCityGate(level, faction, animated, 'bridge');
     bridge.position.set(right, 0, eastGate); bridge.rotation.y = -Math.PI / 2; bridge.name = 'Bridge city gate';
-    const northWater = createCityWaterGate(level, wallHeight(false), faction);
-    northWater.position.set(northRiver, 0, back);
-    const southWater = createCityWaterGate(level, wallHeight(true), faction);
-    southWater.position.set(river, 0, front); southWater.rotation.y = Math.PI;
-    perimeter.add(gate, rear, bridge, northWater, southWater);
+    perimeter.add(gate, rear, bridge);
+    if(riverPresent){
+        const northWater = createCityWaterGate(level, wallHeight(false), faction);
+        northWater.position.set(northRiver, 0, back);
+        const southWater = createCityWaterGate(level, wallHeight(true), faction);
+        southWater.position.set(river, 0, front); southWater.rotation.y = Math.PI;
+        perimeter.add(northWater, southWater);
+    }
     perimeter.name = `City perimeter level ${level}`; return perimeter;
 }

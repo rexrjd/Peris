@@ -3,16 +3,19 @@ import { FACTIONS, type Faction } from '../../../factions/domain/factions';
 import { cityGrowth } from '../../domain/slots';
 import { cityFootprint, riverX, type CityPlot } from './layout';
 import { cityStreetClearance } from './cityStreets';
+import { cityRandom, type CityEnvironment } from '../../domain/environment';
+import { cityBiome } from '../cityBiome';
 
-const noise = (n: number) => { const v = Math.sin(n * 127.1 + 43.7) * 43758.5453; return v - Math.floor(v); };
+const legacyNoise = (n: number) => { const v = Math.sin(n * 127.1 + 43.7) * 43758.5453; return v - Math.floor(v); };
 
 /** Flat, material-batched town surfaces. Reserved plots never become decorative gardens. */
-export function createCitySurfaces(plots: CityPlot[], faction: Faction) {
+export function createCitySurfaces(plots: CityPlot[], faction: Faction, environment?:CityEnvironment) {
     const group = new THREE.Group(); group.name = 'Town stonework and ground variation';
-    const main = plots.find(p => p.type === 'market')?.level ?? 0, g = cityGrowth(main), f = cityFootprint(main), palette = FACTIONS[faction];
+    const main = plots.find(p => p.type === 'market')?.level ?? 0, g = cityGrowth(main), f = cityFootprint(main,environment), palette = FACTIONS[faction],biome=cityBiome(faction,environment);
+    const noise=environment?(n:number)=>cityRandom(environment,4000+n):legacyNoise;
     const points: number[] = [], colors: number[] = [], paving: number[] = [], stoneColors: number[] = [];
     const stone = new THREE.Color(palette.light).lerp(new THREE.Color(palette.stone), .35);
-    const grass = new THREE.Color(palette.ground).lerp(new THREE.Color(palette.road), .24);
+    const grass = new THREE.Color(biome.ground).lerp(new THREE.Color(palette.road), environment?.terrain==='snow'?.04:.12);
     let stones = 0, patches = 0;
     const tile = (x: number, z: number, w: number, d: number, tone: THREE.Color, y = .032) => {
         if(plots.some(p=>p.slot!==undefined&&p.slot<16&&!p.level&&x<p.x+1.6&&x+w>p.x-1.6&&z<p.z+1.6&&z+d>p.z-1.6))return;
@@ -52,13 +55,13 @@ export function createCitySurfaces(plots: CityPlot[], faction: Faction) {
     }
     // Broad, irregular grass tones soften the lawn, staying clear of lots, roads and water.
     if (built.length) for (let i = 0; i < 140; i++) {
-        const x = (f.left+.65+noise(i*13)*(riverX(0)-1.5-f.left-.65))*g;
+        const x = (f.left+.65+noise(i*13)*((!environment||environment.water==='river'?riverX(0,environment)-1.5:f.right-.65)-f.left-.65))*g;
         const z = (f.back+.65+noise(i*29+9)*(f.front-f.back-1.3))*g;
         const r = (.5+noise(i*17)*.55)*g;
-        if (cityStreetClearance(x/g,z/g,main)*g < r+.15) continue;
+        if (cityStreetClearance(x/g,z/g,main,environment)*g < r+.15) continue;
         if (plots.some(p=>p.type!=='wall'&&Math.abs(x-p.x)<(p.type==='market'?2.4:1.8)+r&&Math.abs(z-p.z)<(p.type==='market'?3.5:1.8)+r)) continue;
-        if (x+r>(riverX(z/g)-1.1)*g) continue;
-        const tone = grass.clone().lerp(new THREE.Color(i%3 ? palette.hill : palette.road), i%3 ? .13 : .17);
+        if ((!environment||environment.water==='river')&&x+r>(riverX(z/g,environment)-1.1)*g) continue;
+        const tone = grass.clone().lerp(new THREE.Color(i%3 ? biome.hill : palette.road), i%3 ? .13 : .17);
         for(let j=0;j<7;j++) {
             const a=j*Math.PI*2/7,b=(j+1)*Math.PI*2/7,ra=r*(.75+noise(i*7+j)*.25),rb=r*(.75+noise(i*7+(j+1)%7)*.25);
             points.push(x,-.032,z,x+Math.cos(b)*rb,-.032,z+Math.sin(b)*rb*.65,x+Math.cos(a)*ra,-.032,z+Math.sin(a)*ra*.65);

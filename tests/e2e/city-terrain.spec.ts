@@ -1,23 +1,10 @@
 import { test, expect } from '@playwright/test';
-import sharp from 'sharp';
 import { createSolo } from '../../src/features/campaign/domain/newRealm';
 import { refreshCityEconomy } from '../../src/features/city/domain/slots';
 import { FACTIONS, type Faction } from '../../src/features/factions/domain/factions';
-import { PAINTED_CITY } from '../../src/features/city/rendering/paintedLayout';
 
 test('every faction keeps its wall dry, both roads at gates and residents on walkable surfaces', async ({ context }, info) => {
     test.setTimeout(180_000);
-    const {data,info: pixels}=await sharp('public/art/city/village-v1/countryside-simple.webp').raw().toBuffer({resolveWithObject:true});
-    // Only connected river/pond pixels count; bluish woodland shadows are dry land.
-    const water=new Set<number>(),queue=[850*pixels.width+1100];
-    const blue=(cell:number)=>{const i=cell*pixels.channels,r=data[i],g=data[i+1],b=data[i+2];return b>r*1.1&&g>r*1.05&&b>g*.84};
-    for(let i=0;i<queue.length;i++){
-        const cell=queue[i];if(water.has(cell)||!blue(cell))continue;water.add(cell);
-        const x=cell%pixels.width,y=Math.floor(cell/pixels.width);
-        if(x>0)queue.push(cell-1);if(x<pixels.width-1)queue.push(cell+1);
-        if(y>0)queue.push(cell-pixels.width);if(y<pixels.height-1)queue.push(cell+pixels.width);
-    }
-    expect(water.size).toBeGreaterThan(25_000);
     for(const faction of Object.keys(FACTIONS) as Faction[]) {
         const page=await context.newPage(),world=createSolo(`Terrain ${faction}`);
         world.settlements[0].faction=faction;
@@ -44,9 +31,16 @@ test('every faction keeps its wall dry, both roads at gates and residents on wal
             const p=el as SVGPathElement,n=p.getTotalLength();
             return Array.from({length:601},(_,i)=>{const q=p.getPointAtLength(n*i/600);return {x:q.x,y:q.y}});
         });
-        // Compare the complete raised wall footprint against the actual unmasked painting.
-        const wet=wall.flatMap(q=>[-12,0,12].flatMap(dx=>[-10,0,18].map(dy=>({x:Math.round(q.x+PAINTED_CITY.offsetX+dx),y:Math.round(q.y+PAINTED_CITY.offsetY+dy)})))).filter(q=>water.has(q.y*pixels.width+q.x));
-        expect(wet,`${faction}: walls and shadows touch painted water`).toEqual([]);
+        // Sample the actual seeded SVG water, including the complete raised wall and shadow footprint.
+        const wet=await village.evaluate((el,wall)=>{
+            const court=el.querySelector('[data-walkable=court]') as SVGPathElement;
+            const water=[...el.querySelectorAll('[data-city-water-surface]')] as SVGGeometryElement[];
+            return wall.flatMap(q=>[-12,0,12].flatMap(dx=>[-10,0,18].map(dy=>({x:q.x+dx,y:q.y+dy})))).filter(q=>water.some(surface=>{
+                const point=new DOMPoint(q.x,q.y).matrixTransform(court.getScreenCTM()!).matrixTransform(surface.getScreenCTM()!.inverse());
+                return surface.getAttribute('fill')==='none'?surface.isPointInStroke(point):surface.isPointInFill(point);
+            }));
+        },wall);
+        expect(wet,`${faction}: walls and shadows touch city water`).toEqual([]);
         const faults=await village.evaluate(async el=>{
             const bad:string[]=[],floor=el.querySelector('[data-walkable=court]') as SVGPathElement;
             for(const image of el.querySelectorAll('[data-building^="slot:"] .city-building-artwork')){

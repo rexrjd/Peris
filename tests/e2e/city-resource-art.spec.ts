@@ -4,6 +4,7 @@ import { createSolo } from '../../src/features/campaign/domain/newRealm';
 import { refreshCityEconomy } from '../../src/features/city/domain/slots';
 import { cityLayout } from '../../src/features/city/rendering/three/layout';
 import { CityCamera } from '../../src/features/city/rendering/three/CityCamera';
+import { cityEnvironment } from '../../src/features/city/domain/environment';
 
 test('working resource yards remain selectable through their actual 3D geometry', async ({page,isMobile},info) => {
     const world=createSolo('Working yards'),town=world.settlements[0],errors:string[]=[];
@@ -15,7 +16,7 @@ test('working resource yards remain selectable through their actual 3D geometry'
     const canvas=page.locator('.city-3d-scene.ready canvas');await expect(canvas).toHaveAttribute('data-city-zoom','1.000');
     const rect=(await canvas.boundingBox())!,camera=new CityCamera();camera.resize(rect.width,rect.height,3);
     for(const key of ['lumber','quarry','farm','fishery']){
-        const plot=cityLayout({market:3},world.city_slots).find(p=>p.key===key)!;
+        const plot=cityLayout({market:3},world.city_slots,cityEnvironment(town,true)).find(p=>p.key===key)!;
         // Mobile's narrow view can put an outside yard behind its HUD; its marker
         // remains a normal alternative. Desktop clicks use projected roof geometry.
         if(isMobile)await page.locator(`[data-building="${key}"]`).click();

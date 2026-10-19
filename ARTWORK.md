@@ -1,5 +1,27 @@
 # Original Peris artwork
 
+## Persistent city environments
+
+City and Village views derive their scenery from the settlement's canonical world
+field. The biome controls ground, distant relief, foliage and sky, while the
+location seed varies scenery, plot arrangement, wall flanks and corner depths.
+Faction architecture and materials remain distinct across all eleven factions.
+Identity stays stable across city growth, reloads, owner changes and map wrapping;
+saved building slot IDs are unchanged.
+
+Live 3D terrain and original vector Village countryside use native geometry, with
+no new textures, models, downloaded art or licenses. Streets, gates, villagers,
+planting clearances and surface details share the selected city's environment.
+River courses vary by seed; shores leave working yards on dry ground. The earlier
+painted countryside remains available to context-free previews.
+
+New fisheries require a river, marsh, lake or coastal field in the city's wrapped
+3×3 neighbourhood. Existing fisheries and pending construction retain their water
+frontage, production and upgrades. The local command and authoritative SQL enforce
+the same construction rule. `supabase/UPGRADE_CITY_ENVIRONMENT.sql` is generated
+from modular source for review and separate application to an existing server;
+this artwork change does not deploy SQL. No GPU frame-rate claim is made.
+
 ## Rally Point operations ledger
 
 The Rally Point uses the approved ivory operations-ledger presentation in

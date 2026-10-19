@@ -7,6 +7,7 @@ import { BuildingArtwork } from './BuildingArtwork';
 import { PAINTED_CITY, cityBoundary, paintedCityLayout, paintedPlotName, type PaintedCityPlot } from './paintedLayout';
 import { villageActivitySvg } from './villageDecoration';
 import { villageLandscapeSvg } from './villageLandscape';
+import type { CityEnvironment } from '../domain/environment';
 
 export type PaintedSettlementSceneProps = {
     selected: string;
@@ -14,6 +15,7 @@ export type PaintedSettlementSceneProps = {
     levels: Record<string, number>;
     slots: CitySlot[];
     faction?: Faction;
+    environment?: CityEnvironment;
 };
 
 const color = (value: number) => `#${value.toString(16).padStart(6, '0')}`;
@@ -25,10 +27,11 @@ function details(plot: PaintedCityPlot) {
 }
 
 /** Terrain and city furniture are separate from the persisted buildings and plots. */
-function VillageGround({ faction, wallLevel, plots, textureId }: { faction: Faction; wallLevel: number; plots: PaintedCityPlot[]; textureId: string }) {
+function VillageGround({ faction, wallLevel, plots, textureId, environment }: { faction: Faction; wallLevel: number; plots: PaintedCityPlot[]; textureId: string; environment?:CityEnvironment }) {
     const plotKey=JSON.stringify(plots);
     // Stable markup prevents economy ticks from replacing paths and restarting motion.
-    const markup=useMemo(()=>({__html:villageLandscapeSvg(faction,wallLevel,plots,textureId)}),[faction,wallLevel,plotKey,textureId]);
+    const environmentKey=JSON.stringify(environment);
+    const markup=useMemo(()=>({__html:villageLandscapeSvg(faction,wallLevel,plots,textureId,environment)}),[faction,wallLevel,plotKey,textureId,environmentKey]);
     return <svg className="painted-city-ground" viewBox="0 0 1200 900" aria-hidden="true" dangerouslySetInnerHTML={markup}/>;
 }
 
@@ -45,19 +48,20 @@ function Gate({ faction, level }: { faction: Faction; level: number }) {
     </svg>;
 }
 
-export function PaintedSettlementScene({ selected, onSelect, levels, slots, faction = 'roman' }: PaintedSettlementSceneProps) {
+export function PaintedSettlementScene({ selected, onSelect, levels, slots, faction = 'roman',environment }: PaintedSettlementSceneProps) {
     const textureId = `city-terrain-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`;
-    const plots = paintedCityLayout(levels, slots), palette = FACTIONS[faction];
+    const plots = paintedCityLayout(levels, slots,environment), palette = FACTIONS[faction];
     const plotKey=JSON.stringify(plots);
-    const activityMarkup=useMemo(()=>({__html:villageActivitySvg(faction,plots)}),[faction,plotKey]);
+    const environmentKey=JSON.stringify(environment);
+    const activityMarkup=useMemo(()=>({__html:villageActivitySvg(faction,plots,environment)}),[faction,plotKey,environmentKey]);
     const [hidden, setHidden] = useState(false);
     useEffect(() => {
         const update = () => setHidden(document.hidden);
         update(); document.addEventListener('visibilitychange', update);
         return () => document.removeEventListener('visibilitychange', update);
     }, []);
-    return <div className="painted-settlement-scene" data-hidden={hidden} data-faction={faction} data-city-shape={cityBoundary(faction).shape} aria-label="Painted isometric village with selectable buildings and empty construction plots" style={{ '--city-road': color(palette.road), '--city-accent': color(palette.gold) } as CSSProperties}>
-        <VillageGround faction={faction} wallLevel={levels.wall ?? 0} plots={plots} textureId={textureId}/>
+    return <div className="painted-settlement-scene" data-hidden={hidden} data-faction={faction} data-city-shape={cityBoundary(faction,environment).shape} data-city-seed={environment?.seed} data-city-terrain={environment?.terrain} data-city-water={environment?.water} aria-label="Painted isometric village with selectable buildings and empty construction plots" style={{ '--city-road': color(palette.road), '--city-accent': color(palette.gold) } as CSSProperties}>
+        <VillageGround faction={faction} wallLevel={levels.wall ?? 0} plots={plots} textureId={textureId} environment={environment}/>
         <svg className="painted-city-activity" viewBox="0 0 1200 900" aria-hidden="true"><g transform={`translate(${PAINTED_CITY.offsetX} ${PAINTED_CITY.offsetY})`} dangerouslySetInnerHTML={activityMarkup}/></svg>
         {(levels.wall ?? 0) > 0 && <div className="painted-city-north-gate" aria-hidden="true" style={{left:`${(500+PAINTED_CITY.offsetX)/12}%`,top:`${(65+PAINTED_CITY.offsetY)/9}%`}}><Gate faction={faction} level={levels.wall ?? 0}/></div>}
         <div className="painted-city-plots" aria-label="Village buildings and construction plots">

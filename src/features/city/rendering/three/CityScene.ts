@@ -1,4 +1,4 @@
-import {FACTIONS,type Faction} from '../../../factions/domain/factions';
+import {type Faction} from '../../../factions/domain/factions';
 import * as THREE from 'three';
 import { type BuildingType } from '../../domain/types';
 import { cityLayout, type CityPlot } from './layout';
@@ -16,6 +16,8 @@ import { CityTrainingYard } from './cityTraining';
 import { createCityResource, isCityResource } from './resourceModels';
 import { createCityLife } from './cityLife';
 import type { CityTraining } from '../../domain/training';
+import type { CityEnvironment } from '../../domain/environment';
+import { cityBiome } from '../cityBiome';
 
 /** Presentation only. Selection returns through React; upgrades stay in the engine. */
 export class CityScene {
@@ -45,6 +47,7 @@ export class CityScene {
     private growth = 1;
     private mainLevel = 0;
     private faction:Faction='roman';
+    private environment?:CityEnvironment;
     private landscape = createCityLandscape();
     private districts = new THREE.Group();
     private townLife = createCityLife([], 'roman', 0);
@@ -83,24 +86,24 @@ export class CityScene {
         this.settingsObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
         this.resize = new ResizeObserver(() => this.setSize()); this.resize.observe(canvas.parentElement!); this.setSize();
     }
-    update(levels: Record<string, number>, selected: string, slots: CitySlot[],faction:Faction='roman',training:CityTraining=null) {
-        const signature=JSON.stringify([levels,slots,faction]);
+    update(levels: Record<string, number>, selected: string, slots: CitySlot[],faction:Faction='roman',training:CityTraining=null,environment?:CityEnvironment) {
+        const signature=JSON.stringify([levels,slots,faction,environment]);
         if(signature===this.layoutSignature) {
             this.training.setTraining(training,this.plots,faction);
             if(selected!==this.selected) {this.selected=selected;const p=this.plots.find(p=>p.key===selected);this.ring.visible=!!p;if(p){this.ring.position.set(p.x,.06,p.z);this.ring.scale.set(p.radius*Math.SQRT2,p.radius*Math.SQRT2,1);}this.render();}
             return;
         }
         this.layoutSignature=signature;
-        const changed=faction!==this.faction;this.faction=faction;
-        this.scene.background=new THREE.Color(FACTIONS[faction].sky).lerp(new THREE.Color('#d4d6ca'),.2);
+        const changed=faction!==this.faction,environmentChanged=JSON.stringify(environment)!==JSON.stringify(this.environment);this.faction=faction;this.environment=environment;
+        this.scene.background=new THREE.Color(cityBiome(faction,environment).sky).lerp(new THREE.Color('#d4d6ca'),.2);
         this.scene.fog=new THREE.Fog(this.scene.background,60,135);
         if(changed){this.scene.remove(this.villagers.group);disposeCityObject(this.villagers.group);this.villagers=createVillagers(faction);this.scene.add(this.villagers.group);}
-        const valid=new Set(cityLayout(levels,slots).map(p=>p.key));for(const [key,item] of this.models)if(!valid.has(key)){this.scene.remove(item.model);disposeCityObject(item.model);this.models.delete(key);}
-        this.plots = cityLayout(levels, slots);
+        const valid=new Set(cityLayout(levels,slots,environment).map(p=>p.key));for(const [key,item] of this.models)if(!valid.has(key)){this.scene.remove(item.model);disposeCityObject(item.model);this.models.delete(key);}
+        this.plots = cityLayout(levels, slots,environment);
         const growth = cityGrowth(levels.market ?? 0), resized = growth !== this.growth;
         this.mainLevel=levels.market??0;
         this.growth = growth;
-        if(resized||changed) {this.scene.remove(this.landscape);disposeCityObject(this.landscape);this.landscape=createCityLandscape(this.mainLevel,faction);this.scene.add(this.landscape);}
+        if(resized||changed||environmentChanged) {this.scene.remove(this.landscape);disposeCityObject(this.landscape);this.landscape=createCityLandscape(this.mainLevel,faction,environment);this.scene.add(this.landscape);}
         this.landscape.scale.set(growth, 1, growth);
         for (const hit of this.pickMeshes) { this.scene.remove(hit); disposeCityObject(hit); }
         this.pickMeshes.length = 0;
@@ -108,9 +111,9 @@ export class CityScene {
             const hit = new THREE.Mesh(new THREE.BoxGeometry(plot.slot!==undefined&&plot.slot<16?3.2:plot.radius*2,.15,plot.slot!==undefined&&plot.slot<16?3.2:plot.radius*2), new THREE.MeshBasicMaterial({visible:false}));
             hit.position.set(plot.x,.12,plot.z); hit.userData.building=plot.key; this.pickMeshes.push(hit); this.scene.add(hit);
             const level=plot.type==='mage_tower'?Math.max(0,Math.min(10,Math.round(plot.level))):visualLevel(plot.level), previous=this.models.get(plot.key);
-            if (changed || !previous || previous.level!==level || previous.type!==plot.type || plot.type==='wall' && resized) {
+            if (changed || !previous || previous.level!==level || previous.type!==plot.type || plot.type==='wall' && (resized||environmentChanged)) {
                 if(previous) {this.scene.remove(previous.model);disposeCityObject(previous.model);}
-                const model=plot.slot!==undefined && !level ? createEmptyCityPlot(faction,plot.slot===16) : isCityResource(plot.type) ? createCityResource(plot.type,level,faction,true) : plot.slot!==undefined ? createSlotModel(plot.type as SlotType|null,level,faction,true) : plot.type==='wall' ? createCityWalls(level,this.mainLevel,faction,true) : createBuildingModel(plot.type as BuildingType,level,faction,true);
+                const model=plot.slot!==undefined && !level ? createEmptyCityPlot(faction,plot.slot===16) : isCityResource(plot.type) ? createCityResource(plot.type,level,faction,true) : plot.slot!==undefined ? createSlotModel(plot.type as SlotType|null,level,faction,true) : plot.type==='wall' ? createCityWalls(level,this.mainLevel,faction,true,environment) : createBuildingModel(plot.type as BuildingType,level,faction,true);
                 this.scene.add(model); this.models.set(plot.key,{level,type:plot.type,model});
             }
             const model=this.models.get(plot.key)!.model;
@@ -121,10 +124,10 @@ export class CityScene {
             else model.scale.set(1.05,1.1,1.05);
         }
         this.scene.remove(this.districts);disposeCityObject(this.districts);
-        this.districts=createCityDistricts(this.plots,faction);this.scene.add(this.districts);
+        this.districts=createCityDistricts(this.plots,faction,environment);this.scene.add(this.districts);
         this.scene.remove(this.townLife.group);disposeCityObject(this.townLife.group);
-        this.townLife=createCityLife(this.plots,faction,this.mainLevel);this.scene.add(this.townLife.group);
-        this.villagers.setPlots(this.plots,growth,this.mainLevel);
+        this.townLife=createCityLife(this.plots,faction,this.mainLevel,environment);this.scene.add(this.townLife.group);
+        this.villagers.setPlots(this.plots,growth,this.mainLevel,environment);
         this.activities.setModels(this.models, this.plots, faction);
         this.training.setTraining(training,this.plots,faction);
         this.selected=selected;

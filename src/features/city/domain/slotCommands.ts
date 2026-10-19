@@ -5,11 +5,13 @@ import { RESOURCES } from '../../../shared/model/resources';
 import { affordable } from './economy';
 import { citySlots, mainLevel, slotCount, riversideSlot, slotCost, SLOT_BUILDINGS, slotMaxLevel } from './slots';
 import { upgradeSeconds } from './construction';
+import { cityWaterAccess } from './environment';
 
 export function queueSlot(context: LocalCommandContext, cmd: Extract<Command,{type:'buildSlot'|'upgradeSlot'}>) {
     const w=context.world, town=commandCity(context);
     if (!Number.isInteger(cmd.slot) || cmd.slot<0 || cmd.slot!==16 && cmd.slot>=slotCount(mainLevel(w,town.id))) throw new Error('Upgrade the main building to unlock this plot.');
     if (w.orders.some(o=>o.owner_id===context.playerId && (o.settlement_id??w.settlements[0].id)===town.id && o.kind==='upgrade')) throw new Error('Your builders are already working.');
+    if (cmd.type==='buildSlot' && cmd.slot===16 && cmd.item==='fishery' && cityWaterAccess(town.x,town.y)==='none') throw new Error('A fishery needs nearby river, lake or coastal water.');
     w.city_slots ??= citySlots(w,town.id);
     let slot=w.city_slots.find(s=>s.settlement_id===town.id && s.slot_index===cmd.slot);
     if (cmd.type==='buildSlot') {

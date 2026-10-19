@@ -4,9 +4,10 @@ import { type CityPlot } from './layout';
 import type { Faction } from '../../../factions/domain/factions';
 import { isCityResource } from './resourceModels';
 import { createCitySurfaces } from './citySurfaces';
+import type { CityEnvironment } from '../../domain/environment';
 
 /** Shared material batches dress actual built plots. No decorative building fills an empty slot. */
-export function createCityDistricts(plots: CityPlot[], faction: Faction) {
+export function createCityDistricts(plots: CityPlot[], faction: Faction, environment?:CityEnvironment) {
     const k = cityKit(faction), { m, box, cylinder, rock } = k;
     m.road.color.lerp(m.light.color, .35);
     m.earth.color.lerp(m.wood.color, .2); m.wheat.color.lerp(m.gold.color, .24);
@@ -79,7 +80,7 @@ export function createCityDistricts(plots: CityPlot[], faction: Faction) {
             for (const dx of [-.28, .28]) box(.035, .15, .05, x - 1.2 + dx, 0, z + 1.1, m.wood);
         }
     }
-    const group = k.finish(), surfaces=createCitySurfaces(plots,faction);
+    const group = k.finish(), surfaces=createCitySurfaces(plots,faction,environment);
     if(surfaces.children.length)group.add(surfaces);
     group.name = 'Paved city districts and working yards'; return group;
 }
