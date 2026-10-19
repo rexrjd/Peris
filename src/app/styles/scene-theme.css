@@ -1,28 +1,27 @@
 /* Shared materials for the map, native 3D city, and their floating windows. */
-.scene-theme{display:contents;--scene-ink:#251a15;--scene-panel:#30231b;--scene-edge:#a58050;--scene-accent:#dfbd81;--scene-text:#f3e9d6;--scene-muted:#c1b29a;--scene-slice:225;--scene-radius:4px;--scene-texture:var(--rp-nation-texture);--scene-frame:var(--rp-nation-frame);--scene-material:linear-gradient(color-mix(in srgb,var(--scene-ink) 94%,transparent),color-mix(in srgb,var(--scene-panel) 94%,transparent)),var(--scene-texture)}
+.scene-theme{display:contents;--scene-ink:#251a15;--scene-panel:#30231b;--scene-edge:#a58050;--scene-accent:#dfbd81;--scene-text:#f3e9d6;--scene-muted:#c1b29a;--scene-radius:4px;--scene-texture:var(--rp-nation-texture);--scene-material:linear-gradient(color-mix(in srgb,var(--scene-ink) 94%,transparent),color-mix(in srgb,var(--scene-panel) 94%,transparent)),var(--scene-texture)}
 .scene-theme[data-scene-faction=spartan]{--scene-ink:#2b1715;--scene-panel:#40231e;--scene-edge:#b38b4f;--scene-accent:#edd09d}
 .scene-theme[data-scene-faction=persian]{--scene-ink:#10292c;--scene-panel:#17383b;--scene-edge:#b99c57;--scene-accent:#f0d38c;--scene-muted:#acc9c3}
 .scene-theme[data-scene-faction=egyptian]{--scene-ink:#172231;--scene-panel:#263346;--scene-edge:#b99e53;--scene-accent:#f2d787}
-.scene-theme[data-scene-faction=orc]{--scene-ink:#25231a;--scene-panel:#373525;--scene-edge:#8b8d65;--scene-accent:#e0cca2;--scene-muted:#bfc0a5;--scene-slice:290;--scene-radius:2px}
-.scene-theme[data-scene-faction=elf]{--scene-ink:#122a22;--scene-panel:#1c3a2d;--scene-edge:#90a77a;--scene-accent:#dce8be;--scene-text:#edf3df;--scene-muted:#b4cbb7;--scene-slice:265;--scene-radius:10px}
-.scene-theme[data-scene-faction=dwarf]{--scene-ink:#1d252b;--scene-panel:#2d353a;--scene-edge:#ab815a;--scene-accent:#efc18c;--scene-muted:#c2c7c7;--scene-slice:340;--scene-radius:2px}
+.scene-theme[data-scene-faction=orc]{--scene-ink:#25231a;--scene-panel:#373525;--scene-edge:#8b8d65;--scene-accent:#e0cca2;--scene-muted:#bfc0a5;--scene-radius:2px}
+.scene-theme[data-scene-faction=elf]{--scene-ink:#122a22;--scene-panel:#1c3a2d;--scene-edge:#90a77a;--scene-accent:#dce8be;--scene-text:#edf3df;--scene-muted:#b4cbb7;--scene-radius:10px}
+.scene-theme[data-scene-faction=dwarf]{--scene-ink:#1d252b;--scene-panel:#2d353a;--scene-edge:#ab815a;--scene-accent:#efc18c;--scene-muted:#c2c7c7;--scene-radius:2px}
 .scene-theme[data-scene-faction=gnome]{--scene-ink:#2c2028;--scene-panel:#3b2a31;--scene-edge:#bc9251;--scene-accent:#f1d18c;--scene-slice:340}
 .scene-theme[data-scene-faction=pandaren]{--scene-ink:#1b2b23;--scene-panel:#2d3b2e;--scene-edge:#b88c55;--scene-accent:#efcea0;--scene-muted:#c7c8af}
 .scene-theme[data-scene-faction=undead]{--scene-ink:#211d2c;--scene-panel:#302a3c;--scene-edge:#9b8ba6;--scene-accent:#d2dfba;--scene-muted:#c3b6cc}
 .scene-theme[data-scene-faction=demon]{--scene-ink:#2d1817;--scene-panel:#41211c;--scene-edge:#b96740;--scene-accent:#ffca88;--scene-muted:#d4b5a6;--scene-radius:2px}
 
-/* A restrained rim keeps race ornaments visible without enlarging every panel. */
+/* Quiet single-line frames retain faction colors without ornate artwork. */
 .scene-theme :is(.city-selector-card,.city-selector-menu,.army-map-dock,.map-army-options,.ops-widget,.ops-selection,.map-field-search,.map-command-hint,.march-cancel-panel,.station-reinforcement-panel,.map-focus-controls,.map-view-controls,.scene-minimap,.city-scene-plate,.city-camera-controls,.building-inspector,.modal,.peris-quick-panel,.game-menu>div,.game-navigation,.social-navigation,.game-header-actions){
- background-color:var(--scene-ink);background-image:var(--scene-material);background-size:auto,360px auto;border-color:var(--scene-edge);border-radius:var(--scene-radius);color:var(--scene-text);box-shadow:0 4px 16px #080c0955,inset 0 0 0 1px color-mix(in srgb,var(--scene-edge) 25%,transparent);--cmd-bg:var(--scene-ink);--cmd-panel:var(--scene-panel);--cmd-text:var(--scene-text);--cmd-muted:var(--scene-muted);--cmd-accent:var(--scene-accent);--cmd-border:var(--scene-edge);--city-accent:var(--scene-accent);--city-muted:var(--scene-muted);--ops-text:var(--scene-text);--ops-muted:var(--scene-muted);--ops-line:color-mix(in srgb,var(--scene-edge) 30%,transparent)
+ background-color:var(--scene-ink);background-image:var(--scene-material);background-size:auto,360px auto;border-color:color-mix(in srgb,var(--scene-edge) 55%,transparent);border-radius:var(--scene-radius);color:var(--scene-text);box-shadow:0 3px 10px #080c0933;--cmd-bg:var(--scene-ink);--cmd-panel:var(--scene-panel);--cmd-text:var(--scene-text);--cmd-muted:var(--scene-muted);--cmd-accent:var(--scene-accent);--cmd-border:var(--scene-edge);--city-accent:var(--scene-accent);--city-muted:var(--scene-muted);--ops-text:var(--scene-text);--ops-muted:var(--scene-muted);--ops-line:color-mix(in srgb,var(--scene-edge) 30%,transparent)
 }
 .scene-theme :is(.city-selector-card,.city-selector-menu,.map-army-options,.ops-widget,.map-view-controls,.scene-minimap,.social-navigation,.game-header-actions){position:relative}
-.scene-theme :is(.city-selector-card,.city-selector-menu,.army-map-dock,.map-army-options,.ops-widget,.ops-selection,.map-field-search,.map-focus-controls,.map-view-controls,.scene-minimap,.city-scene-plate,.city-camera-controls,.building-inspector,.modal,.game-navigation,.social-navigation,.game-header-actions)::after{content:'';position:absolute;inset:-3px;z-index:2;border:10px solid transparent;border-image-source:var(--scene-frame);border-image-slice:var(--scene-slice);border-image-repeat:stretch;pointer-events:none}
-.scene-theme :is(.game-navigation,.social-navigation,.game-header-actions)::after{border-width:8px;inset:-2px}
+.scene-theme :is(.city-selector-card,.city-selector-menu,.army-map-dock,.map-army-options,.ops-widget,.ops-selection,.map-field-search,.map-focus-controls,.map-view-controls,.scene-minimap,.city-scene-plate,.city-camera-controls,.building-inspector,.modal,.game-navigation,.social-navigation,.game-header-actions)::after{content:'';position:absolute;inset:0;z-index:2;border:1px solid color-mix(in srgb,var(--scene-edge) 55%,transparent);border-radius:inherit;pointer-events:none}
 .scene-theme :is(.city-selector-menu,.map-army-options){position:absolute}
 .scene-theme .city-selector-card{flex-wrap:wrap;padding:8px 10px 4px}
 .scene-theme .city-selector .city-selector-trigger{flex-basis:calc(100% - 36px)}
 .scene-theme .game-header .game-navigation{position:relative}
-.scene-theme .game-shell .scene-stage .army-map-dock,.scene-theme .game-shell :is(.map-focus-controls,.map-field-search,.map-army-options){background-color:var(--scene-ink);background-image:var(--scene-material);background-size:auto,360px auto;border-color:var(--scene-edge);color:var(--scene-text);border-radius:var(--scene-radius)}
+.scene-theme .game-shell .scene-stage .army-map-dock,.scene-theme .game-shell :is(.map-focus-controls,.map-field-search,.map-army-options){background-color:var(--scene-ink);background-image:var(--scene-material);background-size:auto,360px auto;border-color:color-mix(in srgb,var(--scene-edge) 55%,transparent);color:var(--scene-text);border-radius:var(--scene-radius)}
 .scene-theme .game-shell .scene-stage .map-focus-controls button{color:var(--scene-accent)}
 .scene-theme[data-scene-faction=orc] :is(.city-selector-card,.army-map-dock,.scene-minimap,.ops-widget)::before{content:'';position:absolute;top:-8px;left:calc(50% - 9px);z-index:3;width:18px;height:18px;background:var(--scene-accent);mask:url('/art/ui/orc-skull.svg') center/contain no-repeat;pointer-events:none;filter:drop-shadow(0 1px 2px #000)}
 .scene-theme .city-selector-info strong{color:var(--scene-text);font-family:'Cinzel',Georgia,serif;font-size:14px;letter-spacing:0}
@@ -37,7 +36,7 @@
 .city-selector-village{display:flex;align-items:center;gap:8px;width:100%;min-height:34px;margin-top:6px;padding:6px 8px;border:0;border-top:1px solid var(--scene-edge);background:transparent;color:var(--scene-accent);font:inherit;cursor:pointer}
 .city-selector-village>svg:last-child{margin-left:auto}
 .scene-theme .city-selector-menu{padding:10px;max-height:min(400px,calc(100dvh - 280px))}
-.scene-theme .city-selector-option[aria-checked=true]{border-color:var(--scene-edge);background:color-mix(in srgb,var(--scene-accent) 10%,transparent)}
+.scene-theme .city-selector-option[aria-checked=true]{border-color:color-mix(in srgb,var(--scene-edge) 55%,transparent);background:color-mix(in srgb,var(--scene-accent) 10%,transparent)}
 .scene-theme .game-header-actions{padding-inline:4px}
 .scene-theme .game-header .resource-strip.resource-hud{border:0;background:transparent;box-shadow:none}
 .scene-theme .game-header :is(button,summary){color:var(--scene-muted)}
@@ -72,9 +71,9 @@
 .scene-theme .city-scene-screen .city-landmark-label .city-landmark-tooltip{background:var(--scene-ink);color:var(--scene-text);border-color:var(--scene-edge)}
 .scene-theme .city-scene-screen .city-landmark-label.is-hovered .city-level-badge{background:var(--scene-accent);color:var(--scene-ink)}
 .scene-theme .building-inspector{--cmd-bg:var(--scene-ink);--cmd-muted:var(--scene-muted);--cmd-accent:var(--scene-accent)}
-.scene-theme :is(.building-inspector-heading,.building-inspector-tabs,.building-inspector-footer,.city-report-heading,.city-report-footer){background:color-mix(in srgb,var(--scene-panel) 70%,transparent);border-color:var(--scene-edge);color:var(--scene-text)}
+.scene-theme :is(.building-inspector-heading,.building-inspector-tabs,.building-inspector-footer,.city-report-heading,.city-report-footer){background:color-mix(in srgb,var(--scene-panel) 70%,transparent);border-color:color-mix(in srgb,var(--scene-edge) 55%,transparent);color:var(--scene-text)}
 .scene-theme :is(.building-inspector-title h2,.building-inspector h3,.city-report h2,.city-report h3){color:var(--scene-accent)}
-.scene-theme :is(.building-inspector-primary,.city-report-tabs button[aria-pressed=true]){background:var(--scene-panel);border-color:var(--scene-edge);color:var(--scene-accent)}
+.scene-theme :is(.building-inspector-primary,.city-report-tabs button[aria-pressed=true]){background:var(--scene-panel);border-color:color-mix(in srgb,var(--scene-edge) 55%,transparent);color:var(--scene-accent)}
 .scene-theme .city-report{--paper:var(--scene-text);--muted:var(--scene-muted);--accent:var(--scene-accent);--line:var(--scene-edge)}
 
 @media(max-width:900px){
