@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import * as THREE from 'three';
 import { createSolo } from '../../src/features/campaign/domain/newRealm';
 import { refreshCityEconomy, type SlotType } from '../../src/features/city/domain/slots';
-import { FACTIONS, type Faction } from '../../src/features/factions/domain/factions';
+import { type Faction } from '../../src/features/factions/domain/factions';
 import { cityLayout } from '../../src/features/city/rendering/three/layout';
 import { CityCamera } from '../../src/features/city/rendering/three/CityCamera';
 import { cityEnvironment } from '../../src/features/city/domain/environment';
@@ -28,7 +28,7 @@ for (const faction of ['roman', 'elf', 'undead'] as Faction[]) test(`redesigned 
         await page.getByRole('button', { name: '3D', exact: true }).click();
         const canvas = page.locator('.city-3d-scene.ready canvas');
         await expect(canvas).toHaveAttribute('data-city-zoom', '1.000');
-        await expect(page.locator('.city-scene-identity')).toContainText(FACTIONS[faction].name);
+        await expect(page.locator('.city-selector-card .city-selector-preview')).toHaveAttribute('data-city-faction',faction);
         const badge = page.locator('[data-building="slot:3"] .city-level-badge');
         await expect(badge).toHaveCSS('opacity', '0');
         await page.getByRole('button', { name: 'Show building levels', exact: true }).click();

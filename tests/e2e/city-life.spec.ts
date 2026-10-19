@@ -5,6 +5,7 @@ import { refreshCityEconomy } from '../../src/features/city/domain/slots';
 import { cityLayout } from '../../src/features/city/rendering/three/layout';
 import { CityCamera } from '../../src/features/city/rendering/three/CityCamera';
 import { cityEnvironment } from '../../src/features/city/domain/environment';
+import { selectCity } from './helpers/selectCity';
 
 test('town flowers and lanterns follow the selected city, preserve building selection and respect reduced motion',async({page},info)=>{
     const world=createSolo('Willowford'),town=world.settlements[0],errors:string[]=[];
@@ -23,8 +24,8 @@ test('town flowers and lanterns follow the selected city, preserve building sele
     await page.mouse.click(rect.x+(p.x+1)*rect.width/2,rect.y+(1-p.y)*rect.height/2);
     await expect(page.locator('.building-inspector').getByRole('heading',{name:'Housing',exact:true})).toBeVisible();await page.keyboard.press('Escape');
     await page.locator('[data-building="slot:3"]').click();await expect(page.getByRole('radio',{name:/^Housing/})).toBeVisible();await page.keyboard.press('Escape');
-    await page.getByLabel('Current city',{exact:true}).selectOption('2');await expect.poll(async()=>Number(await canvas.getAttribute('data-city-flowers'))).toBeLessThan(flowers);
-    await page.getByLabel('Current city',{exact:true}).selectOption(String(town.id));await expect(canvas).toHaveAttribute('data-city-flowers',String(flowers));
+    await selectCity(page,2);await expect.poll(async()=>Number(await canvas.getAttribute('data-city-flowers'))).toBeLessThan(flowers);
+    await selectCity(page,town.id);await expect(canvas).toHaveAttribute('data-city-flowers',String(flowers));
     await page.emulateMedia({reducedMotion:'no-preference'});await page.evaluate(()=>document.documentElement.classList.remove('reduced-motion'));
     await expect.poll(async()=>Number(await canvas.getAttribute('data-city-life-phase'))).toBeGreaterThan(.1);
     await page.emulateMedia({reducedMotion:'reduce'});await expect(canvas).toHaveAttribute('data-city-life-phase','0.00');

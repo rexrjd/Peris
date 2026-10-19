@@ -6,6 +6,8 @@ Read `ARCHITECTURE.md`, `MAP_WORLD.md`, and `ARTWORK.md` before changing gamepla
 
 Peris combines persistent, field-based strategy with automatic AI-controlled formation battles. Develop an original fantasy identity, including Shahnameh-inspired creatures and Persian architecture. Preserve the existing eleven factions and working flows while introducing that direction incrementally. Use reference artwork for art direction, not as a substitute for interactive terrain or game-ready models.
 
+City-view requests target the live 3D City view only. Ignore the painted Village view for implementation and visual review unless the user explicitly requests it. Keep its existing compatibility flow intact.
+
 ## Architecture and compatibility
 
 - Keep the existing React/TypeScript/Three.js stack. Domain logic must remain independent of React, Three.js, browser APIs, and rendering frame rate.

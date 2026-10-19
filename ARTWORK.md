@@ -358,3 +358,21 @@ retain their behaviour. All changes are presentation-only, release owned render
 resources, and use the existing reduced-motion-aware scene lifecycle. No SQL,
 dependency, external asset, image, GLB or license change is required. Frame-rate
 targets remain unmeasured.
+
+## Shared City and Map selector previews
+
+The live 3D City and global Map use one city selector with population and stationed
+army counts. Its static miniature uses the same plot model factory, transforms,
+faction architecture, seeded layout and walls as the live City. Map-backed water
+and preserved inland fishery frontage follow the same environment rules. Rendering
+is lazy, deduplicated and cached for at most 32 appearances; batches release their
+WebGL renderer, model geometry and materials. Resources, population ticks and army
+changes do not invalidate the image. These are lifecycle limits, not measured FPS.
+
+Three original landscape backdrops were generated with the built-in OpenAI
+image-generation tool. Exact prompts and provenance are recorded in
+`assets/city-preview-v1.json`; originals are in `assets/source/city-preview-v1/`
+and shipped 256-pixel WebPs in `public/art/city/previews-v1/`. The generated images
+contain terrain only; actual city geometry is composited over them in the browser.
+Rebuild with `node scripts/build-city-preview-art.mjs`; `npm run assets:check`
+verifies the exports. Painted Village, save formats and server rules are unchanged.

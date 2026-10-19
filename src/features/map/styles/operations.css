@@ -105,7 +105,6 @@
  .map-operations.is-open{top:158px}
  .map-operations .ops-selection{max-height:min(290px,34dvh)}
  .map-operations .ops-event-scroll{max-height:190px}
- .realm-shell.game-shell .operations-workspace>.world-map-wrap>.map-city-select{top:114px;width:min(180px,calc(100% - 152px));left:12px}
 }
 @media(max-height:550px){.map-operations{top:66px;max-height:calc(100% - 92px)}.map-operations .ops-selection{max-height:calc(100dvh - 190px)}.map-operations .ops-event-scroll{max-height:110px}}
 

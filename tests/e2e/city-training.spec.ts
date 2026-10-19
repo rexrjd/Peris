@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
+import { selectCity } from './helpers/selectCity';
 import { createSolo } from '../../src/features/campaign/domain/newRealm';
 import { refreshCityEconomy } from '../../src/features/city/domain/slots';
 import type { World } from '../../src/shared/model/world';
@@ -77,9 +78,9 @@ for (const faction of ['elf', 'orc'] as Faction[]) test(`${faction} trainees use
     await page.mouse.wheel(0, -300);
     await canvas.focus(); await page.mouse.move(5,150);
     await page.screenshot({ path: info.outputPath(`city-${faction}-training.png`) });
-    await page.getByLabel('Current city', { exact: true }).selectOption('2');
+    await selectCity(page,2);
     await expect(canvas).toHaveAttribute('data-city-training', 'none');
-    await page.getByLabel('Current city', { exact: true }).selectOption('1');
+    await selectCity(page,1);
     await expect(canvas).toHaveAttribute('data-city-training', 'ready');
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });

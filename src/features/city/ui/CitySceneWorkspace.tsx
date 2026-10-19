@@ -3,7 +3,7 @@ import type { World } from '../../../shared/model/world';
 import { RESOURCES } from '../../../shared/model/resources';
 import { Icon } from '../../../shared/ui/Icons';
 import { clock } from '../../../shared/time/clock';
-import { FACTIONS, factionOf } from '../../factions/domain/factions';
+import { CitySelector } from './CitySelector';
 import { rosterTotal } from '../../army/domain/roster';
 import { territoryAllowance, territoryPopulation } from '../../map/domain/territory';
 import { cityOverview, signed } from '../domain/overview';
@@ -30,7 +30,6 @@ export function CitySceneWorkspace({ world, owner, sid, now, plots, scene, viewC
     const panelRef = useRef<HTMLElement>(null), triggers = useRef<Partial<Record<Panel, HTMLButtonElement>>>({});
     const model = cityOverview(world, sid, now), { town } = model;
     const military = cityMilitaryOverview(world, sid, owner, now), ready = rosterTotal(military.totals);
-    const cities = world.settlements.filter(city => city.owner_id === owner);
     const order = world.orders.find(order => order.kind === 'upgrade' && order.owner_id === owner && (order.settlement_id ?? world.settlements[0].id) === sid);
     const constructionPlot = order ? plots.find(plot => plot.key === constructionTarget(order)) : undefined;
     const progress = order ? Math.max(0, Math.min(100, (now - Date.parse(order.started_at)) / Math.max(1, Date.parse(order.finish_at) - Date.parse(order.started_at)) * 100)) : 0;
@@ -61,11 +60,7 @@ export function CitySceneWorkspace({ world, owner, sid, now, plots, scene, viewC
     return <section className={`city-scene-workspace ${markers ? '' : 'hide-city-markers'} ${levelsVisible?'show-city-levels':''}`} aria-label="3D city workspace">
         <div className="city-scene-surface">{scene}</div>
         <div className="city-scene-top">
-            <header className="city-scene-identity city-scene-plate">
-                <span className="city-scene-town-icon"><Icon name="town" size={22}/></span>
-                <div className="city-scene-name"><h1>{cities.length > 1 ? <select aria-label="Current city" value={sid} onChange={event => onCity?.(Number(event.target.value))}>{cities.map(city => <option key={city.id} value={city.id}>{city.name}</option>)}</select> : town.name}</h1><p>{FACTIONS[factionOf(town.faction)].name}<span>Lv. {model.main}</span></p></div>
-                <button className="city-scene-icon-button" title="City report" aria-label="Open city economy report" onClick={() => setReport('overview')}><Icon name="report" size={17}/></button>
-            </header>
+            <CitySelector world={world} owner={owner} sid={sid} now={now} onCity={onCity} onReport={() => setReport('overview')}/>
             <nav className="city-scene-status city-scene-plate" aria-label="City status">
                 <button className={model.population >= model.capacity ? 'is-warning' : ''} title={`${Math.floor(model.population)} / ${model.capacity} residents. ${Math.round(model.staffing * 100)}% staffed.`} aria-label={`Residents: ${Math.floor(model.population)} of ${model.capacity}. Open residents and housing details.`} onClick={() => setReport('residents')}><Icon name="people" size={17}/><strong>{Math.floor(model.population).toLocaleString()}</strong><small>people</small></button>
                 <button ref={element => { if (element) triggers.current.economy = element; }} data-city-panel="economy" className={town.food_rate < 0 ? 'is-warning' : ''} title="Income, storage and food balance" aria-label="City production" aria-controls="city-scene-economy" aria-expanded={panel === 'economy'} onClick={() => toggle('economy')}><Icon name="wood" size={17}/><span>Income</span></button>

@@ -1,4 +1,5 @@
 import { test, expect, type Page, type TestInfo } from '@playwright/test';
+import { selectCity } from './helpers/selectCity';
 import { createSolo } from '../../src/features/campaign/domain/newRealm';
 import { refreshCityEconomy, type SlotType } from '../../src/features/city/domain/slots';
 import { stationCell } from '../../src/features/map/domain/garrisons';
@@ -132,8 +133,8 @@ test('3D UI retains city switching and useful construction when WebGL is unavail
     world.buildings.push(...world.buildings.map(building => ({ ...building, id: building.id + 100, settlement_id: 2 })));
     await start(page, world);
     await expect(page.locator('.city-fallback-grid')).toBeVisible();
-    await page.getByLabel('Current city', { exact: true }).selectOption('2');
-    await expect(page.locator('.city-scene-identity')).toContainText('Second City');
+    await selectCity(page,2);
+    await expect(page.locator('.city-selector')).toContainText('Second City');
     await page.locator('.city-fallback-grid').getByRole('button', { name: /^Main building/ }).click();
     await page.getByRole('button', { name: 'Construct Main building', exact: true }).click();
     await expect.poll(async () => (await save(page)).orders.find(order => order.kind === 'upgrade')?.settlement_id).toBe(2);

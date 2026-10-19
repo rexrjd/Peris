@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "license": "original",
+  "generator": "OpenAI built-in image_gen",
+  "generatedAt": "2026-10-19",
+  "purpose": "Biome backdrops beneath actual rendered city models; no fabricated city buildings in artwork.",
+  "assets": [
+    {
+      "id": "temperate",
+      "prompt": "Use case: stylized-concept. Asset type: landscape backdrop for a tiny city selector thumbnail in the fantasy strategy game Peris. Create a single square image, low-poly 3D game art, broad simple faceted forms, restrained detail, soft daylight from upper left. Elevated isometric view toward distant terrain; flat empty clearing fills central 70% and foreground, with low hills around the top edge. A real 3D miniature city will be composited over the central clearing. No buildings, walls, people, UI, letters, frames, roads or water. Readable at 100 pixels. Terrain: temperate sage-green grassland clearing surrounded by sparse angular olive and deep-green trees at the edges, hazy green hills, warm natural earth. Original fantasy game art.",
+      "source": "assets/source/city-preview-v1/temperate.png",
+      "file": "public/art/city/previews-v1/temperate.webp"
+    },
+    {
+      "id": "arid",
+      "prompt": "Use case: stylized-concept. Asset type: landscape backdrop for a tiny city selector thumbnail in the fantasy strategy game Peris. Create a single square image, low-poly 3D game art, broad simple faceted forms, restrained detail, soft daylight from upper left. Elevated isometric view toward distant terrain; flat empty clearing fills central 70% and foreground, with low hills around the top edge. A real 3D miniature city will be composited over the central clearing. No buildings, walls, people, UI, letters, frames, roads or water. Readable at 100 pixels. Terrain: dry ochre desert plateau clearing, sandy golden earth, angular sandstone hills along upper edge, a few sparse dusty shrubs only at edges, warm muted colors. Original fantasy game art.",
+      "source": "assets/source/city-preview-v1/arid.png",
+      "file": "public/art/city/previews-v1/arid.webp"
+    },
+    {
+      "id": "highland",
+      "prompt": "Use case: stylized-concept. Asset type: landscape backdrop for a tiny city selector thumbnail in the fantasy strategy game Peris. Create a single square image, low-poly 3D game art, broad simple faceted forms, restrained detail, soft daylight from upper left. Elevated isometric view toward distant terrain; flat empty clearing fills central 70% and foreground, with low hills around the top edge. A real 3D miniature city will be composited over the central clearing. No buildings, walls, people, UI, letters, frames, roads or water. Readable at 100 pixels. Terrain: cool rocky highland clearing, pale gray stone and sparse snow patches, distant snow covered blue-gray ridges along upper edge, a few tiny dark pine trees at edges. Original fantasy game art.",
+      "source": "assets/source/city-preview-v1/highland.png",
+      "file": "public/art/city/previews-v1/highland.webp"
+    }
+  ]
+}

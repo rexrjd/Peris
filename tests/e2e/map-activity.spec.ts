@@ -130,7 +130,8 @@ test('empty activity can fold away, real map clicks open details, and clearing d
     await expect(panel.locator('.ops-activity')).toHaveCount(0);
     await capture(page, info, 'map-minimal-idle');
     const canvas = page.locator('canvas[aria-label^="Interactive 200 by 200"]');
-    await canvas.click({ position: { x: 90, y: 175 } });
+    // Click open map space below the shared city selector and its local controls.
+    await canvas.click({ position: { x: 90, y: 325 } });
     await expect(panel.getByRole('region', { name: 'Selected map landmark' })).toBeVisible();
     await expect(panel.getByRole('button', { name: /^(March to this field|Sea requires ships|No connected land route)$/ })).toBeInViewport();
     await capture(page, info, 'map-minimal-field');

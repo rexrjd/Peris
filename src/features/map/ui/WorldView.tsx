@@ -39,6 +39,7 @@ import { visibleReports } from '../../campaign/domain/reportEconomics';
 import { SavedReportDialog } from '../../campaign/ui/Chronicle';
 import type { ArmyTroops } from '../../army/domain/types';
 import { garrisonAt } from '../domain/garrisons';
+import { CitySelector } from '../../city/ui/CitySelector';
 import '../styles/atlas.css';
 import '../styles/territory.css';
 import '../styles/operations.css';
@@ -146,6 +147,7 @@ export function WorldView({ world, playerId, selection, setSelection, moveMode, 
   <section className="world-stage atlas-stage scene-stage" aria-label={`Interactive ${WORLD_COLS} by ${WORLD_ROWS} world map`}>
    <div className={`atlas-workspace operations-workspace ${operationsOpen ? 'ops-expanded' : 'ops-collapsed'} ${selection ? 'has-selection' : ''}`}>
    <div className="world-map-wrap">
+    <div className="map-city-card"><CitySelector world={world} owner={playerId} sid={town.id} now={now} onCity={id=>{const city=world.settlements.find(s=>s.id===id)!;onCity?.(id);setMapClaimMode(false);focusPoint(city.x,city.y,1.7);}}/></div>
     <div className="map-hud" role="group" aria-label="Map controls">
      <button className="map-land-control" aria-pressed={mapClaimMode} aria-label={mapClaimMode ? 'Finish choosing land' : `Choose land: ${plotCount} of ${allowance} fields claimed`} title={`${town.name} · ${plotCount} of ${allowance} fields claimed · Expansion ${population}. ${plotCount < 4 ? 'Start with four fields next to your city.' : 'Upgrade buildings to unlock more connected land.'}`} onClick={() => { setMapClaimMode(!mapClaimMode); setMoveMode(false); setLayersOpen(false); setFindOpen(false); if (!mapClaimMode) { setSelection(null); focusPoint(town.x, town.y, 1.7); } }}>
       <span>{mapClaimMode ? 'Done' : 'Land'}</span><strong>{plotCount}<span>/ {allowance}</span></strong>{mapClaimMode ? <Icon name="check" size={16}/> : <span className="map-land-add" aria-hidden="true">+</span>}
@@ -174,7 +176,6 @@ export function WorldView({ world, playerId, selection, setSelection, moveMode, 
      <form onSubmit={goToCoordinates}><label>X<input type="number" step={1} required value={coordinateX} aria-label={`Field X coordinate, ${minCol} to ${maxCol}`} onChange={event => setCoordinateX(event.target.value)}/></label><label>Y<input type="number" step={1} required value={coordinateY} aria-label={`Field Y coordinate, ${minRow} to ${maxRow}`} onChange={event => setCoordinateY(event.target.value)}/></label><button type="submit">Go<Icon name="arrow" size={13}/></button></form>
      <span className="atlas-coordinate-range">World coordinates: {minCol} to {maxCol}</span><button className="scene-find-close" aria-label="Close field search" onClick={() => setFindOpen(false)}>×</button>{coordinateError && <span className="atlas-coordinate-error" role="alert">{coordinateError}</span>}
     </div>}
-    {world.settlements.filter(s=>s.owner_id===playerId).length>1&&<select className="map-city-select" aria-label="City territory to manage" value={town.id} onChange={event=>{const id=Number(event.target.value),city=world.settlements.find(s=>s.id===id)!;onCity?.(id);setMapClaimMode(false);focusPoint(city.x,city.y,1.7);}}>{world.settlements.filter(s=>s.owner_id===playerId).map(s=><option key={s.id} value={s.id}>{s.name}</option>)}</select>}
     <GameCanvas state={{ world, selectedSettlementId:town.id, selectedArmyId:army.id, playerId, mode: 'world', selection, selectedIds: [], moveMode: moveMode && !marchBlocked, mapFocus, clockOffset, mapLayers, mapClaimMode: mapClaimMode && !moveMode }} actions={{ selectMap: nextSelection => { setSelection(nextSelection); setLayersOpen(false); }, mapViewport, moveArmy: (x, y) => { if (marchBlocked) return; setMoveMode(false); setMarchRequest({ destination: { kind: 'move', x, y, label: 'Selected reinforcement destination' }, armyId: army.id }); }, cancelMove: () => { setMoveMode(false); setMapClaimMode(false); }, selectUnits: () => { }, order: () => { }, pause: () => { }, rally: () => { } }}/>
     {mapClaimMode && !moveMode && <div className="map-command-hint" role="status">Select a highlighted field, then claim it in the field panel. Land starts empty.<button aria-label="Close claim mode" onClick={() => setMapClaimMode(false)}>×</button></div>}
     {moveMode && <div className="map-command-hint" role="status"><Icon name="flag" size={17}/>{marchBlocked ? 'Marching unavailable while training or an order is pending.' : 'Choose a destination for your legion.'}<button aria-label="Cancel marching orders" onClick={() => setMoveMode(false)}>×</button></div>}

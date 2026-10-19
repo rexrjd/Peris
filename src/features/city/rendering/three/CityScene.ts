@@ -2,18 +2,16 @@ import {type Faction} from '../../../factions/domain/factions';
 import * as THREE from 'three';
 import { type BuildingType } from '../../domain/types';
 import { cityLayout, type CityPlot } from './layout';
-import { cityGrowth, type CitySlot, type SlotType } from '../../domain/slots';
-import { createSlotModel } from './slotModels';
+import { cityGrowth, type CitySlot } from '../../domain/slots';
 import { createVillagers } from './villagers';
-import { createBuildingModel, visualLevel } from './buildingModels';
+import { visualLevel } from './buildingModels';
 import { createCityLandscape } from './landscape';
 import { disposeCityObject } from './modelKit';
-import { createCityWalls } from './cityWalls';
+import { createCityPlotModel, positionCityPlotModel } from './cityPlotModel';
 import { CityCamera } from './CityCamera';
 import { createCityActivities } from './cityActivities';
-import { createCityDistricts, createEmptyCityPlot } from './cityDistricts';
+import { createCityDistricts } from './cityDistricts';
 import { CityTrainingYard } from './cityTraining';
-import { createCityResource, isCityResource } from './resourceModels';
 import { createCityLife } from './cityLife';
 import type { CityTraining } from '../../domain/training';
 import type { CityEnvironment } from '../../domain/environment';
@@ -113,15 +111,11 @@ export class CityScene {
             const level=plot.type==='mage_tower'?Math.max(0,Math.min(10,Math.round(plot.level))):visualLevel(plot.level), previous=this.models.get(plot.key);
             if (changed || !previous || previous.level!==level || previous.type!==plot.type || plot.type==='wall' && (resized||environmentChanged)) {
                 if(previous) {this.scene.remove(previous.model);disposeCityObject(previous.model);}
-                const model=plot.slot!==undefined && !level ? createEmptyCityPlot(faction,plot.slot===16) : isCityResource(plot.type) ? createCityResource(plot.type,level,faction,true) : plot.slot!==undefined ? createSlotModel(plot.type as SlotType|null,level,faction,true) : plot.type==='wall' ? createCityWalls(level,this.mainLevel,faction,true,environment) : createBuildingModel(plot.type as BuildingType,level,faction,true);
+                const model=createCityPlotModel(plot,this.mainLevel,faction,environment,true);
                 this.scene.add(model); this.models.set(plot.key,{level,type:plot.type,model});
             }
             const model=this.models.get(plot.key)!.model;
-            model.position.set(plot.x,.015,plot.z);
-            if(plot.type==='wall') model.scale.set(growth,1,growth);
-            else if(plot.slot!==undefined) model.scale.set(.98,1.12,.98);
-            else if(plot.type==='market') model.scale.set(1.2,1.35,1.2);
-            else model.scale.set(1.05,1.1,1.05);
+            positionCityPlotModel(model,plot,growth);
         }
         this.scene.remove(this.districts);disposeCityObject(this.districts);
         this.districts=createCityDistricts(this.plots,faction,environment);this.scene.add(this.districts);
