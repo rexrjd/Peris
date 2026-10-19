@@ -5,6 +5,8 @@ import { cityStreetClearance } from './cityStreets';
 import { cityKit } from './modelKit';
 import type { CityEnvironment } from '../../domain/environment';
 import { cityPlan, planContains } from './cityPlan';
+import { cityPublicSpaces } from './cityPublicSpaces';
+import { createCityLandmark } from './cityLandmarks';
 
 type Placement = { x: number; z: number; y?: number; angle?: number; scale?: number; tone?: number };
 type LanternPlacement = Placement & { kind: 'street' | 'gate' | 'square' };
@@ -13,7 +15,9 @@ type LanternPlacement = Placement & { kind: 'street' | 'gate' | 'square' };
 export function cityLanternPlacements(plots: CityPlot[], mainLevel: number, environment?:CityEnvironment): LanternPlacement[] {
     if (!plots.some(p => p.level > 0 && p.type !== 'wall')) return [];
     const g = cityRenderGrowth(mainLevel,environment), f = cityFootprint(mainLevel,environment), result: LanternPlacement[] = [];
+    const landmark=cityPublicSpaces(mainLevel,environment).landmark;
     const add = (x: number, z: number, angle: number, kind: LanternPlacement['kind']) => {
+        if(landmark&&Math.hypot(x-landmark.x,z-landmark.z)<landmark.radius+.5)return;
         x *= g; z *= g;
         if (cityStreetClearance(x / g, z / g, mainLevel,environment) * g < .1) return;
         if (plots.some(p => p.slot !== undefined && p.slot < 16 && Math.abs(x - p.x) < 1.69 && Math.abs(z - p.z) < 1.69)) return;
@@ -85,13 +89,15 @@ export function createCityLife(plots: CityPlot[], faction: Faction, mainLevel: n
     const group = new THREE.Group(); group.name = 'Living town details';
     const k = cityKit(faction, true), { m, box, cylinder, rock } = k, g = cityRenderGrowth(mainLevel,environment), f = cityFootprint(mainLevel,environment);
     const flowers: Placement[] = [], lanterns = cityLanternPlacements(plots, mainLevel,environment), gestures: THREE.Group[] = [];
-    const colors = faction === 'undead' ? [0xa28ab9, 0xded4dd, 0xb78fa4] : faction === 'demon' ? [0xd97e48, 0xc34b46, 0xefd195] : [0xc95d68, 0xe8be79, 0xe9daca, 0xa68ab4];
+    const flowersAllowed=!['orc','undead','demon'].includes(faction);
+    const colors = [0xc95d68, 0xe8be79, 0xe9daca, 0xa68ab4];
     let bouquetIndex = 0;
     const bouquet = (x: number, y: number, z: number, n = 5) => {
+        if(!flowersAllowed)return;
         const tone = bouquetIndex++ % colors.length;
         for (let i = 0; i < n; i++) { const a = i * Math.PI * 2 / n; flowers.push({ x: x + Math.cos(a) * .1, z: z + Math.sin(a) * .1, y, scale: .85 + i % 3 * .12, angle: a, tone }); }
     };
-    const pot = (x: number, z: number, y = 0) => { cylinder(.145, .23, x, y, z, m.roofLight); cylinder(.18, .045, x, y + .2, z, m.roof); cylinder(.13, .025, x, y + .23, z, m.earth); bouquet(x, y + .24, z); };
+    const pot = (x: number, z: number, y = 0) => { if(!flowersAllowed)return; cylinder(.145, .23, x, y, z, m.roofLight); cylinder(.18, .045, x, y + .2, z, m.roof); cylinder(.13, .025, x, y + .23, z, m.earth); bouquet(x, y + .24, z); };
     const barrel = (x: number, z: number) => { cylinder(.15, .35, x, 0, z, m.timber); for (const y of [.07,.26]) cylinder(.16, .035, x, y, z, m.dark); };
     const crate = (x: number, z: number, y = 0) => { box(.3, .28, .3, x, y, z, m.timber); for (const side of [-1,1]) box(.035, .28, .32, x + side * .12, y, z, m.wood); box(.32,.04,.32,x,y+.25,z,m.wood); };
     // Blooms sit above the existing shrubs, following their existing courtyards.
@@ -139,11 +145,16 @@ export function createCityLife(plots: CityPlot[], faction: Faction, mainLevel: n
     // Hanging baskets give a few street lamps a softer silhouette.
     lanterns.forEach((p,i)=>{if(i%4)return;const a=p.angle??0;pot(p.x-Math.cos(a)*.15,p.z+Math.sin(a)*.15,.72);});
     const dressed = k.finish(); group.add(dressed);
+    const placement=cityPublicSpaces(mainLevel,environment).landmark;
+    const landmark=placement?createCityLandmark(placement,faction,g):undefined;
+    if(landmark)group.add(landmark.group);
+    group.userData.cityLandmark=placement?.kind;
     let glow: THREE.MeshStandardMaterial | undefined;
     if (lanterns.length) { const lamp=lantern(faction);glow=lamp.glow;group.add(instances(lamp.prototype,lanterns,'Street lanterns')); }
     if (flowers.length) group.add(instances(flower(faction),flowers,'Town flowers',colors));
     group.userData.cityLife = { lanterns: lanterns.length, flowers: flowers.length, shopkeepers: gestures.length };
     return { group, animate(seconds: number, reduced: boolean) {
+        landmark?.animate(seconds,reduced);
         if (glow) glow.emissiveIntensity = reduced ? .8 : .8 + Math.sin(seconds*2.1)*.035;
         gestures.forEach((arm,i)=>{arm.rotation.z=reduced?0:Math.max(0,Math.sin(seconds*.85+i))*.5;});
     } };

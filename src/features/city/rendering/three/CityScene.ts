@@ -167,6 +167,8 @@ export class CityScene {
                 this.canvas.dataset.cityTrainingPhase = (reduced ? 0 : this.animationTime).toFixed(2);
                 this.canvas.dataset.cityLanterns = String(this.townLife.group.userData.cityLife.lanterns);
                 this.canvas.dataset.cityFlowers = String(this.townLife.group.userData.cityLife.flowers);
+                this.canvas.dataset.cityLandmark = this.townLife.group.userData.cityLandmark??'none';
+                this.canvas.dataset.citySquares = String(this.landscape.userData.citySquares??0);
                 this.canvas.dataset.cityLifePhase = (reduced ? 0 : this.animationTime).toFixed(2);
                 for (const plot of this.plots) {
                     const button = this.labelRoot.querySelector<HTMLElement>(`[data-building="${plot.key}"]`);

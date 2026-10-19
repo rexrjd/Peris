@@ -1,4 +1,4 @@
-import { cityFootprint, riverX, cityShoreX, type CityPlot } from './layout';
+import { cityFootprint, cityRenderGrowth, riverX, cityShoreX, type CityPlot } from './layout';
 import { slotCount } from '../../domain/slots';
 import { cityRandom, type CityEnvironment } from '../../domain/environment';
 import { cityPlan } from './cityPlan';
@@ -16,9 +16,10 @@ export function cityStreets(mainLevel: number, environment?:CityEnvironment): Ci
     const footprint = cityFootprint(mainLevel,environment), rows = Math.ceil(slotCount(mainLevel) / 4);
     const streets: CityStreet[] = [];
     const road = (x: number, z: number, x2: number, z2: number, width = .5) => streets.push({ from: [x, z], to: [x2, z2], width });
-    road(0, -4.2, 0, footprint.front, mainLevel >= 2 ? 1.1 : .8);
+    const avenue=Math.min(1.05,4-3.2/cityRenderGrowth(mainLevel,environment)-.18);
+    road(0, -4.2, 0, footprint.front, avenue);
     road(-.4, -CITY_LANDSCAPE_EDGE, -.4, -7.6, .8);
-    for (let row = 0; row < rows; row++) road(-7.6, -.25 + row * 4, 7.6, -.25 + row * 4, .65);
+    for (let row = 0; row < rows; row++) road(-7.6, -.25 + row * 4, 7.6, -.25 + row * 4, .48);
     road(-7.6, -.25, -7.6, footprint.front - 1.2, .42);
     road(7.6, -.25, 7.6, footprint.front - 1.2, .42);
     road(7.6, 2.4, 11.4, 2.4, .58);

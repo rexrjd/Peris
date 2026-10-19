@@ -32,6 +32,16 @@ footprint, including future sites. Resource yards and fisheries stay outside the
 walls. These layouts introduce no model assets, save schema or gameplay changes.
 The painted Village and the other eight factions retain their existing layouts.
 
+Native civic clearings now contain Roman tiered fountains with paved courts,
+Elf groves with standing stones, or Orc gathering fires and stools. Deterministic
+placement clears roads, walls, lamp posts and every future building site. The
+landmarks also appear in city portraits. Fountain streams and fire geometry
+animate gently and freeze under reduced motion. Orc, Undead and Demon native
+cities have no decorative flowers, flower pots or hanging flower baskets.
+Broad, lighter main avenues contrast with narrow earth-toned side paths; small
+paved junction squares share the road batches. Existing legacy verges retain
+clearance. All additions use original native geometry and existing palettes.
+
 Live 3D terrain and original vector Village countryside use native geometry, with
 no new textures, models, downloaded art or licenses. Streets, gates, villagers,
 planting clearances and surface details share the selected city's environment.

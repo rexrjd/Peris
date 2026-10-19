@@ -6,6 +6,7 @@ import { CITY_LANDSCAPE_EDGE, cityStreets, cityStreetClearance, cityTerrainHeigh
 import { createCityFoliage } from './cityFoliage';
 import { cityRandom, type CityEnvironment } from '../../domain/environment';
 import { cityBiome } from '../cityBiome';
+import { cityPublicSpaces } from './cityPublicSpaces';
 
 const legacyRandom = (n: number) => { const value = Math.sin(n * 127.1 + 19.7) * 43758.5453; return value - Math.floor(value); };
 
@@ -36,11 +37,18 @@ export function createCityLandscape(mainLevel = 0, faction: Faction = 'roman', e
     ground.receiveShadow = true; group.add(ground);
 
     m.road.color.lerp(m.light.color, .25);
-    const roadLayers = [{ vertices: [] as number[], extra: .08, lift: .018, material: m.earth.clone() }, { vertices: [] as number[], extra: 0, lift: .035, material: m.road.clone() }];
+    const roadLayers = [
+        {name:'City road borders',vertices:[] as number[],extra:.1,lift:.018,material:m.earth.clone()},
+        {name:'City side paths',vertices:[] as number[],extra:0,lift:.033,material:m.earth.clone()},
+        {name:'City avenues',vertices:[] as number[],extra:0,lift:.044,material:m.road.clone()},
+    ];
+    roadLayers[1].material.color.lerp(m.road.color,.55);
+    roadLayers[2].material.color.lerp(m.light.color,.2);
     const roadPiece=(x1:number,z1:number,x2:number,z2:number,width:number)=>{
         const length = Math.hypot(x2 - x1, z2 - z1), steps = Math.ceil(length / 1.5);
         const nx = -(z2 - z1) / length, nz = (x2 - x1) / length;
-        for (const { vertices, extra, lift } of roadLayers) {
+        for (const { name,vertices, extra, lift } of roadLayers) {
+            if(name==='City avenues'&&width<.95||name==='City side paths'&&width>=.95)continue;
             const w = width + extra;
             const edge = (step: number, side: number) => {
                 const t = step / steps, x = x1 + (x2 - x1) * t + nx * w * side / 2, z = z1 + (z2 - z1) * t + nz * w * side / 2;
@@ -60,9 +68,19 @@ export function createCityLandscape(mainLevel = 0, faction: Faction = 'roman', e
             roadPiece(crossing+1.1,z1,Math.max(x1,x2),z1,width);
         }else roadPiece(x1,z1,x2,z2,width);
     }
-    for (const { vertices, material } of roadLayers) {
+    const spaces=cityPublicSpaces(mainLevel,environment);
+    for(const square of spaces.squares){
+        for(const [layer,extra] of [[roadLayers[0],.07],[roadLayers[2],0]] as const){
+            for(let i=0;i<8;i++){
+                const a=i*Math.PI/4,b=(i+1)*Math.PI/4,r=square.radius+extra,y=cityTerrainHeight(square.x,square.z,mainLevel,environment)+layer.lift+.002;
+                layer.vertices.push(square.x,y,square.z,square.x+Math.cos(b)*r,y,square.z+Math.sin(b)*r,square.x+Math.cos(a)*r,y,square.z+Math.sin(a)*r);
+            }
+        }
+    }
+    group.userData.citySquares=spaces.squares.length;
+    for (const { name,vertices, material } of roadLayers) {
         const shape = new THREE.BufferGeometry(); shape.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3)); shape.computeVertexNormals();
-        const mesh = new THREE.Mesh(shape, material); mesh.receiveShadow = true; group.add(mesh);
+        const mesh = new THREE.Mesh(shape, material); mesh.name=name;mesh.receiveShadow = true; group.add(mesh);
     }
     // Garden verges frame the stone avenue, which follows completed town development.
     if(!environment?.layout)for (const x of [-.76, .76]) for (let z = .9; z < footprint.front - 1; z += 4) {

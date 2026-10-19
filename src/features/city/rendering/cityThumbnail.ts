@@ -4,6 +4,8 @@ import { cityRenderGrowth, cityLayout, cityShoreX, riverX } from './three/layout
 import { createCityPlotModel, positionCityPlotModel } from './three/cityPlotModel';
 import { createCityDistricts } from './three/cityDistricts';
 import { disposeCityObject } from './three/modelKit';
+import { cityPublicSpaces } from './three/cityPublicSpaces';
+import { createCityLandmark } from './three/cityLandmarks';
 
 const cache = new Map<string, string>();
 const pending = new Map<string, Promise<string | null>>();
@@ -18,6 +20,8 @@ export function createCityThumbnailModel(state: CityPreviewState) {
         positionCityPlotModel(model, plot, growth); model.name = plot.key; group.add(model);
     }
     group.add(createCityDistricts(plots, state.faction, state.environment));
+    const landmark=cityPublicSpaces(main,state.environment).landmark;
+    if(landmark)group.add(createCityLandmark(landmark,state.faction,growth).group);
     // Only map-backed water is added. Use the live city's river/shore geometry.
     if (state.environment.water !== 'none') {
         const vertices: number[] = [], bounds = new THREE.Box3().setFromObject(group);

@@ -78,14 +78,14 @@ export function cityPlan(environment?: CityEnvironment): CityPlan | undefined {
     };
     const routes = sites.map(p => approach(point(p.x, p.z + 2)));
     const streets: PlanStreet[] = [];
-    const add = (path: readonly PlanPoint[], width = .65) => path.slice(1).forEach((to, i) => { if (distance(path[i], to) > .01) streets.push({ from: path[i], to, width }); });
+    const add = (path: readonly PlanPoint[], width = .45) => path.slice(1).forEach((to, i) => { if (distance(path[i], to) > .01) streets.push({ from: path[i], to, width }); });
     routes.forEach(path => add(path));
     const gateRoutes = [front, rear].map(entry => {
         const p = entry.point, inward = point(snap(p.x + (market.x - p.x) / distance(p, market) * 2), snap(p.z + (market.z - p.z) / distance(p, market) * 2));
         const path = [...approach(inward), p];
-        add(path, .95); return path;
+        add(path, 1.25); return path;
     });
-    add([hub, point(market.x, market.z + 2.2)], .9);
+    add([hub, point(market.x, market.z + 2.2)], 1.25);
     const outside = bounds.front + 4, lane = bounds.left - 1.5;
     add([front.point, point(front.point.x, outside), point(front.point.x, 96)], 1);
     add([rear.point, point(rear.point.x, -96)], .8);

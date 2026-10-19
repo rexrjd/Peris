@@ -26,11 +26,13 @@ test('town dressing follows completed buildings, stays bounded and uses instance
         const plots=cityLayout({market:3,lumber:3,quarry:3,farm:3},[{settlement_id:1,slot_index:0,building_type:'housing',level:3},{settlement_id:1,slot_index:1,building_type:'warehouse',level:3},{settlement_id:1,slot_index:2,building_type:'academy',level:2}]);
         const before=structuredClone(plots),town=createCityLife(plots,faction,3),stats=town.group.userData.cityLife;
         assert.deepEqual(plots,before,'presentation must not mutate game-derived plots');
-        assert.ok(stats.flowers>40&&stats.flowers<300);assert.ok(stats.lanterns>=6&&stats.lanterns<=20);assert.equal(stats.shopkeepers,1);
+        const flowering=!['orc','undead','demon'].includes(faction);
+        if(flowering)assert.ok(stats.flowers>40&&stats.flowers<300);else assert.equal(stats.flowers,0);
+        assert.ok(stats.lanterns>=6&&stats.lanterns<=20);assert.equal(stats.shopkeepers,1);
         let draws=0,instanced=0,lights=0;
         town.group.traverse(object=>{if(object instanceof THREE.Light)lights++;if(object instanceof THREE.Mesh){draws++;const positions=object.geometry.getAttribute('position');assert.ok([...positions.array].every(Number.isFinite));if(object instanceof THREE.InstancedMesh){instanced++;assert.ok([...object.instanceMatrix.array].every(Number.isFinite));}}});
-        assert.ok(draws<=30&&instanced>=6);assert.equal(lights,0,'decorative lanterns do not allocate individual lights');
-        const removed=createCityLife(plots.filter(p=>p.key!=='slot:0'),faction,3);assert.ok(removed.group.userData.cityLife.flowers<stats.flowers,'demolished housing loses its flowers');
+        assert.ok(draws<=30&&instanced>=(flowering?6:4));assert.equal(lights,0,'decorative lanterns do not allocate individual lights');
+        const removed=createCityLife(plots.filter(p=>p.key!=='slot:0'),faction,3);if(flowering)assert.ok(removed.group.userData.cityLife.flowers<stats.flowers,'demolished housing loses its flowers');
         disposeCityObject(removed.group);disposeCityObject(town.group);
     }
 });
