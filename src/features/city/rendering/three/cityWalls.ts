@@ -4,6 +4,7 @@ import { cityKit } from './modelKit';
 import { cityFootprint, riverX } from './layout';
 import { createCityGate, createCityWaterGate } from './gateModels';
 import { cityRandom, type CityEnvironment } from '../../domain/environment';
+import { cityPlan } from './cityPlan';
 
 /** Open gateways and water arches; thicker walls keep the playable plots clear. */
 export function createCityWalls(value: number, mainLevel = 0, faction: Faction = 'roman', animated = false, environment?:CityEnvironment) {
@@ -19,7 +20,7 @@ export function createCityWalls(value: number, mainLevel = 0, faction: Faction =
         const angle = -Math.atan2(z2 - z1, x2 - x1), h = wallHeight(foreground), x = (x1 + x2) / 2, z = (z1 + z2) / 2;
         if (!level) { box(length, .045, .26, x, -.005, z, m.darkStone, angle); return; }
         box(length, .12, level < 3 ? .4 : .72, x, 0, z, level < 3 ? m.earth : m.darkStone, angle);
-        if (level <= 2) {
+        if (level <= 2 || environment?.layout === 'orc') {
             const count = Math.ceil(length / .28);
             for (let i = 0; i < count; i++) {
                 const t = (i + .5) / count, px = x1 + (x2 - x1) * t, pz = z1 + (z2 - z1) * t;
@@ -49,9 +50,24 @@ export function createCityWalls(value: number, mainLevel = 0, faction: Faction =
     function bastion(x: number, z: number, foreground: boolean, riverside = false) {
         const h = wallHeight(foreground) + .5, r = riverside ? .32 : .49;
         box(r * 2.45, .18, r * 2.45, x, 0, z, level < 3 ? m.wood : m.darkStone);
-        if (level < 3) { box(r * 1.8, h, r * 1.8, x, .15, z, m.wood); k.roof(r * 2.6, .33, r * 2.6, x, h + .15, z, m.slate); }
+        if (level < 3 || environment?.layout === 'orc') { box(r * 1.8, h, r * 1.8, x, .15, z, m.wood); k.roof(r * 2.6, .33, r * 2.6, x, h + .15, z, m.slate); }
         else { k.tower(x, z, h, r); cylinder(r * 1.04, .1, x, h * .43, z, m.darkStone); }
         if (level >= 4 && !riverside) k.flag(x, h + .18, z, .65);
+    }
+    const plan=cityPlan(environment);
+    if(plan){
+        const anchor=plan.front.point;
+        for(const {from,to} of plan.walls){
+            const length=Math.hypot(to.x-from.x,to.z-from.z);
+            section(from.x-anchor.x,from.z-anchor.z,to.x-anchor.x,to.z-anchor.z,(to.z-from.z)/length,-(to.x-from.x)/length,(from.z+to.z)/2>(plan.bounds.back+plan.bounds.front)/2);
+        }
+        if(level>=2)plan.boundary.forEach((p,i)=>{if(i%(environment?.layout==='elf'?5:2)||[plan.front,plan.rear].some(g=>Math.hypot(g.point.x-p.x,g.point.z-p.z)<2))return;bastion(p.x-anchor.x,p.z-anchor.z,p.z>(plan.bounds.front+plan.bounds.back)/2);});
+        const group=k.finish();
+        for(const [i,entry] of [plan.front,plan.rear].entries()){
+            const gate=createCityGate(level,faction,animated,i?'postern':undefined);
+            gate.position.set(entry.point.x-anchor.x,0,entry.point.z-anchor.z);gate.rotation.y=entry.angle;gate.name=i?'Rear city gate':'Front city gate';group.add(gate);
+        }
+        group.name=`City perimeter level ${level}`;return group;
     }
     const gateWidth = 3.1 + level * .12, gateX = .4, eastGate = 11.4;
     const northCut=environment ? .7+cityRandom(environment,20)*1.6 : 0;

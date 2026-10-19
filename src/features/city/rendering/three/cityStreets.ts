@@ -1,11 +1,18 @@
 import { cityFootprint, riverX, cityShoreX, type CityPlot } from './layout';
 import { slotCount } from '../../domain/slots';
 import { cityRandom, type CityEnvironment } from '../../domain/environment';
+import { cityPlan } from './cityPlan';
 
 export type CityStreet = { from: [number, number]; to: [number, number]; width: number };
 export const CITY_LANDSCAPE_EDGE = 96;
 /** Landscape coordinates. Buildings face their cross-street instead of a radial hub. */
 export function cityStreets(mainLevel: number, environment?:CityEnvironment): CityStreet[] {
+    const plan=cityPlan(environment);
+    if(plan){
+        const streets:CityStreet[]=plan.streets.map(({from,to,width})=>({from:[from.x,from.z],to:[to.x,to.z],width}));
+        if(environment?.water!=='none')streets.push({from:[plan.front.point.x,plan.bounds.front+4],to:[riverX(plan.bounds.front+5.5,environment)-.85,plan.bounds.front+5.5],width:.6});
+        return streets;
+    }
     const footprint = cityFootprint(mainLevel,environment), rows = Math.ceil(slotCount(mainLevel) / 4);
     const streets: CityStreet[] = [];
     const road = (x: number, z: number, x2: number, z2: number, width = .5) => streets.push({ from: [x, z], to: [x2, z2], width });
@@ -37,6 +44,16 @@ export function cityStreetClearance(x: number, z: number, mainLevel: number, env
 /** The same streets guide visual walkers; they stop at entrances, clear of roofs. */
 export function cityWalkRoute(plot: CityPlot, growth: number, mainLevel: number, environment?:CityEnvironment): [number, number][] {
     const f = cityFootprint(mainLevel,environment), x = plot.x / growth, z = plot.z / growth;
+    const plan=cityPlan(environment),coordinates=(path:readonly {x:number;z:number}[]):[number,number][]=>path.map(p=>[p.x,p.z]);
+    if(plan){
+        if(plot.type==='market')return coordinates([plan.hub,{x:plan.market.x,z:plan.market.z+2.2}]);
+        if(plot.slot!==undefined&&plot.slot<16)return coordinates(plan.routes[plot.slot]);
+        const approach=coordinates(plan.gateRoutes[0]),gate=plan.front.point;
+        approach.push([gate.x,f.outsideRoad]);
+        if(plot.slot===16)return [...approach,[x-.85,z]];
+        const lane=x<0?plan.serviceLane:13;
+        return [...approach,[lane,f.outsideRoad],[lane,z+1.7],[x,z+1.7]];
+    }
     if (plot.type === 'market') return [[0, -.25], [0, -4.2]];
     if (plot.slot !== undefined && plot.slot < 16) return [[0, -.25], [0, z + 1.75], [x, z + 1.75], [x, z + 1.35]];
     if (plot.slot === 16) return [[0, -.25], [0, f.front], [0, f.outsideRoad], [x-.85, z]];
@@ -45,7 +62,8 @@ export function cityWalkRoute(plot: CityPlot, growth: number, mainLevel: number,
 }
 export function cityTerrainHeight(x: number, z: number, mainLevel: number, environment?:CityEnvironment) {
     if(environment?.water==='coast'&&x>cityShoreX(z,mainLevel,environment))return -.12;
-    const flat = Math.abs(x) < 18 && z > -12 && z < cityFootprint(mainLevel,environment).fishingZ + 2;
+    const footprint=cityFootprint(mainLevel,environment);
+    const flat = (environment?.layout ? x>footprint.left-10&&x<18&&z>footprint.back-4 : Math.abs(x) < 18 && z > -12) && z < footprint.fishingZ + 2;
     if (flat || (!environment||environment.water==='river')&&Math.abs(x - riverX(z,environment)) < 1.3) return -.04;
     if(environment){
         const relief=environment.terrain==='mountain'?.15:environment.terrain==='snow'?.10:environment.terrain==='marsh'?.02:.04;

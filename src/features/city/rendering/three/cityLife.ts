@@ -1,10 +1,10 @@
 import * as THREE from 'three';
 import { FACTIONS, type Faction } from '../../../factions/domain/factions';
-import { cityGrowth } from '../../domain/slots';
-import { cityFootprint, type CityPlot } from './layout';
+import { cityRenderGrowth, cityFootprint, type CityPlot } from './layout';
 import { cityStreetClearance } from './cityStreets';
 import { cityKit } from './modelKit';
 import type { CityEnvironment } from '../../domain/environment';
+import { cityPlan, planContains } from './cityPlan';
 
 type Placement = { x: number; z: number; y?: number; angle?: number; scale?: number; tone?: number };
 type LanternPlacement = Placement & { kind: 'street' | 'gate' | 'square' };
@@ -12,13 +12,24 @@ type LanternPlacement = Placement & { kind: 'street' | 'gate' | 'square' };
 /** Clear of walking surfaces and every reserved building lot, including empty ones. */
 export function cityLanternPlacements(plots: CityPlot[], mainLevel: number, environment?:CityEnvironment): LanternPlacement[] {
     if (!plots.some(p => p.level > 0 && p.type !== 'wall')) return [];
-    const g = cityGrowth(mainLevel), f = cityFootprint(mainLevel,environment), result: LanternPlacement[] = [];
+    const g = cityRenderGrowth(mainLevel,environment), f = cityFootprint(mainLevel,environment), result: LanternPlacement[] = [];
     const add = (x: number, z: number, angle: number, kind: LanternPlacement['kind']) => {
         x *= g; z *= g;
         if (cityStreetClearance(x / g, z / g, mainLevel,environment) * g < .1) return;
         if (plots.some(p => p.slot !== undefined && p.slot < 16 && Math.abs(x - p.x) < 1.69 && Math.abs(z - p.z) < 1.69)) return;
         result.push({ x, z, angle, kind });
     };
+    const plan=cityPlan(environment);
+    if(plan){
+        for(const path of plan.routes)for(let i=1;i<path.length;i++){
+            const a=path[i-1],b=path[i],length=Math.hypot(b.x-a.x,b.z-a.z);
+            for(let d=1;d<length;d+=4){const x=a.x+(b.x-a.x)*d/length-(b.z-a.z)/length*.75,z=a.z+(b.z-a.z)*d/length+(b.x-a.x)/length*.75;
+                if(!planContains(plan.boundary,{x,z})||result.some(p=>Math.hypot(p.x/g-x,p.z/g-z)<2))continue;
+                add(x,z,Math.atan2(b.z-a.z,b.x-a.x),'street');
+            }
+        }
+        return result;
+    }
     const rows = Math.ceil(plots.filter(p => p.slot !== undefined && p.slot < 16).length / 4);
     for (let row = 0; row < rows; row++) for (const side of [-1, 1]) {
         add(side * .8, row * 4 + .23, side < 0 ? 0 : Math.PI, 'street');
@@ -72,7 +83,7 @@ function flower(faction: Faction) {
 /** Native-city dressing only. Nothing is serialized or added to the economy. */
 export function createCityLife(plots: CityPlot[], faction: Faction, mainLevel: number, environment?:CityEnvironment) {
     const group = new THREE.Group(); group.name = 'Living town details';
-    const k = cityKit(faction, true), { m, box, cylinder, rock } = k, g = cityGrowth(mainLevel), f = cityFootprint(mainLevel,environment);
+    const k = cityKit(faction, true), { m, box, cylinder, rock } = k, g = cityRenderGrowth(mainLevel,environment), f = cityFootprint(mainLevel,environment);
     const flowers: Placement[] = [], lanterns = cityLanternPlacements(plots, mainLevel,environment), gestures: THREE.Group[] = [];
     const colors = faction === 'undead' ? [0xa28ab9, 0xded4dd, 0xb78fa4] : faction === 'demon' ? [0xd97e48, 0xc34b46, 0xefd195] : [0xc95d68, 0xe8be79, 0xe9daca, 0xa68ab4];
     let bouquetIndex = 0;
@@ -120,7 +131,7 @@ export function createCityLife(plots: CityPlot[], faction: Faction, mainLevel: n
         }
     }
     // The avenue gets roses in its existing beds, never on an unoccupied lot.
-    if (plots.some(p=>p.level>0&&p.type!=='wall')) for(const side of [-1,1])for(let z=.9;z<f.front-1;z+=4) {
+    if (!environment?.layout&&plots.some(p=>p.level>0&&p.type!=='wall')) for(const side of [-1,1])for(let z=.9;z<f.front-1;z+=4) {
         const x=side*.76*g,pz=z*g;
         if(plots.some(p=>p.slot!==undefined&&p.slot<16&&Math.abs(x-p.x)<1.8&&Math.abs(pz-p.z)<1.8))continue;
         for(const dz of [-.16,.16])bouquet(x,.28,pz+dz*g,3);

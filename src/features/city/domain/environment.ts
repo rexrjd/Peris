@@ -1,7 +1,7 @@
 import { cellAt, getCell, type FieldTerrain } from '../../map/domain/worldGrid';
 import { WORLD_MAP_SEED } from '../../map/domain/dimensions';
 
-export type CityEnvironment = { seed: number; terrain: FieldTerrain; water: 'none' | 'river' | 'coast' };
+export type CityEnvironment = { seed: number; terrain: FieldTerrain; water: 'none' | 'river' | 'coast'; layout?: 'roman' | 'elf' | 'orc' };
 
 /** Public geography only. The same wrapped 3×3 neighbourhood is checked by SQL. */
 export function cityWaterAccess(x: number, y: number): 'none' | 'river' | 'coast' {
@@ -16,10 +16,11 @@ export function cityWaterAccess(x: number, y: number): 'none' | 'river' | 'coast
 }
 
 /** Location determines identity; owner, faction, level and wall-clock time never reroll it. */
-export function cityEnvironment(town: { x: number; y: number }, existingFishery = false): CityEnvironment {
+export function cityEnvironment(town: { x: number; y: number; faction?: string }, existingFishery = false): CityEnvironment {
     const cell = cellAt(town.x, town.y), water = cityWaterAccess(town.x, town.y);
     const seed = (Math.imul(cell.col + 100, 374761393) ^ Math.imul(cell.row + 100, 668265263) ^ WORLD_MAP_SEED) >>> 0;
-    return { seed, terrain: cell.terrain, water: water === 'none' && existingFishery ? 'river' : water };
+    const layout = town.faction === 'roman' || town.faction === 'elf' || town.faction === 'orc' ? town.faction : undefined;
+    return { seed, terrain: cell.terrain, water: water === 'none' && existingFishery ? 'river' : water, ...(layout ? { layout } : {}) };
 }
 
 /** Indexed integer noise: adding scenery never changes earlier random choices. */

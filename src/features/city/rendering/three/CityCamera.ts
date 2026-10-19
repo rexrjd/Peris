@@ -1,6 +1,6 @@
 import * as THREE from 'three';
-import { cityFootprint } from './layout';
-import { cityGrowth } from '../../domain/slots';
+import { cityFootprint, cityRenderGrowth } from './layout';
+import type { CityEnvironment } from '../../domain/environment';
 
 /** Local presentation camera. Never changes settlement or plot coordinates. */
 export class CityCamera {
@@ -13,15 +13,18 @@ export class CityCamera {
     private height = 1;
     private growth = 1;
     private centerZ = 0;
+    private centerX = 0;
     private readonly plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
     private readonly ray = new THREE.Raycaster();
     get moving() { return Math.abs(this.desiredRotation - this.rotation) > .001; }
-    resize(width: number, height: number, mainLevel: number) {
+    resize(width: number, height: number, mainLevel: number, environment?:CityEnvironment) {
         this.width = Math.max(1, width); this.height = Math.max(1, height);
-        const growth = cityGrowth(mainLevel), footprint = cityFootprint(mainLevel);
-        const centerZ = (footprint.back + footprint.fishingZ) * growth / 2;
+        const scale=cityRenderGrowth(mainLevel,environment),footprint = cityFootprint(mainLevel,environment);
+        const growth = scale*(environment?.layout?Math.max(1.15,(footprint.front-footprint.back)/27,(footprint.right-footprint.left)/23):1);
+        const centerZ = (footprint.back + (environment?.layout?footprint.front+2:footprint.fishingZ)) * scale / 2,centerX=environment?.layout?(footprint.left+footprint.right)*scale/2:0;
         this.target.z += centerZ - this.centerZ;
-        this.centerZ = centerZ; this.growth = growth; this.update();
+        this.target.x += centerX-this.centerX;
+        this.centerX=centerX;this.centerZ = centerZ; this.growth = growth; this.update();
     }
     rotate(angle: number, instant = false) {
         if (!Number.isFinite(angle)) return;
@@ -45,13 +48,13 @@ export class CityCamera {
         this.update();
         const after = anchor ? this.ground(anchor) : null;
         if (before && after) this.target.add(before.sub(after));
-        this.target.x = THREE.MathUtils.clamp(this.target.x, -9 * this.growth, 9 * this.growth);
+        this.target.x = THREE.MathUtils.clamp(this.target.x, this.centerX-9 * this.growth, this.centerX+9 * this.growth);
         this.target.z = THREE.MathUtils.clamp(this.target.z, this.centerZ - 9 * this.growth, this.centerZ + 9 * this.growth);
         this.update();
     }
     reset() {
         this.rotation = this.desiredRotation = 0; this.camera.zoom = 1;
-        this.target.set(0, 0, this.centerZ); this.update();
+        this.target.set(this.centerX, 0, this.centerZ); this.update();
     }
     private update() {
         const aspect = this.width / this.height;

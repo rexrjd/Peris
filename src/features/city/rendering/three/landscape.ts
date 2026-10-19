@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { FACTIONS, type Faction } from '../../../factions/domain/factions';
 import { cityKit } from './modelKit';
 import { cityFootprint, riverX, cityShoreX } from './layout';
-import { CITY_LANDSCAPE_EDGE, cityStreets, cityTerrainHeight } from './cityStreets';
+import { CITY_LANDSCAPE_EDGE, cityStreets, cityStreetClearance, cityTerrainHeight } from './cityStreets';
 import { createCityFoliage } from './cityFoliage';
 import { cityRandom, type CityEnvironment } from '../../domain/environment';
 import { cityBiome } from '../cityBiome';
@@ -65,7 +65,7 @@ export function createCityLandscape(mainLevel = 0, faction: Faction = 'roman', e
         const mesh = new THREE.Mesh(shape, material); mesh.receiveShadow = true; group.add(mesh);
     }
     // Garden verges frame the stone avenue, which follows completed town development.
-    for (const x of [-.76, .76]) for (let z = .9; z < footprint.front - 1; z += 4) {
+    if(!environment?.layout)for (const x of [-.76, .76]) for (let z = .9; z < footprint.front - 1; z += 4) {
         box(.34, .12, .8, x, .01, z, m.stone);
         for (const dz of [-.2, .2]) rock(.18, x, .12, z + dz, m.leaf);
     }
@@ -116,6 +116,7 @@ export function createCityLandscape(mainLevel = 0, faction: Faction = 'roman', e
     }
     for (let i = 0; i < 26; i++) {
         const x = -22 + random(i * 97) * 45, z = -15 - random(i * 31) * 5;
+        if(environment?.layout&&((x>footprint.left-1&&x<footprint.right+1&&z>footprint.back-1&&z<footprint.front+1)||cityStreetClearance(x,z,mainLevel,environment)<1))continue;
         rock(.2 + random(i * 53) * .42, x, cityTerrainHeight(x, z, mainLevel,environment), z, i % 3 ? m.darkStone : m.light);
     }
     group.add(k.finish(), createCityFoliage(mainLevel, faction,environment));

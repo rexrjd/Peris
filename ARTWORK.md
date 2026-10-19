@@ -20,6 +20,18 @@ Faction architecture and materials remain distinct across all eleven factions.
 Identity stays stable across city growth, reloads, owner changes and map wrapping;
 saved building slot IDs are unchanged.
 
+The live 3D city now uses a shared seeded plan for Roman, Elf and Orc layouts.
+Romans use ordered streets within individually clipped polygonal walls; Elves
+use curved approaches and organic oval enclosures; Orcs use clustered districts
+inside irregular palisades. Geography seeds the proportions and highland sites
+are narrower. The plan reserves all sixteen possible internal sites immediately,
+keeping existing plot positions fixed as the main building unlocks more slots.
+Walls, gate openings, paths, scenery clearance, residents, camera framing and
+selector portraits consume the same plan. Paths avoid every reserved building
+footprint, including future sites. Resource yards and fisheries stay outside the
+walls. These layouts introduce no model assets, save schema or gameplay changes.
+The painted Village and the other eight factions retain their existing layouts.
+
 Live 3D terrain and original vector Village countryside use native geometry, with
 no new textures, models, downloaded art or licenses. Streets, gates, villagers,
 planting clearances and surface details share the selected city's environment.

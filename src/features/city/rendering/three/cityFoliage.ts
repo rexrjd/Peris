@@ -1,7 +1,6 @@
 import * as THREE from 'three';
 import { FACTIONS, type Faction } from '../../../factions/domain/factions';
-import { cityLayout, cityFootprint, riverX, cityShoreX } from './layout';
-import { cityGrowth } from '../../domain/slots';
+import { cityRenderGrowth, cityLayout, cityFootprint, riverX, cityShoreX } from './layout';
 import { cityStreetClearance, cityTerrainHeight } from './cityStreets';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { cityRandom, type CityEnvironment } from '../../domain/environment';
@@ -20,7 +19,7 @@ function palmCrown() {
 
 /** Deterministic forest groves in four instanced draws, outside the city and its working yards. */
 export function createCityFoliage(mainLevel: number, faction: Faction, environment?:CityEnvironment) {
-    const p = FACTIONS[faction], biome=cityBiome(faction,environment), f = cityFootprint(mainLevel,environment), growth = cityGrowth(mainLevel);
+    const p = FACTIONS[faction], biome=cityBiome(faction,environment), f = cityFootprint(mainLevel,environment), growth = cityRenderGrowth(mainLevel,environment);
     const random=environment?(n:number)=>cityRandom(environment,2000+n):legacyRandom;
     const palm = biome.tree==='palm', bare = biome.tree==='bare', bamboo = faction === 'pandaren'&&(!environment||environment.terrain==='forest');
     const pine = biome.tree==='pine';

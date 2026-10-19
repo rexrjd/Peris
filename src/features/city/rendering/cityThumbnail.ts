@@ -1,7 +1,6 @@
 import * as THREE from 'three';
 import type { CityPreviewState } from '../domain/citySelector';
-import { cityGrowth } from '../domain/slots';
-import { cityLayout, cityShoreX, riverX } from './three/layout';
+import { cityRenderGrowth, cityLayout, cityShoreX, riverX } from './three/layout';
 import { createCityPlotModel, positionCityPlotModel } from './three/cityPlotModel';
 import { createCityDistricts } from './three/cityDistricts';
 import { disposeCityObject } from './three/modelKit';
@@ -12,7 +11,7 @@ const queue: { state: CityPreviewState; resolve: (url: string | null) => void }[
 
 /** Static actual buildings, plot layout and seeded walls. No simulation or event listeners. */
 export function createCityThumbnailModel(state: CityPreviewState) {
-    const group = new THREE.Group(), main = state.levels.market ?? 0, growth = cityGrowth(main);
+    const group = new THREE.Group(), main = state.levels.market ?? 0, growth = cityRenderGrowth(main,state.environment);
     const plots = cityLayout(state.levels, state.slots, state.environment);
     for (const plot of plots) {
         const model = createCityPlotModel(plot, main, state.faction, state.environment);

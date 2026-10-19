@@ -1,6 +1,7 @@
 import type { BuildingType } from '../../domain/types';
 import { cityGrowth, slotCount, type CitySlot, type SlotType } from '../../domain/slots';
 import { cityPlotPosition, cityRandom, type CityEnvironment } from '../../domain/environment';
+import { cityPlan } from './cityPlan';
 export type CityPlot = { key:string; type:BuildingType|SlotType|null; x:number; z:number; radius:number; level:number; slot?:number };
 export const CITY_PLOTS = [
  {type:'wall' as const,x:-.4,z:-9,radius:2.25},
@@ -19,19 +20,25 @@ export function cityShoreX(z:number, main:number, environment:CityEnvironment) {
 }
 /** Bounds in landscape coordinates; reserve an open street beyond the last plot row. */
 export function cityFootprint(main:number, environment?:CityEnvironment) {
+ const plan=cityPlan(environment);
+ if(plan)return {...plan.bounds,outsideRoad:plan.bounds.front+4,fishingZ:plan.bounds.front+5.5};
  const level=Math.max(0,Math.min(5,main)),rows=Math.ceil(slotCount(level)/4);
  const lastRow=-2+(rows-1)*4;
  const front=Math.max(11,lastRow+3.8)+level*.1+(environment?cityRandom(environment,5)*1.2:0);
  return {left:-8.8-(environment?cityRandom(environment,6)*.45:0),right:10.6,back:-9,front,outsideRoad:front+2,fishingZ:front+3.5};
 }
+/** Native seeded plans reserve their full extent and never move existing sites. */
+export const cityRenderGrowth = (main:number, environment?:CityEnvironment) => environment?.layout ? 1.35 : cityGrowth(main);
 export function cityLayout(levels:Record<string,number>, slots:CitySlot[], environment?:CityEnvironment):CityPlot[] {
- const growth=cityGrowth(levels.market??0),footprint=cityFootprint(levels.market??0,environment);
+ const growth=cityRenderGrowth(levels.market??0,environment),footprint=cityFootprint(levels.market??0,environment),plan=cityPlan(environment);
  const fixed:CityPlot[]=CITY_PLOTS.map(p=>({...p,key:p.type,x:p.x*growth,z:p.z*growth,level:levels[p.type]??0}));
+ if(plan)for(const p of fixed){const position=p.type==='market'?plan.market:p.type==='wall'?plan.front.point:p.type==='quarry'?{x:13,z:-4}:{x:plan.bounds.left-4,z:p.type==='farm'?8:-5};p.x=position.x*growth;p.z=position.z*growth;}
  const fishing=slots.find(s=>s.slot_index===16);
  if(!environment||environment.water!=='none'||fishing)fixed.push({key:'fishery',type:'fishery',slot:16,level:fishing?.level??0,x:riverX(footprint.fishingZ,environment)*growth,z:footprint.fishingZ*growth,radius:1.6});
  return [...fixed,...Array.from({length:slotCount(levels.market??0)},(_,index)=>{
   const slot=slots.find(s=>s.slot_index===index);
   const position=cityPlotPosition(index,environment);
-  return {key:`slot:${index}`,slot:index,type:slot?.building_type??null,level:slot?.level??0,x:[-6,-2,2,6.2][position%4]*growth,z:(-2+Math.floor(position/4)*4)*growth,radius:1.5};
+  const site=plan?.sites[index];
+  return {key:`slot:${index}`,slot:index,type:slot?.building_type??null,level:slot?.level??0,x:(site?.x??[-6,-2,2,6.2][position%4])*growth,z:(site?.z??(-2+Math.floor(position/4)*4))*growth,radius:1.5};
  })];
 }

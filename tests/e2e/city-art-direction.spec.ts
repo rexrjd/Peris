@@ -39,7 +39,7 @@ for (const faction of ['roman', 'elf', 'undead'] as Faction[]) test(`redesigned 
         await expect(badge).toHaveCSS('opacity', '0');
         await page.screenshot({ path: info.outputPath(`city-${faction}.png`) });
         // A real roof click validates scene picking, independently of the DOM marker buttons.
-        const rect = (await canvas.boundingBox())!, camera = new CityCamera(); camera.resize(rect.width, rect.height, main);
+        const rect = (await canvas.boundingBox())!, camera = new CityCamera(); camera.resize(rect.width,rect.height,main,cityEnvironment(world.settlements[0]));
         const plot = cityLayout({ market: main }, world.city_slots,cityEnvironment(world.settlements[0])).find(plot => plot.key === 'slot:3')!;
         const point = new THREE.Vector3(plot.x, 1.1, plot.z - .2).project(camera.camera);
         await page.mouse.click(rect.x + (point.x + 1) * rect.width / 2, rect.y + (1 - point.y) * rect.height / 2);

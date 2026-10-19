@@ -14,7 +14,7 @@ test('working resource yards remain selectable through their actual 3D geometry'
     await page.addInitScript(w=>{localStorage.setItem('peris-campaign-v6',JSON.stringify(w));localStorage.setItem('peris-settings',JSON.stringify({sound:false,music:false,reducedMotion:true}));localStorage.setItem(`peris-welcome:${w.players[0].id}:${w.players[0].created_at}`,'yes');},world);
     await page.goto('/');await page.getByRole('button',{name:'Continue campaign',exact:true}).click();await page.getByRole('button',{name:'City',exact:true}).click();await page.getByRole('button',{name:'3D',exact:true}).click();
     const canvas=page.locator('.city-3d-scene.ready canvas');await expect(canvas).toHaveAttribute('data-city-zoom','1.000');
-    const rect=(await canvas.boundingBox())!,camera=new CityCamera();camera.resize(rect.width,rect.height,3);
+    const rect=(await canvas.boundingBox())!,camera=new CityCamera();camera.resize(rect.width,rect.height,3,cityEnvironment(town,true));
     for(const key of ['lumber','quarry','farm','fishery']){
         const plot=cityLayout({market:3},world.city_slots,cityEnvironment(town,true)).find(p=>p.key===key)!;
         // Mobile's narrow view can put an outside yard behind its HUD; its marker

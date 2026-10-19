@@ -1,8 +1,8 @@
 import {type Faction} from '../../../factions/domain/factions';
 import * as THREE from 'three';
 import { type BuildingType } from '../../domain/types';
-import { cityLayout, type CityPlot } from './layout';
-import { cityGrowth, type CitySlot } from '../../domain/slots';
+import { cityRenderGrowth, cityLayout, type CityPlot } from './layout';
+import { type CitySlot } from '../../domain/slots';
 import { createVillagers } from './villagers';
 import { visualLevel } from './buildingModels';
 import { createCityLandscape } from './landscape';
@@ -98,7 +98,7 @@ export class CityScene {
         if(changed){this.scene.remove(this.villagers.group);disposeCityObject(this.villagers.group);this.villagers=createVillagers(faction);this.scene.add(this.villagers.group);}
         const valid=new Set(cityLayout(levels,slots,environment).map(p=>p.key));for(const [key,item] of this.models)if(!valid.has(key)){this.scene.remove(item.model);disposeCityObject(item.model);this.models.delete(key);}
         this.plots = cityLayout(levels, slots,environment);
-        const growth = cityGrowth(levels.market ?? 0), resized = growth !== this.growth;
+        const growth = cityRenderGrowth(levels.market ?? 0,environment), resized = growth !== this.growth || this.mainLevel !== (levels.market ?? 0);
         this.mainLevel=levels.market??0;
         this.growth = growth;
         if(resized||changed||environmentChanged) {this.scene.remove(this.landscape);disposeCityObject(this.landscape);this.landscape=createCityLandscape(this.mainLevel,faction,environment);this.scene.add(this.landscape);}
@@ -129,12 +129,12 @@ export class CityScene {
         this.ring.visible=!!plot;
         if(plot) {this.ring.position.set(plot.x,.06,plot.z);this.ring.scale.set(plot.radius*Math.SQRT2,plot.radius*Math.SQRT2,1);}
         this.renderer.shadowMap.needsUpdate=true;
-        if(resized) this.setSize(); else this.render();
+        if(resized||environmentChanged||changed) this.setSize(); else this.render();
     }
     private setSize() {
         const rect = this.canvas.parentElement!.getBoundingClientRect(); this.width = Math.max(1, rect.width); this.height = Math.max(1, rect.height);
         this.renderer.setSize(this.width, this.height, false);
-        this.view.resize(this.width, this.height, this.mainLevel); this.render();
+        this.view.resize(this.width, this.height, this.mainLevel,this.environment); this.render();
     }
     private get reduced() { return this.motionPreference.matches || document.documentElement.classList.contains('reduced-motion'); }
     rotate(angle: number) { this.view.rotate(angle, this.reduced); this.hoverRing.visible = false; this.render(); }

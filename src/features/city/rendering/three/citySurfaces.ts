@@ -1,7 +1,6 @@
 import * as THREE from 'three';
 import { FACTIONS, type Faction } from '../../../factions/domain/factions';
-import { cityGrowth } from '../../domain/slots';
-import { cityFootprint, riverX, type CityPlot } from './layout';
+import { cityRenderGrowth, cityFootprint, riverX, type CityPlot } from './layout';
 import { cityStreetClearance } from './cityStreets';
 import { cityRandom, type CityEnvironment } from '../../domain/environment';
 import { cityBiome } from '../cityBiome';
@@ -11,7 +10,7 @@ const legacyNoise = (n: number) => { const v = Math.sin(n * 127.1 + 43.7) * 4375
 /** Flat, material-batched town surfaces. Reserved plots never become decorative gardens. */
 export function createCitySurfaces(plots: CityPlot[], faction: Faction, environment?:CityEnvironment) {
     const group = new THREE.Group(); group.name = 'Town stonework and ground variation';
-    const main = plots.find(p => p.type === 'market')?.level ?? 0, g = cityGrowth(main), f = cityFootprint(main,environment), palette = FACTIONS[faction],biome=cityBiome(faction,environment);
+    const main = plots.find(p => p.type === 'market')?.level ?? 0, g = cityRenderGrowth(main,environment), f = cityFootprint(main,environment), palette = FACTIONS[faction],biome=cityBiome(faction,environment);
     const noise=environment?(n:number)=>cityRandom(environment,4000+n):legacyNoise;
     const points: number[] = [], colors: number[] = [], paving: number[] = [], stoneColors: number[] = [];
     const stone = new THREE.Color(palette.light).lerp(new THREE.Color(palette.stone), .35);
@@ -34,7 +33,7 @@ export function createCitySurfaces(plots: CityPlot[], faction: Faction, environm
         }
     };
     const built = plots.filter(p => p.level > 0 && p.type !== 'wall');
-    if (main > 0) {
+    if (main > 0 && !environment?.layout) {
         // One continuous avenue ties the gate to the civic square.
         const start = -4.2*g, end = f.front*g;
         paved(0,(start+end)/2,(main>=2?1.04:.75)*g,end-start,.33,.3);
@@ -47,7 +46,7 @@ export function createCitySurfaces(plots: CityPlot[], faction: Faction, environm
             for(const side of [-1,1]) tile(p.x+side*1.52-.035,p.z+1.68,.07,1.64,stone.clone().multiplyScalar(.74),.035);
         } else if (p.slot !== undefined && p.slot < 16) {
             // A worn stone approach connects the actual doorway to its cross-street.
-            const end = p.z+1.75*g;
+            const end = p.z+(environment?.layout?2:1.75)*g;
             paved(p.x,(p.z+.92+end)/2,.72,end-(p.z+.92),.35,.26);
             if (['housing','academy','mage_tower'].includes(p.type ?? '')) paved(p.x,p.z+1.17,2.25,.64,.36,.3);
             if (p.type === 'warehouse' || p.type === 'granary') paved(p.x,p.z+.95,2.65,.95,.42,.32);

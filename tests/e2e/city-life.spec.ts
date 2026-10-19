@@ -19,7 +19,7 @@ test('town flowers and lanterns follow the selected city, preserve building sele
     await page.goto('/');await page.getByRole('button',{name:'Continue campaign',exact:true}).click();await page.getByRole('button',{name:'City',exact:true}).click();await page.getByRole('button',{name:'3D',exact:true}).click();
     const canvas=page.locator('.city-3d-scene.ready canvas');await expect(canvas).toHaveAttribute('data-city-life-phase','0.00');
     const flowers=Number(await canvas.getAttribute('data-city-flowers'));expect(flowers).toBeGreaterThan(30);expect(Number(await canvas.getAttribute('data-city-lanterns'))).toBeGreaterThan(3);
-    const rect=(await canvas.boundingBox())!,camera=new CityCamera();camera.resize(rect.width,rect.height,3);
+    const rect=(await canvas.boundingBox())!,camera=new CityCamera();camera.resize(rect.width,rect.height,3,cityEnvironment(town));
     const plot=cityLayout({market:3},world.city_slots,cityEnvironment(town)).find(p=>p.key==='slot:0')!,p=new THREE.Vector3(plot.x,.65,plot.z).project(camera.camera);
     await page.mouse.click(rect.x+(p.x+1)*rect.width/2,rect.y+(1-p.y)*rect.height/2);
     await expect(page.locator('.building-inspector').getByRole('heading',{name:'Housing',exact:true})).toBeVisible();await page.keyboard.press('Escape');
