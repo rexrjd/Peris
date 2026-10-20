@@ -2,27 +2,30 @@ import {useCallback,useEffect,useRef,useState} from 'react';
 import type {GameEngine} from '../../../engine/contracts';
 import {emptySocial,type SocialCommand} from '../domain/social';
 import {SocialError,socialCommand,socialSnapshot} from '../platform/client';
+import {PollBackoff} from '../../../platform/backend/polling';
 type Pending = {id:string; command:SocialCommand};
 export function useSocial(engine:GameEngine, open:boolean) {
   const key=`peris-social-pending:${engine.playerId}`;
   const [snapshot,setSnapshot]=useState(emptySocial),[error,setError]=useState<string|null>(null),[busy,setBusy]=useState(false),[loading,setLoading]=useState(engine.mode==='online');
   const [pending,setPending]=useState<Pending|null>(()=>{try{return JSON.parse(sessionStorage.getItem(key)??'null');}catch{return null;}});
   const pendingRef=useRef(pending),writing=useRef(false),reading=useRef<Promise<void>|null>(null),alive=useRef(true);
+  const backoff=useRef(new PollBackoff());
   const persist=useCallback((intent:Pending|null)=>{pendingRef.current=intent;setPending(intent);try{if(intent)sessionStorage.setItem(key,JSON.stringify(intent));else sessionStorage.removeItem(key);}catch{/* The in-memory retry still uses the same UUID. */}},[key]);
-  const refresh=useCallback((signal?:AbortSignal):Promise<void>=>{
+  const refresh=useCallback((signal?:AbortSignal,automatic=false):Promise<void>=>{
     if(engine.mode!=='online')return Promise.resolve();
+    if(automatic&&!backoff.current.ready(Date.now()))return Promise.resolve();
     if(reading.current)return reading.current;
     const task=(async()=>{
-      try{const next=await socialSnapshot(signal);if(alive.current&&!signal?.aborted){setSnapshot(previous=>Date.parse(next.server_now)>=Date.parse(previous.server_now)?next:previous);setError(null);}}
-      catch(e){if(alive.current&&!signal?.aborted)setError(e instanceof Error?e.message:'Could not reach your guild and messages.');}
+      try{const next=await socialSnapshot(signal);if(alive.current&&!signal?.aborted){backoff.current.reset();setSnapshot(previous=>Date.parse(next.server_now)>=Date.parse(previous.server_now)?next:previous);setError(null);}}
+      catch(e){if(alive.current&&!signal?.aborted){backoff.current.fail(Date.now());setError(e instanceof Error?e.message:'Could not reach your guild and messages.');}}
       finally{reading.current=null;if(alive.current)setLoading(false);}
     })();
     reading.current=task;return task;
   },[engine]);
   useEffect(()=>{
-    alive.current=true;const controller=new AbortController();void refresh(controller.signal);
-    const timer=window.setInterval(()=>{if(document.visibilityState==='visible')void refresh(controller.signal);},open?2000:6000);
-    const focus=()=>void refresh(controller.signal);window.addEventListener('focus',focus);
+    alive.current=true;const controller=new AbortController();void refresh(controller.signal,true);
+    const timer=window.setInterval(()=>{if(document.visibilityState==='visible')void refresh(controller.signal,true);},open?6000:10000);
+    const focus=()=>void refresh(controller.signal,true);window.addEventListener('focus',focus);
     return()=>{alive.current=false;controller.abort();window.clearInterval(timer);window.removeEventListener('focus',focus);};
   },[refresh,open]);
   const execute=useCallback(async(intent:Pending)=>{
