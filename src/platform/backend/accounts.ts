@@ -1,7 +1,8 @@
 import { supabase } from './supabase';
-import { openRuler, type AccountBackend, type RulerLogin, type AccountEntry } from './accountLogin';
+import { openRuler, accountEntryRequest, accountEntryError, type AccountBackend, type RulerLogin, type AccountEntry } from './accountLogin';
 import type { World } from '../../shared/model/world';
 const ACCOUNT_UPGRADE = 'Install supabase/UPGRADE_TO_V15.sql to enable the account browser and race selection. Your existing accounts and progress are preserved.';
+const PASSWORD_UPGRADE = 'Password access is not available on this server yet. Ask the world administrator to enable it, then retry.';
 const backend: AccountBackend = {
     async session() { const { data, error } = await supabase.auth.getSession(); if (error) throw error; return data.session?.user.id ?? null; },
     async freshSession() {
@@ -13,23 +14,25 @@ const backend: AccountBackend = {
         return data.session.user.id;
     },
     async login(name, entry = { mode: 'login' }) {
-        const { data, error } = await supabase.rpc('peris_enter_account', { p_display_name: name, p_mode: entry.mode, p_faction: entry.mode === 'create' ? entry.faction : null, p_creation_id: entry.mode === 'create' ? entry.creationId : null });
+        const request = accountEntryRequest(name, entry);
+        const { data, error } = await supabase.rpc(request.functionName, request.args);
         if (error) throw error; return data as RulerLogin;
     },
     async sync() { const { error } = await supabase.rpc('sync_my_state'); if (error) throw error; },
     async snapshot() { const { data, error } = await supabase.rpc('peris_snapshot'); if (error) throw error; return data as World; },
 };
-let pending: { name: string; result: ReturnType<typeof openRuler> } | null = null;
+let pending: { name: string; entry: AccountEntry; result: ReturnType<typeof openRuler> } | null = null;
 export function loginAccount(name: string, entry: AccountEntry = { mode: 'login' }): ReturnType<typeof openRuler> {
-    const requested = JSON.stringify([name.trim().toLowerCase(), entry]);
+    const requested = name.trim().toLowerCase();
     if (pending) {
-        if (pending.name === requested) return pending.result;
+        if (pending.name === requested && pending.entry.mode === entry.mode && pending.entry.password === entry.password
+            && (entry.mode === 'login' || pending.entry.mode === 'create' && pending.entry.faction === entry.faction && pending.entry.creationId === entry.creationId)) return pending.result;
         return Promise.reject(new Error('A ruler is already being opened. Wait for that login to finish.'));
     }
     const result = openRuler(name, backend, entry).catch(error => {
-        if ((error as { code?: string }).code === 'PGRST202') throw new Error(ACCOUNT_UPGRADE);
-        throw Object.assign(new Error(error?.message || 'The shared world could not be reached. Retry the same ruler name.'), { code: error?.code, status: error?.status });
+        if ((error as { code?: string }).code === 'PGRST202') throw new Error(entry.password ? PASSWORD_UPGRADE : ACCOUNT_UPGRADE);
+        throw accountEntryError(error, entry);
     }).finally(() => { pending = null; });
-    pending = { name: requested, result };
+    pending = { name: requested, entry, result };
     return result;
 }
