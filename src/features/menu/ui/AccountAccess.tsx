@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { FACTIONS, type Faction } from '../../factions/domain/factions';
 import { heroPortraitUrl } from '../../heroes/domain/portraits';
 import { accountDirectory, ACCOUNT_PAGE_SIZE, type AccountDirectory, type DirectoryFilters, type PublicAccount } from '../../../platform/backend/accountDirectory';
-import { rulerName, type AccountEntry } from '../../../platform/backend/accountLogin';
+import { rulerName, validateCreationPassword, type AccountEntry } from '../../../platform/backend/accountLogin';
 import { lastRulerName } from '../../../platform/backend/accountStorage';
 import { Icon } from '../../../shared/ui/Icons';
 
@@ -37,8 +37,14 @@ export function AccountAccess({ onOpen, busy, error }: { onOpen: (name: string, 
     const [validation, setValidation] = useState<string | null>(null);
     const [revision, setRevision] = useState(0);
     const creation = useRef<{ key: string; id: string } | null>(null);
+    const loginPassword = useRef<HTMLInputElement>(null);
+    const newPassword = useRef<HTMLInputElement>(null);
     const preview = useRef<HTMLElement>(null);
     const remembered = useRef(lastRulerName().toLowerCase());
+    useEffect(() => {
+        const login = loginPassword.current, create = newPassword.current;
+        return () => { if (login) login.value = ''; if (create) create.value = ''; };
+    }, [tab]);
     useEffect(() => {
         if (tab !== 'login') return;
         const controller = new AbortController();
@@ -65,18 +71,25 @@ export function AccountAccess({ onOpen, busy, error }: { onOpen: (name: string, 
         return () => window.clearInterval(timer);
     }, [tab]);
     const changeFilter = (next: Partial<DirectoryFilters>) => setFilters(previous => ({ ...previous, ...next, page: 0 }));
-    const chooseTab = (next: 'login' | 'create') => { setTab(next); setValidation(null); };
+    const clearPasswords = () => { if (loginPassword.current) loginPassword.current.value = ''; if (newPassword.current) newPassword.current.value = ''; };
+    const chooseTab = (next: 'login' | 'create') => { clearPasswords(); setTab(next); setValidation(null); };
     const open = (name: string, mode: 'login' | 'create') => {
         if (busy) return;
         setAttempt(mode); setValidation(null);
         try {
             const normalized = rulerName(name);
-            if (mode === 'login') onOpen(normalized, { mode });
+            if (mode === 'login') {
+                const password = loginPassword.current?.value;
+                onOpen(normalized, password ? { mode, password } : { mode });
+            }
             else {
+                const password = newPassword.current?.value;
+                validateCreationPassword(password);
                 const key = `${normalized.toLowerCase()}:${race}`;
                 if (creation.current?.key !== key) creation.current = { key, id: crypto.randomUUID() };
-                onOpen(normalized, { mode, faction: race, creationId: creation.current.id });
+                onOpen(normalized, { mode, faction: race, creationId: creation.current.id, ...(password ? { password } : {}) });
             }
+            clearPasswords();
         } catch (cause) { setValidation(cause instanceof Error ? cause.message : 'Check your ruler name.'); }
     };
     const message = validation ?? (attempt === tab ? error : null);
@@ -92,26 +105,28 @@ export function AccountAccess({ onOpen, busy, error }: { onOpen: (name: string, 
                     <select aria-label="Filter by race" value={filters.faction} disabled={busy} onChange={event => changeFilter({ faction: event.target.value as Faction | '' })}><option value="">All races</option>{races.map(id => <option key={id} value={id}>{FACTIONS[id].name}</option>)}</select>
                     <select aria-label="Sort rulers" value={filters.sort} disabled={busy} onChange={event => changeFilter({ sort: event.target.value as DirectoryFilters['sort'] })}><option value="active">Recent activity</option><option value="name">Name A–Z</option><option value="cities">Most cities</option><option value="hero">Hero level</option></select>
                 </div>
+                <div className="account-name-field" style={{ marginBottom: 18 }}><label htmlFor="account-login-password">Ruler password (if set)</label><input id="account-login-password" ref={loginPassword} type="password" autoComplete="current-password" autoCapitalize="none" spellCheck={false} disabled={busy} aria-describedby="account-login-password-help"/><small id="account-login-password-help">Applies to the ruler you select or enter by name. Leave blank for name-only rulers or a browser already signed in.</small></div>
                 {rosterError ? <div className="account-empty" role="status"><Icon name="world" size={28}/><h2>World roster unavailable</h2><p>{rosterError}</p><button type="button" className="account-outline" onClick={() => setRevision(value => value + 1)}>Retry roster</button></div>
                     : loading && !data ? <div className="account-grid" aria-label="Loading rulers" role="status">{Array.from({ length: 6 }, (_, index) => <div key={index} className="account-skeleton"><i/><span/><span/></div>)}</div>
-                    : <><div className={`account-grid${loading ? ' refreshing' : ''}`} aria-busy={loading}>{data?.accounts.map(account => <button type="button" key={account.player_id} className={`account-card${selected?.player_id === account.player_id ? ' selected' : ''}`} aria-pressed={selected?.player_id === account.player_id} disabled={busy || loading} aria-label={`Select ${account.display_name}`} onClick={() => setSelected(account)}>
+                    : <><div className={`account-grid${loading ? ' refreshing' : ''}`} aria-busy={loading}>{data?.accounts.map(account => <button type="button" key={account.player_id} className={`account-card${selected?.player_id === account.player_id ? ' selected' : ''}`} aria-pressed={selected?.player_id === account.player_id} disabled={busy || loading} aria-label={`Select ${account.display_name}`} onClick={() => { if (selected?.player_id !== account.player_id) clearPasswords(); setSelected(account); }}>
                         <Portrait account={account}/><div className="account-card-copy"><strong>{account.display_name}</strong><span>{FACTIONS[account.faction].name}</span><small>{account.city_count} {account.city_count === 1 ? 'city' : 'cities'} <b>·</b> {account.army_count} {account.army_count === 1 ? 'army' : 'armies'} <b>·</b> Hero {account.hero_level || '—'}</small></div><span className={`account-presence${account.online ? ' online' : ''}`} title={activity(account, data!.server_now)} aria-label={activity(account, data!.server_now)}><i/></span>
                     </button>)}</div>
                     {!loading && data?.total === 0 && <div className="account-empty" role="status"><Icon name="flag" size={28}/><h2>{filters.search || filters.faction || filters.activity !== 'all' ? 'No matching rulers' : 'Be the first ruler'}</h2><p>{filters.search || filters.faction || filters.activity !== 'all' ? 'Try another name, race or activity filter.' : 'Create an account to found the first city in this world.'}</p><button type="button" className="account-outline" onClick={() => filters.search || filters.faction || filters.activity !== 'all' ? setFilters(initialFilters) : chooseTab('create')}>{filters.search || filters.faction || filters.activity !== 'all' ? 'Reset filters' : 'Create your account'}</button></div>}
                     {!!data?.total && <div className="account-pagination"><span>{loading ? 'Updating roster…' : `Showing ${filters.page * ACCOUNT_PAGE_SIZE + 1}–${Math.min((filters.page + 1) * ACCOUNT_PAGE_SIZE, data.total)} of ${number(data.total)}`}</span><div><button type="button" aria-label="Previous rulers" disabled={busy || loading || filters.page === 0} onClick={() => setFilters(previous => ({ ...previous, page: previous.page - 1 }))}>←</button><button type="button" aria-label="Next rulers" disabled={busy || loading || (filters.page + 1) * ACCOUNT_PAGE_SIZE >= data.total} onClick={() => setFilters(previous => ({ ...previous, page: previous.page + 1 }))}>→</button></div></div>}
                     </>}
-                <details className="account-manual"><summary>Log in by name <span>Already know your ruler?</span></summary><form onSubmit={event => { event.preventDefault(); open(manualName, 'login'); }}><label htmlFor="existing-ruler">YOUR RULER NAME</label><div><input id="existing-ruler" value={manualName} onChange={event => setManualName(event.target.value)} minLength={2} maxLength={20} required autoComplete="off" autoCapitalize="none" spellCheck={false} disabled={busy}/><button type="submit" className="account-outline" disabled={busy}>{busy ? 'Opening…' : 'Enter the shared world'}</button></div></form></details>
+                <details className="account-manual"><summary>Log in by name <span>Already know your ruler?</span></summary><form onSubmit={event => { event.preventDefault(); open(manualName, 'login'); }}><label htmlFor="existing-ruler">YOUR RULER NAME</label><div><input id="existing-ruler" value={manualName} onChange={event => { clearPasswords(); setManualName(event.target.value); }} minLength={2} maxLength={20} required autoComplete="off" autoCapitalize="none" spellCheck={false} disabled={busy}/><button type="submit" className="account-outline" disabled={busy}>{busy ? 'Opening…' : 'Enter the shared world'}</button></div></form></details>
             </section>
             <aside className="account-preview" ref={preview} aria-label="Selected ruler">{selected && !rosterError ? <>
                 <div className="account-preview-art"><Portrait account={selected} large/><span className="account-preview-badge">{FACTIONS[selected.faction].name}</span></div>
-                <div className="account-preview-body"><span className={`account-presence${selected.online ? ' online' : ''}`}><i/>{activity(selected, data?.server_now ?? new Date().toISOString())}</span><h2>{selected.display_name}</h2><p className="account-capital"><Icon name="city" size={16}/>{selected.capital_name}</p><Stats account={selected}/><button type="button" className="account-primary" disabled={busy || loading} onClick={() => open(selected.display_name, 'login')}>{busy ? 'Opening your realm…' : `Log in as ${selected.display_name}`}<Icon name="arrow" size={17}/></button><p className="account-access-note">Name-based access. Choosing a ruler gives you control of that account.</p><small className="account-joined">Founded {new Date(selected.joined_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</small></div>
+                <div className="account-preview-body"><span className={`account-presence${selected.online ? ' online' : ''}`}><i/>{activity(selected, data?.server_now ?? new Date().toISOString())}</span><h2>{selected.display_name}</h2><p className="account-capital"><Icon name="city" size={16}/>{selected.capital_name}</p><Stats account={selected}/><button type="button" className="account-primary" disabled={busy || loading} onClick={() => open(selected.display_name, 'login')}>{busy ? 'Opening your realm…' : `Log in as ${selected.display_name}`}<Icon name="arrow" size={17}/></button><p className="account-access-note">Password-protected rulers need their password in a new browser. Name-only rulers remain open by name.</p><small className="account-joined">Founded {new Date(selected.joined_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</small></div>
             </> : <div className="account-preview-placeholder"><Icon name="flag" size={38}/><h2>Your next chapter</h2><p>Select a ruler to see their realm, armies and strongest hero.</p><button type="button" className="account-outline" disabled={busy} onClick={() => chooseTab('create')}>Or create an account</button></div>}</aside>
             {selected && !rosterError && <div className="account-mobile-entry" role="region" aria-label="Quick account entry"><Portrait account={selected}/><div><strong>{selected.display_name}</strong><button type="button" aria-label="View ruler details" disabled={busy} onClick={() => preview.current?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' })}>View realm <span>↓</span></button></div><button type="button" className="account-primary" aria-label={`Enter ${selected.display_name}'s realm`} disabled={busy || loading} onClick={() => open(selected.display_name, 'login')}>{busy ? 'Opening…' : 'Log in'}<Icon name="arrow" size={16}/></button></div>}
         </div> : <form className="account-layout account-create" onSubmit={event => { event.preventDefault(); open(newName, 'create'); }}>
             <section className="account-creation-fields"><div className="account-name-field"><label htmlFor="new-account-name">Name your ruler</label><input id="new-account-name" placeholder="Your name in this world" value={newName} onChange={event => setNewName(event.target.value)} minLength={2} maxLength={20} required autoComplete="off" autoCapitalize="none" spellCheck={false} disabled={busy}/><small>2–20 letters, numbers, spaces, _ or -. Names ignore capitalization.</small></div>
+                <div className="account-name-field" style={{ marginTop: 24 }}><label htmlFor="new-account-password">Password (optional)</label><input id="new-account-password" ref={newPassword} type="password" minLength={12} autoComplete="new-password" autoCapitalize="none" spellCheck={false} disabled={busy} aria-describedby="new-account-password-help"/><small id="new-account-password-help">Set a password to protect this ruler. Use at least 12 characters and at most 72 UTF-8 bytes. Leave blank for name-only access.</small></div>
                 <fieldset className="account-races" disabled={busy}><legend>Choose your race <span>11 peoples. One shared world.</span></legend><div className="account-race-grid">{races.map(id => <label key={id} className={`account-race${race === id ? ' selected' : ''}`}><input type="radio" name="account-race" value={id} checked={race === id} onChange={() => setRace(id)} aria-label={FACTIONS[id].name}/><Portrait faction={id}/><span>{FACTIONS[id].name.replace('Human · ', '')}<small>{id === 'roman' || id === 'spartan' || id === 'persian' || id === 'egyptian' ? 'Human' : ' '}</small></span><b aria-hidden="true">{race === id ? '✓' : ''}</b></label>)}</div></fieldset>
             </section>
-            <aside className="account-preview account-race-preview" aria-label="Selected race"><div className="account-preview-art"><Portrait faction={race} large/><span className="account-preview-badge">YOUR PEOPLE</span></div><div className="account-preview-body"><span className="account-kicker">{newName.trim() || 'YOUR NEW REALM'}</span><h2>{FACTIONS[race].name}</h2><p className="account-race-description">{FACTIONS[race].style}.</p><p className="account-race-note">Your race shapes the look of your city, troops and hero portraits.</p><div className="account-starting"><span><strong>1</strong> City</span><span><strong>1</strong> Army</span><span><strong>1</strong> Hero</span></div><button type="submit" className="account-primary" disabled={busy || newName.trim().length < 2}>{busy ? 'Founding your realm…' : 'Create account'}<Icon name="arrow" size={17}/></button><p className="account-access-note">Keep your ruler name. It is all you need to return on another device.</p></div></aside>
+            <aside className="account-preview account-race-preview" aria-label="Selected race"><div className="account-preview-art"><Portrait faction={race} large/><span className="account-preview-badge">YOUR PEOPLE</span></div><div className="account-preview-body"><span className="account-kicker">{newName.trim() || 'YOUR NEW REALM'}</span><h2>{FACTIONS[race].name}</h2><p className="account-race-description">{FACTIONS[race].style}.</p><p className="account-race-note">Your race shapes the look of your city, troops and hero portraits.</p><div className="account-starting"><span><strong>1</strong> City</span><span><strong>1</strong> Army</span><span><strong>1</strong> Hero</span></div><button type="submit" className="account-primary" disabled={busy || newName.trim().length < 2}>{busy ? 'Founding your realm…' : 'Create account'}<Icon name="arrow" size={17}/></button><p className="account-access-note">Keep your ruler name and any password you set to return in another browser. Passwords cannot be recovered.</p></div></aside>
         </form>}
     </div>;
 }
