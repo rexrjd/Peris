@@ -14,7 +14,7 @@ const unitNames: Record<RecruitUnit, string> = { infantry: 'infantry', spearmen:
 const unitName = (unit: string) => RECRUIT_UNITS.includes(unit as RecruitUnit) ? unitNames[unit as RecruitUnit] : 'soldiers';
 export type MapActivity = {
     id: string; kind: ActivityKind; category: 'armies' | 'cities'; title: string; detail: string;
-    destination?: string; troops?: number; armyId?: number; cityId?: number;
+    destination?: string; troops?: number; armyId?: number; cityId?: number; sourceCityId?: number;
     startedAt: number | null; endsAt: number | null; live?: boolean;
     selection: Exclude<MapSelection, null>; point: { x: number; y: number };
     cancel?: { armyId: number; sentAt: string; until: number };
@@ -87,7 +87,7 @@ export function mapActivity(world: World, owner: string, now: number): MapActivi
         const total = rosterTotal(shipment.troops);
         events.push({ id: 'reinforcement:' + shipment.id, kind: 'reinforcement', category: 'armies',
             title: total.toLocaleString() + ' reinforcements', detail: origin.name,
-            destination: target.name, troops: total, cityId: target.id,
+            destination: target.name, troops: total, cityId: target.id, sourceCityId: origin.id,
             startedAt: timestamp(shipment.departure_at), endsAt: timestamp(shipment.arrival_at),
             selection: { kind: 'settlement', id: target.id }, point: { x: target.x, y: target.y } });
     }
@@ -153,4 +153,18 @@ export function activityPreview(events: readonly MapActivity[], view: 'movements
 export function activityProgress(event: MapActivity, now: number) {
     if (event.startedAt === null || event.endsAt === null) return 0;
     return Math.max(0, Math.min(1, (now - event.startedAt) / Math.max(1, event.endsAt - event.startedAt)));
+}
+
+/** The empire-wide Events panel never hides activity outside the selected city.
+ * Filtering is a pure projection so both map/city views retain privacy and
+ * unchanged authoritative deadlines. A shipment belongs to BOTH endpoints. */
+export type EmpireActivityFilter = 'all' | 'construction' | 'recruitment' | 'armies' | 'cities' | 'other';
+export function filterEmpireActivity(events: readonly MapActivity[], filter: EmpireActivityFilter = 'all', cityId?: number): MapActivity[] {
+    return events.filter(event => {
+        if (cityId !== undefined && event.cityId !== cityId && event.sourceCityId !== cityId) return false;
+        if (filter === 'all') return true;
+        if (filter === 'armies' || filter === 'cities') return event.category === filter;
+        if (filter === 'other') return event.category === 'cities' && event.kind !== 'construction' && event.kind !== 'recruitment';
+        return event.kind === filter;
+    });
 }

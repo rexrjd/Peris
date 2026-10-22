@@ -117,3 +117,59 @@
 .realm-shell.game-shell .map-operations .camp-force .game-troop-summary{width:100%;gap:6px}
 .realm-shell.game-shell .map-operations .camp-force .game-troop-summary>span{font-size:10px;min-width:0}
 .map-operations .camp-route-info{font-size:10px;line-height:1.6;color:#a7b7ce;margin:6px 0 12px}.map-operations .camp-stock-capacity{display:grid;gap:5px;font-size:9px;color:#a5b6cd;padding:9px 0;border-top:1px solid #ffffff10}.map-operations .camp-stock-capacity .cost{margin:0;gap:9px;flex-wrap:wrap}.map-operations .camp-stock-capacity .cost span{font-size:10px}.map-operations .camp-recent-reports{border-top:1px solid #ffffff13;margin-top:12px;padding-top:10px}.map-operations .camp-recent-reports summary{cursor:pointer;font-size:10px;color:#d7c09c}.map-operations .camp-recent-reports>button{display:flex;align-items:center;gap:8px;width:100%;background:none;color:#d5deea;border:0;border-bottom:1px solid #ffffff08;text-align:left;padding:10px 0;font-size:10px}.map-operations .camp-recent-reports>button>span{flex:1}.map-operations .camp-recent-reports small{display:block;margin-top:3px;color:#95a9c3;font-size:9px}.map-operations .camp-recent-reports>p{font-size:10px;color:#96a9c4}
+
+/* Empire-wide event feed and timed troop shipments. This extends the existing
+ * Events widget instead of adding a separate overlay or colour system. */
+.map-operations.is-transfer{width:328px}
+.map-operations .ops-sections{display:grid;grid-template-columns:1fr 1fr;flex:none;gap:3px;padding:5px 8px 0;border-bottom:1px solid var(--ops-line)}
+.map-operations .ops-sections>button{display:flex;align-items:center;justify-content:center;gap:6px;min-width:0;min-height:32px;padding:5px 8px;border:0;border-bottom:2px solid transparent;background:transparent;color:var(--ops-muted);font-size:11px}
+.map-operations .ops-sections>button[aria-selected="true"]{border-bottom-color:var(--ops-accent,#d0bda0);color:var(--ops-text)}
+.map-operations .ops-sections>button:hover{color:var(--ops-text)}
+.map-operations .ops-kind-filters{justify-content:space-between;gap:3px;padding:2px 7px 0}
+.map-operations .ops-kind-filters button{gap:3px;min-width:0;flex:1;justify-content:center;font-size:10px;padding:5px 1px}
+.map-operations .ops-kind-filters button[aria-pressed="true"]{border-bottom-color:var(--ops-accent,#d0bda0)}
+.map-operations .ops-city-filter{display:flex;align-items:center;gap:7px;min-height:30px;padding:4px 10px;border-bottom:1px solid var(--ops-line);color:var(--ops-muted);font-size:10px}
+.map-operations .ops-city-filter select{flex:1;min-width:0;max-width:190px;margin-left:auto;padding:3px 7px;border:1px solid var(--ops-line);border-radius:5px;background:var(--ops-select-bg,#15191b);color:var(--ops-text);font:inherit;cursor:pointer}
+.map-operations .ops-event-content{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.map-operations .ops-event-content>strong{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;font-weight:550}
+.map-operations .ops-event-content>small{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ops-muted);font-size:9px;line-height:1.3}
+.map-operations .ops-event-content>small>span{color:var(--event-color)}
+.map-operations .ops-event-content .ops-event-kind{font-weight:400}
+.map-operations .is-open .ops-event-main:focus-visible{outline-offset:-2px}
+.map-operations .ops-event-main>svg{flex-shrink:0}
+.map-operations .ops-empire-footer{display:flex;justify-content:space-between;gap:8px;padding:7px 10px;border-top:1px solid var(--ops-line);color:var(--ops-muted);font-size:9px}
+.map-operations .ops-empire-footer span:last-child{white-space:nowrap}
+.map-operations.is-empire-events .ops-event{min-height:43px}
+.map-operations.is-empire-events .ops-event-main{min-height:43px;padding:6px 3px}
+
+.map-operations .ops-transfer{padding:9px 10px 10px;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;max-height:min(460px,calc(100dvh - 292px));color:var(--ops-text)}
+.map-operations .ops-transfer-route{display:flex;align-items:end;gap:6px}
+.map-operations .ops-transfer-route>svg{flex:none;margin-bottom:11px;color:var(--ops-accent,#d0bda0)}
+.map-operations .ops-transfer-route label{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px;font-size:9px;color:var(--ops-muted)}
+.map-operations .ops-transfer-route select{width:100%;min-width:0;height:32px;padding:5px 6px;border:1px solid var(--ops-line);border-radius:5px;background:var(--ops-select-bg,#15191b);color:var(--ops-text);font:inherit;font-size:10px;cursor:pointer;text-overflow:ellipsis}
+.map-operations .ops-transfer-summary{display:flex;justify-content:space-between;gap:7px;align-items:center;margin:9px 0;padding:7px 0;border-block:1px solid var(--ops-line);font-size:10px;color:var(--ops-muted)}
+.map-operations .ops-transfer-summary strong{color:var(--ops-text);font-size:10px;font-weight:600;white-space:nowrap}
+.map-operations .ops-transfer-pick-actions{display:flex;align-items:center;gap:8px;margin:0 0 3px;font-size:10px;color:var(--ops-text)}
+.map-operations .ops-transfer-pick-actions>span{margin-right:auto}
+.map-operations .ops-transfer-pick-actions small{display:block;color:var(--ops-muted);font-size:9px}
+.map-operations .ops-transfer-pick-actions button{border:0;background:transparent;padding:4px 2px;color:var(--ops-accent,#d0bda0);font-size:10px}
+.map-operations .ops-transfer-units{display:flex;flex-direction:column;max-height:218px;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin}
+.map-operations .ops-transfer-unit{display:flex;align-items:center;gap:5px;min-height:40px;padding:4px 0;border-bottom:1px solid var(--ops-line)}
+.map-operations .ops-transfer-unit>.fw-troop-icon{flex:0 0 27px;width:27px;height:27px;border-radius:4px}
+.map-operations .ops-transfer-unit-label{display:flex;flex-direction:column;flex:0 1 86px;min-width:0;line-height:1.25}
+.map-operations .ops-transfer-unit-label strong{font-size:10px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.map-operations .ops-transfer-unit-label small{font-size:9px;color:var(--ops-muted)}
+.map-operations .ops-transfer-unit input[type="range"]{flex:1;min-width:33px;width:25%;height:16px;padding:0;border:0;background:transparent;accent-color:var(--ops-accent,#d0bda0);cursor:pointer}
+.map-operations .ops-transfer-unit input[type="number"]{flex:0 0 37px;min-width:0;width:37px;height:27px;padding:2px;border:1px solid var(--ops-line);border-radius:4px;background:var(--ops-select-bg,#15191b);color:var(--ops-text);font:inherit;font-size:10px;text-align:center;appearance:textfield}
+.map-operations .ops-transfer-unit input[type="number"]::-webkit-inner-spin-button,.map-operations .ops-transfer-unit input[type="number"]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+.map-operations .ops-transfer-unit>button{flex:none;padding:3px 0;border:0;background:transparent;color:var(--ops-accent,#d0bda0);font-size:9px}
+.map-operations .ops-transfer-unit input:disabled,.map-operations .ops-transfer-unit button:disabled,.map-operations .ops-transfer-footer button:disabled{opacity:.45;cursor:default}
+.map-operations .ops-transfer-message,.map-operations .ops-transfer-error{margin:9px 0;font-size:10px;line-height:1.45;color:var(--ops-muted)}
+.map-operations .ops-transfer-error{color:#e9a78c}
+.map-operations .ops-transfer-eta{display:flex;align-items:center;gap:5px;margin:9px 0 0;font-size:10px;color:var(--ops-muted)}
+.map-operations .ops-transfer-eta svg{color:var(--ops-accent,#d0bda0)}
+.map-operations .ops-transfer-footer{display:flex;align-items:center;justify-content:space-between;gap:7px;margin-top:10px;padding-top:9px;border-top:1px solid var(--ops-line);font-size:10px;color:var(--ops-muted)}
+.map-operations .ops-transfer-footer>button{display:flex;align-items:center;gap:6px;justify-content:center;min-height:30px;padding:6px 10px;border:1px solid var(--ops-line);border-radius:5px;background:var(--ops-accent,#d0bda0);color:var(--ops-select-bg,#15191b);font-size:10px;font-weight:650}
+.map-operations .ops-transfer-footer>button:hover:not(:disabled){filter:brightness(1.1)}
+@media(max-height:630px){.map-operations .ops-transfer{max-height:min(300px,calc(100dvh - 240px))}}
+@media(max-width:390px){.map-operations.is-transfer{width:calc(100% - 20px)}.map-operations .ops-transfer-unit-label{flex-basis:71px}.map-operations .ops-transfer-unit>.fw-troop-icon{width:23px;height:23px;flex-basis:23px}}

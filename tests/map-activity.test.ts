@@ -124,3 +124,31 @@ test('city activity preview prioritizes local construction and training while ma
     assert.equal(JSON.stringify(f.world),snapshot,'previews do not modify the game or deadlines');
     assert.equal(activityPreview(events,'city',2)[0].id,'order:203','changing city changes priority, not activity ownership');
 });
+
+test('empire-wide activity filters show every city and both ends of reinforcement movements', async () => {
+    const { filterEmpireActivity } = await import('../src/features/map/domain/activity');
+    const f = fixture(), original = f.world.settlements[0];
+    f.world.settlements.push({ ...original, id: 77, name: 'Second capital', x: original.x + 128, y: original.y });
+    f.world.orders.push(
+        { id: 901, owner_id: f.owner, settlement_id: original.id, kind: 'recruit', item: 'infantry', quantity: 12, recruit_destination: 'garrison',
+            started_at: f.world.server_now, finish_at: new Date(f.now + 80000).toISOString() },
+        { id: 902, owner_id: f.owner, settlement_id: 77, kind: 'upgrade', item: 'wall', quantity: 1,
+            started_at: f.world.server_now, finish_at: new Date(f.now + 70000).toISOString() },
+        { id: 903, owner_id: 'opponent', settlement_id: 77, kind: 'upgrade', item: 'wall', quantity: 1,
+            started_at: f.world.server_now, finish_at: new Date(f.now + 1000).toISOString() },
+    );
+    f.world.city_reinforcements = [{ id: 4, owner_id: f.owner, source_settlement_id: original.id, target_settlement_id: 77,
+        troops: { infantry: 9, archers: 0, cavalry: 0 }, march_path: [], departure_at: f.world.server_now,
+        arrival_at: new Date(f.now + 60000).toISOString() }];
+    const before = JSON.stringify(f.world), all = mapActivity(f.world, f.owner, f.now);
+    assert.equal(all.length, 3, 'all city jobs and troop transports, not just the current city');
+    assert.ok(!all.some(event => event.id === 'order:903'), 'rival private orders are never included');
+    assert.equal(filterEmpireActivity(all).length, 3);
+    assert.deepEqual(filterEmpireActivity(all, 'construction').map(x=>x.id), ['order:902']);
+    assert.deepEqual(filterEmpireActivity(all, 'recruitment').map(x=>x.id), ['order:901']);
+    assert.deepEqual(filterEmpireActivity(all, 'armies').map(x=>x.id), ['reinforcement:4']);
+    assert.deepEqual(filterEmpireActivity(all, 'all', original.id).map(x=>x.id), ['reinforcement:4','order:901']);
+    assert.deepEqual(filterEmpireActivity(all, 'all', 77).map(x=>x.id), ['reinforcement:4','order:902']);
+    assert.equal(all.find(x=>x.kind==='reinforcement')?.sourceCityId, original.id);
+    assert.equal(JSON.stringify(f.world), before, 'filters never change multiplayer state');
+});

@@ -156,3 +156,52 @@ test('3D City Events shows queued building and garrison training, links to their
     await page.getByRole('button',{name:'Map',exact:true}).click();
     await expect(page.getByRole('complementary',{name:'Map overview and activity'})).toBeVisible();
 });
+
+test('City Events lists all cities and sends actual timed reinforcements from its own tab', async ({ page }, info) => {
+    const { cellCenter, isWalkable } = await import('../../src/features/map/domain/worldGrid');
+    const { findMarchPath } = await import('../../src/features/map/domain/pathfinding');
+    const { emptyRoster, writeRoster } = await import('../../src/features/army/domain/roster');
+    const { homeArmyPosition, stationCell } = await import('../../src/features/map/domain/garrisons');
+    const world = createSolo('Empire Events'), source = world.settlements[0], at = Date.parse(world.server_now);
+    const startCell = stationCell(source);
+    const targetCell = [[1,0],[-1,0],[0,1],[0,-1],[2,0],[0,2]].map(([dx,dy]) => ({col:startCell.col+dx,row:startCell.row+dy}))
+        .find(cell => isWalkable(cell.col,cell.row) && findMarchPath(homeArmyPosition(source),homeArmyPosition(cellCenter(cell.col,cell.row))));
+    expect(targetCell).toBeDefined();
+    const target = { ...source, ...cellCenter(targetCell!.col,targetCell!.row), id: 88, name: 'Northwatch' };
+    world.settlements.push(target);
+    world.buildings.push(...world.buildings.filter(row => row.settlement_id === source.id).map(row => ({...row,id:row.id+5000,settlement_id:target.id})));
+    const garrison = { owner_id: source.owner_id, settlement_id: source.id, ...emptyRoster() };
+    writeRoster(garrison, {...emptyRoster(), infantry: 75, spearmen: 30});
+    world.city_garrisons = [garrison];
+    world.orders = [
+        { id: 501, owner_id: source.owner_id, settlement_id: source.id, kind: 'upgrade', item: 'market', quantity: 1,
+            started_at: world.server_now, finish_at: new Date(at+180000).toISOString() },
+        { id: 502, owner_id: source.owner_id, settlement_id: target.id, kind: 'upgrade', item: 'wall', quantity: 1,
+            started_at: world.server_now, finish_at: new Date(at+230000).toISOString() },
+    ];
+    await page.clock.setFixedTime(at);
+    await start(page,world);
+    const panel = page.getByRole('complementary',{name:'City events and activity'});
+    await expect(panel.locator('.ops-events li')).toHaveCount(2);
+    await expect(panel).toContainText(source.name);
+    await expect(panel).toContainText(target.name);
+    await panel.getByRole('combobox',{name:'Filter events by city'}).selectOption(String(target.id));
+    await expect(panel.locator('.ops-events li')).toHaveCount(1);
+    await expect(panel).toContainText('Walls');
+    await panel.getByRole('combobox',{name:'Filter events by city'}).selectOption('all');
+    await panel.getByRole('tab',{name:'Send troops'}).click();
+    const editor = panel.getByRole('region',{name:'Move troops between cities'});
+    await expect(editor.getByRole('combobox',{name:'Source city'})).toHaveValue(String(source.id));
+    await expect(editor.getByRole('combobox',{name:'Destination city'})).toHaveValue(String(target.id));
+    await expect(editor.getByRole('slider',{name:'Select infantry reinforcements'})).toBeVisible();
+    await editor.getByRole('button',{name:'All',exact:true}).click();
+    await expect(editor.getByRole('button',{name:/^Send troops/})).toBeEnabled();
+    await editor.getByRole('button',{name:/^Send troops/}).click();
+    await expect.poll(async()=> (await save(page)).city_reinforcements?.length).toBe(1);
+    await expect(panel.locator('.ops-events li')).toHaveCount(3);
+    await expect(panel).toContainText('reinforcements');
+    await capture(page,info,'city-empire-events-and-reinforcements');
+    const current = await save(page);
+    expect(current.city_reinforcements?.[0]?.target_settlement_id).toBe(target.id);
+    expect(current.city_reinforcements?.[0]?.source_settlement_id).toBe(source.id);
+});
