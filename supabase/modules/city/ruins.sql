@@ -104,7 +104,11 @@ begin
   start_x=round((position->>'x')::numeric)::integer,start_y=round((position->>'y')::numeric)::integer,
   target_x=(route->>'x')::integer,target_y=(route->>'y')::integer,march_path=route->'path',march_distance=(route->>'distance')::numeric,march_map_version=4,
   status='moving',raid_city_id=null,raid_target_id=null,raid_reserve=null,march_origin=null,march_returning=true,march_sent_at=null,march_cancel_until=null,
+<<<<<<< Updated upstream
   departure_at=public.peris_game_now(),arrival_at=public.peris_game_now()+make_interval(secs=>greatest(2,(route->>'distance')::numeric/greatest(1,public.peris_march_speed(a.id)))::double precision),updated_at=now()where id=a.id;
+=======
+  departure_at=now(),arrival_at=now()+make_interval(secs=>greatest(2,(route->>'distance')::numeric/greatest(1,public.peris_march_speed(a.id)))::double precision),updated_at=now()where id=a.id;
+>>>>>>> Stashed changes
  return true;
 end $$;
 
@@ -155,8 +159,13 @@ begin
   route:=public.peris_ruin_route(city.owner_id,city.x,city.y);
   if route is not null and public.peris_roster_total(garrison.unit_roster)>0 then
    insert into public.peris_ruin_evacuations(owner_id,origin_settlement_id,target_settlement_id,origin_x,origin_y,troops,departure_at,arrival_at)
+<<<<<<< Updated upstream
    values(city.owner_id,city.id,(route->>'city_id')::bigint,city.x,city.y,public.peris_roster(garrison.unit_roster),public.peris_game_now(),
      public.peris_game_now()+make_interval(secs=>greatest(2,(route->>'distance')::numeric/22)::double precision));
+=======
+   values(city.owner_id,city.id,(route->>'city_id')::bigint,city.x,city.y,public.peris_roster(garrison.unit_roster),now(),
+     now()+make_interval(secs=>greatest(2,(route->>'distance')::numeric/22)::double precision));
+>>>>>>> Stashed changes
   end if;
   delete from public.peris_city_garrisons where settlement_id=p_city and owner_id=city.owner_id;
  end loop;
@@ -165,8 +174,13 @@ begin
   route:=public.peris_ruin_route(city.owner_id,g.col*128+64,g.row*128+64);
   if route is not null and public.peris_roster_total(public.peris_roster(to_jsonb(g)))>0 then
    insert into public.peris_ruin_evacuations(owner_id,origin_settlement_id,target_settlement_id,origin_x,origin_y,troops,departure_at,arrival_at)
+<<<<<<< Updated upstream
    values(city.owner_id,city.id,(route->>'city_id')::bigint,g.col*128+64,g.row*128+64,public.peris_roster(to_jsonb(g)),public.peris_game_now(),
     public.peris_game_now()+make_interval(secs=>greatest(2,(route->>'distance')::numeric/22)::double precision));
+=======
+   values(city.owner_id,city.id,(route->>'city_id')::bigint,g.col*128+64,g.row*128+64,public.peris_roster(to_jsonb(g)),now(),
+    now()+make_interval(secs=>greatest(2,(route->>'distance')::numeric/22)::double precision));
+>>>>>>> Stashed changes
   end if;
   delete from public.peris_garrisons where owner_id=g.owner_id and col=g.col and row=g.row;
  end loop;
@@ -176,6 +190,10 @@ begin
   update public.players set defeated_at=coalesce(defeated_at,now()),culture_points=0 where id=city.owner_id;
   delete from public.peris_ruin_evacuations where owner_id=city.owner_id;
   delete from public.peris_city_reinforcements where owner_id=city.owner_id;
+<<<<<<< Updated upstream
+=======
+  delete from public.peris_guild_reinforcements where owner_id=city.owner_id;
+>>>>>>> Stashed changes
   delete from public.peris_garrisons where owner_id=city.owner_id;
   delete from public.peris_orders where owner_id=city.owner_id;
   update public.peris_settler_expeditions set status='returned'where owner_id=city.owner_id and status='travelling';

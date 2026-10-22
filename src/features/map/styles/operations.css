@@ -219,3 +219,15 @@
 .map-operations .ops-reinforcement-actions button:hover{filter:brightness(1.12)}
 @media(max-width:400px){.map-operations .ops-reinforcement-units{grid-template-columns:1fr}.map-operations .ops-reinforcement-times{gap:9px}.map-operations .ops-reinforcement-body{padding-inline:12px}.map-operations .ops-reinforcement-route{gap:5px}}
 @media(prefers-reduced-motion:reduce){.map-operations .ops-reinforcement-progress span{transition:none}}
+<<<<<<< Updated upstream
+=======
+
+/* Shared Events visual language for guild support; no new themed card. */
+.ops-transfer-scope{display:flex;gap:4px;padding:4px;background:var(--ops-inset-bg,rgba(0,0,0,.23));border-radius:7px;margin-bottom:8px}
+.ops-transfer-scope button{flex:1;border:0;border-radius:5px;background:transparent;color:inherit;padding:7px;font:inherit;cursor:pointer}
+.ops-transfer-scope button[aria-pressed="true"]{background:rgba(226,193,129,.18);color:var(--rp-gold,#e5c899)}
+.ops-guild-parties{margin-top:12px;padding-top:10px;border-top:1px solid rgba(220,200,156,.16);display:grid;gap:8px}
+.ops-guild-party{display:flex;align-items:center;gap:10px;justify-content:space-between;font-size:12px}
+.ops-guild-party span{min-width:0}.ops-guild-party small{display:block;color:var(--rp-muted,#b7ada0);margin-top:2px}
+.ops-guild-party button{border:1px solid rgba(220,200,156,.25);color:inherit;background:transparent;border-radius:5px;padding:5px 8px}
+>>>>>>> Stashed changes

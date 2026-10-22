@@ -53,6 +53,29 @@ outputs['FRESH_INSTALL_V14.sql']=fresh
 outputs['UPGRADE_TO_V15.sql']=upgrade
 outputs['FRESH_INSTALL_V15.sql']=fresh
 
+<<<<<<< Updated upstream
+=======
+// Focused guild-defence upgrade for an existing V19 + City Logistics database.
+const guildSupport=await readSource(path.join(root,'supabase/modules/city/guild-reinforcements.sql'))
+const guildFunctions=[]
+for (const [file,names] of [
+ ['campaign/player-raids.sql',['peris_start_city_raid','peris_finish_city_raid']],
+ ['city/peris_settle.sql',['peris_settle']],
+ ['campaign/game-worker.sql',['peris_game_tick']],
+ ['city/ruins.sql',['peris_ruin_city']]
+]) {
+ const source=await readSource(path.join(root,'supabase/modules',file))
+ const definitions=source.match(/create or replace function public\.[\s\S]*?\$\$;/g)??[]
+ for(const name of names){const definition=definitions.find(text=>text.startsWith('create or replace function public.'+name+'('))
+ if(!definition)throw Error('Missing guild reinforcement dependency: '+name)
+ guildFunctions.push(definition)}
+}
+outputs['UPGRADE_GUILD_REINFORCEMENTS.sql']=[
+ '-- Apply AFTER City Logistics and V19 Guilds. No existing garrisons are reassigned.',
+ 'begin;',guildSupport,...guildFunctions,"notify pgrst,'reload schema';",'commit;'
+].join('\n')
+
+>>>>>>> Stashed changes
 const cityGarrisonModule=await readSource(path.join(root,'supabase/modules/city/city-garrisons.sql'))
 const ruinModule=await readSource(path.join(root,'supabase/modules/city/ruins.sql'))
 const ruinDefinitions=[
@@ -129,6 +152,10 @@ const logisticsDependencies=[
  ['city/ruins.sql',['peris_ruin_city']],
  ['snapshot/peris_snapshot.sql',['peris_snapshot']],
  ['campaign/game-worker.sql',['peris_game_tick']],
+<<<<<<< Updated upstream
+=======
+ ['city/ruins.sql',['peris_ruin_city']],
+>>>>>>> Stashed changes
 ]
 const logisticsDefinitions=[]
 for(const [file,names] of logisticsDependencies){
@@ -151,6 +178,7 @@ outputs['UPGRADE_CITY_LOGISTICS.sql']=[
  'commit;',
 ].join('\n')
 
+<<<<<<< Updated upstream
 // Focused installers also ship the private dependency of extracted finalizers.
 const participantLocks=await readSource(path.join(root,'supabase/modules/battle/participant-locks.sql'))
 const gameClock=await readSource(path.join(root,'supabase/modules/time/game-clock.sql'))
@@ -166,5 +194,7 @@ for(const[name,content]of Object.entries(outputs)){
  }
  outputs[name]=complete
 }
+=======
+>>>>>>> Stashed changes
 for(const[file,content]of Object.entries(outputs)){const target=path.join(root,'supabase',file);if(process.argv.includes('--check')){if(await readSource(target)!==content)throw Error('Stale SQL bundle: '+file)}else{let existing;try{existing=await readSource(target)}catch(error){if(error.code!=='ENOENT')throw error}if(existing!==content)await fs.writeFile(target,content)}}
 console.log(process.argv.includes('--check')?'SQL bundles match modular source':'SQL bundles rebuilt')

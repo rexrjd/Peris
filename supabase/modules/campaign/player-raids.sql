@@ -66,6 +66,15 @@ begin
  and floor(d.target_x/128.0)=floor(c.x/128.0)and floor(d.target_y/128.0)=floor(c.y/128.0)order by coalesce(h.experience,0)desc,d.id limit 1;
  select public.peris_roster(to_jsonb(g))into roster from public.peris_garrisons g where owner_id=c.owner_id and col=floor(c.x/128.0)::integer and row=floor(c.y/128.0)::integer for update;
  if roster is not null then defenders:=defenders||jsonb_build_array(jsonb_build_object('col',floor(c.x/128.0),'row',floor(c.y/128.0),'troops',roster));end if;
+<<<<<<< Updated upstream
+=======
+ -- Guild troops remain owned by their sender, and are accounted for individually.
+ select defenders||coalesce(jsonb_agg(jsonb_build_object('guild_reinforcement_id',r.id,'troops',r.troops)order by r.id),'[]'::jsonb) into defenders
+ from public.peris_guild_reinforcements r
+ join public.peris_guild_members sender on sender.player_id=r.owner_id
+ join public.peris_guild_members receiver on receiver.player_id=r.recipient_id and receiver.guild_id=sender.guild_id
+ where r.target_settlement_id=c.id and r.recipient_id=c.owner_id and r.status='stationed';
+>>>>>>> Stashed changes
  select public.peris_roster(g.unit_roster)into roster from public.peris_city_garrisons g where g.settlement_id=c.id and g.owner_id=c.owner_id for update;
  if roster is not null and public.peris_roster_total(roster)>0 then defenders:=defenders||jsonb_build_array(jsonb_build_object('city_garrison_id',c.id,'troops',roster));end if;
  insert into public.battles(attacker_owner_id,defender_owner_id,attacker_army_id,defender_army_id,mode,phase,terrain,difficulty,enemy_name,attacker_ready,defender_ready,defender_faction,raid_city_id,siege_target,city_defenders)
@@ -134,6 +143,18 @@ begin
   if party ? 'army_id'then
    select public.peris_roster(to_jsonb(d))into current_roster from public.armies d where id=(party->>'army_id')::bigint and owner_id=b.defender_owner_id for update;
    perform public.peris_write_roster((party->>'army_id')::bigint,public.peris_roster_add(current_roster,losses,-1));
+<<<<<<< Updated upstream
+=======
+  elsif party ? 'guild_reinforcement_id' then
+   select public.peris_roster(troops)into current_roster from public.peris_guild_reinforcements
+    where id=(party->>'guild_reinforcement_id')::bigint and status='stationed' for update;
+   if current_roster is not null then
+    current_roster:=public.peris_roster_add(current_roster,losses,-1);
+    if public.peris_roster_total(current_roster)=0 then
+     delete from public.peris_guild_reinforcements where id=(party->>'guild_reinforcement_id')::bigint;
+    else update public.peris_guild_reinforcements set troops=current_roster where id=(party->>'guild_reinforcement_id')::bigint;end if;
+   end if;
+>>>>>>> Stashed changes
   elsif party ? 'city_garrison_id'then
    select public.peris_roster(garrison.unit_roster)into current_roster from public.peris_city_garrisons garrison where garrison.settlement_id=(party->>'city_garrison_id')::bigint and garrison.owner_id=b.defender_owner_id for update;
    if current_roster is not null then
