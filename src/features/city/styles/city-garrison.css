@@ -1,191 +1,95 @@
-/* Persistent defence lives in the right-hand city card, mirroring CitySelector.
-   The old floating Defence button and fullscreen modal have been removed. */
-.city-scene-workspace .city-garrison-dock {
-  position: relative;
-  z-index: 15;
-  flex: 0 1 350px;
-  width: 350px;
-  min-width: 0;
-  max-width: 100%;
-  margin-left: auto;
-  color: #edf0f6;
-  font: 12px/1.4 'Open Sans', Arial, sans-serif;
-  pointer-events: auto;
+/* Garrison borrows the existing faction-aware CitySelector card, menu, and tabs.
+ * Only its content layout lives here; materials, color, border and fonts come
+ * from scene-theme.css / city-selector.css. */
+.city-scene-workspace .city-scene-top>.city-garrison-dock{
+  margin-left:auto;flex:0 0 320px;width:320px;min-width:0;max-width:100%;z-index:15;
 }
-.city-garrison-card {
-  padding: 5px;
-  min-width: 0;
-  background: #242d33f5;
-  border: 1px solid #ffffff24;
-  border-radius: 13px;
-  box-shadow: 0 4px 18px #07101a30;
+.city-garrison-card .city-selector-trigger{width:100%}
+.city-garrison-emblem.city-selector-preview{
+  display:grid;place-items:center;width:54px;height:54px;
+  background:var(--scene-panel);color:var(--scene-accent);
 }
-.city-scene-workspace .city-garrison-trigger {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-  min-width: 0;
-  padding: 0;
-  border: 0;
-  border-radius: 9px;
-  background: transparent;
-  text-align: left;
-  color: #edf0f6;
-  cursor: pointer;
+.city-garrison-foot>span{white-space:nowrap}
+.city-garrison-foot svg{color:var(--scene-accent)}
+.city-scene-workspace .city-garrison-menu{
+  top:calc(100% + 7px);left:auto;right:0;width:100%;max-height:min(450px,calc(100dvh - 212px));
+  overflow:auto;overscroll-behavior:contain;padding:10px;
 }
-.city-scene-workspace .city-garrison-trigger:hover,
-.city-scene-workspace .city-garrison-trigger[aria-expanded=true] {
-  background: #ffffff05;
-  color: #edf0f6;
+.city-garrison-line{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0}
+.city-garrison-overview{font-size:11px;color:var(--scene-muted);margin:1px 1px 6px}
+.city-garrison-overview strong{color:var(--scene-text);font-size:13px;font-variant-numeric:tabular-nums}
+.city-garrison-roster{display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin:0 1px 10px}
+.city-garrison-roster>span{display:inline-flex;align-items:center;gap:6px;max-width:100%;min-width:0;padding:3px 7px;
+  font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  border:1px solid color-mix(in srgb,var(--scene-edge) 32%,transparent);border-radius:var(--scene-radius);
+  color:var(--scene-muted);
 }
-.city-garrison-crest {
-  display: grid;
-  place-items: center;
-  width: 88px;
-  height: 72px;
-  flex: none;
-  overflow: hidden;
-  border-radius: 8px;
-  background: radial-gradient(circle at 47% 36%, #45565a, #293840 75%);
-  color: #e4c58e;
+.city-garrison-roster b{color:var(--scene-text);font-variant-numeric:tabular-nums;font-weight:600}
+.city-garrison-roster>small,.city-garrison-note{font-size:10px;color:var(--scene-muted);line-height:1.45}
+.city-garrison-roster>small{padding:4px 0}
+.city-garrison-tabs{margin:0 0 8px}
+.city-garrison-tabs button.selected{background:var(--scene-panel);color:var(--scene-accent)}
+.city-garrison-legion{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 1px 8px;min-width:0}
+.city-garrison-legion label,.city-garrison-legion-label{flex:none;font-size:10px;color:var(--scene-muted)}
+.city-garrison-legion select,.city-garrison-one-legion{
+  width:calc(100% - 53px);min-width:0;padding:6px 7px;border:1px solid color-mix(in srgb,var(--scene-edge) 36%,transparent);
+  border-radius:var(--scene-radius);background:var(--scene-ink);color:var(--scene-text);
+  font:inherit;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
-.city-garrison-crest>span {
-  display: grid;
-  place-items: center;
-  width: 49px;
-  height: 54px;
-  border: 1px solid #d6c08a63;
-  border-radius: 11px 11px 21px 21px;
-  background: linear-gradient(145deg, #d7c08b18, #111d2a99);
-  box-shadow: inset 0 0 0 3px #203037, 0 3px 8px #050b1470;
+.city-garrison-one-legion{border-color:transparent;padding-right:0;text-align:right}
+.city-garrison-one-legion small{color:var(--scene-muted)}
+.city-garrison-transfer-title{padding:7px 1px 6px;border-top:1px solid color-mix(in srgb,var(--scene-edge) 30%,transparent)}
+.city-garrison-transfer-title>span{font-size:10px;color:var(--scene-muted)}
+.city-scene-workspace .city-garrison-transfer-title button{
+  border:0;background:transparent;color:var(--scene-accent);font-size:10px;padding:3px 4px;
 }
-.city-garrison-card-info { display: block; flex: 1; min-width: 0; padding: 3px 5px 3px 0; }
-.city-garrison-card-heading { display: flex; align-items: center; justify-content: space-between; gap: 7px; }
-.city-garrison-card-heading strong {
-  display: block;
-  font-size: 15px;
-  font-weight: 650;
-  letter-spacing: -.02em;
-  color: #edf0f6;
+.city-garrison-units{display:flex;flex-direction:column;gap:0;max-height:170px;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin}
+.city-garrison-unit{display:flex;align-items:center;gap:5px;min-height:37px;padding:3px 1px;
+  border-top:1px solid color-mix(in srgb,var(--scene-edge) 22%,transparent)}
+.city-garrison-unit-name{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11px;color:var(--scene-text)}
+.city-garrison-unit-name small{margin-left:5px;font-size:9px;color:var(--scene-muted)}
+.city-garrison-unit input{
+  flex:none;width:51px;min-width:0;height:27px;padding:2px 4px;text-align:center;
+  border:1px solid color-mix(in srgb,var(--scene-edge) 40%,transparent);border-radius:var(--scene-radius);
+  background:var(--scene-ink);color:var(--scene-text);font:inherit;font-size:11px;font-variant-numeric:tabular-nums;
+  appearance:textfield;
 }
-.city-garrison-card-heading svg { flex: none; color: #c6d0db; transition: transform .18s ease; }
-.city-garrison-trigger[aria-expanded=true] .city-garrison-card-heading svg { transform: rotate(180deg); }
-.city-garrison-card-counts { display: flex; flex-wrap: wrap; gap: 3px 10px; margin-top: 7px; font-size: 10px; color: #aebbc7; }
-.city-garrison-card-counts>span { display: flex; align-items: center; gap: 4px; white-space: nowrap; }
-.city-garrison-card-counts svg { flex: none; color: #c3b18d; }
-.city-garrison-card-counts b { font-weight: 600; color: #e2e6e9; font-variant-numeric: tabular-nums; }
-.city-garrison-card-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  min-height: 29px;
-  margin-top: 5px;
-  padding: 5px 7px 1px;
-  border-top: 1px solid #ffffff1d;
+.city-garrison-unit input::-webkit-inner-spin-button,.city-garrison-unit input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+.city-scene-workspace .city-garrison-unit>button{
+  flex:none;border:0;background:transparent;color:var(--scene-accent);padding:5px 4px;font-size:10px;
 }
-.city-garrison-auto { display: inline-flex; align-items: center; gap: 7px; color: #b6c4c7; font-size: 10px; white-space: nowrap; }
-.city-garrison-auto i { display: block; flex: none; width: 6px; height: 6px; border-radius: 50%; background: #9cbb91; box-shadow: 0 0 0 3px #9cbb9118; }
-.city-scene-workspace .city-garrison-manage {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 3px 0 3px 7px;
-  border: 0;
-  background: transparent;
-  color: #dcc598;
-  font-size: 10px;
-  white-space: nowrap;
+.city-garrison-error{font-size:10px;color:var(--city-accent);margin:8px 1px 0}
+.city-garrison-note{margin:8px 1px}
+.city-garrison-actions{display:flex;align-items:center;justify-content:space-between;gap:8px;
+  margin-top:9px;padding-top:9px;border-top:1px solid color-mix(in srgb,var(--scene-edge) 35%,transparent)}
+.city-garrison-actions span{font-size:10px;color:var(--scene-muted);font-variant-numeric:tabular-nums}
+.city-scene-workspace .city-garrison-actions button{
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;min-width:104px;
+  min-height:30px;padding:6px 10px;border:1px solid var(--scene-edge);border-radius:var(--scene-radius);
+  background:var(--scene-accent);color:var(--scene-ink);font-weight:650;font-size:11px;
 }
-.city-scene-workspace .city-garrison-manage:hover,
-.city-scene-workspace .city-garrison-manage[aria-expanded=true] { background: transparent; color: #f3deaf; }
-.city-garrison-menu {
-  position: absolute;
-  z-index: 28;
-  top: calc(100% + 8px);
-  right: 0;
-  width: 100%;
-  max-height: min(68vh, calc(100dvh - 244px));
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  padding: 15px;
-  background: #242d33fb;
-  border: 1px solid #ffffff30;
-  border-radius: 12px;
-  box-shadow: 0 12px 35px #0008;
-  color: #edf0f6;
-  scrollbar-width: thin;
-  scrollbar-color: #ffffff40 transparent;
+.city-scene-workspace .city-garrison-actions button:hover:not(:disabled){background:var(--scene-text);color:var(--scene-ink)}
+@media(max-width:800px){
+  .city-scene-workspace .city-scene-top{flex-wrap:nowrap}
+  .city-scene-workspace .city-scene-top>.city-selector{flex:1 1 0;width:auto;min-width:0}
+  .city-garrison-emblem.city-selector-preview{width:42px;height:46px}
+  .city-scene-workspace .city-garrison-menu{width:min(320px,calc(100vw - 20px));max-height:min(400px,calc(100dvh - 180px))}
 }
-.city-garrison-menu-header { display: flex; flex-direction: column; gap: 3px; margin-bottom: 11px; }
-.city-garrison-menu-header>span { font-size: 9px; font-weight: 700; letter-spacing: .12em; color: #d7be89; }
-.city-garrison-menu-header>strong { font-size: 14px; font-weight: 650; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-.city-garrison-metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
-.city-garrison-metrics>div { display: flex; flex-direction: column; gap: 4px; padding: 10px 11px; border: 1px solid #ffffff16; border-radius: 8px; background: #151e26a6; min-width: 0; }
-.city-garrison-metrics small { color: #aebac7; font-size: 10px; }
-.city-garrison-metrics strong { color: #efd9ac; font-size: 20px; line-height: 1.2; font-variant-numeric: tabular-nums; }
-.city-garrison-metrics strong span { font-size: 10px; font-weight: 500; color: #beccda; }
-.city-garrison-hint { margin: 10px 0 0; color: #aebbc8; font-size: 10px; line-height: 1.55; }
-.city-garrison-section-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin: 16px 0 8px; }
-.city-garrison-section-head h3 { margin: 0; color: #e8e9e6; font-size: 11px; font-weight: 650; }
-.city-garrison-section-head>span { color: #9eacbb; font-size: 10px; white-space: nowrap; }
-.city-garrison-roster { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
-.city-garrison-roster>span { display: flex; align-items: center; justify-content: space-between; gap: 5px; min-width: 0; padding: 7px 8px; border: 1px solid #ffffff13; border-radius: 6px; background: #ffffff09; }
-.city-garrison-roster small { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: #c4cdd9; font-size: 10px; }
-.city-garrison-roster strong { flex: none; color: #ecd8ac; font-size: 11px; font-variant-numeric: tabular-nums; }
-.city-garrison-empty { grid-column: 1/-1; margin: 8px 0; color: #b0bdca; font-size: 10px; line-height: 1.5; }
-.city-garrison-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; margin-bottom: 11px; padding: 3px; border: 1px solid #ffffff0c; border-radius: 8px; background: #151d24; }
-.city-scene-workspace .city-garrison-tabs button { padding: 7px; border: 0; border-radius: 5px; background: transparent; color: #b0becb; font-size: 11px; }
-.city-scene-workspace .city-garrison-tabs button[aria-pressed=true] { background: #d9bc83; color: #1d242e; font-weight: 700; }
-.city-garrison-legion-label { display: flex; flex-direction: column; gap: 6px; color: #bbc7d3; font-size: 10px; }
-.city-garrison-legion-label select { width: 100%; min-width: 0; padding: 9px 10px; border: 1px solid #ffffff26; border-radius: 7px; background: #152028; color: #edf0f6; font-size: 11px; }
-.city-garrison-transfer-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 10px 0 7px; color: #bac4d0; font-size: 10px; }
-.city-scene-workspace .city-garrison-transfer-head button { padding: 4px 8px; border: 1px solid #dbc18b4b; border-radius: 5px; background: transparent; color: #dfc38d; font-size: 10px; }
-.city-garrison-units { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
-.city-garrison-units label { display: flex; align-items: center; justify-content: space-between; gap: 5px; min-width: 0; padding: 6px; border-radius: 6px; background: #151e2694; color: #d5dde6; }
-.city-garrison-units label>span { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 10px; }
-.city-garrison-units small { color: #91a2b5; }
-.city-garrison-units input { flex: none; width: 51px; min-width: 0; padding: 6px 2px 6px 4px; border: 1px solid #ffffff2b; border-radius: 5px; background: #10171d; color: #edf0f6; font-size: 11px; font-variant-numeric: tabular-nums; text-align: right; }
-.city-garrison-actions { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 13px; }
-.city-garrison-actions span { color: #bac6d3; font-size: 10px; }
-.city-scene-workspace .city-garrison-actions button { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 9px 10px; border: 0; border-radius: 6px; background: #d9bc83; color: #18212a; font-weight: 700; font-size: 10px; white-space: nowrap; }
-.city-scene-workspace .city-garrison-actions button:hover:not(:disabled) { background: #edd3a0; color: #18212a; }
-.city-scene-workspace .city-garrison-actions button:disabled { opacity: .45; }
-.city-garrison-error { margin: 8px 0 0; color: #f1a58e; font-size: 10px; }
-@media (max-width: 780px) {
-  .city-scene-workspace .city-scene-top { flex-wrap: nowrap; }
-  .city-scene-workspace .city-scene-top>.city-selector,
-  .city-scene-workspace .city-scene-top>.city-garrison-dock { width: auto; flex: 1 1 0; min-width: 0; }
-  .city-garrison-crest { width: 60px; height: 65px; }
-  .city-garrison-crest>span { width: 43px; height: 48px; }
-  .city-garrison-menu { width: min(350px, calc(100vw - 20px)); }
+@media(max-width:550px){
+  .city-scene-workspace .city-scene-top{gap:8px}
+  .city-scene-workspace .city-scene-top>.city-garrison-dock{flex:0 0 40%;width:40%}
+  .city-scene-workspace .city-scene-top>.city-selector:not(.city-garrison-dock){flex:1 1 60%}
+  .city-scene-top .city-selector:not(.city-garrison-dock) .city-selector-preview{width:48px;height:52px}
+  .city-scene-top .city-selector:not(.city-garrison-dock) .city-selector-trigger{gap:6px}
+  .city-scene-top .city-selector:not(.city-garrison-dock) .city-selector-counts{column-gap:6px;row-gap:0;font-size:9px}
+  .city-scene-top .city-selector:not(.city-garrison-dock) .city-selector-report{width:24px;min-height:29px;margin-left:0}
+  .city-garrison-emblem.city-selector-preview{width:30px;height:39px}
+  .city-garrison-emblem svg{width:18px;height:18px}
+  .city-garrison-card .city-selector-trigger{gap:5px}
+  .city-garrison-card .city-selector-info strong{font-size:11px}
+  .city-garrison-card .city-selector-counts{margin-top:3px;column-gap:5px;row-gap:0;font-size:9px}
+  .city-garrison-card .city-selector-counts svg{display:none}
+  .city-garrison-foot>span{max-width:95px;overflow:hidden;text-overflow:ellipsis}
+  .city-scene-workspace .city-garrison-menu{max-height:min(360px,calc(100dvh - 170px))}
 }
-@media (max-width: 520px) {
-  .city-scene-workspace .city-scene-top { gap: 8px; }
-  .city-scene-top .city-selector-preview { width: 54px; height: 60px; }
-  .city-scene-top .city-selector .city-selector-trigger { gap: 6px; }
-  .city-scene-top .city-selector-info strong { font-size: 12px; }
-  .city-scene-top .city-selector-counts { font-size: 9px; gap: 2px 7px; }
-  .city-scene-top .city-selector .city-selector-report { width: 23px; min-height: 29px; margin-left: 0; }
-  .city-garrison-crest { width: 52px; height: 60px; }
-  .city-garrison-crest>span { width: 37px; height: 42px; }
-  .city-garrison-crest svg { width: 24px; height: 24px; }
-  .city-scene-workspace .city-garrison-trigger { gap: 7px; }
-  .city-garrison-card-heading strong { font-size: 12px; }
-  .city-garrison-card-heading svg { width: 12px; }
-  .city-garrison-card-counts { font-size: 9px; gap: 2px 5px; }
-  .city-garrison-card-counts svg { display: none; }
-  .city-garrison-auto,.city-scene-workspace .city-garrison-manage { font-size: 9px; }
-  .city-garrison-card-footer { gap: 3px; }
-  .city-garrison-menu { max-height: min(65vh, calc(100dvh - 228px)); }
-}
-@media (max-width: 390px) {
-  .city-scene-top .city-selector-preview { width: 45px; height: 56px; }
-  .city-garrison-crest { width: 42px; height: 56px; }
-  .city-garrison-crest>span { width: 33px; height: 39px; }
-  .city-garrison-auto i { width: 5px; height: 5px; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .city-garrison-card-heading svg { transition: none; }
-}
+@media(prefers-reduced-motion:reduce){.city-garrison-menu{scroll-behavior:auto}}

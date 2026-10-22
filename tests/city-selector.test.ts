@@ -1,4 +1,5 @@
 import test from 'node:test';
+import { readFileSync } from 'node:fs';
 import assert from 'node:assert/strict';
 import { createSolo } from '../src/features/campaign/domain/newRealm';
 import { citySelectorEntries, cityPreviewState } from '../src/features/city/domain/citySelector';
@@ -36,17 +37,27 @@ test('3D city has a right-hand garrison card, not the old Defence launcher or fu
         world, owner:town.owner_id, sid:town.id, now:Date.parse(world.server_now),
         plots:[], scene:null, run:()=>{}, busy:false, onSelect:()=>{},
     }));
-    assert.ok(html.includes('class="city-garrison-dock"'), 'a dedicated garrison surface is always visible');
-    assert.ok(html.includes('class="city-garrison-card"'));
-    assert.ok(html.includes('20</b> permanent'), 'shows real permanently stationed defenders');
-    assert.ok(html.includes('Wall Lv. 5'));
+    assert.ok(html.includes('class="city-selector city-garrison-dock"'), 'garrison inherits the city selector theme');
+    assert.ok(html.includes('class="city-selector-card city-garrison-card"'));
+    assert.ok(html.includes('class="city-selector-preview city-garrison-emblem"'));
+    assert.ok(!html.includes('city-garrison-metrics'), 'no redundant large metric tiles');
+    assert.ok(html.includes('20</b> defenders'), 'shows real permanently stationed defenders');
+    assert.ok(html.includes('Wall <b>+50%</b>'));
     assert.ok(html.includes('+50%'));
-    assert.ok(html.includes('Automatic defence'));
+    assert.ok(html.includes('Auto-defends offline'));
     assert.ok(html.includes('aria-expanded="false"'), 'the garrison editor is collapsed by default');
     assert.ok(!html.includes('city-garrison-launch'), 'obsolete Defence tab has been removed');
     assert.ok(!html.includes('city-garrison-overlay'), 'old full-screen modal has been removed');
-    assert.ok(html.indexOf('class="city-selector"') < html.indexOf('class="city-garrison-dock"'),
+    assert.ok(html.indexOf('class="city-selector"') < html.indexOf('class="city-selector city-garrison-dock"'),
         'city selector is on the left and garrison on the right');
+});
+
+test('garrison UI inherits shared scene materials instead of defining a second color palette', () => {
+    const styles = readFileSync(new URL('../src/features/city/styles/city-garrison.css', import.meta.url), 'utf8');
+    assert.match(styles, /city-selector-card|CitySelector/);
+    assert.match(styles, /var\(--scene-accent\)/);
+    assert.doesNotMatch(styles, /#[\da-f]{3,8}\b/i, 'garrison styles should not hardcode a new palette');
+    assert.doesNotMatch(styles, /\.city-garrison-card\s*\{/, 'reuse the existing city card surface');
 });
 
 test('selector lists only owned cities and counts residents and physically stationed troops', () => {
