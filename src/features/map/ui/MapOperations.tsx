@@ -18,7 +18,7 @@ function remaining(event: MapActivity, now: number, world: World) {
     if (event.endsAt === null) return 'Pending';
     if (event.endsAt <= now) return event.category === 'armies' ? 'Arriving' : 'Finishing';
     const seconds = Math.ceil((event.endsAt - now) / 1000 / (world.game_clock?.rate ?? 1));
-    return seconds >= 3600 ? Math.floor(seconds / 3600) + 'h ' + Math.floor(seconds % 3600 / 60) + 'm' : clock(seconds, world.game_clock?.rate ?? 1);
+    return seconds >= 3600 ? Math.floor(seconds / 3600) + 'h ' + Math.floor(seconds % 3600 / 60) + 'm' : clock(seconds);
 }
 export function MapOperations({ world, playerId, now, busy, run, open, onToggle, onLocate, selectionKey, children, preview = 'movements', focusCityId }: {
     world: World; playerId: string; now: number; busy: boolean; run: (command: Command, message?: string) => void;

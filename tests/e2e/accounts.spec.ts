@@ -58,6 +58,7 @@ async function ruler(page: Page, name: string) {
 }
 test('name login, refresh, fresh device, switch and expired session keep the correct account', async ({ page, context, browser }, testInfo) => {
     test.setTimeout(120000); const errors: string[] = []; page.on('pageerror', error => errors.push(error.message));
+    const initialCounts = await server.counts();
     await connect(context); await login(page, 'Account Alpha',true); await ruler(page, 'Account Alpha');
     const alpha = server.logins.at(-1); expect(alpha.created).toBe(true);
     await page.screenshot({ path: testInfo.outputPath('name-login.png') });
@@ -76,7 +77,7 @@ test('name login, refresh, fresh device, switch and expired session keep the cor
     await page.reload();await expect(page.getByLabel('Game menu')).toBeVisible();await ruler(page, 'Account Alpha');expect(server.logins.at(-1).player_id).toBe(alpha.player_id);
     await page.getByRole('button', { name: 'Switch ruler', exact: true }).click();await manual(page);await expect(page.getByLabel('YOUR RULER NAME')).toHaveValue('Account Alpha');
     await page.reload();await manual(page);await expect(page.getByLabel('YOUR RULER NAME')).toBeVisible();await expect(page.getByLabel('Game menu')).toHaveCount(0);
-    expect(await server.counts()).toEqual({ players: 2, cities: 2, armies: 2 });expect(errors).toEqual([]);await other.close();
+    expect(await server.counts()).toEqual({ players: Number(initialCounts.players)+2, cities: Number(initialCounts.cities)+2, armies: Number(initialCounts.armies)+2 });expect(errors).toEqual([]);await other.close();
 });
 test('two tabs can control different names without changing each other', async ({ context }, testInfo) => {
     await connect(context); const first = await context.newPage(), second = await context.newPage();

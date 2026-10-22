@@ -18,6 +18,7 @@
     "test:clock-db": "node --import tsx tests/game-clock-database.test.mts",
     "test:clock-gameplay-db": "node --import tsx tests/game-clock-gameplay.test.mts",
     "test:clock-upgrade-db": "node --import tsx tests/game-clock-upgrade.test.mts",
+    "test:clock-journeys-db": "node --import tsx tests/game-clock-journeys.test.mts",
     "test:server-concurrency": "node --import tsx tests/server-reliability-concurrency.test.mts",
     "check:server-reliability": "node --import tsx scripts/check-server-reliability.mts",
     "test:fresh": "node tests/fresh-database.test.mjs",

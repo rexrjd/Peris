@@ -53,7 +53,17 @@ try {
  const formations=(await db.query<any>(`select * from public.battle_formations where battle_id=${started} and side='defender'`)).rows;
  assert.ok(formations.reduce((sum:number,row:any)=>sum+Number(row.initial_soldiers),0)>=200);
  assert.ok(formations.every((row:any)=>Number(row.defence_multiplier)>=1.5-1e-6));
- await admin(`update public.battle_formations set soldiers=floor(initial_soldiers/2) where battle_id=${started} and side='defender';select public.peris_finish(${started},'attacker','Garrison test')`);
+ await admin(`update public.battle_formations set soldiers=floor(initial_soldiers/2) where battle_id=${started} and side='defender'`);
+ const inventory=async()=>{
+  await db.exec('reset role');
+  const tables=['players','settlements','armies','battles','battle_formations','peris_city_garrisons','peris_garrisons','peris_ruin_evacuations','peris_heroes','peris_hero_artifacts','peris_reports'];
+  return Object.fromEntries(await Promise.all(tables.map(async table=>[table,(await db.query<any>('select to_jsonb(t)as row from public.'+table+' t order by to_jsonb(t)::text')).rows])));
+ };
+ const beforeFault=await inventory();
+ await admin("create function public.peris_test_city_fault()returns trigger language plpgsql as $$begin raise exception 'Injected city finalizer report fault';end$$;create trigger peris_test_city_fault before insert on public.peris_reports for each row execute function public.peris_test_city_fault()");
+ await assert.rejects(()=>admin(`select public.peris_finish(${started},'attacker','Fault')`),/Injected city finalizer report fault/);
+ assert.deepEqual(await inventory(),beforeFault,'late city report failure rolls back siege, army and populated permanent-garrison casualties, loot, hero rewards and results');
+ await admin(`drop trigger peris_test_city_fault on public.peris_reports;drop function public.peris_test_city_fault();select public.peris_finish(${started},'attacker','Garrison test')`);
  await login(1);world=await rpc('peris_snapshot');
  assert.ok(world.city_garrisons[0].unit_roster.infantry<40,'garrison pays losses in the authoritative DB');
  const retained=world.city_garrisons[0].unit_roster;

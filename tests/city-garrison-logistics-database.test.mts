@@ -6,7 +6,7 @@ import { readFile } from 'node:fs/promises';
 
 const db = new PGlite();
 const user = '11111111-1111-4111-8111-111111111111';
-const admin = (sql: string) => db.exec('reset role;' + sql);
+const admin = async (sql: string) => { await db.exec('reset role'); return db.exec(sql); };
 const login = () => db.exec(`reset role;set role authenticated;select set_config('request.jwt.claim.sub','${user}',false)`);
 const rpc = async (fn: string, args: unknown[] = []) =>
     (await db.query<{result: any}>(`select public.${fn}(${args.map((_,i)=>'$'+(i+1)).join(',')})result`,args)).rows[0].result;
@@ -26,6 +26,7 @@ try {
     // Pick one adjacent piece of actual server land; SQL and client must agree
     // that reinforcement troops have a connected, non-instant route.
     let destination:{x:number;y:number}|null=null;
+    await db.exec('reset role'); // Private geography is fixture setup, not a player RPC.
     for(const [dx,dy] of [[128,0],[-128,0],[0,128],[0,-128]]){
         const x=from.x+dx,y=from.y+dy;
         if(x< -12800||x>=12800||y< -12800||y>=12800)continue;
@@ -52,6 +53,7 @@ try {
     assert.equal(stock.infantry,9);
     await admin(`select public.peris_city_garrison_receive('${user}',${from.id},'{"infantry":45,"archers":15}'::jsonb)`);
     const initial=69; // 9 directly trained + 45 infantry + 15 archers
+    await db.exec('reset role');
     const a=await rpc('peris_home_army_position',[from.x,from.y]);
     const b=await rpc('peris_home_army_position',[destination!.x,destination!.y]);
     const route=[[a.x,a.y],[b.x,b.y]];
