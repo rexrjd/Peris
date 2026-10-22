@@ -98,7 +98,7 @@ export class OnlineEngine implements GameEngine {
         this.channel = supabase.channel(`peris-world-${playerId}`);
         const own = `owner_id=eq.${playerId}`;
         // No global subscription: a distant ruler's orders do not wake this client.
-        for (const table of ['peris_account_science','peris_research_progress','peris_map_plots', 'settlements', 'armies', 'battle_formations', 'peris_orders', 'peris_reports', 'peris_heroes', 'peris_hero_artifacts', 'peris_settler_expeditions', 'peris_campaign_farm_lists', 'peris_campaign_farms', 'peris_garrisons']) this.watch(table, own);
+        for (const table of ['peris_account_science','peris_research_progress','peris_map_plots', 'settlements', 'armies', 'battle_formations', 'peris_orders', 'peris_reports', 'peris_heroes', 'peris_hero_artifacts', 'peris_settler_expeditions', 'peris_campaign_farm_lists', 'peris_campaign_farms', 'peris_garrisons', 'peris_city_garrisons', 'peris_city_reinforcements']) this.watch(table, own);
         this.watch('players', `id=eq.${playerId}`);
         if (town) this.watch('buildings', `settlement_id=eq.${town.id}`);
         for (const table of ['battles', 'peris_challenges']) {

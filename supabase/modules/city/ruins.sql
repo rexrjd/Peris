@@ -175,6 +175,7 @@ begin
  if living_count=0 then
   update public.players set defeated_at=coalesce(defeated_at,now()),culture_points=0 where id=city.owner_id;
   delete from public.peris_ruin_evacuations where owner_id=city.owner_id;
+  delete from public.peris_city_reinforcements where owner_id=city.owner_id;
   delete from public.peris_garrisons where owner_id=city.owner_id;
   delete from public.peris_orders where owner_id=city.owner_id;
   update public.peris_settler_expeditions set status='returned'where owner_id=city.owner_id and status='travelling';

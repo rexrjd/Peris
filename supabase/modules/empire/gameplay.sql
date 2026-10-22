@@ -128,10 +128,11 @@ begin
  if exists(select 1 from public.battles where status='active'and(attacker_owner_id=u or defender_owner_id=u))then raise exception 'Finish the current battle first';end if;
  case command_kind
  when 'manageCityGarrison'then return public.peris_manage_city_garrison(u,s.id,a.id,p_command->>'action',p_command->'troops');
+ when 'reinforceCity'then return public.peris_send_city_reinforcements(u,s.id,(p_command->>'targetCityId')::bigint,p_command->'troops',p_command->'route');
  when 'upgrade'then return public.peris_queue_upgrade(p_command->>'item');
  when 'buildSlot'then return public.peris_queue_slot((p_command->>'slot')::integer,p_command->>'item');
  when 'upgradeSlot'then return public.peris_queue_slot((p_command->>'slot')::integer,null);
- when 'recruit'then return public.peris_queue_recruit(p_command->>'item',(p_command->>'quantity')::integer);
+ when 'recruit'then return public.peris_queue_recruit_to(p_command->>'item',(p_command->>'quantity')::integer,coalesce(p_command->>'destination','legion'));
  when 'move'then
   if p_command ? 'troops'then
    if jsonb_typeof(p_command->'troops')is distinct from 'object'then raise exception 'Choose troops currently available in this legion';end if;

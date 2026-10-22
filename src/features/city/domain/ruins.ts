@@ -142,6 +142,7 @@ export function ruinCity(world: World, cityId: number, now = worldGameNow(world)
         world.orders=world.orders.filter(order=>order.owner_id!==owner);
         world.garrisons=world.garrisons?.filter(row=>row.owner_id!==owner);
         world.ruin_evacuations=world.ruin_evacuations?.filter(row=>row.owner_id!==owner);
+        world.city_reinforcements=world.city_reinforcements?.filter(row=>row.owner_id!==owner);
         for(const army of world.armies.filter(row=>row.owner_id===owner)) disband(army,now);
     }
     return true;

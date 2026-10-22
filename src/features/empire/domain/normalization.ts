@@ -29,7 +29,7 @@ export function normalizeRealm(world: World, now = world.server_now, associateOr
         for(const camp of BANDIT_CAMPS)if(!ids.has(camp.id)&&!world.settlements.some(s=>wrappedCellDistance(wrapWorldCell(Math.floor(s.x/128),Math.floor(s.y/128)),wrapWorldCell(Math.floor(camp.x/128),Math.floor(camp.y/128)))<=1)&&!world.map_plots?.some(p=>p.col===Math.floor(camp.x/128)&&p.row===Math.floor(camp.y/128)))world.camps.push({...camp});
         for(const camp of world.camps)camp.terrain=battleTerrainAtWorld(camp.x,camp.y);
     }
-    world.heroes ??= []; world.hero_artifacts ??= []; world.settler_expeditions ??= []; world.ruin_evacuations ??= [];
+    world.heroes ??= []; world.hero_artifacts ??= []; world.settler_expeditions ??= []; world.ruin_evacuations ??= []; world.city_reinforcements ??= [];
     const migratedSlots = world.city_slots === undefined ? world.settlements.flatMap(s => citySlots(world, s.id)) : world.city_slots;
     world.city_slots = migratedSlots;
     for (const player of world.players) {
@@ -44,7 +44,7 @@ export function normalizeRealm(world: World, now = world.server_now, associateOr
         for (const order of associateOrders ? world.orders.filter(o => o.owner_id === player.id) : []) {
             const [, col, row] = order.item.split(':');
             order.settlement_id ??= order.kind === 'field' ? world.map_plots?.find(p => p.col === Number(col) && p.row === Number(row))?.settlement_id ?? cities[0]?.id : cities[0]?.id;
-            if (order.kind === 'recruit') order.army_id ??= armies[0]?.id;
+            if (order.kind === 'recruit' && order.recruit_destination !== 'garrison') order.army_id ??= armies[0]?.id;
         }
     }
     world.gameplay_version = 1;

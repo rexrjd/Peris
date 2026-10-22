@@ -1,29 +1,58 @@
-create or replace function public.peris_queue_recruit(p_type text,p_quantity integer) returns jsonb language plpgsql security definer set search_path='' as $$
-declare u uuid:=public.peris_player_id();s public.settlements%rowtype;a public.armies%rowtype;l integer;at_time timestamptz;duration numeric;queued integer;home jsonb;r public.peris_unit_catalog%rowtype;
+-- Dedicated destination is recorded on the order; training is still queued in the
+-- city's ordinary recruitment building and resolves on the same offline tick.
+create or replace function public.peris_queue_recruit_to(p_type text,p_quantity integer,p_destination text)returns jsonb
+language plpgsql security definer set search_path='' as $$
+declare u uuid:=public.peris_player_id();s public.settlements%rowtype;a public.armies%rowtype;
+ l integer;at_time timestamptz;duration numeric;queued integer;queue_size integer;home jsonb;r public.peris_unit_catalog%rowtype;
 begin
  if u is null then raise exception 'Authentication required';end if;
+ if p_destination not in('legion','garrison')or p_destination is null then raise exception 'Choose a recruitment destination';end if;
  select * into r from public.peris_unit_catalog where unit=p_type;
  if r.unit is null or p_quantity is null or p_quantity<1 or p_quantity>200 then raise exception 'Choose between 1 and 200 soldiers';end if;
  perform public.peris_settle(u);
- if exists(select 1 from public.battles where status='active' and (attacker_owner_id=u or defender_owner_id=u)) then raise exception 'Finish the current battle first';end if;
- select * into s from public.settlements where id=public.peris_city_id(u) and owner_id=u for update;
- select * into a from public.armies where id=public.peris_army_id(u) and owner_id=u for update;
- if s.id is null or a.id is null then raise exception 'Realm not found';end if;
- home:=public.peris_home_army_position(s.x,s.y);
- if a.status='moving' or a.raid_target_id is not null or a.raid_city_id is not null or a.raid_reserve is not null or sqrt(power(a.target_x-(home->>'x')::integer,2)+power(a.target_y-(home->>'y')::integer,2))>90 then raise exception 'Bring your army home to recruit';end if;
- if (select count(*)from public.peris_orders where owner_id=u and army_id=a.id and kind='recruit')>=3 then raise exception 'Training queue is full';end if;
- select coalesce(sum(quantity),0)into queued from public.peris_orders where owner_id=u and army_id=a.id and kind='recruit';
- if a.infantry+a.archers+a.cavalry+queued+p_quantity>1000 then raise exception 'Army capacity is 1,000 soldiers';end if;
- select coalesce(sum(level),0) into l from public.peris_city_slots where settlement_id=s.id and building_type=r.building;
+ if exists(select 1 from public.battles where status='active'and(attacker_owner_id=u or defender_owner_id=u))then raise exception 'Finish the current battle first';end if;
+ select * into s from public.settlements where id=public.peris_city_id(u) and owner_id=u and ruined_at is null for update;
+ if s.id is null then raise exception 'Choose your own living city';end if;
+ if p_destination='legion' then
+  select * into a from public.armies where id=public.peris_army_id(u) and owner_id=u for update;
+  if a.id is null then raise exception 'Choose your legion';end if;
+  home:=public.peris_home_army_position(s.x,s.y);
+  if a.status='moving' or a.raid_target_id is not null or a.raid_city_id is not null or a.raid_reserve is not null
+   or sqrt(power(a.target_x-(home->>'x')::integer,2)+power(a.target_y-(home->>'y')::integer,2))>90 then
+   raise exception 'Bring your army home to recruit';end if;
+  select count(*),coalesce(sum(quantity),0)into queue_size,queued from public.peris_orders
+   where owner_id=u and army_id=a.id and kind='recruit'and recruit_destination='legion';
+  if queue_size>=3 then raise exception 'Training queue is full';end if;
+  if a.infantry+a.archers+a.cavalry+queued+p_quantity>1000 then raise exception 'Army capacity is 1,000 soldiers';end if;
+ else
+  select count(*)into queue_size from public.peris_orders where owner_id=u and settlement_id=s.id and kind='recruit'and recruit_destination='garrison';
+  if queue_size>=3 then raise exception 'Garrison training queue is full';end if;
+ end if;
+ select coalesce(sum(level),0)into l from public.peris_city_slots where settlement_id=s.id and building_type=r.building;
  if l=0 then raise exception 'Build % first',r.building;end if;
- if r.research_seconds>0 and public.peris_research_bonus(u,'unlock_'||p_type)=0 and not exists(select 1 from public.peris_unit_research where settlement_id=s.id and unit=p_type and completes_at<=public.peris_game_now())then raise exception 'Research this unit in this village first';end if;
- if s.wood<(r.cost->>'wood')::integer*p_quantity or s.stone<(r.cost->>'stone')::integer*p_quantity or s.food<(r.cost->>'food')::integer*p_quantity or s.gold<(r.cost->>'gold')::integer*p_quantity then raise exception 'Your stores cannot cover this cost';end if;
- select greatest(public.peris_game_now(),coalesce(max(o.finish_at),public.peris_game_now()))into at_time from public.peris_orders o join public.peris_unit_catalog c on c.unit=o.item where o.settlement_id=s.id and o.kind='recruit' and c.building=r.building;
+ if r.research_seconds>0 and public.peris_research_bonus(u,'unlock_'||p_type)=0
+  and not exists(select 1 from public.peris_unit_research where settlement_id=s.id and unit=p_type and completes_at<=public.peris_game_now())then
+  raise exception 'Research this unit in this village first';end if;
+ if s.wood<(r.cost->>'wood')::integer*p_quantity or s.stone<(r.cost->>'stone')::integer*p_quantity or
+    s.food<(r.cost->>'food')::integer*p_quantity or s.gold<(r.cost->>'gold')::integer*p_quantity then raise exception 'Your stores cannot cover this cost';end if;
+ select greatest(public.peris_game_now(),coalesce(max(o.finish_at),public.peris_game_now()))into at_time from public.peris_orders o
+ join public.peris_unit_catalog c on c.unit=o.item where o.settlement_id=s.id and o.kind='recruit'and c.building=r.building;
  duration:=greatest(5,ceil(p_quantity*r.train_seconds/((1+(l-1)*.18)*public.peris_research_factor(u,'training'))));
- update public.settlements set wood=wood-(r.cost->>'wood')::integer*p_quantity,stone=stone-(r.cost->>'stone')::integer*p_quantity,food=food-(r.cost->>'food')::integer*p_quantity,gold=gold-(r.cost->>'gold')::integer*p_quantity where id=s.id;
- insert into public.peris_orders(owner_id,settlement_id,army_id,kind,item,quantity,started_at,finish_at)values(u,s.id,a.id,'recruit',p_type,p_quantity,at_time,at_time+make_interval(secs=>duration::double precision));
- return jsonb_build_object('ok',true);
+ update public.settlements set wood=wood-(r.cost->>'wood')::integer*p_quantity,
+  stone=stone-(r.cost->>'stone')::integer*p_quantity,food=food-(r.cost->>'food')::integer*p_quantity,
+  gold=gold-(r.cost->>'gold')::integer*p_quantity where id=s.id;
+ insert into public.peris_orders(owner_id,settlement_id,army_id,recruit_destination,kind,item,quantity,started_at,finish_at)
+ values(u,s.id,case when p_destination='legion'then a.id else null end,p_destination,'recruit',p_type,p_quantity,
+  at_time,at_time+make_interval(secs=>duration::double precision));
+ return jsonb_build_object('ok',true,'destination',p_destination);
 end $$;
+revoke all on function public.peris_queue_recruit_to(text,integer,text) from public,anon,authenticated;
+
+-- Maintain the existing public two-argument recruitment RPC for older clients.
+create or replace function public.peris_queue_recruit(p_type text,p_quantity integer)returns jsonb
+language sql security definer set search_path='' as $$
+ select public.peris_queue_recruit_to(p_type,p_quantity,'legion')
+$$;
 
 create or replace function public.peris_research_unit(p_city bigint,p_unit text) returns jsonb language plpgsql security definer set search_path='' as $$
 declare u uuid:=public.peris_player_id();s public.settlements%rowtype;r public.peris_unit_catalog%rowtype;at_time timestamptz;

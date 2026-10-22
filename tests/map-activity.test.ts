@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createSolo } from '../src/features/campaign/domain/newRealm';
 import { marchArmy, startRaidReturn } from '../src/features/map/domain/commands';
-import { mapActivity, activityProgress } from '../src/features/map/domain/activity';
+import { mapActivity, activityProgress, activityPreview } from '../src/features/map/domain/activity';
 import { beginRaid } from '../src/features/campaign/domain/raids';
 import type { LocalCommandContext } from '../src/shared/model/commands';
 
@@ -97,4 +97,30 @@ test('advanced recruitment and research retain their roles and exclude completed
     assert.ok(activityProgress(events[1], f.now) > 0);
     assert.equal(JSON.stringify(f.world), before);
     assert.equal(mapActivity(f.world, f.owner, f.now + 50000).filter(e => e.kind === 'research').length, 0);
+});
+
+
+test('city activity preview prioritizes local construction and training while map still previews only movements', () => {
+    const f=fixture(), city=f.world.settlements[0], army=f.world.armies[0], before=f.world.server_now;
+    f.world.settlements.push({ ...city, id: 2, name: 'Outpost' });
+    f.world.orders.push(
+        { id: 201, owner_id: f.owner, settlement_id: city.id, kind: 'recruit', item: 'infantry', quantity: 15,
+            started_at: before, finish_at: new Date(f.now + 120000).toISOString(), recruit_destination: 'garrison' },
+        { id: 202, owner_id: f.owner, settlement_id: city.id, kind: 'upgrade', item: 'market', quantity: 1,
+            started_at: before, finish_at: new Date(f.now + 180000).toISOString() },
+        { id: 203, owner_id: f.owner, settlement_id: 2, kind: 'upgrade', item: 'wall', quantity: 1,
+            started_at: before, finish_at: new Date(f.now + 90000).toISOString() },
+        { id: 204, owner_id: 'rival', settlement_id: 2, kind: 'recruit', item: 'infantry', quantity: 99,
+            started_at: before, finish_at: new Date(f.now + 30000).toISOString() },
+    );
+    army.status = 'moving'; army.departure_at = before; army.arrival_at = new Date(f.now + 50000).toISOString();
+    const snapshot=JSON.stringify(f.world), events=mapActivity(f.world,f.owner,f.now);
+    const cityPreview=activityPreview(events,'city',city.id);
+    assert.deepEqual(cityPreview.slice(0,3).map(e => e.id),['order:201','order:202','order:203']);
+    assert.deepEqual(cityPreview.slice(0,3).map(e => e.kind),['recruitment','construction','construction']);
+    assert.equal(cityPreview[0].destination,'Garrison');
+    assert.ok(!cityPreview.some(e=>e.title.includes('99')));
+    assert.deepEqual(activityPreview(events,'movements').map(e=>e.kind), ['march']);
+    assert.equal(JSON.stringify(f.world),snapshot,'previews do not modify the game or deadlines');
+    assert.equal(activityPreview(events,'city',2)[0].id,'order:203','changing city changes priority, not activity ownership');
 });

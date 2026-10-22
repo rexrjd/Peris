@@ -31,6 +31,7 @@ import {researchSpell} from '../../features/magic/domain/commands';
 import { claimMapField, queueMapField } from '../../features/map/domain/territory';
 import { commandCampaignFarm } from '../../features/campaign/domain/farms';
 import { advanceCampFarms } from '../../features/campaign/domain/campEconomy';
+import { sendCityReinforcements } from '../../features/city/domain/cityReinforcements';
 import { manageCityGarrison } from '../../features/city/domain/cityGarrison';
 import { collectGarrison } from '../../features/map/domain/garrisons';
 import { markAllReportsRead, markReportsRead } from '../../features/campaign/domain/reports';
@@ -150,7 +151,7 @@ export class LocalEngine implements GameEngine {
         settleLocal(this.snapshot, this.playerId);
         this.advanceFarms();
         const active = this.active();
-        if (['claimField', 'buildField', 'researchSpell', 'upgrade', 'buildSlot', 'upgradeSlot', 'recruit', 'researchUnit', 'move', 'raid', 'raidCity', 'trainSettlers', 'foundCity', 'recruitHero', 'heroSkill', 'equipArtifact', 'transferTroops', 'rebaseArmy', 'manageCityGarrison'].includes(cmd.type) && active)
+        if (['claimField', 'buildField', 'researchSpell', 'upgrade', 'buildSlot', 'upgradeSlot', 'recruit', 'researchUnit', 'move', 'raid', 'raidCity', 'trainSettlers', 'foundCity', 'recruitHero', 'heroSkill', 'equipArtifact', 'transferTroops', 'rebaseArmy', 'manageCityGarrison', 'reinforceCity'].includes(cmd.type) && active)
             throw new Error('Finish the current battle first.');
         this.snapshot.server_now = new Date(this.nowGameMs()).toISOString();
         const context: LocalCommandContext = { world: this.snapshot, playerId: this.playerId, settlementId: cmd.settlementId, armyId: cmd.armyId, nextId: () => this.nextId = Math.max(this.nextId + 1, nextEntityId(this.snapshot)), active, now: new Date(this.nowGameMs()).toISOString(), paused: value => { this.paused = value; }, finalize: id => this.finalize(id) };
@@ -169,6 +170,7 @@ export class LocalEngine implements GameEngine {
             case 'equipArtifact': equipArtifact(context, cmd.heroId, cmd.artifactId, cmd.equip); break;
             case 'transferTroops': transferTroops(context, cmd); break;
             case 'manageCityGarrison': manageCityGarrison(context, cmd); break;
+            case 'reinforceCity': sendCityReinforcements(context, cmd); break;
             case 'rebaseArmy': rebaseArmy(context); break;
             case 'claimField': claimMapField(context, cmd.col, cmd.row); break;
             case 'buildField': queueMapField(context, cmd.col, cmd.row, cmd.item); break;

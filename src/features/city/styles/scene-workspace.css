@@ -125,3 +125,19 @@
 @media(max-width:430px){.city-scene-identity{max-width:calc(100% - 154px)}.city-scene-identity>.city-scene-icon-button{display:none}.city-scene-status>button{padding:8px 6px;gap:4px}.city-scene-status>button:first-child{max-width:58px}.city-scene-status>button:last-child{max-width:76px}.city-scene-status strong{font-size:10px}.city-scene-name h1{font-size:12px}.city-scene-name p{font-size:9px;gap:7px}.city-scene-name p>span{padding-left:7px}.city-scene-top{gap:7px}.city-scene-peek{width:calc(100% - 20px)}.city-scene-identity .city-scene-name{width:100%}}
 @media(prefers-reduced-motion:reduce){.city-scene-construction-progress>i{transition:none}}
 @media(hover:none){.city-scene-screen .city-landmark-label:hover .city-landmark-tooltip{display:none!important}.city-scene-screen .city-landmark-label:focus-visible .city-landmark-tooltip{display:block!important}}
+
+/* Reuse the map Events widget in the live 3D city, immediately below Garrison.
+ * Garrison's open editor stays above it; no second event design or queue state. */
+.city-scene-activity{position:absolute;top:197px;right:16px;z-index:7;width:264px;
+  max-width:calc(100% - 32px);max-height:calc(100% - 294px);min-height:0;pointer-events:none}
+.city-scene-activity>.map-operations{position:relative;inset:auto;right:auto;top:auto;
+  width:100%;max-width:100%;max-height:100%;align-items:flex-end;pointer-events:none}
+.city-scene-activity .ops-widget{border-color:var(--scene-edge,#ffffff22);background:var(--scene-panel,#242d33f5)}
+.city-scene-activity .ops-event-scroll{max-height:min(222px,calc(100dvh - 340px))}
+@media(max-width:760px){
+  .city-scene-activity{top:200px;right:10px;max-width:calc(100% - 20px);max-height:calc(100% - 282px)}
+  .city-scene-activity .ops-event-scroll{max-height:min(180px,calc(100dvh - 335px))}
+}
+@media(max-height:530px){
+  .city-scene-activity .ops-event-scroll{max-height:90px}
+}

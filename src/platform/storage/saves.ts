@@ -145,7 +145,7 @@ function validateLegacySave(data: unknown): World {
         if (!connected.has(key) && wrappedCellDistance(queue[head], plot) === 1) { connected.add(key); queue.push(plot); }
     }
     if (connected.size !== plots.length) invalid();
-    if (w.orders.filter(o => o.kind === 'upgrade').length > 1 || w.orders.filter(o => o.kind === 'recruit').length > 3)
+    if (w.orders.filter(o => o.kind === 'upgrade').length > 1 || w.orders.filter(o => o.kind === 'recruit' && o.recruit_destination !== 'garrison').length > 3 || w.orders.filter(o => o.kind === 'recruit' && o.recruit_destination === 'garrison').length > 3)
         invalid();
     const fieldQueues = new Set<string>();
     for (const o of w.orders) {
@@ -156,7 +156,7 @@ function validateLegacySave(data: unknown): World {
             fieldQueues.add(key!);
         } else if (!(o.kind === 'upgrade' ? ['lumber', 'quarry', 'farm', 'market', 'barracks', 'stables', 'wall', 'storehouse', ...(w.city_slots??[]).map(s=>`slot:${s.slot_index}:${s.building_type}`)] : RECRUIT_UNITS).includes(o.item)) invalid();
     }
-    if (army.infantry + army.archers + army.cavalry + w.orders.filter(o => o.kind === 'recruit').reduce((n, o) => n + o.quantity, 0) > 1000)
+    if (army.infantry + army.archers + army.cavalry + w.orders.filter(o => o.kind === 'recruit' && o.recruit_destination !== 'garrison').reduce((n, o) => n + o.quantity, 0) > 1000)
         invalid();
     for(const f of w.formations)if([f.attack_ready_at,f.charge_distance].some(n=>n!==undefined&&(!Number.isFinite(n)||n<0))||f.damage_target_id!==undefined&&!Number.isSafeInteger(f.damage_target_id))invalid();
     for (const f of w.formations)
@@ -271,6 +271,31 @@ export function validateSave(data: unknown): World {
         stationKeys.add(key);
     }
     validateCampaignFarms(w);
+    if (w.city_garrisons !== undefined && (!Array.isArray(w.city_garrisons) || w.city_garrisons.length > 10)) invalid();
+    const permanentIds = new Set<number>();
+    for (const garrison of w.city_garrisons ?? []) {
+        const roster = readRoster(garrison);
+        if (!garrison || garrison.owner_id !== 'solo-ruler' || !cities.has(garrison.settlement_id) ||
+            permanentIds.has(garrison.settlement_id) || !validateRoster(roster, 200000) ||
+            (['infantry', 'archers', 'cavalry'] as const).some(key => !Number.isSafeInteger(garrison[key]) ||
+            garrison[key] < 0 || garrison[key] > 200000)) invalid();
+        const copy = { ...garrison }; writeRoster(copy, roster);
+        if (copy.infantry !== garrison.infantry || copy.archers !== garrison.archers || copy.cavalry !== garrison.cavalry) invalid();
+        permanentIds.add(garrison.settlement_id);
+    }
+    if (w.city_reinforcements !== undefined && (!Array.isArray(w.city_reinforcements) || w.city_reinforcements.length > 500)) invalid();
+    const transportIds = new Set<number>();
+    for (const transport of w.city_reinforcements ?? []) {
+        if (!transport || !Number.isSafeInteger(transport.id) || transport.id < 1 || transportIds.has(transport.id) ||
+            transport.owner_id !== 'solo-ruler' || !cities.has(transport.source_settlement_id) || !cities.has(transport.target_settlement_id) ||
+            !validateRoster(transport.troops, 1000, false) || !Array.isArray(transport.march_path) ||
+            transport.march_path.length < 2 || transport.march_path.length > 2000 ||
+            transport.march_path.some(point => !Array.isArray(point) || point.length !== 2 ||
+            point.some(n => !Number.isFinite(n) || n < WORLD_MIN_X || n >= WORLD_MAX_X)) ||
+            !Number.isFinite(Date.parse(transport.departure_at)) || !Number.isFinite(Date.parse(transport.arrival_at)) ||
+            Date.parse(transport.arrival_at) <= Date.parse(transport.departure_at)) invalid();
+        transportIds.add(transport.id);
+    }
     for(const building of w.buildings)if(!cities.has(building.settlement_id))invalid();
     for(const key of ['city_slots','spell_research','map_plots','heroes','hero_artifacts','settler_expeditions'] as const)if(w[key]!==undefined&&!Array.isArray(w[key]))invalid();
     for(const slot of w.city_slots??[])if(!cities.has(slot.settlement_id))invalid();
@@ -282,7 +307,9 @@ export function validateSave(data: unknown): World {
     const firstCity=w.settlements[0].id, firstArmy=w.armies[0].id;
     for(const order of w.orders){
         if(!cities.has(order.settlement_id??firstCity))invalid();
-        if(order.kind==='recruit'&&!armies.has(order.army_id??firstArmy))invalid();
+        if(order.kind==='recruit'&&order.recruit_destination!==undefined&&order.recruit_destination!=='garrison'&&order.recruit_destination!=='legion')invalid();
+        if(order.kind==='recruit'&&order.recruit_destination!=='garrison'&&!armies.has(order.army_id??firstArmy))invalid();
+        if(order.kind==='recruit'&&order.recruit_destination==='garrison'&&order.army_id!==undefined&&order.army_id!==null)invalid();
         if(order.kind==='settler'&&(order.owner_id!=='solo-ruler'||order.item!=='settlers'||!Number.isInteger(order.quantity)||order.quantity<1||order.quantity>3||!Number.isFinite(Date.parse(order.started_at))||!Number.isFinite(Date.parse(order.finish_at))||Date.parse(order.finish_at)<Date.parse(order.started_at)))invalid();
     }
     const normalized=structuredClone(w), migratedSlots=[] as NonNullable<World['city_slots']>;
@@ -299,7 +326,7 @@ export function validateSave(data: unknown): World {
     normalized.city_slots??=migratedSlots;
     for(const army of w.armies){
         const city=cities.get(army.home_settlement_id)!;
-        const orders=w.orders.filter(o=>o.kind==='recruit'&&(o.army_id??firstArmy)===army.id);
+        const orders=w.orders.filter(o=>o.kind==='recruit'&&o.recruit_destination!=='garrison'&&(o.army_id??firstArmy)===army.id);
         const projected:World={...w,settlements:[city],armies:[army],buildings:w.buildings.filter(b=>b.settlement_id===city.id),city_slots:[],spell_research:[],map_plots:[],orders,settler_expeditions:[]};
         validateLegacySave(projected);
     }
@@ -342,9 +369,9 @@ export function validateSave(data: unknown): World {
         for(const item of reward.artifacts){if(!item||!Number.isSafeInteger(item.id)||item.id<1||receiptIds.has(item.id)||!Object.hasOwn(ARTIFACTS,item.artifact_id))invalid();receiptIds.add(item.id);}
     }
     if(w.settlements.length===1&&w.armies.length===1){
-        const legacy=validateLegacySave({...w,orders:w.orders.filter(o=>o.kind!=='settler'),settler_expeditions:[]});
+        const legacy=validateLegacySave({...w,orders:w.orders.filter(o=>o.kind!=='settler'&&o.recruit_destination!=='garrison'),settler_expeditions:[]});
         normalized.settlements=legacy.settlements;normalized.buildings=legacy.buildings;normalized.city_slots=legacy.city_slots;if(legacy.map_plots!==undefined)normalized.map_plots=legacy.map_plots;normalized.players=legacy.players;normalized.armies=legacy.armies;
-        normalized.orders=[...legacy.orders,...w.orders.filter(o=>o.kind==='settler')];
+        normalized.orders=[...legacy.orders,...w.orders.filter(o=>o.kind==='settler'||o.recruit_destination==='garrison')];
     }
     validateResearch(normalized);
     return normalizeRealm(normalized,normalized.server_now,false);

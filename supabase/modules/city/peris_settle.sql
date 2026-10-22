@@ -8,6 +8,7 @@ begin
  if not found then return;end if;
  if exists(select 1 from public.players where id=p_owner and defeated_at is not null)then return;end if;
  perform public.peris_ruin_advance(p_owner,p_until);
+ perform public.peris_city_reinforcements_advance(p_owner,p_until);
  for s in select * from public.settlements where owner_id=p_owner and ruined_at is null order by id for update loop
  perform public.peris_city_migrate(s.id);if not s.population_ready then perform public.peris_city_economy(s.id);end if;
  end loop;
@@ -34,7 +35,11 @@ begin
   update public.players set upgrades=upgrades+1 where id=p_owner;update public.settlements set development_points=development_points+1 where id=s.id;perform public.peris_city_economy(s.id);
  elsif o.kind='settler'then update public.settlements set settlers=settlers+o.quantity where id=s.id;
  elsif o.kind='recruit' then
-  perform public.peris_recruit_complete(coalesce(o.army_id,(select min(id)from public.armies where owner_id=p_owner)),o.item,o.quantity);
+  if o.recruit_destination='garrison' then
+   perform public.peris_city_garrison_receive(p_owner,s.id,jsonb_build_object(o.item,o.quantity));
+  else
+   perform public.peris_recruit_complete(coalesce(o.army_id,(select min(id)from public.armies where owner_id=p_owner)),o.item,o.quantity);
+  end if;
   update public.players set recruits=recruits+o.quantity where id=p_owner;
  end if;
  delete from public.peris_orders where id=o.id;

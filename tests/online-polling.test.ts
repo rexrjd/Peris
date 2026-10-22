@@ -41,3 +41,11 @@ test('overload retries grow from five seconds to a bounded minute and reset on s
  backoff.reset();assert.equal(backoff.ready(0),true);
  backoff.fail(0);assert.equal(backoff.ready(5000),true);
 });
+
+test('owned evacuation and new city shipment journeys retain timely state checks',()=>{
+ for(const key of ['ruin_evacuations','city_reinforcements'] as const){
+  const world=createSolo('Poller'),owner=world.players[0].id;
+  Object.assign(world,{[key]:[{owner_id:owner}]});
+  assert.equal(statePollInterval(world,owner,false),2550,key);
+ }
+});

@@ -93,3 +93,24 @@
   .city-scene-workspace .city-garrison-menu{max-height:min(360px,calc(100dvh - 170px))}
 }
 @media(prefers-reduced-motion:reduce){.city-garrison-menu{scroll-behavior:auto}}
+/* Visual troop picker reuses faction artwork and the same scene-theme tokens. */
+.city-garrison-roster .fw-troop-icon{width:22px;height:22px;min-width:22px;border-radius:4px}
+.city-garrison-unit>.fw-troop-icon{width:30px;height:30px;min-width:30px;border-radius:5px}
+.city-garrison-tabs{grid-template-columns:repeat(3,minmax(0,1fr))}
+.city-garrison-quick{display:flex;align-items:center;gap:9px}
+.city-garrison-unit{min-height:44px;gap:6px}
+.city-garrison-unit-name{flex:0 1 116px;font-size:10px;line-height:1.25}
+.city-garrison-unit-name small{display:block;margin:2px 0 0;font-size:9px}
+.city-garrison-unit input.city-garrison-slider{
+ flex:1 1 70px;appearance:auto;-webkit-appearance:auto;width:auto;min-width:45px;height:auto;padding:0;
+ accent-color:var(--scene-accent);background:transparent;border:0;cursor:pointer;
+}
+.city-garrison-unit input.city-garrison-quantity{flex:0 0 39px;width:39px;min-width:39px;height:27px;font-size:10px}
+.city-scene-workspace .city-garrison-unit>button{padding:5px 1px;flex:none}
+.city-garrison-route{display:flex;gap:6px;align-items:center;color:var(--scene-muted);font-size:10px;line-height:1.35;margin:7px 0 0}
+.city-garrison-route svg{flex:none;color:var(--scene-accent)}
+.city-garrison-shipments{margin-top:10px;padding-top:9px;border-top:1px solid color-mix(in srgb,var(--scene-edge) 35%,transparent)}
+.city-garrison-shipments>strong{color:var(--scene-muted);font-size:10px;font-weight:600}
+.city-garrison-shipment{display:flex;justify-content:space-between;align-items:center;gap:6px;padding:5px 0;font-size:10px;color:var(--scene-text)}
+.city-garrison-shipment small{flex:none;color:var(--scene-accent);font-variant-numeric:tabular-nums}
+@media(max-width:550px){.city-garrison-unit-name{flex-basis:88px}.city-garrison-unit>.fw-troop-icon{width:26px;height:26px;min-width:26px}}

@@ -9,6 +9,7 @@ alter table public.players add column if not exists culture_updated_at timestamp
 alter table public.players alter column culture_updated_at set default public.peris_game_now();
 alter table public.peris_orders add column if not exists settlement_id bigint references public.settlements(id) on delete cascade;
 alter table public.peris_orders add column if not exists army_id bigint references public.armies(id) on delete cascade;
+alter table public.peris_orders add column if not exists recruit_destination text not null default 'legion';
 update public.peris_orders o set settlement_id=(select min(s.id)from public.settlements s where s.owner_id=o.owner_id)where settlement_id is null;
 update public.peris_orders o set army_id=(select min(a.id)from public.armies a where a.owner_id=o.owner_id)where army_id is null and kind='recruit';
 create index if not exists peris_orders_city on public.peris_orders(settlement_id,kind);
@@ -70,7 +71,7 @@ create or replace function public.peris_scope_order()returns trigger language pl
 begin
  new.settlement_id:=coalesce(new.settlement_id,public.peris_city_id(new.owner_id));
  if not exists(select 1 from public.settlements where id=new.settlement_id and owner_id=new.owner_id and ruined_at is null)then raise exception 'Order city ownership mismatch';end if;
- if new.kind='recruit' then
+ if new.kind='recruit' and coalesce(new.recruit_destination,'legion')<>'garrison' then
  new.army_id:=coalesce(new.army_id,public.peris_army_id(new.owner_id));
  if not exists(select 1 from public.armies where id=new.army_id and owner_id=new.owner_id)then raise exception 'Order army ownership mismatch';end if;
  end if;return new;

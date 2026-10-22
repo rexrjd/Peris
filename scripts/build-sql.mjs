@@ -118,6 +118,39 @@ outputs['UPGRADE_CITY_GARRISONS.sql']=[
  'commit;'
 ].join('\n')
 
+// Focused, idempotent upgrade for direct-garrison training and timed city-to-city
+// shipments. Requires the already deployed city-garrison/ruins feature.
+const cityLogisticsSource=await readSource(path.join(root,'supabase/modules/city/garrison-logistics.sql'))
+const logisticsDependencies=[
+ ['empire/schema.sql',['peris_scope_order']],
+ ['army/peris_queue_recruit.sql',['peris_queue_recruit_to','peris_queue_recruit']],
+ ['city/peris_settle.sql',['peris_settle']],
+ ['empire/gameplay.sql',['peris_empire_command']],
+ ['city/ruins.sql',['peris_ruin_city']],
+ ['snapshot/peris_snapshot.sql',['peris_snapshot']],
+ ['campaign/game-worker.sql',['peris_game_tick']],
+]
+const logisticsDefinitions=[]
+for(const [file,names] of logisticsDependencies){
+ const source=await readSource(path.join(root,'supabase/modules',file))
+ const definitions=source.match(/create or replace function public\.[\s\S]*?\$\$;/g)??[]
+ for(const name of names){
+  const definition=definitions.find(x=>x.startsWith('create or replace function public.'+name+'('))
+  if(!definition)throw Error('Garrison logistics migration missing '+file+':'+name)
+  logisticsDefinitions.push(definition)
+ }
+}
+outputs['UPGRADE_CITY_LOGISTICS.sql']=[
+ '-- PERIS: direct city-garrison recruitment and marching garrison reinforcements.',
+ '-- Apply after UPGRADE_CITY_GARRISONS.sql, once. No existing units are changed.',
+ 'begin;',
+ "do $$ begin if to_regclass('public.peris_city_garrisons') is null or to_regprocedure('public.peris_ruin_city(bigint)') is null then raise exception 'Apply the existing City Ruins and City Garrisons updates first'; end if; end $$;",
+ cityLogisticsSource,
+ ...logisticsDefinitions,
+ "notify pgrst,'reload schema';",
+ 'commit;',
+].join('\n')
+
 // Focused installers also ship the private dependency of extracted finalizers.
 const participantLocks=await readSource(path.join(root,'supabase/modules/battle/participant-locks.sql'))
 const gameClock=await readSource(path.join(root,'supabase/modules/time/game-clock.sql'))
