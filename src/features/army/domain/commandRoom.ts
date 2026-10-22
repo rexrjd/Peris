@@ -21,7 +21,7 @@ export const UNIT_ROLES = { infantry: { name: 'Infantry', icon: 'shield', role: 
 export const percent = (value: number) => `${Math.round(value * 100)}%`;
 export const count = (value: number) => Math.floor(value).toLocaleString();
 export function trainingOrders(world: World, army: Army) {
-    return world.orders.filter(o => o.owner_id === army.owner_id && o.kind === 'recruit' && (o.army_id ?? world.armies[0]?.id) === army.id).sort((a, b) => Date.parse(a.started_at) - Date.parse(b.started_at));
+    return world.orders.filter(o => o.owner_id === army.owner_id && o.kind === 'recruit' && o.recruit_destination !== 'garrison' && (o.army_id ?? world.armies[0]?.id) === army.id).sort((a, b) => Date.parse(a.started_at) - Date.parse(b.started_at));
 }
 export function cityDistance(army: Army, city: Settlement, now: number, wrapped = false) {
     const pos = armyPosition(army, now), { x, y } = homeArmyPosition(city);
@@ -38,14 +38,14 @@ export function armyOverview(world: World, army: Army, now: number) {
     const smithy = home ? armyAttack(world, home.id) : 1;
     return { orders, total, queued, free: Math.max(0, ARMY_CAPACITY - total - queued), home, local, state, bonuses, smithy, damage: bonuses.damage * smithy, arrival: Math.max(0, (Date.parse(army.arrival_at) - now) / 1000) };
 }
-export function recruitmentPlan(world: World, army: Army, city: Settlement, type: RecruitUnit, quantity: number, now: number) {
+export function recruitmentPlan(world: World, army: Army, city: Settlement, type: RecruitUnit, quantity: number, now: number, destination: 'legion' | 'garrison' = 'legion') {
     const version=worldBalanceVersion(world),rule=unitRule(type,version);
-    const orders = trainingOrders(world, army), queued = orders.reduce((n, o) => n + o.quantity, 0);
-    const free = Math.max(0, ARMY_CAPACITY - soldierTotal(army) - queued), resources = liveResources(city, now), cost = multiply(rule.cost, quantity);
+    const orders = destination === 'garrison' ? world.orders.filter(o => o.kind === 'recruit' && o.owner_id === army.owner_id && o.settlement_id === city.id && o.recruit_destination === 'garrison') : trainingOrders(world, army), queued = orders.reduce((n, o) => n + o.quantity, 0);
+    const free = destination === 'garrison' ? 200 : Math.max(0, ARMY_CAPACITY - soldierTotal(army) - queued), resources = liveResources(city, now), cost = multiply(rule.cost, quantity);
     const building = rule.building, level = slotLevels(world, city.id, building);
     const near = atRecruitmentCity(army, city, now);
     const max = Math.max(0, Math.min(200, free, ...RESOURCES.filter(k => rule.cost[k] > 0).map(k => Math.floor(resources[k] / rule.cost[k]))));
-    const reason = !unitUnlocked(world,army.owner_id,city.id,type,now) ? 'Unlock this unit in Research first.' : city.owner_id !== army.owner_id ? 'Choose one of your cities.' : army.status === 'moving' ? 'Stop at a city before recruiting.' : !near ? `Bring this army to ${city.name}.` : !level ? `Build ${building} in ${city.name}.` : orders.length >= 3 ? 'All three training slots are occupied.' : free === 0 ? 'This army has no room for more soldiers.' : !Number.isInteger(quantity) || quantity < 1 || quantity > 200 ? 'Choose 1–200 soldiers.' : quantity > free ? `Only ${free} spaces remain, including queued troops.` : !affordable(resources, cost) ? `${city.name} needs more supplies for this batch.` : null;
+    const reason = !unitUnlocked(world,army.owner_id,city.id,type,now) ? 'Unlock this unit in Research first.' : city.owner_id !== army.owner_id ? 'Choose one of your cities.' : destination === 'legion' && army.status === 'moving' ? 'Stop at a city before recruiting.' : destination === 'legion' && !near ? `Bring this army to ${city.name}.` : !level ? `Build ${building} in ${city.name}.` : orders.length >= 3 ? 'All three training slots are occupied.' : free === 0 ? 'This army has no room for more soldiers.' : !Number.isInteger(quantity) || quantity < 1 || quantity > 200 ? 'Choose 1–200 soldiers.' : quantity > free ? `Only ${free} spaces remain, including queued troops.` : !affordable(resources, cost) ? `${city.name} needs more supplies for this batch.` : null;
     const seconds = recruitSeconds(type, quantity, Math.max(1, level),trainingBoost(world,army.owner_id),version), start = Math.max(now, ...world.orders.filter(o => o.kind === 'recruit' && o.settlement_id === city.id && RECRUIT_RULES[o.item as RecruitUnit]?.building === building).map(o => Date.parse(o.finish_at)));
     return { orders, queued, free, resources, cost, building, level, near, max, reason, seconds, finishSeconds: (start - now) / 1000 + seconds };
 }

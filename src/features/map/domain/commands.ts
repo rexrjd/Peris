@@ -80,7 +80,7 @@ export function marchArmy(context: LocalCommandContext, cmd: Extract<Command, {
     const w = context.world, a = commandArmy(context), now = context.now, clock = Date.parse(now);
     if(isDefeated(w,context.playerId))throw new Error('This ruler has been defeated.');
     if (w.battles.some(battle => battle.status === 'active' && (battle.attacker_owner_id === context.playerId || battle.defender_owner_id === context.playerId))) throw new Error('Finish the current battle first.');
-    if (w.orders.some(o => o.kind === 'recruit' && (o.army_id ?? w.armies[0].id) === a.id))
+    if (w.orders.some(o => o.kind === 'recruit' && o.recruit_destination !== 'garrison' && (o.army_id ?? w.armies[0].id) === a.id))
         throw new Error('Let the training queue finish before marching.');
     let x: number, y: number, raidTargetId: number | null = null;
     if (cmd.type === 'raid') {

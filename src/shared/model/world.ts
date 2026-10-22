@@ -9,6 +9,7 @@ import type { SpellResearch } from '../../features/magic/domain/spells';
 import type { MapPlot } from '../../features/map/domain/territory';
 import type { Hero, HeroArtifact } from '../../features/heroes/domain/heroes';
 import type { SettlerExpedition } from '../../features/empire/domain/expansion';
+import type { CityReinforcement } from '../../features/city/domain/cityReinforcements';
 import type { CityGarrison } from '../../features/city/domain/cityGarrison';
 import type { RuinEvacuation } from '../../features/city/domain/ruins';
 export type Order = {
@@ -17,6 +18,7 @@ export type Order = {
     kind: 'upgrade' | 'recruit' | 'field' | 'settler';
     settlement_id?: number;
     army_id?: number;
+    recruit_destination?: 'legion' | 'garrison';
     item: string;
     quantity: number;
     started_at: string;
@@ -59,6 +61,7 @@ export type World = {
     campaign_farm_stats?: import('../../features/campaign/domain/types').CampaignFarmStats[];
     garrisons?: Garrison[];
     city_garrisons?: CityGarrison[];
+    city_reinforcements?: CityReinforcement[];
     ruin_evacuations?: RuinEvacuation[];
     /** Server geography format; version 3 uses the persistent 200 × 200 world. */
     map?: {

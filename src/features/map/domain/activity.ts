@@ -7,9 +7,9 @@ import { soldierTotal } from '../../army/domain/units';
 import { BUILDINGS } from '../../city/domain/buildings';
 import { SLOT_BUILDINGS } from '../../city/domain/slots';
 import { FIELD_BUILDINGS } from './territory';
-import { RECRUIT_RULES, RECRUIT_UNITS, type RecruitUnit } from '../../army/domain/roster';
+import { RECRUIT_RULES, RECRUIT_UNITS, rosterTotal, type RecruitUnit } from '../../army/domain/roster';
 
-export type ActivityKind = 'raid' | 'return' | 'march' | 'battle' | 'construction' | 'recruitment' | 'research' | 'settlers';
+export type ActivityKind = 'raid' | 'return' | 'march' | 'battle' | 'construction' | 'recruitment' | 'research' | 'settlers' | 'reinforcement';
 const unitNames: Record<RecruitUnit, string> = { infantry: 'infantry', spearmen: 'spearmen', archers: 'archers', elite: 'elite soldiers', cavalry: 'cavalry', scout: 'scouts', heavyCavalry: 'heavy cavalry', ram: 'rams', catapult: 'catapults' };
 const unitName = (unit: string) => RECRUIT_UNITS.includes(unit as RecruitUnit) ? unitNames[unit as RecruitUnit] : 'soldiers';
 export type MapActivity = {
@@ -79,16 +79,28 @@ export function mapActivity(world: World, owner: string, now: number): MapActivi
             selection: { kind: 'army', id: army.id }, point: armyPosition(army, now),
             ...(staged ? { cancel: { armyId: army.id, sentAt: army.march_sent_at!, until: until! } } : {}) });
     }
+    for (const shipment of world.city_reinforcements ?? []) {
+        if (shipment.owner_id !== owner) continue;
+        const origin = cities.find(s => s.id === shipment.source_settlement_id);
+        const target = cities.find(s => s.id === shipment.target_settlement_id);
+        if (!origin || !target) continue;
+        const total = rosterTotal(shipment.troops);
+        events.push({ id: 'reinforcement:' + shipment.id, kind: 'reinforcement', category: 'armies',
+            title: total.toLocaleString() + ' reinforcements', detail: origin.name,
+            destination: target.name, troops: total, cityId: target.id,
+            startedAt: timestamp(shipment.departure_at), endsAt: timestamp(shipment.arrival_at),
+            selection: { kind: 'settlement', id: target.id }, point: { x: target.x, y: target.y } });
+    }
     for (const order of world.orders) {
         if (order.owner_id !== owner) continue;
         const city = cities.find(s => s.id === (order.settlement_id ?? cities[0]?.id));
         if (!city) continue;
         const base = { id: 'order:' + order.id, cityId: city.id, startedAt: timestamp(order.started_at), endsAt: timestamp(order.finish_at), point: { x: city.x, y: city.y } };
         if (order.kind === 'recruit') {
-            const army = armies.find(a => a.id === (order.army_id ?? armies[0]?.id));
+            const army = order.recruit_destination === 'garrison' ? undefined : armies.find(a => a.id === (order.army_id ?? armies[0]?.id));
             const unit = unitName(order.item);
             events.push({ ...base, kind: 'recruitment', category: 'cities', title: order.quantity + ' ' + unit, detail: city.name,
-                destination: army?.name, armyId: army?.id, selection: { kind: 'settlement', id: city.id } });
+                destination: order.recruit_destination === 'garrison' ? 'Garrison' : army?.name, armyId: army?.id, selection: { kind: 'settlement', id: city.id } });
         } else if (order.kind === 'settler') {
             events.push({ ...base, kind: 'settlers', category: 'cities', title: order.quantity + (order.quantity === 1 ? ' settler' : ' settlers'),
                 detail: city.name, selection: { kind: 'settlement', id: city.id } });

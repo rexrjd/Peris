@@ -191,3 +191,6 @@ body .raise-army-modal.army-command-dialog{width:min(800px,calc(100vw - 32px));m
 img.command-portrait.painted{object-fit:cover;object-position:center 40%;border-radius:12px;border:1px solid #ad94694d;background:#202733}
 .army-cancel-order{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin:16px 0;padding:14px 16px;border:1px solid var(--cmd-border);border-radius:7px;background:#161d27}
 .army-cancel-order>div{display:grid;gap:5px}.army-cancel-order strong{font-size:12px;color:var(--cmd-text)}.army-cancel-order span{font-size:10px;color:var(--cmd-muted)}
+/* Same command-room tabs; recruitment can feed a legion or the city garrison. */
+.recruit-destination-tabs{margin:10px 0 7px}
+.recruit-destination-tabs>button{flex:1}

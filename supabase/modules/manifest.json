@@ -23,6 +23,7 @@
   "map/march-orders.sql",
   "city/city-garrisons.sql",
   "city/ruins.sql",
+  "city/garrison-logistics.sql",
   "empire/gameplay.sql",
   "campaign/farms.sql",
   "map/bandits.sql",

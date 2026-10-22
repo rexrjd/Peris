@@ -1,3 +1,6 @@
+import { settleCityReinforcements } from '../../city/domain/cityReinforcements';
+import { cityGarrisonAt, type CityGarrison } from '../../city/domain/cityGarrison';
+import { addRosters, emptyRoster, readRoster, writeRoster } from '../../army/domain/roster';
 import {ensureScience,advanceResearch} from '../../research/domain/science';
 import { isDefeated, settleRuinEvacuations, redirectFromLostStation } from '../../city/domain/ruins';
 import { accrueResources } from '../../city/domain/economy';
@@ -17,6 +20,7 @@ export function settleLocal(w: World, owner: string, now = Date.now(), travel = 
     const player = w.players.find(p => p.id === owner);
     if (!player || isDefeated(w,owner)) return;
     settleRuinEvacuations(w,owner,now);
+    settleCityReinforcements(w, owner, now);
     ensureScience(w,owner);
     const events = [
         ...w.orders.filter(o => o.owner_id === owner && Date.parse(o.finish_at) <= now).map(order => ({ at: Date.parse(order.finish_at), order, expedition: undefined })),
@@ -38,6 +42,20 @@ export function settleLocal(w: World, owner: string, now = Date.now(), travel = 
         if (order.kind === 'field') { completeMapField(w, owner, order); refreshCityEconomy(w, city.id, city.population !== undefined); }
         else if (order.kind === 'upgrade') completeUpgrade(w, city, player, order);
         else if (order.kind === 'settler') city.settlers = (city.settlers ?? 0) + order.quantity;
+        else if (order.recruit_destination === 'garrison') {
+            const permanent = cityGarrisonAt(w, city.id, owner);
+            const troops = emptyRoster();
+            const unit = order.item as keyof typeof troops;
+            if (!(unit in troops)) throw new Error('Unknown garrison recruitment unit.');
+            troops[unit] = order.quantity;
+            if (permanent) writeRoster(permanent, addRosters(readRoster(permanent), troops));
+            else {
+                const fresh: CityGarrison = { owner_id: owner, settlement_id: city.id, ...emptyRoster() };
+                writeRoster(fresh, troops);
+                (w.city_garrisons ??= []).push(fresh);
+            }
+            player.recruits += order.quantity;
+        }
         else {
             const army = w.armies.find(a => a.owner_id === owner && a.id === (order.army_id ?? w.armies.find(a => a.owner_id === owner)?.id));
             if (!army) throw new Error('The army for this training order is missing.');

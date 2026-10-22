@@ -57,7 +57,7 @@ export function mergeStationGarrison(world: World, army: Army, troops?: ArmyTroo
 export function collectGarrison(context: LocalCommandContext, cmd: Extract<Command, { type: 'collectGarrison' }>) {
     const army = context.world.armies.find(row => row.id === cmd.armyId && row.owner_id === context.playerId);
     if (!army) throw new Error('Choose one of your armies.');
-    if (context.world.orders.some(order => order.kind === 'recruit' && (order.army_id ?? context.world.armies[0].id) === army.id))
+    if (context.world.orders.some(order => order.kind === 'recruit' && order.recruit_destination !== 'garrison' && (order.army_id ?? context.world.armies[0].id) === army.id))
         throw new Error('Finish training before collecting stationed troops.');
     if (cmd.troops !== undefined && (!cmd.troops || typeof cmd.troops !== 'object' || Array.isArray(cmd.troops)))
         throw new Error('Choose whole stationed troop counts.');

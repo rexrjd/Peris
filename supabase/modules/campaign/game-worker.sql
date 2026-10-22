@@ -13,6 +13,7 @@ begin
   select owner_id,min(arrival_at)as due from public.armies where (status='moving' or raid_target_id is not null or raid_city_id is not null)and arrival_at<=now() group by owner_id
   union all select owner_id,min(arrival_at)from public.peris_settler_expeditions where status='travelling'and arrival_at<=now()group by owner_id
   union all select owner_id,min(finish_at)from public.peris_orders where finish_at<=now()group by owner_id
+  union all select owner_id,min(arrival_at)from public.peris_city_reinforcements where arrival_at<=now()group by owner_id
   union all select owner_id,min(public.peris_science_deadline(owner_id))from public.peris_account_science where active_id is not null and public.peris_science_deadline(owner_id)<=now()group by owner_id
   union all select owner_id,min(next_at)from public.peris_campaign_farms where enabled and next_at<=now()group by owner_id
   union all select attacker_owner_id,min(last_tick_at)from public.battles where status='active'group by attacker_owner_id

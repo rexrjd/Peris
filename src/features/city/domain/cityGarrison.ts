@@ -33,7 +33,7 @@ export function manageCityGarrison(context: LocalCommandContext, cmd: Extract<Co
         throw new Error('Bring an idle legion into this city before transferring defenders.');
     }
     if (world.battles.some(b => b.status === 'active' && (b.attacker_owner_id === owner || b.defender_owner_id === owner))) throw new Error('Finish the current battle first.');
-    if (world.orders.some(o => o.kind === 'recruit' && o.owner_id === owner && (o.army_id ?? world.armies.find(a => a.owner_id === owner)?.id) === army.id)) {
+    if (world.orders.some(o => o.kind === 'recruit' && o.recruit_destination !== 'garrison' && o.owner_id === owner && (o.army_id ?? world.armies.find(a => a.owner_id === owner)?.id) === army.id)) {
         throw new Error('Finish this legion\'s recruitment before transferring defenders.');
     }
     if (cmd.action !== 'station' && cmd.action !== 'withdraw') throw new Error('Choose a valid garrison action.');

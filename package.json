@@ -67,6 +67,7 @@
     "test:report-reads-db": "node tests/report-reads-database.test.mjs",
     "test:player-raids-db": "node --import tsx tests/player-city-raids-database.test.mts",
     "test:city-garrisons-db": "node --import tsx tests/city-garrisons-database.test.mts",
+    "test:city-logistics-db": "node --import tsx tests/city-garrison-logistics-database.test.mts",
     "build:ui-icons": "node scripts/build-ui-icons.mjs",
     "check:ui-icons": "node scripts/build-ui-icons.mjs --check",
     "build:research-art": "node scripts/build-research-art.mjs",
