@@ -1,3 +1,4 @@
+import { worldGameNow } from '../../../shared/time/gameClock';
 import {applyResearchFormations,researchFactor} from '../../research/domain/effects';
 import { cityGarrisonAt, wallDefenseBonus } from '../../city/domain/cityGarrison';
 import { livingCities } from '../../city/domain/ruins';
@@ -24,7 +25,7 @@ import { recordBattleEconomics } from './reportEconomics';
 import { settleLocal } from './settlement';
 import { deliverCampLoot } from './loot';
 
-export function beginCityRaid(world:World, owner:string, armyId:number, nextId:()=>number, now=Date.now()):Battle|undefined {
+export function beginCityRaid(world:World, owner:string, armyId:number, nextId:()=>number, now=worldGameNow(world)):Battle|undefined {
     const army=world.armies.find(row=>row.id===armyId&&row.owner_id===owner);
     const city=world.settlements.find(row=>row.id===army?.raid_city_id&&row.owner_id!==owner&&!row.ruined_at);
     if(!army||!city)return;
@@ -42,7 +43,7 @@ export function beginCityRaid(world:World, owner:string, armyId:number, nextId:(
     if(cityGarrison)parties.push({city_garrison_id:city.id,troops:readRoster(cityGarrison)});
     const total=parties.reduce((sum,row)=>addRosters(sum,row.troops),emptyRoster());
     const force:Pick<Army,'infantry'|'archers'|'cavalry'|'unit_roster'>={infantry:0,archers:0,cavalry:0};writeRoster(force,total);
-    const instance=newBattle(nextId(),owner,army,force,battleTerrainAtWorld(city.x,city.y),'normal',city.name,'pvp',null,{version:worldBalanceVersion(world),attackerFaction:armyFaction(world,army),defenderFaction:city.faction??'roman'});
+    const instance=newBattle(nextId(),owner,army,force,battleTerrainAtWorld(city.x,city.y),'normal',city.name,'pvp',null,{version:worldBalanceVersion(world),attackerFaction:armyFaction(world,army),defenderFaction:city.faction??'roman',now:new Date(now).toISOString()});
     const b=instance.battle;
     b.defender_owner_id=city.owner_id;b.defender_army_id=leader?.id??null;
     b.raid_city_id=city.id;b.siege_target=army.siege_target??'auto';b.city_defenders=parties;
@@ -67,7 +68,7 @@ export function beginCityRaid(world:World, owner:string, armyId:number, nextId:(
 }
 
 /** Losses are distributed exactly across the troops captured at battle start. */
-export function settleCityRaid(world:World,battle:Battle,nextId:()=>number,now=Date.now()) {
+export function settleCityRaid(world:World,battle:Battle,nextId:()=>number,now=worldGameNow(world)) {
     if(!battle.result||!battle.raid_city_id||world.reports.some(row=>row.battle_id===battle.id&&row.owner_id===battle.attacker_owner_id))return;
     const city=world.settlements.find(row=>row.id===battle.raid_city_id)!, army=world.armies.find(row=>row.id===battle.attacker_army_id)!;
     const result=battle.result, won=battle.winner_side==='attacker';

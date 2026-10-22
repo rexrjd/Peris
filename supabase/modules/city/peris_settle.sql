@@ -1,4 +1,4 @@
-create or replace function public.peris_settle(p_owner uuid,p_until timestamptz default now()) returns void
+create or replace function public.peris_settle(p_owner uuid,p_until timestamptz default public.peris_game_now()) returns void
 language plpgsql security definer set search_path='' as $$
 declare s public.settlements%rowtype;o public.peris_orders%rowtype;event record;target_slot integer;field_col integer;field_row integer;arriving_army bigint;
 begin

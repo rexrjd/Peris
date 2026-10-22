@@ -14,6 +14,7 @@ export type RenderState = {
     selectedArmyId?: number;
     mapLayers?: { grid: boolean; regions: boolean; resources: boolean };
     clockOffset?: number;
+    gameNow?: () => number;
     mapFocus?: { x: number; y: number; key: number; zoom?: number };
     mapPurpose?: 'colonies' | 'frontier';
     expansionRoute?: { path: [number, number][]; key: string };

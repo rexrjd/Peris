@@ -13,7 +13,7 @@ begin
  end if;
  if a.infantry+a.archers+a.cavalry=0 then raise exception 'Your army has no soldiers';end if;
  if exists(select 1 from public.battles where status='active' and (attacker_owner_id=p_owner or defender_owner_id=p_owner)) then raise exception 'Finish the current battle first';end if;
- if not shared_stock and exists(select 1 from public.peris_progress where owner_id=p_owner and camp_id=p_camp and available_at>now()) then raise exception 'The camp is still regrouping';end if;
+ if not shared_stock and exists(select 1 from public.peris_progress where owner_id=p_owner and camp_id=p_camp and available_at>public.peris_game_now()) then raise exception 'The camp is still regrouping';end if;
  insert into public.battles(attacker_owner_id,defender_owner_id,attacker_army_id,defender_army_id,mode,phase,camp_id,terrain,difficulty,enemy_name,defender_ready,defender_faction)
  values(p_owner,null,a.id,null,'pve','combat',c.id,public.peris_battle_terrain(c.x,c.y),case when c.tier>=6 then 'hard' when c.tier<=2 then 'easy' else 'normal' end,c.name,true,c.faction) returning id into bid;
  if shared_stock then update public.peris_camp_stock set engaged_battle_id=bid where camp_id=c.id;end if;

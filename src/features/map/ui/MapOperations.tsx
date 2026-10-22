@@ -10,11 +10,11 @@ const labels: Record<ActivityKind, { name: string; short: string; icon: string }
     battle: { name: 'In battle', short: 'Battle', icon: 'army' }, construction: { name: 'Building', short: 'Build', icon: 'town' },
     recruitment: { name: 'Recruiting', short: 'Train', icon: 'shield' }, research: { name: 'Researching', short: 'Research', icon: 'book' }, settlers: { name: 'Settlers', short: 'Settle', icon: 'people' },
 };
-function remaining(event: MapActivity, now: number) {
+function remaining(event: MapActivity, now: number, world: World) {
     if (event.live) return 'Live';
     if (event.endsAt === null) return 'Pending';
     if (event.endsAt <= now) return event.category === 'armies' ? 'Arriving' : 'Finishing';
-    const seconds = Math.ceil((event.endsAt - now) / 1000);
+    const seconds = Math.ceil((event.endsAt - now) / 1000 / (world.game_clock?.rate ?? 1));
     return seconds >= 3600 ? Math.floor(seconds / 3600) + 'h ' + Math.floor(seconds % 3600 / 60) + 'm' : clock(seconds);
 }
 export function MapOperations({ world, playerId, now, busy, run, open, onToggle, onLocate, selectionKey, children }: {
@@ -43,9 +43,9 @@ export function MapOperations({ world, playerId, now, busy, run, open, onToggle,
                 <div className="ops-event-scroll" ref={listRef}>
                     {visible.length ? <ol className="ops-events">{visible.map(event => <li key={event.id} className={'ops-event event-' + event.kind}>
                         <button type="button" className="ops-event-main" onClick={() => onLocate(event)} aria-label={'View ' + labels[event.kind].name.toLowerCase() + ': ' + event.title} title={[labels[event.kind].name, event.title, event.detail, event.destination].filter(Boolean).join(' · ')}>
-                            <Icon name={labels[event.kind].icon} size={15}/><strong><span className="ops-event-kind">{labels[event.kind].short} · </span>{event.title}</strong><span className="ops-event-time">{remaining(event, now)}</span>
+                            <Icon name={labels[event.kind].icon} size={15}/><strong><span className="ops-event-kind">{labels[event.kind].short} · </span>{event.title}</strong><span className="ops-event-time">{remaining(event, now, world)}</span>
                         </button>
-                        {event.cancel && <button type="button" className="ops-event-cancel" disabled={busy} aria-label={'Cancel departure: ' + event.title} title={'Cancel departure · ' + clock((event.cancel.until - now) / 1000) + ' left'} onClick={() => run({ type: 'cancelMarch', armyId: event.cancel!.armyId, sentAt: event.cancel!.sentAt }, 'March cancelled. Troops remain at their departure station.')}>×</button>}
+                        {event.cancel && <button type="button" className="ops-event-cancel" disabled={busy} aria-label={'Cancel departure: ' + event.title} title={'Cancel departure · ' + clock((event.cancel.until - now) / 1000, world.game_clock?.rate ?? 1) + ' left'} onClick={() => run({ type: 'cancelMarch', armyId: event.cancel!.armyId, sentAt: event.cancel!.sentAt }, 'March cancelled. Troops remain at their departure station.')}>×</button>}
                     </li>)}</ol> : <p className="ops-empty">{events.length === 0 ? 'No ongoing events' : full ? 'Nothing in this category' : 'No troops on the move'}</p>}
                 </div>
                 <button className="ops-all-events" type="button" onClick={() => setFull(!full)}>{full ? 'Back to movements' : 'All events'}{!full && <span>{events.length}</span>}<Icon name="arrow" size={12}/></button>

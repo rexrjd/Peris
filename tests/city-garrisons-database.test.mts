@@ -29,14 +29,16 @@ try {
  assert.equal(world.city_garrisons.length,1);assert.equal(world.city_garrisons[0].settlement_id,target.id);
  assert.equal(world.city_garrisons[0].unit_roster.infantry,60);
  assert.equal(world.armies.find((a:any)=>a.id===defenderArmy.id).unit_roster.infantry,120);
- await assert.rejects(()=>command({...assign,armyId:attackerArmy.id}),/owned legion/);
+ await assert.rejects(()=>command({...assign,armyId:attackerArmy.id}),/Choose one of your armies/);
  await assert.rejects(()=>command({...assign,action:'withdraw',troops:{...emptyRoster(),infantry:1000}}),/available|1,000/);
  // Temporary station auto-merge leaves the dedicated defensive table untouched.
  await admin(`select public.peris_garrison_add('${defender}',floor(${target.x}/128.0)::integer,floor(${target.y}/128.0)::integer,'${JSON.stringify({...emptyRoster(),infantry:10})}');select public.peris_garrison_merge(${defenderArmy.id})`);
  await login(1);world=await rpc('peris_snapshot');assert.equal(world.city_garrisons[0].unit_roster.infantry,60);
  await command({...assign,action:'withdraw',troops:{...emptyRoster(),infantry:20}});
  world=await rpc('peris_snapshot');assert.equal(world.city_garrisons[0].unit_roster.infantry,40);
- assert.equal(await rpc('peris_wall_defence_bonus',[0]),0);
+ await assert.rejects(()=>rpc('peris_wall_defence_bonus',[0]),/permission/);
+ await db.exec('reset role');
+ assert.equal(Number(await rpc('peris_wall_defence_bonus',[0])),0);
  assert.equal(Number(await rpc('peris_wall_defence_bonus',[5])),.5);
  assert.equal(Number(await rpc('peris_wall_defence_bonus',[100])),.5);
  // Attack arrival is processed by the server without any defender login or ready click.

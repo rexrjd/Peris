@@ -44,7 +44,7 @@ export function ArmyMapPicker({ world, army, now, onChoose, onInspect, onReturnH
                         <HeroPortrait compact heroId={h?.id} heroClass={h?.class} faction={info.home?.faction}/>
                         <span className="map-roster-identity"><span className="map-roster-title"><strong>{h?.name ?? a.name}</strong>{h && <small>Lv. {heroLevel(h)}</small>}</span>
                             <small>{h ? `${HERO_CLASSES[h.class].name} · ` : ''}{a.name}</small>
-                            <span className="map-roster-meta"><span className={stateClass(info.state)}>{info.state}{a.status === 'moving' ? ` · ${clock(info.arrival)}` : ''}</span><span>{count(info.total)} soldiers</span></span>
+                            <span className="map-roster-meta"><span className={stateClass(info.state)}>{info.state}{a.status === 'moving' ? ` · ${clock(info.arrival, world.game_clock?.rate ?? 1)}` : ''}</span><span>{count(info.total)} soldiers</span></span>
                         </span>
                         <span className="map-roster-selected" aria-label={selected ? 'Selected army' : undefined}>{selected && <Icon name="check" size={14}/>}</span>
                     </button>;
@@ -55,7 +55,7 @@ export function ArmyMapPicker({ world, army, now, onChoose, onInspect, onReturnH
             <span key={type}><Icon name={UNIT_ROLES[type].icon} size={15}/><span><strong>{count(army[type])}</strong><small>{UNIT_ROLES[type].name}</small></span></span>
         )}</div>
         <div className="map-army-footer">
-            <span className={`map-army-status ${stateClass(active.state)}`} role="status"><i/><span>{status}{army.status === 'moving' && <> · {clock(active.arrival)}</>}</span></span>
+            <span className={`map-army-status ${stateClass(active.state)}`} role="status"><i/><span>{status}{army.status === 'moving' && <> · {clock(active.arrival, world.game_clock?.rate ?? 1)}</>}</span></span>
             <div className="map-army-actions">
                 {onInspect && <button type="button" onClick={onInspect} aria-label="Inspect your legion">Details<Icon name="arrow" size={13}/></button>}
                 {onReturnHome && <button type="button" onClick={onReturnHome} disabled={returnDisabled} title="Return home" aria-label="Return home"><Icon name="town" size={16}/></button>}

@@ -174,7 +174,7 @@ begin
   if s.settlers+qty+3*(select count(*)from public.peris_settler_expeditions where origin_settlement_id=s.id and status='travelling')>6 then raise exception 'A city can prepare up to six settlers';end if;
   if s.wood<350*qty or s.stone<250*qty or s.food<450*qty or s.gold<100*qty then raise exception 'More supplies are needed to train settlers';end if;
   update public.settlements set wood=wood-350*qty,stone=stone-250*qty,food=food-450*qty,gold=gold-100*qty where id=s.id;
-  insert into public.peris_orders(owner_id,settlement_id,kind,item,quantity,started_at,finish_at)values(u,s.id,'settler','settlers',qty,now(),now()+make_interval(secs=>ceil(40*qty/(1+main*.15))::double precision));
+  insert into public.peris_orders(owner_id,settlement_id,kind,item,quantity,started_at,finish_at)values(u,s.id,'settler','settlers',qty,public.peris_game_now(),public.peris_game_now()+make_interval(secs=>ceil(40*qty/(1+main*.15))::double precision));
  when 'foundCity'then
   perform pg_advisory_xact_lock(204200);
   reason:=public.peris_found_reason((p_command->>'col')::integer,(p_command->>'row')::integer);
@@ -190,7 +190,7 @@ begin
   update public.settlements set settlers=settlers-3,wood=wood-500,stone=stone-400,food=food-600,gold=gold-150 where id=s.id;
   update public.players set culture_points=culture_points-cost where id=u;
   insert into public.peris_settler_expeditions(owner_id,origin_settlement_id,col,row,name,departure_at,arrival_at,culture_cost,march_path)
-  values(u,s.id,public.peris_wrap_cell((p_command->>'col')::integer),public.peris_wrap_cell((p_command->>'row')::integer),hero_name,now(),now()+make_interval(secs=>greatest(5,distance/18)::double precision),cost,p_command->'route');
+  values(u,s.id,public.peris_wrap_cell((p_command->>'col')::integer),public.peris_wrap_cell((p_command->>'row')::integer),hero_name,public.peris_game_now(),public.peris_game_now()+make_interval(secs=>greatest(5,distance/18)::double precision),cost,p_command->'route');
  when 'recruitHero'then
   hero_class:=p_command->>'heroClass';hero_name:=btrim(p_command->>'name');
   if hero_class is null or hero_class not in('knight','ranger','mage')then raise exception 'Choose a hero class';end if;

@@ -48,9 +48,9 @@ export function TroopStatsDialog({ world, army, city, unit, now, onClose, onUnit
         </section>
         <section className="troop-dossier-recruit" aria-label="Troop recruitment requirements">
             <header><h3>Recruitment</h3><span>{stats.unlocked ? 'Unlocked' : 'Research required'}</span></header>
-            <dl><div><dt>Training building</dt><dd>{SLOT_BUILDINGS[rule.building].name} <small>{plan.level ? `Lv. ${plan.level}` : 'Required · Lv. 1'}</small></dd></div><div><dt>Train 10 soldiers</dt><dd>{clock(stats.trainTenSeconds)}<small>{city.name}</small></dd></div></dl>
+            <dl><div><dt>Training building</dt><dd>{SLOT_BUILDINGS[rule.building].name} <small>{plan.level ? `Lv. ${plan.level}` : 'Required · Lv. 1'}</small></dd></div><div><dt>Train 10 soldiers</dt><dd>{clock(stats.trainTenSeconds, world.game_clock?.rate ?? 1)}<small>{city.name}</small></dd></div></dl>
             <p className="troop-cost-caption">Cost per soldier</p><div className="troop-unit-cost" aria-label="Recruitment cost per soldier">{RESOURCES.map(resource => <span key={resource} title={`${resource} per soldier`}><Icon name={resource} size={16}/><b>{rule.cost[resource]}</b><small>{resource === 'wood' ? 'Timber' : resource[0].toUpperCase() + resource.slice(1)}</small></span>)}</div>
-            {!stats.unlocked && <p className="troop-unlock-note"><Icon name="book" size={15}/><span>{stats.technology?.name ?? 'Unit research'}<small>{stats.technology ? `${stats.technology.cost} science · ${clock(stats.technology.seconds)} base research time` : 'Complete unit research to recruit.'}</small></span></p>}
+            {!stats.unlocked && <p className="troop-unlock-note"><Icon name="book" size={15}/><span>{stats.technology?.name ?? 'Unit research'}<small>{stats.technology ? `${stats.technology.cost} science · ${clock(stats.technology.seconds, world.game_clock?.rate ?? 1)} base research time` : 'Complete unit research to recruit.'}</small></span></p>}
         </section>
         <details className="troop-combat-details"><summary>More combat details<Icon name="chevron" size={14}/></summary><dl>
             <div><dt>Base damage rate</dt><dd>{troopNumber(stats.attackRate)} /s</dd></div>

@@ -56,9 +56,9 @@ begin
  if px<>tx or py<>ty then raise exception 'Route must end at the chosen destination';end if;
  seconds:=greatest(2,distance/public.peris_march_speed(a.id));
  update public.armies set start_x=round((position->>'x')::numeric),start_y=round((position->>'y')::numeric),target_x=tx,target_y=ty,
-  march_path=route,march_distance=distance,march_map_version=4,march_sent_at=now(),march_cancel_until=now()+interval '30 seconds',
+  march_path=route,march_distance=distance,march_map_version=4,march_sent_at=public.peris_game_now(),march_cancel_until=public.peris_game_now()+interval '30 seconds',
   march_origin=jsonb_build_object('col',floor((position->>'x')::numeric/128),'row',floor((position->>'y')::numeric/128),'x',round((position->>'x')::numeric),'y',round((position->>'y')::numeric)),march_returning=false,
-  departure_at=now()+interval '30 seconds',arrival_at=now()+interval '30 seconds'+make_interval(secs=>seconds::double precision),
+  departure_at=public.peris_game_now()+interval '30 seconds',arrival_at=public.peris_game_now()+interval '30 seconds'+make_interval(secs=>seconds::double precision),
   status='moving',raid_target_id=null,raid_city_id=p_city,siege_target='auto',farm_list_id=null,updated_at=now() where id=a.id;
  return jsonb_build_object('ok',true);
 end $$;

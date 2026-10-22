@@ -1,3 +1,4 @@
+import { realTimeForGameDate } from '../../../shared/time/gameClock';
 import { useEffect, useId, useRef, useState } from 'react';
 import type { World } from '../../../shared/model/world';
 import { Icon } from '../../../shared/ui/Icons';
@@ -55,7 +56,7 @@ export function CitySelector({ world, owner, sid, now, onCity, onReport, onLand,
             {!ruinTab && cities.map(city => <button key={city.id} data-city-id={city.id} role="menuitemradio" tabIndex={-1} aria-label={`${city.name}, Population ${city.population.toLocaleString()}, Army ${city.army.toLocaleString()}`} aria-checked={city.id === sid} className="city-selector-option" onClick={() => { close(true); onCity?.(city.id); }}>
                 <CityThumbnail world={world} sid={city.id}/><span className="city-selector-info"><strong>{city.name}</strong><CityCounts city={city}/><span className="city-selector-land-count">Land {city.land} / {city.landAllowance}</span></span>{city.id === sid && <span className="city-selector-selected" aria-hidden="true">✓</span>}
             </button>)}
-            {ruinTab && (ruins.length ? ruins.map(ruin => <div className="city-ruin-entry" key={ruin.id} role="listitem"><span className="city-ruin-glyph" aria-hidden="true">⌁</span><span><strong>{ruin.name}</strong><small>Fallen {ruin.ruined_at ? new Date(ruin.ruined_at).toLocaleDateString() : ''} · Never to be rebuilt</small></span></div>) : <p className="city-ruin-empty">No fallen cities.</p>)}
+            {ruinTab && (ruins.length ? ruins.map(ruin => <div className="city-ruin-entry" key={ruin.id} role="listitem"><span className="city-ruin-glyph" aria-hidden="true">⌁</span><span><strong>{ruin.name}</strong><small>Fallen {ruin.ruined_at ? new Date(realTimeForGameDate(world, ruin.ruined_at)).toLocaleDateString() : ''} · Never to be rebuilt</small></span></div>) : <p className="city-ruin-empty">No fallen cities.</p>)}
             {onVillage && <button className="city-selector-village" role="menuitem" tabIndex={-1} onClick={() => { close(); onVillage(); }}><Icon name="town" size={14}/>Village<Icon name="arrow" size={12}/></button>}
         </div>}
     </div>;

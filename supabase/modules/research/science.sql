@@ -42,15 +42,15 @@ create or replace function public.peris_research_command(p_command jsonb)returns
 declare u uuid:=public.peris_player_id();s public.peris_account_science%rowtype;c public.peris_technology_catalog%rowtype;p public.peris_research_progress%rowtype;kind text:=p_command->>'type';
 begin
  if u is null then raise exception 'Authentication required';end if;
- perform public.peris_science_advance(u,now());select * into s from public.peris_account_science where owner_id=u for update;
- if kind='pauseResearch'then perform public.peris_research_pause(u,now());
+ perform public.peris_science_advance(u,public.peris_game_now());select * into s from public.peris_account_science where owner_id=u for update;
+ if kind='pauseResearch'then perform public.peris_research_pause(u,public.peris_game_now());
  elsif kind='debugResearch'then
   if not coalesce((select enabled from public.peris_debug_config where id),false)then raise exception 'Debug controls are disabled';end if;
   if p_command->>'action'='points'then update public.peris_account_science set points=least(1000000000,points+10000)where owner_id=u;
   elsif p_command->>'action'='complete'then
    if s.active_id is null then raise exception 'Start a technology first';end if;
    update public.peris_research_progress p set seconds=c.seconds from public.peris_technology_catalog c where c.id=s.active_id and p.owner_id=u and p.technology_id=c.id;
-   update public.peris_account_science set active_since=now()where owner_id=u;perform public.peris_science_advance(u,now());
+   update public.peris_account_science set active_since=public.peris_game_now()where owner_id=u;perform public.peris_science_advance(u,public.peris_game_now());
   else raise exception 'Unknown research debug action';end if;
  elsif kind='startResearch'then
   select * into c from public.peris_technology_catalog where id=p_command->>'technologyId';
@@ -61,9 +61,9 @@ begin
   if exists(select 1 from jsonb_array_elements_text(c.prerequisites)r(id)where not exists(select 1 from public.peris_research_progress where owner_id=u and technology_id=r.id and completed_at is not null))then raise exception 'Research the prerequisites first';end if;
   if s.active_id=c.id then return jsonb_build_object('ok',true);end if;
   if p.technology_id is null and s.points<c.cost then raise exception 'You need % science points',c.cost;end if;
-  perform public.peris_research_pause(u,now());
+  perform public.peris_research_pause(u,public.peris_game_now());
   if p.technology_id is null then update public.peris_account_science set points=points-c.cost where owner_id=u;insert into public.peris_research_progress(owner_id,technology_id)values(u,c.id);end if;
-  update public.peris_account_science set active_id=c.id,active_since=now(),active_rate=public.peris_research_factor(u,'research_speed')where owner_id=u;
+  update public.peris_account_science set active_id=c.id,active_since=public.peris_game_now(),active_rate=public.peris_research_factor(u,'research_speed')where owner_id=u;
  else raise exception 'Unknown research command';end if;
  return jsonb_build_object('ok',true);
 end $$;

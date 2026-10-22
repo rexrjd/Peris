@@ -30,6 +30,8 @@ export type World = {
     debug_enabled?: boolean;
     version: number;
     server_now: string;
+    /** Absent only on legacy 1x servers and campaign saves. */
+    game_clock?: import('../time/gameClock').GameClockSample;
     players: Player[];
     settlements: Settlement[];
     buildings: Building[];

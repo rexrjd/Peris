@@ -16,6 +16,7 @@ import type { Report } from '../../features/campaign/domain/types';
 import { expiredSession } from '../../platform/backend/accountLogin';
 import { rememberRuler } from '../../platform/backend/accountStorage';
 import {PollBackoff,statePollInterval} from '../../platform/backend/polling';
+import { EngineClock } from '../clock';
 
 type MapBounds = { minX: number; minY: number; maxX: number; maxY: number };
 type PublicMapSnapshot = {
@@ -40,6 +41,8 @@ export class OnlineEngine implements GameEngine {
     snapshot: World;
     readonly playerId: string;
     private core: World;
+    private gameClock: EngineClock;
+    nowGameMs = () => this.gameClock.nowGameMs();
     private armyCultures = new Map<number, Faction>();
     private culturesAt = 0;
     private cultureBattleIds = '';
@@ -67,7 +70,6 @@ export class OnlineEngine implements GameEngine {
     private coreBackoff = new PollBackoff();
     private mapBackoff = new PollBackoff();
     private cultureBackoff = new PollBackoff();
-    private lastCoreSnapshotAt = Date.now();
     private ticking = false;
     private reconnecting: Promise<void> | null = null;
     private recoveryTimer: number | undefined;
@@ -79,6 +81,7 @@ export class OnlineEngine implements GameEngine {
     get pendingCommand() { return this.mutations?.pending ?? null; }
 
     constructor(playerId: string, snapshot: World, sessionId: string = playerId) {
+        this.gameClock = new EngineClock(snapshot, () => performance.now());
         this.playerId = playerId;
         this.sessionId = sessionId;
         this.core = snapshot;
@@ -151,7 +154,8 @@ export class OnlineEngine implements GameEngine {
             if (!this.alive) return;
             if (account.ruler.player_id !== this.playerId) throw new Error('The server returned a different account. Re-enter your ruler name.');
             this.sessionId = account.sessionId;
-            this.core = account.world; this.lastCoreSnapshotAt = Date.now(); this.coreError = null;
+            this.gameClock.accept(account.world);
+            this.core = account.world; this.coreError = null;
             this.publish(); void this.refreshMap();
         }).catch(error => { if (this.alive) { this.coreError = this.message(error); this.publish(); } }).finally(() => { this.reconnecting = null; });
         return this.reconnecting;
@@ -277,10 +281,11 @@ export class OnlineEngine implements GameEngine {
                     void this.recoverAccount();
                     return;
                 }
+                this.gameClock.accept(next);
                 this.core = next;
                 this.coreBackoff.reset();
                 void this.refreshArmyCultures();
-                this.lastCoreSnapshotAt = Date.now();
+
                 this.coreError = null;
                 this.publish();
                 if (!hadMap && this.core.map) void this.refreshMap();
@@ -343,8 +348,7 @@ export class OnlineEngine implements GameEngine {
             if (currentMap(this.core.map)) {
                 const army = this.core.armies.find(a => a.owner_id === this.playerId && (cmd.armyId===undefined||a.id===cmd.armyId));
                 if (!army) throw new Error('Army not found.');
-                const offset = Date.parse(this.core.server_now) - this.lastCoreSnapshotAt;
-                const route = findMarchPath(armyPosition(army, Date.now() + offset), target);
+                                const route = findMarchPath(armyPosition(army, this.nowGameMs()), target);
                 if (!route) throw new Error('No connected land route reaches this destination.');
                 prepared = { ...cmd, ...target, route: route.path };
             }
@@ -353,14 +357,12 @@ export class OnlineEngine implements GameEngine {
             const army = this.core.armies.find(a => a.owner_id === this.playerId && (cmd.armyId === undefined || a.id === cmd.armyId));
             const camp = cmd.type==='raid'?this.core.camps.find(c => c.id === cmd.campId):this.snapshot.settlements.find(city=>city.id===cmd.targetCityId&&city.owner_id!==this.playerId);
             if (!army || !camp) throw new Error('Choose your army and a campaign camp.');
-            const offset = Date.parse(this.core.server_now) - this.lastCoreSnapshotAt;
-            const route = findMarchPath(armyPosition(army, Date.now() + offset), camp);
+                        const route = findMarchPath(armyPosition(army, this.nowGameMs()), camp);
             if (!route) throw new Error('No connected land route reaches this camp.');
             prepared = { ...cmd, armyId: army.id, route: route.path };
         }
         if (cmd.type === 'startCampaignFarmList' && currentMap(this.core.map)) {
-            const offset = Date.parse(this.core.server_now) - this.lastCoreSnapshotAt;
-            const clock = Date.now() + offset;
+                        const clock = this.nowGameMs();
             const routes = (this.core.campaign_farms ?? [])
                 .filter(target => target.owner_id === this.playerId && target.list_id === cmd.id)
                 .flatMap(target => {

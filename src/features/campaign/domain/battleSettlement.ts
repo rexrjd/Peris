@@ -1,3 +1,4 @@
+import { worldGameNow } from '../../../shared/time/gameClock';
 import {researchFactor} from '../../research/domain/effects';
 import { accrueCamp } from './campStock';
 import { settleCityRaid } from './cityRaids';
@@ -38,11 +39,11 @@ export function settleBattle(w: World, id: number, owner: string, nextId: () => 
     writeRoster(a, remaining);
     restoreRaidReserve(a);
     if (camp?.bandit) {
-        accrueCamp(camp, Date.now(), true);
+        accrueCamp(camp, worldGameNow(w), true);
         const defenders = emptyRoster();
         for (const formation of w.formations.filter(f => f.battle_id === id && f.side === 'defender')) defenders[formation.recruit_unit ?? formation.unit_type] += formation.soldiers;
         writeRoster(camp, defenders);
-        camp.next_recruit_at = new Date(Date.now() + recruitDelay(DEFAULT_CONFIG, String(camp.id), camp.recruit_sequence ?? 0)).toISOString();
+        camp.next_recruit_at = new Date(worldGameNow(w) + recruitDelay(DEFAULT_CONFIG, String(camp.id), camp.recruit_sequence ?? 0)).toISOString();
         const loot = won ? takeLoot(camp.resources!, Math.floor(carryingCapacity(result.attacker_survivor_roster)*researchFactor(w,owner,'carry'))) : emptyResources();
         for (const key of RESOURCES) camp.resources![key] -= loot[key];
         result.loot = loot; a.carried_loot = loot; a.loot_report_id = id;
@@ -61,10 +62,10 @@ export function settleBattle(w: World, id: number, owner: string, nextId: () => 
         const old = w.progress.find(c => c.camp_id === camp.id && c.owner_id===owner);
         if (old) {
             old.defeated++;
-            old.available_at = new Date(Date.now() + campCooldown(camp)).toISOString();
+            old.available_at = new Date(worldGameNow(w) + campCooldown(camp)).toISOString();
         }
         else
-            w.progress.push({ camp_id: camp.id, owner_id: owner, defeated: 1, available_at: new Date(Date.now() + campCooldown(camp)).toISOString() });
+            w.progress.push({ camp_id: camp.id, owner_id: owner, defeated: 1, available_at: new Date(worldGameNow(w) + campCooldown(camp)).toISOString() });
     }
     recordBattleEconomics(result);
     w.reports.unshift({ id: nextId(), owner_id: owner, battle_id: id, camp_id: camp?.id, farm_list_id: a.farm_list_id, title: b.enemy_name, won, result: { ...result }, created_at: new Date().toISOString() });

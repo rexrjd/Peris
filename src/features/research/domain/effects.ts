@@ -1,3 +1,4 @@
+import { worldGameNow } from '../../../shared/time/gameClock';
 import type {World} from '../../../shared/model/world';
 import {unitStats,unitRule,worldBalanceVersion,type UnitBalanceContext,type UnitBalanceVersion} from '../../army/domain/unitBalance';
 import type {RecruitUnit} from '../../army/domain/roster';
@@ -11,7 +12,7 @@ export function researchBonuses(w:World,owner:string){
  return bonus;
 }
 export const researchFactor=(w:World,owner:string,key:string)=>1+(researchBonuses(w,owner)[key]??0);
-export function unitUnlocked(w:World,owner:string,sid:number,unit:RecruitUnit,now=Date.now()){
+export function unitUnlocked(w:World,owner:string,sid:number,unit:RecruitUnit,now=worldGameNow(w)){
  return !RECRUIT_RULES[unit].researchSeconds||(researchBonuses(w,owner)['unlock_'+unit]??0)>0||!!w.unit_research?.some(r=>r.settlement_id===sid&&r.unit===unit&&Date.parse(r.completes_at)<=now);
 }
 export const unitTechnology=(unit:RecruitUnit)=>TECHNOLOGIES.find(t=>t.effects['unlock_'+unit]);

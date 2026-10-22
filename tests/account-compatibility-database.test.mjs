@@ -44,8 +44,9 @@ try {
     const before = await persisted(), upgrade = await readFile('supabase/UPGRADE_TO_V17.sql', 'utf8');
     // Preserve every legacy value and assert exact defaults for the new fields.
     const additions = {
+        players: { defeated_at: null },
         armies: { unit_roster: null, carried_loot: null, farm_list_id: null, loot_report_id: null, raid_city_id: null, siege_target: 'auto' },
-        settlements: { wood_research: 1, stone_research: 1, food_research: 1, gold_research: 1, trade_research: 1 },
+        settlements: { wood_research: 1, stone_research: 1, food_research: 1, gold_research: 1, trade_research: 1, ruined_at: null },
         peris_garrisons: { unit_roster: null },
         peris_campaign_farms: { route: null, enabled: false, interval_seconds: 300, next_at: null, last_status: null, sent: 0, skipped: 0 },
     };

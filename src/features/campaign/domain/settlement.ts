@@ -1,3 +1,4 @@
+import { worldGameNow } from '../../../shared/time/gameClock';
 import {ensureScience,advanceResearch} from '../../research/domain/science';
 import { isDefeated, settleRuinEvacuations, redirectFromLostStation } from '../../city/domain/ruins';
 import { accrueResources } from '../../city/domain/economy';
@@ -13,7 +14,7 @@ import { mergeStationGarrison } from '../../map/domain/garrisons';
 import { ownedStation } from '../../map/domain/garrisons';
 
 /** Complete all cities' queues in time order; every order belongs to one city/army. */
-export function settleLocal(w: World, owner: string, now = Date.now(), travel = true) {
+export function settleLocal(w: World, owner: string, now = worldGameNow(w), travel = true) {
     const player = w.players.find(p => p.id === owner);
     if (!player || isDefeated(w,owner)) return;
     settleRuinEvacuations(w,owner,now);

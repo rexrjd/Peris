@@ -1,3 +1,4 @@
+import { worldGameNow } from '../../../shared/time/gameClock';
 import { commandArmy } from '../../empire/domain/context';
 import { isDefeated, livingCities } from '../../city/domain/ruins';
 import { SIEGE_TARGETS } from '../../city/domain/siege';
@@ -29,7 +30,7 @@ export function restoreRaidReserve(army: Army) {
     army.raid_reserve = null;
 }
 /** A raid's return is an existing journey, without another cancellation window. */
-export function startRaidReturn(world: LocalCommandContext['world'], army: Army, clock = Date.now()) {
+export function startRaidReturn(world: LocalCommandContext['world'], army: Army, clock = worldGameNow(world)) {
     if (army.march_returning) return true;
     const origin = army.march_origin, path = army.march_path, distance = army.march_distance;
     army.raid_target_id = null; army.march_sent_at = null; army.march_cancel_until = null;

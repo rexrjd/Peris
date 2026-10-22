@@ -11,7 +11,7 @@ import { newBattle } from '../../battle/domain/creation';
 import { armyAttack } from '../../city/domain/slots';
 export function beginRaid(world: World, owner: string, campId: number, nextId: () => number, armyId?: number) {
     const camp = world.camps.find(c => c.id === campId)!, a = ownedArmy(world, owner, armyId);
-    const instance = newBattle(nextId(), owner, a, camp, battleTerrainAtWorld(camp.x,camp.y), campBattleDifficulty(camp.tier), camp.name, 'pve', camp.id,{version:worldBalanceVersion(world),attackerFaction:armyFaction(world,a),defenderFaction:camp.faction??'orc'});
+    const instance = newBattle(nextId(), owner, a, camp, battleTerrainAtWorld(camp.x,camp.y), campBattleDifficulty(camp.tier), camp.name, 'pve', camp.id,{version:worldBalanceVersion(world),attackerFaction:armyFaction(world,a),defenderFaction:camp.faction??'orc',now:world.server_now});
     applyResearchFormations(world,owner,instance.formations,{version:instance.battle.balance_version!,faction:instance.battle.attacker_faction!});
     const wall = world.buildings.find(b => b.settlement_id === a.home_settlement_id && b.building_type === 'wall')?.level ?? 1;
     instance.formations.filter(f => f.owner_id === owner).forEach(f => f.morale = Math.min(100, 90 + wall * 2));

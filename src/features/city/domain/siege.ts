@@ -23,7 +23,7 @@ export function siegeReduction(engines:number, level:number, weapon:'ram'|'catap
     return level-after;
 }
 
-export function damageCity(world:World, cityId:number, troops:ArmyTroops, target:SiegeTarget='auto', now=new Date().toISOString(),attackerOwner?:string):SiegeDamage[] {
+export function damageCity(world:World, cityId:number, troops:ArmyTroops, target:SiegeTarget='auto', now=world.server_now,attackerOwner?:string):SiegeDamage[] {
     if (world.settlements.find(city=>city.id===cityId)?.ruined_at) return [];
     const damage:SiegeDamage[]=[];const boost=attackerOwner?researchFactor(world,attackerOwner,'siege'):1;
     const wall=world.buildings.find(row=>row.settlement_id===cityId&&row.building_type==='wall');

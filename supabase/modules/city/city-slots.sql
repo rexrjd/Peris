@@ -83,7 +83,7 @@ begin
  if s.wood<cw or s.stone<cs or s.food<cf or s.gold<cg then raise exception 'Your stores cannot cover this cost';end if;
  update public.settlements set wood=wood-cw,stone=stone-cs,food=food-cf,gold=gold-cg where id=s.id;
  if p_type is not null then insert into public.peris_city_slots values(s.id,p_slot,t,0);end if;
- insert into public.peris_orders(owner_id,kind,item,quantity,started_at,finish_at)values(u,'upgrade','slot:'||p_slot||':'||t,1,now(),now()+make_interval(secs=>greatest(1,ceil((15+l*10)/public.peris_research_factor(u,'construction')))::double precision));
+ insert into public.peris_orders(owner_id,kind,item,quantity,started_at,finish_at)values(u,'upgrade','slot:'||p_slot||':'||t,1,public.peris_game_now(),public.peris_game_now()+make_interval(secs=>greatest(1,ceil((15+l*10)/public.peris_research_factor(u,'construction')))::double precision));
  return jsonb_build_object('ok',true);
 end $$;
 revoke all on function public.peris_city_economy(bigint),public.peris_city_migrate(bigint),public.peris_queue_slot(integer,text) from public,anon,authenticated;

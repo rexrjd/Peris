@@ -8,6 +8,7 @@ export interface GameEngine {
     readonly playerId: string;
     readonly mode: 'solo' | 'online' | 'practice';
     snapshot: World;
+    nowGameMs: () => number;
     subscribe: (fn: () => void) => () => void;
     command: (cmd: Command) => Promise<void>;
     /** An unconfirmed online mutation retains its original request across retries. */

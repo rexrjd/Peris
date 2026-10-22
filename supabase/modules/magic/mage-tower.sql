@@ -42,7 +42,7 @@ insert into public.peris_spell_catalog values
 on conflict(id) do update set name=excluded.name,school=excluded.school,level=excluded.level,mana=excluded.mana,target=excluded.target,damage=excluded.damage,heal=excluded.heal,morale=excluded.morale,stamina=excluded.stamina,attack=excluded.attack,defence=excluded.defence,speed=excluded.speed,radius=excluded.radius,chain=excluded.chain,revive=excluded.revive;
 create table if not exists public.peris_spell_research (
  settlement_id bigint not null references public.settlements(id) on delete cascade,
- spell_id text not null references public.peris_spell_catalog(id),researched_at timestamptz not null default now(),primary key(settlement_id,spell_id)
+ spell_id text not null references public.peris_spell_catalog(id),researched_at timestamptz not null default public.peris_game_now(),primary key(settlement_id,spell_id)
 );
 alter table public.peris_spell_catalog enable row level security;
 alter table public.peris_spell_research enable row level security;

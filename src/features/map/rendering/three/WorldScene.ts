@@ -117,7 +117,7 @@ export class WorldScene {
         this.intersection.observe(canvas);
         this.frame = requestAnimationFrame(t => this.loop(t));
     }
-    private now() { return Date.now() + (this.state().clockOffset ?? 0); }
+    private now() { return this.state().gameNow?.() ?? (Date.now() + (this.state().clockOffset ?? 0)); }
     private imagePoint(x: number, y: number, view = this.view) {
         if (view.isOverview) return wrapWorldPoint({ x, y });
         const tx = view.target.x * CELL_SIZE, ty = view.target.z * CELL_SIZE;

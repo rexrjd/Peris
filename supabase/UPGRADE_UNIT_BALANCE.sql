@@ -1,16 +1,56 @@
 -- Focused unit balance upgrade for an existing V19 world. No scheduler or reset.
 begin;
+-- One backend is one world. Operational/security/audit clocks remain real UTC.
+create table if not exists public.peris_world_clock(
+ id boolean primary key default true check(id),
+ version integer not null default 1 check(version=1),
+ rate integer not null default 1 check(rate in(1,10,100)),
+ profile_id text not null default 'normal-v1' check(profile_id in('normal-v1','accelerated-test-v1')),
+ real_anchor timestamptz not null,game_anchor timestamptz not null,
+ check(profile_id<>'normal-v1'or rate=1)
+);
+insert into public.peris_world_clock(id,real_anchor,game_anchor)values(true,now(),now())on conflict(id)do nothing;
+alter table public.peris_world_clock enable row level security;
+revoke all on public.peris_world_clock from public,anon,authenticated;
+
+create or replace function public.peris_game_now()returns timestamptz
+language sql stable security definer set search_path='' as $$
+ select game_anchor+(now()-real_anchor)*rate from public.peris_world_clock where id
+$$;
+create or replace function public.peris_clock_snapshot()returns jsonb
+language sql stable security definer set search_path='' as $$
+ select jsonb_build_object('version',version,'rate',rate,'profile_id',profile_id,'real_now',now(),'game_now',public.peris_game_now())from public.peris_world_clock where id
+$$;
+-- Private operator setup, only before the first account in a disposable backend.
+create or replace function public.peris_configure_test_clock(p_rate integer)returns void
+language plpgsql security definer set search_path='' as $$
+begin
+ if p_rate is null or p_rate not in(1,10,100)then raise exception 'Invalid test clock rate';end if;
+ perform pg_advisory_xact_lock(204200);
+ if exists(select 1 from public.players)then raise exception 'Test clock configuration requires an empty world';end if;
+ update public.peris_world_clock set rate=p_rate,profile_id='accelerated-test-v1',real_anchor=now(),game_anchor=now()where id;
+end $$;
+revoke all on function public.peris_game_now(),public.peris_clock_snapshot(),public.peris_configure_test_clock(integer)from public,anon,authenticated;
+-- Core tables exist before this module, including on legacy upgrades.
+-- Defaults affect new rows only; accepted dates and balances are untouched.
+alter table public.armies alter column departure_at set default public.peris_game_now();
+alter table public.armies alter column arrival_at set default public.peris_game_now();
+alter table public.battles alter column started_at set default public.peris_game_now();
+alter table public.battles alter column last_tick_at set default public.peris_game_now();
+alter table public.settlements alter column resources_updated_at set default public.peris_game_now();
+alter table public.peris_challenges alter column expires_at set default public.peris_game_now()+interval '90 seconds';
+
 -- Never wait for a player while retaining another participant's row/land lock.
 -- Exception rollback releases every lock acquired in this helper on contention.
 create or replace function public.peris_lock_battle_participants(p_attacker uuid,p_defender uuid)returns boolean
-language plpgsql security definer set search_path='' as $
+language plpgsql security definer set search_path='' as $$
 begin
- if exists(select 1 from public.peris_settler_expeditions where owner_id in(p_attacker,p_defender)and status='travelling'and arrival_at<=now())
+ if exists(select 1 from public.peris_settler_expeditions where owner_id in(p_attacker,p_defender)and status='travelling'and arrival_at<=public.peris_game_now())
   and not pg_try_advisory_xact_lock(204200)then raise lock_not_available;end if;
  perform 1 from public.players where id in(p_attacker,p_defender)order by id for update nowait;
  return true;
 exception when lock_not_available then return false;
-end $;
+end $$;
 revoke all on function public.peris_lock_battle_participants(uuid,uuid)from public,anon,authenticated;
 
 do $$begin
@@ -184,7 +224,7 @@ begin
  if b.mode='pve' and p_winner='attacker' and not camp.bandit then
  tier:=camp.tier;
  loot:=jsonb_build_object('wood',180*tier,'stone',140*tier,'food',220*tier,'gold',60*tier);
- insert into public.peris_progress(owner_id,camp_id,defeated,available_at) values(b.attacker_owner_id,b.camp_id,1,now()+interval '2 minutes')
+ insert into public.peris_progress(owner_id,camp_id,defeated,available_at) values(b.attacker_owner_id,b.camp_id,1,public.peris_game_now()+interval '2 minutes')
  on conflict(owner_id,camp_id)do update set defeated=peris_progress.defeated+1,available_at=excluded.available_at;
  end if;
  if camp.bandit then
@@ -197,7 +237,7 @@ begin
    loot:=public.peris_take_camp_loot(stock,carry);
    foreach key in array array['wood','stone','food','gold']loop stock:=jsonb_set(stock,array[key],to_jsonb((stock->>key)::numeric-(loot->>key)::numeric));end loop;
   end if;
-  update public.peris_camp_stock set resources=stock,engaged_battle_id=null,next_recruit_at=now()+make_interval(secs=>60+floor(random()*241)::integer)where camp_id=camp.id;
+  update public.peris_camp_stock set resources=stock,engaged_battle_id=null,next_recruit_at=public.peris_game_now()+make_interval(secs=>60+floor(random()*241)::integer)where camp_id=camp.id;
   update public.peris_camps set
    infantry=coalesce((select sum(soldiers)from public.battle_formations where battle_id=b.id and side='defender'and unit_type='infantry'),0),
    archers=coalesce((select sum(soldiers)from public.battle_formations where battle_id=b.id and side='defender'and unit_type='archers'),0),
@@ -214,7 +254,7 @@ begin
  carry:=floor(carry*public.peris_research_factor(b.attacker_owner_id,'carry'));
  r:=r||jsonb_build_object('replacement_cost',public.peris_roster_loss_cost(r->'attacker_roster',r->'attacker_survivor_roster',b.balance_version),'carrying_capacity',carry);
  if (loot->>'wood')::numeric+(loot->>'stone')::numeric+(loot->>'food')::numeric+(loot->>'gold')::numeric=0 then r:=r||jsonb_build_object('estimated_profit',public.peris_resource_difference(loot,r->'replacement_cost'));end if;
- update public.battles set status='resolved' ,phase='finished',winner_side=p_winner,winner_owner_id=winner,ended_at=now(),result=r where id=b.id;
+ update public.battles set status='resolved' ,phase='finished',winner_side=p_winner,winner_owner_id=winner,ended_at=public.peris_game_now(),result=r where id=b.id;
  for u in select id from public.players where id in(b.attacker_owner_id,b.defender_owner_id) order by id loop
  perform public.peris_settle(u);
  select * into a from public.armies where id=case when u=b.attacker_owner_id then b.attacker_army_id else b.defender_army_id end;
@@ -226,7 +266,7 @@ begin
  status='idle',raid_target_id=null,raid_reserve=null,march_sent_at=null,march_cancel_until=null,
  start_x=case when a.march_origin is null then (home->>'x')::integer else a.target_x end,start_y=case when a.march_origin is null then (home->>'y')::integer else a.target_y end,
  target_x=case when a.march_origin is null then (home->>'x')::integer else a.target_x end,target_y=case when a.march_origin is null then (home->>'y')::integer else a.target_y end,
- arrival_at=now(),departure_at=now(),updated_at=now() where id=a.id;
+ arrival_at=public.peris_game_now(),departure_at=public.peris_game_now(),updated_at=now() where id=a.id;
  if camp.bandit and u=b.attacker_owner_id then update public.armies set carried_loot=loot,loot_report_id=b.id where id=a.id;end if;
  if not public.peris_return_raid(a.id)then update public.armies set march_path=null,march_distance=null,march_returning=false where id=a.id;end if;
  if u=winner then update public.players set victories=victories+1,prestige=prestige+coalesce(tier,1)*25 where id=u;end if;
@@ -260,7 +300,7 @@ begin
  perform public.peris_note_account_activity();
  perform public.peris_science_ensure(u);
  perform public.peris_city_migrate(s.id) from public.settlements s where s.owner_id=u;
- select jsonb_build_object('version',6,'server_now',now(),
+ select jsonb_build_object('version',6,'server_now',public.peris_game_now(),'game_clock',public.peris_clock_snapshot(),
  'debug_enabled',coalesce((select enabled from public.peris_debug_config where id),false),
  'map',jsonb_build_object('version',4,'cols',200,'rows',200,'cell_size',128,'seed',1346720329,
    'total_players',(select count(*) from public.players),'total_settlements',(select count(*) from public.settlements)),
@@ -284,7 +324,7 @@ begin
  'ruin_evacuations',coalesce((select jsonb_agg(e order by e.arrival_at)from public.peris_ruin_evacuations e where e.owner_id=u),'[]'::jsonb),
  'players',coalesce((select jsonb_agg(p order by created_at)from public.players p where p.id=u
    or exists(select 1 from public.battles b where (b.attacker_owner_id=u or b.defender_owner_id=u) and (b.attacker_owner_id=p.id or b.defender_owner_id=p.id))
-   or exists(select 1 from public.peris_challenges c where c.status='pending' and c.expires_at>now() and (c.attacker_owner_id=u or c.defender_owner_id=u) and (c.attacker_owner_id=p.id or c.defender_owner_id=p.id))),'[]'::jsonb),
+   or exists(select 1 from public.peris_challenges c where c.status='pending' and c.expires_at>public.peris_game_now() and (c.attacker_owner_id=u or c.defender_owner_id=u) and (c.attacker_owner_id=p.id or c.defender_owner_id=p.id))),'[]'::jsonb),
  'settlements',coalesce((select jsonb_agg(s order by id)from public.settlements s where s.owner_id=u),'[]'::jsonb),
  'buildings',coalesce((select jsonb_agg(b order by b.id)from public.buildings b join public.settlements s on s.id=b.settlement_id where s.owner_id=u),'[]'::jsonb),
  'unit_research',coalesce((select jsonb_agg(r order by r.unit)from public.peris_unit_research r join public.settlements s on s.id=r.settlement_id where s.owner_id=u),'[]'::jsonb),
@@ -302,7 +342,7 @@ begin
  'unread_report_count',(select count(*)from public.peris_reports r where owner_id=u and r.read_at is null and (coalesce((r.result->>'attacker_losses')::integer,0)>0 or not exists(select 1 from public.peris_campaign_farm_lists l where l.id=r.farm_list_id and l.owner_id=u and l.casualties_only))),
  'progress',coalesce((select jsonb_agg(p)from public.peris_progress p where owner_id=u),'[]'::jsonb),
  'claims',coalesce((select jsonb_agg(c)from public.peris_claims c where owner_id=u),'[]'::jsonb),
- 'challenges',coalesce((select jsonb_agg(c)from public.peris_challenges c where (attacker_owner_id=u or defender_owner_id=u)and status='pending'and expires_at>now()),'[]'::jsonb))into result;
+ 'challenges',coalesce((select jsonb_agg(c)from public.peris_challenges c where (attacker_owner_id=u or defender_owner_id=u)and status='pending'and expires_at>public.peris_game_now()),'[]'::jsonb))into result;
  return result;
 end $$;
 
@@ -413,7 +453,7 @@ begin
   if owner=winner then update public.players set victories=victories+1,prestige=prestige+25 where id=owner;end if;
   insert into public.peris_reports(owner_id,battle_id,title,won,result)values(owner,b.id,case side when 'attacker'then c.name else 'Defence of '||c.name end,coalesce(owner=winner,false),receipt)on conflict(owner_id,battle_id)do nothing;
  end loop;
- update public.battles set status='resolved',phase='finished',winner_side=p_winner,winner_owner_id=winner,ended_at=now(),result=r where id=b.id;
+ update public.battles set status='resolved',phase='finished',winner_side=p_winner,winner_owner_id=winner,ended_at=public.peris_game_now(),result=r where id=b.id;
  if not public.peris_return_raid(a.id)then
   update public.armies set start_x=(public.peris_home_army_position(s.x,s.y)->>'x')::integer,start_y=(public.peris_home_army_position(s.x,s.y)->>'y')::integer,target_x=(public.peris_home_army_position(s.x,s.y)->>'x')::integer,target_y=(public.peris_home_army_position(s.x,s.y)->>'y')::integer,march_path=null,march_distance=null,march_returning=false from public.settlements s where armies.id=a.id and s.id=a.home_settlement_id;
   perform public.peris_deliver_loot(a.id);

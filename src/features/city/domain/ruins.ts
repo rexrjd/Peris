@@ -1,3 +1,4 @@
+import { worldGameNow } from '../../../shared/time/gameClock';
 import type { World } from '../../../shared/model/world';
 import type { ArmyTroops } from '../../army/domain/types';
 import type { Army } from '../../army/domain/types';
@@ -81,7 +82,7 @@ export function settleRuinEvacuations(world: World, owner: string, now: number) 
 
 /** Permanent once-only state change, after a victorious siege. Resource fields do
  * not have to be individually destroyed: all abandoned holdings are forfeited. */
-export function ruinCity(world: World, cityId: number, now = Date.now()): boolean {
+export function ruinCity(world: World, cityId: number, now = worldGameNow(world)): boolean {
     const city=world.settlements.find(row=>row.id===cityId);
     if(!city||city.ruined_at) return false;
     if(world.buildings.some(row=>row.settlement_id===cityId&&row.level>0)||

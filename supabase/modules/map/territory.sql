@@ -133,7 +133,7 @@ begin
  if s.wood<cw or s.stone<cs or s.food<cf or s.gold<cg then raise exception 'Your stores cannot cover this cost';end if;
  update public.settlements set wood=wood-cw,stone=stone-cs,food=food-cf,gold=gold-cg where id=s.id;
  update public.peris_map_plots set building_type=p_type where col=c and row=r;
- insert into public.peris_orders(owner_id,kind,item,quantity,started_at,finish_at) values(u,'field','field:'||c||':'||r||':'||p_type,1,now(),now()+make_interval(secs=>greatest(1,ceil((15+p.level*10)/public.peris_research_factor(u,'construction')))::double precision));
+ insert into public.peris_orders(owner_id,kind,item,quantity,started_at,finish_at) values(u,'field','field:'||c||':'||r||':'||p_type,1,public.peris_game_now(),public.peris_game_now()+make_interval(secs=>greatest(1,ceil((15+p.level*10)/public.peris_research_factor(u,'construction')))::double precision));
  return jsonb_build_object('ok',true);
 end $$;
 

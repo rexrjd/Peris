@@ -1,6 +1,6 @@
 -- Interpolate by traveled route distance. Old saves and armies with no stored
 -- route retain the original straight-line interpolation until their next march.
-create or replace function public.peris_army_position(p_army public.armies,p_at timestamptz default now())returns jsonb
+create or replace function public.peris_army_position(p_army public.armies,p_at timestamptz default public.peris_game_now())returns jsonb
 language plpgsql stable security definer set search_path='' as $$
 declare t numeric;remaining numeric;point jsonb;previous jsonb;x numeric;y numeric;px numeric;py numeric;dx numeric;dy numeric;segment numeric;
 begin

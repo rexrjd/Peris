@@ -1,9 +1,11 @@
 import fs from 'node:fs/promises';
 const source = (await fs.readFile('supabase/modules/campaign/report-reads.sql','utf8')).replace(/\r\n/g,'\n');
 const snapshot = (await fs.readFile('supabase/modules/snapshot/peris_snapshot.sql','utf8')).replace(/\r\n/g,'\n');
+const clock = (await fs.readFile('supabase/modules/time/game-clock.sql','utf8')).replace(/\r\n/g,'\n');
 const sql = `-- Existing name-only-account worlds; additive report read tracking only.
 -- Apply with the report inbox frontend on a V17 world. No gameplay rules change.
 begin;
+${clock}
 ${source}
 ${snapshot}
 notify pgrst,'reload schema';

@@ -15,7 +15,7 @@ begin
  perform public.peris_settle(u);
  if public.peris_city_id(u)=(select min(id)from public.settlements where owner_id=u)then
   select c.faction into active_faction from public.peris_account_science s join public.peris_technology_catalog c on c.id=s.active_id where s.owner_id=u;
-  if active_faction is not null and active_faction<>p_faction then perform public.peris_research_pause(u,now());end if;
+  if active_faction is not null and active_faction<>p_faction then perform public.peris_research_pause(u,public.peris_game_now());end if;
  end if;
  update public.settlements set faction=p_faction where id=public.peris_city_id(u);if not found then raise exception 'Settlement missing';end if;
  for city in select id from public.settlements where owner_id=u order by id loop perform public.peris_city_economy(city.id);end loop;
@@ -32,12 +32,12 @@ begin
  if p_action='resources' then
   if p_value is null or p_value not in (0,1000)then raise exception 'Choose fill storage or +1,000 supplies';end if;
   update public.settlements set wood=case when p_value=0 then capacity else least(capacity,wood+1000)end,stone=case when p_value=0 then capacity else least(capacity,stone+1000)end,
-   food=case when p_value=0 then food_capacity else least(food_capacity,food+1000)end,gold=case when p_value=0 then capacity else least(capacity,gold+1000)end,resources_updated_at=now() where id=s.id;return;
+   food=case when p_value=0 then food_capacity else least(food_capacity,food+1000)end,gold=case when p_value=0 then capacity else least(capacity,gold+1000)end,resources_updated_at=public.peris_game_now() where id=s.id;return;
  elsif p_action='population' then
   if p_value is null or p_value not in (0,10)then raise exception 'Choose fill housing or +10 residents';end if;
   update public.settlements set population=case when p_value=0 then population_capacity else least(population_capacity,population+10)end where id=s.id;perform public.peris_city_economy(s.id);return;
  elsif p_action='finish' then
-  update public.peris_orders set started_at=least(started_at,now()),finish_at=now() where owner_id=u and settlement_id=s.id and kind='upgrade';perform public.peris_settle(u);return;
+  update public.peris_orders set started_at=least(started_at,public.peris_game_now()),finish_at=public.peris_game_now() where owner_id=u and settlement_id=s.id and kind='upgrade';perform public.peris_settle(u);return;
  end if;
  if p_action is null or p_action not in ('demolish','level')then raise exception 'Invalid debug action';end if;
  if p_target ~ '^slot:[0-9]{1,2}$' then

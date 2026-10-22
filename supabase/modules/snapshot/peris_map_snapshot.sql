@@ -47,7 +47,7 @@ begin
  ), visible_owners as (
    select owner_id from visible_settlements union select owner_id from visible_armies union select owner_id from visible_plots union select u
  )
- select jsonb_build_object('server_now',now(),
+ select jsonb_build_object('server_now',public.peris_game_now(),'game_clock',public.peris_clock_snapshot(),
    'players',coalesce((select jsonb_agg(jsonb_build_object('id',p.id,'display_name',p.display_name) order by p.id)
      from public.players p join visible_owners o on o.owner_id=p.id),'[]'::jsonb),
    'settlements',coalesce((select jsonb_agg(to_jsonb(s)||jsonb_build_object('map_development',public.peris_map_development(s.id)) order by s.id) from visible_settlements s),'[]'::jsonb),

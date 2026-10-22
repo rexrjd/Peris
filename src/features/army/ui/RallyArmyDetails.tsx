@@ -44,7 +44,7 @@ export function RallyArmyDetails({ world, playerId, armyId, now, busy, onManage,
     const slowestSpeed = activeUnits.length ? Math.min(...activeUnits.map(unit => RECRUIT_RULES[unit].speed)) : undefined;
     const arrival = army ? Date.parse(army.arrival_at) : NaN;
     const remaining = Number.isFinite(arrival) ? Math.max(0, (arrival - now) / 1000) : undefined;
-    const movingCaption = remaining === undefined ? 'Arrival time unavailable' : remaining > 0 ? `Arrives in ${clock(remaining)}` : 'Awaiting arrival update';
+    const movingCaption = remaining === undefined ? 'Arrival time unavailable' : remaining > 0 ? `Arrives in ${clock(remaining, world.game_clock?.rate ?? 1)}` : 'Awaiting arrival update';
     const training = !!army && world.orders.some(order => order.owner_id === playerId && order.kind === 'recruit' && (order.army_id ?? world.armies.find(candidate => candidate.owner_id === playerId)?.id) === army.id);
     const fighting = !!army && (army.raid_target_id != null || army.raid_city_id != null || world.battles.some(battle => battle.status === 'active' && (battle.attacker_army_id === army.id || battle.defender_army_id === army.id)));
     const activeBattle = world.battles.some(battle => battle.status === 'active' && (battle.attacker_owner_id === playerId || battle.defender_owner_id === playerId));
@@ -102,7 +102,7 @@ export function RallyArmyDetails({ world, playerId, armyId, now, busy, onManage,
             <header><h3>{factionTroopName(faction, selectedUnit)}</h3><span>{presentation.category} · {rule.building}</span></header>
             <div className="rp-stat-row"><span>In this legion</span><strong>{(roster?.[selectedUnit] ?? 0).toLocaleString()}</strong></div>
             {home && <TroopStatSummary {...troopCardStats(world, army, home, selectedUnit, now)}/>}
-            {stats&&<><div className="rp-stat-row"><span>Faction attack / protection</span><strong>{troopNumber(stats.factionAttackPoints)} / {troopNumber(stats.factionProtectionPoints)}</strong></div><div className="rp-stat-row"><span>Train 10 soldiers</span><strong>{clock(stats.trainTenSeconds)}</strong></div></>}
+            {stats&&<><div className="rp-stat-row"><span>Faction attack / protection</span><strong>{troopNumber(stats.factionAttackPoints)} / {troopNumber(stats.factionProtectionPoints)}</strong></div><div className="rp-stat-row"><span>Train 10 soldiers</span><strong>{clock(stats.trainTenSeconds, world.game_clock?.rate ?? 1)}</strong></div></>}
             <div className="rp-stat-row"><span><Icon name="horse" size={16}/>Combat speed</span><strong>{troopNumber(rule.speed)}</strong></div>
             <div className="rp-stat-row"><span><Icon name="transfer" size={16}/>Base carry per troop</span><strong>{troopNumber(rule.carry)}</strong></div>
             <div className="rp-stat-row"><span><Icon name="time" size={16}/>Base training per troop</span><strong>{rule.trainSeconds}s</strong></div>

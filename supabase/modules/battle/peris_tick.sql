@@ -8,7 +8,7 @@ begin
  if b.status<>'active'then return jsonb_build_object('ok',true);end if;
  if not public.peris_lock_battle_participants(b.attacker_owner_id,b.defender_owner_id)then return jsonb_build_object('busy',true);end if;
  if b.phase='deployment'then b.phase:='combat';update public.battles set phase='combat',attacker_ready=true,defender_ready=true where id=b.id;end if;
- remain:=least(10,greatest(0,extract(epoch from(now()-b.last_tick_at))));
+ remain:=least(10,greatest(0,extract(epoch from(public.peris_game_now()-b.last_tick_at))));
  if remain<.15 then return jsonb_build_object('ok',true);end if;
  processed:=remain;update public.battles set last_tick_at=last_tick_at+make_interval(secs=>processed::double precision)where id=b.id;
  while remain>0 loop

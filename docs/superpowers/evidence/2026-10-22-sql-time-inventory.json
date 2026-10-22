@@ -1,0 +1,212 @@
+[
+  {
+    "source": "supabase/modules/army/peris_queue_recruit.sql",
+    "classification": "gameplay; explicitly retained audit expressions stay real UTC",
+    "retained_real": [],
+    "changed": true
+  },
+  {
+    "source": "supabase/modules/battle/automatic.sql",
+    "classification": "gameplay; explicitly retained audit expressions stay real UTC",
+    "retained_real": [],
+    "changed": true
+  },
+  {
+    "source": "supabase/modules/battle/participant-locks.sql",
+    "classification": "gameplay; explicitly retained audit expressions stay real UTC",
+    "retained_real": [],
+    "changed": true
+  },
+  {
+    "source": "supabase/modules/battle/peris_finish.sql",
+    "classification": "gameplay; explicitly retained audit expressions stay real UTC",
+    "retained_real": [
+      "updated_at=now()",
+      "'delivered_at',now()"
+    ],
+    "changed": true
+  },
+  {
+    "source": "supabase/modules/battle/peris_tick.sql",
+    "classification": "gameplay; explicitly retained audit expressions stay real UTC",
+    "retained_real": [
+      "updated_at=now()"
+    ],
+    "changed": true
+  },
+  {
+    "source": "supabase/modules/campaign/battle-worker.sql",
+    "classification": "gameplay; explicitly retained audit expressions stay real UTC",
+    "retained_real": [],
+    "changed": true
+  },
+  {
+    "source": "supabase/modules/campaign/camp-schema.sql",
+    "classification": "gameplay; explicitly retained audit expressions stay real UTC",
+    "retained_real": [
+      "'delivered_at',now()",
+      "'delivered_at',now()"
+    ],
+    "changed": true
+  },
+  {
+    "source": "supabase/modules/campaign/farms.sql",
+    "classification": "gameplay; explicitly retained audit expressions stay real UTC",
+    "retained_real": [
+      "created_at timestamptz not null default now()"
+    ],
+    "changed": true
+  },
+  {
+    "source": "supabase/modules/campaign/game-worker.sql",
+    "classification": "gameplay; explicitly retained audit expressions stay real UTC",
+    "retained_real": [
+      "last_processed_at timestamptz not null default now()"
+    ],
+    "changed": true
+  },
+  {
+    "source": "supabase/modules/campaign/peris_start_raid.sql",
+    "classification": "gameplay; explicitly retained audit expressions stay real UTC",
+    "retained_real": [],
+    "changed": true
+  },
+  {
+    "source": "supabase/modules/campaign/player-raids.sql",
+    "classification": "gameplay; explicitly retained audit expressions stay real UTC",
+    "retained_real": [
+      "updated_at=now()",
+      "updated_at=now()",
+      "updated_at=now()"
+    ],
+    "changed": true
+  },
+  {
+    "source": "supabase/modules/campaign/sync_my_state.sql",
+    "classification": "gameplay; explicitly retained audit expressions stay real UTC",
+    "retained_real": [],
+    "changed": true
+  },
+  {
+    "source": "supabase/modules/city/city-slots.sql",
+    "classification": "gameplay; explicitly retained audit expressions stay real UTC",
+    "retained_real": [],
+    "changed": true
+  },
+  {
+    "source": "supabase/modules/city/peris_queue_upgrade.sql",
+    "classification": "gameplay; explicitly retained audit expressions stay real UTC",
+    "retained_real": [],
+    "changed": true
+  },
+  {
+    "source": "supabase/modules/city/peris_settle.sql",
+    "classification": "gameplay; explicitly retained audit expressions stay real UTC",
+    "retained_real": [],
+    "changed": true
+  },
+  {
+    "source": "supabase/modules/city/population.sql",
+    "classification": "gameplay; explicitly retained audit expressions stay real UTC",
+    "retained_real": [],
+    "changed": true
+  },
+  {
+    "source": "supabase/modules/city/ruins.sql",
+    "classification": "gameplay; explicitly retained audit expressions stay real UTC",
+    "retained_real": [
+      "updated_at=now()",
+      "updated_at=now()",
+      "updated_at=now()",
+      "updated_at=now()",
+      "ruined_at=now()",
+      "defeated_at=coalesce(defeated_at,now())"
+    ],
+    "changed": true
+  },
+  {
+    "source": "supabase/modules/empire/gameplay.sql",
+    "classification": "gameplay; explicitly retained audit expressions stay real UTC",
+    "retained_real": [],
+    "changed": true
+  },
+  {
+    "source": "supabase/modules/empire/schema.sql",
+    "classification": "gameplay; explicitly retained audit expressions stay real UTC",
+    "retained_real": [],
+    "changed": true
+  },
+  {
+    "source": "supabase/modules/factions/city-factions.sql",
+    "classification": "gameplay; explicitly retained audit expressions stay real UTC",
+    "retained_real": [
+      "updated_at=now()"
+    ],
+    "changed": true
+  },
+  {
+    "source": "supabase/modules/magic/mage-tower.sql",
+    "classification": "gameplay; explicitly retained audit expressions stay real UTC",
+    "retained_real": [],
+    "changed": true
+  },
+  {
+    "source": "supabase/modules/map/march-orders.sql",
+    "classification": "gameplay; explicitly retained audit expressions stay real UTC",
+    "retained_real": [
+      "updated_at=now()",
+      "updated_at=now()"
+    ],
+    "changed": true
+  },
+  {
+    "source": "supabase/modules/map/peris_army_position.sql",
+    "classification": "gameplay; explicitly retained audit expressions stay real UTC",
+    "retained_real": [],
+    "changed": true
+  },
+  {
+    "source": "supabase/modules/map/peris_march.sql",
+    "classification": "gameplay; explicitly retained audit expressions stay real UTC",
+    "retained_real": [
+      "updated_at=now()"
+    ],
+    "changed": true
+  },
+  {
+    "source": "supabase/modules/map/territory.sql",
+    "classification": "gameplay; explicitly retained audit expressions stay real UTC",
+    "retained_real": [],
+    "changed": true
+  },
+  {
+    "source": "supabase/modules/multiplayer/peris_challenge.sql",
+    "classification": "gameplay; explicitly retained audit expressions stay real UTC",
+    "retained_real": [],
+    "changed": true
+  },
+  {
+    "source": "supabase/modules/multiplayer/peris_respond.sql",
+    "classification": "gameplay; explicitly retained audit expressions stay real UTC",
+    "retained_real": [],
+    "changed": true
+  },
+  {
+    "source": "supabase/modules/research/schema.sql",
+    "classification": "gameplay; explicitly retained audit expressions stay real UTC",
+    "retained_real": [],
+    "changed": true
+  },
+  {
+    "source": "supabase/modules/research/science.sql",
+    "classification": "gameplay; explicitly retained audit expressions stay real UTC",
+    "retained_real": [],
+    "changed": true
+  },
+  {
+    "source": "supabase/modules/snapshot/peris_snapshot.sql",
+    "classification": "gameplay; explicitly retained audit expressions stay real UTC",
+    "retained_real": [],
+    "changed": true
+  }
+]

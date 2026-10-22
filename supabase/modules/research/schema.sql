@@ -7,10 +7,11 @@ create table if not exists public.peris_technology_catalog(
 create table if not exists public.peris_account_science(
  owner_id uuid primary key references public.players(id)on delete cascade,
  points numeric not null default 75 check(points between 0 and 1000000000),
- updated_at timestamptz not null default now(),active_id text references public.peris_technology_catalog(id),
+ updated_at timestamptz not null default public.peris_game_now(),active_id text references public.peris_technology_catalog(id),
  active_since timestamptz,active_rate numeric not null default 1 check(active_rate between 1 and 4),
  check((active_id is null)=(active_since is null))
 );
+alter table public.peris_account_science alter column updated_at set default public.peris_game_now();
 create table if not exists public.peris_research_progress(
  owner_id uuid not null references public.players(id)on delete cascade,
  technology_id text not null references public.peris_technology_catalog(id),

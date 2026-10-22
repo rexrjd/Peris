@@ -144,7 +144,7 @@ begin
   else
    if jsonb_typeof(p_command->'enabled') is distinct from 'boolean'then raise exception 'Choose a repeat preference';end if;
    repeat_enabled:=(p_command->>'enabled')::boolean;
-   update public.peris_campaign_farms set enabled=repeat_enabled,next_at=case when repeat_enabled then now()+make_interval(secs=>interval_seconds)else null end,last_status=case when repeat_enabled then 'Scheduled'else 'Paused'end where list_id=list.id and owner_id=u and enabled is distinct from repeat_enabled;
+   update public.peris_campaign_farms set enabled=repeat_enabled,next_at=case when repeat_enabled then public.peris_game_now()+make_interval(secs=>interval_seconds)else null end,last_status=case when repeat_enabled then 'Scheduled'else 'Paused'end where list_id=list.id and owner_id=u and enabled is distinct from repeat_enabled;
   end if;
   return jsonb_build_object('ok',true);
  elsif kind='startCampaignFarmList' then
@@ -284,7 +284,7 @@ begin
   repeat_interval:=coalesce((p_command->>'intervalSeconds')::integer,farm.interval_seconds,300);
   if repeat_interval not between 60 and 86400 then raise exception 'Use a repeat interval of 60–86400 seconds';end if;
   update public.peris_campaign_farms set enabled=repeat_enabled,interval_seconds=repeat_interval,
-   next_at=case when repeat_enabled then case when enabled and interval_seconds=repeat_interval then coalesce(next_at,now()+make_interval(secs=>repeat_interval))else now()+make_interval(secs=>repeat_interval)end else null end
+   next_at=case when repeat_enabled then case when enabled and interval_seconds=repeat_interval then coalesce(next_at,public.peris_game_now()+make_interval(secs=>repeat_interval))else public.peris_game_now()+make_interval(secs=>repeat_interval)end else null end
    where id=farm.id returning * into farm;
   return to_jsonb(farm);
 

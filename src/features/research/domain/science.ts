@@ -1,3 +1,4 @@
+import { worldGameNow } from '../../../shared/time/gameClock';
 import type {World} from '../../../shared/model/world';
 import type {AccountScience} from './types';
 import {TECHNOLOGY_BY_ID} from './catalog';
@@ -12,8 +13,8 @@ export function ensureScience(w:World,owner:string,now=Date.parse(w.server_now))
 }
 export function scienceSources(w:World,owner:string){return w.settlements.filter(s=>s.owner_id===owner).map(s=>({id:s.id,name:s.name,academies:(w.city_slots??[]).filter(c=>c.settlement_id===s.id&&c.building_type==='academy'&&c.level>0),rate:(w.city_slots??[]).filter(c=>c.settlement_id===s.id&&c.building_type==='academy').reduce((n,c)=>n+(ACADEMY_SCIENCE[c.level]??0),0)}));}
 export const scienceRate=(w:World,owner:string)=>(6+scienceSources(w,owner).reduce((n,c)=>n+c.rate,0))*researchFactor(w,owner,'science');
-export function liveScience(w:World,owner:string,now=Date.now()){const s=w.account_science?.find(s=>s.owner_id===owner);return s?Math.min(1e9,s.points+Math.max(0,now-Date.parse(s.updated_at))/60000*scienceRate(w,owner)):75;}
-export function researchSeconds(w:World,owner:string,id:string,now=Date.now()){const r=w.research_progress?.find(r=>r.owner_id===owner&&r.technology_id===id),s=w.account_science?.find(s=>s.owner_id===owner);const t=TECHNOLOGY_BY_ID.get(id);return Math.min(t?.seconds??0,(r?.seconds??0)+(s?.active_id===id&&s.active_since?Math.max(0,now-Date.parse(s.active_since))/1000*s.active_rate:0));}
+export function liveScience(w:World,owner:string,now=worldGameNow(w)){const s=w.account_science?.find(s=>s.owner_id===owner);return s?Math.min(1e9,s.points+Math.max(0,now-Date.parse(s.updated_at))/60000*scienceRate(w,owner)):75;}
+export function researchSeconds(w:World,owner:string,id:string,now=worldGameNow(w)){const r=w.research_progress?.find(r=>r.owner_id===owner&&r.technology_id===id),s=w.account_science?.find(s=>s.owner_id===owner);const t=TECHNOLOGY_BY_ID.get(id);return Math.min(t?.seconds??0,(r?.seconds??0)+(s?.active_id===id&&s.active_since?Math.max(0,now-Date.parse(s.active_since))/1000*s.active_rate:0));}
 export function researchDeadline(w:World,owner:string){const s=w.account_science?.find(s=>s.owner_id===owner),t=s?.active_id?TECHNOLOGY_BY_ID.get(s.active_id):undefined;if(!s?.active_since||!t)return Infinity;const p=w.research_progress?.find(p=>p.owner_id===owner&&p.technology_id===t.id);return Math.ceil((Date.parse(s.active_since)+(t.seconds-(p?.seconds??0))/s.active_rate*1000)-1e-7);}
 function accrue(w:World,owner:string,until:number){const s=ensureScience(w,owner,until);if(until<=Date.parse(s.updated_at))return;s.points=liveScience(w,owner,until);s.updated_at=new Date(until).toISOString();}
 export function advanceResearch(w:World,owner:string,until:number){const s=ensureScience(w,owner,until),due=researchDeadline(w,owner);if(due<=until){

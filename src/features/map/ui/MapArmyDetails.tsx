@@ -31,7 +31,7 @@ export function MapArmyDetails({ world, army, playerId, now, busy, outgoing, onM
         <div className="ops-identity"><HeroPortrait compact heroId={hero?.id} heroClass={hero?.class} faction={faction}/>
             <div><h2>{army.name}</h2><p>{hero ? hero.name + ' · Lv. ' + heroLevel(hero) : playerName(world.players, army.owner_id)}</p></div>
         </div>
-        <div className="ops-army-state"><span><i/>{status}</span>{moving && <small>{!Number.isFinite(arrival) ? 'Pending' : arrival <= now ? 'Arriving' : clock((arrival - now) / 1000)}</small>}</div>
+        <div className="ops-army-state"><span><i/>{status}</span>{moving && <small>{!Number.isFinite(arrival) ? 'Pending' : arrival <= now ? 'Arriving' : clock((arrival - now) / 1000, world.game_clock?.rate ?? 1)}</small>}</div>
         <div className="ops-troops" aria-label="Army troop composition">{own || army.unit_roster != null
             ? RECRUIT_UNITS.filter(type => UNIT_TYPES.some(base => base === type) || troops[type] > 0).map(type => <span key={type} data-troop={type} title={troops[type] + ' ' + factionTroopName(faction,type)} aria-label={troops[type] + ' ' + factionTroopName(faction,type)}><TroopIcon unit={type} faction={faction}/><strong>{troops[type].toLocaleString('en-US')}</strong><small>{factionTroopName(faction,type)}</small></span>)
             : UNIT_TYPES.map(type => <span key={type} title={UNIT_ROLES[type].name} aria-label={army[type] + ' ' + UNIT_ROLES[type].name}><Icon name={UNIT_ROLES[type].icon} size={15}/><strong>{army[type].toLocaleString('en-US')}</strong><small>{UNIT_ROLES[type].name}</small></span>)}</div>

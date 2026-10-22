@@ -52,6 +52,6 @@ export function autoCastSpells(world:World,b:Battle,nextId:()=>number,finalize:(
         if(!army)continue;
         const available=SPELLS.filter(spell=>world.settlements.some(city=>city.owner_id===owner&&towerLevel(world,city.id)>=spell.level&&knowsSpell(world,city.id,spell.id)));
         const choice=chooseAutomaticSpell(b,world.formations.filter(f=>f.battle_id===b.id),side,available,(side==='attacker'?b.mana_attacker:b.mana_defender)??0,heroBonuses(world,army).spell);
-        if(choice)castSpell({world,playerId:owner,active:b,now:new Date().toISOString(),nextId,finalize,paused:()=>{}},{type:'castSpell',battleId:b.id,spell:choice.spell.id,target:choice.target});
+        if(choice)castSpell({world,playerId:owner,active:b,now:world.server_now,nextId,finalize,paused:()=>{}},{type:'castSpell',battleId:b.id,spell:choice.spell.id,target:choice.target});
     }
 }

@@ -3,9 +3,9 @@ declare u uuid:=public.peris_player_id();c public.peris_challenges%rowtype;a pub
 begin
  select * into c from public.peris_challenges where id=p_id for update;
  if u is null or c.id is null or c.defender_owner_id<>u then raise exception 'Not your invitation';end if;
- if c.status<>'pending' or c.expires_at<=now()then raise exception 'Challenge has expired';end if;
+ if c.status<>'pending' or c.expires_at<=public.peris_game_now()then raise exception 'Challenge has expired';end if;
  if not p_accept then update public.peris_challenges set status='declined'where id=c.id;return jsonb_build_object('ok',true);end if;
- if exists(select 1 from public.peris_settler_expeditions where owner_id in(c.attacker_owner_id,c.defender_owner_id)and status='travelling'and arrival_at<=now())then perform pg_advisory_xact_lock(204200);end if;
+ if exists(select 1 from public.peris_settler_expeditions where owner_id in(c.attacker_owner_id,c.defender_owner_id)and status='travelling'and arrival_at<=public.peris_game_now())then perform pg_advisory_xact_lock(204200);end if;
  perform 1 from public.players where id in(c.attacker_owner_id,c.defender_owner_id)order by id for update;
  perform public.peris_settle(c.attacker_owner_id);perform public.peris_settle(c.defender_owner_id);
  perform 1 from public.armies where owner_id in(c.attacker_owner_id,c.defender_owner_id)order by owner_id for update;

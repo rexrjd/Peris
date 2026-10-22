@@ -23,7 +23,7 @@ export class MapRenderer {
     private previewKey = '';
     private preview: MarchPath | null = null;
     constructor(private ctx: RenderContext) { }
-    private now() { return Date.now() + (this.ctx.state().clockOffset ?? 0); }
+    private now() { return this.ctx.state().gameNow?.() ?? (Date.now() + (this.ctx.state().clockOffset ?? 0)); }
     private get scale() { return this.ctx.zoomBase * this.ctx.camera.zoom; }
     private imagePoint(x:number,y:number){return{x:this.ctx.camera.x+wrappedWorldDelta(this.ctx.camera.x,x),y:this.ctx.camera.y+wrappedWorldDelta(this.ctx.camera.y,y)};}
     private routeImages(points:readonly [number,number][]){let previous:{x:number;y:number}|undefined;return points.map(([x,y])=>{const point=previous?{x:previous.x+wrappedWorldDelta(previous.x,x),y:previous.y+wrappedWorldDelta(previous.y,y)}:this.imagePoint(x,y);previous=point;return point;});}

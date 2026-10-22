@@ -5,7 +5,7 @@ alter table public.battle_formations add column if not exists charge_distance nu
 alter table public.battles alter column phase set default 'combat';
 alter table public.battles alter column attacker_ready set default true;
 alter table public.battles alter column defender_ready set default true;
-update public.battles set phase='combat',attacker_ready=true,defender_ready=true,last_tick_at=now() where status='active' and phase='deployment';
+update public.battles set phase='combat',attacker_ready=true,defender_ready=true,last_tick_at=public.peris_game_now() where status='active' and phase='deployment';
 
 create or replace function public.peris_extent(f public.battle_formations,dx numeric,dy numeric)returns numeric language plpgsql immutable set search_path='' as $$
 declare len numeric:=greatest(.001,sqrt(dx*dx+dy*dy));a numeric:=radians(f.facing);cols numeric:=least(f.columns,greatest(1,f.initial_soldiers));width numeric:=cols*8+12;depth numeric:=ceil(least(f.initial_soldiers,120)::numeric/cols)*8+12;

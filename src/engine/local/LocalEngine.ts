@@ -1,4 +1,5 @@
 import {ensureScience,startResearch,pauseResearch,debugResearch} from '../../features/research/domain/science';
+import { EngineClock } from '../clock';
 import { autoCastSpells } from '../../features/magic/domain/automatic';
 import { normalizeRealm } from '../../features/empire/domain/normalization';
 import { isDefeated } from '../../features/city/domain/ruins';
@@ -37,6 +38,8 @@ export class LocalEngine implements GameEngine {
     readonly playerId = 'solo-ruler';
     readonly mode: 'solo' | 'practice';
     snapshot: World;
+    private gameClock = new EngineClock({ server_now: new Date().toISOString() }, () => performance.now());
+    nowGameMs = () => this.gameClock.nowGameMs();
     private listeners = new Set<() => void>();
     private timer: number;
     private last = performance.now();
@@ -50,6 +53,9 @@ export class LocalEngine implements GameEngine {
     paused = false;
     saveError = false;
     constructor(world: World, persistent = true) {
+        if (world.game_clock && world.game_clock.rate !== 1) throw new Error('An accelerated world cannot be loaded as a solo campaign.');
+        delete world.game_clock;
+        world.server_now = new Date(this.nowGameMs()).toISOString();
         normalizeRealm(world);
         ensureScience(world,this.playerId);
         for(const battle of world.battles)if(battle.status==='active'&&battle.phase==='deployment'){battle.phase='combat';battle.attacker_ready=battle.defender_ready=true;}
@@ -60,21 +66,21 @@ export class LocalEngine implements GameEngine {
             const slot=world.city_slots.find(s=>s.settlement_id===order.settlement_id&&s.building_type===type);
             if (slot) order.item=`slot:${slot.slot_index}:${type}`;
         }
-        if(world.settlements[0].population===undefined)settleLocal(world,this.playerId,Date.now());
+        if(world.settlements[0].population===undefined)settleLocal(world,this.playerId,this.nowGameMs());
         for (const city of world.settlements.filter(s=>s.owner_id===this.playerId)) refreshCityEconomy(world,city.id);
         this.mode = persistent ? 'solo' : 'practice';
         this.persistent = persistent;
         this.nextId = Math.max(100, Date.now() % 100000000, nextEntityId(world));
         this.snapshot.battles.filter(b => b.status === 'resolved').forEach(b => this.finalized.add(b.id));
         const resumed=this.active();
-        if(resumed?.phase==='combat')this.battleDebt=Math.min(900,Math.max(0,(Date.now()-Date.parse(resumed.last_tick_at))/1000));
+        if(resumed?.phase==='combat')this.battleDebt=Math.min(900,Math.max(0,(this.nowGameMs()-Date.parse(resumed.last_tick_at))/1000));
         settleLocal(world, this.playerId);
         this.advanceFarms();
         this.timer = window.setInterval(() => this.tick(), 50);
         this.save();
     }
     subscribe = (fn: () => void) => { this.listeners.add(fn); return () => this.listeners.delete(fn); };
-    private publish() { this.snapshot = { ...this.snapshot, server_now: new Date().toISOString() }; this.listeners.forEach(fn => fn()); }
+    private publish() { this.snapshot = { ...this.snapshot, server_now: new Date(this.nowGameMs()).toISOString() }; this.listeners.forEach(fn => fn()); }
     private save() { if (this.persistent)
         try {
             localStorage.setItem(SAVE_KEY, JSON.stringify(this.snapshot));
@@ -87,11 +93,12 @@ export class LocalEngine implements GameEngine {
     private tick() {
         const now=performance.now(),elapsed=Math.max(0,(now-this.last)/1000),dt=Math.min(.5,elapsed);
         this.last = now;
+        this.snapshot.server_now = new Date(this.nowGameMs()).toISOString();
         const b = this.active();
         if (b && b.phase === 'combat' && !this.paused) {
             this.battleDebt+=elapsed*this.speed;
             let remaining=Math.min(10,this.battleDebt);this.battleDebt-=remaining;
-            b.last_tick_at=new Date().toISOString();
+            b.last_tick_at=this.snapshot.server_now;
             while (remaining > 0 && b.status === 'active') {
                 const step = Math.min(.05, remaining);
                 stepBattle(b,this.snapshot.formations.filter(f=>f.battle_id===b.id),step,()=>autoCastSpells(this.snapshot,b,()=>++this.nextId,id=>this.finalize(id)));
@@ -110,7 +117,7 @@ export class LocalEngine implements GameEngine {
             }
             for (const army of this.snapshot.armies.filter(a => a.owner_id === this.playerId)) if (!this.active() && army.raid_target_id && army.status === 'idle') {
                 const camp = this.snapshot.camps.find(c => c.id === army.raid_target_id);
-                if (camp && (camp.bandit || !this.snapshot.progress.some(p=>p.owner_id===this.playerId&&p.camp_id===camp.id&&Date.parse(p.available_at)>Date.now()))) {
+                if (camp && (camp.bandit || !this.snapshot.progress.some(p=>p.owner_id===this.playerId&&p.camp_id===camp.id&&Date.parse(p.available_at)>this.nowGameMs()))) {
                     army.raid_target_id = null;
                     this.beginRaid(camp.id, army.id);
                 } else { restoreRaidReserve(army); startRaidReturn(this.snapshot, army); }
@@ -124,7 +131,7 @@ export class LocalEngine implements GameEngine {
     }
     private advanceFarms() {
         if (this.mode === 'practice' || isDefeated(this.snapshot,this.playerId)) return;
-        advanceCampFarms({ world: this.snapshot, playerId: this.playerId, nextId: () => ++this.nextId, active: this.active(), now: new Date().toISOString(), paused: () => {}, finalize: id => this.finalize(id) }, Date.now());
+        advanceCampFarms({ world: this.snapshot, playerId: this.playerId, nextId: () => ++this.nextId, active: this.active(), now: new Date(this.nowGameMs()).toISOString(), paused: () => {}, finalize: id => this.finalize(id) }, this.nowGameMs());
     }
     private beginRaid(campId: number, armyId?: number) { beginRaid(this.snapshot, this.playerId, campId, () => ++this.nextId, armyId); }
     startPractice(terrain: Terrain, difficulty: Difficulty, doctrine: 'balanced' | 'infantry' | 'cavalry' = 'balanced', faction: Faction = 'roman', enemy: Faction = 'orc') { startPractice(this.snapshot, this.playerId, () => ++this.nextId, terrain, difficulty, doctrine, faction, enemy); this.publish(); }
@@ -145,7 +152,8 @@ export class LocalEngine implements GameEngine {
         const active = this.active();
         if (['claimField', 'buildField', 'researchSpell', 'upgrade', 'buildSlot', 'upgradeSlot', 'recruit', 'researchUnit', 'move', 'raid', 'raidCity', 'trainSettlers', 'foundCity', 'recruitHero', 'heroSkill', 'equipArtifact', 'transferTroops', 'rebaseArmy', 'manageCityGarrison'].includes(cmd.type) && active)
             throw new Error('Finish the current battle first.');
-        const context: LocalCommandContext = { world: this.snapshot, playerId: this.playerId, settlementId: cmd.settlementId, armyId: cmd.armyId, nextId: () => this.nextId = Math.max(this.nextId + 1, nextEntityId(this.snapshot)), active, now: new Date().toISOString(), paused: value => { this.paused = value; }, finalize: id => this.finalize(id) };
+        this.snapshot.server_now = new Date(this.nowGameMs()).toISOString();
+        const context: LocalCommandContext = { world: this.snapshot, playerId: this.playerId, settlementId: cmd.settlementId, armyId: cmd.armyId, nextId: () => this.nextId = Math.max(this.nextId + 1, nextEntityId(this.snapshot)), active, now: new Date(this.nowGameMs()).toISOString(), paused: value => { this.paused = value; }, finalize: id => this.finalize(id) };
         switch (cmd.type) {
             case 'startResearch': startResearch(this.snapshot,this.playerId,cmd.technologyId,Date.parse(context.now)); break;
             case 'pauseResearch': pauseResearch(this.snapshot,this.playerId,Date.parse(context.now)); break;

@@ -1,3 +1,4 @@
+import { worldGameNow } from '../../../shared/time/gameClock';
 import {researchFactor} from '../../research/domain/effects';
 import type { World } from '../../../shared/model/world';
 import type { LocalCommandContext } from '../../../shared/model/commands';
@@ -25,7 +26,7 @@ export function cityCultureRate(world: World, sid: number) {
         + (world.city_slots ?? []).filter(s => s.settlement_id === sid).reduce((sum, s) => sum + s.level * 3, 0))*researchFactor(world,world.settlements.find(s=>s.id===sid)!.owner_id,'culture');
 }
 export const cultureRate = (world: World, owner: string) => world.settlements.filter(s => s.owner_id === owner && !s.ruined_at).reduce((sum, s) => sum + cityCultureRate(world, s.id), 0);
-export function liveCulture(world: World, owner: string, now = Date.now()) {
+export function liveCulture(world: World, owner: string, now = worldGameNow(world)) {
     const player = world.players.find(p => p.id === owner)!;
     return Math.min(1e9, (player.culture_points ?? 0) + Math.max(0, now - Date.parse(player.culture_updated_at ?? world.server_now)) / 60000 * cultureRate(world, owner));
 }

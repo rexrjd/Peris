@@ -2,13 +2,15 @@
 create table if not exists public.peris_camp_stock (
  camp_id integer primary key references public.peris_camps(id) on delete cascade,
  resources jsonb not null default '{"wood":0,"stone":0,"food":0,"gold":0}',
- stock_updated_at timestamptz not null default now(),
- next_recruit_at timestamptz not null default now()+interval '1 minute',
+ stock_updated_at timestamptz not null default public.peris_game_now(),
+ next_recruit_at timestamptz not null default public.peris_game_now()+interval '1 minute',
  recruit_sequence bigint not null default 0, engaged_battle_id bigint
 );
 revoke all on public.peris_camp_stock from public,anon,authenticated;
+alter table public.peris_camp_stock alter column stock_updated_at set default public.peris_game_now();
+alter table public.peris_camp_stock alter column next_recruit_at set default public.peris_game_now()+interval '1 minute';
 alter table public.peris_camp_stock enable row level security;
-insert into public.peris_camp_stock(camp_id,next_recruit_at)select id,now()+make_interval(secs=>60+floor(random()*241)::integer)from public.peris_camps where bandit on conflict do nothing;
+insert into public.peris_camp_stock(camp_id,next_recruit_at)select id,public.peris_game_now()+make_interval(secs=>60+floor(random()*241)::integer)from public.peris_camps where bandit on conflict do nothing;
 alter table public.peris_reports add column if not exists camp_id integer;
 alter table public.peris_reports add column if not exists farm_list_id bigint;
 alter table public.armies add column if not exists loot_report_id bigint;
@@ -19,7 +21,7 @@ alter table public.peris_campaign_farms add column if not exists next_at timesta
 alter table public.peris_campaign_farms add column if not exists last_status text;
 create index if not exists peris_farms_due on public.peris_campaign_farms(next_at,id)where enabled;
 
-create or replace function public.peris_camp_accrue(p_camp integer,p_until timestamptz default now())returns void language plpgsql security definer set search_path='' as $$
+create or replace function public.peris_camp_accrue(p_camp integer,p_until timestamptz default public.peris_game_now())returns void language plpgsql security definer set search_path='' as $$
 declare c public.peris_camps%rowtype;s public.peris_camp_stock%rowtype;rates integer[];capacity integer;batch_min integer;batch_max integer;cap integer;minutes numeric;r text;i integer:=1;amount integer;steps integer:=0;stock jsonb;
 begin
  select * into c from public.peris_camps where id=p_camp and bandit for update;if c.id is null then return;end if;

@@ -1,7 +1,7 @@
 -- Catch up completed legacy construction and income before introducing consumption.
 do $$declare city record;begin
  if to_regprocedure('public.peris_settle(uuid,timestamptz)')is not null and not exists(select 1 from information_schema.columns where table_schema='public' and table_name='settlements' and column_name='population')then
-  for city in select owner_id from public.settlements loop perform public.peris_settle(city.owner_id,now());end loop;
+  for city in select owner_id from public.settlements loop perform public.peris_settle(city.owner_id,public.peris_game_now());end loop;
  end if;
 end $$;
 -- Civilian population, housing and production-worker economy.
@@ -69,7 +69,7 @@ create or replace function public.peris_city_economy(p_sid bigint)returns void l
 declare main integer;lumber integer;quarry integer;farm integer;fish integer;homes integer;s public.settlements%rowtype;staff numeric;fw numeric:=0;fs numeric:=0;ff numeric:=0;fg numeric:=0;
 begin
  select * into s from public.settlements where id=p_sid for update;if s.id is null then return;end if;
- if not s.population_ready then perform public.peris_population_accrue(p_sid,now());select * into s from public.settlements where id=p_sid;end if;
+ if not s.population_ready then perform public.peris_population_accrue(p_sid,public.peris_game_now());select * into s from public.settlements where id=p_sid;end if;
  select coalesce(max(level)filter(where building_type='market'),0),coalesce(max(level)filter(where building_type='lumber'),0),coalesce(max(level)filter(where building_type='quarry'),0),coalesce(max(level)filter(where building_type='farm'),0) into main,lumber,quarry,farm from public.buildings where settlement_id=p_sid;
  select coalesce(sum(level)filter(where building_type='fishery'),0),coalesce(sum(level)filter(where building_type='housing'),0) into fish,homes from public.peris_city_slots where settlement_id=p_sid;
  s.population_capacity:=40+10*main+30*homes;s.population:=greatest(10,least(s.population_capacity,s.population));s.workers_required:=4*main+6*lumber+6*quarry+5*farm+4*fish;

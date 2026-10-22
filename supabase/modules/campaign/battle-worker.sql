@@ -1,9 +1,11 @@
 -- Scheduling timestamps are operational real time, never accelerated game time.
 create table if not exists public.peris_battle_work(
- battle_id bigint primary key references public.battles(id) on delete cascade,
+ battle_id bigint primary key,
  last_attempt_at timestamptz not null,next_attempt_at timestamptz not null,
  consecutive_failures integer not null default 0,last_sqlstate text
 );
+-- A failed/rolled-back item must not wait on an FK lock while recording its retry.
+alter table public.peris_battle_work drop constraint if exists peris_battle_work_battle_id_fkey;
 alter table public.peris_battle_work enable row level security;
 revoke all on public.peris_battle_work from public,anon,authenticated;
 create index if not exists peris_active_battles_due on public.battles(last_tick_at,id)where status='active';
@@ -13,11 +15,12 @@ declare started timestamptz:=clock_timestamp();bid bigint;owner uuid;visited big
  attempted integer:=0;processed integer:=0;failed integer:=0;busy integer:=0;outcome jsonb;
 begin
  if p_limit is null or p_limit not between 1 and 100 or p_budget_ms is null or p_budget_ms not between 1 and 5000 then raise exception 'Invalid battle worker budget';end if;
+ delete from public.peris_battle_work w where not exists(select 1 from public.battles b where b.id=w.battle_id);
  while attempted<p_limit and extract(epoch from(clock_timestamp()-started))*1000<p_budget_ms loop
   bid:=null;
   begin
    select b.id,b.attacker_owner_id into bid,owner from public.battles b left join public.peris_battle_work w on w.battle_id=b.id
-    where b.status='active'and b.last_tick_at<=now()-interval '150 milliseconds'
+    where b.status='active'and b.last_tick_at<=public.peris_game_now()-interval '150 milliseconds'
      and not(b.id=any(visited))and(w.next_attempt_at is null or w.next_attempt_at<=clock_timestamp())
     order by w.last_attempt_at nulls first,b.last_tick_at,b.id limit 1 for update of b skip locked;
    if bid is null then exit;end if;

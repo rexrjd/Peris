@@ -19,12 +19,12 @@ begin
  select * into a from public.armies where id=p_army and owner_id=u for update;
  if a.id is null then raise exception 'Choose one of your armies';end if;
  if p_sent_at is null or a.march_sent_at is distinct from p_sent_at then raise exception 'This march is no longer the same order';end if;
- if a.status<>'moving' or a.march_cancel_until is null or now()>=a.march_cancel_until or now()<a.march_sent_at then
+ if a.status<>'moving' or a.march_cancel_until is null or public.peris_game_now()>=a.march_cancel_until or public.peris_game_now()<a.march_sent_at then
   raise exception 'Marches can only be cancelled during the first 30 seconds';
  end if;
  perform public.peris_restore_raid_reserve(a.id);
  update public.armies set status='idle',raid_target_id=null,raid_city_id=null,siege_target='auto',target_x=start_x,target_y=start_y,
-  departure_at=now(),arrival_at=now(),march_path=null,march_distance=null,march_sent_at=null,march_cancel_until=null,march_origin=null,march_returning=false,updated_at=now()
+  departure_at=public.peris_game_now(),arrival_at=public.peris_game_now(),march_path=null,march_distance=null,march_sent_at=null,march_cancel_until=null,march_origin=null,march_returning=false,updated_at=now()
   where id=a.id;
  perform public.peris_garrison_merge(a.id);
  return jsonb_build_object('ok',true);
@@ -41,7 +41,7 @@ begin
  if c.id is null then raise exception 'Camp not found';end if;
  if a.id is null or a.infantry+a.archers+a.cavalry=0 then raise exception 'Recruit soldiers before starting a raid';end if;
  if a.status<>'idle' or a.raid_target_id is not null or a.raid_city_id is not null or a.raid_reserve is not null then raise exception 'This legion already has a march or raid';end if;
- if not c.bandit and exists(select 1 from public.peris_progress where owner_id=u and camp_id=p_camp and available_at>now())then raise exception 'The camp is still regrouping';end if;
+ if not c.bandit and exists(select 1 from public.peris_progress where owner_id=u and camp_id=p_camp and available_at>public.peris_game_now())then raise exception 'The camp is still regrouping';end if;
  if p_troops is not null then
   if jsonb_typeof(p_troops)<>'object' then raise exception 'Choose troops currently available in this legion';end if;
   available:=public.peris_roster(to_jsonb(a));preset:=public.peris_garrison_troops(p_troops);
@@ -88,6 +88,6 @@ begin
  seconds:=greatest(2,a.march_distance/public.peris_march_speed(a.id));
  update public.armies set start_x=a.target_x,start_y=a.target_y,target_x=(a.march_origin->>'x')::integer,target_y=(a.march_origin->>'y')::integer,
   march_path=route,status='moving',raid_target_id=null,raid_city_id=null,siege_target='auto',march_returning=true,march_sent_at=null,march_cancel_until=null,
-  departure_at=now(),arrival_at=now()+make_interval(secs=>seconds::double precision),updated_at=now() where id=a.id;
+  departure_at=public.peris_game_now(),arrival_at=public.peris_game_now()+make_interval(secs=>seconds::double precision),updated_at=now() where id=a.id;
  return true;
 end $$;

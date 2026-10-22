@@ -31,7 +31,7 @@ export class CanvasOverlays {
                 c.fillRect(x + (town.x - WORLD_MIN_X) / worldW * w - 2, y + (town.y - WORLD_MIN_Y) / worldH * h - 2, 4, 4);
             }
             for (const army of s.world.armies) {
-                const pos = armyPosition(army, Date.now() + (s.clockOffset ?? 0)), ax = x + (pos.x - WORLD_MIN_X) / worldW * w, ay = y + (pos.y - WORLD_MIN_Y) / worldH * h;
+                const pos = armyPosition(army, (s.gameNow?.() ?? (Date.now() + (s.clockOffset ?? 0)))), ax = x + (pos.x - WORLD_MIN_X) / worldW * w, ay = y + (pos.y - WORLD_MIN_Y) / worldH * h;
                 c.fillStyle = army.owner_id === s.playerId ? '#ffe3a1' : '#9dc2dc';
                 c.beginPath(); c.moveTo(ax, ay - 3); c.lineTo(ax + 3, ay); c.lineTo(ax, ay + 3); c.lineTo(ax - 3, ay); c.closePath(); c.fill();
             }

@@ -4,16 +4,19 @@ import { accountServer } from '../helpers/account-server.mjs';
 let server: Awaited<ReturnType<typeof accountServer>>;
 test.beforeAll(async () => { server = await accountServer(); });
 test.afterAll(async () => { await server.close(); });
-test('temporary initial snapshot error recovers the same ruler without another account entry', async ({ page, context }, testInfo) => {
+for (const failure of ['gateway', 'network'] as const) test(`temporary initial snapshot ${failure} recovers the same ruler without another account entry`, async ({ page, context }, testInfo) => {
     await connect(context);
     let failures = 0;
     const entries = server.logins.length;
     await context.route('**/rest/v1/rpc/peris_snapshot', async route => {
-        if (failures++ === 0) await route.fulfill({ status: 500, contentType: 'application/json', body: JSON.stringify({ code: '57014', message: 'Controlled initial-read reporter check' }) });
+        if (failures++ === 0) {
+            if (failure === 'network') await route.abort('connectionfailed');
+            else await route.fulfill({ status: 502, contentType: 'application/json', body: JSON.stringify({ code: '', message: 'Controlled initial-read gateway check' }) });
+        }
         else await route.fallback();
     });
-    await login(page, 'Recovery ruler', true);
-    await ruler(page, 'Recovery ruler');
+    await login(page, 'Recovery ' + failure, true);
+    await ruler(page, 'Recovery ' + failure);
     expect(failures).toBeGreaterThan(1);
     expect(server.logins.length - entries).toBe(1);
     await page.screenshot({ path: testInfo.outputPath('initial-read-recovered.png') });

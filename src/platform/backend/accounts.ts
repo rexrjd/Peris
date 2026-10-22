@@ -1,6 +1,7 @@
 import { supabase } from './supabase';
 import { openRuler, accountEntryRequest, accountEntryError, type AccountBackend, type RulerLogin, type AccountEntry } from './accountLogin';
 import type { World } from '../../shared/model/world';
+import { accountResponse } from './accountResponse';
 const ACCOUNT_UPGRADE = 'Install supabase/UPGRADE_TO_V15.sql to enable the account browser and race selection. Your existing accounts and progress are preserved.';
 const PASSWORD_UPGRADE = 'Password access is not available on this server yet. Ask the world administrator to enable it, then retry.';
 const backend: AccountBackend = {
@@ -15,11 +16,10 @@ const backend: AccountBackend = {
     },
     async login(name, entry = { mode: 'login' }) {
         const request = accountEntryRequest(name, entry);
-        const { data, error } = await supabase.rpc(request.functionName, request.args);
-        if (error) throw error; return data as RulerLogin;
+        return accountResponse(await supabase.rpc(request.functionName, request.args)) as RulerLogin;
     },
-    async sync() { const { error } = await supabase.rpc('sync_my_state'); if (error) throw error; },
-    async snapshot() { const { data, error } = await supabase.rpc('peris_snapshot'); if (error) throw error; return data as World; },
+    async sync() { accountResponse(await supabase.rpc('sync_my_state')); },
+    async snapshot() { return accountResponse(await supabase.rpc('peris_snapshot')) as World; },
 };
 let pending: { name: string; entry: AccountEntry; result: ReturnType<typeof openRuler> } | null = null;
 export function loginAccount(name: string, entry: AccountEntry = { mode: 'login' }): ReturnType<typeof openRuler> {
