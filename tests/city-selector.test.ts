@@ -52,6 +52,24 @@ test('3D city has a right-hand garrison card, not the old Defence launcher or fu
         'city selector is on the left and garrison on the right');
 });
 
+test('live 3D City shares the map Events widget and exposes active building and garrison-training orders', () => {
+    const world=createSolo('Events'),city=world.settlements[0], now=Date.parse(world.server_now);
+    world.orders.push(
+        {id:77,owner_id:city.owner_id,settlement_id:city.id,kind:'upgrade',item:'market',quantity:1,
+            started_at:world.server_now,finish_at:new Date(now+120000).toISOString()},
+        {id:78,owner_id:city.owner_id,settlement_id:city.id,kind:'recruit',item:'infantry',quantity:12,
+            recruit_destination:'garrison',started_at:world.server_now,finish_at:new Date(now+150000).toISOString()},
+    );
+    const html=renderToStaticMarkup(React.createElement(CitySceneWorkspace,{
+        world,owner:city.owner_id,sid:city.id,now,plots:[],scene:null,run:()=>{},busy:false,onSelect:()=>{},
+    }));
+    assert.ok(html.includes('aria-label="City events and activity"'));
+    assert.ok(html.includes('Main building'));
+    assert.ok(html.includes('12 infantry'));
+    assert.ok(html.includes('All events'));
+    assert.ok(html.includes('city-scene-activity'));
+});
+
 test('garrison UI inherits shared scene materials instead of defining a second color palette', () => {
     const styles = readFileSync(new URL('../src/features/city/styles/city-garrison.css', import.meta.url), 'utf8');
     assert.match(styles, /city-selector-card|CitySelector/);

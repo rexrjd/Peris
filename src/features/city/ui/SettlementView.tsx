@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { World } from '../../../shared/model/world';
 import type { Command } from '../../../shared/model/commands';
+import type { MapActivity } from '../../map/domain/activity';
 import { Icon, buildingIcon } from '../../../shared/ui/Icons';
 import { factionOf } from '../../factions/domain/factions';
 import { BUILDINGS } from '../domain/buildings';
@@ -18,8 +19,9 @@ import { CityArmySummary, CityEconomySummary } from './CitySummary';
 import { activeCityTraining } from '../domain/training';
 import { cityEnvironment } from '../domain/environment';
 
-export function SettlementView({ world, playerId, run, busy, now, cityId, onCity, onEmpire, shortcut, onLand, onSceneChange }: {
+export function SettlementView({ world, playerId, run, busy, now, cityId, onCity, onEmpire, shortcut, onLand, onSceneChange, onActivityMap }: {
     world: World; playerId: string; cityId?: number; onCity?: (id: number) => void; onEmpire?: () => void; onLand?: () => void; onSceneChange?: (active: boolean) => void;
+    onActivityMap?: (event: MapActivity) => void;
     shortcut?: { type: SlotType | 'market'; request: number }; run: (command: Command, message?: string) => void; busy: boolean; now: number;
 }) {
     const town = world.settlements.find(s => s.owner_id === playerId && (cityId === undefined || s.id === cityId))!;
@@ -57,7 +59,7 @@ export function SettlementView({ world, playerId, run, busy, now, cityId, onCity
     const sceneProps = { selected, onSelect: choose, levels, slots, faction: factionOf(town.faction),environment };
     const dialog = dialogOpen && <BuildingDialog key={plot.key} appearance={mode === '3d' ? 'scene' : undefined} world={world} owner={playerId} sid={town.id} plot={plot} initialChoice={buildChoice} note={shortcutNote} busy={busy} now={now} run={run} onSelect={choose} onClose={() => setDialogOpen(false)}/>;
     if (mode === '3d') return <div className="settlement-layout city-stage city-scene-screen">
-        <CitySceneWorkspace world={world} owner={playerId} sid={town.id} now={now} plots={plots} run={run} busy={busy} onCity={onCity} onSelect={choose} onLand={onLand} onVillage={paintedAvailable ? () => setMode('city') : undefined} scene={<SettlementScene {...sceneProps} training={activeCityTraining(world,town.id,playerId,now)}/>}/>
+        <CitySceneWorkspace world={world} owner={playerId} sid={town.id} now={now} plots={plots} run={run} busy={busy} onCity={onCity} onActivityMap={onActivityMap} onSelect={choose} onLand={onLand} onVillage={paintedAvailable ? () => setMode('city') : undefined} scene={<SettlementScene {...sceneProps} training={activeCityTraining(world,town.id,playerId,now)}/>}/>
         {dialog}
     </div>;
     return <div className="settlement-layout city-stage city-command-ui village-screen">

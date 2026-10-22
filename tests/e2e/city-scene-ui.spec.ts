@@ -124,3 +124,35 @@ test('3D UI retains city switching and useful construction when WebGL is unavail
     await expect(page.getByRole('region', { name: 'Construction queue', exact: true })).toContainText('Main building');
     await capture(page, info, 'city-scene-fallback');
 });
+
+
+test('3D City Events shows queued building and garrison training, links to their buildings and stays compact on mobile', async ({ page }, info) => {
+    const world=createSolo('City Events'),city=world.settlements[0], at=Date.parse(world.server_now);
+    world.city_slots=[{settlement_id:city.id,slot_index:0,building_type:'barracks',level:1}];
+    world.orders=[
+        {id:420,owner_id:city.owner_id,settlement_id:city.id,kind:'upgrade',item:'market',quantity:1,
+            started_at:world.server_now,finish_at:new Date(at+180000).toISOString()},
+        {id:421,owner_id:city.owner_id,settlement_id:city.id,kind:'recruit',item:'infantry',quantity:8,
+            recruit_destination:'garrison',started_at:world.server_now,finish_at:new Date(at+240000).toISOString()},
+    ];
+    await page.clock.setFixedTime(at);
+    await start(page,world);
+    const events=page.getByRole('complementary',{name:'City events and activity'});
+    await expect(events).toBeVisible();
+    await expect(events.locator('.ops-events li')).toHaveCount(2);
+    await expect(events).toContainText('Main building');
+    await expect(events).toContainText('8 infantry');
+    await expect(events.getByText('Events',{exact:true})).toBeVisible();
+    await capture(page,info,'city-events-desktop');
+    await events.getByRole('button',{name:/View building: Main building/}).click();
+    await expect(page.getByRole('dialog',{name:'Selected building',exact:true})).toContainText('Main building');
+    await page.keyboard.press('Escape');
+    await events.getByRole('button',{name:/View recruiting: 8 infantry/}).click();
+    await expect(page.getByRole('dialog',{name:'Selected building',exact:true})).toContainText('Barracks');
+    await page.keyboard.press('Escape');
+    await page.setViewportSize({width:390,height:844});
+    await capture(page,info,'city-events-mobile-folded');
+    expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+    await page.getByRole('button',{name:'Map',exact:true}).click();
+    await expect(page.getByRole('complementary',{name:'Map overview and activity'})).toBeVisible();
+});

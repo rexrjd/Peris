@@ -135,6 +135,21 @@ export function mapActivity(world: World, owner: string, now: number): MapActivi
     }
     return events.sort((a, b) => Number(!!b.live) - Number(!!a.live) || (a.endsAt ?? Infinity) - (b.endsAt ?? Infinity) || a.id.localeCompare(b.id));
 }
+/** Map keeps its short movement roster. In City, prioritize building/training
+ * in the selected city, then other city projects, then the remaining events.
+ * Keep stable IDs and server deadlines; never mutate the authoritative list. */
+export function activityPreview(events: readonly MapActivity[], view: 'movements' | 'city', cityId?: number): MapActivity[] {
+    if (view === 'movements') return events.filter(event => event.category === 'armies').slice(0, 3);
+    const priority = (event: MapActivity) => {
+        const work = event.kind === 'construction' || event.kind === 'recruitment';
+        if (work && event.cityId === cityId) return 0;
+        if (work) return 1;
+        if (event.category === 'cities' && event.cityId === cityId) return 2;
+        return 3;
+    };
+    return [...events].sort((a,b) => priority(a)-priority(b)).slice(0, 5);
+}
+
 export function activityProgress(event: MapActivity, now: number) {
     if (event.startedAt === null || event.endsAt === null) return 0;
     return Math.max(0, Math.min(1, (now - event.startedAt) / Math.max(1, event.endsAt - event.startedAt)));
