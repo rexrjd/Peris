@@ -15,6 +15,30 @@ function fixture(session: string | null = 'browser-one') {
     };
     return { backend, calls, world };
 }
+test('temporary first snapshot failure retries state loading without replacing identity or repeating account entry', async () => {
+    const { backend, calls, world } = fixture();
+    let snapshots = 0;
+    Object.assign(backend, { wait: async (ms: number) => { calls.push('wait:' + ms); } });
+    backend.snapshot = async () => { calls.push('snapshot'); if (++snapshots === 1) throw { status: 500, code: '57014' }; return world; };
+    const result = await openRuler('Alpha', backend);
+    assert.equal(result.sessionId, 'browser-one');
+    assert.equal(calls.filter(call => call === 'login:Alpha').length, 1);
+    assert.equal(calls.includes('fresh'), false);
+    assert.equal(snapshots, 2);
+    assert.ok(calls.includes('wait:500'));
+});
+test('state recovery has a finite retry budget and does not retry permission failures', async () => {
+    const { backend } = fixture();
+    let snapshots = 0;
+    Object.assign(backend, { wait: async () => {} });
+    backend.snapshot = async () => { snapshots++; throw { status: 503 }; };
+    await assert.rejects(() => openRuler('Alpha', backend));
+    assert.equal(snapshots, 3);
+    snapshots = 0;
+    backend.snapshot = async () => { snapshots++; throw { code: '42501' }; };
+    await assert.rejects(() => openRuler('Alpha', backend));
+    assert.equal(snapshots, 1);
+});
 test('name-only login uses the persistent ruler ID and settles before the first snapshot', async () => {
     const { backend, calls } = fixture();
     const result = await openRuler('  aLpHa  ', backend);

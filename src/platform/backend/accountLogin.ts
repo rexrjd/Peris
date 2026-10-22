@@ -8,6 +8,8 @@ export type AccountBackend = {
     login: (name: string, entry?: AccountEntry) => Promise<RulerLogin>;
     sync: () => Promise<void>;
     snapshot: () => Promise<World>;
+    /** Real-time delay; injected by tests so recovery checks do not sleep. */
+    wait?: (milliseconds: number) => Promise<void>;
 };
 export function rulerName(value: string): string {
     const name = value.trim();
@@ -39,6 +41,17 @@ const expired = (error: unknown) => {
     return e.status === 401 || ['PGRST301', 'PGRST302', 'PGRST303', 'refresh_token_not_found', 'refresh_token_already_used', 'session_not_found'].includes(e.code ?? '') || /JWT expired|Invalid Refresh Token/i.test(e.message ?? '');
 };
 export function expiredSession(error: unknown) { return expired(error); }
+async function loadRulerState(backend: AccountBackend): Promise<World> {
+    for (let attempt = 0; ; attempt++) {
+        try { await backend.sync(); return await backend.snapshot(); }
+        catch (error) {
+            const e = error as { code?: string; status?: number };
+            const transient = [0, 500, 502, 503, 504].includes(e.status ?? -1) || e.code === '57014' || error instanceof TypeError;
+            if (attempt >= 2 || !transient || expired(error)) throw error;
+            await (backend.wait ?? (ms => new Promise<void>(resolve => setTimeout(resolve, ms))))(500 * (attempt + 1));
+        }
+    }
+}
 /** One serialized attempt per tab; never infer ownership from the Auth UUID. */
 export async function openRuler(value: string, backend: AccountBackend, entry: AccountEntry = { mode: 'login' }) {
     const name = rulerName(value);
@@ -56,8 +69,7 @@ export async function openRuler(value: string, backend: AccountBackend, entry: A
     }
     if (typeof ruler?.player_id !== 'string' || typeof ruler.display_name !== 'string' || ruler.display_name.toLowerCase() !== name.toLowerCase()) throw new Error('The server opened a different ruler. Please retry.');
     // Settle offline queues before reading, so the first frame is current.
-    await backend.sync();
-    const world = await backend.snapshot();
+    const world = await loadRulerState(backend);
     if (!world?.players?.some(player => player.id === ruler.player_id && player.display_name === ruler.display_name) || !world.settlements?.some(city => city.owner_id === ruler.player_id) || !world.armies?.some(army => army.owner_id === ruler.player_id)) throw new Error('Your realm could not be loaded. Please retry the same name.');
     return { ruler, world, sessionId: session };
 }

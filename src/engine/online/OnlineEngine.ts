@@ -15,6 +15,7 @@ import type { AccountEntry } from '../../platform/backend/accountLogin';
 import type { Report } from '../../features/campaign/domain/types';
 import { expiredSession } from '../../platform/backend/accountLogin';
 import { rememberRuler } from '../../platform/backend/accountStorage';
+import {PollBackoff,statePollInterval} from '../../platform/backend/polling';
 
 type MapBounds = { minX: number; minY: number; maxX: number; maxY: number };
 type PublicMapSnapshot = {
@@ -56,11 +57,16 @@ export class OnlineEngine implements GameEngine {
     private requests = new Set<AbortController>();
     private busy = false;
     private dirty = false;
+    private dirtyForced = false;
     private alive = true;
     private realtimeTimer: number | undefined;
     private coreError: string | null = null;
     private mapError: string | null = null;
     private lastCorePoll = Date.now();
+    private lastMapPoll = 0;
+    private coreBackoff = new PollBackoff();
+    private mapBackoff = new PollBackoff();
+    private cultureBackoff = new PollBackoff();
     private lastCoreSnapshotAt = Date.now();
     private ticking = false;
     private reconnecting: Promise<void> | null = null;
@@ -109,10 +115,10 @@ export class OnlineEngine implements GameEngine {
                 this.recoveryTimer = window.setTimeout(() => { this.recoveryTimer = undefined; void this.recoverAccount(); }, 0);
             }
         }).data.subscription;
-        // Battles retain their 850ms authoritative cadence; peaceful state polls
-        // every 2.55s. Public rivals are refreshed independently every five seconds.
+        // Battle and queued-work cadences are preserved. Idle reads are slower;
+        // viewport changes and confirmed player commands still refresh immediately.
         this.timer = window.setInterval(() => void this.tick(), 850);
-        this.mapTimer = window.setInterval(() => void this.refreshMap(), 5000);
+        this.mapTimer = window.setInterval(() => void this.refreshMap(true), 5000);
         if (snapshot.map && !currentMap(snapshot.map)) { this.mapError = WORLD_UPGRADE; this.publish(); }
         else if (snapshot.map) void this.refreshMap();
     }
@@ -120,7 +126,7 @@ export class OnlineEngine implements GameEngine {
     private watch(table: string, filter: string) {
         this.channel.on('postgres_changes', { event: '*', schema: 'public', table, filter }, () => {
             if (!this.alive || this.realtimeTimer !== undefined) return;
-            this.realtimeTimer = window.setTimeout(() => { this.realtimeTimer = undefined; void this.refresh(); }, 180);
+            this.realtimeTimer = window.setTimeout(() => { this.realtimeTimer = undefined; void this.refresh(false); }, 180);
         });
     }
     private async rpc(fn: string, args: Record<string, unknown> = {}) {
@@ -175,7 +181,7 @@ export class OnlineEngine implements GameEngine {
             .map(battle => `${battle.id}:${battle.attacker_army_id}:${battle.defender_army_id}`).sort().join('|');
         // A newly encountered battle needs its actual cultures immediately;
         // the peaceful-map refresh interval must not launch the wrong 3D army.
-        if (!this.alive || this.culturesBusy || (battleIds === this.cultureBattleIds && Date.now() - this.culturesAt < 10000)) return;
+        if (!this.alive || this.culturesBusy || !this.cultureBackoff.ready(Date.now()) || (battleIds === this.cultureBattleIds && Date.now() - this.culturesAt < 10000)) return;
         this.cultureBattleIds = battleIds;
         this.culturesBusy = true;
         const controller = new AbortController(); this.requests.add(controller);
@@ -193,8 +199,8 @@ export class OnlineEngine implements GameEngine {
                     if (error) throw error; return data ?? [];
                 },
             });
-            if (this.alive) { this.armyCultures = cultures; this.culturesAt = Date.now(); this.publish(); }
-        } catch { /* Map and battle commands remain usable if cosmetic lookup fails. */ }
+            if (this.alive) { this.cultureBackoff.reset();this.armyCultures = cultures; this.culturesAt = Date.now(); this.publish(); }
+        } catch { this.cultureBackoff.fail(Date.now()); /* Cosmetic failures do not stop gameplay. */ }
         finally { this.requests.delete(controller); this.culturesBusy = false; }
     }
     private publish() {
@@ -225,15 +231,20 @@ export class OnlineEngine implements GameEngine {
         };
         this.listeners.forEach(fn => fn());
     }
-    private async refreshMap() {
+    private async refreshMap(background = false) {
         if (!this.alive || !this.core.map) return;
         if (!currentMap(this.core.map)) { this.mapError = WORLD_UPGRADE; this.publish(); return; }
-        if (this.mapBusy) { this.mapQueued = true; return; }
+        const now=Date.now();
+        if(!this.mapBackoff.ready(now))return;
+        if(background&&now-this.lastMapPoll<(document.visibilityState==='hidden'?30000:15000))return;
+        if (this.mapBusy) { if(!background)this.mapQueued = true; return; }
         this.mapBusy = true;
+        this.lastMapPoll=now;
         const revision = this.mapRevision, bounds = { ...this.viewport };
         try {
             const { data, error } = await this.rpc('peris_map_snapshot', { p_min_x: bounds.minX, p_min_y: bounds.minY, p_max_x: bounds.maxX, p_max_y: bounds.maxY });
             if (error) throw error;
+            this.mapBackoff.reset();
             if (this.alive && revision === this.mapRevision) {
                 this.publicMap = data as PublicMapSnapshot;
                 void this.refreshArmyCultures();
@@ -241,6 +252,7 @@ export class OnlineEngine implements GameEngine {
                 this.publish();
             }
         } catch (e) {
+            this.mapBackoff.fail(Date.now());
             if (this.alive && revision === this.mapRevision) {
                 this.mapError = (e as { code?: string })?.code === 'PGRST202' ? WORLD_UPGRADE : this.message(e);
                 this.publish();
@@ -250,9 +262,10 @@ export class OnlineEngine implements GameEngine {
             if (this.mapQueued && this.alive) { this.mapQueued = false; void this.refreshMap(); }
         }
     }
-    async refresh() {
+    async refresh(force = true) {
         if (!this.alive) return;
-        if (this.busy) { this.dirty = true; return; }
+        if(!force&&!this.coreBackoff.ready(Date.now()))return;
+        if (this.busy) { this.dirty = true;this.dirtyForced ||= force; return; }
         this.busy = true;
         try {
             const { data, error } = await this.rpc('peris_snapshot');
@@ -265,6 +278,7 @@ export class OnlineEngine implements GameEngine {
                     return;
                 }
                 this.core = next;
+                this.coreBackoff.reset();
                 void this.refreshArmyCultures();
                 this.lastCoreSnapshotAt = Date.now();
                 this.coreError = null;
@@ -272,16 +286,20 @@ export class OnlineEngine implements GameEngine {
                 if (!hadMap && this.core.map) void this.refreshMap();
             }
         } catch (e) {
+            this.coreBackoff.fail(Date.now());
             if (this.alive) { this.coreError = this.message(e); this.publish(); }
         } finally {
             this.busy = false;
-            if (this.dirty && this.alive) { this.dirty = false; void this.refresh(); }
+            if (this.dirty && this.alive) {
+                const queuedForce=this.dirtyForced;this.dirty = false;this.dirtyForced=false;
+                void this.refresh(queuedForce);
+            }
         }
     }
     private async tick() {
         if (this.ticking || !this.alive) return;
         const battle = this.core.battles.find(b => b.status === 'active'), now = Date.now();
-        if (!battle && now - this.lastCorePoll < 2550) return;
+        if(!this.coreBackoff.ready(now)||now-this.lastCorePoll<statePollInterval(this.core,this.playerId,document.visibilityState==='hidden'))return;
         this.ticking = true; this.lastCorePoll = now;
         try {
             if (battle?.status === 'active') {
@@ -291,8 +309,9 @@ export class OnlineEngine implements GameEngine {
                 const { error } = await this.rpc('sync_my_state');
                 if (error) throw error;
             }
-            if (this.alive) await this.refresh();
+            if (this.alive) await this.refresh(false);
         } catch (e) {
+            this.coreBackoff.fail(Date.now());
             if (this.alive) { this.coreError = this.message(e); this.publish(); }
         } finally { this.ticking = false; }
     }

@@ -7,6 +7,7 @@ import {Crest} from './Crest';
 import {PlayerFinder} from './GuildsPanel';
 import {Empty,SharedWorldOnly,SocialStatus} from './SocialShared';
 import type {SocialController} from './useSocial';
+import {PollBackoff} from '../../../platform/backend/polling';
 export type MessageTarget={player?:SocialPlayer;guild?:boolean;request:number};
 export function MessagesPanel({social,target,onClose}:{social:SocialController;target?:MessageTarget;onClose:()=>void}) {
   const [selected,setSelected]=useState<{id:string;kind:'direct'|'guild'}|null>(null),[draft,setDraft]=useState<SocialPlayer|null>(null),[compose,setCompose]=useState(false),[filter,setFilter]=useState<'all'|'unread'|'archived'>('all'),[query,setQuery]=useState(''),[blocks,setBlocks]=useState(false);
@@ -43,8 +44,8 @@ function Conversation({social,thread,player,onBack,onSent}:{social:SocialControl
   useEffect(()=>{
     alive.current=true;
     if(!thread)return;
-    const controller=new AbortController();let fetching=false;
-    const fetchPage=async()=>{if(fetching||document.visibilityState!=='visible')return;fetching=true;try{const result=await threadPage(thread.kind,thread.id,null,controller.signal);if(!controller.signal.aborted){setMessages(previous=>mergeMessages(previous,result.messages));if(firstLoad.current){setBefore(result.before);firstLoad.current=false;}setLoading(false);setError('');}}catch(e){if(!controller.signal.aborted){setError(e instanceof Error?e.message:'Could not load conversation.');setLoading(false);}}finally{fetching=false;}};
+    const controller=new AbortController(),backoff=new PollBackoff();let fetching=false;
+    const fetchPage=async()=>{if(fetching||document.visibilityState!=='visible'||!backoff.ready(Date.now()))return;fetching=true;try{const result=await threadPage(thread.kind,thread.id,null,controller.signal);if(!controller.signal.aborted){backoff.reset();setMessages(previous=>mergeMessages(previous,result.messages));if(firstLoad.current){setBefore(result.before);firstLoad.current=false;}setLoading(false);setError('');}}catch(e){if(!controller.signal.aborted){backoff.fail(Date.now());setError(e instanceof Error?e.message:'Could not load conversation.');setLoading(false);}}finally{fetching=false;}};
     void fetchPage();const timer=window.setInterval(()=>void fetchPage(),2000);window.addEventListener('focus',fetchPage);
     return()=>{alive.current=false;controller.abort();window.clearInterval(timer);window.removeEventListener('focus',fetchPage);};
   },[thread?.id,thread?.kind]);
