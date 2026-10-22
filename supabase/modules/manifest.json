@@ -41,6 +41,7 @@
   "battle/peris_ready.sql",
   "battle/peris_order.sql",
   "battle/peris_ground.sql",
+  "battle/participant-locks.sql",
   "battle/peris_finish.sql",
   "battle/peris_tick.sql",
   "battle/peris_rally.sql",
@@ -63,6 +64,7 @@
   "battle/automatic.sql",
   "campaign/player-raids.sql",
   "accounts/policies.sql",
+  "campaign/battle-worker.sql",
   "campaign/game-worker.sql",
   "security/command-receipts.sql",
   "security/permissions.sql"

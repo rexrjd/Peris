@@ -115,8 +115,7 @@ declare b public.battles%rowtype;c public.settlements%rowtype;a public.armies%ro
 begin
  select * into b from public.battles where id=p_bid for update;if b.id is null or b.status<>'active'or b.raid_city_id is null then return;end if;
  if p_winner not in('attacker','defender','draw')then raise exception 'Invalid battle outcome';end if;
- if exists(select 1 from public.peris_settler_expeditions where owner_id in(b.attacker_owner_id,b.defender_owner_id)and status='travelling'and arrival_at<=now())and not pg_try_advisory_xact_lock(204200)then raise exception 'City raid is still resolving. Try again';end if;
- perform 1 from public.players where id in(b.attacker_owner_id,b.defender_owner_id)order by id for update nowait;
+ if not public.peris_lock_battle_participants(b.attacker_owner_id,b.defender_owner_id)then raise lock_not_available;end if;
  perform public.peris_settle(b.attacker_owner_id);perform public.peris_settle(b.defender_owner_id);
  select * into c from public.settlements where id=b.raid_city_id for update;
  select * into a from public.armies where id=b.attacker_army_id for update;

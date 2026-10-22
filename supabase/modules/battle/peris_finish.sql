@@ -3,14 +3,11 @@ language plpgsql security definer set search_path='' as $$
 declare b public.battles%rowtype;ai integer;di integer;asur integer;dsur integer;r jsonb;loot jsonb:='{"wood":0,"stone":0,"food":0,"gold":0}';tier integer;u uuid;name text;a public.armies%rowtype;s public.settlements%rowtype;winner uuid;home jsonb;camp public.peris_camps%rowtype;stock jsonb;remaining jsonb;carry numeric;take numeric;key text;delivered jsonb;overflow jsonb;
 begin
  select * into b from public.battles where id=p_bid for update;if b.id is null or b.status='resolved' then return;end if;
+ if not public.peris_lock_battle_participants(b.attacker_owner_id,b.defender_owner_id)then raise lock_not_available;end if;
  if b.raid_city_id is not null then perform public.peris_finish_city_raid(p_bid,p_winner,p_reason);return;end if;
  select coalesce(sum(initial_soldiers)filter(where side='attacker'),0),coalesce(sum(initial_soldiers)filter(where side='defender'),0),
  coalesce(sum(soldiers)filter(where side='attacker'),0),coalesce(sum(soldiers)filter(where side='defender'),0) into ai,di,asur,dsur from public.battle_formations where battle_id=b.id;
  winner:=case p_winner when 'attacker' then b.attacker_owner_id when 'defender' then b.defender_owner_id else null end;
- -- A due colony takes the shared land lock before player locks, matching founding commands.
- if exists(select 1 from public.peris_settler_expeditions where owner_id in(b.attacker_owner_id,b.defender_owner_id)and status='travelling'and arrival_at<=now())then perform pg_advisory_xact_lock(204200);end if;
- -- Acquire both player locks in a stable order, even when two battles finish concurrently.
- perform 1 from public.players where id in(b.attacker_owner_id,b.defender_owner_id) order by id for update;
  select * into camp from public.peris_camps where id=b.camp_id;
  if b.mode='pve' and p_winner='attacker' and not camp.bandit then
  tier:=camp.tier;

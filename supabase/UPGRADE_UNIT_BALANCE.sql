@@ -1,5 +1,18 @@
 -- Focused unit balance upgrade for an existing V19 world. No scheduler or reset.
 begin;
+-- Never wait for a player while retaining another participant's row/land lock.
+-- Exception rollback releases every lock acquired in this helper on contention.
+create or replace function public.peris_lock_battle_participants(p_attacker uuid,p_defender uuid)returns boolean
+language plpgsql security definer set search_path='' as $
+begin
+ if exists(select 1 from public.peris_settler_expeditions where owner_id in(p_attacker,p_defender)and status='travelling'and arrival_at<=now())
+  and not pg_try_advisory_xact_lock(204200)then raise lock_not_available;end if;
+ perform 1 from public.players where id in(p_attacker,p_defender)order by id for update nowait;
+ return true;
+exception when lock_not_available then return false;
+end $;
+revoke all on function public.peris_lock_battle_participants(uuid,uuid)from public,anon,authenticated;
+
 do $$begin
  if to_regprocedure('public.peris_social_snapshot()')is null or to_regclass('public.peris_unit_catalog')is null then
   raise exception 'Install V19 first, or use the complete V19 upgrade.';
@@ -162,14 +175,11 @@ language plpgsql security definer set search_path='' as $$
 declare b public.battles%rowtype;ai integer;di integer;asur integer;dsur integer;r jsonb;loot jsonb:='{"wood":0,"stone":0,"food":0,"gold":0}';tier integer;u uuid;name text;a public.armies%rowtype;s public.settlements%rowtype;winner uuid;home jsonb;camp public.peris_camps%rowtype;stock jsonb;remaining jsonb;carry numeric;take numeric;key text;delivered jsonb;overflow jsonb;
 begin
  select * into b from public.battles where id=p_bid for update;if b.id is null or b.status='resolved' then return;end if;
+ if not public.peris_lock_battle_participants(b.attacker_owner_id,b.defender_owner_id)then raise lock_not_available;end if;
  if b.raid_city_id is not null then perform public.peris_finish_city_raid(p_bid,p_winner,p_reason);return;end if;
  select coalesce(sum(initial_soldiers)filter(where side='attacker'),0),coalesce(sum(initial_soldiers)filter(where side='defender'),0),
  coalesce(sum(soldiers)filter(where side='attacker'),0),coalesce(sum(soldiers)filter(where side='defender'),0) into ai,di,asur,dsur from public.battle_formations where battle_id=b.id;
  winner:=case p_winner when 'attacker' then b.attacker_owner_id when 'defender' then b.defender_owner_id else null end;
- -- A due colony takes the shared land lock before player locks, matching founding commands.
- if exists(select 1 from public.peris_settler_expeditions where owner_id in(b.attacker_owner_id,b.defender_owner_id)and status='travelling'and arrival_at<=now())then perform pg_advisory_xact_lock(204200);end if;
- -- Acquire both player locks in a stable order, even when two battles finish concurrently.
- perform 1 from public.players where id in(b.attacker_owner_id,b.defender_owner_id) order by id for update;
  select * into camp from public.peris_camps where id=b.camp_id;
  if b.mode='pve' and p_winner='attacker' and not camp.bandit then
  tier:=camp.tier;
@@ -344,8 +354,7 @@ declare b public.battles%rowtype;c public.settlements%rowtype;a public.armies%ro
 begin
  select * into b from public.battles where id=p_bid for update;if b.id is null or b.status<>'active'or b.raid_city_id is null then return;end if;
  if p_winner not in('attacker','defender','draw')then raise exception 'Invalid battle outcome';end if;
- if exists(select 1 from public.peris_settler_expeditions where owner_id in(b.attacker_owner_id,b.defender_owner_id)and status='travelling'and arrival_at<=now())and not pg_try_advisory_xact_lock(204200)then raise exception 'City raid is still resolving. Try again';end if;
- perform 1 from public.players where id in(b.attacker_owner_id,b.defender_owner_id)order by id for update nowait;
+ if not public.peris_lock_battle_participants(b.attacker_owner_id,b.defender_owner_id)then raise lock_not_available;end if;
  perform public.peris_settle(b.attacker_owner_id);perform public.peris_settle(b.defender_owner_id);
  select * into c from public.settlements where id=b.raid_city_id for update;
  select * into a from public.armies where id=b.attacker_army_id for update;

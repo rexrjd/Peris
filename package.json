@@ -13,6 +13,8 @@
     "preview": "vite preview",
     "test": "node --import tsx --test tests/*.test.ts",
     "test:db": "node tests/database.test.mjs",
+    "test:unattended-db": "node --import tsx tests/unattended-battle-database.test.mts",
+    "test:battle-atomicity-db": "node --import tsx tests/battle-worker-atomicity.test.mts",
     "test:fresh": "node tests/fresh-database.test.mjs",
     "build:world": "node --import tsx scripts/build-world.mjs",
     "check:world": "node --import tsx scripts/build-world.mjs --check",

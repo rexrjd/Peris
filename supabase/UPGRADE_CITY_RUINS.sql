@@ -1,6 +1,19 @@
 -- PERIS permanent city ruins: focused upgrade for an existing V19 database.
 -- REVIEW FIRST. Back up your database. Not automatically deployed.
 begin;
+-- Never wait for a player while retaining another participant's row/land lock.
+-- Exception rollback releases every lock acquired in this helper on contention.
+create or replace function public.peris_lock_battle_participants(p_attacker uuid,p_defender uuid)returns boolean
+language plpgsql security definer set search_path='' as $
+begin
+ if exists(select 1 from public.peris_settler_expeditions where owner_id in(p_attacker,p_defender)and status='travelling'and arrival_at<=now())
+  and not pg_try_advisory_xact_lock(204200)then raise lock_not_available;end if;
+ perform 1 from public.players where id in(p_attacker,p_defender)order by id for update nowait;
+ return true;
+exception when lock_not_available then return false;
+end $;
+revoke all on function public.peris_lock_battle_participants(uuid,uuid)from public,anon,authenticated;
+
 -- Persistent defensive garrisons: separate from transient field stations.
 -- Automatic arrival-merging must never withdraw soldiers assigned to this city.
 create table if not exists public.peris_city_garrisons (
@@ -707,8 +720,7 @@ declare b public.battles%rowtype;c public.settlements%rowtype;a public.armies%ro
 begin
  select * into b from public.battles where id=p_bid for update;if b.id is null or b.status<>'active'or b.raid_city_id is null then return;end if;
  if p_winner not in('attacker','defender','draw')then raise exception 'Invalid battle outcome';end if;
- if exists(select 1 from public.peris_settler_expeditions where owner_id in(b.attacker_owner_id,b.defender_owner_id)and status='travelling'and arrival_at<=now())and not pg_try_advisory_xact_lock(204200)then raise exception 'City raid is still resolving. Try again';end if;
- perform 1 from public.players where id in(b.attacker_owner_id,b.defender_owner_id)order by id for update nowait;
+ if not public.peris_lock_battle_participants(b.attacker_owner_id,b.defender_owner_id)then raise lock_not_available;end if;
  perform public.peris_settle(b.attacker_owner_id);perform public.peris_settle(b.defender_owner_id);
  select * into c from public.settlements where id=b.raid_city_id for update;
  select * into a from public.armies where id=b.attacker_army_id for update;

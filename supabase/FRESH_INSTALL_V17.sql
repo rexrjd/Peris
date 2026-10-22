@@ -4580,19 +4580,28 @@ create or replace function public.peris_ground(p_terrain text,px numeric,py nume
  else '{"kind":"Open ground","speed":1,"cover":1,"height":0}'::jsonb end from(select px/sqrt(5) nx,py/sqrt(5) ny) coordinates;
 $$;
 
+-- Never wait for a player while retaining another participant's row/land lock.
+-- Exception rollback releases every lock acquired in this helper on contention.
+create or replace function public.peris_lock_battle_participants(p_attacker uuid,p_defender uuid)returns boolean
+language plpgsql security definer set search_path='' as $$
+begin
+ if exists(select 1 from public.peris_settler_expeditions where owner_id in(p_attacker,p_defender)and status='travelling'and arrival_at<=now())
+  and not pg_try_advisory_xact_lock(204200)then raise lock_not_available;end if;
+ perform 1 from public.players where id in(p_attacker,p_defender)order by id for update nowait;
+ return true;
+exception when lock_not_available then return false;
+end $$;
+revoke all on function public.peris_lock_battle_participants(uuid,uuid)from public,anon,authenticated;
 create or replace function public.peris_finish(p_bid bigint,p_winner text,p_reason text) returns void
 language plpgsql security definer set search_path='' as $$
 declare b public.battles%rowtype;ai integer;di integer;asur integer;dsur integer;r jsonb;loot jsonb:='{"wood":0,"stone":0,"food":0,"gold":0}';tier integer;u uuid;name text;a public.armies%rowtype;s public.settlements%rowtype;winner uuid;home jsonb;camp public.peris_camps%rowtype;stock jsonb;remaining jsonb;carry numeric;take numeric;key text;delivered jsonb;overflow jsonb;
 begin
  select * into b from public.battles where id=p_bid for update;if b.id is null or b.status='resolved' then return;end if;
+ if not public.peris_lock_battle_participants(b.attacker_owner_id,b.defender_owner_id)then raise lock_not_available;end if;
  if b.raid_city_id is not null then perform public.peris_finish_city_raid(p_bid,p_winner,p_reason);return;end if;
  select coalesce(sum(initial_soldiers)filter(where side='attacker'),0),coalesce(sum(initial_soldiers)filter(where side='defender'),0),
  coalesce(sum(soldiers)filter(where side='attacker'),0),coalesce(sum(soldiers)filter(where side='defender'),0) into ai,di,asur,dsur from public.battle_formations where battle_id=b.id;
  winner:=case p_winner when 'attacker' then b.attacker_owner_id when 'defender' then b.defender_owner_id else null end;
- -- A due colony takes the shared land lock before player locks, matching founding commands.
- if exists(select 1 from public.peris_settler_expeditions where owner_id in(b.attacker_owner_id,b.defender_owner_id)and status='travelling'and arrival_at<=now())then perform pg_advisory_xact_lock(204200);end if;
- -- Acquire both player locks in a stable order, even when two battles finish concurrently.
- perform 1 from public.players where id in(b.attacker_owner_id,b.defender_owner_id) order by id for update;
  select * into camp from public.peris_camps where id=b.camp_id;
  if b.mode='pve' and p_winner='attacker' and not camp.bandit then
  tier:=camp.tier;
@@ -4673,11 +4682,7 @@ begin
  select * into b from public.battles where id=p_battle_id for update;
  if u is null or b.id is null or(u is distinct from b.attacker_owner_id and u is distinct from b.defender_owner_id)then raise exception 'Not your battle';end if;
  if b.status<>'active'then return jsonb_build_object('ok',true);end if;
- if b.raid_city_id is not null then
-  if exists(select 1 from public.peris_settler_expeditions where owner_id in(b.attacker_owner_id,b.defender_owner_id)and status='travelling'and arrival_at<=now())and not pg_try_advisory_xact_lock(204200)then return jsonb_build_object('busy',true);end if;
-  begin perform 1 from public.players where id in(b.attacker_owner_id,b.defender_owner_id)order by id for update nowait;
-  exception when lock_not_available then return jsonb_build_object('busy',true);end;
- end if;
+ if not public.peris_lock_battle_participants(b.attacker_owner_id,b.defender_owner_id)then return jsonb_build_object('busy',true);end if;
  if b.phase='deployment'then b.phase:='combat';update public.battles set phase='combat',attacker_ready=true,defender_ready=true where id=b.id;end if;
  remain:=least(10,greatest(0,extract(epoch from(now()-b.last_tick_at))));
  if remain<.15 then return jsonb_build_object('ok',true);end if;
@@ -5927,8 +5932,7 @@ declare b public.battles%rowtype;c public.settlements%rowtype;a public.armies%ro
 begin
  select * into b from public.battles where id=p_bid for update;if b.id is null or b.status<>'active'or b.raid_city_id is null then return;end if;
  if p_winner not in('attacker','defender','draw')then raise exception 'Invalid battle outcome';end if;
- if exists(select 1 from public.peris_settler_expeditions where owner_id in(b.attacker_owner_id,b.defender_owner_id)and status='travelling'and arrival_at<=now())and not pg_try_advisory_xact_lock(204200)then raise exception 'City raid is still resolving. Try again';end if;
- perform 1 from public.players where id in(b.attacker_owner_id,b.defender_owner_id)order by id for update nowait;
+ if not public.peris_lock_battle_participants(b.attacker_owner_id,b.defender_owner_id)then raise lock_not_available;end if;
  perform public.peris_settle(b.attacker_owner_id);perform public.peris_settle(b.defender_owner_id);
  select * into c from public.settlements where id=b.raid_city_id for update;
  select * into a from public.armies where id=b.attacker_army_id for update;
@@ -6015,28 +6019,84 @@ do $$declare p record;predicate text;check_predicate text;statement text;begin
  end loop;
 end $$;
 
+-- Scheduling timestamps are operational real time, never accelerated game time.
+create table if not exists public.peris_battle_work(
+ battle_id bigint primary key references public.battles(id) on delete cascade,
+ last_attempt_at timestamptz not null,next_attempt_at timestamptz not null,
+ consecutive_failures integer not null default 0,last_sqlstate text
+);
+alter table public.peris_battle_work enable row level security;
+revoke all on public.peris_battle_work from public,anon,authenticated;
+create index if not exists peris_active_battles_due on public.battles(last_tick_at,id)where status='active';
+create or replace function public.peris_advance_battles(p_limit integer default 20,p_budget_ms integer default 2000)returns jsonb
+language plpgsql security definer set search_path='' as $$
+declare started timestamptz:=clock_timestamp();bid bigint;owner uuid;visited bigint[]:='{}';
+ attempted integer:=0;processed integer:=0;failed integer:=0;busy integer:=0;outcome jsonb;
+begin
+ if p_limit is null or p_limit not between 1 and 100 or p_budget_ms is null or p_budget_ms not between 1 and 5000 then raise exception 'Invalid battle worker budget';end if;
+ while attempted<p_limit and extract(epoch from(clock_timestamp()-started))*1000<p_budget_ms loop
+  bid:=null;
+  begin
+   select b.id,b.attacker_owner_id into bid,owner from public.battles b left join public.peris_battle_work w on w.battle_id=b.id
+    where b.status='active'and b.last_tick_at<=now()-interval '150 milliseconds'
+     and not(b.id=any(visited))and(w.next_attempt_at is null or w.next_attempt_at<=clock_timestamp())
+    order by w.last_attempt_at nulls first,b.last_tick_at,b.id limit 1 for update of b skip locked;
+   if bid is null then exit;end if;
+   visited:=array_append(visited,bid);attempted:=attempted+1;
+   outcome:=public.peris_tick_for(bid,owner);
+   if coalesce((outcome->>'busy')::boolean,false)then raise lock_not_available;end if;
+   insert into public.peris_battle_work values(bid,clock_timestamp(),clock_timestamp(),0,null)
+    on conflict(battle_id)do update set last_attempt_at=excluded.last_attempt_at,next_attempt_at=excluded.next_attempt_at,consecutive_failures=0,last_sqlstate=null;
+   processed:=processed+1;
+  exception when lock_not_available then
+   busy:=busy+1;
+   insert into public.peris_battle_work values(bid,clock_timestamp(),clock_timestamp()+interval '1 second',0,'55P03')
+    on conflict(battle_id)do update set last_attempt_at=excluded.last_attempt_at,next_attempt_at=excluded.next_attempt_at;
+  when others then
+   failed:=failed+1;
+   insert into public.peris_battle_work values(bid,clock_timestamp(),clock_timestamp()+interval '5 seconds',1,sqlstate)
+    on conflict(battle_id)do update set last_attempt_at=excluded.last_attempt_at,
+     next_attempt_at=clock_timestamp()+make_interval(secs=>least(300,5*power(2,least(6,public.peris_battle_work.consecutive_failures)))::double precision),
+     consecutive_failures=public.peris_battle_work.consecutive_failures+1,last_sqlstate=excluded.last_sqlstate;
+  end;
+ end loop;
+ return jsonb_build_object('attempted',attempted,'processed',processed,'failed',failed,'busy',busy,'duration_ms',extract(epoch from(clock_timestamp()-started))*1000);
+end $$;
 create table if not exists public.peris_worker_owners(owner_id uuid primary key references public.players(id)on delete cascade,last_processed_at timestamptz not null default now());
+alter table public.peris_worker_owners add column if not exists last_attempt_at timestamptz;
+alter table public.peris_worker_owners add column if not exists next_attempt_at timestamptz;
+alter table public.peris_worker_owners add column if not exists consecutive_failures integer not null default 0;
+alter table public.peris_worker_owners add column if not exists last_sqlstate text;
 alter table public.peris_worker_owners enable row level security;
 revoke all on public.peris_worker_owners from public,anon,authenticated;
 -- The same persistent world advances without a browser. All helpers are private.
 create or replace function public.peris_game_tick(p_limit integer default 40)returns jsonb
 language plpgsql security definer set search_path='' as $$
-declare owner uuid;farm public.peris_campaign_farms%rowtype;processed integer:=0;bid bigint;camp_id integer;
+declare owner uuid;farm public.peris_campaign_farms%rowtype;processed integer:=0;camp_id integer;
+ attempted integer:=0;failed integer:=0;camp_failed integer:=0;
+ started timestamptz:=clock_timestamp();pass_started timestamptz;battles jsonb;
 begin
- if p_limit not between 1 and 100 then raise exception 'Use a worker budget of 1Ã¢â‚¬“100 owners';end if;
+ if p_limit is null or p_limit not between 1 and 100 then raise exception 'Use a worker budget of 1Ã¢â‚¬“100 owners';end if;
  if not pg_try_advisory_xact_lock(204215)then return jsonb_build_object('busy',true);end if;
- if exists(select 1 from public.peris_settler_expeditions where status='travelling'and arrival_at<=now())then perform pg_advisory_xact_lock(204200);end if;
+ battles:=public.peris_advance_battles(20,2000);pass_started:=clock_timestamp();
  for owner in select q.owner_id from(
   select owner_id,min(arrival_at)as due from public.armies where (status='moving' or raid_target_id is not null or raid_city_id is not null)and arrival_at<=now() group by owner_id
   union all select owner_id,min(arrival_at)from public.peris_settler_expeditions where status='travelling'and arrival_at<=now()group by owner_id
+  union all select owner_id,min(arrival_at)from public.peris_ruin_evacuations where arrival_at<=now()group by owner_id
   union all select owner_id,min(finish_at)from public.peris_orders where finish_at<=now()group by owner_id
   union all select owner_id,min(public.peris_science_deadline(owner_id))from public.peris_account_science where active_id is not null and public.peris_science_deadline(owner_id)<=now()group by owner_id
   union all select owner_id,min(next_at)from public.peris_campaign_farms where enabled and next_at<=now()group by owner_id
-  union all select attacker_owner_id,min(last_tick_at)from public.battles where status='active'group by attacker_owner_id
- )q left join public.peris_worker_owners w on w.owner_id=q.owner_id group by q.owner_id,w.last_processed_at order by coalesce(w.last_processed_at,'1970-01-01'::timestamptz),min(q.due),q.owner_id limit p_limit loop
+ )q left join public.peris_worker_owners w on w.owner_id=q.owner_id
+ where w.next_attempt_at is null or w.next_attempt_at<=clock_timestamp()
+ group by q.owner_id,w.last_processed_at,w.last_attempt_at order by coalesce(w.last_attempt_at,w.last_processed_at,'1970-01-01'::timestamptz),min(q.due),q.owner_id limit p_limit loop
+  exit when extract(epoch from(clock_timestamp()-pass_started))*1000>=2000;
+  attempted:=attempted+1;
   begin
-   perform public.peris_settle(owner);
-   for farm in select * from public.peris_campaign_farms where owner_id=owner and enabled and next_at<=now()order by next_at,id limit 100 for update loop
+   if exists(select 1 from public.peris_settler_expeditions where owner_id=owner and status='travelling'and arrival_at<=now())and not pg_try_advisory_xact_lock(204200)then raise lock_not_available;end if;
+   perform 1 from public.players where id=owner for update nowait;
+   perform public.peris_sync_owner(owner);
+   for farm in select * from public.peris_campaign_farms where owner_id=owner and enabled and next_at<=now()order by next_at,id limit 100 for update skip locked loop
+    exit when extract(epoch from(clock_timestamp()-pass_started))*1000>=2000;
     begin
      if farm.route is null then raise exception 'Start this target manually once to establish its land route';end if;
      perform public.peris_prepare_raid_for(owner,farm.army_id,farm.camp_id,farm.route,farm.troops);
@@ -6045,14 +6105,27 @@ begin
     exception when others then update public.peris_campaign_farms set last_status=sqlerrm,skipped=skipped+1 where id=farm.id;end;
     update public.peris_campaign_farms set next_at=now()+make_interval(secs=>farm.interval_seconds)where id=farm.id;
    end loop;
-   perform public.peris_sync_owner(owner);
-   for bid in select id from public.battles where status='active'and attacker_owner_id=owner order by id loop perform public.peris_tick_for(bid,owner);end loop;
-   insert into public.peris_worker_owners(owner_id,last_processed_at)values(owner,now())on conflict(owner_id)do update set last_processed_at=excluded.last_processed_at;
+   insert into public.peris_worker_owners(owner_id,last_processed_at,last_attempt_at,next_attempt_at,consecutive_failures,last_sqlstate)
+    values(owner,clock_timestamp(),clock_timestamp(),null,0,null)on conflict(owner_id)do update set
+    last_processed_at=excluded.last_processed_at,last_attempt_at=excluded.last_attempt_at,next_attempt_at=null,consecutive_failures=0,last_sqlstate=null;
    processed:=processed+1;
-  exception when others then raise warning 'Peris worker could not process owner %: %',owner,sqlerrm;end;
+  exception when lock_not_available then
+   insert into public.peris_worker_owners(owner_id,last_attempt_at,next_attempt_at)values(owner,clock_timestamp(),clock_timestamp()+interval '1 second')
+    on conflict(owner_id)do update set last_attempt_at=excluded.last_attempt_at,next_attempt_at=excluded.next_attempt_at;
+  when others then
+   failed:=failed+1;
+   insert into public.peris_worker_owners(owner_id,last_attempt_at,next_attempt_at,consecutive_failures,last_sqlstate)
+    values(owner,clock_timestamp(),clock_timestamp()+interval '5 seconds',1,sqlstate)on conflict(owner_id)do update set
+    last_attempt_at=excluded.last_attempt_at,next_attempt_at=clock_timestamp()+make_interval(secs=>least(300,5*power(2,least(6,public.peris_worker_owners.consecutive_failures)))::double precision),
+    consecutive_failures=public.peris_worker_owners.consecutive_failures+1,last_sqlstate=excluded.last_sqlstate;
+  end;
  end loop;
- for camp_id in select s.camp_id from public.peris_camp_stock s where s.next_recruit_at<=now() or s.stock_updated_at<=now()-interval '1 minute'order by least(s.next_recruit_at,s.stock_updated_at+interval '1 minute'),s.camp_id limit 100 loop perform public.peris_camp_accrue(camp_id);end loop;
- return jsonb_build_object('processed',processed);
+ pass_started:=clock_timestamp();
+ for camp_id in select s.camp_id from public.peris_camp_stock s where s.next_recruit_at<=now() or s.stock_updated_at<=now()-interval '1 minute'order by least(s.next_recruit_at,s.stock_updated_at+interval '1 minute'),s.camp_id limit 100 loop
+  exit when extract(epoch from(clock_timestamp()-pass_started))*1000>=500;
+  begin perform public.peris_camp_accrue(camp_id);exception when others then camp_failed:=camp_failed+1;end;
+ end loop;
+ return jsonb_build_object('processed',processed,'attempted',attempted,'failed',failed,'battles',battles,'camps_failed',camp_failed,'duration_ms',extract(epoch from(clock_timestamp()-started))*1000);
 end $$;
 -- Gameplay mutations keep a private receipt so a lost response can be retried.
 create table if not exists public.peris_command_receipts(

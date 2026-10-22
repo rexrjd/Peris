@@ -118,5 +118,13 @@ outputs['UPGRADE_CITY_GARRISONS.sql']=[
  'commit;'
 ].join('\n')
 
+// Focused installers also ship the private dependency of extracted finalizers.
+const participantLocks=await readSource(path.join(root,'supabase/modules/battle/participant-locks.sql'))
+for(const[name,content]of Object.entries(outputs)){
+ if(content.includes('public.peris_lock_battle_participants(')&&!content.includes('create or replace function public.peris_lock_battle_participants(')){
+  if(!/^begin;$/m.test(content))throw Error('Missing transaction boundary for participant dependency: '+name)
+  outputs[name]=content.replace(/^begin;$/m,'begin;\n'+participantLocks)
+ }
+}
 for(const[file,content]of Object.entries(outputs)){const target=path.join(root,'supabase',file);if(process.argv.includes('--check')){if(await readSource(target)!==content)throw Error('Stale SQL bundle: '+file)}else{let existing;try{existing=await readSource(target)}catch(error){if(error.code!=='ENOENT')throw error}if(existing!==content)await fs.writeFile(target,content)}}
 console.log(process.argv.includes('--check')?'SQL bundles match modular source':'SQL bundles rebuilt')
