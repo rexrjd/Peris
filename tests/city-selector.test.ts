@@ -1,4 +1,5 @@
 import test from 'node:test';
+import { readFileSync } from 'node:fs';
 import assert from 'node:assert/strict';
 import { createSolo } from '../src/features/campaign/domain/newRealm';
 import { citySelectorEntries, cityPreviewState } from '../src/features/city/domain/citySelector';
@@ -9,12 +10,13 @@ import { cityLayout } from '../src/features/city/rendering/three/layout';
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { CitySceneWorkspace } from '../src/features/city/ui/CitySceneWorkspace';
+import { emptyRoster } from '../src/features/army/domain/roster';
 
 (globalThis as any).React = React;
 test('3D identity presents shared preview and population and army instead of faction and level', () => {
     const world = createSolo('Preview'), town = world.settlements[0];
     const html = renderToStaticMarkup(React.createElement(CitySceneWorkspace, {
-        world, owner: town.owner_id, sid: town.id, now: Date.parse(world.server_now), plots: [], scene: null, viewControls: null, onSelect: () => {},
+        world, owner: town.owner_id, sid: town.id, now: Date.parse(world.server_now), plots: [], scene: null, run: () => {}, busy: false, onSelect: () => {},
     }));
     assert.ok(html.includes('class="city-selector"'));
     assert.ok(html.includes('city-selector-preview'));
@@ -22,6 +24,40 @@ test('3D identity presents shared preview and population and army instead of fac
     assert.ok(html.includes('aria-describedby='), 'city button exposes its visible population and army counts');
     assert.ok(html.includes('Open city economy report'));
     assert.ok(!html.includes('city-scene-name'));
+});
+
+
+test('3D city has a right-hand garrison card, not the old Defence launcher or fullscreen modal', () => {
+    const world = createSolo('Guard'), town = world.settlements[0];
+    world.city_garrisons = [{owner_id:town.owner_id, settlement_id:town.id, infantry:12, archers:8, cavalry:0,
+        unit_roster:{...emptyRoster(), infantry:12, archers:8}}];
+    const wall = world.buildings.find(row => row.settlement_id === town.id && row.building_type === 'wall');
+    if (wall) wall.level = 5;
+    const html = renderToStaticMarkup(React.createElement(CitySceneWorkspace, {
+        world, owner:town.owner_id, sid:town.id, now:Date.parse(world.server_now),
+        plots:[], scene:null, run:()=>{}, busy:false, onSelect:()=>{},
+    }));
+    assert.ok(html.includes('class="city-selector city-garrison-dock"'), 'garrison inherits the city selector theme');
+    assert.ok(html.includes('class="city-selector-card city-garrison-card"'));
+    assert.ok(html.includes('class="city-selector-preview city-garrison-emblem"'));
+    assert.ok(!html.includes('city-garrison-metrics'), 'no redundant large metric tiles');
+    assert.ok(html.includes('20</b> defenders'), 'shows real permanently stationed defenders');
+    assert.ok(html.includes('Wall <b>+50%</b>'));
+    assert.ok(html.includes('+50%'));
+    assert.ok(html.includes('Auto-defends offline'));
+    assert.ok(html.includes('aria-expanded="false"'), 'the garrison editor is collapsed by default');
+    assert.ok(!html.includes('city-garrison-launch'), 'obsolete Defence tab has been removed');
+    assert.ok(!html.includes('city-garrison-overlay'), 'old full-screen modal has been removed');
+    assert.ok(html.indexOf('class="city-selector"') < html.indexOf('class="city-selector city-garrison-dock"'),
+        'city selector is on the left and garrison on the right');
+});
+
+test('garrison UI inherits shared scene materials instead of defining a second color palette', () => {
+    const styles = readFileSync(new URL('../src/features/city/styles/city-garrison.css', import.meta.url), 'utf8');
+    assert.match(styles, /city-selector-card|CitySelector/);
+    assert.match(styles, /var\(--scene-accent\)/);
+    assert.doesNotMatch(styles, /#[\da-f]{3,8}\b/i, 'garrison styles should not hardcode a new palette');
+    assert.doesNotMatch(styles, /\.city-garrison-card\s*\{/, 'reuse the existing city card surface');
 });
 
 test('selector lists only owned cities and counts residents and physically stationed troops', () => {

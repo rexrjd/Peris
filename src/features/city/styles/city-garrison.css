@@ -1,20 +1,95 @@
-.city-scene-workspace .city-garrison-launch{display:flex;gap:7px;align-items:center;justify-content:center;min-height:40px;margin-left:auto;padding:8px 13px;background:#1b2029ef;border:1px solid #d7b77976;border-radius:10px;color:#efdcaf;font-weight:700;box-shadow:0 5px 20px #0006;white-space:nowrap}
-.city-scene-workspace .city-garrison-launch:hover{background:#2b323f}
-.city-garrison-overlay{position:absolute;inset:0;z-index:45;display:flex;align-items:center;justify-content:center;padding:20px;background:#070a10bd;pointer-events:auto}
-.city-scene-workspace .city-garrison-panel{width:min(580px,100%);max-height:calc(100dvh - 36px);overflow-y:auto;padding:22px;border:1px solid #ddc18e55;border-radius:13px;background:#1b2029f8;color:#e9edf6;box-shadow:0 12px 45px #000a}
-.city-garrison-heading{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;margin-bottom:17px}
-.city-garrison-eyebrow{display:flex;align-items:center;gap:6px;color:#dfbe83;font-size:10px;font-weight:700;letter-spacing:.12em}
-.city-garrison-heading h2{margin:7px 0 5px;color:#fff4de;font-size:21px;line-height:1.25}
-.city-garrison-heading p,.city-garrison-hint{margin:0;color:#b5bfd2;font-size:11px;line-height:1.55}
-.city-scene-workspace .city-garrison-close{width:32px;height:32px;border:1px solid #ffffff2a;border-radius:7px;background:#ffffff0c}
-.city-garrison-metrics{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
-.city-garrison-metrics>div{display:flex;flex-direction:column;gap:7px;padding:14px;background:#ffffff0b;border:1px solid #ffffff17;border-radius:9px}
-.city-garrison-metrics small{color:#b0b9c9;font-size:11px}.city-garrison-metrics strong{color:#f7e4bb;font-size:24px;font-variant-numeric:tabular-nums}.city-garrison-metrics strong span{font-size:12px}
-.city-garrison-section-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:20px 0 10px}.city-garrison-section-head h3{margin:0;font-size:13px;color:#f3e7d4}.city-garrison-section-head>span{color:#9eabc0;font-size:11px}
-.city-garrison-roster{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.city-garrison-roster>span{display:flex;justify-content:space-between;gap:5px;align-items:center;padding:9px 8px;background:#ffffff09;border:1px solid #ffffff13;border-radius:6px}.city-garrison-roster small{color:#bdc8d9;font-size:10px}.city-garrison-roster strong{color:#f4deab;font-size:12px}
-.city-garrison-empty{margin:4px 0;color:#a9b6c9;font-size:11px;line-height:1.6;grid-column:1/-1}.city-garrison-tabs{display:flex;gap:5px;margin-bottom:12px;padding:4px;background:#111821;border:1px solid #ffffff12;border-radius:8px}.city-scene-workspace .city-garrison-tabs button{flex:1;padding:8px;border:0;border-radius:6px;color:#b6c3d5}.city-scene-workspace .city-garrison-tabs button[aria-pressed=true]{background:#d9bc83;color:#1d242e;font-weight:700}
-.city-garrison-legion-label{display:flex;flex-direction:column;gap:7px;color:#c6d1e0;font-size:11px}.city-garrison-legion-label select{width:100%;padding:10px;background:#121923;color:#ecf0f5;border:1px solid #ffffff2f;border-radius:7px}
-.city-garrison-transfer-head{display:flex;justify-content:space-between;gap:8px;align-items:center;margin:13px 0 8px;color:#abb8cb;font-size:11px}.city-scene-workspace .city-garrison-transfer-head button{padding:5px 9px;border:1px solid #d4bb8a4d;border-radius:5px;color:#ebd09d}
-.city-garrison-units{display:grid;grid-template-columns:1fr 1fr;gap:8px}.city-garrison-units label{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px;background:#ffffff08;border-radius:6px;color:#d8e0ef;font-size:11px}.city-garrison-units small{color:#8ea0b6;font-size:10px}.city-garrison-units input{width:66px;min-width:0;padding:7px;border:1px solid #ffffff29;border-radius:5px;background:#101720;color:#fff;font-variant-numeric:tabular-nums;text-align:right}
-.city-garrison-actions{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:16px}.city-garrison-actions span{color:#bec8d4;font-size:11px}.city-scene-workspace .city-garrison-actions button{display:flex;align-items:center;gap:7px;justify-content:center;padding:10px 13px;background:#d9bc83;color:#171b22;border:0;border-radius:7px;font-weight:700}.city-garrison-error{color:#f7a58e;font-size:11px}
-@media(max-width:600px){.city-garrison-overlay{align-items:flex-end;padding:7px}.city-scene-workspace .city-garrison-panel{max-height:calc(100dvh - 14px);padding:16px}.city-garrison-roster{grid-template-columns:repeat(2,minmax(0,1fr))}.city-garrison-units{grid-template-columns:1fr}.city-scene-workspace .city-garrison-launch{padding:9px;font-size:11px}}
+/* Garrison borrows the existing faction-aware CitySelector card, menu, and tabs.
+ * Only its content layout lives here; materials, color, border and fonts come
+ * from scene-theme.css / city-selector.css. */
+.city-scene-workspace .city-scene-top>.city-garrison-dock{
+  margin-left:auto;flex:0 0 320px;width:320px;min-width:0;max-width:100%;z-index:15;
+}
+.city-garrison-card .city-selector-trigger{width:100%}
+.city-garrison-emblem.city-selector-preview{
+  display:grid;place-items:center;width:54px;height:54px;
+  background:var(--scene-panel);color:var(--scene-accent);
+}
+.city-garrison-foot>span{white-space:nowrap}
+.city-garrison-foot svg{color:var(--scene-accent)}
+.city-scene-workspace .city-garrison-menu{
+  top:calc(100% + 7px);left:auto;right:0;width:100%;max-height:min(450px,calc(100dvh - 212px));
+  overflow:auto;overscroll-behavior:contain;padding:10px;
+}
+.city-garrison-line{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0}
+.city-garrison-overview{font-size:11px;color:var(--scene-muted);margin:1px 1px 6px}
+.city-garrison-overview strong{color:var(--scene-text);font-size:13px;font-variant-numeric:tabular-nums}
+.city-garrison-roster{display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin:0 1px 10px}
+.city-garrison-roster>span{display:inline-flex;align-items:center;gap:6px;max-width:100%;min-width:0;padding:3px 7px;
+  font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  border:1px solid color-mix(in srgb,var(--scene-edge) 32%,transparent);border-radius:var(--scene-radius);
+  color:var(--scene-muted);
+}
+.city-garrison-roster b{color:var(--scene-text);font-variant-numeric:tabular-nums;font-weight:600}
+.city-garrison-roster>small,.city-garrison-note{font-size:10px;color:var(--scene-muted);line-height:1.45}
+.city-garrison-roster>small{padding:4px 0}
+.city-garrison-tabs{margin:0 0 8px}
+.city-garrison-tabs button.selected{background:var(--scene-panel);color:var(--scene-accent)}
+.city-garrison-legion{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 1px 8px;min-width:0}
+.city-garrison-legion label,.city-garrison-legion-label{flex:none;font-size:10px;color:var(--scene-muted)}
+.city-garrison-legion select,.city-garrison-one-legion{
+  width:calc(100% - 53px);min-width:0;padding:6px 7px;border:1px solid color-mix(in srgb,var(--scene-edge) 36%,transparent);
+  border-radius:var(--scene-radius);background:var(--scene-ink);color:var(--scene-text);
+  font:inherit;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.city-garrison-one-legion{border-color:transparent;padding-right:0;text-align:right}
+.city-garrison-one-legion small{color:var(--scene-muted)}
+.city-garrison-transfer-title{padding:7px 1px 6px;border-top:1px solid color-mix(in srgb,var(--scene-edge) 30%,transparent)}
+.city-garrison-transfer-title>span{font-size:10px;color:var(--scene-muted)}
+.city-scene-workspace .city-garrison-transfer-title button{
+  border:0;background:transparent;color:var(--scene-accent);font-size:10px;padding:3px 4px;
+}
+.city-garrison-units{display:flex;flex-direction:column;gap:0;max-height:170px;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin}
+.city-garrison-unit{display:flex;align-items:center;gap:5px;min-height:37px;padding:3px 1px;
+  border-top:1px solid color-mix(in srgb,var(--scene-edge) 22%,transparent)}
+.city-garrison-unit-name{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11px;color:var(--scene-text)}
+.city-garrison-unit-name small{margin-left:5px;font-size:9px;color:var(--scene-muted)}
+.city-garrison-unit input{
+  flex:none;width:51px;min-width:0;height:27px;padding:2px 4px;text-align:center;
+  border:1px solid color-mix(in srgb,var(--scene-edge) 40%,transparent);border-radius:var(--scene-radius);
+  background:var(--scene-ink);color:var(--scene-text);font:inherit;font-size:11px;font-variant-numeric:tabular-nums;
+  appearance:textfield;
+}
+.city-garrison-unit input::-webkit-inner-spin-button,.city-garrison-unit input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+.city-scene-workspace .city-garrison-unit>button{
+  flex:none;border:0;background:transparent;color:var(--scene-accent);padding:5px 4px;font-size:10px;
+}
+.city-garrison-error{font-size:10px;color:var(--city-accent);margin:8px 1px 0}
+.city-garrison-note{margin:8px 1px}
+.city-garrison-actions{display:flex;align-items:center;justify-content:space-between;gap:8px;
+  margin-top:9px;padding-top:9px;border-top:1px solid color-mix(in srgb,var(--scene-edge) 35%,transparent)}
+.city-garrison-actions span{font-size:10px;color:var(--scene-muted);font-variant-numeric:tabular-nums}
+.city-scene-workspace .city-garrison-actions button{
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;min-width:104px;
+  min-height:30px;padding:6px 10px;border:1px solid var(--scene-edge);border-radius:var(--scene-radius);
+  background:var(--scene-accent);color:var(--scene-ink);font-weight:650;font-size:11px;
+}
+.city-scene-workspace .city-garrison-actions button:hover:not(:disabled){background:var(--scene-text);color:var(--scene-ink)}
+@media(max-width:800px){
+  .city-scene-workspace .city-scene-top{flex-wrap:nowrap}
+  .city-scene-workspace .city-scene-top>.city-selector{flex:1 1 0;width:auto;min-width:0}
+  .city-garrison-emblem.city-selector-preview{width:42px;height:46px}
+  .city-scene-workspace .city-garrison-menu{width:min(320px,calc(100vw - 20px));max-height:min(400px,calc(100dvh - 180px))}
+}
+@media(max-width:550px){
+  .city-scene-workspace .city-scene-top{gap:8px}
+  .city-scene-workspace .city-scene-top>.city-garrison-dock{flex:0 0 40%;width:40%}
+  .city-scene-workspace .city-scene-top>.city-selector:not(.city-garrison-dock){flex:1 1 60%}
+  .city-scene-top .city-selector:not(.city-garrison-dock) .city-selector-preview{width:48px;height:52px}
+  .city-scene-top .city-selector:not(.city-garrison-dock) .city-selector-trigger{gap:6px}
+  .city-scene-top .city-selector:not(.city-garrison-dock) .city-selector-counts{column-gap:6px;row-gap:0;font-size:9px}
+  .city-scene-top .city-selector:not(.city-garrison-dock) .city-selector-report{width:24px;min-height:29px;margin-left:0}
+  .city-garrison-emblem.city-selector-preview{width:30px;height:39px}
+  .city-garrison-emblem svg{width:18px;height:18px}
+  .city-garrison-card .city-selector-trigger{gap:5px}
+  .city-garrison-card .city-selector-info strong{font-size:11px}
+  .city-garrison-card .city-selector-counts{margin-top:3px;column-gap:5px;row-gap:0;font-size:9px}
+  .city-garrison-card .city-selector-counts svg{display:none}
+  .city-garrison-foot>span{max-width:95px;overflow:hidden;text-overflow:ellipsis}
+  .city-scene-workspace .city-garrison-menu{max-height:min(360px,calc(100dvh - 170px))}
+}
+@media(prefers-reduced-motion:reduce){.city-garrison-menu{scroll-behavior:auto}}
