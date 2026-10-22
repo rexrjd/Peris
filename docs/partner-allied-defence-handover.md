@@ -1,7 +1,7 @@
 # Partner handover: allied defence
 
 **Status**: Allied defence is proposed work. Server/clock interfaces are implemented and reviewed on `feat/server-clock-foundation`; they are not deployed or merged into main. See [verification and limits](superpowers/evidence/2026-10-22-server-clock-verification.md).
-**Baseline**: `0edf013` (22 October; includes own-city troop shipments, direct garrison recruitment and city event UI).
+**Baseline**: `773a84b` (22 October; includes own-city troop shipments, direct garrison recruitment and empire event UI).
 
 ### Context & Ownership
 You begin implementing **B1 allied reinforcements**. The other developer retains ownership of timeouts, worker fairness, and clock logic. Existing mechanics include own-city garrisons, ruins, permanent defeat, and walls (+10% defence per level, capped at +50%). Note that foreign allied troops are not yet implemented.

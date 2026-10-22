@@ -1,13 +1,14 @@
 # Server/clock verification — 22 October 2026
 
-Review branch `feat/server-clock-foundation`, integrated with main `0edf013`. No production deployment or main merge. The PC runs Windows, Intel i7-9700K (8 logical CPUs), approximately 32 GB RAM; native PostgreSQL 17.11 uses an isolated loopback database. No live player data or credentials are used.
+Review branch `feat/server-clock-foundation`, integrated with main `773a84b` (latest update is UI only). No production deployment or main merge. The PC runs Windows, Intel i7-9700K (8 logical CPUs), approximately 32 GB RAM; native PostgreSQL 17.11 uses an isolated loopback database. No live player data or credentials are used.
 
 ## Checks actually completed
 
 | Check | Result |
 |---|---|
-| Unit suite after integration and countdown regression | 568 passed, 1 skipped, 0 failed |
-| Build | Passed; existing large-chunk warning retained |
+| Unit suite after server/logistics integration and countdown regression | 568 passed, 1 skipped, 0 failed at `0072e11` |
+| Build | Passed at `0072e11`; existing large-chunk warning retained |
+| Later UI-only main integration | 9 focused clock/activity tests and application typecheck passed; broad UI reruns omitted at the user's request |
 | Tooling | 5 passed |
 | Assets, world, bandits, SQL generation | Passed |
 | Report-read and camp/artifact generation | Passed after regenerating the changed snapshot installer |
@@ -17,6 +18,7 @@ Review branch `feat/server-clock-foundation`, integrated with main `0edf013`. No
 | Background journeys at 1x/10x/100x | Passed: production upgrade, paid settlers and troop shipment, populated evacuation/returning-loot fixtures, repeated-settlement no-op |
 | Populated pre-clock upgrade | Passed: exact old account/resource/queue/army/field-station/battle/science/report rows unchanged at first and repeated 1x clock installation |
 | Camp and city finalizer fault checks | Passed: late report failure rolls back results; successful retry and duplicate result do not repeat effects; city case includes actual permanent defenders |
+| Final five-client, ten-minute local probe | Passed: core p95 **1113 ms**, zero errors, no duplicate reports, all five battles resolved and all paid queues completed |
 
 After integrating main, the rerun isolated suites passed: unattended worker, battle atomicity, clock metadata/gameplay/upgrade/journeys, game integration, automatic battles, player raids, hero loot, command receipts, city garrisons, own-city logistics, account compatibility, fresh install, database privacy and report reads. Research, population, territory, empire/heroes, army/farm parity, artifacts/camps, city environment, world battles and magic also passed after the clock changes, before the latest main integration; they were not all repeated after that integration.
 
@@ -26,8 +28,9 @@ Representative desktop/mobile recovery screenshots were inspected. The account b
 
 - **Pre-existing social upgrade failure:** the last `test:social-db` run reached check 42, then an old frozen V18 world reported `record "c" has no field "ruined_at"` while the test expected a protected-city rejection. Reproduced with unchanged main `3225ffb` guild SQL. It remains open; checks were not relaxed to hide it or subsequently claimed green.
 - **Broad UI suite incomplete:** stopped at the user's request because the partner owns those surfaces. Earlier attempts exposed old recruitment-label/duplicate-preview selectors and account-fixture counts; the latter was corrected while preserving the exact two-new-account invariant. Cold startup under concurrent browser/database load also exceeded a test deadline. The focused final account run passed without extending timeouts. Do not describe the full UI suite as passing.
-- **Mixed-load performance target missed:** the integrated five-client, ten-minute direct-SQL run completed without errors or duplicate reports, but core p95 was **2010 ms**, above the 2000 ms target. Broad browser/database verification was also running on the PC. This failure is retained alongside the later separately labelled run without concurrent repository tests.
+- **Mixed-load performance target missed:** the integrated five-client, ten-minute direct-SQL run completed without errors or duplicate reports, but core p95 was **2010 ms**, above the 2000 ms target. Broad browser/database verification was also running on the PC. This failure is retained alongside the later separately labelled run without that broad background load. Lightweight Git, documentation and targeted type/clock checks still ran during the latter; it is not a dedicated benchmark machine.
 - The earlier ten-minute run before the latest main integration had core p95 **954 ms**, zero errors and no duplicate reports. This is a different revision/workload and is not substituted for the integrated result.
+- **Final reduced-background-load run:** approximately 609 seconds on the integrated backend at `0072e11` (later merges changed UI only). Core reads: 530 samples, median **242 ms**, p95 **1113 ms**, maximum **3920 ms**; all channels reported zero errors. Five battles resolved, with 505 total reports including 500 deliberately synthetic history entries; no duplicate owner/battle reports and no remaining paid queues. Peak combat processing lag was **51.6 game seconds**, falling to zero after resolution; responsive reads do not establish low-latency combat progression. The p95 target passed; this does not mean every individual request stayed below two seconds. PostgreSQL/client process startup is included in timings. The raw run is `reports/server-reliability/2026-10-22T04-45-05-184Z/`.
 - **Deferred minor:** two ruin-date UI labels convert real audit dates as virtual game dates in accelerated worlds. The default 1x display is unaffected. Audit dates must eventually be displayed directly in `CitySelector.tsx` and `WorldView.tsx`.
 - All 210 technology definitions are covered by the existing research suite at 1x; every technology and every challenge/practice fault path was not separately replayed at each accelerated rate. Camp/city fault injection and normal challenge/practice tests do not imply that exhaustive matrix passed.
 - No hosted timeout-resolution, regional migration, 200-bot capacity or 100x throughput claim. The ten-game-second battle cap and preserved debt remain important scaling limits. See [server reliability](../../server-reliability.md).
