@@ -28,6 +28,8 @@ npm.cmd run test:clock-gameplay-db
 
 True lock/cancellation tests additionally need a **local PostgreSQL 17** server and `psql` (portable binaries work). Use a fresh empty database for each initialization. These tools refuse remote hosts and databases whose names do not start with `peris_test_`. They never accept the production Supabase URL.
 
+Use a dedicated disposable local cluster with an administrator capable of creating the fixture's Auth schema/roles. It contains synthetic data only. This is separate from the Supabase backend required to run the hosted game.
+
 ```powershell
 # Create these empty databases in your local PostgreSQL first.
 $env:PERIS_PSQL_PATH = 'C:\path\to\PostgreSQL\17\bin\psql.exe'

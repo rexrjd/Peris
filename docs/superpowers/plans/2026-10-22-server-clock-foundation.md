@@ -12,6 +12,8 @@
 
 **Status:** Approved by the user on 22 October; implementation in progress. Baseline: main 7f933205db48cdacdab42101e6637d0e89e7290d. Review branch: feat/server-clock-foundation.
 
+**Implementation update:** Core worker, recovery and clock changes are implemented and received a fresh review. Main through `0edf013` was integrated, preserving its own-city logistics. See [actual verification and remaining limits](../evidence/2026-10-22-server-clock-verification.md). The user subsequently asked to stop broad rechecking of the partner's UI; focused account/clock checks remain in scope. Full accelerated capacity and exhaustive per-mode fault matrices are not claimed complete.
+
 ## Plain-language sequence
 
 1. Prevent a broken account or a busy battle from holding up everyone else.
@@ -39,7 +41,7 @@ Earlier live evidence contains HTTP500/SQLSTATE57014 failures in snapshot/sync/m
 
 ## Shared clock contract for the partner
 
-These interfaces are proposed by this plan; they do not exist yet.
+These interfaces are implemented on the review branch. They are not deployed or present on main through the baseline above.
 
 - New pure module src/shared/time/gameClock.ts:
   - GameClockSample = { version: 1; rate: 1 | 10 | 100; profile_id: 'normal-v1' | 'accelerated-test-v1'; real_now: string; game_now: string }.
