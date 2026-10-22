@@ -141,3 +141,14 @@
 @media(max-height:530px){
   .city-scene-activity .ops-event-scroll{max-height:90px}
 }
+
+/* The Events feed mirrors Garrison width and keeps ALL city activity inside a
+ * bounded scroll region; faction colours are inherited from scene-theme. */
+.city-scene-activity{width:320px;max-height:calc(100% - 254px)}
+.city-scene-activity .map-operations{--ops-muted:var(--scene-muted,#aba9a0);--ops-text:var(--scene-text,#f0e7d7);--ops-line:color-mix(in srgb,var(--scene-edge,#b9a27c) 38%,transparent);--ops-accent:var(--scene-accent,#d0bda0);--ops-select-bg:var(--scene-ink,#161910)}
+.city-scene-activity .ops-widget{border-radius:var(--scene-radius,8px)}
+.city-scene-activity .ops-event-scroll{max-height:min(282px,calc(100dvh - 352px))}
+.city-scene-activity .ops-filters button[aria-pressed="true"]{color:var(--scene-text);border-bottom-color:var(--scene-accent)}
+.city-scene-activity .ops-toggle>svg:first-child,.city-scene-activity .ops-event-time{color:var(--scene-accent)}
+@media(max-width:760px){.city-scene-activity{width:min(320px,calc(100% - 20px))}.city-scene-activity .ops-event-scroll{max-height:min(210px,calc(100dvh - 360px))}}
+@media(max-height:530px){.city-scene-activity .ops-event-scroll{max-height:110px}}

@@ -24,6 +24,12 @@ export function CitySceneWorkspace({ world, owner, sid, now, plots, scene, onCit
     const [eventsOpen, setEventsOpen] = useState(() =>
         typeof window === 'undefined' || window.matchMedia('(min-width: 761px)').matches);
     const locateActivity = (event: MapActivity) => {
+        if (event.cityId !== undefined && event.cityId !== sid && event.category === 'cities' && event.selection.kind === 'settlement') {
+            // City events are empire-wide: open the relevant city rather than
+            // sending a building/training order to an unrelated map inspector.
+            onCity?.(event.cityId);
+            return;
+        }
         if (event.cityId === sid && event.id.startsWith('order:')) {
             const current = world.orders.find(row => `order:${row.id}` === event.id && row.owner_id === owner);
             if (current?.kind === 'upgrade') { onSelect(constructionTarget(current)); return; }
