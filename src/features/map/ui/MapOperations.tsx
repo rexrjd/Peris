@@ -3,8 +3,10 @@ import type { World } from '../../../shared/model/world';
 import type { Command } from '../../../shared/model/commands';
 import { Icon } from '../../../shared/ui/Icons';
 import { clock } from '../../../shared/time/clock';
-import { mapActivity, activityPreview, filterEmpireActivity, type MapActivity, type ActivityKind, type EmpireActivityFilter } from '../domain/activity';
+import { mapActivity, activityPreview, filterEmpireActivity, reinforcementRouteLabel, type MapActivity, type ActivityKind, type EmpireActivityFilter } from '../domain/activity';
 import { CityReinforcementComposer } from './CityReinforcementComposer';
+import { ReinforcementDetailsDialog } from './ReinforcementDetailsDialog';
+import { factionOf } from '../../factions/domain/factions';
 
 const labels: Record<ActivityKind, { name: string; short: string; icon: string }> = {
     raid: { name: 'Raiding', short: 'Raid', icon: 'army' }, return: { name: 'Returning', short: 'Return', icon: 'transfer' }, march: { name: 'Marching', short: 'March', icon: 'flag' },
@@ -19,13 +21,13 @@ const cityFilters: { value: EmpireActivityFilter; label: string }[] = [
 const mapFilters: { value: EmpireActivityFilter; label: string }[] = [
     { value: 'all', label: 'All' }, { value: 'armies', label: 'Armies' }, { value: 'cities', label: 'Cities' },
 ];
-function remaining(event: MapActivity, now: number, world: World) {
+function remaining(event: MapActivity, now: number) {
     if (event.live) return 'Live';
     if (event.startedAt !== null && event.startedAt > now &&
         (event.kind === 'construction' || event.kind === 'recruitment')) return 'Queued';
     if (event.endsAt === null) return 'Pending';
     if (event.endsAt <= now) return event.category === 'armies' ? 'Arriving' : 'Finishing';
-    const seconds = Math.ceil((event.endsAt - now) / 1000 / (world.game_clock?.rate ?? 1));
+    const seconds = Math.ceil((event.endsAt - now) / 1000);
     return seconds >= 3600 ? Math.floor(seconds / 3600) + 'h ' + Math.floor(seconds % 3600 / 60) + 'm' : clock(seconds);
 }
 /** One Events widget on City and Map; City defaults to ALL ongoing activity
@@ -38,6 +40,7 @@ export function MapOperations({ world, playerId, now, busy, run, open, onToggle,
     const isCity = preview === 'city';
     const [full, setFull] = useState(false);
     const [section, setSection] = useState<'activity' | 'transfer'>('activity');
+    const [selectedShipmentId, setSelectedShipmentId] = useState<number | null>(null);
     const [filter, setFilter] = useState<EmpireActivityFilter>('all');
     const [cityFilter, setCityFilter] = useState<string>('all');
     const selectionRef = useRef<HTMLDivElement>(null), listRef = useRef<HTMLDivElement>(null);
@@ -46,6 +49,9 @@ export function MapOperations({ world, playerId, now, busy, run, open, onToggle,
     useEffect(() => { if (!open) { setFull(false); setSection('activity'); setFilter('all'); setCityFilter('all'); } }, [open]);
     useEffect(() => { if (listRef.current) listRef.current.scrollTop = 0; }, [filter, cityFilter, full, section]);
     const events = useMemo(() => mapActivity(world, playerId, now), [world, playerId, now]);
+    const selectedEvent = selectedShipmentId === null ? undefined : events.find(event => event.kind === 'reinforcement' && event.shipmentId === selectedShipmentId);
+    const selectedShipment = selectedEvent && world.city_reinforcements?.find(row => row.id === selectedShipmentId && row.owner_id === playerId);
+    const selectedSource = selectedEvent && world.settlements.find(city => city.id === selectedEvent.sourceCityId && city.owner_id === playerId);
     const ownedCities = world.settlements.filter(city => city.owner_id === playerId && !city.ruined_at);
     const scopedCity = cityFilter === 'all' ? undefined : Number(cityFilter);
     const scopedEvents = filterEmpireActivity(events, 'all', scopedCity);
@@ -54,7 +60,7 @@ export function MapOperations({ world, playerId, now, busy, run, open, onToggle,
     const filters = isCity ? cityFilters : mapFilters;
     const counts = Object.fromEntries(filters.map(item => [item.value, filterEmpireActivity(scopedEvents, item.value).length])) as Record<EmpireActivityFilter, number>;
     const locationLabel = (event: MapActivity) => {
-        if (event.kind === 'reinforcement') return `${event.detail} → ${event.destination ?? 'City'}`;
+        if (event.kind === 'reinforcement') return reinforcementRouteLabel(event);
         const city = world.settlements.find(row => row.id === event.cityId && row.owner_id === playerId);
         const prefix = city?.name ?? event.detail;
         return event.destination && event.destination !== prefix ? `${prefix} · ${event.destination}` : prefix;
@@ -94,19 +100,30 @@ export function MapOperations({ world, playerId, now, busy, run, open, onToggle,
                     <div className="ops-event-scroll" ref={listRef}>
                         {visible.length ? <ol className="ops-events">
                             {visible.map(event => <li key={event.id} className={'ops-event event-' + event.kind}>
-                                <button type="button" className="ops-event-main" onClick={() => onLocate(event)}
-                                    aria-label={'View ' + labels[event.kind].name.toLowerCase() + ': ' + event.title + (isCity ? ', ' + locationLabel(event) : '')}
-                                    title={[labels[event.kind].name, event.title, locationLabel(event)].filter(Boolean).join(' · ')}>
+                                <button type="button" className="ops-event-main" onClick={() => {
+                                    if (event.kind === 'reinforcement' && event.shipmentId !== undefined) setSelectedShipmentId(event.shipmentId);
+                                    else onLocate(event);
+                                }}
+                                    aria-haspopup={event.kind === 'reinforcement' ? 'dialog' : undefined}
+                                    aria-label={event.kind === 'reinforcement'
+                                        ? `Reinforcement details: ${event.detail} to ${event.destination ?? 'Unknown city'}, ${event.troops ?? 0} soldiers, ${remaining(event, now)} remaining`
+                                        : 'View ' + labels[event.kind].name.toLowerCase() + ': ' + event.title + (isCity ? ', ' + locationLabel(event) : '')}
+                                    title={event.kind === 'reinforcement' ? `View reinforcement details · ${reinforcementRouteLabel(event)}` : [labels[event.kind].name, event.title, locationLabel(event)].filter(Boolean).join(' · ')}>
                                     <Icon name={labels[event.kind].icon} size={15}/>
                                     <span className="ops-event-content">
-                                        <strong>{isCity ? event.title : <><span className="ops-event-kind">{labels[event.kind].short} · </span>{event.title}</>}</strong>
-                                        {(isCity || full) && <small><span>{labels[event.kind].short}</span> · {locationLabel(event)}</small>}
+                                        {event.kind === 'reinforcement' ? <>
+                                            <strong className="ops-event-route">{reinforcementRouteLabel(event)}</strong>
+                                            <small><span>{event.troops?.toLocaleString() ?? '0'} reinforcements</span> · {event.endsAt !== null && event.endsAt <= now ? 'Arriving' : 'In transit'}</small>
+                                        </> : <>
+                                            <strong>{isCity ? event.title : <><span className="ops-event-kind">{labels[event.kind].short} · </span>{event.title}</>}</strong>
+                                            {(isCity || full) && <small><span>{labels[event.kind].short}</span> · {locationLabel(event)}</small>}
+                                        </>}
                                     </span>
-                                    <span className="ops-event-time">{remaining(event, now, world)}</span>
+                                    <span className="ops-event-time">{remaining(event, now)}</span>
                                 </button>
                                 {event.cancel && <button type="button" className="ops-event-cancel" disabled={busy}
                                     aria-label={'Cancel departure: ' + event.title}
-                                    title={'Cancel departure · ' + clock((event.cancel.until - now) / 1000, world.game_clock?.rate ?? 1) + ' left'}
+                                    title={'Cancel departure · ' + clock((event.cancel.until - now) / 1000) + ' left'}
                                     onClick={() => run({ type: 'cancelMarch', armyId: event.cancel!.armyId, sentAt: event.cancel!.sentAt }, 'March cancelled. Troops remain at their departure station.')}>×</button>}
                             </li>)}
                         </ol> : <p className="ops-empty">{!events.length ? isCity ? 'No ongoing events in your empire' : 'No ongoing events' : isCity || full ? 'No events match these filters' : 'No troops on the move'}</p>}
@@ -119,5 +136,11 @@ export function MapOperations({ world, playerId, now, busy, run, open, onToggle,
             </section>}
         </div>
         {!open && children && <div className="ops-selection" ref={selectionRef} key={selectionKey}>{children}</div>}
+        {selectedEvent && selectedShipment && <ReinforcementDetailsDialog key={selectedShipment.id}
+            event={selectedEvent} shipment={selectedShipment} faction={factionOf(selectedSource?.faction)} now={now}
+            onClose={() => setSelectedShipmentId(null)} onLocate={() => {
+                setSelectedShipmentId(null);
+                onLocate(selectedEvent);
+            }}/>} 
     </aside>;
 }

@@ -173,3 +173,49 @@
 .map-operations .ops-transfer-footer>button:hover:not(:disabled){filter:brightness(1.1)}
 @media(max-height:630px){.map-operations .ops-transfer{max-height:min(300px,calc(100dvh - 240px))}}
 @media(max-width:390px){.map-operations.is-transfer{width:calc(100% - 20px)}.map-operations .ops-transfer-unit-label{flex-basis:71px}.map-operations .ops-transfer-unit>.fw-troop-icon{width:23px;height:23px;flex-basis:23px}}
+
+/* Reinforcement movements: route first even in Map's short, three-event preview. */
+.map-operations .event-reinforcement .ops-event-main{min-height:46px}
+.map-operations .ops-event-content .ops-event-route{white-space:normal;overflow:visible;text-overflow:clip;line-height:1.25;overflow-wrap:anywhere;font-weight:600}
+.map-operations .event-reinforcement .ops-event-content>small{color:var(--ops-muted)}
+.map-operations .event-reinforcement .ops-event-main:hover .ops-event-route{color:var(--ops-accent,#d0bda0)}
+
+/* Native dialog is in the browser top layer, retaining its parent Events
+ * theme variables (including the City scene's faction-specific palette). */
+.map-operations .ops-reinforcement-dialog{box-sizing:border-box;position:fixed;inset:0;margin:auto;padding:0;width:min(440px,calc(100vw - 28px));max-height:min(640px,calc(100dvh - 28px));overflow:auto;pointer-events:auto;overscroll-behavior:contain;
+  border:1px solid var(--scene-edge,#ffffff24);border-radius:var(--scene-radius,10px);background:var(--scene-panel,#1a1e26);color:var(--ops-text);box-shadow:0 24px 75px #0009;font:12px/1.45 'Open Sans',Arial,sans-serif}
+.map-operations .ops-reinforcement-dialog::backdrop{background:#0b1013b8;backdrop-filter:blur(3px)}
+.map-operations .ops-reinforcement-head{display:flex;align-items:center;gap:10px;padding:16px 17px 13px;border-bottom:1px solid var(--ops-line)}
+.map-operations .ops-reinforcement-emblem{display:grid;place-items:center;width:36px;height:36px;flex:none;border:1px solid var(--ops-line);border-radius:8px;color:var(--ops-accent,#d0bda0);background:#ffffff07}
+.map-operations .ops-reinforcement-heading{min-width:0;display:flex;flex-direction:column;gap:2px;flex:1}
+.map-operations .ops-reinforcement-heading>small{font-size:10px;line-height:1.3;color:var(--ops-muted)}
+.map-operations .ops-reinforcement-heading>strong{font-size:17px;font-weight:650;color:var(--ops-text)}
+.map-operations .ops-reinforcement-close{display:grid;place-items:center;flex:none;width:30px;height:30px;border:0;border-radius:6px;background:transparent;color:var(--ops-muted)}
+.map-operations .ops-reinforcement-close:hover{color:var(--ops-text);background:#ffffff10}
+.map-operations .ops-reinforcement-body{padding:16px 17px 8px}
+.map-operations .ops-reinforcement-route{display:grid;grid-template-columns:minmax(0,1fr) 20px minmax(0,1fr);align-items:center;gap:9px;margin-bottom:17px}
+.map-operations .ops-reinforcement-route>div{display:flex;flex-direction:column;gap:4px;min-width:0}
+.map-operations .ops-reinforcement-route small{font-size:10px;color:var(--ops-muted)}
+.map-operations .ops-reinforcement-route strong{font-size:13px;line-height:1.3;overflow-wrap:anywhere;font-weight:600;color:var(--ops-text)}
+.map-operations .ops-reinforcement-route>svg{color:var(--ops-accent,#d0bda0)}
+.map-operations .ops-reinforcement-progress-top{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:11px;color:var(--ops-muted);margin-bottom:6px}
+.map-operations .ops-reinforcement-progress-top strong{color:var(--ops-accent,#d0bda0);font-size:13px;font-variant-numeric:tabular-nums}
+.map-operations .ops-reinforcement-progress{height:5px;background:#ffffff15;border-radius:9px;overflow:hidden}
+.map-operations .ops-reinforcement-progress span{display:block;height:100%;background:var(--ops-accent,#d0bda0);border-radius:9px;transition:width .25s ease}
+.map-operations .ops-reinforcement-times{display:grid;grid-template-columns:1fr 1fr;gap:15px;margin:13px 0 15px;padding-bottom:14px;border-bottom:1px solid var(--ops-line)}
+.map-operations .ops-reinforcement-times>div{display:flex;flex-direction:column;gap:4px;min-width:0}
+.map-operations .ops-reinforcement-times dt{font-size:10px;color:var(--ops-muted)}
+.map-operations .ops-reinforcement-times dd{margin:0;font-size:11px;color:var(--ops-text);font-variant-numeric:tabular-nums}
+.map-operations .ops-reinforcement-roster-title{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px;font-size:11px;color:var(--ops-text)}
+.map-operations .ops-reinforcement-roster-title strong{color:var(--ops-accent,#d0bda0);font-variant-numeric:tabular-nums;font-size:13px}
+.map-operations .ops-reinforcement-units{display:grid;grid-template-columns:1fr 1fr;column-gap:12px;max-height:240px;overflow-y:auto}
+.map-operations .ops-reinforcement-unit{display:flex;align-items:center;gap:7px;min-width:0;padding:7px 0;border-top:1px solid var(--ops-line);font-size:11px}
+.map-operations .ops-reinforcement-unit .fw-troop-icon{width:27px;height:27px;flex:none;border-radius:4px}
+.map-operations .ops-reinforcement-unit>span:not(.fw-troop-icon){flex:1;min-width:0;line-height:1.2;overflow-wrap:anywhere}
+.map-operations .ops-reinforcement-unit strong{flex:none;color:var(--ops-text);font-size:11px;font-variant-numeric:tabular-nums}
+.map-operations .ops-reinforcement-actions{display:flex;justify-content:flex-end;gap:9px;padding:12px 17px 15px;border-top:1px solid var(--ops-line)}
+.map-operations .ops-reinforcement-actions button{display:flex;align-items:center;justify-content:center;gap:7px;min-height:34px;padding:7px 12px;border:1px solid var(--ops-line);border-radius:6px;background:transparent;color:var(--ops-text);font-size:11px}
+.map-operations .ops-reinforcement-actions button.primary{background:var(--ops-accent,#d0bda0);color:var(--ops-select-bg,#171b1b);border-color:var(--ops-accent,#d0bda0);font-weight:650}
+.map-operations .ops-reinforcement-actions button:hover{filter:brightness(1.12)}
+@media(max-width:400px){.map-operations .ops-reinforcement-units{grid-template-columns:1fr}.map-operations .ops-reinforcement-times{gap:9px}.map-operations .ops-reinforcement-body{padding-inline:12px}.map-operations .ops-reinforcement-route{gap:5px}}
+@media(prefers-reduced-motion:reduce){.map-operations .ops-reinforcement-progress span{transition:none}}

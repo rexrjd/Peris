@@ -152,3 +152,27 @@ test('empire-wide activity filters show every city and both ends of reinforcemen
     assert.equal(all.find(x=>x.kind==='reinforcement')?.sourceCityId, original.id);
     assert.equal(JSON.stringify(f.world), before, 'filters never change multiplayer state');
 });
+
+
+test('reinforcement preview displays the full route and links to its own shipment details', async () => {
+    const { reinforcementRouteLabel } = await import('../src/features/map/domain/activity');
+    const f = fixture(), start = f.world.settlements[0];
+    f.world.settlements.push({ ...start, id: 515, name: 'Eastwatch', x: start.x + 128, y: start.y });
+    f.world.city_reinforcements = [
+        { id: 88, owner_id: f.owner, source_settlement_id: start.id, target_settlement_id: 515,
+          troops: { infantry: 580, archers: 4, cavalry: 0 }, march_path: [],
+          departure_at: f.world.server_now, arrival_at: new Date(f.now + 48000).toISOString() },
+        { id: 89, owner_id: 'rival', source_settlement_id: start.id, target_settlement_id: 515,
+          troops: { infantry: 10, archers: 0, cavalry: 0 }, march_path: [],
+          departure_at: f.world.server_now, arrival_at: new Date(f.now + 40000).toISOString() },
+    ];
+    const before = JSON.stringify(f.world), event = mapActivity(f.world, f.owner, f.now)[0];
+    assert.equal(event.shipmentId, 88);
+    assert.equal(event.troops, 584);
+    assert.equal(event.sourceCityId, start.id);
+    assert.equal(event.cityId, 515);
+    assert.equal(reinforcementRouteLabel(event), `${start.name} → Eastwatch`);
+    assert.equal(activityPreview(mapActivity(f.world, f.owner, f.now), 'movements')[0].id, 'reinforcement:88');
+    assert.equal(activityProgress(event, f.now + 24000), .5);
+    assert.equal(JSON.stringify(f.world), before, 'inspection does not change troop orders or arrival times');
+});

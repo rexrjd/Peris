@@ -14,7 +14,7 @@ const unitNames: Record<RecruitUnit, string> = { infantry: 'infantry', spearmen:
 const unitName = (unit: string) => RECRUIT_UNITS.includes(unit as RecruitUnit) ? unitNames[unit as RecruitUnit] : 'soldiers';
 export type MapActivity = {
     id: string; kind: ActivityKind; category: 'armies' | 'cities'; title: string; detail: string;
-    destination?: string; troops?: number; armyId?: number; cityId?: number; sourceCityId?: number;
+    destination?: string; troops?: number; armyId?: number; cityId?: number; sourceCityId?: number; shipmentId?: number;
     startedAt: number | null; endsAt: number | null; live?: boolean;
     selection: Exclude<MapSelection, null>; point: { x: number; y: number };
     cancel?: { armyId: number; sentAt: string; until: number };
@@ -87,7 +87,7 @@ export function mapActivity(world: World, owner: string, now: number): MapActivi
         const total = rosterTotal(shipment.troops);
         events.push({ id: 'reinforcement:' + shipment.id, kind: 'reinforcement', category: 'armies',
             title: total.toLocaleString() + ' reinforcements', detail: origin.name,
-            destination: target.name, troops: total, cityId: target.id, sourceCityId: origin.id,
+            destination: target.name, troops: total, cityId: target.id, sourceCityId: origin.id, shipmentId: shipment.id,
             startedAt: timestamp(shipment.departure_at), endsAt: timestamp(shipment.arrival_at),
             selection: { kind: 'settlement', id: target.id }, point: { x: target.x, y: target.y } });
     }
@@ -167,4 +167,10 @@ export function filterEmpireActivity(events: readonly MapActivity[], filter: Emp
         if (filter === 'other') return event.category === 'cities' && event.kind !== 'construction' && event.kind !== 'recruitment';
         return event.kind === filter;
     });
+}
+
+/** Both city names are already projected from the owner's own snapshot.
+ * Keep route text visible even in the map's three-movement preview. */
+export function reinforcementRouteLabel(event: MapActivity): string {
+    return `${event.detail} → ${event.destination ?? 'Unknown city'}`;
 }

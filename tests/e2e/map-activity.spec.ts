@@ -144,3 +144,37 @@ test('empty activity can fold away, real map clicks open details, and clearing d
     await page.getByRole('navigation', { name: 'Quick access shortcuts' }).getByRole('button', { name: /^Reports/ }).click();
     await expect(page.locator('.chronicle')).toBeVisible();
 });
+
+test('map reinforcement preview shows both cities and opens the exact shipment details', async ({ page }, info) => {
+    const { cityReinforcementRoute } = await import('../../src/features/city/domain/cityReinforcements');
+    const world = richWorld(), source = world.settlements[0], target = world.settlements[1];
+    const route = cityReinforcementRoute(world, source.id, target.id)!;
+    expect(route).not.toBeNull();
+    const startTime = Date.parse(world.server_now);
+    world.city_reinforcements = [{
+        id: 2201, owner_id: world.players[0].id,
+        source_settlement_id: source.id, target_settlement_id: target.id,
+        troops: { infantry: 570, spearmen: 14, archers: 0, cavalry: 0 },
+        march_path: route.path, departure_at: world.server_now,
+        arrival_at: new Date(startTime + 48000).toISOString(),
+    }];
+    validateSave(world);
+    await page.clock.setFixedTime(startTime);
+    await start(page, world);
+    await showEvents(page);
+    const panel = page.getByRole('complementary', { name: 'Map overview and activity' });
+    const row = panel.getByRole('button', { name: /^Reinforcement details:/ });
+    await expect(row).toContainText(`${source.name} → ${target.name}`);
+    await expect(row).toContainText('584 reinforcements');
+    await row.click();
+    const details = page.getByRole('dialog', { name: 'Reinforcements' });
+    await expect(details).toBeVisible();
+    await expect(details.locator('.ops-reinforcement-route')).toContainText(source.name);
+    await expect(details.locator('.ops-reinforcement-route')).toContainText(target.name);
+    await expect(details.getByRole('region', { name: 'Troops in transit' })).toContainText('584');
+    await expect(details.getByRole('progressbar', { name: 'Reinforcement march progress' })).toHaveAttribute('aria-valuenow', '0');
+    await capture(page, info, 'map-reinforcement-inspector');
+    await details.getByRole('button', { name: 'Close reinforcement details' }).click();
+    await expect(details).toHaveCount(0);
+    expect((await saved(page)).city_reinforcements?.[0]?.id).toBe(2201);
+});
