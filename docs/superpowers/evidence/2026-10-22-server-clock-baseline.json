@@ -1,0 +1,50 @@
+{
+  "baseline": "7f933205db48cdacdab42101e6637d0e89e7290d",
+  "database": "PostgreSQL 17.5 on x86_64-pc-linux-gnu, compiled by emcc (Emscripten gcc/clang-like replacement + linker emulating GNU ld) 3.1.74 (1092ec30a3fb1d46b1782ff1b4db5094d3d06ae5), 32-bit",
+  "scope": "isolated PGlite diagnostic; no concurrency/load capacity claim",
+  "before": [
+    {
+      "id": 1,
+      "elapsed": "0"
+    },
+    {
+      "id": 2,
+      "elapsed": "0"
+    }
+  ],
+  "calls": [
+    {
+      "processed": 0
+    },
+    {
+      "processed": 0
+    },
+    {
+      "processed": 1
+    },
+    {
+      "processed": 1
+    }
+  ],
+  "blocked": [
+    {
+      "id": 1,
+      "elapsed": "0"
+    },
+    {
+      "id": 2,
+      "elapsed": "0"
+    }
+  ],
+  "recovered": [
+    {
+      "id": 1,
+      "elapsed": "10.0"
+    },
+    {
+      "id": 2,
+      "elapsed": "10.0"
+    }
+  ],
+  "notices": []
+}
