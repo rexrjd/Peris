@@ -15,8 +15,9 @@ test('a victory removes the last main building and makes a permanent memorial', 
   const now = '2026-10-22T12:00:00Z';
   const damage = damageCity(w, city.id, { ...emptyRoster(), catapult: 100 }, 'market', now);
   assert.deepEqual(damage.map(d => [d.building_type, d.before, d.after]), [['market',1,0]]);
-  assert.equal(city.ruined_at, now);
-  assert.equal(w.players.find(p=>p.id===owner)?.defeated_at, now);
+  const canonicalTime = new Date(now).toISOString();
+  assert.equal(city.ruined_at, canonicalTime);
+  assert.equal(w.players.find(p=>p.id===owner)?.defeated_at, canonicalTime);
   assert.ok(isDefeated(w,owner));
   assert.equal(livingCities(w,owner).length, 0);
   assert.equal(rosterTotal(readRoster(w.armies[0])),0);

@@ -1,17 +1,19 @@
-Peris V19.6 — City / Map floating top bar
+PERIS CITY RUINS — TIMESTAMP ASSERTION FIX
 
-Based on main commit 7f7094942fd16926d63c912f65275de45b095caa. This package contains one updated source file.
+Only file changed: tests/city-ruins.test.ts
 
-The native 3D city now fills the space behind the shared top bar, just like the map. The middle gap shows city scenery. Floating city panels remain below the header buttons.
+Fixes the first ruins test: the game serializes timestamps to canonical ISO 8601
+with milliseconds (.000Z), while the original test compared against an input
+string without milliseconds. Both represent the same moment.
 
-Installation
-Copy src/ into your repository root, preserving its path and replacing compact-header.css. Alternatively, apply city-topbar.patch with git apply; use only one installation method.
+INSTALL:
+- Extract the ZIP into C:\Peris, preserving folder structure.
+- This changes ONLY the test file. It does not modify gameplay code or SQL.
 
-Validation
-- Build, TypeScript, artifact art and research art checks passed.
-- Unit tests: 452 passed, one skipped; no failures.
-- Tooling: four tests passed.
-- Asset checks: all 46 registered GLB files passed.
-- Browser checks: six city interaction tests plus desktop/mobile header parity checks passed. Screenshots inspected.
+VERIFY from PowerShell:
+cd C:\Peris
+node --import tsx --test tests/city-ruins.test.ts
+npm.cmd test
+npm.cmd run build
 
-No SQL migration is required.
+Keep the live Supabase database unchanged until all database tests pass.

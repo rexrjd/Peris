@@ -28,7 +28,8 @@ create policy "own ruin evacuations" on public.peris_ruin_evacuations for select
 create or replace function public.peris_ruin_route(p_owner uuid,p_x integer,p_y integer)returns jsonb
 language plpgsql stable security definer set search_path='' as $$
 declare visited integer[]:=array_fill(0,array[40000]); parents integer[]:=array_fill(0,array[40000]); queue integer[]:=array_fill(0,array[40000]);
- start_col integer:=public.peris_wrap_cell(floor(p_x/128.0)::integer),start_row integer:=public.peris_wrap_cell(floor(p_y/128.0)::integer);
+ start_col integer:=public.peris_wrap_cell(floor(p_x/128.0)::integer);
+ start_row integer:=public.peris_wrap_cell(floor(p_y/128.0)::integer);
  start_idx integer;current_idx integer;next_idx integer;goal_idx integer:=0;cx integer;cy integer;nx integer;ny integer;
  dx integer;dy integer;head integer:=1;tail integer:=1;target public.settlements%rowtype; candidate public.settlements%rowtype;
  cells integer[]:='{}';point_idx integer;tx integer;ty integer;px integer:=p_x;py integer:=p_y;

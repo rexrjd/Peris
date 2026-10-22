@@ -1,5 +1,6 @@
 [
   "schema/base.sql",
+  "city/ruins-columns.sql",
   "accounts/sessions.sql",
   "empire/schema.sql",
   "social/schema.sql",

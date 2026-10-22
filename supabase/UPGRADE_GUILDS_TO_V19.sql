@@ -485,11 +485,11 @@ language plpgsql security definer set search_path='' as $$
 declare a public.armies%rowtype;c public.settlements%rowtype;available jsonb;chosen jsonb;unit_name text;
 begin
  if p_owner is null then raise exception 'Authentication required';end if;
- if p_target not in('auto','barracks','stables','workshop','smithy','warehouse','granary','housing','mage_tower','fishery','lumber','quarry','farm','storehouse','trading_post')then raise exception 'Choose a valid catapult target';end if;
+ if p_target not in('auto','market','barracks','stables','workshop','smithy','warehouse','granary','housing','mage_tower','fishery','lumber','quarry','farm','storehouse','trading_post')then raise exception 'Choose a valid catapult target';end if;
  perform public.peris_settle(p_owner);
  select * into a from public.armies where id=p_army and owner_id=p_owner for update;
  select * into c from public.settlements where id=p_city and owner_id<>p_owner;
- if a.id is null or c.id is null then raise exception 'Choose your legion and another player''s city';end if;
+ if a.id is null or c.id is null or c.ruined_at is not null then raise exception 'Choose your legion and another player''s living city';end if;
  if public.peris_social_relation(p_owner,c.owner_id)in('guild','alliance','nap')then raise exception 'Your guild or diplomatic pact protects this city';end if;
  available:=public.peris_roster(to_jsonb(a));chosen:=public.peris_garrison_troops(coalesce(nullif(p_troops,'null'::jsonb),available));
  if public.peris_roster_total(chosen)=0 then raise exception 'Send at least one soldier';end if;
@@ -509,7 +509,7 @@ declare a public.armies%rowtype;c public.settlements%rowtype;defenders jsonb;ros
 begin
  select * into a from public.armies where id=p_army and owner_id=p_owner;
  select * into c from public.settlements where id=a.raid_city_id and owner_id<>p_owner;
- if a.id is null or c.id is null or a.status<>'idle'or a.target_x<>c.x or a.target_y<>c.y then return null;end if;
+ if a.id is null or c.id is null or c.ruined_at is not null or a.status<>'idle'or a.target_x<>c.x or a.target_y<>c.y then return null;end if;
  -- A pact accepted during travel protects the city when the raid arrives.
  if public.peris_social_relation(p_owner,c.owner_id)in('guild','alliance','nap')then perform public.peris_return_raid(a.id);return null;end if;
  -- Avoid waiting on another ruler while the caller already holds its own lock.

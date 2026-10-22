@@ -122,6 +122,12 @@ create policy "challenge participants" on public.peris_challenges for select to 
 using(attacker_owner_id=auth.uid() or defender_owner_id=auth.uid());
 
 -- Internal helpers are revoked from ALL client roles at the end of the file.
+-- City ruins columns must exist before SQL-language helpers such as
+-- peris_station_owned() are defined. The later city/ruins.sql repeats these
+-- idempotent additions so UPGRADE_CITY_RUINS.sql remains self-contained.
+-- Preserve existing settlements and players; no backfill or data rewrite.
+alter table public.settlements add column if not exists ruined_at timestamptz;
+alter table public.players add column if not exists defeated_at timestamptz;
 -- A ruler survives the anonymous browser identity that first created it.
 -- Preserve every existing player UUID and all gameplay foreign keys.
 do $$declare constraint_name text;begin
@@ -200,13 +206,14 @@ alter table public.battle_formations add column if not exists defence_multiplier
 create or replace function public.peris_city_id(p_owner uuid)returns bigint language plpgsql security definer set search_path='' as $$
 declare requested bigint:=nullif(current_setting('peris.city_id',true),'')::bigint;result bigint;
 begin
- if requested is null then select min(id)into result from public.settlements where owner_id=p_owner;
- else select id into result from public.settlements where owner_id=p_owner and id=requested;end if;
+ if requested is null then select min(id)into result from public.settlements where owner_id=p_owner and ruined_at is null;
+ else select id into result from public.settlements where owner_id=p_owner and id=requested and ruined_at is null;end if;
  if result is null then raise exception 'Choose one of your cities';end if;return result;
 end $$;
 create or replace function public.peris_army_id(p_owner uuid)returns bigint language plpgsql security definer set search_path='' as $$
 declare requested bigint:=nullif(current_setting('peris.army_id',true),'')::bigint;result bigint;
 begin
+ if exists(select 1 from public.players where id=p_owner and defeated_at is not null)then raise exception 'This ruler has been defeated';end if;
  if requested is null then select min(id)into result from public.armies where owner_id=p_owner;
  else select id into result from public.armies where owner_id=p_owner and id=requested;end if;
  if result is null then raise exception 'Choose one of your armies';end if;return result;
@@ -214,7 +221,7 @@ end $$;
 create or replace function public.peris_scope_order()returns trigger language plpgsql security definer set search_path='' as $$
 begin
  new.settlement_id:=coalesce(new.settlement_id,public.peris_city_id(new.owner_id));
- if not exists(select 1 from public.settlements where id=new.settlement_id and owner_id=new.owner_id)then raise exception 'Order city ownership mismatch';end if;
+ if not exists(select 1 from public.settlements where id=new.settlement_id and owner_id=new.owner_id and ruined_at is null)then raise exception 'Order city ownership mismatch';end if;
  if new.kind='recruit' then
  new.army_id:=coalesce(new.army_id,public.peris_army_id(new.owner_id));
  if not exists(select 1 from public.armies where id=new.army_id and owner_id=new.owner_id)then raise exception 'Order army ownership mismatch';end if;
@@ -1408,7 +1415,7 @@ $$;
 
 create or replace function public.peris_station_owned(p_owner uuid,p_col integer,p_row integer)
 returns boolean language sql stable security definer set search_path='' as $$
- select exists(select 1 from public.settlements s where s.owner_id=p_owner
+ select exists(select 1 from public.settlements s where s.owner_id=p_owner and s.ruined_at is null
   and public.peris_wrap_cell(floor(s.x/128.0)::integer)=public.peris_wrap_cell(p_col)
   and public.peris_wrap_cell(floor(s.y/128.0)::integer)=public.peris_wrap_cell(p_row))
  or exists(select 1 from public.peris_map_plots p where p.owner_id=p_owner and p.col=public.peris_wrap_cell(p_col) and p.row=public.peris_wrap_cell(p_row))
@@ -1557,12 +1564,201 @@ declare a public.armies%rowtype;route jsonb;seconds numeric;
 begin
  select * into a from public.armies where id=p_army for update;
  if a.march_returning then return true;end if;
- if a.id is null or a.march_origin is null or a.march_path is null or a.march_distance is null then return false;end if;
+ if a.id is null then return false;end if;
+ if a.march_origin is not null and not public.peris_station_owned(a.owner_id,floor((a.march_origin->>'x')::numeric/128.0)::integer,floor((a.march_origin->>'y')::numeric/128.0)::integer)then perform public.peris_ruin_redirect_army(a.id);return true;end if;
+ if a.march_origin is null or a.march_path is null or a.march_distance is null then perform public.peris_ruin_redirect_army(a.id);return true;end if;
  select jsonb_agg(value order by ordinal desc) into route from jsonb_array_elements(a.march_path)with ordinality as points(value,ordinal);
  seconds:=greatest(2,a.march_distance/public.peris_march_speed(a.id));
  update public.armies set start_x=a.target_x,start_y=a.target_y,target_x=(a.march_origin->>'x')::integer,target_y=(a.march_origin->>'y')::integer,
   march_path=route,status='moving',raid_target_id=null,raid_city_id=null,siege_target='auto',march_returning=true,march_sent_at=null,march_cancel_until=null,
   departure_at=now(),arrival_at=now()+make_interval(secs=>seconds::double precision),updated_at=now() where id=a.id;
+ return true;
+end $$;
+-- PERIS city ruins and permanent ruler defeat. All timestamps are authoritative.
+-- These columns preserve existing IDs, reports, sessions, and older saves.
+alter table public.settlements add column if not exists ruined_at timestamptz;
+alter table public.players add column if not exists defeated_at timestamptz;
+alter table public.settlements drop constraint if exists settlements_population_check;
+alter table public.settlements add constraint settlements_population_check check(population between 0 and 2500);
+create index if not exists peris_living_cities_owner on public.settlements(owner_id,id) where ruined_at is null;
+create table if not exists public.peris_ruin_evacuations (
+ id bigint generated always as identity primary key,
+ owner_id uuid not null references public.players(id) on delete cascade,
+ origin_settlement_id bigint not null references public.settlements(id) on delete cascade,
+ target_settlement_id bigint not null references public.settlements(id) on delete cascade,
+ origin_x integer not null,origin_y integer not null,
+ troops jsonb not null,departure_at timestamptz not null,arrival_at timestamptz not null
+);
+create index if not exists peris_ruin_evacuations_due on public.peris_ruin_evacuations(owner_id,arrival_at);
+alter table public.peris_ruin_evacuations enable row level security;
+revoke all on public.peris_ruin_evacuations from public,anon,authenticated;
+grant select on public.peris_ruin_evacuations to authenticated;
+drop policy if exists "own ruin evacuations" on public.peris_ruin_evacuations;
+create policy "own ruin evacuations" on public.peris_ruin_evacuations for select to authenticated using(owner_id=public.peris_player_id());
+
+-- BFS over the same wrapped 200 x 200 land mask and no-corner-cut diagonals.
+-- Return a validated route to the first reachable surviving city. Never teleport.
+create or replace function public.peris_ruin_route(p_owner uuid,p_x integer,p_y integer)returns jsonb
+language plpgsql stable security definer set search_path='' as $$
+declare visited integer[]:=array_fill(0,array[40000]); parents integer[]:=array_fill(0,array[40000]); queue integer[]:=array_fill(0,array[40000]);
+ start_col integer:=public.peris_wrap_cell(floor(p_x/128.0)::integer);
+ start_row integer:=public.peris_wrap_cell(floor(p_y/128.0)::integer);
+ start_idx integer;current_idx integer;next_idx integer;goal_idx integer:=0;cx integer;cy integer;nx integer;ny integer;
+ dx integer;dy integer;head integer:=1;tail integer:=1;target public.settlements%rowtype; candidate public.settlements%rowtype;
+ cells integer[]:='{}';point_idx integer;tx integer;ty integer;px integer:=p_x;py integer:=p_y;
+ position jsonb;route jsonb;distance numeric:=0;change_x numeric;change_y numeric;
+begin
+ if p_x is null or p_y is null or not public.peris_world_walkable(p_x,p_y)then return null;end if;
+ start_idx:=(start_row+100)*200+start_col+101;
+ queue[1]:=start_idx;visited[start_idx]:=1;
+ while head<=tail loop
+  current_idx:=queue[head];head:=head+1;
+  cx:=mod(current_idx-1,200)-100;cy:=floor((current_idx-1)/200.0)::integer-100;
+  for candidate in select * from public.settlements s where s.owner_id=p_owner and s.ruined_at is null order by id loop
+   if floor(candidate.x/128.0)::integer=cx and floor(candidate.y/128.0)::integer=cy then
+    target:=candidate;goal_idx:=current_idx;exit;
+   end if;
+  end loop;
+  exit when goal_idx>0;
+  for dx in -1..1 loop for dy in -1..1 loop
+   if dx=0 and dy=0 then continue;end if;
+   nx:=public.peris_wrap_cell(cx+dx);ny:=public.peris_wrap_cell(cy+dy);
+   next_idx:=(ny+100)*200+nx+101;
+   if visited[next_idx]<>0 or not public.peris_world_walkable(nx*128+64,ny*128+64)then continue;end if;
+   if dx<>0 and dy<>0 and (not public.peris_world_walkable(nx*128+64,cy*128+64)
+     or not public.peris_world_walkable(cx*128+64,ny*128+64))then continue;end if;
+   visited[next_idx]:=1;parents[next_idx]:=current_idx;tail:=tail+1;queue[tail]:=next_idx;
+  end loop;end loop;
+ end loop;
+ if goal_idx=0 then return null;end if;
+ current_idx:=goal_idx;
+ while current_idx<>start_idx loop
+  cells:=array_prepend(current_idx,cells);
+  current_idx:=parents[current_idx];
+  if current_idx=0 then return null;end if;
+ end loop;
+ route:=jsonb_build_array(jsonb_build_array(p_x,p_y));
+ foreach point_idx in array cells loop
+  tx:=(mod(point_idx-1,200)-100)*128+64;
+  ty:=(floor((point_idx-1)/200.0)::integer-100)*128+64;
+  change_x:=public.peris_wrapped_delta(px,tx);change_y:=public.peris_wrapped_delta(py,ty);
+  distance:=distance+sqrt(change_x*change_x+change_y*change_y);
+  route:=route||jsonb_build_array(jsonb_build_array(tx,ty));px:=tx;py:=ty;
+ end loop;
+ position:=public.peris_home_army_position(target.x,target.y);
+ tx:=(position->>'x')::integer;ty:=(position->>'y')::integer;
+ if px<>tx or py<>ty then
+  change_x:=public.peris_wrapped_delta(px,tx);change_y:=public.peris_wrapped_delta(py,ty);
+  distance:=distance+sqrt(change_x*change_x+change_y*change_y);
+  route:=route||jsonb_build_array(jsonb_build_array(tx,ty));
+ end if;
+ return jsonb_build_object('city_id',target.id,'path',route,'distance',distance,'x',tx,'y',ty);
+end $$;
+
+-- Each hero remains attached to their existing army. Never spawn free commanders.
+create or replace function public.peris_ruin_redirect_army(p_army bigint)returns boolean
+language plpgsql security definer set search_path='' as $$
+declare a public.armies%rowtype;position jsonb;route jsonb;owner_defeated boolean;
+begin
+ select * into a from public.armies where id=p_army for update;
+ if a.id is null then return false;end if;
+ select defeated_at is not null into owner_defeated from public.players where id=a.owner_id;
+ if owner_defeated then
+  perform public.peris_write_roster(a.id,public.peris_roster('{}'));
+  update public.armies set status='idle',raid_city_id=null,raid_target_id=null,raid_reserve=null,march_path=null,march_distance=null,march_origin=null,march_returning=false,march_sent_at=null,march_cancel_until=null,carried_loot=null,updated_at=now()where id=a.id;
+  return false;
+ end if;
+ if exists(select 1 from public.battles b where b.status='active'and (b.attacker_army_id=a.id or b.defender_army_id=a.id))then return false;end if;
+ position:=public.peris_army_position(a);
+ route:=public.peris_ruin_route(a.owner_id,round((position->>'x')::numeric)::integer,round((position->>'y')::numeric)::integer);
+ if route is null then
+  perform public.peris_write_roster(a.id,public.peris_roster('{}'));
+  update public.armies set status='idle',raid_city_id=null,raid_target_id=null,raid_reserve=null,march_path=null,march_distance=null,march_origin=null,march_returning=false,march_sent_at=null,march_cancel_until=null,carried_loot=null,updated_at=now()where id=a.id;
+  return false;
+ end if;
+ update public.armies set home_settlement_id=(route->>'city_id')::bigint,
+  start_x=round((position->>'x')::numeric)::integer,start_y=round((position->>'y')::numeric)::integer,
+  target_x=(route->>'x')::integer,target_y=(route->>'y')::integer,march_path=route->'path',march_distance=(route->>'distance')::numeric,march_map_version=4,
+  status='moving',raid_city_id=null,raid_target_id=null,raid_reserve=null,march_origin=null,march_returning=true,march_sent_at=null,march_cancel_until=null,
+  departure_at=now(),arrival_at=now()+make_interval(secs=>greatest(2,(route->>'distance')::numeric/greatest(1,public.peris_march_speed(a.id)))::double precision),updated_at=now()where id=a.id;
+ return true;
+end $$;
+
+-- Deliver GARRISON evacuees as troops, not as new armies. One field can hold
+-- multiple legions, so the ordinary 1000-per-legion input limit does not apply.
+create or replace function public.peris_ruin_advance(p_owner uuid,p_until timestamptz)returns void
+language plpgsql security definer set search_path='' as $$
+declare e public.peris_ruin_evacuations%rowtype;s public.settlements%rowtype;route jsonb;existing jsonb;troops jsonb;cx integer;cy integer;
+begin
+ for e in select * from public.peris_ruin_evacuations where owner_id=p_owner and arrival_at<=p_until order by arrival_at,id for update loop
+  select * into s from public.settlements where id=e.target_settlement_id and owner_id=p_owner and ruined_at is null;
+  if s.id is null then
+   route:=public.peris_ruin_route(p_owner,e.origin_x,e.origin_y);
+   if route is null then delete from public.peris_ruin_evacuations where id=e.id;continue;end if;
+   update public.peris_ruin_evacuations set target_settlement_id=(route->>'city_id')::bigint,departure_at=p_until,
+    arrival_at=p_until+make_interval(secs=>greatest(2,(route->>'distance')::numeric/22)::double precision) where id=e.id;
+   continue;
+  end if;
+  cx:=floor(s.x/128.0)::integer;cy:=floor(s.y/128.0)::integer;
+  select public.peris_roster(to_jsonb(g))into existing from public.peris_garrisons g where g.owner_id=p_owner and g.col=cx and g.row=cy for update;
+  troops:=public.peris_roster_add(coalesce(existing,public.peris_roster('{}')),e.troops);
+  insert into public.peris_garrisons(owner_id,col,row,unit_roster,infantry,archers,cavalry)
+   values(p_owner,cx,cy,troops,public.peris_roster_class(troops,'infantry'),public.peris_roster_class(troops,'archers'),public.peris_roster_class(troops,'cavalry'))
+   on conflict(owner_id,col,row)do update set unit_roster=excluded.unit_roster,infantry=excluded.infantry,archers=excluded.archers,cavalry=excluded.cavalry;
+  delete from public.peris_ruin_evacuations where id=e.id;
+ end loop;
+end $$;
+
+-- Called exclusively after successful siege damage. Never delete the settlement,
+-- account, history or location; ruined_at is permanent and applied only once.
+create or replace function public.peris_ruin_city(p_city bigint)returns boolean
+language plpgsql security definer set search_path='' as $$
+declare city public.settlements%rowtype;g public.peris_garrisons%rowtype;a public.armies%rowtype;route jsonb;
+ old_fields text[];city_key text;pos jsonb;target_key text;living_count integer;
+begin
+ select * into city from public.settlements where id=p_city for update;
+ if city.id is null or city.ruined_at is not null then return false;end if;
+ if exists(select 1 from public.buildings where settlement_id=p_city and level>0)
+    or exists(select 1 from public.peris_city_slots where settlement_id=p_city and level>0)then return false;end if;
+ city_key:=floor(city.x/128.0)::integer||':'||floor(city.y/128.0)::integer;
+ select array_append(coalesce(array_agg(col||':'||row),array[]::text[]),city_key)into old_fields from public.peris_map_plots where settlement_id=p_city;
+ update public.settlements set ruined_at=now(),wood=0,stone=0,food=0,gold=0,
+    wood_rate=0,stone_rate=0,food_rate=0,gold_rate=0,settlers=0,population=0 where id=p_city;
+ delete from public.peris_orders where settlement_id=p_city;
+ update public.peris_settler_expeditions set status='returned' where origin_settlement_id=p_city and status='travelling';
+ -- Transport surviving station pools before abandoning the claimed fields.
+ for g in select * from public.peris_garrisons where owner_id=city.owner_id and (col||':'||row)=any(old_fields)for update loop
+  route:=public.peris_ruin_route(city.owner_id,g.col*128+64,g.row*128+64);
+  if route is not null and public.peris_roster_total(public.peris_roster(to_jsonb(g)))>0 then
+   insert into public.peris_ruin_evacuations(owner_id,origin_settlement_id,target_settlement_id,origin_x,origin_y,troops,departure_at,arrival_at)
+   values(city.owner_id,city.id,(route->>'city_id')::bigint,g.col*128+64,g.row*128+64,public.peris_roster(to_jsonb(g)),now(),
+    now()+make_interval(secs=>greatest(2,(route->>'distance')::numeric/22)::double precision));
+  end if;
+  delete from public.peris_garrisons where owner_id=g.owner_id and col=g.col and row=g.row;
+ end loop;
+ delete from public.peris_map_plots where settlement_id=p_city;
+ select count(*)into living_count from public.settlements where owner_id=city.owner_id and ruined_at is null;
+ if living_count=0 then
+  update public.players set defeated_at=coalesce(defeated_at,now()),culture_points=0 where id=city.owner_id;
+  delete from public.peris_ruin_evacuations where owner_id=city.owner_id;
+  delete from public.peris_garrisons where owner_id=city.owner_id;
+  delete from public.peris_orders where owner_id=city.owner_id;
+  update public.peris_settler_expeditions set status='returned'where owner_id=city.owner_id and status='travelling';
+  update public.peris_campaign_farms set enabled=false where owner_id=city.owner_id;
+  for a in select * from public.armies where owner_id=city.owner_id for update loop
+   perform public.peris_write_roster(a.id,public.peris_roster('{}'));
+   update public.armies set status='idle',raid_city_id=null,raid_target_id=null,raid_reserve=null,march_path=null,march_distance=null,march_origin=null,march_returning=false,march_sent_at=null,march_cancel_until=null,carried_loot=null,updated_at=now()where id=a.id;
+  end loop;
+  return true;
+ end if;
+ for a in select * from public.armies where owner_id=city.owner_id order by id for update loop
+  pos:=public.peris_army_position(a);
+  target_key:=floor(a.target_x/128.0)::integer||':'||floor(a.target_y/128.0)::integer;
+  if a.home_settlement_id=city.id or target_key=any(old_fields) or
+   (a.status='idle' and (floor((pos->>'x')::numeric/128.0)::integer||':'||floor((pos->>'y')::numeric/128.0)::integer)=any(old_fields))then
+   perform public.peris_ruin_redirect_army(a.id);
+  end if;
+ end loop;
  return true;
 end $$;
 -- Culture is integrated at each completed order/arrival before rates change.
@@ -1574,7 +1770,7 @@ update public.settlements s set development_points=p.upgrades from public.player
 alter table public.peris_challenges add column if not exists attacker_army_id bigint references public.armies(id);
 
 create or replace function public.peris_culture_rate(p_owner uuid)returns numeric language sql stable security definer set search_path='' as $$
- select coalesce(sum(5+2*coalesce((select sum(level)from public.buildings b where b.settlement_id=s.id),0)+3*coalesce((select sum(level)from public.peris_city_slots c where c.settlement_id=s.id),0)),0)*public.peris_research_factor(p_owner,'culture')from public.settlements s where s.owner_id=p_owner
+ select coalesce(sum(5+2*coalesce((select sum(level)from public.buildings b where b.settlement_id=s.id),0)+3*coalesce((select sum(level)from public.peris_city_slots c where c.settlement_id=s.id),0)),0)*public.peris_research_factor(p_owner,'culture')from public.settlements s where s.owner_id=p_owner and s.ruined_at is null
 $$;
 create or replace function public.peris_culture_accrue(p_owner uuid,p_until timestamptz)returns void language plpgsql security definer set search_path='' as $$
 begin update public.players set culture_points=least(1000000000,culture_points+greatest(0,extract(epoch from p_until-culture_updated_at))/60*public.peris_culture_rate(p_owner)),culture_updated_at=greatest(culture_updated_at,p_until)where id=p_owner;end $$;
@@ -1655,6 +1851,7 @@ create or replace function public.peris_found_complete(p_id bigint)returns void 
 declare e public.peris_settler_expeditions%rowtype;s public.settlements%rowtype;sid bigint;reason text;
 begin
  select * into e from public.peris_settler_expeditions where id=p_id for update;if e.id is null or e.status<>'travelling'then return;end if;
+ if exists(select 1 from public.players where id=e.owner_id and defeated_at is not null)or exists(select 1 from public.settlements where id=e.origin_settlement_id and ruined_at is not null)then update public.peris_settler_expeditions set status='returned' where id=e.id;return;end if;
  perform pg_advisory_xact_lock(204200);
  perform public.peris_population_accrue(e.origin_settlement_id,e.arrival_at);
  reason:=public.peris_found_reason(e.col,e.row,e.id);
@@ -1676,6 +1873,7 @@ declare u uuid:=public.peris_player_id();command_kind text:=p_command->>'type';s
  qty integer;main integer;count_cities integer;count_armies integer;cost integer;reason text;distance numeric;hero_class text;hero_name text;new_army_id bigint;stat text;inf integer;arc integer;cav integer;position jsonb;target jsonb;camp public.peris_camps%rowtype;chosen jsonb;available jsonb;reply jsonb;
 begin
  if u is null then raise exception 'Authentication required';end if;
+ if exists(select 1 from public.players where id=u and defeated_at is not null)then raise exception 'This ruler has been permanently defeated';end if;
  if p_command is null or jsonb_typeof(p_command)<>'object'or command_kind is null then raise exception 'Choose a valid command';end if;
  if command_kind in('foundCity','claimField')then perform pg_advisory_xact_lock(204200);end if;
  perform set_config('peris.city_id',coalesce(p_command->>'settlementId',''),true);perform set_config('peris.army_id',coalesce(p_command->>'armyId',''),true);
@@ -1744,7 +1942,7 @@ begin
   reason:=public.peris_found_reason((p_command->>'col')::integer,(p_command->>'row')::integer);
   if reason is not null then raise exception '%',reason;end if;
   hero_name:=btrim(p_command->>'name');if hero_name is null or length(hero_name)<2 or length(hero_name)>32 then raise exception 'Use a city name of 2-32 characters';end if;
-  select (select count(*)from public.settlements where owner_id=u)+(select count(*)from public.peris_settler_expeditions where owner_id=u and status='travelling')into count_cities;
+  select (select count(*)from public.settlements where owner_id=u and ruined_at is null)+(select count(*)from public.peris_settler_expeditions where owner_id=u and status='travelling')into count_cities;
   if count_cities>=10 then raise exception 'Your empire can hold up to ten cities';end if;
   cost:=300*count_cities*count_cities;
   if s.settlers<3 then raise exception 'Prepare three settlers in this city first';end if;
@@ -1759,7 +1957,7 @@ begin
   hero_class:=p_command->>'heroClass';hero_name:=btrim(p_command->>'name');
   if hero_class is null or hero_class not in('knight','ranger','mage')then raise exception 'Choose a hero class';end if;
   if hero_name is null or length(hero_name)<2 or length(hero_name)>24 then raise exception 'Use a hero name of 2-24 characters';end if;
-  select count(*)into count_cities from public.settlements where owner_id=u;select count(*)into count_armies from public.armies where owner_id=u;
+  select count(*)into count_cities from public.settlements where owner_id=u and ruined_at is null;select count(*)into count_armies from public.armies where owner_id=u;
   if count_armies>=least(20,count_cities*2)then raise exception 'Found another city to support more armies';end if;
   if s.gold<500 then raise exception 'Hiring a hero costs 500 gold';end if;
   update public.settlements set gold=gold-500 where id=s.id;
@@ -2944,7 +3142,9 @@ begin
  if exists(select 1 from public.peris_settler_expeditions where owner_id=p_owner and status='travelling'and arrival_at<=p_until)then perform pg_advisory_xact_lock(204200);end if;
  perform 1 from public.players where id=p_owner for update;
  if not found then return;end if;
- for s in select * from public.settlements where owner_id=p_owner order by id for update loop
+ if exists(select 1 from public.players where id=p_owner and defeated_at is not null)then return;end if;
+ perform public.peris_ruin_advance(p_owner,p_until);
+ for s in select * from public.settlements where owner_id=p_owner and ruined_at is null order by id for update loop
  perform public.peris_city_migrate(s.id);if not s.population_ready then perform public.peris_city_economy(s.id);end if;
  end loop;
  for event in select id,finish_at as at_time,false as expedition from public.peris_orders where owner_id=p_owner and finish_at<=p_until
@@ -2954,8 +3154,8 @@ begin
  perform public.peris_culture_accrue(p_owner,event.at_time);
  if event.expedition then perform public.peris_found_complete(event.id);continue;end if;
  select * into o from public.peris_orders where id=event.id for update;
- select * into s from public.settlements where id=coalesce(o.settlement_id,(select min(id)from public.settlements where owner_id=p_owner))and owner_id=p_owner for update;
- if s.id is null then raise exception 'The city for this order is missing';end if;
+ select * into s from public.settlements where id=coalesce(o.settlement_id,(select min(id)from public.settlements where owner_id=p_owner and ruined_at is null))and owner_id=p_owner for update;
+ if s.id is null or s.ruined_at is not null then delete from public.peris_orders where id=o.id;continue;end if;
  perform public.peris_population_accrue(s.id,o.finish_at);
  if o.kind='upgrade' then
   if o.item like 'slot:%' then
@@ -2977,8 +3177,11 @@ begin
  end loop;
  perform public.peris_science_advance(p_owner,p_until);
  perform public.peris_culture_accrue(p_owner,p_until);
- for s in select * from public.settlements where owner_id=p_owner order by id loop perform public.peris_population_accrue(s.id,p_until);end loop;
+ for s in select * from public.settlements where owner_id=p_owner and ruined_at is null order by id loop perform public.peris_population_accrue(s.id,p_until);end loop;
  for arriving_army in select id from public.armies where owner_id=p_owner and status='moving' and raid_target_id is null and raid_city_id is null and arrival_at<=p_until order by id for update loop
+  if not exists(select 1 from public.armies a where a.id=arriving_army and public.peris_station_owned(p_owner,floor(a.target_x/128.0)::integer,floor(a.target_y/128.0)::integer))then
+   perform public.peris_ruin_redirect_army(arriving_army);continue;
+  end if;
   perform public.peris_deliver_loot(arriving_army);
   update public.armies set status='idle',start_x=target_x,start_y=target_y,march_path=null,march_distance=null,
    march_sent_at=null,march_cancel_until=null,march_origin=null,march_returning=false,updated_at=p_until where id=arriving_army;
@@ -3050,7 +3253,7 @@ begin
  perform public.peris_settle(u);
  if not exists(select 1 from public.battles where status='active'and(attacker_owner_id=u or defender_owner_id=u))then
  for a in select * from public.armies where owner_id=u and raid_city_id is not null and status='idle'order by arrival_at,id for update loop
-  if a.infantry+a.archers+a.cavalry=0 or not exists(select 1 from public.settlements where id=a.raid_city_id and owner_id<>u)then perform public.peris_return_raid(a.id);continue;end if;
+  if a.infantry+a.archers+a.cavalry=0 or not exists(select 1 from public.settlements where id=a.raid_city_id and owner_id<>u and ruined_at is null)then perform public.peris_return_raid(a.id);continue;end if;
   if public.peris_start_city_raid(u,a.id)is not null then exit;end if;
  end loop;
  end if;
@@ -3163,7 +3366,7 @@ begin
  position:=public.peris_army_position(a);
  px:=(position->>'x')::numeric;py:=(position->>'y')::numeric;
  if (raid_target is not null or p_city is not null) and not public.peris_station_owned(u,floor(px/128)::integer,floor(py/128)::integer)then raise exception 'Depart from one of your own villages or claimed fields';end if;
- if p_city is not null and not exists(select 1 from public.settlements c where c.id=p_city and c.owner_id<>u and c.x=tx and c.y=ty)then raise exception 'Choose another player''s city';end if;
+ if p_city is not null and not exists(select 1 from public.settlements c where c.id=p_city and c.owner_id<>u and c.ruined_at is null and c.x=tx and c.y=ty)then raise exception 'Choose another player''s city';end if;
  if not public.peris_station_owned(u,floor(tx/128.0)::integer,floor(ty/128.0)::integer) and not exists(select 1 from public.peris_camps c where c.id=raid_target and c.x=tx and c.y=ty)and p_city is null then raise exception 'Troops can only station in your own villages and fields';end if;
  if not public.peris_world_walkable(px,py) then raise exception 'The army must start on land';end if;
  pcx:=floor(px/128)::integer;pcy:=floor(py/128)::integer;
@@ -4318,6 +4521,7 @@ begin
    from public.peris_reports r join public.peris_camps c on c.id=r.camp_id and c.bandit left join public.battles b on b.id=r.battle_id where r.owner_id=u and r.result?'delivered'
   )s where s.rank=1),'[]'::jsonb),
  'garrisons',coalesce((select jsonb_agg(g order by row,col)from public.peris_garrisons g where owner_id=u),'[]'::jsonb),
+ 'ruin_evacuations',coalesce((select jsonb_agg(e order by e.arrival_at)from public.peris_ruin_evacuations e where e.owner_id=u),'[]'::jsonb),
  'players',coalesce((select jsonb_agg(p order by created_at)from public.players p where p.id=u
    or exists(select 1 from public.battles b where (b.attacker_owner_id=u or b.defender_owner_id=u) and (b.attacker_owner_id=p.id or b.defender_owner_id=p.id))
    or exists(select 1 from public.peris_challenges c where c.status='pending' and c.expires_at>now() and (c.attacker_owner_id=u or c.defender_owner_id=u) and (c.attacker_owner_id=p.id or c.defender_owner_id=p.id))),'[]'::jsonb),
@@ -4363,11 +4567,11 @@ begin
  if min_x is null or min_y is null or max_x is null or max_y is null
  or min_x>=max_x or min_y>=max_y or min_x < -38400 or min_y < -38400 or max_x > 38400 or max_y > 38400 then raise exception 'Choose valid map bounds';end if;
  with nearby_settlements as materialized (
-   select s.id,s.owner_id,s.name,s.x,s.y,s.faction from public.settlements s where s.owner_id<>u
+   select s.id,s.owner_id,s.name,s.x,s.y,s.faction,s.ruined_at from public.settlements s where s.owner_id<>u
    and public.peris_map_axis_visible(s.x,min_x,max_x) and public.peris_map_axis_visible(s.y,min_y,max_y)
    order by s.id limit 601
  ), visible_settlements as (
-   select s.id,s.owner_id,s.name,s.x,s.y,s.faction from public.settlements s where s.owner_id=u
+   select s.id,s.owner_id,s.name,s.x,s.y,s.faction,s.ruined_at from public.settlements s where s.owner_id=u
    union all select * from (select * from nearby_settlements order by id limit 600) nearby
  ), army_positions as materialized (
    select a.*,(travel.position->>'x')::numeric as map_x,(travel.position->>'y')::numeric as map_y
@@ -4556,11 +4760,11 @@ language plpgsql security definer set search_path='' as $$
 declare a public.armies%rowtype;c public.settlements%rowtype;available jsonb;chosen jsonb;unit_name text;
 begin
  if p_owner is null then raise exception 'Authentication required';end if;
- if p_target not in('auto','barracks','stables','workshop','smithy','warehouse','granary','housing','mage_tower','fishery','lumber','quarry','farm','storehouse','trading_post')then raise exception 'Choose a valid catapult target';end if;
+ if p_target not in('auto','market','barracks','stables','workshop','smithy','warehouse','granary','housing','mage_tower','fishery','lumber','quarry','farm','storehouse','trading_post')then raise exception 'Choose a valid catapult target';end if;
  perform public.peris_settle(p_owner);
  select * into a from public.armies where id=p_army and owner_id=p_owner for update;
  select * into c from public.settlements where id=p_city and owner_id<>p_owner;
- if a.id is null or c.id is null then raise exception 'Choose your legion and another player''s city';end if;
+ if a.id is null or c.id is null or c.ruined_at is not null then raise exception 'Choose your legion and another player''s living city';end if;
  if public.peris_social_relation(p_owner,c.owner_id)in('guild','alliance','nap')then raise exception 'Your guild or diplomatic pact protects this city';end if;
  available:=public.peris_roster(to_jsonb(a));chosen:=public.peris_garrison_troops(coalesce(nullif(p_troops,'null'::jsonb),available));
  if public.peris_roster_total(chosen)=0 then raise exception 'Send at least one soldier';end if;
@@ -4580,7 +4784,7 @@ declare a public.armies%rowtype;c public.settlements%rowtype;defenders jsonb;ros
 begin
  select * into a from public.armies where id=p_army and owner_id=p_owner;
  select * into c from public.settlements where id=a.raid_city_id and owner_id<>p_owner;
- if a.id is null or c.id is null or a.status<>'idle'or a.target_x<>c.x or a.target_y<>c.y then return null;end if;
+ if a.id is null or c.id is null or c.ruined_at is not null or a.status<>'idle'or a.target_x<>c.x or a.target_y<>c.y then return null;end if;
  -- A pact accepted during travel protects the city when the raid arrives.
  if public.peris_social_relation(p_owner,c.owner_id)in('guild','alliance','nap')then perform public.peris_return_raid(a.id);return null;end if;
  -- Avoid waiting on another ruler while the caller already holds its own lock.
@@ -4616,6 +4820,7 @@ create or replace function public.peris_damage_city(p_city bigint,p_engines json
 language plpgsql security definer set search_path='' as $$
 declare wall public.buildings%rowtype;chosen record;loss integer;damage jsonb:='[]';
 begin
+ if exists(select 1 from public.settlements where id=p_city and ruined_at is not null)then return '[]'::jsonb;end if;
  select * into wall from public.buildings where settlement_id=p_city and building_type='wall'for update;
  if wall.id is not null then
   loss:=public.peris_siege_reduction(coalesce((p_engines->>'ram')::integer,0),wall.level,'ram');
@@ -4623,7 +4828,7 @@ begin
  end if;
  select * into chosen from(
   select building_type,level,slot_index,null::bigint as building_id,null::integer as field_col,null::integer as field_row from public.peris_city_slots where settlement_id=p_city
-  union all select building_type,level,null::integer,id,null::integer,null::integer from public.buildings where settlement_id=p_city and building_type not in('market','wall')
+  union all select building_type,level,null::integer,id,null::integer,null::integer from public.buildings where settlement_id=p_city and building_type<>'wall'
   union all select case when building_type='market'then 'trading_post'else building_type end,level,null::integer,null::bigint,col,row from public.peris_map_plots where settlement_id=p_city and building_type is not null
  )q where level>0 and(p_target='auto'or building_type=p_target)order by level desc,building_type collate "C",coalesce(slot_index,999),coalesce(field_col,999),coalesce(field_row,999)limit 1;
  if chosen.level is not null then
@@ -4636,6 +4841,7 @@ begin
   end if;
  end if;
  if jsonb_array_length(damage)>0 then perform public.peris_city_economy(p_city);end if;
+ if coalesce((p_engines->>'catapult')::integer,0)>0 or coalesce((p_engines->>'ram')::integer,0)>0 then perform public.peris_ruin_city(p_city);end if;
  return damage;
 end $$;
 
@@ -4685,7 +4891,8 @@ begin
   damage:=public.peris_damage_city(c.id,engines,b.siege_target);
  else damage:='[]';end if;
  winner:=case p_winner when 'attacker'then b.attacker_owner_id when 'defender'then b.defender_owner_id end;
- r:=jsonb_build_object('balance_version',b.balance_version,'attacker_initial',ai,'defender_initial',di,'attacker_survivors',asur,'defender_survivors',dsur,'attacker_losses',ai-asur,'defender_losses',di-dsur,'attacker_roster',initial,'attacker_survivor_roster',survivors,'defender_roster',def_initial,'defender_survivor_roster',def_remaining,'attacker_faction',coalesce(b.attacker_faction,(select faction from public.settlements where id=a.home_settlement_id)),'defender_faction',coalesce(b.defender_faction,c.faction),'loot',loot,'duration',round(b.elapsed),'reason',p_reason,'carrying_capacity',carry,'replacement_cost',public.peris_roster_loss_cost(initial,survivors,b.balance_version),'raid_city',jsonb_build_object('id',c.id,'name',c.name),'siege_damage',damage);
+ r:=jsonb_build_object('balance_version',b.balance_version,'attacker_initial',ai,'defender_initial',di,'attacker_survivors',asur,'defender_survivors',dsur,'attacker_losses',ai-asur,'defender_losses',di-dsur,'attacker_roster',initial,'attacker_survivor_roster',survivors,'defender_roster',def_initial,'defender_survivor_roster',def_remaining,'attacker_faction',coalesce(b.attacker_faction,(select faction from public.settlements where id=a.home_settlement_id)),'defender_faction',coalesce(b.defender_faction,c.faction),'loot',loot,'duration',round(b.elapsed),'reason',p_reason,'carrying_capacity',carry,'replacement_cost',public.peris_roster_loss_cost(initial,survivors,b.balance_version),'raid_city',jsonb_build_object('id',c.id,'name',c.name),'siege_damage',damage,
+   'city_ruined',exists(select 1 from public.settlements where id=c.id and ruined_at is not null));
  if carry=0 or(loot->>'wood')::numeric+(loot->>'stone')::numeric+(loot->>'food')::numeric+(loot->>'gold')::numeric=0 then r:=r||jsonb_build_object('estimated_profit',public.peris_resource_difference(loot,r->'replacement_cost'));end if;
  update public.armies set status='idle',raid_city_id=null,raid_target_id=null,raid_reserve=null,march_sent_at=null,march_cancel_until=null,carried_loot=loot,loot_report_id=b.id,updated_at=now()where id=a.id;
  for side in select unnest(array['attacker','defender'])loop
@@ -4786,6 +4993,7 @@ begin
   if previous.function_name is distinct from p_function or previous.arguments is distinct from p_args then raise exception 'This request belongs to a different command';end if;
   return previous.response;
  end if;
+ if exists(select 1 from public.players where id=u and defeated_at is not null)then raise exception 'This ruler has been permanently defeated';end if;
  -- A fixed whitelist keeps the receipt endpoint from invoking private helpers.
  case p_function
  when 'peris_empire_command' then answer:=public.peris_empire_command(p_args->'p_command');
