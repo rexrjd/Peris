@@ -1,4 +1,5 @@
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, writeFile, readFile } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import os from 'node:os';
 import { performance } from 'node:perf_hooks';
@@ -8,6 +9,9 @@ import { testPostgres } from '../tests/helpers/testPostgres.ts';
 const minutes = Number(process.argv.find(a => a.startsWith('--minutes='))?.split('=')[1] ?? 10);
 if (!Number.isFinite(minutes) || minutes < 1 || minutes > 30) throw new Error('Use --minutes=1..30 (acceptance run: 10).');
 const db = testPostgres();
+const build = execFileSync('git', ['rev-parse', 'HEAD'], {encoding: 'utf8'}).trim();
+const dirty = !!execFileSync('git', ['status', '--porcelain'], {encoding: 'utf8'}).trim();
+const sql_sha256 = createHash('sha256').update(await readFile('supabase/FRESH_INSTALL_V19.sql')).digest('hex');
 const target = await db.assertTarget();
 if (process.argv.includes('--initialize')) {
     await db.initialize();
@@ -72,7 +76,7 @@ finally {
     const acceptance = { completed_ten_minutes: performance.now() - started >= 600000, zero_errors: errors.length === 0, no_duplicate_reports: findings.duplicate_reports === 0, core_p95_below_2s: summary.core?.p95_ms < 2000 };
     const directory = 'reports/server-reliability/' + startedAt.replace(/[:.]/g, '-');
     await mkdir(directory, { recursive: true });
-    const report = { build: execFileSync('git', ['rev-parse', 'HEAD'], {encoding: 'utf8'}).trim(), dirty: !!execFileSync('git', ['status', '--porcelain'], {encoding: 'utf8'}).trim(), started_at: startedAt, elapsed_seconds: (performance.now() - started) / 1000, scenario, transport: 'Direct local psql sessions; client process startup included; not hosted HTTP or browser bots', hardware: { platform: os.platform(), cpu: os.cpus()[0]?.model, logical_cpus: os.cpus().length, memory_gb: os.totalmem() / 2 ** 30 }, postgres: target.version, summary, acceptance, findings, workers, lag, errors, samples, plans: JSON.parse(plans) };
+    const report = { build, dirty, sql_sha256, started_at: startedAt, elapsed_seconds: (performance.now() - started) / 1000, scenario, transport: 'Direct local psql sessions; client process startup included; not hosted HTTP or browser bots', hardware: { platform: os.platform(), cpu: os.cpus()[0]?.model, logical_cpus: os.cpus().length, memory_gb: os.totalmem() / 2 ** 30 }, postgres: target.version, summary, acceptance, findings, workers, lag, errors, samples, plans: JSON.parse(plans) };
     await writeFile(directory + '/report.json', JSON.stringify(report, null, 2));
     await writeFile(directory + '/report.md', '# Isolated five-client reliability probe\n\n' + report.transport + '. Synthetic setup includes 100 history reports per ruler.\n\n' + Object.entries(acceptance).map(([key, ok]) => `- [${ok ? 'x' : ' '}] ${key}`).join('\n') + '\n\n```json\n' + JSON.stringify(summary, null, 2) + '\n```\n\nSee report.json for real actions, errors, game-time lag, hardware and query plan. A passed local probe does not establish hosted capacity for 200 bots.\n');
     console.log(directory, JSON.stringify({ summary, acceptance, findings }));
