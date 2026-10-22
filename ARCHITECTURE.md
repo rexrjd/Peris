@@ -50,6 +50,10 @@ Private `peris_game_tick` performs bounded, fair owner processing through existi
 settlement, travel and battle functions, plus camp accrual. Only service-role
 execution is granted; an optional database scheduler runs it independently of
 browsers. NPC growth deadlines are never exposed in public snapshots.
+Online clients retain their battle and queued-work cadence while polling idle
+state less often. Background core, map, cosmetic and social reads back off after
+failures; explicit commands retain the existing server receipt and retry path.
+See `docs/shared-world-polling.md` for intervals, limitations and measured traffic.
 The old local Frontier server remains a development reference, not a second
 player account, production service or navigation route.
 See `docs/frontier-wars.md` for the migration and publication boundary.
