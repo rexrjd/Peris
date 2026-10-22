@@ -23,11 +23,11 @@ language plpgsql security definer set search_path='' as $$
 declare a public.armies%rowtype;c public.settlements%rowtype;available jsonb;chosen jsonb;unit_name text;
 begin
  if p_owner is null then raise exception 'Authentication required';end if;
- if p_target not in('auto','barracks','stables','workshop','smithy','warehouse','granary','housing','mage_tower','fishery','lumber','quarry','farm','storehouse','trading_post')then raise exception 'Choose a valid catapult target';end if;
+ if p_target not in('auto','market','barracks','stables','workshop','smithy','warehouse','granary','housing','mage_tower','fishery','lumber','quarry','farm','storehouse','trading_post')then raise exception 'Choose a valid catapult target';end if;
  perform public.peris_settle(p_owner);
  select * into a from public.armies where id=p_army and owner_id=p_owner for update;
  select * into c from public.settlements where id=p_city and owner_id<>p_owner;
- if a.id is null or c.id is null then raise exception 'Choose your legion and another player''s city';end if;
+ if a.id is null or c.id is null or c.ruined_at is not null then raise exception 'Choose your legion and another player''s living city';end if;
  if public.peris_social_relation(p_owner,c.owner_id)in('guild','alliance','nap')then raise exception 'Your guild or diplomatic pact protects this city';end if;
  available:=public.peris_roster(to_jsonb(a));chosen:=public.peris_garrison_troops(coalesce(nullif(p_troops,'null'::jsonb),available));
  if public.peris_roster_total(chosen)=0 then raise exception 'Send at least one soldier';end if;
@@ -47,7 +47,7 @@ declare a public.armies%rowtype;c public.settlements%rowtype;defenders jsonb;ros
 begin
  select * into a from public.armies where id=p_army and owner_id=p_owner;
  select * into c from public.settlements where id=a.raid_city_id and owner_id<>p_owner;
- if a.id is null or c.id is null or a.status<>'idle'or a.target_x<>c.x or a.target_y<>c.y then return null;end if;
+ if a.id is null or c.id is null or c.ruined_at is not null or a.status<>'idle'or a.target_x<>c.x or a.target_y<>c.y then return null;end if;
  -- A pact accepted during travel protects the city when the raid arrives.
  if public.peris_social_relation(p_owner,c.owner_id)in('guild','alliance','nap')then perform public.peris_return_raid(a.id);return null;end if;
  -- Avoid waiting on another ruler while the caller already holds its own lock.
@@ -83,6 +83,7 @@ create or replace function public.peris_damage_city(p_city bigint,p_engines json
 language plpgsql security definer set search_path='' as $$
 declare wall public.buildings%rowtype;chosen record;loss integer;damage jsonb:='[]';
 begin
+ if exists(select 1 from public.settlements where id=p_city and ruined_at is not null)then return '[]'::jsonb;end if;
  select * into wall from public.buildings where settlement_id=p_city and building_type='wall'for update;
  if wall.id is not null then
   loss:=public.peris_siege_reduction(coalesce((p_engines->>'ram')::integer,0),wall.level,'ram');
@@ -90,7 +91,7 @@ begin
  end if;
  select * into chosen from(
   select building_type,level,slot_index,null::bigint as building_id,null::integer as field_col,null::integer as field_row from public.peris_city_slots where settlement_id=p_city
-  union all select building_type,level,null::integer,id,null::integer,null::integer from public.buildings where settlement_id=p_city and building_type not in('market','wall')
+  union all select building_type,level,null::integer,id,null::integer,null::integer from public.buildings where settlement_id=p_city and building_type<>'wall'
   union all select case when building_type='market'then 'trading_post'else building_type end,level,null::integer,null::bigint,col,row from public.peris_map_plots where settlement_id=p_city and building_type is not null
  )q where level>0 and(p_target='auto'or building_type=p_target)order by level desc,building_type collate "C",coalesce(slot_index,999),coalesce(field_col,999),coalesce(field_row,999)limit 1;
  if chosen.level is not null then
@@ -103,6 +104,7 @@ begin
   end if;
  end if;
  if jsonb_array_length(damage)>0 then perform public.peris_city_economy(p_city);end if;
+ if coalesce((p_engines->>'catapult')::integer,0)>0 or coalesce((p_engines->>'ram')::integer,0)>0 then perform public.peris_ruin_city(p_city);end if;
  return damage;
 end $$;
 
@@ -152,7 +154,8 @@ begin
   damage:=public.peris_damage_city(c.id,engines,b.siege_target);
  else damage:='[]';end if;
  winner:=case p_winner when 'attacker'then b.attacker_owner_id when 'defender'then b.defender_owner_id end;
- r:=jsonb_build_object('balance_version',b.balance_version,'attacker_initial',ai,'defender_initial',di,'attacker_survivors',asur,'defender_survivors',dsur,'attacker_losses',ai-asur,'defender_losses',di-dsur,'attacker_roster',initial,'attacker_survivor_roster',survivors,'defender_roster',def_initial,'defender_survivor_roster',def_remaining,'attacker_faction',coalesce(b.attacker_faction,(select faction from public.settlements where id=a.home_settlement_id)),'defender_faction',coalesce(b.defender_faction,c.faction),'loot',loot,'duration',round(b.elapsed),'reason',p_reason,'carrying_capacity',carry,'replacement_cost',public.peris_roster_loss_cost(initial,survivors,b.balance_version),'raid_city',jsonb_build_object('id',c.id,'name',c.name),'siege_damage',damage);
+ r:=jsonb_build_object('balance_version',b.balance_version,'attacker_initial',ai,'defender_initial',di,'attacker_survivors',asur,'defender_survivors',dsur,'attacker_losses',ai-asur,'defender_losses',di-dsur,'attacker_roster',initial,'attacker_survivor_roster',survivors,'defender_roster',def_initial,'defender_survivor_roster',def_remaining,'attacker_faction',coalesce(b.attacker_faction,(select faction from public.settlements where id=a.home_settlement_id)),'defender_faction',coalesce(b.defender_faction,c.faction),'loot',loot,'duration',round(b.elapsed),'reason',p_reason,'carrying_capacity',carry,'replacement_cost',public.peris_roster_loss_cost(initial,survivors,b.balance_version),'raid_city',jsonb_build_object('id',c.id,'name',c.name),'siege_damage',damage,
+   'city_ruined',exists(select 1 from public.settlements where id=c.id and ruined_at is not null));
  if carry=0 or(loot->>'wood')::numeric+(loot->>'stone')::numeric+(loot->>'food')::numeric+(loot->>'gold')::numeric=0 then r:=r||jsonb_build_object('estimated_profit',public.peris_resource_difference(loot,r->'replacement_cost'));end if;
  update public.armies set status='idle',raid_city_id=null,raid_target_id=null,raid_reserve=null,march_sent_at=null,march_cancel_until=null,carried_loot=loot,loot_report_id=b.id,updated_at=now()where id=a.id;
  for side in select unnest(array['attacker','defender'])loop

@@ -18,7 +18,7 @@ export function homeArmyPosition(city: { x: number; y: number }) {
 /** Troops may stop only at a village or field owned by their ruler. Routes may cross other land. */
 export function ownedStation(world: World, owner: string, point: { x: number; y: number }) {
     const { col, row } = stationCell(point);
-    return world.settlements.some(city => city.owner_id === owner && stationCell(city).col === col && stationCell(city).row === row) ||
+    return world.settlements.some(city => city.owner_id === owner && !city.ruined_at && stationCell(city).col === col && stationCell(city).row === row) ||
         !!world.map_plots?.some(plot => plot.owner_id === owner && plot.col === col && plot.row === row);
 }
 export function garrisonAt(world: World, owner: string, point: { x: number; y: number }) {

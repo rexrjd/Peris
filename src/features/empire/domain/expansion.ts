@@ -24,7 +24,7 @@ export function cityCultureRate(world: World, sid: number) {
     return (5 + world.buildings.filter(b => b.settlement_id === sid).reduce((sum, b) => sum + b.level * 2, 0)
         + (world.city_slots ?? []).filter(s => s.settlement_id === sid).reduce((sum, s) => sum + s.level * 3, 0))*researchFactor(world,world.settlements.find(s=>s.id===sid)!.owner_id,'culture');
 }
-export const cultureRate = (world: World, owner: string) => world.settlements.filter(s => s.owner_id === owner).reduce((sum, s) => sum + cityCultureRate(world, s.id), 0);
+export const cultureRate = (world: World, owner: string) => world.settlements.filter(s => s.owner_id === owner && !s.ruined_at).reduce((sum, s) => sum + cityCultureRate(world, s.id), 0);
 export function liveCulture(world: World, owner: string, now = Date.now()) {
     const player = world.players.find(p => p.id === owner)!;
     return Math.min(1e9, (player.culture_points ?? 0) + Math.max(0, now - Date.parse(player.culture_updated_at ?? world.server_now)) / 60000 * cultureRate(world, owner));
@@ -34,7 +34,7 @@ export function accrueCulture(world: World, owner: string, now: number) {
     if (!player || now <= Date.parse(player.culture_updated_at ?? world.server_now)) return;
     player.culture_points = liveCulture(world, owner, now); player.culture_updated_at = new Date(now).toISOString();
 }
-export const expansionCount = (world: World, owner: string) => world.settlements.filter(s => s.owner_id === owner).length + (world.settler_expeditions ?? []).filter(e => e.owner_id === owner && e.status === 'travelling').length;
+export const expansionCount = (world: World, owner: string) => world.settlements.filter(s => s.owner_id === owner && !s.ruined_at).length + (world.settler_expeditions ?? []).filter(e => e.owner_id === owner && e.status === 'travelling').length;
 export function foundingReason(world: World, owner: string, col: number, row: number): string | null {
     if (!Number.isSafeInteger(col) || !Number.isSafeInteger(row)) return 'Choose whole field coordinates.';
     const cell = wrapWorldCell(col, row);
@@ -78,6 +78,7 @@ export function nextEntityId(world: World) {
 }
 export function completeExpedition(world: World, expedition: SettlerExpedition) {
     if (expedition.status !== 'travelling') return;
+    if (world.players.find(p=>p.id===expedition.owner_id)?.defeated_at||world.settlements.find(s=>s.id===expedition.origin_settlement_id)?.ruined_at){expedition.status='returned';return;}
     // Exclude this reservation when rechecking the site at arrival.
     const check = { ...world, settler_expeditions: world.settler_expeditions?.filter(e => e !== expedition) };
     if (foundingReason(check, expedition.owner_id, expedition.col, expedition.row)) {

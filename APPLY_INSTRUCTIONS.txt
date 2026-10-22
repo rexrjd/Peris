@@ -1,0 +1,7 @@
+Peris city ruins integrated changes (against uploaded Peris-ruins-local.zip)
+
+1. Back up C:\Peris and all database data first.
+2. Extract this ZIP directly to C:\Peris, preserving folders; review changes before overwrite.
+3. Run npm run build:sql, npm test, npm run test:tooling, npm run assets:check, npm run build and affected database tests.
+4. Review supabase/UPGRADE_CITY_RUINS.sql. DO NOT apply it to live Supabase until all relevant database and multiplayer integration tests pass.
+5. Changes were based on your uploaded working tree, not GitHub main.

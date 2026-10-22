@@ -7,7 +7,7 @@ update public.settlements s set development_points=p.upgrades from public.player
 alter table public.peris_challenges add column if not exists attacker_army_id bigint references public.armies(id);
 
 create or replace function public.peris_culture_rate(p_owner uuid)returns numeric language sql stable security definer set search_path='' as $$
- select coalesce(sum(5+2*coalesce((select sum(level)from public.buildings b where b.settlement_id=s.id),0)+3*coalesce((select sum(level)from public.peris_city_slots c where c.settlement_id=s.id),0)),0)*public.peris_research_factor(p_owner,'culture')from public.settlements s where s.owner_id=p_owner
+ select coalesce(sum(5+2*coalesce((select sum(level)from public.buildings b where b.settlement_id=s.id),0)+3*coalesce((select sum(level)from public.peris_city_slots c where c.settlement_id=s.id),0)),0)*public.peris_research_factor(p_owner,'culture')from public.settlements s where s.owner_id=p_owner and s.ruined_at is null
 $$;
 create or replace function public.peris_culture_accrue(p_owner uuid,p_until timestamptz)returns void language plpgsql security definer set search_path='' as $$
 begin update public.players set culture_points=least(1000000000,culture_points+greatest(0,extract(epoch from p_until-culture_updated_at))/60*public.peris_culture_rate(p_owner)),culture_updated_at=greatest(culture_updated_at,p_until)where id=p_owner;end $$;
@@ -88,6 +88,7 @@ create or replace function public.peris_found_complete(p_id bigint)returns void 
 declare e public.peris_settler_expeditions%rowtype;s public.settlements%rowtype;sid bigint;reason text;
 begin
  select * into e from public.peris_settler_expeditions where id=p_id for update;if e.id is null or e.status<>'travelling'then return;end if;
+ if exists(select 1 from public.players where id=e.owner_id and defeated_at is not null)or exists(select 1 from public.settlements where id=e.origin_settlement_id and ruined_at is not null)then update public.peris_settler_expeditions set status='returned' where id=e.id;return;end if;
  perform pg_advisory_xact_lock(204200);
  perform public.peris_population_accrue(e.origin_settlement_id,e.arrival_at);
  reason:=public.peris_found_reason(e.col,e.row,e.id);
@@ -109,6 +110,7 @@ declare u uuid:=public.peris_player_id();command_kind text:=p_command->>'type';s
  qty integer;main integer;count_cities integer;count_armies integer;cost integer;reason text;distance numeric;hero_class text;hero_name text;new_army_id bigint;stat text;inf integer;arc integer;cav integer;position jsonb;target jsonb;camp public.peris_camps%rowtype;chosen jsonb;available jsonb;reply jsonb;
 begin
  if u is null then raise exception 'Authentication required';end if;
+ if exists(select 1 from public.players where id=u and defeated_at is not null)then raise exception 'This ruler has been permanently defeated';end if;
  if p_command is null or jsonb_typeof(p_command)<>'object'or command_kind is null then raise exception 'Choose a valid command';end if;
  if command_kind in('foundCity','claimField')then perform pg_advisory_xact_lock(204200);end if;
  perform set_config('peris.city_id',coalesce(p_command->>'settlementId',''),true);perform set_config('peris.army_id',coalesce(p_command->>'armyId',''),true);
@@ -177,7 +179,7 @@ begin
   reason:=public.peris_found_reason((p_command->>'col')::integer,(p_command->>'row')::integer);
   if reason is not null then raise exception '%',reason;end if;
   hero_name:=btrim(p_command->>'name');if hero_name is null or length(hero_name)<2 or length(hero_name)>32 then raise exception 'Use a city name of 2-32 characters';end if;
-  select (select count(*)from public.settlements where owner_id=u)+(select count(*)from public.peris_settler_expeditions where owner_id=u and status='travelling')into count_cities;
+  select (select count(*)from public.settlements where owner_id=u and ruined_at is null)+(select count(*)from public.peris_settler_expeditions where owner_id=u and status='travelling')into count_cities;
   if count_cities>=10 then raise exception 'Your empire can hold up to ten cities';end if;
   cost:=300*count_cities*count_cities;
   if s.settlers<3 then raise exception 'Prepare three settlers in this city first';end if;
@@ -192,7 +194,7 @@ begin
   hero_class:=p_command->>'heroClass';hero_name:=btrim(p_command->>'name');
   if hero_class is null or hero_class not in('knight','ranger','mage')then raise exception 'Choose a hero class';end if;
   if hero_name is null or length(hero_name)<2 or length(hero_name)>24 then raise exception 'Use a hero name of 2-24 characters';end if;
-  select count(*)into count_cities from public.settlements where owner_id=u;select count(*)into count_armies from public.armies where owner_id=u;
+  select count(*)into count_cities from public.settlements where owner_id=u and ruined_at is null;select count(*)into count_armies from public.armies where owner_id=u;
   if count_armies>=least(20,count_cities*2)then raise exception 'Found another city to support more armies';end if;
   if s.gold<500 then raise exception 'Hiring a hero costs 500 gold';end if;
   update public.settlements set gold=gold-500 where id=s.id;

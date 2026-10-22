@@ -53,13 +53,14 @@ alter table public.battle_formations add column if not exists defence_multiplier
 create or replace function public.peris_city_id(p_owner uuid)returns bigint language plpgsql security definer set search_path='' as $$
 declare requested bigint:=nullif(current_setting('peris.city_id',true),'')::bigint;result bigint;
 begin
- if requested is null then select min(id)into result from public.settlements where owner_id=p_owner;
- else select id into result from public.settlements where owner_id=p_owner and id=requested;end if;
+ if requested is null then select min(id)into result from public.settlements where owner_id=p_owner and ruined_at is null;
+ else select id into result from public.settlements where owner_id=p_owner and id=requested and ruined_at is null;end if;
  if result is null then raise exception 'Choose one of your cities';end if;return result;
 end $$;
 create or replace function public.peris_army_id(p_owner uuid)returns bigint language plpgsql security definer set search_path='' as $$
 declare requested bigint:=nullif(current_setting('peris.army_id',true),'')::bigint;result bigint;
 begin
+ if exists(select 1 from public.players where id=p_owner and defeated_at is not null)then raise exception 'This ruler has been defeated';end if;
  if requested is null then select min(id)into result from public.armies where owner_id=p_owner;
  else select id into result from public.armies where owner_id=p_owner and id=requested;end if;
  if result is null then raise exception 'Choose one of your armies';end if;return result;
@@ -67,7 +68,7 @@ end $$;
 create or replace function public.peris_scope_order()returns trigger language plpgsql security definer set search_path='' as $$
 begin
  new.settlement_id:=coalesce(new.settlement_id,public.peris_city_id(new.owner_id));
- if not exists(select 1 from public.settlements where id=new.settlement_id and owner_id=new.owner_id)then raise exception 'Order city ownership mismatch';end if;
+ if not exists(select 1 from public.settlements where id=new.settlement_id and owner_id=new.owner_id and ruined_at is null)then raise exception 'Order city ownership mismatch';end if;
  if new.kind='recruit' then
  new.army_id:=coalesce(new.army_id,public.peris_army_id(new.owner_id));
  if not exists(select 1 from public.armies where id=new.army_id and owner_id=new.owner_id)then raise exception 'Order army ownership mismatch';end if;

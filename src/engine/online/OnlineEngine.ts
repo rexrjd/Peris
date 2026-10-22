@@ -20,7 +20,7 @@ type MapBounds = { minX: number; minY: number; maxX: number; maxY: number };
 type PublicMapSnapshot = {
     server_now: string;
     players: Pick<World['players'][number], 'id' | 'display_name'>[];
-    settlements: Pick<World['settlements'][number], 'id' | 'owner_id' | 'name' | 'x' | 'y' | 'faction' | 'map_development'>[];
+    settlements: Pick<World['settlements'][number], 'id' | 'owner_id' | 'name' | 'x' | 'y' | 'faction' | 'map_development' | 'ruined_at'>[];
     armies: World['armies'];
     map_plots: NonNullable<World['map_plots']>;
     total_players: number;

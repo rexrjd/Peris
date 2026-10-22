@@ -2,7 +2,7 @@ import type { World } from '../../../shared/model/world';
 import type { LocalCommandContext } from '../../../shared/model/commands';
 
 export function ownedCity(world: World, owner: string, id?: number) {
-    const city = world.settlements.find(s => s.owner_id === owner && (id === undefined || s.id === id));
+    const city = world.settlements.find(s => s.owner_id === owner && !s.ruined_at && (id === undefined || s.id === id));
     if (!city) throw new Error('Choose one of your cities.');
     return city;
 }

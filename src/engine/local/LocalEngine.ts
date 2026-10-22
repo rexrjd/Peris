@@ -1,6 +1,7 @@
 import {ensureScience,startResearch,pauseResearch,debugResearch} from '../../features/research/domain/science';
 import { autoCastSpells } from '../../features/magic/domain/automatic';
 import { normalizeRealm } from '../../features/empire/domain/normalization';
+import { isDefeated } from '../../features/city/domain/ruins';
 import { trainSettlers, sendSettlers, nextEntityId } from '../../features/empire/domain/expansion';
 import { recruitHero, improveHero, equipArtifact, transferTroops, rebaseArmy } from '../../features/heroes/domain/commands';
 import type { Faction } from '../../features/factions/domain/factions';
@@ -121,7 +122,7 @@ export class LocalEngine implements GameEngine {
         }
     }
     private advanceFarms() {
-        if (this.mode === 'practice') return;
+        if (this.mode === 'practice' || isDefeated(this.snapshot,this.playerId)) return;
         advanceCampFarms({ world: this.snapshot, playerId: this.playerId, nextId: () => ++this.nextId, active: this.active(), now: new Date().toISOString(), paused: () => {}, finalize: id => this.finalize(id) }, Date.now());
     }
     private beginRaid(campId: number, armyId?: number) { beginRaid(this.snapshot, this.playerId, campId, () => ++this.nextId, armyId); }
@@ -137,6 +138,7 @@ export class LocalEngine implements GameEngine {
         this.save();
     }
     command = async (cmd: Command) => {
+        if (isDefeated(this.snapshot,this.playerId)) throw new Error('This ruler has been defeated. Your cities remain as ruins.');
         settleLocal(this.snapshot, this.playerId);
         this.advanceFarms();
         const active = this.active();

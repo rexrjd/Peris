@@ -6,7 +6,9 @@ begin
  if exists(select 1 from public.peris_settler_expeditions where owner_id=p_owner and status='travelling'and arrival_at<=p_until)then perform pg_advisory_xact_lock(204200);end if;
  perform 1 from public.players where id=p_owner for update;
  if not found then return;end if;
- for s in select * from public.settlements where owner_id=p_owner order by id for update loop
+ if exists(select 1 from public.players where id=p_owner and defeated_at is not null)then return;end if;
+ perform public.peris_ruin_advance(p_owner,p_until);
+ for s in select * from public.settlements where owner_id=p_owner and ruined_at is null order by id for update loop
  perform public.peris_city_migrate(s.id);if not s.population_ready then perform public.peris_city_economy(s.id);end if;
  end loop;
  for event in select id,finish_at as at_time,false as expedition from public.peris_orders where owner_id=p_owner and finish_at<=p_until
@@ -16,8 +18,8 @@ begin
  perform public.peris_culture_accrue(p_owner,event.at_time);
  if event.expedition then perform public.peris_found_complete(event.id);continue;end if;
  select * into o from public.peris_orders where id=event.id for update;
- select * into s from public.settlements where id=coalesce(o.settlement_id,(select min(id)from public.settlements where owner_id=p_owner))and owner_id=p_owner for update;
- if s.id is null then raise exception 'The city for this order is missing';end if;
+ select * into s from public.settlements where id=coalesce(o.settlement_id,(select min(id)from public.settlements where owner_id=p_owner and ruined_at is null))and owner_id=p_owner for update;
+ if s.id is null or s.ruined_at is not null then delete from public.peris_orders where id=o.id;continue;end if;
  perform public.peris_population_accrue(s.id,o.finish_at);
  if o.kind='upgrade' then
   if o.item like 'slot:%' then
@@ -39,8 +41,11 @@ begin
  end loop;
  perform public.peris_science_advance(p_owner,p_until);
  perform public.peris_culture_accrue(p_owner,p_until);
- for s in select * from public.settlements where owner_id=p_owner order by id loop perform public.peris_population_accrue(s.id,p_until);end loop;
+ for s in select * from public.settlements where owner_id=p_owner and ruined_at is null order by id loop perform public.peris_population_accrue(s.id,p_until);end loop;
  for arriving_army in select id from public.armies where owner_id=p_owner and status='moving' and raid_target_id is null and raid_city_id is null and arrival_at<=p_until order by id for update loop
+  if not exists(select 1 from public.armies a where a.id=arriving_army and public.peris_station_owned(p_owner,floor(a.target_x/128.0)::integer,floor(a.target_y/128.0)::integer))then
+   perform public.peris_ruin_redirect_army(arriving_army);continue;
+  end if;
   perform public.peris_deliver_loot(arriving_army);
   update public.armies set status='idle',start_x=target_x,start_y=target_y,march_path=null,march_distance=null,
    march_sent_at=null,march_cancel_until=null,march_origin=null,march_returning=false,updated_at=p_until where id=arriving_army;

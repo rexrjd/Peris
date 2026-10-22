@@ -27,7 +27,7 @@ begin
  position:=public.peris_army_position(a);
  px:=(position->>'x')::numeric;py:=(position->>'y')::numeric;
  if (raid_target is not null or p_city is not null) and not public.peris_station_owned(u,floor(px/128)::integer,floor(py/128)::integer)then raise exception 'Depart from one of your own villages or claimed fields';end if;
- if p_city is not null and not exists(select 1 from public.settlements c where c.id=p_city and c.owner_id<>u and c.x=tx and c.y=ty)then raise exception 'Choose another player''s city';end if;
+ if p_city is not null and not exists(select 1 from public.settlements c where c.id=p_city and c.owner_id<>u and c.ruined_at is null and c.x=tx and c.y=ty)then raise exception 'Choose another player''s city';end if;
  if not public.peris_station_owned(u,floor(tx/128.0)::integer,floor(ty/128.0)::integer) and not exists(select 1 from public.peris_camps c where c.id=raid_target and c.x=tx and c.y=ty)and p_city is null then raise exception 'Troops can only station in your own villages and fields';end if;
  if not public.peris_world_walkable(px,py) then raise exception 'The army must start on land';end if;
  pcx:=floor(px/128)::integer;pcy:=floor(py/128)::integer;

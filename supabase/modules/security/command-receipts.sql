@@ -20,6 +20,7 @@ begin
   if previous.function_name is distinct from p_function or previous.arguments is distinct from p_args then raise exception 'This request belongs to a different command';end if;
   return previous.response;
  end if;
+ if exists(select 1 from public.players where id=u and defeated_at is not null)then raise exception 'This ruler has been permanently defeated';end if;
  -- A fixed whitelist keeps the receipt endpoint from invoking private helpers.
  case p_function
  when 'peris_empire_command' then answer:=public.peris_empire_command(p_args->'p_command');

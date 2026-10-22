@@ -29,7 +29,7 @@ $$;
 
 create or replace function public.peris_station_owned(p_owner uuid,p_col integer,p_row integer)
 returns boolean language sql stable security definer set search_path='' as $$
- select exists(select 1 from public.settlements s where s.owner_id=p_owner
+ select exists(select 1 from public.settlements s where s.owner_id=p_owner and s.ruined_at is null
   and public.peris_wrap_cell(floor(s.x/128.0)::integer)=public.peris_wrap_cell(p_col)
   and public.peris_wrap_cell(floor(s.y/128.0)::integer)=public.peris_wrap_cell(p_row))
  or exists(select 1 from public.peris_map_plots p where p.owner_id=p_owner and p.col=public.peris_wrap_cell(p_col) and p.row=public.peris_wrap_cell(p_row))

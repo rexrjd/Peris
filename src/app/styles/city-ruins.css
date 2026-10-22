@@ -1,0 +1,10 @@
+.peris-defeat-screen{min-height:100dvh;display:grid;place-items:center;padding:32px 20px;background:radial-gradient(ellipse at center,#343436 0%,#171a20 64%,#101117 100%);color:#f1e8dc;text-align:center}
+.peris-defeat-memorial{width:min(510px,100%);padding:42px 30px 32px;border:1px solid #bca78046;background:#161c24e6;box-shadow:0 24px 70px #0505099c;border-radius:10px}
+.peris-defeat-symbol{font-size:48px;color:#c5a47c;line-height:1.3}.peris-defeat-eyebrow{color:#c6a781;letter-spacing:.18em;font-size:11px}
+.peris-defeat-memorial h1{font-size:clamp(26px,5vw,40px);margin:8px 0 12px;font-family:Georgia,serif;font-weight:500}
+.peris-defeat-memorial>p:not(.peris-defeat-eyebrow){color:#bec0c6;line-height:1.7}
+.peris-defeat-memorial section{text-align:left;margin:26px 0;border-top:1px solid #a49c8d44}
+.peris-defeat-memorial h2{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:#afaa9e;margin:17px 0 10px}
+.peris-defeat-city{display:flex;justify-content:space-between;gap:12px;padding:11px 0;border-bottom:1px solid #b9aca42b;font-size:14px}
+.peris-defeat-city span{font-size:12px;color:#bfa98d}
+.peris-defeat-memorial>button{background:#b9925f;border:0;border-radius:5px;color:#171717;padding:12px 22px;cursor:pointer;font-weight:700}

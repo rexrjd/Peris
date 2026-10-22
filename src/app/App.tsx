@@ -29,6 +29,7 @@ import { useReportReads } from '../features/campaign/ui/useReportReads';
 import { LocalEngine } from '../engine/local/LocalEngine';
 import { createSolo } from '../features/campaign/domain/newRealm';
 import { type World } from '../shared/model/world';
+import { isDefeated } from '../features/city/domain/ruins';
 import { OnlineEngine, enterOnline } from '../engine/online/OnlineEngine';
 import type { AccountEntry } from '../platform/backend/accountLogin';
 import { activeRulerName, leaveRuler } from '../platform/backend/accountStorage';
@@ -167,8 +168,8 @@ function Realm({ engine, onExit, onLoad, onRetry, onUnitPreview }: {
     const openEmpire=(target?:{col:number;row:number})=>{setEmpireTarget(target);setEmpireOpen(true);};
     const closeEmpire=()=>{setEmpireOpen(false);requestAnimationFrame(()=>document.querySelector<HTMLButtonElement>('.game-navigation button[aria-current=page]')?.focus());};
     const ownedCities=world.settlements.filter(s=>s.owner_id===engine.playerId), ownedArmies=world.armies.filter(a=>a.owner_id===engine.playerId);
-    const town=ownedCities.find(s=>s.id===cityId)??ownedCities[0], selectedArmy=ownedArmies.find(a=>a.id===armyId)??ownedArmies[0];
-    const chooseCity=(id:number)=>{if(ownedCities.some(s=>s.id===id)){setCityId(id);setMoveMode(false);}};
+    const town=ownedCities.find(s=>s.id===cityId&&!s.ruined_at)??ownedCities.find(s=>!s.ruined_at)??ownedCities[0], selectedArmy=ownedArmies.find(a=>a.id===armyId)??ownedArmies[0];
+    const chooseCity=(id:number)=>{if(ownedCities.some(s=>s.id===id&&!s.ruined_at)){setCityId(id);setMoveMode(false);}};
     const chooseArmy=(id:number)=>{if(ownedArmies.some(a=>a.id===id)){setArmyId(id);setMoveMode(false);}};
     const selectMap=(next:MapSelection)=>{setSelection(next);if(next?.kind==='army')chooseArmy(next.id);if(next?.kind==='settlement')chooseCity(next.id);};
     const player = world.players.find(p => p.id === engine.playerId)!, done = conquered(world, engine.playerId), active = world.battles.find(b => b.status === 'active');
@@ -259,6 +260,13 @@ function Realm({ engine, onExit, onLoad, onRetry, onUnitPreview }: {
     const closeEnding = () => { writeFlag(endingKey); setEndingSeen(true); setEnding(false); };
     const currentResearch=world.account_science?.find(s=>s.owner_id===engine.playerId)?.active_id;
     const currentTechnology=currentResearch?TECHNOLOGY_BY_ID.get(currentResearch):undefined;
+    if (isDefeated(world, engine.playerId)) return <main className="peris-defeat-screen" role="main">
+        <div className="peris-defeat-memorial"><div className="peris-defeat-symbol" aria-hidden="true">⚔</div>
+        <p className="peris-defeat-eyebrow">THE FALL OF YOUR REALM</p><h1>Your empire has fallen</h1>
+        <p>Every city has been reduced to ruins. Your ruler is permanently defeated in this world.</p>
+        <section aria-label="Fallen cities"><h2>Ruins of your empire</h2>{ownedCities.map(city => <div key={city.id} className="peris-defeat-city"><strong>{city.name}</strong><span>{city.ruined_at ? `Fallen ${new Date(city.ruined_at).toLocaleDateString()}` : 'Lost city'}</span></div>)}</section>
+        <button onClick={onExit}>Return to main menu</button></div>
+    </main>;
     return <ResearchNavigation.Provider value={id=>{setResearchSelection(id);setEmpireOpen(false);navigate('research');}}>
   <div className={rallyActive ? 'realm-presentation rp-overlay-theme' : `realm-presentation ${!visibleBattle && (view === 'world' || view === 'settlement' && cityScene) ? 'scene-theme' : ''}`} data-scene-faction={factionOf(town.faction)} style={rallyFactionStyle(factionOf(town.faction))} data-rally-faction={rallyActive ? rallyDisplayedFaction : undefined}>
   {visibleBattle ? <BattleView world={world} battle={visibleBattle} engine={engine} run={run} onHelp={() => setHelp(true)} onSettings={() => setSettings(true)}/> : <div className={`realm-shell game-shell ${view === 'world' && !empireOpen ? 'has-map' : ''} ${rallyActive ? 'rp-shell' : ''}`} data-rally-faction={rallyActive ? rallyDisplayedFaction : undefined}>

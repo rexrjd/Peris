@@ -81,7 +81,9 @@ declare a public.armies%rowtype;route jsonb;seconds numeric;
 begin
  select * into a from public.armies where id=p_army for update;
  if a.march_returning then return true;end if;
- if a.id is null or a.march_origin is null or a.march_path is null or a.march_distance is null then return false;end if;
+ if a.id is null then return false;end if;
+ if a.march_origin is not null and not public.peris_station_owned(a.owner_id,floor((a.march_origin->>'x')::numeric/128.0)::integer,floor((a.march_origin->>'y')::numeric/128.0)::integer)then perform public.peris_ruin_redirect_army(a.id);return true;end if;
+ if a.march_origin is null or a.march_path is null or a.march_distance is null then perform public.peris_ruin_redirect_army(a.id);return true;end if;
  select jsonb_agg(value order by ordinal desc) into route from jsonb_array_elements(a.march_path)with ordinality as points(value,ordinal);
  seconds:=greatest(2,a.march_distance/public.peris_march_speed(a.id));
  update public.armies set start_x=a.target_x,start_y=a.target_y,target_x=(a.march_origin->>'x')::integer,target_y=(a.march_origin->>'y')::integer,

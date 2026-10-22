@@ -5,6 +5,7 @@ export type Settlement = Resources & {
     wood_research?:number;stone_research?:number;food_research?:number;gold_research?:number;trade_research?:number;
     id: number;
     settlers?: number;
+    ruined_at?: string | null;
     development_points?: number;
     owner_id: string;
     name: string;

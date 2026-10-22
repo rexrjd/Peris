@@ -1,4 +1,5 @@
 import { commandArmy } from '../../empire/domain/context';
+import { isDefeated, livingCities } from '../../city/domain/ruins';
 import { SIEGE_TARGETS } from '../../city/domain/siege';
 import { heroBonuses } from '../../heroes/domain/heroes';
 import { type Command, type LocalCommandContext } from '../../../shared/model/commands';
@@ -8,7 +9,7 @@ import { CELL_SIZE, WORLD_MAP_VERSION, wrapWorldPoint } from './dimensions';
 import { findMarchPath } from './pathfinding';
 import { isWalkable } from './worldGrid';
 import type { Army, ArmyTroops } from '../../army/domain/types';
-import { addStationGarrison, mergeStationGarrison, ownedStation, stationCell } from './garrisons';
+import { addStationGarrison, mergeStationGarrison, ownedStation, stationCell, homeArmyPosition } from './garrisons';
 import { readRoster, writeRoster, addRosters, RECRUIT_UNITS, RECRUIT_RULES, rosterTotal, validateRoster } from '../../army/domain/roster';
 export const MARCH_CANCEL_MS = 30_000;
 /** A party travels together at its slowest recruited role; infantry retains the original 22-unit pace. */
@@ -33,7 +34,23 @@ export function startRaidReturn(world: LocalCommandContext['world'], army: Army,
     const origin = army.march_origin, path = army.march_path, distance = army.march_distance;
     army.raid_target_id = null; army.march_sent_at = null; army.march_cancel_until = null;
     army.raid_city_id=null;army.siege_target='auto';
-    if (!origin || !path || distance == null) return false;
+    const home = world.settlements.find(city=>city.id===army.home_settlement_id && !city.ruined_at);
+    if (isDefeated(world,army.owner_id)) return false;
+    if (!origin || !ownedStation(world,army.owner_id,origin)) {
+        const alternate = home ?? livingCities(world,army.owner_id)[0];
+        if (!alternate) return false;
+        const start = {x:army.target_x,y:army.target_y};
+        const safe=homeArmyPosition(alternate),route=findMarchPath(start,safe);
+        if(!route)return false;
+        army.home_settlement_id=alternate.id;
+        army.start_x=start.x;army.start_y=start.y;army.target_x=safe.x;army.target_y=safe.y;
+        army.march_path=route.path;army.march_distance=route.distance;
+        army.status='moving';army.march_returning=true;army.raid_city_id=null;army.raid_target_id=null;
+        army.departure_at=new Date(clock).toISOString();
+        army.arrival_at=new Date(clock+Math.max(2,route.distance/marchSpeed(world,army))*1000).toISOString();
+        return true;
+    }
+    if (!path || distance == null) return false;
     army.start_x = army.target_x; army.start_y = army.target_y;
     army.target_x = origin.x; army.target_y = origin.y;
     army.march_path = path.slice().reverse(); army.march_returning = true; army.status = 'moving';
@@ -61,6 +78,7 @@ export function marchArmy(context: LocalCommandContext, cmd: Extract<Command, {
     type: 'move' | 'raid' | 'raidCity';
 }>) {
     const w = context.world, a = commandArmy(context), now = context.now, clock = Date.parse(now);
+    if(isDefeated(w,context.playerId))throw new Error('This ruler has been defeated.');
     if (w.battles.some(battle => battle.status === 'active' && (battle.attacker_owner_id === context.playerId || battle.defender_owner_id === context.playerId))) throw new Error('Finish the current battle first.');
     if (w.orders.some(o => o.kind === 'recruit' && (o.army_id ?? w.armies[0].id) === a.id))
         throw new Error('Let the training queue finish before marching.');
@@ -79,7 +97,7 @@ export function marchArmy(context: LocalCommandContext, cmd: Extract<Command, {
     }
     else if(cmd.type==='raidCity'){
         const city=w.settlements.find(row=>row.id===cmd.targetCityId);
-        if(!city||city.owner_id===context.playerId)throw new Error('Choose another player’s city.');
+        if(!city||city.owner_id===context.playerId||city.ruined_at)throw new Error('Choose another player’s living city.');
         if(cmd.siegeTarget!==undefined&&!Object.hasOwn(SIEGE_TARGETS,cmd.siegeTarget))throw new Error('Choose a valid catapult target.');
         if(!soldierTotal(a))throw new Error('Recruit soldiers before starting a raid.');
         x=city.x;y=city.y;

@@ -1,4 +1,12 @@
 /* Shared identity for the live City and Map. All preview geometry is static. */
+.city-ruin-tabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin:4px 3px 7px;padding:3px;border-radius:8px;background:#141c22}
+.city-ruin-tabs button{padding:7px 4px;border:0;border-radius:6px;background:transparent;color:#b3bcc2;font-size:11px;cursor:pointer}
+.city-ruin-tabs button.selected{background:#45505a;color:#f1e7d4}
+.city-ruin-entry{display:flex;align-items:center;gap:10px;padding:11px 9px;border-top:1px solid #ffffff19;color:#d9c9bb}
+.city-ruin-glyph{display:grid;place-items:center;flex:none;width:38px;height:36px;background:#4e4340;border-radius:7px;color:#eccca0;font-size:29px}
+.city-ruin-entry strong{display:block;font-size:13px;color:#e4d6c8}
+.city-ruin-entry small{display:block;margin-top:3px;color:#b1aaa4;font-size:10px}
+.city-ruin-empty{padding:12px;color:#aeb8bf;font-size:12px}
 .city-selector{position:relative;width:350px;max-width:100%;min-width:0;color:#edf0f6;font:12px/1.4 'Open Sans',Arial,sans-serif;pointer-events:auto}
 .city-selector-card{display:flex;align-items:center;gap:0;min-width:0;padding:5px;border:1px solid #ffffff24;border-radius:13px;background:#242d33f5;box-shadow:0 4px 18px #07101a30}
 .city-selector .city-selector-trigger{display:flex;align-items:center;gap:12px;flex:1;min-width:0;padding:0;border:0;border-radius:9px;background:transparent;color:inherit;text-align:left;font:inherit;cursor:pointer;opacity:1}

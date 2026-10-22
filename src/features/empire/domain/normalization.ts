@@ -29,12 +29,12 @@ export function normalizeRealm(world: World, now = world.server_now, associateOr
         for(const camp of BANDIT_CAMPS)if(!ids.has(camp.id)&&!world.settlements.some(s=>wrappedCellDistance(wrapWorldCell(Math.floor(s.x/128),Math.floor(s.y/128)),wrapWorldCell(Math.floor(camp.x/128),Math.floor(camp.y/128)))<=1)&&!world.map_plots?.some(p=>p.col===Math.floor(camp.x/128)&&p.row===Math.floor(camp.y/128)))world.camps.push({...camp});
         for(const camp of world.camps)camp.terrain=battleTerrainAtWorld(camp.x,camp.y);
     }
-    world.heroes ??= []; world.hero_artifacts ??= []; world.settler_expeditions ??= [];
+    world.heroes ??= []; world.hero_artifacts ??= []; world.settler_expeditions ??= []; world.ruin_evacuations ??= [];
     const migratedSlots = world.city_slots === undefined ? world.settlements.flatMap(s => citySlots(world, s.id)) : world.city_slots;
     world.city_slots = migratedSlots;
     for (const player of world.players) {
         player.culture_points ??= 0; player.culture_updated_at ??= now;
-        const cities = world.settlements.filter(s => s.owner_id === player.id);
+        const cities = world.settlements.filter(s => s.owner_id === player.id && !s.ruined_at);
         const armies = world.armies.filter(a => a.owner_id === player.id);
         for (const city of cities) { city.settlers ??= 0; city.development_points ??= cities.length===1 ? player.upgrades : world.buildings.filter(b=>b.settlement_id===city.id).reduce((n,b)=>n+b.level,0); }
         for (const army of armies) if (!world.heroes.some(h => h.army_id === army.id)) {

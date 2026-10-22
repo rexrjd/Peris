@@ -21,7 +21,7 @@ import { createLandscape, sampleHeight } from './landscape';
 import { createArmyModel, createSettlementModel, createMercenaryCampModel } from './models';
 
 type EntityKind = 'army' | 'settlement' | 'camp';
-type Entity = { kind: EntityKind; id: number; x: number; y: number; title: string; mine: boolean; model: THREE.Group; detail: boolean; faction?:Faction; development?:number; composition?:string;bandit?:boolean; tier?:number };
+type Entity = { kind: EntityKind; id: number; x: number; y: number; title: string; mine: boolean; model: THREE.Group; detail: boolean; faction?:Faction; development?:number; ruined?:boolean; composition?:string;bandit?:boolean; tier?:number };
 type Label = { key: string; text: string; x: number; y: number; selection?: MapSelection; portrait?:string; mine?:boolean };
 type PickAnchor = { key: string; kind: EntityKind; id: number; x: number; y: number; lift: number };
 type PickFrame = { objects: THREE.Mesh[]; pool: THREE.Mesh[]; anchors: PickAnchor[]; anchorCount: number };
@@ -144,8 +144,8 @@ export class WorldScene {
         }
         this.hittable.clear();
         this.hittableImages.clear();
-        const records: { kind: EntityKind; id: number; x: number; y: number; title: string; mine: boolean;faction?:Faction;development?:number; composition?:string;bandit?:boolean; tier?:number }[] = [
-            ...s.world.settlements.map(t => ({ kind: 'settlement' as const, id: t.id, x: t.x, y: t.y, title: t.name, mine: t.owner_id === s.playerId,faction:factionOf(t.faction), development:mapSettlementDevelopment(t.map_development??settlementMapDevelopment(s.world.buildings,t.id,s.world.city_slots)) })),
+        const records: { kind: EntityKind; id: number; x: number; y: number; title: string; mine: boolean;faction?:Faction;development?:number; ruined?:boolean; composition?:string;bandit?:boolean; tier?:number }[] = [
+            ...s.world.settlements.map(t => ({ kind: 'settlement' as const, id: t.id, x: t.x, y: t.y, title: t.name, mine: t.owner_id === s.playerId,faction:factionOf(t.faction), ruined:!!t.ruined_at, development:mapSettlementDevelopment(t.map_development??settlementMapDevelopment(s.world.buildings,t.id,s.world.city_slots)) })),
             ...s.world.camps.map(t => ({ kind: 'camp' as const, id: t.id, x: t.x, y: t.y, title: t.bandit?t.name:siteFor(t.id).title, mine: false,bandit:t.bandit,faction:t.faction,tier:t.tier })),
             ...s.world.armies.map(t => ({ kind: 'army' as const, id: t.id, ...armyPosition(t, now), title: t.name, mine: t.owner_id === s.playerId, faction: armyFaction(s.world, t), composition: `${t.infantry > 0 ? 'i' : ''}${t.archers > 0 ? 'a' : ''}${t.cavalry > 0 ? 'c' : ''}` })),
         ];
@@ -164,13 +164,13 @@ export class WorldScene {
                 const model = new THREE.Group();
                 e = { ...record, model, detail: false }; this.entities.set(key, e); this.scene.add(model);
             }
-            if(e.faction!==record.faction || e.development!==record.development || e.composition!==record.composition || e.tier!==record.tier || e.kind==='army' && this.armyModels.ready(factionOf(record.faction)) && !e.model.userData.publishedArmy){this.removeCopies(key);this.disposeGroup(e.model);e.detail=false;}
+            if(e.faction!==record.faction || e.development!==record.development || e.ruined!==record.ruined || e.composition!==record.composition || e.tier!==record.tier || e.kind==='army' && this.armyModels.ready(factionOf(record.faction)) && !e.model.userData.publishedArmy){this.removeCopies(key);this.disposeGroup(e.model);e.detail=false;}
             Object.assign(e, record);
             const images = this.visibleImages(e.x, e.y);
             const detailed = this.view.span < 36 && images.length > 0 && (priority(e) === 0 || detailCount++ < 48);
             if (detailed && !e.detail) {
                 const kind = e.kind === 'settlement' ? 'village' : e.id === 6 ? 'ruins' : e.id === 2 ? 'sanctuary' : e.id === 5 ? 'volcano' : e.id === 3 ? 'crossing' : e.id === 4 ? 'keep' : 'village';
-                e.model.add(e.kind === 'army' ? this.armyModels.create(factionOf(e.faction), e.composition ?? 'i', e.mine ? 0x345e48 : 0x749cb1) ?? createArmyModel(e.mine ? 0x345e48 : 0x749cb1) : e.kind==='settlement'?this.settlementModels.get(factionOf(e.faction),e.development):e.bandit?createMercenaryCampModel((e.tier ?? 1) <= 2 ? 'low' : (e.tier ?? 1) <= 5 ? 'medium' : 'hard',FACTIONS[factionOf(e.faction)].roof):createSettlementModel(kind)); e.detail = true;
+                e.model.add(e.kind === 'army' ? this.armyModels.create(factionOf(e.faction), e.composition ?? 'i', e.mine ? 0x345e48 : 0x749cb1) ?? createArmyModel(e.mine ? 0x345e48 : 0x749cb1) : e.kind==='settlement'?(e.ruined?createSettlementModel('ruins',0x645b56):this.settlementModels.get(factionOf(e.faction),e.development)):e.bandit?createMercenaryCampModel((e.tier ?? 1) <= 2 ? 'low' : (e.tier ?? 1) <= 5 ? 'medium' : 'hard',FACTIONS[factionOf(e.faction)].roof):createSettlementModel(kind)); e.detail = true;
                 e.model.userData.publishedArmy = e.kind === 'army' && !!e.model.children[0]?.userData.publishedArmy;
                 this.shadowKey='';
             }
@@ -190,7 +190,7 @@ export class WorldScene {
             if (!detailed && (priority(e) === 0 || !occupied.has(bin))) {
                 occupied.add(bin); const scale = Math.max(1, this.view.span / 25);
                 matrix.compose(new THREE.Vector3(imageX / CELL_SIZE, sampleHeight(imageX / CELL_SIZE, imageY / CELL_SIZE) + .22, imageY / CELL_SIZE), new THREE.Quaternion(), new THREE.Vector3(scale, scale, scale));
-                this.markers.setMatrixAt(markerCount, matrix); this.markers.setColorAt(markerCount++, color.set(e.mine ? '#f5c85c' : e.kind === 'camp' ? '#c68764' : '#76aac6'));
+                this.markers.setMatrixAt(markerCount, matrix); this.markers.setColorAt(markerCount++, color.set(e.ruined ? '#8c7869' : e.mine ? '#f5c85c' : e.kind === 'camp' ? '#c68764' : '#76aac6'));
                 this.hittable.add(key);
                 let hits = this.hittableImages.get(key); if (!hits) this.hittableImages.set(key,hits=[]); hits.push({x:imageX,y:imageY});
             }
@@ -470,7 +470,7 @@ export class WorldScene {
         return JSON.stringify([
             s.playerId, s.selection, s.selectedArmyId, s.selectedSettlementId,
             s.moveMode, s.mapClaimMode, s.mapLayers, s.mapPurpose, s.expansionRoute,
-            world.settlements.map(town => [town.id, town.x, town.y, town.name, town.owner_id, town.faction, town.map_development]),
+            world.settlements.map(town => [town.id, town.x, town.y, town.name, town.owner_id, town.faction, town.map_development, town.ruined_at]),
             world.camps.map(camp => [camp.id, camp.x, camp.y, camp.name, camp.bandit, camp.faction, camp.tier]),
             world.armies, world.buildings, world.city_slots, world.map_plots, world.heroes,
             world.players.map(player => [player.id, player.upgrades]),

@@ -5,7 +5,7 @@ begin
  perform public.peris_settle(u);
  if not exists(select 1 from public.battles where status='active'and(attacker_owner_id=u or defender_owner_id=u))then
  for a in select * from public.armies where owner_id=u and raid_city_id is not null and status='idle'order by arrival_at,id for update loop
-  if a.infantry+a.archers+a.cavalry=0 or not exists(select 1 from public.settlements where id=a.raid_city_id and owner_id<>u)then perform public.peris_return_raid(a.id);continue;end if;
+  if a.infantry+a.archers+a.cavalry=0 or not exists(select 1 from public.settlements where id=a.raid_city_id and owner_id<>u and ruined_at is null)then perform public.peris_return_raid(a.id);continue;end if;
   if public.peris_start_city_raid(u,a.id)is not null then exit;end if;
  end loop;
  end if;

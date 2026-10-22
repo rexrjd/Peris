@@ -1,4 +1,5 @@
 import {applyResearchFormations,researchFactor} from '../../research/domain/effects';
+import { livingCities } from '../../city/domain/ruins';
 import type { World } from '../../../shared/model/world';
 import type { Army } from '../../army/domain/types';
 import type { Battle } from '../../battle/domain/types';
@@ -24,7 +25,7 @@ import { deliverCampLoot } from './loot';
 
 export function beginCityRaid(world:World, owner:string, armyId:number, nextId:()=>number, now=Date.now()):Battle|undefined {
     const army=world.armies.find(row=>row.id===armyId&&row.owner_id===owner);
-    const city=world.settlements.find(row=>row.id===army?.raid_city_id&&row.owner_id!==owner);
+    const city=world.settlements.find(row=>row.id===army?.raid_city_id&&row.owner_id!==owner&&!row.ruined_at);
     if(!army||!city)return;
     if(world.battles.some(row=>row.status==='active'&&[row.attacker_owner_id,row.defender_owner_id].some(id=>id===owner||id===city.owner_id)))return;
     settleLocal(world,city.owner_id,now);
@@ -109,7 +110,9 @@ export function settleCityRaid(world:World,battle:Battle,nextId:()=>number,now=D
         world.reports.unshift({id:nextId(),owner_id:owner,battle_id:battle.id,title:side==='attacker'?city.name:`Defence of ${city.name}`,won:victory,result:{...result,loot:{...result.loot},report_side:side,hero_reward:reward},created_at:new Date(now).toISOString()});
     }
     if(!startRaidReturn(world,army,now)){
-        const home=homeArmyPosition(world.settlements.find(row=>row.id===army.home_settlement_id)!);
+        const safe=world.settlements.find(row=>row.id===army.home_settlement_id&&!row.ruined_at)??livingCities(world,army.owner_id)[0];
+        if(!safe) return;
+        const home=homeArmyPosition(safe);
         army.start_x=army.target_x=home.x;army.start_y=army.target_y=home.y;army.status='idle';deliverCampLoot(world,army);
     }
 }

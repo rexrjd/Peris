@@ -18,6 +18,7 @@ export type CampaignFarmStats = {
 export type Player = {
     id: string;
     display_name: string;
+    defeated_at?: string | null;
     created_at: string;
     prestige: number;
     victories: number;

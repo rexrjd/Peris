@@ -23,7 +23,7 @@ export function cityPreviewState(world: World, sid: number) {
 }
 
 export function citySelectorEntries(world: World, owner: string, now: number) {
-    return world.settlements.filter(city => city.owner_id === owner).map(city => ({
+    return world.settlements.filter(city => city.owner_id === owner && !city.ruined_at).map(city => ({
         id: city.id, name: city.name,
         population: Math.floor(cityOverview(world, city.id, now).population),
         army: rosterTotal(cityMilitaryOverview(world, city.id, owner, now).totals),

@@ -1,4 +1,5 @@
 import {ensureScience,advanceResearch} from '../../research/domain/science';
+import { isDefeated, settleRuinEvacuations, redirectFromLostStation } from '../../city/domain/ruins';
 import { accrueResources } from '../../city/domain/economy';
 import { completeUpgrade } from '../../city/domain/construction';
 import { completeRecruit } from '../../army/domain/recruitment';
@@ -9,11 +10,13 @@ import { refreshCityEconomy } from '../../city/domain/slots';
 import { accrueCulture, completeExpedition } from '../../empire/domain/expansion';
 import { deliverCampLoot } from './loot';
 import { mergeStationGarrison } from '../../map/domain/garrisons';
+import { ownedStation } from '../../map/domain/garrisons';
 
 /** Complete all cities' queues in time order; every order belongs to one city/army. */
 export function settleLocal(w: World, owner: string, now = Date.now(), travel = true) {
     const player = w.players.find(p => p.id === owner);
-    if (!player) return;
+    if (!player || isDefeated(w,owner)) return;
+    settleRuinEvacuations(w,owner,now);
     ensureScience(w,owner);
     const events = [
         ...w.orders.filter(o => o.owner_id === owner && Date.parse(o.finish_at) <= now).map(order => ({ at: Date.parse(order.finish_at), order, expedition: undefined })),
@@ -23,13 +26,14 @@ export function settleLocal(w: World, owner: string, now = Date.now(), travel = 
         advanceResearch(w,owner,event.at);
         accrueCulture(w, owner, event.at);
         if (event.expedition) {
-            const source = w.settlements.find(s => s.id === event.expedition!.origin_settlement_id);
+            const source = w.settlements.find(s => s.id === event.expedition!.origin_settlement_id && !s.ruined_at);
+            if(!source){event.expedition.status='returned';continue;}
             if (source) accrueResources(source, event.at);
             completeExpedition(w, event.expedition); continue;
         }
         const order = event.order!;
         const city = w.settlements.find(s => s.owner_id === owner && s.id === (order.settlement_id ?? w.settlements.find(s => s.owner_id === owner)?.id));
-        if (!city) throw new Error('The city for this order is missing.');
+        if (!city || city.ruined_at) { w.orders=w.orders.filter(o=>o.id!==order.id);continue; }
         accrueResources(city, event.at);
         if (order.kind === 'field') { completeMapField(w, owner, order); refreshCityEconomy(w, city.id, city.population !== undefined); }
         else if (order.kind === 'upgrade') completeUpgrade(w, city, player, order);
@@ -43,8 +47,9 @@ export function settleLocal(w: World, owner: string, now = Date.now(), travel = 
     }
     advanceResearch(w,owner,now);
     accrueCulture(w, owner, now);
-    for (const city of w.settlements.filter(s => s.owner_id === owner)) accrueResources(city, now);
+    for (const city of w.settlements.filter(s => s.owner_id === owner && !s.ruined_at)) accrueResources(city, now);
     if (travel) for (const army of w.armies.filter(a => a.owner_id === owner)) {
+        if(army.raid_target_id===null&&army.raid_city_id===null&& !ownedStation(w,owner,{x:army.target_x,y:army.target_y})) redirectFromLostStation(w,army,now);
         const arriving = army.status === 'moving' && Date.parse(army.arrival_at) <= now;
         completeTravel(army, now);
         if (arriving && army.raid_target_id === null && army.raid_city_id==null) {

@@ -9,6 +9,7 @@ import type { SpellResearch } from '../../features/magic/domain/spells';
 import type { MapPlot } from '../../features/map/domain/territory';
 import type { Hero, HeroArtifact } from '../../features/heroes/domain/heroes';
 import type { SettlerExpedition } from '../../features/empire/domain/expansion';
+import type { RuinEvacuation } from '../../features/city/domain/ruins';
 export type Order = {
     id: number;
     owner_id: string;
@@ -56,6 +57,7 @@ export type World = {
     campaign_farms?: CampaignFarmTarget[];
     campaign_farm_stats?: import('../../features/campaign/domain/types').CampaignFarmStats[];
     garrisons?: Garrison[];
+    ruin_evacuations?: RuinEvacuation[];
     /** Server geography format; version 3 uses the persistent 200 × 200 world. */
     map?: {
         version: number;

@@ -52,5 +52,40 @@ outputs['UPGRADE_TO_V14.sql']=upgrade
 outputs['FRESH_INSTALL_V14.sql']=fresh
 outputs['UPGRADE_TO_V15.sql']=upgrade
 outputs['FRESH_INSTALL_V15.sql']=fresh
+
+const ruinModule=await readSource(path.join(root,'supabase/modules/city/ruins.sql'))
+const ruinDefinitions=[
+ ['empire/schema.sql',['peris_city_id','peris_army_id','peris_scope_order']],
+ ['map/garrisons.sql',['peris_station_owned']],
+ ['empire/gameplay.sql',['peris_culture_rate','peris_found_complete','peris_empire_command']],
+ ['map/peris_march.sql',['peris_march_for_target']],
+ ['map/march-orders.sql',['peris_return_raid']],
+ ['campaign/sync_my_state.sql',['peris_sync_owner']],
+ ['city/peris_settle.sql',['peris_settle']],
+ ['campaign/player-raids.sql',['peris_prepare_city_raid','peris_start_city_raid','peris_damage_city','peris_finish_city_raid']],
+ ['snapshot/peris_snapshot.sql',['peris_snapshot']],
+ ['snapshot/peris_map_snapshot.sql',['peris_map_snapshot']],
+ ['security/command-receipts.sql',['peris_submit_command']],
+]
+const ruinFunctions=[]
+for(const[file,names] of ruinDefinitions){
+ const source=await readSource(path.join(root,'supabase/modules',file))
+ const defs=source.match(/create or replace function public\.[\s\S]*?\$\$;/g)??[]
+ for(const name of names){const def=defs.find(x=>x.startsWith('create or replace function public.'+name+'('))
+  if(!def)throw Error('City ruins migration missing '+file+':'+name)
+  ruinFunctions.push(def)
+ }
+}
+outputs['UPGRADE_CITY_RUINS.sql']=[
+ '-- PERIS permanent city ruins: focused upgrade for an existing V19 database.',
+ '-- REVIEW FIRST. Back up your database. Not automatically deployed.',
+ 'begin;',
+ ruinModule,
+ ...ruinFunctions,
+ 'revoke all on function public.peris_ruin_route(uuid,integer,integer),public.peris_ruin_redirect_army(bigint),public.peris_ruin_advance(uuid,timestamptz),public.peris_ruin_city(bigint) from public,anon,authenticated;',
+ "notify pgrst,'reload schema';",
+ 'commit;'
+].join('\n')
+
 for(const[file,content]of Object.entries(outputs)){const target=path.join(root,'supabase',file);if(process.argv.includes('--check')){if(await readSource(target)!==content)throw Error('Stale SQL bundle: '+file)}else{let existing;try{existing=await readSource(target)}catch(error){if(error.code!=='ENOENT')throw error}if(existing!==content)await fs.writeFile(target,content)}}
 console.log(process.argv.includes('--check')?'SQL bundles match modular source':'SQL bundles rebuilt')

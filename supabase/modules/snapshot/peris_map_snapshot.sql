@@ -19,11 +19,11 @@ begin
  if min_x is null or min_y is null or max_x is null or max_y is null
  or min_x>=max_x or min_y>=max_y or min_x < -38400 or min_y < -38400 or max_x > 38400 or max_y > 38400 then raise exception 'Choose valid map bounds';end if;
  with nearby_settlements as materialized (
-   select s.id,s.owner_id,s.name,s.x,s.y,s.faction from public.settlements s where s.owner_id<>u
+   select s.id,s.owner_id,s.name,s.x,s.y,s.faction,s.ruined_at from public.settlements s where s.owner_id<>u
    and public.peris_map_axis_visible(s.x,min_x,max_x) and public.peris_map_axis_visible(s.y,min_y,max_y)
    order by s.id limit 601
  ), visible_settlements as (
-   select s.id,s.owner_id,s.name,s.x,s.y,s.faction from public.settlements s where s.owner_id=u
+   select s.id,s.owner_id,s.name,s.x,s.y,s.faction,s.ruined_at from public.settlements s where s.owner_id=u
    union all select * from (select * from nearby_settlements order by id limit 600) nearby
  ), army_positions as materialized (
    select a.*,(travel.position->>'x')::numeric as map_x,(travel.position->>'y')::numeric as map_y

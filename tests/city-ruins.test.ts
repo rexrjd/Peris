@@ -1,0 +1,54 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { createSolo } from '../src/features/campaign/domain/newRealm';
+import { emptyRoster, writeRoster, readRoster, rosterTotal } from '../src/features/army/domain/roster';
+import { damageCity } from '../src/features/city/domain/siege';
+import { ruinCity, livingCities, isDefeated, settleRuinEvacuations } from '../src/features/city/domain/ruins';
+import { ownedCity } from '../src/features/empire/domain/context';
+import { stationCell } from '../src/features/map/domain/garrisons';
+import { isWalkable } from '../src/features/map/domain/worldGrid';
+
+test('a victory removes the last main building and makes a permanent memorial', () => {
+  const w = createSolo('Fallen ruler'), city = w.settlements[0], owner = city.owner_id;
+  for (const b of w.buildings.filter(b => b.settlement_id === city.id)) b.level = b.building_type === 'market' ? 1 : 0;
+  for (const b of w.city_slots ?? []) if (b.settlement_id === city.id) b.level = 0;
+  const now = '2026-10-22T12:00:00Z';
+  const damage = damageCity(w, city.id, { ...emptyRoster(), catapult: 100 }, 'market', now);
+  assert.deepEqual(damage.map(d => [d.building_type, d.before, d.after]), [['market',1,0]]);
+  assert.equal(city.ruined_at, now);
+  assert.equal(w.players.find(p=>p.id===owner)?.defeated_at, now);
+  assert.ok(isDefeated(w,owner));
+  assert.equal(livingCities(w,owner).length, 0);
+  assert.equal(rosterTotal(readRoster(w.armies[0])),0);
+  assert.throws(() => ownedCity(w,owner,city.id),/cities/);
+  assert.equal(ruinCity(w,city.id,Date.parse(now)+1),false);
+  assert.deepEqual(damageCity(w,city.id,{...emptyRoster(),catapult:100},'market',now),[]);
+});
+
+test('fields are abandoned and armies / troops retreat without new commanders', () => {
+  const w=createSolo('Two cities'), original=w.settlements[0], owner=original.owner_id;
+  const at=stationCell(original);
+  const near=[{col:at.col+1,row:at.row},{col:at.col-1,row:at.row},{col:at.col,row:at.row+1},{col:at.col,row:at.row-1}].find(p=>isWalkable(p.col,p.row));
+  assert.ok(near, 'the starting site needs a dry neighboring field');
+  const safe={...original,id:989,name:'Safe haven',x:near!.col*128+64,y:near!.row*128+64};
+  w.settlements.push(safe);
+  const field={col:at.col,row:at.row+1};
+  w.map_plots=[{...field,owner_id:owner,settlement_id:original.id,building_type:'lumber',level:3}];
+  w.garrisons=[{owner_id:owner,...at,infantry:25,archers:0,cavalry:0}];
+  writeRoster(w.armies[0],{...emptyRoster(),infantry:40});
+  for(const building of w.buildings.filter(b=>b.settlement_id===original.id))building.level=0;
+  for(const slot of w.city_slots??[])if(slot.settlement_id===original.id)slot.level=0;
+  const n=Date.parse('2026-10-22T12:00:00Z'), heroes=w.heroes?.length ?? 0, armies=w.armies.length;
+  assert.equal(ruinCity(w,original.id,n),true);
+  assert.equal(isDefeated(w,owner),false);
+  assert.equal(livingCities(w,owner).length,1);
+  assert.ok(!w.map_plots?.some(p=>p.settlement_id===original.id));
+  assert.equal(w.garrisons?.length,0);
+  assert.equal(w.ruin_evacuations?.length,1);
+  assert.equal(w.armies.length,armies);
+  assert.equal(w.heroes?.length??0,heroes);
+  assert.equal(w.armies[0].home_settlement_id,safe.id);
+  assert.equal(w.armies[0].status,'moving');
+  settleRuinEvacuations(w,owner,Date.parse(w.ruin_evacuations![0].arrival_at)+10);
+  assert.equal(w.garrisons?.find(g=>g.owner_id===owner&&g.col===near!.col&&g.row===near!.row)?.infantry,25);
+});

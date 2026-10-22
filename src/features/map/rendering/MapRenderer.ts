@@ -153,11 +153,16 @@ export class MapRenderer {
             const town={...rawTown,...this.imagePoint(rawTown.x,rawTown.y)};
             if (!this.visible(town.x, town.y)) continue;
             const mine = town.owner_id === s.playerId, active = selected('settlement', town.id);
-            if (this.scale < .15) { this.dot(town.x, town.y, mine ? '#ffe3a1' : '#a3c7da', 3); continue; }
+            if (this.scale < .15) { this.dot(town.x, town.y, town.ruined_at ? '#8c7869' : mine ? '#ffe3a1' : '#a3c7da', 3); continue; }
             this.ring(town.x, town.y + 5, active, hover('settlement', town.id), 34);
-            if (!drawMapSprite(c, 8, town.x - 32, town.y - 45, 64)) drawLandmark(c, town.x, town.y, 'home', mine ? '#cba85c' : '#7398ae');
+            if(town.ruined_at){
+                c.save();c.translate(town.x,town.y);c.fillStyle='#625c55';
+                c.fillRect(-28,-12,52,24);c.fillStyle='#aea396';
+                for(const [x,y,w,h] of [[-24,-17,11,16],[-8,-20,15,11],[13,-8,11,15],[-15,10,20,6],[6,13,18,5]])c.fillRect(x,y,w,h);
+                c.strokeStyle='#382f2b';c.lineWidth=2;c.beginPath();c.moveTo(-20,-3);c.lineTo(0,9);c.lineTo(14,-12);c.stroke();c.restore();
+            } else if (!drawMapSprite(c, 8, town.x - 32, town.y - 45, 64)) drawLandmark(c, town.x, town.y, 'home', mine ? '#cba85c' : '#7398ae');
             if (active || this.scale > .3) this.label(town.x, town.y + 32 * unit, town.name, mine ? '#f4dfab' : '#d3e2ea');
-            if (active || this.ctx.camera.zoom > 1.5) this.label(town.x, town.y + 49 * unit, mine ? 'YOUR SETTLEMENT' : 'RIVAL SETTLEMENT', '#bfbfa1', true);
+            if (active || this.ctx.camera.zoom > 1.5) this.label(town.x, town.y + 49 * unit, town.ruined_at ? 'FALLEN CITY' : mine ? 'YOUR SETTLEMENT' : 'RIVAL SETTLEMENT', '#bfbfa1', true);
         }
         for (const rawCamp of s.world.camps) {
             const camp={...rawCamp,...this.imagePoint(rawCamp.x,rawCamp.y)};
