@@ -1,7 +1,7 @@
 # Partner handover: allied defence
 
-**Status**: Proposed work; server/clock changes not implemented.  
-**Baseline**: `7f933205db48cdacdab42101e6637d0e89e7290d`
+**Status**: Proposed work; server/clock changes implementation in progress.
+**Baseline**: `3225ffb0195666ed0fa6c256b42e089f5bf53306` (22 October; includes current garrison UI)
 
 ### Context & Ownership
 You begin implementing **B1 allied reinforcements**. The other developer retains ownership of timeouts, worker fairness, and clock logic. Existing mechanics include own-city garrisons, ruins, permanent defeat, and walls (+10% defence per level, capped at +50%). Note that foreign allied troops are not yet implemented.
