@@ -53,6 +53,7 @@ outputs['FRESH_INSTALL_V14.sql']=fresh
 outputs['UPGRADE_TO_V15.sql']=upgrade
 outputs['FRESH_INSTALL_V15.sql']=fresh
 
+const cityGarrisonModule=await readSource(path.join(root,'supabase/modules/city/city-garrisons.sql'))
 const ruinModule=await readSource(path.join(root,'supabase/modules/city/ruins.sql'))
 const ruinDefinitions=[
  ['empire/schema.sql',['peris_city_id','peris_army_id','peris_scope_order']],
@@ -80,9 +81,39 @@ outputs['UPGRADE_CITY_RUINS.sql']=[
  '-- PERIS permanent city ruins: focused upgrade for an existing V19 database.',
  '-- REVIEW FIRST. Back up your database. Not automatically deployed.',
  'begin;',
+ cityGarrisonModule,
  ruinModule,
  ...ruinFunctions,
  'revoke all on function public.peris_ruin_route(uuid,integer,integer),public.peris_ruin_redirect_army(bigint),public.peris_ruin_advance(uuid,timestamptz),public.peris_ruin_city(bigint) from public,anon,authenticated;',
+ "notify pgrst,'reload schema';",
+ 'commit;'
+].join('\n')
+
+// Deploy this focused module after the city ruins migration. It changes only
+// garrison storage/commands, city-siege resolution, the snapshot and evacuation.
+const garrisonFunctions=[
+ ['empire/gameplay.sql',['peris_empire_command']],
+ ['campaign/player-raids.sql',['peris_start_city_raid','peris_finish_city_raid']],
+ ['city/ruins.sql',['peris_ruin_city']],
+ ['snapshot/peris_snapshot.sql',['peris_snapshot']],
+]
+const garrisonDefinitions=[]
+for(const [file,names] of garrisonFunctions){
+ const source=await readSource(path.join(root,'supabase/modules',file))
+ const definitions=source.match(/create or replace function public\.[\s\S]*?\$\$;/g)??[]
+ for(const name of names){
+  const definition=definitions.find(x=>x.startsWith('create or replace function public.'+name+'('))
+  if(!definition)throw Error('City garrisons migration missing '+file+':'+name)
+  garrisonDefinitions.push(definition)
+ }
+}
+outputs['UPGRADE_CITY_GARRISONS.sql']=[
+ '-- PERIS permanent city garrisons. Run after UPGRADE_CITY_RUINS.sql.',
+ '-- Back up your realm first. Do not mix with an in-progress migration.',
+ 'begin;',
+ "do $$ begin if to_regprocedure('public.peris_ruin_city(bigint)') is null then raise exception 'Apply UPGRADE_CITY_RUINS.sql first'; end if; end $$;",
+ cityGarrisonModule,
+ ...garrisonDefinitions,
  "notify pgrst,'reload schema';",
  'commit;'
 ].join('\n')

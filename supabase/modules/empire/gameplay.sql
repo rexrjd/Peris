@@ -127,6 +127,7 @@ begin
  select * into a from public.armies where id=public.peris_army_id(u)for update;
  if exists(select 1 from public.battles where status='active'and(attacker_owner_id=u or defender_owner_id=u))then raise exception 'Finish the current battle first';end if;
  case command_kind
+ when 'manageCityGarrison'then return public.peris_manage_city_garrison(u,s.id,a.id,p_command->>'action',p_command->'troops');
  when 'upgrade'then return public.peris_queue_upgrade(p_command->>'item');
  when 'buildSlot'then return public.peris_queue_slot((p_command->>'slot')::integer,p_command->>'item');
  when 'upgradeSlot'then return public.peris_queue_slot((p_command->>'slot')::integer,null);

@@ -84,7 +84,7 @@ type BaseCommand = {type:'startResearch';technologyId:string} | {type:'pauseRese
     type: 'respond';
     id: number;
     accept: boolean;
-} | { type: 'trainSettlers'; quantity: number } | { type: 'foundCity'; col: number; row: number; name: string; route?: [number, number][] } | { type: 'recruitHero'; name: string; heroClass: 'knight' | 'ranger' | 'mage' } | { type: 'heroSkill'; heroId: number; stat: 'attack' | 'defence' | 'power' | 'knowledge' } | { type: 'equipArtifact'; heroId: number; artifactId: number; equip: boolean } | { type: 'transferTroops'; targetArmyId: number; infantry: number; archers: number; cavalry: number; troops?: ArmyTroops } | { type: 'rebaseArmy' };
+} | { type: 'manageCityGarrison'; settlementId: number; armyId: number; action: 'station' | 'withdraw'; troops: ArmyTroops } | { type: 'trainSettlers'; quantity: number } | { type: 'foundCity'; col: number; row: number; name: string; route?: [number, number][] } | { type: 'recruitHero'; name: string; heroClass: 'knight' | 'ranger' | 'mage' } | { type: 'heroSkill'; heroId: number; stat: 'attack' | 'defence' | 'power' | 'knowledge' } | { type: 'equipArtifact'; heroId: number; artifactId: number; equip: boolean } | { type: 'transferTroops'; targetArmyId: number; infantry: number; archers: number; cavalry: number; troops?: ArmyTroops } | { type: 'rebaseArmy' };
 export type Command = BaseCommand & { settlementId?: number; armyId?: number };
 export type LocalCommandContext = {
     world: World;

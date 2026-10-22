@@ -13,6 +13,6 @@ export const BUILDINGS: Record<BuildingType, {
     market: { name: 'Main building', description: 'Expand the city and unlock more construction plots.', cost: { wood: 140, stone: 130, food: 80, gold: 25 }, effect: '+2 building plots and a larger city per level', color: '#b69c69' },
     barracks: { name: 'Barracks', description: 'Train disciplined infantry and skilled bowmen.', cost: { wood: 180, stone: 160, food: 100, gold: 30 }, effect: 'Faster infantry and archer training', color: '#be876f' },
     stables: { name: 'Stables', description: 'Raise mounted troops for decisive flank attacks.', cost: { wood: 200, stone: 120, food: 180, gold: 45 }, effect: 'Faster cavalry training', color: '#b98b64' },
-    wall: { name: 'City walls', description: 'Hold the gate. Every level strengthens army morale.', cost: { wood: 100, stone: 240, food: 80, gold: 25 }, effect: '+2 starting morale per level (max 100)', color: '#a7aaa3' },
+    wall: { name: 'City walls', description: 'Passive protection for your city garrison and stationed legions during automatic defence.', cost: { wood: 100, stone: 240, food: 80, gold: 25 }, effect: '+10% defence per level (up to +50%)', color: '#a7aaa3' },
     storehouse: { name: 'Granary', description: 'Keep surplus supplies safe for the next campaign.', cost: { wood: 200, stone: 150, food: 90, gold: 20 }, effect: '+2,500 resource capacity per level', color: '#c2ae88' },
 };

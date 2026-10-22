@@ -1,6 +1,80 @@
 -- PERIS permanent city ruins: focused upgrade for an existing V19 database.
 -- REVIEW FIRST. Back up your database. Not automatically deployed.
 begin;
+-- Persistent defensive garrisons: separate from transient field stations.
+-- Automatic arrival-merging must never withdraw soldiers assigned to this city.
+create table if not exists public.peris_city_garrisons (
+ settlement_id bigint primary key references public.settlements(id) on delete cascade,
+ owner_id uuid not null references public.players(id) on delete cascade,
+ unit_roster jsonb not null default '{}'::jsonb
+);
+create index if not exists peris_city_garrisons_owner on public.peris_city_garrisons(owner_id,settlement_id);
+alter table public.peris_city_garrisons enable row level security;
+revoke all on public.peris_city_garrisons from public,anon,authenticated;
+grant select on public.peris_city_garrisons to authenticated;
+drop policy if exists "own city garrisons" on public.peris_city_garrisons;
+create policy "own city garrisons" on public.peris_city_garrisons for select to authenticated
+ using(owner_id=public.peris_player_id());
+
+-- A passive numeric modifier applied to defender formations at battle creation.
+-- Five wall levels => 10%, 20%, 30%, 40%, 50%, with no tactical gate system.
+create or replace function public.peris_wall_defence_bonus(p_level integer)returns numeric
+language sql immutable set search_path='' as $$
+ select least(.5::numeric,greatest(0,least(5,coalesce(p_level,0)))*.1::numeric)
+$$;
+
+-- Called only through the authenticated, idempotent empire command.
+-- A dedicated city garrison has no commander and does not march; legions can
+-- withdraw it explicitly when present, never automatically upon return.
+create or replace function public.peris_manage_city_garrison(
+ p_owner uuid,p_city bigint,p_army bigint,p_action text,p_troops jsonb
+)returns jsonb language plpgsql security definer set search_path='' as $$
+declare city public.settlements%rowtype;army public.armies%rowtype;position jsonb;
+ selected jsonb;legion jsonb;stationed jsonb;updated jsonb;unit_name text;
+begin
+ if p_owner is null or p_action is null or p_action not in('station','withdraw') or jsonb_typeof(p_troops)is distinct from 'object' then
+  raise exception 'Choose a valid city garrison action';end if;
+ select * into city from public.settlements where id=p_city and owner_id=p_owner and ruined_at is null for update;
+ select * into army from public.armies where id=p_army and owner_id=p_owner for update;
+ if city.id is null or army.id is null then raise exception 'Choose your city and an owned legion';end if;
+ if exists(select 1 from public.players where id=p_owner and defeated_at is not null)then raise exception 'This ruler has been permanently defeated';end if;
+ if army.status<>'idle' or army.raid_target_id is not null or army.raid_city_id is not null or army.raid_reserve is not null then
+  raise exception 'Bring an idle legion to the city';end if;
+ if exists(select 1 from public.battles where status='active'and(attacker_owner_id=p_owner or defender_owner_id=p_owner))then
+  raise exception 'Finish the current battle first';end if;
+ if exists(select 1 from public.peris_orders where kind='recruit'and owner_id=p_owner and
+  coalesce(army_id,(select min(id)from public.armies where owner_id=p_owner))=army.id)then
+  raise exception 'Finish this legion''s recruitment first';end if;
+ position:=public.peris_army_position(army);
+ if public.peris_wrap_cell(floor((position->>'x')::numeric/128)::integer)<>public.peris_wrap_cell(floor(city.x/128.0)::integer)
+  or public.peris_wrap_cell(floor((position->>'y')::numeric/128)::integer)<>public.peris_wrap_cell(floor(city.y/128.0)::integer)then
+  raise exception 'Bring an idle legion into this city before transferring defenders';end if;
+ selected:=public.peris_garrison_troops(p_troops);
+ if public.peris_roster_total(selected)=0 then raise exception 'Choose one or more soldiers';end if;
+ legion:=public.peris_roster(to_jsonb(army));
+ select g.unit_roster into stationed from public.peris_city_garrisons g where g.settlement_id=p_city and g.owner_id=p_owner for update;
+ stationed:=public.peris_roster(coalesce(stationed,'{}'::jsonb));
+ foreach unit_name in array array['infantry','spearmen','archers','elite','cavalry','scout','heavyCavalry','ram','catapult']loop
+  if (selected->>unit_name)::integer>(case when p_action='station'then (legion->>unit_name)::integer else (stationed->>unit_name)::integer end)then
+   raise exception 'Choose troops actually available in this location';end if;
+ end loop;
+ if p_action='station'then
+  updated:=public.peris_roster_add(stationed,selected);
+  insert into public.peris_city_garrisons(settlement_id,owner_id,unit_roster)values(p_city,p_owner,updated)
+  on conflict(settlement_id)do update set unit_roster=excluded.unit_roster;
+  perform public.peris_write_roster(p_army,public.peris_roster_add(legion,selected,-1));
+ else
+  if public.peris_roster_total(legion)+public.peris_roster_total(selected)>1000 then raise exception 'A legion cannot carry more than 1,000 soldiers';end if;
+  updated:=public.peris_roster_add(stationed,selected,-1);
+  if public.peris_roster_total(updated)=0 then delete from public.peris_city_garrisons where settlement_id=p_city and owner_id=p_owner;
+  else update public.peris_city_garrisons set unit_roster=updated where settlement_id=p_city and owner_id=p_owner;end if;
+  perform public.peris_write_roster(p_army,public.peris_roster_add(legion,selected));
+ end if;
+ update public.armies set updated_at=now()where id=p_army;
+ return jsonb_build_object('ok',true,'garrison',updated);
+end $$;
+revoke all on function public.peris_manage_city_garrison(uuid,bigint,bigint,text,jsonb) from public,anon,authenticated;
+
 -- PERIS city ruins and permanent ruler defeat. All timestamps are authoritative.
 -- These columns preserve existing IDs, reports, sessions, and older saves.
 alter table public.settlements add column if not exists ruined_at timestamptz;
@@ -140,7 +214,7 @@ end $$;
 -- account, history or location; ruined_at is permanent and applied only once.
 create or replace function public.peris_ruin_city(p_city bigint)returns boolean
 language plpgsql security definer set search_path='' as $$
-declare city public.settlements%rowtype;g public.peris_garrisons%rowtype;a public.armies%rowtype;route jsonb;
+declare city public.settlements%rowtype;garrison public.peris_city_garrisons%rowtype;g public.peris_garrisons%rowtype;a public.armies%rowtype;route jsonb;
  old_fields text[];city_key text;pos jsonb;target_key text;living_count integer;
 begin
  select * into city from public.settlements where id=p_city for update;
@@ -153,6 +227,16 @@ begin
     wood_rate=0,stone_rate=0,food_rate=0,gold_rate=0,settlers=0,population=0 where id=p_city;
  delete from public.peris_orders where settlement_id=p_city;
  update public.peris_settler_expeditions set status='returned' where origin_settlement_id=p_city and status='travelling';
+ -- Dedicated city defenders evacuate using the same no-commander transport.
+ for garrison in select * from public.peris_city_garrisons where settlement_id=p_city and owner_id=city.owner_id for update loop
+  route:=public.peris_ruin_route(city.owner_id,city.x,city.y);
+  if route is not null and public.peris_roster_total(garrison.unit_roster)>0 then
+   insert into public.peris_ruin_evacuations(owner_id,origin_settlement_id,target_settlement_id,origin_x,origin_y,troops,departure_at,arrival_at)
+   values(city.owner_id,city.id,(route->>'city_id')::bigint,city.x,city.y,public.peris_roster(garrison.unit_roster),now(),
+     now()+make_interval(secs=>greatest(2,(route->>'distance')::numeric/22)::double precision));
+  end if;
+  delete from public.peris_city_garrisons where settlement_id=p_city and owner_id=city.owner_id;
+ end loop;
  -- Transport surviving station pools before abandoning the claimed fields.
  for g in select * from public.peris_garrisons where owner_id=city.owner_id and (col||':'||row)=any(old_fields)for update loop
   route:=public.peris_ruin_route(city.owner_id,g.col*128+64,g.row*128+64);
@@ -265,6 +349,7 @@ begin
  select * into a from public.armies where id=public.peris_army_id(u)for update;
  if exists(select 1 from public.battles where status='active'and(attacker_owner_id=u or defender_owner_id=u))then raise exception 'Finish the current battle first';end if;
  case command_kind
+ when 'manageCityGarrison'then return public.peris_manage_city_garrison(u,s.id,a.id,p_command->>'action',p_command->'troops');
  when 'upgrade'then return public.peris_queue_upgrade(p_command->>'item');
  when 'buildSlot'then return public.peris_queue_slot((p_command->>'slot')::integer,p_command->>'item');
  when 'upgradeSlot'then return public.peris_queue_slot((p_command->>'slot')::integer,null);
@@ -552,7 +637,7 @@ begin
 end $$;
 create or replace function public.peris_start_city_raid(p_owner uuid,p_army bigint)returns bigint
 language plpgsql security definer set search_path='' as $$
-declare a public.armies%rowtype;c public.settlements%rowtype;defenders jsonb;roster jsonb;leader bigint;bid bigint;wall integer;effective integer;bonus jsonb;
+declare a public.armies%rowtype;c public.settlements%rowtype;defenders jsonb;roster jsonb;leader bigint;bid bigint;wall integer;bonus jsonb;
 begin
  select * into a from public.armies where id=p_army and owner_id=p_owner;
  select * into c from public.settlements where id=a.raid_city_id and owner_id<>p_owner;
@@ -575,14 +660,15 @@ begin
  and floor(d.target_x/128.0)=floor(c.x/128.0)and floor(d.target_y/128.0)=floor(c.y/128.0)order by coalesce(h.experience,0)desc,d.id limit 1;
  select public.peris_roster(to_jsonb(g))into roster from public.peris_garrisons g where owner_id=c.owner_id and col=floor(c.x/128.0)::integer and row=floor(c.y/128.0)::integer for update;
  if roster is not null then defenders:=defenders||jsonb_build_array(jsonb_build_object('col',floor(c.x/128.0),'row',floor(c.y/128.0),'troops',roster));end if;
+ select public.peris_roster(g.unit_roster)into roster from public.peris_city_garrisons g where g.settlement_id=c.id and g.owner_id=c.owner_id for update;
+ if roster is not null and public.peris_roster_total(roster)>0 then defenders:=defenders||jsonb_build_array(jsonb_build_object('city_garrison_id',c.id,'troops',roster));end if;
  insert into public.battles(attacker_owner_id,defender_owner_id,attacker_army_id,defender_army_id,mode,phase,terrain,difficulty,enemy_name,attacker_ready,defender_ready,defender_faction,raid_city_id,siege_target,city_defenders)
  values(p_owner,c.owner_id,a.id,leader,'pvp','combat',public.peris_battle_terrain(c.x,c.y),'normal',c.name,true,true,c.faction,c.id,a.siege_target,defenders)returning id into bid;
  perform public.peris_add_formations(bid,p_owner,'attacker',a.infantry,a.archers,a.cavalry,90);
  perform public.peris_add_formations(bid,c.owner_id,'defender',0,0,0,90);
  select coalesce(level,0)into wall from public.buildings where settlement_id=c.id and building_type='wall';wall:=coalesce(wall,0);
- effective:=wall-public.peris_siege_reduction(floor((public.peris_roster(to_jsonb(a))->>'ram')::integer*public.peris_research_factor(p_owner,'siege'))::integer,wall,'ram');
  bonus:=public.peris_hero_bonuses(leader);
- update public.battle_formations set defence_multiplier=defence_multiplier*(1+effective*.06),morale=least(100,morale+effective*2),
+ update public.battle_formations set defence_multiplier=defence_multiplier*(1+public.peris_wall_defence_bonus(wall)),
  attack_multiplier=(1+least(.6,coalesce((select sum(level)*.04 from public.peris_city_slots where settlement_id=c.id and building_type='smithy'),0)))*(bonus->>'damage')::numeric where battle_id=bid and side='defender';
  update public.armies set raid_city_id=null where id=a.id;
  return bid;
@@ -641,6 +727,13 @@ begin
   if party ? 'army_id'then
    select public.peris_roster(to_jsonb(d))into current_roster from public.armies d where id=(party->>'army_id')::bigint and owner_id=b.defender_owner_id for update;
    perform public.peris_write_roster((party->>'army_id')::bigint,public.peris_roster_add(current_roster,losses,-1));
+  elsif party ? 'city_garrison_id'then
+   select public.peris_roster(garrison.unit_roster)into current_roster from public.peris_city_garrisons garrison where garrison.settlement_id=(party->>'city_garrison_id')::bigint and garrison.owner_id=b.defender_owner_id for update;
+   if current_roster is not null then
+    current_roster:=public.peris_roster_add(current_roster,losses,-1);
+    if public.peris_roster_total(current_roster)=0 then delete from public.peris_city_garrisons where settlement_id=(party->>'city_garrison_id')::bigint and owner_id=b.defender_owner_id;
+    else update public.peris_city_garrisons set unit_roster=current_roster where settlement_id=(party->>'city_garrison_id')::bigint and owner_id=b.defender_owner_id;end if;
+   end if;
   else
    select * into g from public.peris_garrisons where owner_id=b.defender_owner_id and col=(party->>'col')::integer and row=(party->>'row')::integer for update;
    if g.owner_id is not null then
@@ -707,6 +800,7 @@ begin
    from public.peris_reports r join public.peris_camps c on c.id=r.camp_id and c.bandit left join public.battles b on b.id=r.battle_id where r.owner_id=u and r.result?'delivered'
   )s where s.rank=1),'[]'::jsonb),
  'garrisons',coalesce((select jsonb_agg(g order by row,col)from public.peris_garrisons g where owner_id=u),'[]'::jsonb),
+ 'city_garrisons',coalesce((select jsonb_agg(to_jsonb(g)||jsonb_build_object('infantry',public.peris_roster_class(g.unit_roster,'infantry'),'archers',public.peris_roster_class(g.unit_roster,'archers'),'cavalry',public.peris_roster_class(g.unit_roster,'cavalry'))order by g.settlement_id)from public.peris_city_garrisons g where g.owner_id=u),'[]'::jsonb),
  'ruin_evacuations',coalesce((select jsonb_agg(e order by e.arrival_at)from public.peris_ruin_evacuations e where e.owner_id=u),'[]'::jsonb),
  'players',coalesce((select jsonb_agg(p order by created_at)from public.players p where p.id=u
    or exists(select 1 from public.battles b where (b.attacker_owner_id=u or b.defender_owner_id=u) and (b.attacker_owner_id=p.id or b.defender_owner_id=p.id))

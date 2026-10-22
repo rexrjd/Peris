@@ -21,6 +21,7 @@
   "map/player-raid-schema.sql",
   "map/garrisons.sql",
   "map/march-orders.sql",
+  "city/city-garrisons.sql",
   "city/ruins.sql",
   "empire/gameplay.sql",
   "campaign/farms.sql",

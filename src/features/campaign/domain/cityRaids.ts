@@ -1,4 +1,5 @@
 import {applyResearchFormations,researchFactor} from '../../research/domain/effects';
+import { cityGarrisonAt, wallDefenseBonus } from '../../city/domain/cityGarrison';
 import { livingCities } from '../../city/domain/ruins';
 import type { World } from '../../../shared/model/world';
 import type { Army } from '../../army/domain/types';
@@ -9,7 +10,7 @@ import { newBattle } from '../../battle/domain/creation';
 import { battleTerrainAtWorld } from '../../battle/domain/terrain';
 import { addRosters, emptyRoster, readRoster, RECRUIT_UNITS, rosterTotal, writeRoster } from '../../army/domain/roster';
 import { armyAttack } from '../../city/domain/slots';
-import { damageCity, siegeReduction } from '../../city/domain/siege';
+import { damageCity } from '../../city/domain/siege';
 import { heroBonuses, heroForArmy } from '../../heroes/domain/heroes';
 import { awardBattleHero } from '../../heroes/domain/battleRewards';
 import { maximumMana, towerLevel } from '../../magic/domain/spells';
@@ -37,6 +38,8 @@ export function beginCityRaid(world:World, owner:string, armyId:number, nextId:(
     const leader=defenders[0], station=garrisonAt(world,city.owner_id,city);
     const parties:NonNullable<Battle['city_defenders']>=defenders.slice().sort((a,b)=>a.id-b.id).map(row=>({army_id:row.id,troops:readRoster(row)}));
     if(station)parties.push({...cell,troops:readRoster(station)});
+    const cityGarrison=cityGarrisonAt(world,city.id,city.owner_id);
+    if(cityGarrison)parties.push({city_garrison_id:city.id,troops:readRoster(cityGarrison)});
     const total=parties.reduce((sum,row)=>addRosters(sum,row.troops),emptyRoster());
     const force:Pick<Army,'infantry'|'archers'|'cavalry'|'unit_roster'>={infantry:0,archers:0,cavalry:0};writeRoster(force,total);
     const instance=newBattle(nextId(),owner,army,force,battleTerrainAtWorld(city.x,city.y),'normal',city.name,'pvp',null,{version:worldBalanceVersion(world),attackerFaction:armyFaction(world,army),defenderFaction:city.faction??'roman'});
@@ -44,15 +47,15 @@ export function beginCityRaid(world:World, owner:string, armyId:number, nextId:(
     b.defender_owner_id=city.owner_id;b.defender_army_id=leader?.id??null;
     b.raid_city_id=city.id;b.siege_target=army.siege_target??'auto';b.city_defenders=parties;
     const wall=world.buildings.find(row=>row.settlement_id===city.id&&row.building_type==='wall')?.level??0;
-    const effectiveWall=wall-siegeReduction(Math.floor(readRoster(army).ram*researchFactor(world,owner,'siege')),wall,'ram');
+    const wallBonus=wallDefenseBonus(wall);
     for(const side of ['attacker','defender'] as const){
         const commanding=side==='attacker'?army:leader, player=side==='attacker'?owner:city.owner_id;
         const bonuses=commanding?heroBonuses(world,commanding):{damage:1,protection:1,morale:0,mana:0};
         const smithy=armyAttack(world,side==='attacker'?army.home_settlement_id:city.id);
         for(const formation of instance.formations.filter(row=>row.side===side)){
             formation.owner_id=player;formation.attack_multiplier=smithy*bonuses.damage;
-            formation.defence_multiplier=bonuses.protection*(side==='defender'?1+effectiveWall*.06:1);
-            formation.morale=Math.min(100,90+bonuses.morale+(side==='defender'?effectiveWall*2:0));
+            formation.defence_multiplier=bonuses.protection*(side==='defender'?1+wallBonus:1);
+            formation.morale=Math.min(100,90+bonuses.morale);
         }
         applyResearchFormations(world,player,instance.formations.filter(f=>f.side===side),{version:b.balance_version!,faction:(side==='attacker'?b.attacker_faction:b.defender_faction)!});
         b[side==='attacker'?'mana_attacker':'mana_defender']=maximumMana(Math.max(0,...world.settlements.filter(row=>row.owner_id===player).map(row=>towerLevel(world,row.id))))+bonuses.mana;
@@ -82,7 +85,7 @@ export function settleCityRaid(world:World,battle:Battle,nextId:()=>number,now=D
     result.defender_faction=battle.defender_faction??city.faction;result.raid_city={id:city.id,name:city.name};
     const cumulative=emptyRoster();
     for(const party of battle.city_defenders??[]){
-        const force=party.army_id?world.armies.find(row=>row.id===party.army_id&&row.owner_id===city.owner_id):garrisonAt(world,city.owner_id,city);
+        const force=party.army_id?world.armies.find(row=>row.id===party.army_id&&row.owner_id===city.owner_id):party.city_garrison_id?cityGarrisonAt(world,city.id,city.owner_id):garrisonAt(world,city.owner_id,city);
         const loss=emptyRoster();
         for(const unit of RECRUIT_UNITS){
             const initial=result.defender_roster[unit], lost=initial-defending[unit];

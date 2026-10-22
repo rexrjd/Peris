@@ -137,7 +137,7 @@ end $$;
 -- account, history or location; ruined_at is permanent and applied only once.
 create or replace function public.peris_ruin_city(p_city bigint)returns boolean
 language plpgsql security definer set search_path='' as $$
-declare city public.settlements%rowtype;g public.peris_garrisons%rowtype;a public.armies%rowtype;route jsonb;
+declare city public.settlements%rowtype;garrison public.peris_city_garrisons%rowtype;g public.peris_garrisons%rowtype;a public.armies%rowtype;route jsonb;
  old_fields text[];city_key text;pos jsonb;target_key text;living_count integer;
 begin
  select * into city from public.settlements where id=p_city for update;
@@ -150,6 +150,16 @@ begin
     wood_rate=0,stone_rate=0,food_rate=0,gold_rate=0,settlers=0,population=0 where id=p_city;
  delete from public.peris_orders where settlement_id=p_city;
  update public.peris_settler_expeditions set status='returned' where origin_settlement_id=p_city and status='travelling';
+ -- Dedicated city defenders evacuate using the same no-commander transport.
+ for garrison in select * from public.peris_city_garrisons where settlement_id=p_city and owner_id=city.owner_id for update loop
+  route:=public.peris_ruin_route(city.owner_id,city.x,city.y);
+  if route is not null and public.peris_roster_total(garrison.unit_roster)>0 then
+   insert into public.peris_ruin_evacuations(owner_id,origin_settlement_id,target_settlement_id,origin_x,origin_y,troops,departure_at,arrival_at)
+   values(city.owner_id,city.id,(route->>'city_id')::bigint,city.x,city.y,public.peris_roster(garrison.unit_roster),now(),
+     now()+make_interval(secs=>greatest(2,(route->>'distance')::numeric/22)::double precision));
+  end if;
+  delete from public.peris_city_garrisons where settlement_id=p_city and owner_id=city.owner_id;
+ end loop;
  -- Transport surviving station pools before abandoning the claimed fields.
  for g in select * from public.peris_garrisons where owner_id=city.owner_id and (col||':'||row)=any(old_fields)for update loop
   route:=public.peris_ruin_route(city.owner_id,g.col*128+64,g.row*128+64);

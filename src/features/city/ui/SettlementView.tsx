@@ -57,7 +57,7 @@ export function SettlementView({ world, playerId, run, busy, now, cityId, onCity
     const sceneProps = { selected, onSelect: choose, levels, slots, faction: factionOf(town.faction),environment };
     const dialog = dialogOpen && <BuildingDialog key={plot.key} appearance={mode === '3d' ? 'scene' : undefined} world={world} owner={playerId} sid={town.id} plot={plot} initialChoice={buildChoice} note={shortcutNote} busy={busy} now={now} run={run} onSelect={choose} onClose={() => setDialogOpen(false)}/>;
     if (mode === '3d') return <div className="settlement-layout city-stage city-scene-screen">
-        <CitySceneWorkspace world={world} owner={playerId} sid={town.id} now={now} plots={plots} onCity={onCity} onSelect={choose} onLand={onLand} onVillage={paintedAvailable ? () => setMode('city') : undefined} scene={<SettlementScene {...sceneProps} training={activeCityTraining(world,town.id,playerId,now)}/>}/>
+        <CitySceneWorkspace world={world} owner={playerId} sid={town.id} now={now} plots={plots} run={run} busy={busy} onCity={onCity} onSelect={choose} onLand={onLand} onVillage={paintedAvailable ? () => setMode('city') : undefined} scene={<SettlementScene {...sceneProps} training={activeCityTraining(world,town.id,playerId,now)}/>}/>
         {dialog}
     </div>;
     return <div className="settlement-layout city-stage city-command-ui village-screen">

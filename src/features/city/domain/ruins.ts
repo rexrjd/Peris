@@ -1,7 +1,8 @@
 import type { World } from '../../../shared/model/world';
 import type { ArmyTroops } from '../../army/domain/types';
 import type { Army } from '../../army/domain/types';
-import { readRoster, writeRoster, emptyRoster } from '../../army/domain/roster';
+import { cityGarrisonAt } from './cityGarrison';
+import { readRoster, writeRoster, emptyRoster, rosterTotal } from '../../army/domain/roster';
 import { homeArmyPosition, stationCell, addStationGarrison, ownedStation } from '../../map/domain/garrisons';
 import { armyPosition } from '../../map/domain/movement';
 import { findMarchPath } from '../../map/domain/pathfinding';
@@ -98,6 +99,18 @@ export function ruinCity(world: World, cityId: number, now = Date.now()): boolea
     world.settler_expeditions=world.settler_expeditions?.filter(entry=>entry.origin_settlement_id!==cityId||entry.status!=='travelling');
     world.unit_research=world.unit_research?.filter(item=>item.settlement_id!==cityId);
     world.spell_research=world.spell_research?.filter(item=>item.settlement_id!==cityId);
+    const cityDefenders=cityGarrisonAt(world,cityId,owner);
+    if(cityDefenders){
+        world.city_garrisons=world.city_garrisons?.filter(row=>row!==cityDefenders);
+        const target=nearestReachable(world,owner,city);
+        if(target&&rosterTotal(readRoster(cityDefenders))>0){
+            (world.ruin_evacuations??=[]).push({
+                id:Math.max(0,...(world.ruin_evacuations??[]).map(entry=>entry.id))+1,owner_id:owner,
+                origin_settlement_id:cityId,target_settlement_id:target.city.id,troops:readRoster(cityDefenders),departure_at:stamp,
+                arrival_at:new Date(now+Math.max(2,target.route!.distance/22)*1000).toISOString()
+            });
+        }
+    }
     const garrisons=(world.garrisons??[]).filter(g=>g.owner_id===owner&&affected.has(`${g.col}:${g.row}`));
     world.garrisons=world.garrisons?.filter(g=>!garrisons.includes(g));
     for(const garrison of garrisons) {

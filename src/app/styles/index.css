@@ -59,6 +59,7 @@
 @import '../../features/city/styles/building-inspector.css';
 @import '../../features/army/styles/troop-card-stats.css';
 @import '../../features/city/styles/city-selector.css';
+@import '../../features/city/styles/city-garrison.css';
 @import './scene-theme.css';
 @import './city-ruins.css';
 

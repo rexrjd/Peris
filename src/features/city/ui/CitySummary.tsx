@@ -9,7 +9,7 @@ import { CityConstructionQueue, constructionTarget } from './CityConstructionQue
 import { cityLayout } from '../rendering/three/layout';
 import { citySlots } from '../domain/slots';
 import { soldierTotal } from '../../army/domain/units';
-import { RECRUIT_UNITS as UNIT_TYPES, RECRUIT_RULES, rosterTotal, type RecruitUnit } from '../../army/domain/roster';
+import { RECRUIT_UNITS as UNIT_TYPES, RECRUIT_RULES, rosterTotal, readRoster, type RecruitUnit } from '../../army/domain/roster';
 import { armyFaction } from '../../army/domain/faction';
 import { FACTIONS, type Faction } from '../../factions/domain/factions';
 import { factionTroopName } from '../../frontier/ui/roster';
@@ -52,13 +52,14 @@ export function CityEconomySummary({ world, sid, owner, now, onSelect, onEmpire 
 export function CityArmySummary({ world, sid, owner, now, onSelect }: {
     world: World; sid: number; owner: string; now: number; onSelect: (key: string) => void;
 }) {
-    const { town, own, stationed, pool, troopsByFaction, totals, reserved, training, movements } = cityMilitaryOverview(world, sid, owner, now);
+    const { town, own, stationed, pool, cityDefenders, troopsByFaction, totals, reserved, training, movements } = cityMilitaryOverview(world, sid, owner, now);
     const recruitmentPlot = citySlots(world, sid).find(slot => slot.building_type === 'barracks' && slot.level > 0);
     const openRecruitment = (unit: RecruitUnit) => {
         const building = RECRUIT_RULES[unit].building, slot = citySlots(world,sid).filter(slot=>slot.building_type===building).sort((a,b)=>b.level-a.level)[0];
         onSelect(slot ? `slot:${slot.slot_index}` : world.buildings.some(entry=>entry.settlement_id===sid&&entry.building_type===building) ? building : 'market');
     };
     return <aside className="village-rail village-army" aria-label="Village troops and movements"><section><h3><Icon name="shield" size={16}/>Army at home <b>{rosterTotal(totals).toLocaleString()}</b></h3><p className="village-muted">Ready troops in this village</p><div className="village-troops" aria-label="Troops stationed in this village">{[...troopsByFaction].flatMap(([culture, troops]) => UNIT_TYPES.filter(type => ['infantry','archers','cavalry'].includes(type) || troops[type] > 0).map(type => <button key={`${culture}:${type}`} data-faction={culture} onClick={()=>openRecruitment(type)} title={`${FACTIONS[culture].name} · ${factionTroopName(culture, type)} · Open ${RECRUIT_RULES[type].building} recruitment · Carry ${RECRUIT_RULES[type].carry} each. Includes legions and unassigned troops physically stationed here. Travelling and unfinished training are excluded.`}><VillageTroopIcon faction={culture} unit={type}/><span>{factionTroopName(culture, type)}</span><strong data-troop={type}>{troops[type].toLocaleString()}</strong></button>))}</div>
+        {cityDefenders && rosterTotal(readRoster(cityDefenders)) > 0 && <small className="village-pool-note" title="These soldiers belong to the permanent city garrison and fight automatically even when the owner is offline.">{rosterTotal(readRoster(cityDefenders)).toLocaleString()} permanent garrison defenders</small>}
         {pool && soldierTotal(pool) > 0 && <small className="village-pool-note" title="These troops can join an idle legion here. A returning legion automatically collects available stationed troops within its 1,000 soldier capacity.">{soldierTotal(pool).toLocaleString()} troops awaiting a legion</small>}
         {reserved > 0 && <small className="village-pool-note" title="These unsent troops belong to a busy legion in an older save. They become available when that legion returns and are excluded from ready troop counts.">{reserved.toLocaleString()} troops reserved until their legion returns</small>}
         <details className="village-legions"><summary>{stationed.length} {stationed.length === 1 ? 'legion' : 'legions'} stationed here</summary>{stationed.map(army => <div key={army.id}><span>{army.name}</span><b>{soldierTotal(army).toLocaleString()}</b></div>)}{!stationed.length && <p>No legion is currently stationed here.</p>}</details>
