@@ -39,6 +39,7 @@ export type World = {
     buildings: Building[];
     city_slots?: CitySlot[];
     trade_caravans?: import('../../features/city/domain/trade').TradeCaravan[];
+    trade_routes?: import('../../features/city/domain/tradeRoutes').TradeRoute[];
     map_plots?: MapPlot[];
     spell_research?: SpellResearch[];
     armies: Army[];

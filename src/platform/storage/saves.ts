@@ -1,5 +1,6 @@
 import {validateResearch} from '../../features/research/domain/science';
 import {validateTradeCaravans} from '../../features/city/domain/trade';
+import {validateTradeRoutes} from '../../features/city/domain/tradeRoutes';
 import {researchUnitStatLimit} from '../../features/research/domain/effects';
 import {unitRule,unitStats,type UnitBalanceVersion} from '../../features/army/domain/unitBalance';
 import { RECRUIT_UNITS, RECRUIT_RULES, validateRoster, writeRoster, rosterTotal, readRoster } from '../../features/army/domain/roster';
@@ -182,6 +183,7 @@ function validateLegacySave(data: unknown): World {
 /** Reuse the route/terrain validator for each independent city and army. */
 export function validateSave(data: unknown): World {
     if(data&&typeof data==='object')validateTradeCaravans(data as World);
+    if(data&&typeof data==='object')validateTradeRoutes(data as World);
     const w=data as World, invalid=()=>{throw new Error('This file is not a valid Peris campaign save.');};
     if(!w||w.version!==6||!Array.isArray(w.players)||w.players.length!==1||w.players[0]?.id!=='solo-ruler')invalid();
     for(const key of ['settlements','armies','buildings','camps','orders','battles','formations','reports','progress','claims','challenges'] as const)

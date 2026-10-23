@@ -200,6 +200,30 @@ outputs['UPGRADE_MARKET.sql']=[
  "notify pgrst,'reload schema';",'commit;'
 ].join('\n')
 
+// Automatic routes reuse the deployed Market lifecycle and preserve all in-flight cargo.
+const tradeRouteHooks=await readSource(path.join(root,'supabase/modules/city/trade-route-hooks.sql'))
+const tradeRouteDefinitions=[]
+for(const[file,names]of[
+ ['city/market.sql',['peris_dispatch_caravan','peris_send_resources','peris_trade_participants','peris_market_settle']],
+ ['snapshot/peris_snapshot.sql',['peris_snapshot']],
+ ['campaign/game-worker.sql',['peris_game_tick']],
+ ['security/command-receipts.sql',['peris_submit_command']],
+]){
+ const source=await readSource(path.join(root,'supabase/modules',file))
+ const definitions=source.match(/create or replace function public\.[\s\S]*?\$\$;/g)??[]
+ for(const name of names){const definition=definitions.find(x=>x.startsWith('create or replace function public.'+name+'('));if(!definition)throw Error('Missing automatic trade route dependency '+name);tradeRouteDefinitions.push(definition)}
+}
+outputs['UPGRADE_TRADE_ROUTES.sql']=[
+ '-- PERIS automatic trade routes. Apply after UPGRADE_MARKET.sql. Review and back up first; never deployed automatically.',
+ 'begin;',
+ "do $$begin if to_regclass('public.peris_trade_caravans')is null then raise exception 'Install UPGRADE_MARKET.sql first';end if;end $$;",
+ tradeRouteHooks,
+ await readSource(path.join(root,'supabase/modules/city/trade-routes.sql')),
+ ...tradeRouteDefinitions,
+ 'revoke all on function public.peris_dispatch_caravan(uuid,bigint,bigint,jsonb,jsonb,timestamptz),public.peris_send_resources(bigint,bigint,jsonb,jsonb),public.peris_trade_participants(uuid),public.peris_market_settle(uuid,timestamptz)from public,anon,authenticated;',
+ "notify pgrst,'reload schema';",'commit;'
+].join('\n')
+
 // Focused installers also ship the private dependency of extracted finalizers.
 const participantLocks=await readSource(path.join(root,'supabase/modules/battle/participant-locks.sql'))
 const guildHooks=await readSource(path.join(root,'supabase/modules/city/guild-reinforcement-hooks.sql'))
@@ -209,6 +233,7 @@ const settleCore=(settleSource.match(/create or replace function public\.[\s\S]*
 const gameClock=await readSource(path.join(root,'supabase/modules/time/game-clock.sql'))
 for(const[name,content]of Object.entries(outputs)){
  let complete=content
+ if((complete.includes('public.peris_optional_trade_routes()')||complete.includes('public.peris_due_trade_routes()')||complete.includes('public.peris_trade_route_edges()')||complete.includes('public.peris_optional_advance_trade_routes('))&&!complete.includes('create or replace function public.peris_optional_trade_routes()'))complete=complete.replace(/^begin;$/m,()=> 'begin;\n'+tradeRouteHooks)
  if(complete.includes('public.peris_settle_core(')&&!complete.includes('create or replace function public.peris_settle_core('))complete=complete.replace(/^begin;$/m,()=> 'begin;\n'+settleCore+'\nrevoke all on function public.peris_settle_core(uuid,timestamptz)from public,anon,authenticated;\n')
  if((complete.includes('public.peris_optional_trade_caravans()')||complete.includes('public.peris_due_trade_caravans()'))&&!complete.includes('create or replace function public.peris_optional_trade_caravans()'))complete=complete.replace(/^begin;$/m,()=> 'begin;\n'+marketHooks)
  if((complete.includes('public.peris_optional_guild_reinforcements()')||complete.includes('public.peris_due_guild_reinforcements()'))&&!complete.includes('create or replace function public.peris_optional_guild_reinforcements()'))complete=complete.replace(/^begin;$/m,()=> 'begin;\n'+guildHooks)

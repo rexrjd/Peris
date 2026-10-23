@@ -85,6 +85,7 @@
     "test:research-db": "node --import tsx tests/research-database.test.mts",
     "test:social-db": "node --import tsx tests/social-database.test.mts",
     "test:guild-reinforcements-db": "node --import tsx tests/guild-reinforcements-database.test.mts",
+    "test:trade-routes-db": "node --import tsx tests/trade-routes-database.test.mts",
     "test:market-db": "node --import tsx tests/market-database.test.mts"
   },
   "dependencies": {

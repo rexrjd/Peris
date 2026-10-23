@@ -23,6 +23,7 @@ begin
   union all select owner_id,min(arrival_at)from public.peris_settler_expeditions where status='travelling'and arrival_at<=public.peris_game_now()group by owner_id
   union all select owner_id,min(arrival_at)from public.peris_ruin_evacuations where arrival_at<=public.peris_game_now()group by owner_id
   union all select owner_id,min(arrival_at)from public.peris_city_reinforcements where arrival_at<=public.peris_game_now()group by owner_id
+  union all select owner_id,due from public.peris_due_trade_routes()
   union all select owner_id,due from public.peris_due_trade_caravans()
   union all select owner_id,due from public.peris_due_guild_reinforcements()
   union all select owner_id,min(finish_at)from public.peris_orders where finish_at<=public.peris_game_now()group by owner_id

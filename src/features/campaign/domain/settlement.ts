@@ -1,5 +1,6 @@
 import { worldGameNow } from '../../../shared/time/gameClock';
 import {tradeEvents,advanceTradeEvent,unloadWaitingCaravans} from '../../city/domain/trade';
+import {advanceTradeRoutes} from '../../city/domain/tradeRoutes';
 import { settleCityReinforcements } from '../../city/domain/cityReinforcements';
 import { cityGarrisonAt, type CityGarrison } from '../../city/domain/cityGarrison';
 import { addRosters, emptyRoster, readRoster, writeRoster } from '../../army/domain/roster';
@@ -12,7 +13,7 @@ import { completeTravel } from '../../map/domain/movement';
 import { type World } from '../../../shared/model/world';
 import { completeMapField } from '../../map/domain/territory';
 import { refreshCityEconomy } from '../../city/domain/slots';
-import { accrueCulture, completeExpedition } from '../../empire/domain/expansion';
+import { accrueCulture, completeExpedition,nextEntityId } from '../../empire/domain/expansion';
 import { deliverCampLoot } from './loot';
 import { mergeStationGarrison } from '../../map/domain/garrisons';
 import { ownedStation } from '../../map/domain/garrisons';
@@ -79,6 +80,7 @@ export function settleLocal(w: World, owner: string, now = worldGameNow(w), trav
     accrueCulture(w, owner, now);
     for (const city of w.settlements.filter(s => s.owner_id === owner && !s.ruined_at)) accrueResources(city, now);
     unloadWaitingCaravans(w,owner,now);
+    advanceTradeRoutes(w,owner,now,()=>nextEntityId(w));
     if (travel) for (const army of w.armies.filter(a => a.owner_id === owner)) {
         if(army.raid_target_id===null&&army.raid_city_id===null&& !ownedStation(w,owner,{x:army.target_x,y:army.target_y})) redirectFromLostStation(w,army,now);
         const arriving = army.status === 'moving' && Date.parse(army.arrival_at) <= now;

@@ -162,6 +162,33 @@ begin
 end $$;
 revoke all on function public.peris_settle_core(uuid,timestamptz)from public,anon,authenticated;
 
+-- These hooks are deliberately installable without the optional route table.
+create or replace function public.peris_optional_trade_routes()returns jsonb
+language plpgsql stable security definer set search_path='' as $$
+begin
+ if to_regclass('public.peris_trade_routes')is null then return '[]'::jsonb;end if;
+ return(select coalesce(jsonb_agg(r order by r.source_settlement_id,r.id),'[]'::jsonb)from public.peris_trade_routes r where r.owner_id=public.peris_player_id());
+end $$;
+create or replace function public.peris_due_trade_routes()returns table(owner_id uuid,due timestamptz)
+language plpgsql stable security definer set search_path='' as $$
+begin
+ if to_regclass('public.peris_trade_routes')is null then return;end if;
+ return query select r.owner_id,min(r.next_run_at)from public.peris_trade_routes r where r.enabled and r.next_run_at<=public.peris_game_now()group by r.owner_id;
+end $$;
+-- Include future routes: any route may become due while its component is settling.
+create or replace function public.peris_trade_route_edges()returns table(owner_id uuid,recipient_id uuid)
+language plpgsql stable security definer set search_path='' as $$
+begin
+ if to_regclass('public.peris_trade_routes')is null then return;end if;
+ return query select r.owner_id,r.recipient_id from public.peris_trade_routes r where r.enabled;
+end $$;
+create or replace function public.peris_optional_advance_trade_routes(p_owner uuid,p_at timestamptz)returns void
+language plpgsql security definer set search_path='' as $$
+begin
+ if to_regprocedure('public.peris_advance_trade_routes(uuid,timestamp with time zone)')is not null then perform public.peris_advance_trade_routes(p_owner,p_at);end if;
+end $$;
+revoke all on function public.peris_optional_trade_routes(),public.peris_due_trade_routes(),public.peris_trade_route_edges(),public.peris_optional_advance_trade_routes(uuid,timestamptz)from public,anon,authenticated;
+
 -- Persistent defensive garrisons: separate from transient field stations.
 -- Automatic arrival-merging must never withdraw soldiers assigned to this city.
 create table if not exists public.peris_city_garrisons (
@@ -933,6 +960,7 @@ begin
    from public.peris_reports r join public.peris_camps c on c.id=r.camp_id and c.bandit left join public.battles b on b.id=r.battle_id where r.owner_id=u and r.result?'delivered'
   )s where s.rank=1),'[]'::jsonb),
  'garrisons',coalesce((select jsonb_agg(g order by row,col)from public.peris_garrisons g where owner_id=u),'[]'::jsonb),
+ 'trade_routes',public.peris_optional_trade_routes(),
  'trade_caravans',public.peris_optional_trade_caravans(),
  'guild_reinforcements',public.peris_optional_guild_reinforcements(),
  'city_reinforcements',coalesce((select jsonb_agg(r order by r.arrival_at,r.id)from public.peris_city_reinforcements r where r.owner_id=u),'[]'::jsonb),
@@ -1024,6 +1052,7 @@ begin
  if exists(select 1 from public.players where id=u and defeated_at is not null)then raise exception 'This ruler has been permanently defeated';end if;
  -- A fixed whitelist keeps the receipt endpoint from invoking private helpers.
  case p_function
+ when 'peris_trade_route_command' then answer:=public.peris_trade_route_command(p_args->'p_command');
  when 'peris_send_resources' then answer:=public.peris_send_resources((p_args->>'p_source')::bigint,(p_args->>'p_target')::bigint,p_args->'p_resources',p_args->'p_path');
  when 'peris_send_guild_reinforcements' then answer:=public.peris_send_guild_reinforcements((p_args->>'p_source')::bigint,(p_args->>'p_target')::bigint,p_args->'p_troops',p_args->'p_path',(p_args->>'p_army')::bigint);
  when 'peris_recall_guild_reinforcements' then answer:=public.peris_recall_guild_reinforcements((p_args->>'p_id')::bigint);

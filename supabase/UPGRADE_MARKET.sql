@@ -79,6 +79,33 @@ begin
 end $$;
 revoke all on function public.peris_due_guild_reinforcements()from public,anon,authenticated;
 
+-- These hooks are deliberately installable without the optional route table.
+create or replace function public.peris_optional_trade_routes()returns jsonb
+language plpgsql stable security definer set search_path='' as $$
+begin
+ if to_regclass('public.peris_trade_routes')is null then return '[]'::jsonb;end if;
+ return(select coalesce(jsonb_agg(r order by r.source_settlement_id,r.id),'[]'::jsonb)from public.peris_trade_routes r where r.owner_id=public.peris_player_id());
+end $$;
+create or replace function public.peris_due_trade_routes()returns table(owner_id uuid,due timestamptz)
+language plpgsql stable security definer set search_path='' as $$
+begin
+ if to_regclass('public.peris_trade_routes')is null then return;end if;
+ return query select r.owner_id,min(r.next_run_at)from public.peris_trade_routes r where r.enabled and r.next_run_at<=public.peris_game_now()group by r.owner_id;
+end $$;
+-- Include future routes: any route may become due while its component is settling.
+create or replace function public.peris_trade_route_edges()returns table(owner_id uuid,recipient_id uuid)
+language plpgsql stable security definer set search_path='' as $$
+begin
+ if to_regclass('public.peris_trade_routes')is null then return;end if;
+ return query select r.owner_id,r.recipient_id from public.peris_trade_routes r where r.enabled;
+end $$;
+create or replace function public.peris_optional_advance_trade_routes(p_owner uuid,p_at timestamptz)returns void
+language plpgsql security definer set search_path='' as $$
+begin
+ if to_regprocedure('public.peris_advance_trade_routes(uuid,timestamp with time zone)')is not null then perform public.peris_advance_trade_routes(p_owner,p_at);end if;
+end $$;
+revoke all on function public.peris_optional_trade_routes(),public.peris_due_trade_routes(),public.peris_trade_route_edges(),public.peris_optional_advance_trade_routes(uuid,timestamptz)from public,anon,authenticated;
+
 do $$begin if to_regprocedure('public.peris_game_tick(integer)')is null or to_regprocedure('public.peris_guild_reinforcements_advance(uuid,timestamp with time zone)')is null then raise exception 'Install V19, City Logistics and Guild Reinforcements first';end if;end $$;
 alter table public.peris_city_slots drop constraint if exists peris_city_slots_building_type_check;
 alter table public.peris_city_slots add constraint peris_city_slots_building_type_check check(building_type in('barracks','stables','workshop','smithy','warehouse','granary','fishery','mage_tower','housing','academy','bazaar'));
@@ -138,7 +165,7 @@ $$;
 create or replace function public.peris_trade_participants(p_owner uuid)returns uuid[]
 language sql stable security definer set search_path='' as $$
  with recursive participants(id)as(select p_owner union select case when r.owner_id=p.id then r.recipient_id else r.owner_id end
- from participants p join public.peris_trade_caravans r on(r.owner_id=p.id or r.recipient_id=p.id)and r.status<>'completed')
+ from participants p join(select owner_id,recipient_id from public.peris_trade_caravans where status<>'completed' union select owner_id,recipient_id from public.peris_trade_route_edges())r on(r.owner_id=p.id or r.recipient_id=p.id))
  select array_agg(id order by id)from participants
 $$;
 
@@ -243,14 +270,15 @@ begin
  end loop;
  foreach participant in array participants loop perform public.peris_settle_core(participant,p_until);end loop;
  for r in select id from public.peris_trade_caravans where owner_id=any(participants)and status in('waiting','stranded')order by id loop perform public.peris_trade_event(r.id,p_until);end loop;
+ foreach participant in array participants loop perform public.peris_optional_advance_trade_routes(participant,p_until);end loop;
  -- Retain a useful bounded sender history; receipts remain separately journaled.
  delete from public.peris_trade_caravans c where c.owner_id=any(participants)and c.status='completed'and c.id not in(
   select keep.id from public.peris_trade_caravans keep where keep.owner_id=c.owner_id and keep.status='completed'order by keep.completed_at desc,keep.id desc limit 50);
 end $$;
 
-create or replace function public.peris_send_resources(p_source bigint,p_target bigint,p_resources jsonb,p_path jsonb)returns jsonb
+create or replace function public.peris_dispatch_caravan(p_owner uuid,p_source bigint,p_target bigint,p_resources jsonb,p_path jsonb,p_at timestamptz)returns jsonb
 language plpgsql security definer set search_path='' as $$
-declare u uuid:=public.peris_player_id();s public.settlements%rowtype;d public.settlements%rowtype;bag jsonb:='{}';key text;amount numeric;volume integer:=0;used integer;capacity integer;origin jsonb;arrival jsonb;distance numeric;new_id bigint;
+declare u uuid:=p_owner;s public.settlements%rowtype;d public.settlements%rowtype;bag jsonb:='{}';key text;amount numeric;volume integer:=0;used integer;capacity integer;origin jsonb;arrival jsonb;distance numeric;new_id bigint;
 begin
  if u is null then raise exception 'Authentication required';end if;
  if exists(select 1 from public.players where id=u and defeated_at is not null)then raise exception 'This ruler has been permanently defeated';end if;
@@ -271,7 +299,6 @@ begin
  select * into d from public.settlements where id=p_target and ruined_at is null;
  if d.id is null or d.id=s.id or not(d.owner_id=u or exists(select 1 from public.peris_guild_members a join public.peris_guild_members b on b.guild_id=a.guild_id where a.player_id=u and b.player_id=d.owner_id))then raise exception 'Choose another own or guild city';end if;
  if not public.peris_lock_battle_participants(u,d.owner_id)then raise lock_not_available;end if;
- perform public.peris_settle(u);perform public.peris_settle(d.owner_id);
  perform 1 from public.settlements where id in(p_source,p_target)order by id for update nowait;
  select * into s from public.settlements where id=p_source and owner_id=u and ruined_at is null;
  select * into d from public.settlements where id=p_target and ruined_at is null;
@@ -284,11 +311,27 @@ begin
  distance:=public.peris_route_distance((origin->>'x')::numeric,(origin->>'y')::numeric,(arrival->>'x')::numeric,(arrival->>'y')::numeric,p_path);
  update public.settlements set wood=wood-(bag->>'wood')::integer,stone=stone-(bag->>'stone')::integer,food=food-(bag->>'food')::integer,gold=gold-(bag->>'gold')::integer where id=s.id;
  insert into public.peris_trade_caravans(owner_id,recipient_id,source_settlement_id,target_settlement_id,source_city,target_city,resources,returning_resources,volume,march_path,departure_at,arrival_at,return_at)
- values(u,d.owner_id,s.id,d.id,s.name,d.name,bag,bag,volume,p_path,public.peris_game_now(),public.peris_game_now()+make_interval(secs=>greatest(2,distance/22)::double precision),public.peris_game_now()+make_interval(secs=>2*greatest(2,distance/22)::double precision))returning id into new_id;
- -- Sending can open storage for an earlier waiting return; it cannot create free merchant capacity retroactively.
- perform public.peris_settle(u);
+ values(u,d.owner_id,s.id,d.id,s.name,d.name,bag,bag,volume,p_path,p_at,p_at+make_interval(secs=>greatest(2,distance/22)::double precision),p_at+make_interval(secs=>2*greatest(2,distance/22)::double precision))returning id into new_id;
  return jsonb_build_object('ok',true,'caravan_id',new_id);
 end $$;
+
+
+create or replace function public.peris_send_resources(p_source bigint,p_target bigint,p_resources jsonb,p_path jsonb)returns jsonb
+language plpgsql security definer set search_path='' as $$
+declare u uuid:=public.peris_player_id();recipient uuid;answer jsonb;
+begin
+ if u is null then raise exception 'Authentication required';end if;
+ if not pg_try_advisory_xact_lock(72320)then raise lock_not_available;end if;
+ select owner_id into recipient from public.settlements where id=p_target and ruined_at is null;
+ if recipient is null then raise exception 'Choose another own or guild city';end if;
+ if not public.peris_lock_battle_participants(u,recipient)then raise lock_not_available;end if;
+ perform public.peris_settle(u);perform public.peris_settle(recipient);
+ answer:=public.peris_dispatch_caravan(u,p_source,p_target,p_resources,p_path,public.peris_game_now());
+ -- Sending can open storage for an earlier waiting return.
+ perform public.peris_settle(u);
+ return answer;
+end $$;
+revoke all on function public.peris_dispatch_caravan(uuid,bigint,bigint,jsonb,jsonb,timestamptz)from public,anon,authenticated;
 
 revoke all on function public.peris_trade_city_changed(),public.peris_trade_targets(),public.peris_trade_status(),public.peris_trade_participants(uuid),public.peris_trade_credit(bigint,jsonb),public.peris_trade_subtract(jsonb,jsonb),public.peris_trade_volume(jsonb),public.peris_trade_return_position(bigint,timestamptz),public.peris_trade_event(bigint,timestamptz),public.peris_market_settle(uuid,timestamptz),public.peris_send_resources(bigint,bigint,jsonb,jsonb)from public,anon,authenticated;
 grant execute on function public.peris_trade_targets(),public.peris_trade_status()to authenticated;
@@ -446,6 +489,7 @@ begin
    from public.peris_reports r join public.peris_camps c on c.id=r.camp_id and c.bandit left join public.battles b on b.id=r.battle_id where r.owner_id=u and r.result?'delivered'
   )s where s.rank=1),'[]'::jsonb),
  'garrisons',coalesce((select jsonb_agg(g order by row,col)from public.peris_garrisons g where owner_id=u),'[]'::jsonb),
+ 'trade_routes',public.peris_optional_trade_routes(),
  'trade_caravans',public.peris_optional_trade_caravans(),
  'guild_reinforcements',public.peris_optional_guild_reinforcements(),
  'city_reinforcements',coalesce((select jsonb_agg(r order by r.arrival_at,r.id)from public.peris_city_reinforcements r where r.owner_id=u),'[]'::jsonb),
@@ -489,6 +533,7 @@ begin
   union all select owner_id,min(arrival_at)from public.peris_settler_expeditions where status='travelling'and arrival_at<=public.peris_game_now()group by owner_id
   union all select owner_id,min(arrival_at)from public.peris_ruin_evacuations where arrival_at<=public.peris_game_now()group by owner_id
   union all select owner_id,min(arrival_at)from public.peris_city_reinforcements where arrival_at<=public.peris_game_now()group by owner_id
+  union all select owner_id,due from public.peris_due_trade_routes()
   union all select owner_id,due from public.peris_due_trade_caravans()
   union all select owner_id,due from public.peris_due_guild_reinforcements()
   union all select owner_id,min(finish_at)from public.peris_orders where finish_at<=public.peris_game_now()group by owner_id
@@ -550,6 +595,7 @@ begin
  if exists(select 1 from public.players where id=u and defeated_at is not null)then raise exception 'This ruler has been permanently defeated';end if;
  -- A fixed whitelist keeps the receipt endpoint from invoking private helpers.
  case p_function
+ when 'peris_trade_route_command' then answer:=public.peris_trade_route_command(p_args->'p_command');
  when 'peris_send_resources' then answer:=public.peris_send_resources((p_args->>'p_source')::bigint,(p_args->>'p_target')::bigint,p_args->'p_resources',p_args->'p_path');
  when 'peris_send_guild_reinforcements' then answer:=public.peris_send_guild_reinforcements((p_args->>'p_source')::bigint,(p_args->>'p_target')::bigint,p_args->'p_troops',p_args->'p_path',(p_args->>'p_army')::bigint);
  when 'peris_recall_guild_reinforcements' then answer:=public.peris_recall_guild_reinforcements((p_args->>'p_id')::bigint);
