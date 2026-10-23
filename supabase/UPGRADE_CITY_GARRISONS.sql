@@ -80,6 +80,22 @@ begin
 end $$;
 revoke all on function public.peris_due_guild_reinforcements()from public,anon,authenticated;
 
+-- Optional dependencies keep older focused installers valid without creating trade state.
+create or replace function public.peris_optional_trade_caravans()returns jsonb
+language plpgsql stable security definer set search_path='' as $$
+begin
+ if to_regprocedure('public.peris_trade_status()')is null then return '[]'::jsonb;end if;
+ return public.peris_trade_status();
+end $$;
+create or replace function public.peris_due_trade_caravans()returns table(owner_id uuid,due timestamptz)
+language plpgsql stable security definer set search_path='' as $$
+begin
+ if to_regclass('public.peris_trade_caravans')is null then return;end if;
+ return query select c.owner_id,min(case c.status when 'outbound'then c.arrival_at when 'returning'then least(c.return_at,c.redirect_at) else public.peris_game_now()end)
+ from public.peris_trade_caravans c where c.status in('waiting','stranded')or(c.status='outbound'and c.arrival_at<=public.peris_game_now())or(c.status='returning'and least(c.return_at,c.redirect_at)<=public.peris_game_now())group by c.owner_id;
+end $$;
+revoke all on function public.peris_optional_trade_caravans(),public.peris_due_trade_caravans()from public,anon,authenticated;
+
 do $$ begin if to_regprocedure('public.peris_ruin_city(bigint)') is null then raise exception 'Apply UPGRADE_CITY_RUINS.sql first'; end if; end $$;
 -- Persistent defensive garrisons: separate from transient field stations.
 -- Automatic arrival-merging must never withdraw soldiers assigned to this city.
@@ -510,6 +526,7 @@ begin
    from public.peris_reports r join public.peris_camps c on c.id=r.camp_id and c.bandit left join public.battles b on b.id=r.battle_id where r.owner_id=u and r.result?'delivered'
   )s where s.rank=1),'[]'::jsonb),
  'garrisons',coalesce((select jsonb_agg(g order by row,col)from public.peris_garrisons g where owner_id=u),'[]'::jsonb),
+ 'trade_caravans',public.peris_optional_trade_caravans(),
  'guild_reinforcements',public.peris_optional_guild_reinforcements(),
  'city_reinforcements',coalesce((select jsonb_agg(r order by r.arrival_at,r.id)from public.peris_city_reinforcements r where r.owner_id=u),'[]'::jsonb),
  'city_garrisons',coalesce((select jsonb_agg(to_jsonb(g)||jsonb_build_object('infantry',public.peris_roster_class(g.unit_roster,'infantry'),'archers',public.peris_roster_class(g.unit_roster,'archers'),'cavalry',public.peris_roster_class(g.unit_roster,'cavalry'))order by g.settlement_id)from public.peris_city_garrisons g where g.owner_id=u),'[]'::jsonb),

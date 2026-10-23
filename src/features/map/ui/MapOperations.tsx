@@ -9,6 +9,7 @@ import { ReinforcementDetailsDialog } from './ReinforcementDetailsDialog';
 import { factionOf } from '../../factions/domain/factions';
 
 const labels: Record<ActivityKind, { name: string; short: string; icon: string }> = {
+    trade:{name:'Trading',short:'Trade',icon:'transfer'},
     raid: { name: 'Raiding', short: 'Raid', icon: 'army' }, return: { name: 'Returning', short: 'Return', icon: 'transfer' }, march: { name: 'Marching', short: 'March', icon: 'flag' },
     reinforcement: { name: 'Reinforcing', short: 'Troops', icon: 'transfer' },
     battle: { name: 'In battle', short: 'Battle', icon: 'army' }, construction: { name: 'Building', short: 'Build', icon: 'town' },
@@ -22,6 +23,7 @@ const mapFilters: { value: EmpireActivityFilter; label: string }[] = [
     { value: 'all', label: 'All' }, { value: 'armies', label: 'Armies' }, { value: 'cities', label: 'Cities' },
 ];
 function remaining(event: MapActivity, now: number, rate:1|10|100=1) {
+    if(event.kind==='trade'&&event.endsAt===null)return 'Waiting';
     if(event.supportStatus==='stationed')return 'Stationed';
     if (event.live) return 'Live';
     if (event.startedAt !== null && event.startedAt > now &&

@@ -1,4 +1,4 @@
-create or replace function public.peris_settle(p_owner uuid,p_until timestamptz default public.peris_game_now()) returns void
+create or replace function public.peris_settle_core(p_owner uuid,p_until timestamptz default public.peris_game_now()) returns void
 language plpgsql security definer set search_path='' as $$
 declare s public.settlements%rowtype;o public.peris_orders%rowtype;event record;target_slot integer;field_col integer;field_row integer;arriving_army bigint;
 begin
@@ -62,3 +62,13 @@ begin
  -- Attack arrivals retain their outbound route for the eventual return.
  update public.armies set status='idle',start_x=target_x,start_y=target_y,updated_at=p_until where owner_id=p_owner and status='moving'and arrival_at<=p_until;
 end $$;
+
+-- A distinct core keeps cross-player chronology nonrecursive. Optional for older focused installers.
+create or replace function public.peris_settle(p_owner uuid,p_until timestamptz default public.peris_game_now())returns void
+language plpgsql security definer set search_path='' as $$
+begin
+ if to_regprocedure('public.peris_market_settle(uuid,timestamp with time zone)')is not null then
+  perform public.peris_market_settle(p_owner,p_until);
+ else perform public.peris_settle_core(p_owner,p_until);end if;
+end $$;
+revoke all on function public.peris_settle_core(uuid,timestamptz),public.peris_settle(uuid,timestamptz)from public,anon,authenticated;

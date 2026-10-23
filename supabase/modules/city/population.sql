@@ -25,7 +25,7 @@ alter table public.settlements alter column stone_rate type numeric(18,8);
 alter table public.settlements alter column food_rate type numeric(18,8);
 alter table public.settlements alter column gold_rate type numeric(18,8);
 alter table public.peris_city_slots drop constraint if exists peris_city_slots_building_type_check;
-alter table public.peris_city_slots add constraint peris_city_slots_building_type_check check(building_type in ('barracks','stables','workshop','smithy','warehouse','granary','fishery','mage_tower','housing','academy'));
+alter table public.peris_city_slots add constraint peris_city_slots_building_type_check check(building_type in ('barracks','stables','workshop','smithy','warehouse','granary','fishery','mage_tower','housing','academy','bazaar'));
 create or replace function public.peris_population_event(p_value double precision,p_rate double precision,p_slope double precision,p_target double precision,p_limit double precision)returns double precision language plpgsql immutable set search_path='' as $$
 declare disc double precision;t double precision;result double precision:=p_limit;
 begin

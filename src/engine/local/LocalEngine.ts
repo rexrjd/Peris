@@ -34,6 +34,7 @@ import { advanceCampFarms } from '../../features/campaign/domain/campEconomy';
 import { sendCityReinforcements } from '../../features/city/domain/cityReinforcements';
 import { manageCityGarrison } from '../../features/city/domain/cityGarrison';
 import { collectGarrison } from '../../features/map/domain/garrisons';
+import { sendResources } from '../../features/city/domain/trade';
 import { markAllReportsRead, markReportsRead } from '../../features/campaign/domain/reports';
 export class LocalEngine implements GameEngine {
     readonly playerId = 'solo-ruler';
@@ -156,6 +157,7 @@ export class LocalEngine implements GameEngine {
         this.snapshot.server_now = new Date(this.nowGameMs()).toISOString();
         const context: LocalCommandContext = { world: this.snapshot, playerId: this.playerId, settlementId: cmd.settlementId, armyId: cmd.armyId, nextId: () => this.nextId = Math.max(this.nextId + 1, nextEntityId(this.snapshot)), active, now: new Date(this.nowGameMs()).toISOString(), paused: value => { this.paused = value; }, finalize: id => this.finalize(id) };
         switch (cmd.type) {
+            case 'sendResources': sendResources(context,cmd); break;
             case 'reinforceGuild': case 'recallGuildReinforcements': throw new Error('Enter the shared world to send guild reinforcements.');
             case 'startResearch': startResearch(this.snapshot,this.playerId,cmd.technologyId,Date.parse(context.now)); break;
             case 'pauseResearch': pauseResearch(this.snapshot,this.playerId,Date.parse(context.now)); break;

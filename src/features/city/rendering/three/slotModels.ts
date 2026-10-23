@@ -1,4 +1,5 @@
 import {createAcademy} from './academy';
+import {createMarket} from './market';
 import type {Faction} from '../../../factions/domain/factions';
 import type { SlotType } from '../../domain/slots';
 import { createBuildingModel } from './buildingModels';
@@ -7,6 +8,7 @@ import { cityKit } from './modelKit';
 import { createCityBarracks } from './barracks';
 import { createCityWorkplace } from './cityWorkplaces';
 export function createSlotModel(type:SlotType|null,level:number,faction:Faction='roman', animated=false) {
+ if(type==='bazaar')return createMarket(level,faction,animated);
  if(!type || !level)return createBuildingModel('barracks',0,faction);
  if(type==='academy')return createAcademy(level,faction,animated);
  if(type==='mage_tower')return createMageTower(level,faction,animated);

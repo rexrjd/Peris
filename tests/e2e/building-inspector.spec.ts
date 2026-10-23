@@ -73,7 +73,8 @@ test('compact upgrades leave the city visible and allow direct selection of anot
 
 test('plot picker has a pinned build action and preserves unique building rules', async ({page},info) => {
     await start(page); await page.locator('[data-building="slot:3"]').click();
-    await expect(panel(page).getByRole('radio')).toHaveCount(9);
+    await expect(panel(page).getByRole('radio')).toHaveCount(10);
+    await expect(panel(page).getByRole('radio',{name:/^Market/})).toBeVisible();
     await panel(page).getByRole('radio',{name:/^Barracks/}).check();
     await expect(panel(page).getByRole('button',{name:'One barracks per city',exact:true})).toBeDisabled();
     await panel(page).getByRole('radio',{name:/^Housing/}).check();

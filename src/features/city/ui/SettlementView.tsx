@@ -19,9 +19,10 @@ import { CityArmySummary, CityEconomySummary } from './CitySummary';
 import { activeCityTraining } from '../domain/training';
 import { cityEnvironment } from '../domain/environment';
 
-export function SettlementView({ world, playerId, run, busy, now, cityId, onCity, onEmpire, shortcut, onLand, onSceneChange, onActivityMap }: {
+export function SettlementView({ world, playerId, run, busy, now, cityId, onCity, onEmpire, shortcut, onLand, onSceneChange, onActivityMap,onTrade }: {
     world: World; playerId: string; cityId?: number; onCity?: (id: number) => void; onEmpire?: () => void; onLand?: () => void; onSceneChange?: (active: boolean) => void;
     onActivityMap?: (event: MapActivity) => void;
+    onTrade?:(command:Command)=>Promise<void>;
     shortcut?: { type: SlotType | 'market'; request: number }; run: (command: Command, message?: string) => void; busy: boolean; now: number;
 }) {
     const town = world.settlements.find(s => s.owner_id === playerId && (cityId === undefined || s.id === cityId))!;
@@ -54,10 +55,10 @@ export function SettlementView({ world, playerId, run, busy, now, cityId, onCity
         choose('market'); setShortcutNote(mainLevel(world, town.id) < MAX_BUILDING_LEVEL ? 'No free plot is available. Upgrade the main building to unlock more plots.' : 'No free plot is available. All city plots are occupied.');
     }, [shortcut, town.id]);
     const plotName = (p: typeof plots[number]) => p.type ? p.slot === undefined ? BUILDINGS[p.type as BuildingType].name : SLOT_BUILDINGS[p.type as SlotType].name : `Empty plot ${p.slot! + 1}`;
-    const icon = (type: string | null) => buildingIcon((type === 'warehouse' || type === 'granary' ? 'storehouse' : type === 'smithy' ? 'barracks' : type === 'fishery' ? 'farm' : type === 'mage_tower' || type === 'housing' ? 'market' : type ?? 'market') as BuildingType);
+    const icon = (type: string | null) => buildingIcon((type === 'warehouse' || type === 'granary' ? 'storehouse' : type === 'smithy' ? 'barracks' : type === 'fishery' ? 'farm' : type === 'mage_tower' || type === 'housing' || type === 'bazaar' ? 'market' : type ?? 'market') as BuildingType);
     const visiblePlots = plots.filter(p => `${plotName(p)} ${p.slot !== undefined ? `plot ${p.slot + 1}` : ''}`.toLowerCase().includes(query.trim().toLowerCase()));
     const sceneProps = { selected, onSelect: choose, levels, slots, faction: factionOf(town.faction),environment };
-    const dialog = dialogOpen && <BuildingDialog key={plot.key} appearance={mode === '3d' ? 'scene' : undefined} world={world} owner={playerId} sid={town.id} plot={plot} initialChoice={buildChoice} note={shortcutNote} busy={busy} now={now} run={run} onSelect={choose} onClose={() => setDialogOpen(false)}/>;
+    const dialog = dialogOpen && <BuildingDialog onTrade={onTrade} key={plot.key} appearance={mode === '3d' ? 'scene' : undefined} world={world} owner={playerId} sid={town.id} plot={plot} initialChoice={buildChoice} note={shortcutNote} busy={busy} now={now} run={run} onSelect={choose} onClose={() => setDialogOpen(false)}/>;
     if (mode === '3d') return <div className="settlement-layout city-stage city-scene-screen">
         <CitySceneWorkspace world={world} owner={playerId} sid={town.id} now={now} plots={plots} run={run} busy={busy} onCity={onCity} onActivityMap={onActivityMap} onSelect={choose} onLand={onLand} onVillage={paintedAvailable ? () => setMode('city') : undefined} scene={<SettlementScene {...sceneProps} training={activeCityTraining(world,town.id,playerId,now)}/>}/>
         {dialog}

@@ -79,6 +79,88 @@ begin
 end $$;
 revoke all on function public.peris_due_guild_reinforcements()from public,anon,authenticated;
 
+-- Optional dependencies keep older focused installers valid without creating trade state.
+create or replace function public.peris_optional_trade_caravans()returns jsonb
+language plpgsql stable security definer set search_path='' as $$
+begin
+ if to_regprocedure('public.peris_trade_status()')is null then return '[]'::jsonb;end if;
+ return public.peris_trade_status();
+end $$;
+create or replace function public.peris_due_trade_caravans()returns table(owner_id uuid,due timestamptz)
+language plpgsql stable security definer set search_path='' as $$
+begin
+ if to_regclass('public.peris_trade_caravans')is null then return;end if;
+ return query select c.owner_id,min(case c.status when 'outbound'then c.arrival_at when 'returning'then least(c.return_at,c.redirect_at) else public.peris_game_now()end)
+ from public.peris_trade_caravans c where c.status in('waiting','stranded')or(c.status='outbound'and c.arrival_at<=public.peris_game_now())or(c.status='returning'and least(c.return_at,c.redirect_at)<=public.peris_game_now())group by c.owner_id;
+end $$;
+revoke all on function public.peris_optional_trade_caravans(),public.peris_due_trade_caravans()from public,anon,authenticated;
+
+create or replace function public.peris_settle_core(p_owner uuid,p_until timestamptz default public.peris_game_now()) returns void
+language plpgsql security definer set search_path='' as $$
+declare s public.settlements%rowtype;o public.peris_orders%rowtype;event record;target_slot integer;field_col integer;field_row integer;arriving_army bigint;
+begin
+ -- Cell reservation lock precedes player locks everywhere, including offline arrivals.
+ if exists(select 1 from public.peris_settler_expeditions where owner_id=p_owner and status='travelling'and arrival_at<=p_until)then perform pg_advisory_xact_lock(204200);end if;
+ perform 1 from public.players where id=p_owner for update;
+ if not found then return;end if;
+ if exists(select 1 from public.players where id=p_owner and defeated_at is not null)then return;end if;
+ perform public.peris_ruin_advance(p_owner,p_until);
+ perform public.peris_city_reinforcements_advance(p_owner,p_until);
+ if to_regprocedure('public.peris_guild_reinforcements_advance(uuid,timestamp with time zone)')is not null then
+  perform public.peris_guild_reinforcements_advance(p_owner,p_until);
+ end if;
+ for s in select * from public.settlements where owner_id=p_owner and ruined_at is null order by id for update loop
+ perform public.peris_city_migrate(s.id);if not s.population_ready then perform public.peris_city_economy(s.id);end if;
+ end loop;
+ for event in select id,finish_at as at_time,false as expedition from public.peris_orders where owner_id=p_owner and finish_at<=p_until
+ union all select id,arrival_at as at_time,true as expedition from public.peris_settler_expeditions where owner_id=p_owner and status='travelling'and arrival_at<=p_until
+ order by at_time,expedition,id loop
+ perform public.peris_science_advance(p_owner,event.at_time);
+ perform public.peris_culture_accrue(p_owner,event.at_time);
+ if event.expedition then perform public.peris_found_complete(event.id);continue;end if;
+ select * into o from public.peris_orders where id=event.id for update;
+ select * into s from public.settlements where id=coalesce(o.settlement_id,(select min(id)from public.settlements where owner_id=p_owner and ruined_at is null))and owner_id=p_owner for update;
+ if s.id is null or s.ruined_at is not null then delete from public.peris_orders where id=o.id;continue;end if;
+ perform public.peris_population_accrue(s.id,o.finish_at);
+ if o.kind='upgrade' then
+  if o.item like 'slot:%' then
+   target_slot:=split_part(o.item,':',2)::integer;
+   update public.peris_city_slots set level=least(case when building_type='mage_tower' then 10 else 5 end,level+1)where settlement_id=s.id and slot_index=target_slot;
+  else update public.buildings set level=least(5,level+1),updated_at=o.finish_at where settlement_id=s.id and building_type=o.item;end if;
+  update public.players set upgrades=upgrades+1 where id=p_owner;update public.settlements set development_points=development_points+1 where id=s.id;perform public.peris_city_economy(s.id);
+ elsif o.kind='field' then
+  field_col:=split_part(o.item,':',2)::integer;field_row:=split_part(o.item,':',3)::integer;
+  update public.peris_map_plots set level=level+1 where col=field_col and row=field_row and owner_id=p_owner and settlement_id=s.id and building_type=split_part(o.item,':',4) and level<5;
+  if not found then raise exception 'Queued external field no longer matches its owner or building';end if;
+  update public.players set upgrades=upgrades+1 where id=p_owner;update public.settlements set development_points=development_points+1 where id=s.id;perform public.peris_city_economy(s.id);
+ elsif o.kind='settler'then update public.settlements set settlers=settlers+o.quantity where id=s.id;
+ elsif o.kind='recruit' then
+  if o.recruit_destination='garrison' then
+   perform public.peris_city_garrison_receive(p_owner,s.id,jsonb_build_object(o.item,o.quantity));
+  else
+   perform public.peris_recruit_complete(coalesce(o.army_id,(select min(id)from public.armies where owner_id=p_owner)),o.item,o.quantity);
+  end if;
+  update public.players set recruits=recruits+o.quantity where id=p_owner;
+ end if;
+ delete from public.peris_orders where id=o.id;
+ end loop;
+ perform public.peris_science_advance(p_owner,p_until);
+ perform public.peris_culture_accrue(p_owner,p_until);
+ for s in select * from public.settlements where owner_id=p_owner and ruined_at is null order by id loop perform public.peris_population_accrue(s.id,p_until);end loop;
+ for arriving_army in select id from public.armies where owner_id=p_owner and status='moving' and raid_target_id is null and raid_city_id is null and arrival_at<=p_until order by id for update loop
+  if not exists(select 1 from public.armies a where a.id=arriving_army and public.peris_station_owned(p_owner,floor(a.target_x/128.0)::integer,floor(a.target_y/128.0)::integer))then
+   perform public.peris_ruin_redirect_army(arriving_army);continue;
+  end if;
+  perform public.peris_deliver_loot(arriving_army);
+  update public.armies set status='idle',start_x=target_x,start_y=target_y,march_path=null,march_distance=null,
+   march_sent_at=null,march_cancel_until=null,march_origin=null,march_returning=false,updated_at=p_until where id=arriving_army;
+  if not exists(select 1 from public.battles b join public.settlements c on c.id=b.raid_city_id join public.armies a on a.id=arriving_army where b.status='active'and b.defender_owner_id=p_owner and floor(c.x/128.0)=floor(a.target_x/128.0)and floor(c.y/128.0)=floor(a.target_y/128.0))then perform public.peris_garrison_merge(arriving_army);end if;
+ end loop;
+ -- Attack arrivals retain their outbound route for the eventual return.
+ update public.armies set status='idle',start_x=target_x,start_y=target_y,updated_at=p_until where owner_id=p_owner and status='moving'and arrival_at<=p_until;
+end $$;
+revoke all on function public.peris_settle_core(uuid,timestamptz)from public,anon,authenticated;
+
 -- Guild support: troops belong to their sender, never to the city receiving help.
 create table if not exists public.peris_guild_reinforcements (
  id bigint generated always as identity primary key,
@@ -385,69 +467,12 @@ begin
   perform public.peris_deliver_loot(a.id);
  end if;
 end $$;
-create or replace function public.peris_settle(p_owner uuid,p_until timestamptz default public.peris_game_now()) returns void
+create or replace function public.peris_settle(p_owner uuid,p_until timestamptz default public.peris_game_now())returns void
 language plpgsql security definer set search_path='' as $$
-declare s public.settlements%rowtype;o public.peris_orders%rowtype;event record;target_slot integer;field_col integer;field_row integer;arriving_army bigint;
 begin
- -- Cell reservation lock precedes player locks everywhere, including offline arrivals.
- if exists(select 1 from public.peris_settler_expeditions where owner_id=p_owner and status='travelling'and arrival_at<=p_until)then perform pg_advisory_xact_lock(204200);end if;
- perform 1 from public.players where id=p_owner for update;
- if not found then return;end if;
- if exists(select 1 from public.players where id=p_owner and defeated_at is not null)then return;end if;
- perform public.peris_ruin_advance(p_owner,p_until);
- perform public.peris_city_reinforcements_advance(p_owner,p_until);
- if to_regprocedure('public.peris_guild_reinforcements_advance(uuid,timestamp with time zone)')is not null then
-  perform public.peris_guild_reinforcements_advance(p_owner,p_until);
- end if;
- for s in select * from public.settlements where owner_id=p_owner and ruined_at is null order by id for update loop
- perform public.peris_city_migrate(s.id);if not s.population_ready then perform public.peris_city_economy(s.id);end if;
- end loop;
- for event in select id,finish_at as at_time,false as expedition from public.peris_orders where owner_id=p_owner and finish_at<=p_until
- union all select id,arrival_at as at_time,true as expedition from public.peris_settler_expeditions where owner_id=p_owner and status='travelling'and arrival_at<=p_until
- order by at_time,expedition,id loop
- perform public.peris_science_advance(p_owner,event.at_time);
- perform public.peris_culture_accrue(p_owner,event.at_time);
- if event.expedition then perform public.peris_found_complete(event.id);continue;end if;
- select * into o from public.peris_orders where id=event.id for update;
- select * into s from public.settlements where id=coalesce(o.settlement_id,(select min(id)from public.settlements where owner_id=p_owner and ruined_at is null))and owner_id=p_owner for update;
- if s.id is null or s.ruined_at is not null then delete from public.peris_orders where id=o.id;continue;end if;
- perform public.peris_population_accrue(s.id,o.finish_at);
- if o.kind='upgrade' then
-  if o.item like 'slot:%' then
-   target_slot:=split_part(o.item,':',2)::integer;
-   update public.peris_city_slots set level=least(case when building_type='mage_tower' then 10 else 5 end,level+1)where settlement_id=s.id and slot_index=target_slot;
-  else update public.buildings set level=least(5,level+1),updated_at=o.finish_at where settlement_id=s.id and building_type=o.item;end if;
-  update public.players set upgrades=upgrades+1 where id=p_owner;update public.settlements set development_points=development_points+1 where id=s.id;perform public.peris_city_economy(s.id);
- elsif o.kind='field' then
-  field_col:=split_part(o.item,':',2)::integer;field_row:=split_part(o.item,':',3)::integer;
-  update public.peris_map_plots set level=level+1 where col=field_col and row=field_row and owner_id=p_owner and settlement_id=s.id and building_type=split_part(o.item,':',4) and level<5;
-  if not found then raise exception 'Queued external field no longer matches its owner or building';end if;
-  update public.players set upgrades=upgrades+1 where id=p_owner;update public.settlements set development_points=development_points+1 where id=s.id;perform public.peris_city_economy(s.id);
- elsif o.kind='settler'then update public.settlements set settlers=settlers+o.quantity where id=s.id;
- elsif o.kind='recruit' then
-  if o.recruit_destination='garrison' then
-   perform public.peris_city_garrison_receive(p_owner,s.id,jsonb_build_object(o.item,o.quantity));
-  else
-   perform public.peris_recruit_complete(coalesce(o.army_id,(select min(id)from public.armies where owner_id=p_owner)),o.item,o.quantity);
-  end if;
-  update public.players set recruits=recruits+o.quantity where id=p_owner;
- end if;
- delete from public.peris_orders where id=o.id;
- end loop;
- perform public.peris_science_advance(p_owner,p_until);
- perform public.peris_culture_accrue(p_owner,p_until);
- for s in select * from public.settlements where owner_id=p_owner and ruined_at is null order by id loop perform public.peris_population_accrue(s.id,p_until);end loop;
- for arriving_army in select id from public.armies where owner_id=p_owner and status='moving' and raid_target_id is null and raid_city_id is null and arrival_at<=p_until order by id for update loop
-  if not exists(select 1 from public.armies a where a.id=arriving_army and public.peris_station_owned(p_owner,floor(a.target_x/128.0)::integer,floor(a.target_y/128.0)::integer))then
-   perform public.peris_ruin_redirect_army(arriving_army);continue;
-  end if;
-  perform public.peris_deliver_loot(arriving_army);
-  update public.armies set status='idle',start_x=target_x,start_y=target_y,march_path=null,march_distance=null,
-   march_sent_at=null,march_cancel_until=null,march_origin=null,march_returning=false,updated_at=p_until where id=arriving_army;
-  if not exists(select 1 from public.battles b join public.settlements c on c.id=b.raid_city_id join public.armies a on a.id=arriving_army where b.status='active'and b.defender_owner_id=p_owner and floor(c.x/128.0)=floor(a.target_x/128.0)and floor(c.y/128.0)=floor(a.target_y/128.0))then perform public.peris_garrison_merge(arriving_army);end if;
- end loop;
- -- Attack arrivals retain their outbound route for the eventual return.
- update public.armies set status='idle',start_x=target_x,start_y=target_y,updated_at=p_until where owner_id=p_owner and status='moving'and arrival_at<=p_until;
+ if to_regprocedure('public.peris_market_settle(uuid,timestamp with time zone)')is not null then
+  perform public.peris_market_settle(p_owner,p_until);
+ else perform public.peris_settle_core(p_owner,p_until);end if;
 end $$;
 create or replace function public.peris_game_tick(p_limit integer default 40)returns jsonb
 language plpgsql security definer set search_path='' as $$
@@ -464,6 +489,7 @@ begin
   union all select owner_id,min(arrival_at)from public.peris_settler_expeditions where status='travelling'and arrival_at<=public.peris_game_now()group by owner_id
   union all select owner_id,min(arrival_at)from public.peris_ruin_evacuations where arrival_at<=public.peris_game_now()group by owner_id
   union all select owner_id,min(arrival_at)from public.peris_city_reinforcements where arrival_at<=public.peris_game_now()group by owner_id
+  union all select owner_id,due from public.peris_due_trade_caravans()
   union all select owner_id,due from public.peris_due_guild_reinforcements()
   union all select owner_id,min(finish_at)from public.peris_orders where finish_at<=public.peris_game_now()group by owner_id
   union all select owner_id,min(public.peris_science_deadline(owner_id))from public.peris_account_science where active_id is not null and public.peris_science_deadline(owner_id)<=public.peris_game_now()group by owner_id
@@ -600,6 +626,7 @@ begin
    from public.peris_reports r join public.peris_camps c on c.id=r.camp_id and c.bandit left join public.battles b on b.id=r.battle_id where r.owner_id=u and r.result?'delivered'
   )s where s.rank=1),'[]'::jsonb),
  'garrisons',coalesce((select jsonb_agg(g order by row,col)from public.peris_garrisons g where owner_id=u),'[]'::jsonb),
+ 'trade_caravans',public.peris_optional_trade_caravans(),
  'guild_reinforcements',public.peris_optional_guild_reinforcements(),
  'city_reinforcements',coalesce((select jsonb_agg(r order by r.arrival_at,r.id)from public.peris_city_reinforcements r where r.owner_id=u),'[]'::jsonb),
  'city_garrisons',coalesce((select jsonb_agg(to_jsonb(g)||jsonb_build_object('infantry',public.peris_roster_class(g.unit_roster,'infantry'),'archers',public.peris_roster_class(g.unit_roster,'archers'),'cavalry',public.peris_roster_class(g.unit_roster,'cavalry'))order by g.settlement_id)from public.peris_city_garrisons g where g.owner_id=u),'[]'::jsonb),
@@ -642,6 +669,7 @@ begin
  if exists(select 1 from public.players where id=u and defeated_at is not null)then raise exception 'This ruler has been permanently defeated';end if;
  -- A fixed whitelist keeps the receipt endpoint from invoking private helpers.
  case p_function
+ when 'peris_send_resources' then answer:=public.peris_send_resources((p_args->>'p_source')::bigint,(p_args->>'p_target')::bigint,p_args->'p_resources',p_args->'p_path');
  when 'peris_send_guild_reinforcements' then answer:=public.peris_send_guild_reinforcements((p_args->>'p_source')::bigint,(p_args->>'p_target')::bigint,p_args->'p_troops',p_args->'p_path',(p_args->>'p_army')::bigint);
  when 'peris_recall_guild_reinforcements' then answer:=public.peris_recall_guild_reinforcements((p_args->>'p_id')::bigint);
  when 'peris_empire_command' then answer:=public.peris_empire_command(p_args->'p_command');

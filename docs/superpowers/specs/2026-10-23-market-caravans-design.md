@@ -1,6 +1,6 @@
 # Market buildings and resource caravans
 
-Status: proposed for approval. The user chose caravan capacity in chat on 2026-10-23. The remaining defaults below are the builder's proposals, not decisions attributed to the user.
+Status: implemented on the review branch. The user chose caravan capacity in chat on 2026-10-23 and chose to use the written design without mockups. The other defaults below are implementation decisions, not decisions attributed to the user.
 
 ## Intent and scope
 

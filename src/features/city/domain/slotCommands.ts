@@ -17,6 +17,7 @@ export function queueSlot(context: LocalCommandContext, cmd: Extract<Command,{ty
     if (cmd.type==='buildSlot') {
         if (slot) throw new Error('This plot is already occupied.');
         if (!Object.hasOwn(SLOT_BUILDINGS,cmd.item)) throw new Error('Unknown building.');
+        if(cmd.item==='bazaar'&&w.city_slots.some(s=>s.settlement_id===town.id&&s.building_type==='bazaar'))throw new Error('Only one Market can be built in your city.');
         if(cmd.item==='mage_tower'&&w.city_slots.some(s=>s.settlement_id===town.id&&s.building_type==='mage_tower'))throw new Error('Only one mage tower can be built in your city.');
         if(cmd.item==='barracks'&&w.city_slots.some(s=>s.settlement_id===town.id&&s.building_type==='barracks'))throw new Error('Only one barracks can be built in your city.');
         if ((cmd.item==='fishery') !== riversideSlot(cmd.slot)) throw new Error('A fishery needs a riverside plot.');

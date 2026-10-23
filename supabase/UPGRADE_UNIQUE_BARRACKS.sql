@@ -55,8 +55,9 @@ begin
  select level,building_type into l,t from public.peris_city_slots where settlement_id=s.id and slot_index=p_slot;
  if p_type is not null then
   if l is not null then raise exception 'This plot is already occupied';end if;
-  if p_type not in ('barracks','stables','workshop','smithy','warehouse','granary','fishery','mage_tower','housing','academy') then raise exception 'Unknown building';end if;
+  if p_type not in ('barracks','stables','workshop','smithy','warehouse','granary','fishery','mage_tower','housing','academy','bazaar') then raise exception 'Unknown building';end if;
   if p_type='mage_tower' and exists(select 1 from public.peris_city_slots where settlement_id=s.id and building_type='mage_tower') then raise exception 'Only one mage tower can be built in your city';end if;
+  if p_type='bazaar' and exists(select 1 from public.peris_city_slots where settlement_id=s.id and building_type='bazaar') then raise exception 'Only one Market can be built in your city';end if;
   if p_type='barracks' and exists(select 1 from public.peris_city_slots where settlement_id=s.id and building_type='barracks') then raise exception 'Only one barracks can be built in your city';end if;
   if (p_type='fishery')<>(p_slot=16) then raise exception 'A fishery needs a riverside plot';end if;
   -- New fisheries need public map water in the same wrapped 3x3 neighbourhood as the client.
@@ -69,10 +70,10 @@ begin
  elsif l is null or l=0 then raise exception 'This building is not ready';end if;
  if l>=(case when t='mage_tower' then 10 else 5 end) then raise exception 'Maximum building level reached';end if;
  factor:=power(case when t='mage_tower' then 1.38::numeric else 1.55::numeric end,l);
- cw:=ceil((case t when 'academy' then 220 when 'workshop' then 260 when 'housing' then 140 when 'mage_tower' then 260 when 'barracks' then 180 when 'stables' then 200 when 'smithy' then 180 when 'warehouse' then 200 else 160 end)*factor);
- cs:=ceil((case t when 'academy' then 260 when 'workshop' then 220 when 'housing' then 110 when 'mage_tower' then 340 when 'barracks' then 160 when 'stables' then 120 when 'smithy' then 220 when 'warehouse' then 150 when 'granary' then 120 else 80 end)*factor);
+ cw:=ceil((case t when 'bazaar' then 220 when 'academy' then 220 when 'workshop' then 260 when 'housing' then 140 when 'mage_tower' then 260 when 'barracks' then 180 when 'stables' then 200 when 'smithy' then 180 when 'warehouse' then 200 else 160 end)*factor);
+ cs:=ceil((case t when 'bazaar' then 180 when 'academy' then 260 when 'workshop' then 220 when 'housing' then 110 when 'mage_tower' then 340 when 'barracks' then 160 when 'stables' then 120 when 'smithy' then 220 when 'warehouse' then 150 when 'granary' then 120 else 80 end)*factor);
  cf:=ceil((case t when 'workshop' then 120 when 'housing' then 60 when 'barracks' then 100 when 'stables' then 180 when 'smithy' then 80 when 'warehouse' then 90 else 100 end)*factor);
- cg:=ceil((case t when 'academy' then 80 when 'mage_tower' then 160 when 'barracks' then 30 when 'stables' then 45 when 'smithy' then 60 when 'granary' then 15 else 20 end)*factor);
+ cg:=ceil((case t when 'bazaar' then 50 when 'academy' then 80 when 'mage_tower' then 160 when 'barracks' then 30 when 'stables' then 45 when 'smithy' then 60 when 'granary' then 15 else 20 end)*factor);
  if s.wood<cw or s.stone<cs or s.food<cf or s.gold<cg then raise exception 'Your stores cannot cover this cost';end if;
  update public.settlements set wood=wood-cw,stone=stone-cs,food=food-cf,gold=gold-cg where id=s.id;
  if p_type is not null then insert into public.peris_city_slots values(s.id,p_slot,t,0);end if;

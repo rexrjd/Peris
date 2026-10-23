@@ -5,9 +5,10 @@ import type { Resources } from '../../../shared/model/resources';
 import { multiply } from '../../../shared/model/resources';
 import { externalFieldRates } from '../../map/domain/fieldProduction';
 
-export type SlotType = 'barracks' | 'stables' | 'workshop' | 'smithy' | 'warehouse' | 'granary' | 'fishery' | 'mage_tower' | 'housing' | 'academy';
+export type SlotType = 'barracks' | 'stables' | 'workshop' | 'smithy' | 'warehouse' | 'granary' | 'fishery' | 'mage_tower' | 'housing' | 'academy' | 'bazaar';
 export type CitySlot = { settlement_id: number; slot_index: number; building_type: SlotType; level: number };
 export const SLOT_BUILDINGS: Record<SlotType, { name: string; description: string; effect: string; cost: Resources }> = {
+    bazaar:{name:'Market',description:'Send resources by caravan to your other cities and your guild members.',effect:'1,000 carrying capacity per level. Merchants occupy capacity until they return. One Market per city.',cost:{wood:220,stone:180,food:100,gold:50}},
     academy:{name:'Academy',description:'Scholars develop technologies for every city and army in your account.',effect:'12 / 28 / 48 / 72 / 100 science per minute. Multiple Academies stack.',cost:{wood:220,stone:260,food:100,gold:80}},
     housing:{name:'Housing',description:'Homes for the civilians who work in your city. Each level adds room for thirty residents.',effect:'+30 population capacity per level. Housing can be repeated.',cost:{wood:140,stone:110,food:60,gold:20}},
     barracks: { name: 'Barracks', description: 'Your city’s unique garrison and training yard for infantry and archers.', effect: 'Each level improves training speed. One barracks per city.', cost: { wood:180, stone:160, food:100, gold:30 } },

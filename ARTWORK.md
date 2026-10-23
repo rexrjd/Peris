@@ -1,5 +1,21 @@
 # Original Peris artwork
 
+## Market buildings and caravans
+
+The live 3D City Market uses original procedural geometry in `city/rendering/three/market.ts`.
+All eleven faction architectures have five physical development stages: an open stall,
+twin stalls and loading cart, a merchant hall, side arcades, and a complete merchant court.
+Columns, pylons, turquoise domes, hide awnings, living timber, basalt lintels, brass gears,
+pagoda eaves, crypt ornaments and horned obsidian gateways retain faction identity.
+The existing Main building keeps its saved `market` ID; the new slot is `bazaar`.
+
+The city, inspector preview and selector portrait use the same material-batched factory.
+Level zero remains construction markers. The painted Village retains its existing icon
+fallback for roles without a painted atlas cell. No image, GLB, external model, new license
+or Blender dependency is introduced. `tests/e2e/market-gallery.spec.ts` captures all 55
+completed appearances for visual review; `market-art.test.ts` checks finite geometry,
+distinct faction/stage shapes and lot bounds. Performance targets remain unmeasured.
+
 ## Shared map and 3D city interface
 
 The map and live 3D city reuse the eleven existing faction texture

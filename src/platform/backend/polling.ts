@@ -9,6 +9,7 @@ export function statePollInterval(world:World,owner:string,hidden:boolean):numbe
   ||world.ruin_evacuations?.some(e=>e.owner_id===owner)
   ||world.city_reinforcements?.some(e=>e.owner_id===owner)
   ||world.guild_reinforcements?.some(e=>(e.owner_id===owner||e.recipient_id===owner)&&e.status!=='stationed')
+  ||world.trade_caravans?.some(e=>(e.owner_id===owner||e.recipient_id===owner)&&e.status!=='completed')
   ||world.account_science?.some(s=>s.owner_id===owner&&s.active_id)
   ||world.unit_research?.some(r=>Date.parse(r.completes_at)>Date.parse(world.server_now));
  return working?2550:hidden?30000:10000;

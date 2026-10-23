@@ -63,6 +63,8 @@
   "social/commands.sql",
   "city/guild-reinforcements.sql",
   "city/guild-reinforcement-hooks.sql",
+  "city/market.sql",
+  "city/market-hooks.sql",
   "snapshot/peris_snapshot.sql",
   "snapshot/peris_map_snapshot.sql",
   "battle/automatic.sql",

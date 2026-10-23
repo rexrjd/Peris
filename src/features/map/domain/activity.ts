@@ -7,9 +7,10 @@ import { soldierTotal } from '../../army/domain/units';
 import { BUILDINGS } from '../../city/domain/buildings';
 import { SLOT_BUILDINGS } from '../../city/domain/slots';
 import { FIELD_BUILDINGS } from './territory';
+import {RESOURCES} from '../../../shared/model/resources';
 import { RECRUIT_RULES, RECRUIT_UNITS, rosterTotal, type RecruitUnit } from '../../army/domain/roster';
 
-export type ActivityKind = 'raid' | 'return' | 'march' | 'battle' | 'construction' | 'recruitment' | 'research' | 'settlers' | 'reinforcement';
+export type ActivityKind = 'raid' | 'return' | 'march' | 'battle' | 'construction' | 'recruitment' | 'research' | 'settlers' | 'reinforcement' | 'trade';
 const unitNames: Record<RecruitUnit, string> = { infantry: 'infantry', spearmen: 'spearmen', archers: 'archers', elite: 'elite soldiers', cavalry: 'cavalry', scout: 'scouts', heavyCavalry: 'heavy cavalry', ram: 'rams', catapult: 'catapults' };
 const unitName = (unit: string) => RECRUIT_UNITS.includes(unit as RecruitUnit) ? unitNames[unit as RecruitUnit] : 'soldiers';
 export type MapActivity = {
@@ -50,6 +51,16 @@ function constructionTitle(world: World, order: Order, cityId: number) {
 export function mapActivity(world: World, owner: string, now: number): MapActivity[] {
     const events: MapActivity[] = [], fighting = new Set<number>();
     const cities = world.settlements.filter(s => s.owner_id === owner);
+    for(const c of world.trade_caravans??[]){
+        const sent=c.owner_id===owner,received=c.recipient_id===owner;
+        if(c.status==='completed'||!sent&&!received||!sent&&c.status!=='outbound')continue;
+        const returning=c.status!=='outbound',cityId=returning?(c.return_settlement_id??c.source_settlement_id):c.target_settlement_id;
+        const p=world.settlements.find(s=>s.id===cityId),fallback=c.march_path[returning?0:c.march_path.length-1];
+        const point=p?{x:p.x,y:p.y}:{x:fallback[0],y:fallback[1]};
+        const cargo=RESOURCES.filter(k=>c.resources[k]>0).map(k=>`${c.resources[k].toLocaleString()} ${k}`).join(', ');
+        const title=c.status==='waiting'?'Waiting to unload':c.status==='stranded'?'Caravan stranded':returning?'Merchants returning':sent?'Resources outbound':'Resources incoming';
+        events.push({id:`trade:${c.id}`,kind:'trade',category:'cities',title,detail:`${cargo} · ${returning?c.target_city:c.source_city}`,destination:returning?c.source_city:c.target_city,cityId,sourceCityId:sent?c.source_settlement_id:undefined,startedAt:timestamp(returning?c.arrival_at:c.departure_at),endsAt:['waiting','stranded'].includes(c.status)?null:timestamp(returning?c.return_at:c.arrival_at),point,selection:p?{kind:'settlement',id:p.id}:{kind:'cell',...activityField(point)}});
+    }
     const armies = world.armies.filter(a => a.owner_id === owner);
     for (const battle of world.battles) {
         if (battle.status !== 'active' || (battle.attacker_owner_id !== owner && battle.defender_owner_id !== owner)) continue;

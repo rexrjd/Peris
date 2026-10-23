@@ -1,4 +1,5 @@
 import { worldGameNow } from '../../../shared/time/gameClock';
+import {tradeEvents,advanceTradeEvent,unloadWaitingCaravans} from '../../city/domain/trade';
 import { settleCityReinforcements } from '../../city/domain/cityReinforcements';
 import { cityGarrisonAt, type CityGarrison } from '../../city/domain/cityGarrison';
 import { addRosters, emptyRoster, readRoster, writeRoster } from '../../army/domain/roster';
@@ -24,12 +25,22 @@ export function settleLocal(w: World, owner: string, now = worldGameNow(w), trav
     settleCityReinforcements(w, owner, now);
     ensureScience(w,owner);
     const events = [
-        ...w.orders.filter(o => o.owner_id === owner && Date.parse(o.finish_at) <= now).map(order => ({ at: Date.parse(order.finish_at), order, expedition: undefined })),
-        ...(w.settler_expeditions ?? []).filter(e => e.owner_id === owner && e.status === 'travelling' && Date.parse(e.arrival_at) <= now).map(expedition => ({ at: Date.parse(expedition.arrival_at), expedition, order: undefined })),
-    ].sort((a, b) => a.at - b.at || (a.order?.id ?? a.expedition!.id) - (b.order?.id ?? b.expedition!.id));
-    for (const event of events) {
+        ...w.orders.filter(o => o.owner_id === owner && Date.parse(o.finish_at) <= now).map(order => ({ at: Date.parse(order.finish_at), order, expedition: undefined,trade:undefined })),
+        ...(w.settler_expeditions ?? []).filter(e => e.owner_id === owner && e.status === 'travelling' && Date.parse(e.arrival_at) <= now).map(expedition => ({ at: Date.parse(expedition.arrival_at), expedition, order: undefined,trade:undefined })),
+        ...tradeEvents(w,owner,now).map(trade=>({at:trade.at,trade,order:undefined,expedition:undefined})),
+    ];
+    const phaseOrder={delivery:0,redirect:1,return:2};
+    const compareEvents=(a:typeof events[number],b:typeof events[number])=>a.at-b.at||Number(!!a.trade)-Number(!!b.trade)||(a.order?.id??a.expedition?.id??a.trade!.id)-(b.order?.id??b.expedition?.id??b.trade!.id)||(a.trade&&b.trade?phaseOrder[a.trade.phase]-phaseOrder[b.trade.phase]:0);
+    events.sort(compareEvents);
+    while(events.length) {
+        const event=events.shift()!;
         advanceResearch(w,owner,event.at);
         accrueCulture(w, owner, event.at);
+        if(event.trade){
+            advanceTradeEvent(w,event.trade.id,event.trade.phase,event.at);
+            for(const next of tradeEvents(w,owner,now))if(next.at>=event.at&&!events.some(e=>e.trade?.id===next.id&&e.trade.phase===next.phase&&e.at===next.at))events.push({at:next.at,trade:next,order:undefined,expedition:undefined});
+            events.sort(compareEvents);continue;
+        }
         if (event.expedition) {
             const source = w.settlements.find(s => s.id === event.expedition!.origin_settlement_id && !s.ruined_at);
             if(!source){event.expedition.status='returned';continue;}
@@ -67,6 +78,7 @@ export function settleLocal(w: World, owner: string, now = worldGameNow(w), trav
     advanceResearch(w,owner,now);
     accrueCulture(w, owner, now);
     for (const city of w.settlements.filter(s => s.owner_id === owner && !s.ruined_at)) accrueResources(city, now);
+    unloadWaitingCaravans(w,owner,now);
     if (travel) for (const army of w.armies.filter(a => a.owner_id === owner)) {
         if(army.raid_target_id===null&&army.raid_city_id===null&& !ownedStation(w,owner,{x:army.target_x,y:army.target_y})) redirectFromLostStation(w,army,now);
         const arriving = army.status === 'moving' && Date.parse(army.arrival_at) <= now;

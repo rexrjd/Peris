@@ -174,12 +174,43 @@ outputs['UPGRADE_CITY_LOGISTICS.sql']=[
  'commit;',
 ].join('\n')
 
+// Market is a separate reviewed migration; no geography, seeds or unrelated state.
+const marketDependencies=[]
+for(const [file,names]of[
+ ['city/city-slots.sql',['peris_queue_slot']],
+ ['city/peris_settle.sql',['peris_settle_core','peris_settle']],
+ ['snapshot/peris_snapshot.sql',['peris_snapshot']],
+ ['campaign/game-worker.sql',['peris_game_tick']],
+ ['security/command-receipts.sql',['peris_submit_command']],
+]){
+ const source=await readSource(path.join(root,'supabase/modules',file))
+ const defs=source.match(/create or replace function public\.[\s\S]*?\$\$;/g)??[]
+ for(const name of names){const def=defs.find(x=>x.startsWith('create or replace function public.'+name+'('));if(!def)throw Error('Missing Market dependency '+name);marketDependencies.push(def)}
+}
+outputs['UPGRADE_MARKET.sql']=[
+ '-- PERIS Market caravans. Apply after V19 + City Logistics + Guild Reinforcements. Review separately; never deployed automatically.',
+ 'begin;',
+ "do $$begin if to_regprocedure('public.peris_game_tick(integer)')is null or to_regprocedure('public.peris_guild_reinforcements_advance(uuid,timestamp with time zone)')is null then raise exception 'Install V19, City Logistics and Guild Reinforcements first';end if;end $$;",
+ "alter table public.peris_city_slots drop constraint if exists peris_city_slots_building_type_check;",
+ "alter table public.peris_city_slots add constraint peris_city_slots_building_type_check check(building_type in('barracks','stables','workshop','smithy','warehouse','granary','fishery','mage_tower','housing','academy','bazaar'));",
+ await readSource(path.join(root,'supabase/modules/city/market.sql')),
+ await readSource(path.join(root,'supabase/modules/city/market-hooks.sql')),
+ ...marketDependencies,
+ 'revoke all on function public.peris_settle_core(uuid,timestamptz),public.peris_settle(uuid,timestamptz)from public,anon,authenticated;',
+ "notify pgrst,'reload schema';",'commit;'
+].join('\n')
+
 // Focused installers also ship the private dependency of extracted finalizers.
 const participantLocks=await readSource(path.join(root,'supabase/modules/battle/participant-locks.sql'))
 const guildHooks=await readSource(path.join(root,'supabase/modules/city/guild-reinforcement-hooks.sql'))
+const marketHooks=await readSource(path.join(root,'supabase/modules/city/market-hooks.sql'))
+const settleSource=await readSource(path.join(root,'supabase/modules/city/peris_settle.sql'))
+const settleCore=(settleSource.match(/create or replace function public\.[\s\S]*?\$\$;/g)??[]).find(x=>x.startsWith('create or replace function public.peris_settle_core('))
 const gameClock=await readSource(path.join(root,'supabase/modules/time/game-clock.sql'))
 for(const[name,content]of Object.entries(outputs)){
  let complete=content
+ if(complete.includes('public.peris_settle_core(')&&!complete.includes('create or replace function public.peris_settle_core('))complete=complete.replace(/^begin;$/m,()=> 'begin;\n'+settleCore+'\nrevoke all on function public.peris_settle_core(uuid,timestamptz)from public,anon,authenticated;\n')
+ if((complete.includes('public.peris_optional_trade_caravans()')||complete.includes('public.peris_due_trade_caravans()'))&&!complete.includes('create or replace function public.peris_optional_trade_caravans()'))complete=complete.replace(/^begin;$/m,()=> 'begin;\n'+marketHooks)
  if((complete.includes('public.peris_optional_guild_reinforcements()')||complete.includes('public.peris_due_guild_reinforcements()'))&&!complete.includes('create or replace function public.peris_optional_guild_reinforcements()'))complete=complete.replace(/^begin;$/m,()=> 'begin;\n'+guildHooks)
  if(complete.includes('public.peris_lock_battle_participants(')&&!complete.includes('create or replace function public.peris_lock_battle_participants(')){
   if(!/^begin;$/m.test(complete))throw Error('Missing transaction boundary for participant dependency: '+name)

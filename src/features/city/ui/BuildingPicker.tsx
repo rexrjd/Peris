@@ -5,19 +5,19 @@ import { Cost } from '../../../shared/ui/Shared';
 import { affordable } from '../domain/economy';
 import { SLOT_BUILDINGS, slotCost, type SlotType } from '../domain/slots';
 
-export function buildingChoiceReason(choice: SlotType, resources: Resources, hasTower: boolean, hasBarracks: boolean, busy: boolean, building: boolean) {
-  return choice === 'mage_tower' && hasTower ? 'One mage tower per city'
+export function buildingChoiceReason(choice: SlotType, resources: Resources, hasTower: boolean, hasBarracks: boolean, busy: boolean, building: boolean,hasMarket=false) {
+  return choice==='bazaar'&&hasMarket?'One Market per city':choice === 'mage_tower' && hasTower ? 'One mage tower per city'
     : choice === 'barracks' && hasBarracks ? 'One barracks per city'
     : building ? 'Builders are working' : busy ? 'Issuing orders…'
     : !affordable(resources, slotCost(choice, 0)) ? 'More supplies needed' : null;
 }
 
-export function BuildingChoices({ slot, choice, onChange, hasTower, hasBarracks }: { slot: number; choice: SlotType; onChange: (type: SlotType) => void; hasTower: boolean; hasBarracks: boolean }) {
+export function BuildingChoices({ slot, choice, onChange, hasTower, hasBarracks,hasMarket=false }: { slot: number; choice: SlotType; onChange: (type: SlotType) => void; hasTower: boolean; hasBarracks: boolean;hasMarket?:boolean }) {
   return <fieldset><legend>Choose a building</legend><div className="building-options">
     {(Object.entries(SLOT_BUILDINGS) as [SlotType, typeof SLOT_BUILDINGS[SlotType]][]).filter(([key]) => key !== 'fishery').map(([key, option]) =>
       <label key={key} className={choice === key ? 'chosen' : ''}>
         <input type="radio" name={`plot-${slot}-building`} value={key} checked={choice === key} onChange={() => onChange(key)}/>
-        <span>{option.name}<small>{key === 'mage_tower' ? hasTower ? 'Already built' : 'Unique · 10 levels' : key === 'barracks' ? hasBarracks ? 'Already built' : 'Unique · 5 levels' : 'Repeatable · 5 levels'}</small></span>
+        <span>{option.name}<small>{key==='bazaar'?hasMarket?'Already built':'Unique · 5 levels':key === 'mage_tower' ? hasTower ? 'Already built' : 'Unique · 10 levels' : key === 'barracks' ? hasBarracks ? 'Already built' : 'Unique · 5 levels' : 'Repeatable · 5 levels'}</small></span>
       </label>)}
   </div></fieldset>;
 }

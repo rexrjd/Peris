@@ -37,5 +37,6 @@ end $$;
 grant execute on function public.peris_game_tick(integer)to service_role;
 grant execute on function public.peris_social_snapshot(),public.peris_social_directory(text,text,text,integer),public.peris_social_guild(uuid),public.peris_social_thread(text,uuid,bigint),public.peris_social_command(uuid,jsonb)to authenticated;
 grant execute on function public.peris_guild_reinforcement_targets(),public.peris_guild_reinforcement_status()to authenticated;
+grant execute on function public.peris_trade_targets(),public.peris_trade_status()to authenticated;
 notify pgrst,'reload schema';
 commit;

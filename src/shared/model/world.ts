@@ -38,6 +38,7 @@ export type World = {
     settlements: Settlement[];
     buildings: Building[];
     city_slots?: CitySlot[];
+    trade_caravans?: import('../../features/city/domain/trade').TradeCaravan[];
     map_plots?: MapPlot[];
     spell_research?: SpellResearch[];
     armies: Army[];
