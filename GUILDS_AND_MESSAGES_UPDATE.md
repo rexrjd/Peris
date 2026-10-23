@@ -1,5 +1,15 @@
 # Peris guilds and messages — V19
 
+## Guild reinforcement overhaul
+
+Guild → Members has a Send reinforcements action beside each other member. The compact picker selects their living city, your permanent city garrison or an idle army physically stationed in one of your living cities, and 1–1,000 available soldiers. Training, moving and battling armies are unavailable. Troops depart atomically from the selected source; commanders and unselected soldiers stay home.
+
+Map and live 3D City Events show sent and received guild support, troop details, arrival countdowns, stationed defence and return journeys. Only the sender can recall stationed support, after any city battle ends. Returned soldiers enter a reachable home city's permanent garrison. Guild departure or city ruin triggers an automatic return; battle losses remain permanent. Both participants can inspect their support, with no other member's inventory exposed.
+
+Generate SQL with `npm run build:sql`. Existing worlds require the generated `supabase/UPGRADE_GUILD_REINFORCEMENTS.sql` after V19 Guilds and City Logistics. It includes shared-clock and locking dependencies, private snapshot integration, and command receipts. Back up and review before applying; development does not deploy SQL. Complete fresh/upgrade installers also include the feature. Replaying the same pending command confirms its original receipt rather than dispatching twice.
+
+Run `npm run test:guild-reinforcements-db` for isolated PostgreSQL checks at 1×, 10× and 100× clock speeds, including source validation, receipt replay, participant privacy, casualties, recall and guild departure. Browser coverage lives in `tests/e2e/guild-reinforcements.spec.ts` and `tests/e2e/guild-reinforcement-recovery.spec.ts`.
+
 Based on main `6c3025c7878335bff50f05a6885d1016b8ca75b9`, including the V18 technology/Academy update. This is a changed-files package for the root application.
 
 ## Install

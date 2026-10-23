@@ -529,7 +529,7 @@ begin
  perform public.peris_settle(p_owner);
  select * into a from public.armies where id=p_army and owner_id=p_owner for update;
  select * into c from public.settlements where id=p_city and owner_id<>p_owner;
- if a.id is null or c.id is null or c.ruined_at is not null then raise exception 'Choose your legion and another player''s living city';end if;
+ if a.id is null or c.id is null or to_jsonb(c)->>'ruined_at' is not null then raise exception 'Choose your legion and another player''s living city';end if;
  if public.peris_social_relation(p_owner,c.owner_id)in('guild','alliance','nap')then raise exception 'Your guild or diplomatic pact protects this city';end if;
  available:=public.peris_roster(to_jsonb(a));chosen:=public.peris_garrison_troops(coalesce(nullif(p_troops,'null'::jsonb),available));
  if public.peris_roster_total(chosen)=0 then raise exception 'Send at least one soldier';end if;
@@ -549,7 +549,7 @@ declare a public.armies%rowtype;c public.settlements%rowtype;defenders jsonb;ros
 begin
  select * into a from public.armies where id=p_army and owner_id=p_owner;
  select * into c from public.settlements where id=a.raid_city_id and owner_id<>p_owner;
- if a.id is null or c.id is null or c.ruined_at is not null or a.status<>'idle'or a.target_x<>c.x or a.target_y<>c.y then return null;end if;
+ if a.id is null or c.id is null or to_jsonb(c)->>'ruined_at' is not null or a.status<>'idle'or a.target_x<>c.x or a.target_y<>c.y then return null;end if;
  -- A pact accepted during travel protects the city when the raid arrives.
  if public.peris_social_relation(p_owner,c.owner_id)in('guild','alliance','nap')then perform public.peris_return_raid(a.id);return null;end if;
  -- Avoid waiting on another ruler while the caller already holds its own lock.
@@ -568,6 +568,14 @@ begin
  and floor(d.target_x/128.0)=floor(c.x/128.0)and floor(d.target_y/128.0)=floor(c.y/128.0)order by coalesce(h.experience,0)desc,d.id limit 1;
  select public.peris_roster(to_jsonb(g))into roster from public.peris_garrisons g where owner_id=c.owner_id and col=floor(c.x/128.0)::integer and row=floor(c.y/128.0)::integer for update;
  if roster is not null then defenders:=defenders||jsonb_build_array(jsonb_build_object('col',floor(c.x/128.0),'row',floor(c.y/128.0),'troops',roster));end if;
+ -- Guild troops remain owned by their sender, and are accounted for individually.
+ if to_regclass('public.peris_guild_reinforcements')is not null then
+ select defenders||coalesce(jsonb_agg(jsonb_build_object('guild_reinforcement_id',r.id,'troops',r.troops)order by r.id),'[]'::jsonb) into defenders
+ from public.peris_guild_reinforcements r
+ join public.peris_guild_members sender on sender.player_id=r.owner_id
+ join public.peris_guild_members receiver on receiver.player_id=r.recipient_id and receiver.guild_id=sender.guild_id
+ where r.target_settlement_id=c.id and r.recipient_id=c.owner_id and r.status='stationed';
+ end if;
  select public.peris_roster(g.unit_roster)into roster from public.peris_city_garrisons g where g.settlement_id=c.id and g.owner_id=c.owner_id for update;
  if roster is not null and public.peris_roster_total(roster)>0 then defenders:=defenders||jsonb_build_array(jsonb_build_object('city_garrison_id',c.id,'troops',roster));end if;
  insert into public.battles(attacker_owner_id,defender_owner_id,attacker_army_id,defender_army_id,mode,phase,terrain,difficulty,enemy_name,attacker_ready,defender_ready,defender_faction,raid_city_id,siege_target,city_defenders)

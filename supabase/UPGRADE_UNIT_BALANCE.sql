@@ -53,6 +53,32 @@ exception when lock_not_available then return false;
 end $$;
 revoke all on function public.peris_lock_battle_participants(uuid,uuid)from public,anon,authenticated;
 
+-- Optional hooks keep focused upgrades usable before guild support is installed.
+-- No public reads, schema mutation, or synthetic troop state on older worlds.
+create or replace function public.peris_optional_guild_reinforcements()returns jsonb
+language plpgsql stable security definer set search_path='' as $$
+begin
+ if to_regprocedure('public.peris_guild_reinforcement_status()')is null then return '[]'::jsonb;end if;
+ return public.peris_guild_reinforcement_status();
+end $$;
+revoke all on function public.peris_optional_guild_reinforcements()from public,anon,authenticated;
+
+create or replace function public.peris_due_guild_reinforcements()returns table(owner_id uuid,due timestamptz)
+language plpgsql stable security definer set search_path='' as $$
+begin
+ if to_regclass('public.peris_guild_reinforcements')is null then return;end if;
+ return query
+ select r.owner_id,min(r.arrival_at)from public.peris_guild_reinforcements r
+ where r.status in('outbound','returning')and r.arrival_at<=public.peris_game_now()group by r.owner_id
+ union all
+ select r.owner_id,min(public.peris_game_now())from public.peris_guild_reinforcements r
+ join public.settlements s on s.id=r.target_settlement_id
+ where r.status='stationed'and (s.ruined_at is not null or not exists(
+  select 1 from public.peris_guild_members a join public.peris_guild_members b on b.guild_id=a.guild_id
+  where a.player_id=r.owner_id and b.player_id=r.recipient_id))group by r.owner_id;
+end $$;
+revoke all on function public.peris_due_guild_reinforcements()from public,anon,authenticated;
+
 do $$begin
  if to_regprocedure('public.peris_social_snapshot()')is null or to_regclass('public.peris_unit_catalog')is null then
   raise exception 'Install V19 first, or use the complete V19 upgrade.';
@@ -320,6 +346,7 @@ begin
    from public.peris_reports r join public.peris_camps c on c.id=r.camp_id and c.bandit left join public.battles b on b.id=r.battle_id where r.owner_id=u and r.result?'delivered'
   )s where s.rank=1),'[]'::jsonb),
  'garrisons',coalesce((select jsonb_agg(g order by row,col)from public.peris_garrisons g where owner_id=u),'[]'::jsonb),
+ 'guild_reinforcements',public.peris_optional_guild_reinforcements(),
  'city_reinforcements',coalesce((select jsonb_agg(r order by r.arrival_at,r.id)from public.peris_city_reinforcements r where r.owner_id=u),'[]'::jsonb),
  'city_garrisons',coalesce((select jsonb_agg(to_jsonb(g)||jsonb_build_object('infantry',public.peris_roster_class(g.unit_roster,'infantry'),'archers',public.peris_roster_class(g.unit_roster,'archers'),'cavalry',public.peris_roster_class(g.unit_roster,'cavalry'))order by g.settlement_id)from public.peris_city_garrisons g where g.owner_id=u),'[]'::jsonb),
  'ruin_evacuations',coalesce((select jsonb_agg(e order by e.arrival_at)from public.peris_ruin_evacuations e where e.owner_id=u),'[]'::jsonb),
@@ -414,6 +441,15 @@ begin
   if party ? 'army_id'then
    select public.peris_roster(to_jsonb(d))into current_roster from public.armies d where id=(party->>'army_id')::bigint and owner_id=b.defender_owner_id for update;
    perform public.peris_write_roster((party->>'army_id')::bigint,public.peris_roster_add(current_roster,losses,-1));
+  elsif party ? 'guild_reinforcement_id' then
+   select public.peris_roster(troops)into current_roster from public.peris_guild_reinforcements
+    where id=(party->>'guild_reinforcement_id')::bigint and status='stationed' for update;
+   if current_roster is not null then
+    current_roster:=public.peris_roster_add(current_roster,losses,-1);
+    if public.peris_roster_total(current_roster)=0 then
+     delete from public.peris_guild_reinforcements where id=(party->>'guild_reinforcement_id')::bigint;
+    else update public.peris_guild_reinforcements set troops=current_roster where id=(party->>'guild_reinforcement_id')::bigint;end if;
+   end if;
   elsif party ? 'city_garrison_id'then
    select public.peris_roster(garrison.unit_roster)into current_roster from public.peris_city_garrisons garrison where garrison.settlement_id=(party->>'city_garrison_id')::bigint and garrison.owner_id=b.defender_owner_id for update;
    if current_roster is not null then

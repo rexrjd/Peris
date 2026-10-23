@@ -19,11 +19,11 @@ begin
  delete from public.peris_worker_owners w where not exists(select 1 from public.players p where p.id=w.owner_id);
  battles:=public.peris_advance_battles(20,2000);pass_started:=clock_timestamp();
  for owner in select q.owner_id from(
-<<<<<<< Updated upstream
   select owner_id,min(arrival_at)as due from public.armies where (status='moving' or raid_target_id is not null or raid_city_id is not null)and arrival_at<=public.peris_game_now() group by owner_id
   union all select owner_id,min(arrival_at)from public.peris_settler_expeditions where status='travelling'and arrival_at<=public.peris_game_now()group by owner_id
   union all select owner_id,min(arrival_at)from public.peris_ruin_evacuations where arrival_at<=public.peris_game_now()group by owner_id
   union all select owner_id,min(arrival_at)from public.peris_city_reinforcements where arrival_at<=public.peris_game_now()group by owner_id
+  union all select owner_id,due from public.peris_due_guild_reinforcements()
   union all select owner_id,min(finish_at)from public.peris_orders where finish_at<=public.peris_game_now()group by owner_id
   union all select owner_id,min(public.peris_science_deadline(owner_id))from public.peris_account_science where active_id is not null and public.peris_science_deadline(owner_id)<=public.peris_game_now()group by owner_id
   union all select owner_id,min(next_at)from public.peris_campaign_farms where enabled and next_at<=public.peris_game_now()group by owner_id
@@ -32,18 +32,6 @@ begin
  group by q.owner_id,w.last_processed_at,w.last_attempt_at order by coalesce(w.last_attempt_at,w.last_processed_at,'1970-01-01'::timestamptz),min(q.due),q.owner_id limit p_limit loop
   exit when extract(epoch from(clock_timestamp()-pass_started))*1000>=2000;
   attempted:=attempted+1;
-=======
-  select owner_id,min(arrival_at)as due from public.armies where (status='moving' or raid_target_id is not null or raid_city_id is not null)and arrival_at<=now() group by owner_id
-  union all select owner_id,min(arrival_at)from public.peris_settler_expeditions where status='travelling'and arrival_at<=now()group by owner_id
-  union all select owner_id,min(finish_at)from public.peris_orders where finish_at<=now()group by owner_id
-  union all select owner_id,min(arrival_at)from public.peris_city_reinforcements where arrival_at<=now()group by owner_id
-  union all select owner_id,min(arrival_at)from public.peris_guild_reinforcements where status in('outbound','returning')and arrival_at<=now()group by owner_id
-  union all select r.owner_id,min(now())from public.peris_guild_reinforcements r join public.settlements s on s.id=r.target_settlement_id where r.status='stationed'and (s.ruined_at is not null or not exists(select 1 from public.peris_guild_members a join public.peris_guild_members b on b.guild_id=a.guild_id where a.player_id=r.owner_id and b.player_id=r.recipient_id))group by r.owner_id
-  union all select owner_id,min(public.peris_science_deadline(owner_id))from public.peris_account_science where active_id is not null and public.peris_science_deadline(owner_id)<=now()group by owner_id
-  union all select owner_id,min(next_at)from public.peris_campaign_farms where enabled and next_at<=now()group by owner_id
-  union all select attacker_owner_id,min(last_tick_at)from public.battles where status='active'group by attacker_owner_id
- )q left join public.peris_worker_owners w on w.owner_id=q.owner_id group by q.owner_id,w.last_processed_at order by coalesce(w.last_processed_at,'1970-01-01'::timestamptz),min(q.due),q.owner_id limit p_limit loop
->>>>>>> Stashed changes
   begin
    if exists(select 1 from public.peris_settler_expeditions where owner_id=owner and status='travelling'and arrival_at<=public.peris_game_now())and not pg_try_advisory_xact_lock(204200)then raise lock_not_available;end if;
    perform 1 from public.players where id=owner for update nowait;

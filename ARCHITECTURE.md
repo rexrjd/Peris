@@ -121,6 +121,8 @@ ZIP extraction does not delete moved paths. `node scripts/clean-legacy-paths.mjs
 
 ## Guilds and messages (V19)
 
+Guild reinforcement preparation lives in `features/social/ui/GuildReinforcementDialog.tsx`; pure source eligibility and participant DTOs live in `features/social/domain/reinforcements.ts`. Dispatch and recall use the online engine's existing command receipt journal. Authoritative source is `city/guild-reinforcements.sql`; participant-only snapshot data feeds the shared Map/3D City Events selector. The preserved recipient-city ID keeps returning support in the right filter even after its destination changes. Optional private hooks keep older focused installers usable without installing the guild-support subsystem. No troop transfer, travel completion or combat result is decided by the UI.
+
 `features/social/domain` owns social types, guild/rank selectors and message-page merging. `features/social/platform` owns bounded Supabase RPC access, and `features/social/ui` owns the guild hall, messenger, navigation, and safe pending-action retries. Social state is account-scoped and separate from campaign saves and public map snapshots. The guild and message entry points remain in the upper left on desktop and mobile. Solo campaigns show an entry guide to the shared world.
 
 Authoritative source lives in `supabase/modules/social`. Guild permissions, receipts, treasury transfers, and channel privacy are checked in SQL. Guild membership, accepted alliances, and non-aggression pacts guard outgoing and arriving city raids. Generate complete V19 installers and the focused V18-to-V19 migration with `npm run build:sql`. `UPGRADE_GUILDS_TO_V19.sql` alters only social state and the two city-raid entry functions. See `GUILDS_AND_MESSAGES_UPDATE.md`.

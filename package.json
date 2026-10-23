@@ -83,7 +83,8 @@
     "check:research-catalog": "node scripts/build-research-catalog.mjs --check",
     "check:research-art": "node scripts/check-research-art.mjs",
     "test:research-db": "node --import tsx tests/research-database.test.mts",
-    "test:social-db": "node --import tsx tests/social-database.test.mts"
+    "test:social-db": "node --import tsx tests/social-database.test.mts",
+    "test:guild-reinforcements-db": "node --import tsx tests/guild-reinforcements-database.test.mts"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.57.4",

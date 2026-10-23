@@ -6,7 +6,9 @@ const sql=text('supabase/modules/city/guild-reinforcements.sql');
 const raids=text('supabase/modules/campaign/player-raids.sql');
 const settle=text('supabase/modules/city/peris_settle.sql');
 const worker=text('supabase/modules/campaign/game-worker.sql');
-const editor=text('src/features/map/ui/CityReinforcementComposer.tsx');
+const editor=text('src/features/social/ui/GuildReinforcementDialog.tsx');
+const hooks=text('supabase/modules/city/guild-reinforcement-hooks.sql');
+const rpc=text('src/engine/online/rpcCommands.ts');
 test('guild reinforcements are authorized on the server and troops remain with sender',()=>{
  assert.match(sql,/join public\.peris_guild_members b on b\.guild_id=a\.guild_id/);
  assert.match(sql,/r\.owner_id=public\.peris_player_id\(\) or r\.recipient_id=public\.peris_player_id\(\)/);
@@ -23,12 +25,14 @@ test('guild reinforcements join autobattle and take actual casualties',()=>{
  assert.match(sql,/status='active'.*continue/);
 });
 test('offline worker handles shipments and due arrivals',()=>{
- assert.match(worker,/peris_guild_reinforcements where status in\('outbound','returning'\)/);
+ assert.match(worker,/peris_due_guild_reinforcements/);
+ assert.match(hooks,/r.status in\('outbound','returning'\)/);
  assert.match(settle,/peris_guild_reinforcements_advance\(p_owner,p_until\)/);
 });
-test('Events uses guild picker and sender-owned recall',()=>{
- assert.match(editor,/Guild members/);
- assert.match(editor,/peris_send_guild_reinforcements/);
+test('member picker uses authoritative commands and Events supports sender-owned recall',()=>{
+ assert.match(text('src/features/social/ui/GuildsPanel.tsx'),/Send reinforcements to/);
+ assert.match(rpc,/peris_send_guild_reinforcements/);
  assert.match(editor,/peris_guild_reinforcement_targets/);
- assert.match(editor,/peris_recall_guild_reinforcements/);
+ assert.match(rpc,/peris_recall_guild_reinforcements/);
+ assert.match(text('src/features/map/ui/MapOperations.tsx'),/support.owner_id===playerId/);
 });

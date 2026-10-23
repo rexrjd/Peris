@@ -156,6 +156,7 @@ export class LocalEngine implements GameEngine {
         this.snapshot.server_now = new Date(this.nowGameMs()).toISOString();
         const context: LocalCommandContext = { world: this.snapshot, playerId: this.playerId, settlementId: cmd.settlementId, armyId: cmd.armyId, nextId: () => this.nextId = Math.max(this.nextId + 1, nextEntityId(this.snapshot)), active, now: new Date(this.nowGameMs()).toISOString(), paused: value => { this.paused = value; }, finalize: id => this.finalize(id) };
         switch (cmd.type) {
+            case 'reinforceGuild': case 'recallGuildReinforcements': throw new Error('Enter the shared world to send guild reinforcements.');
             case 'startResearch': startResearch(this.snapshot,this.playerId,cmd.technologyId,Date.parse(context.now)); break;
             case 'pauseResearch': pauseResearch(this.snapshot,this.playerId,Date.parse(context.now)); break;
             case 'debugResearch': debugResearch(this.snapshot,this.playerId,cmd.action,Date.parse(context.now)); break;

@@ -1,9 +1,6 @@
 [
   "schema/base.sql",
-<<<<<<< Updated upstream
   "time/game-clock.sql",
-=======
->>>>>>> Stashed changes
   "city/ruins-columns.sql",
   "accounts/sessions.sql",
   "empire/schema.sql",
@@ -65,6 +62,7 @@
   "social/reads.sql",
   "social/commands.sql",
   "city/guild-reinforcements.sql",
+  "city/guild-reinforcement-hooks.sql",
   "snapshot/peris_snapshot.sql",
   "snapshot/peris_map_snapshot.sql",
   "battle/automatic.sql",

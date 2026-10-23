@@ -6,6 +6,7 @@ import type { Faction } from '../../factions/domain/factions';
 import { readRoster, RECRUIT_UNITS, rosterTotal } from '../../army/domain/roster';
 import { Icon } from '../../../shared/ui/Icons';
 import { activityProgress, type MapActivity } from '../domain/activity';
+import type {GuildReinforcement} from '../../social/domain/reinforcements';
 
 const dateTime = (timestamp: number | null) => {
     if (timestamp === null || !Number.isFinite(timestamp)) return 'Unavailable';
@@ -16,9 +17,10 @@ const dateTime = (timestamp: number | null) => {
 
 /** Read-only shipment inspector. Native modal dialogs handle focus trapping,
  * keyboard Escape, and top-layer stacking over both Map and 3D City. */
-export function ReinforcementDetailsDialog({ event, shipment, faction, now, onClose, onLocate }: {
-    event: MapActivity; shipment: CityReinforcement; faction: Faction; now: number;
+export function ReinforcementDetailsDialog({ event, shipment, faction, now, onClose, onLocate, support, onRecall, busy, rate=1 }: {
+    event: MapActivity; shipment: Pick<CityReinforcement,'troops'>; faction: Faction; now: number;
     onClose: () => void; onLocate: () => void;
+    support?:GuildReinforcement;onRecall?:()=>void;busy?:boolean;rate?:1|10|100;
 }) {
     const dialog = useRef<HTMLDialogElement>(null);
     const titleId = useId();
@@ -33,7 +35,7 @@ export function ReinforcementDetailsDialog({ event, shipment, faction, now, onCl
     const started = event.startedAt;
     const arrives = event.endsAt;
     const pending = arrives !== null && arrives <= now;
-    const seconds = arrives === null ? null : Math.max(0, Math.ceil((arrives - now) / 1000));
+    const seconds = arrives === null ? null : Math.max(0, Math.ceil((arrives - now) / 1000 / rate));
     const left = seconds === null ? 'Pending' : pending ? 'Awaiting settlement' : seconds >= 3600
         ? `${Math.floor(seconds / 3600)}h ${Math.floor(seconds % 3600 / 60)}m`
         : `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
@@ -47,7 +49,7 @@ export function ReinforcementDetailsDialog({ event, shipment, faction, now, onCl
         }}>
         <header className="ops-reinforcement-head">
             <span className="ops-reinforcement-emblem"><Icon name="transfer" size={20}/></span>
-            <span className="ops-reinforcement-heading"><small>Troop transfer</small><strong id={titleId}>Reinforcements</strong></span>
+            <span className="ops-reinforcement-heading"><small>{support?'Guild support':'Troop transfer'}</small><strong id={titleId}>Reinforcements</strong></span>
             <button type="button" className="ops-reinforcement-close" aria-label="Close reinforcement details" onClick={onClose} autoFocus>
                 <Icon name="close" size={17}/>
             </button>
@@ -59,18 +61,18 @@ export function ReinforcementDetailsDialog({ event, shipment, faction, now, onCl
                 <div><small>To</small><strong>{event.destination ?? 'Unknown city'}</strong></div>
             </div>
             <div className="ops-reinforcement-progress-top">
-                <span>{pending ? 'Arriving' : 'On the way'}</span><strong>{left}</strong>
+                <span>{support?.status==='stationed'?'Defending city':support?.status==='returning'?'Returning home':pending ? 'Arriving' : 'On the way'}</span><strong>{support?.status==='stationed'?'Stationed':left}</strong>
             </div>
             <div className="ops-reinforcement-progress" role="progressbar" aria-label="Reinforcement march progress"
-                aria-valuemin={0} aria-valuemax={100} aria-valuenow={percent}>
-                <span style={{ width: `${percent}%` }}/>
+                aria-valuemin={0} aria-valuemax={100} aria-valuenow={support?.status==='stationed'?100:percent}>
+                <span style={{ width: `${support?.status==='stationed'?100:percent}%` }}/>
             </div>
             <dl className="ops-reinforcement-times">
                 <div><dt>Departed</dt><dd>{dateTime(started)}</dd></div>
-                <div><dt>Arrival</dt><dd>{dateTime(arrives)}</dd></div>
+                <div><dt>{support?.status==='stationed'?'Supporting':'Arrival'}</dt><dd>{support?.status==='stationed'?support.recipient_name:dateTime(arrives)}</dd></div>
             </dl>
             <section className="ops-reinforcement-roster" aria-label="Troops in transit">
-                <div className="ops-reinforcement-roster-title"><span>Troops in transit</span><strong>{total.toLocaleString()}</strong></div>
+                <div className="ops-reinforcement-roster-title"><span>{support?.status==='stationed'?'Stationed troops':'Troops in transit'}</span><strong>{total.toLocaleString()}</strong></div>
                 <div className="ops-reinforcement-units">
                     {RECRUIT_UNITS.filter(unit => roster[unit] > 0).map(unit =>
                         <div key={unit} className="ops-reinforcement-unit">
@@ -83,6 +85,7 @@ export function ReinforcementDetailsDialog({ event, shipment, faction, now, onCl
         </div>
         <footer className="ops-reinforcement-actions">
             <button type="button" onClick={onClose}>Close</button>
+            {onRecall&&support?.status==='stationed'&&<button type="button" disabled={busy} onClick={onRecall}>Recall troops</button>}
             <button type="button" className="primary" onClick={onLocate}>View destination <Icon name="arrow" size={13}/></button>
         </footer>
     </dialog>;

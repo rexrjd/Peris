@@ -64,6 +64,7 @@ export type World = {
     garrisons?: Garrison[];
     city_garrisons?: CityGarrison[];
     city_reinforcements?: CityReinforcement[];
+    guild_reinforcements?: import('../../features/social/domain/reinforcements').GuildReinforcement[];
     ruin_evacuations?: RuinEvacuation[];
     /** Server geography format; version 3 uses the persistent 200 × 200 world. */
     map?: {

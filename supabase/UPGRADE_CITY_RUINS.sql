@@ -54,6 +54,32 @@ exception when lock_not_available then return false;
 end $$;
 revoke all on function public.peris_lock_battle_participants(uuid,uuid)from public,anon,authenticated;
 
+-- Optional hooks keep focused upgrades usable before guild support is installed.
+-- No public reads, schema mutation, or synthetic troop state on older worlds.
+create or replace function public.peris_optional_guild_reinforcements()returns jsonb
+language plpgsql stable security definer set search_path='' as $$
+begin
+ if to_regprocedure('public.peris_guild_reinforcement_status()')is null then return '[]'::jsonb;end if;
+ return public.peris_guild_reinforcement_status();
+end $$;
+revoke all on function public.peris_optional_guild_reinforcements()from public,anon,authenticated;
+
+create or replace function public.peris_due_guild_reinforcements()returns table(owner_id uuid,due timestamptz)
+language plpgsql stable security definer set search_path='' as $$
+begin
+ if to_regclass('public.peris_guild_reinforcements')is null then return;end if;
+ return query
+ select r.owner_id,min(r.arrival_at)from public.peris_guild_reinforcements r
+ where r.status in('outbound','returning')and r.arrival_at<=public.peris_game_now()group by r.owner_id
+ union all
+ select r.owner_id,min(public.peris_game_now())from public.peris_guild_reinforcements r
+ join public.settlements s on s.id=r.target_settlement_id
+ where r.status='stationed'and (s.ruined_at is not null or not exists(
+  select 1 from public.peris_guild_members a join public.peris_guild_members b on b.guild_id=a.guild_id
+  where a.player_id=r.owner_id and b.player_id=r.recipient_id))group by r.owner_id;
+end $$;
+revoke all on function public.peris_due_guild_reinforcements()from public,anon,authenticated;
+
 -- Persistent defensive garrisons: separate from transient field stations.
 -- Automatic arrival-merging must never withdraw soldiers assigned to this city.
 create table if not exists public.peris_city_garrisons (
@@ -306,6 +332,9 @@ begin
   update public.players set defeated_at=coalesce(defeated_at,now()),culture_points=0 where id=city.owner_id;
   delete from public.peris_ruin_evacuations where owner_id=city.owner_id;
   delete from public.peris_city_reinforcements where owner_id=city.owner_id;
+  if to_regclass('public.peris_guild_reinforcements')is not null then
+   delete from public.peris_guild_reinforcements where owner_id=city.owner_id;
+  end if;
   delete from public.peris_garrisons where owner_id=city.owner_id;
   delete from public.peris_orders where owner_id=city.owner_id;
   update public.peris_settler_expeditions set status='returned'where owner_id=city.owner_id and status='travelling';
@@ -623,6 +652,9 @@ begin
  if exists(select 1 from public.players where id=p_owner and defeated_at is not null)then return;end if;
  perform public.peris_ruin_advance(p_owner,p_until);
  perform public.peris_city_reinforcements_advance(p_owner,p_until);
+ if to_regprocedure('public.peris_guild_reinforcements_advance(uuid,timestamp with time zone)')is not null then
+  perform public.peris_guild_reinforcements_advance(p_owner,p_until);
+ end if;
  for s in select * from public.settlements where owner_id=p_owner and ruined_at is null order by id for update loop
  perform public.peris_city_migrate(s.id);if not s.population_ready then perform public.peris_city_economy(s.id);end if;
  end loop;
@@ -682,7 +714,7 @@ begin
  perform public.peris_settle(p_owner);
  select * into a from public.armies where id=p_army and owner_id=p_owner for update;
  select * into c from public.settlements where id=p_city and owner_id<>p_owner;
- if a.id is null or c.id is null or c.ruined_at is not null then raise exception 'Choose your legion and another player''s living city';end if;
+ if a.id is null or c.id is null or to_jsonb(c)->>'ruined_at' is not null then raise exception 'Choose your legion and another player''s living city';end if;
  if public.peris_social_relation(p_owner,c.owner_id)in('guild','alliance','nap')then raise exception 'Your guild or diplomatic pact protects this city';end if;
  available:=public.peris_roster(to_jsonb(a));chosen:=public.peris_garrison_troops(coalesce(nullif(p_troops,'null'::jsonb),available));
  if public.peris_roster_total(chosen)=0 then raise exception 'Send at least one soldier';end if;
@@ -701,7 +733,7 @@ declare a public.armies%rowtype;c public.settlements%rowtype;defenders jsonb;ros
 begin
  select * into a from public.armies where id=p_army and owner_id=p_owner;
  select * into c from public.settlements where id=a.raid_city_id and owner_id<>p_owner;
- if a.id is null or c.id is null or c.ruined_at is not null or a.status<>'idle'or a.target_x<>c.x or a.target_y<>c.y then return null;end if;
+ if a.id is null or c.id is null or to_jsonb(c)->>'ruined_at' is not null or a.status<>'idle'or a.target_x<>c.x or a.target_y<>c.y then return null;end if;
  -- A pact accepted during travel protects the city when the raid arrives.
  if public.peris_social_relation(p_owner,c.owner_id)in('guild','alliance','nap')then perform public.peris_return_raid(a.id);return null;end if;
  -- Avoid waiting on another ruler while the caller already holds its own lock.
@@ -720,6 +752,14 @@ begin
  and floor(d.target_x/128.0)=floor(c.x/128.0)and floor(d.target_y/128.0)=floor(c.y/128.0)order by coalesce(h.experience,0)desc,d.id limit 1;
  select public.peris_roster(to_jsonb(g))into roster from public.peris_garrisons g where owner_id=c.owner_id and col=floor(c.x/128.0)::integer and row=floor(c.y/128.0)::integer for update;
  if roster is not null then defenders:=defenders||jsonb_build_array(jsonb_build_object('col',floor(c.x/128.0),'row',floor(c.y/128.0),'troops',roster));end if;
+ -- Guild troops remain owned by their sender, and are accounted for individually.
+ if to_regclass('public.peris_guild_reinforcements')is not null then
+ select defenders||coalesce(jsonb_agg(jsonb_build_object('guild_reinforcement_id',r.id,'troops',r.troops)order by r.id),'[]'::jsonb) into defenders
+ from public.peris_guild_reinforcements r
+ join public.peris_guild_members sender on sender.player_id=r.owner_id
+ join public.peris_guild_members receiver on receiver.player_id=r.recipient_id and receiver.guild_id=sender.guild_id
+ where r.target_settlement_id=c.id and r.recipient_id=c.owner_id and r.status='stationed';
+ end if;
  select public.peris_roster(g.unit_roster)into roster from public.peris_city_garrisons g where g.settlement_id=c.id and g.owner_id=c.owner_id for update;
  if roster is not null and public.peris_roster_total(roster)>0 then defenders:=defenders||jsonb_build_array(jsonb_build_object('city_garrison_id',c.id,'troops',roster));end if;
  insert into public.battles(attacker_owner_id,defender_owner_id,attacker_army_id,defender_army_id,mode,phase,terrain,difficulty,enemy_name,attacker_ready,defender_ready,defender_faction,raid_city_id,siege_target,city_defenders)
@@ -786,6 +826,15 @@ begin
   if party ? 'army_id'then
    select public.peris_roster(to_jsonb(d))into current_roster from public.armies d where id=(party->>'army_id')::bigint and owner_id=b.defender_owner_id for update;
    perform public.peris_write_roster((party->>'army_id')::bigint,public.peris_roster_add(current_roster,losses,-1));
+  elsif party ? 'guild_reinforcement_id' then
+   select public.peris_roster(troops)into current_roster from public.peris_guild_reinforcements
+    where id=(party->>'guild_reinforcement_id')::bigint and status='stationed' for update;
+   if current_roster is not null then
+    current_roster:=public.peris_roster_add(current_roster,losses,-1);
+    if public.peris_roster_total(current_roster)=0 then
+     delete from public.peris_guild_reinforcements where id=(party->>'guild_reinforcement_id')::bigint;
+    else update public.peris_guild_reinforcements set troops=current_roster where id=(party->>'guild_reinforcement_id')::bigint;end if;
+   end if;
   elsif party ? 'city_garrison_id'then
    select public.peris_roster(garrison.unit_roster)into current_roster from public.peris_city_garrisons garrison where garrison.settlement_id=(party->>'city_garrison_id')::bigint and garrison.owner_id=b.defender_owner_id for update;
    if current_roster is not null then
@@ -859,6 +908,7 @@ begin
    from public.peris_reports r join public.peris_camps c on c.id=r.camp_id and c.bandit left join public.battles b on b.id=r.battle_id where r.owner_id=u and r.result?'delivered'
   )s where s.rank=1),'[]'::jsonb),
  'garrisons',coalesce((select jsonb_agg(g order by row,col)from public.peris_garrisons g where owner_id=u),'[]'::jsonb),
+ 'guild_reinforcements',public.peris_optional_guild_reinforcements(),
  'city_reinforcements',coalesce((select jsonb_agg(r order by r.arrival_at,r.id)from public.peris_city_reinforcements r where r.owner_id=u),'[]'::jsonb),
  'city_garrisons',coalesce((select jsonb_agg(to_jsonb(g)||jsonb_build_object('infantry',public.peris_roster_class(g.unit_roster,'infantry'),'archers',public.peris_roster_class(g.unit_roster,'archers'),'cavalry',public.peris_roster_class(g.unit_roster,'cavalry'))order by g.settlement_id)from public.peris_city_garrisons g where g.owner_id=u),'[]'::jsonb),
  'ruin_evacuations',coalesce((select jsonb_agg(e order by e.arrival_at)from public.peris_ruin_evacuations e where e.owner_id=u),'[]'::jsonb),
@@ -948,6 +998,8 @@ begin
  if exists(select 1 from public.players where id=u and defeated_at is not null)then raise exception 'This ruler has been permanently defeated';end if;
  -- A fixed whitelist keeps the receipt endpoint from invoking private helpers.
  case p_function
+ when 'peris_send_guild_reinforcements' then answer:=public.peris_send_guild_reinforcements((p_args->>'p_source')::bigint,(p_args->>'p_target')::bigint,p_args->'p_troops',p_args->'p_path',(p_args->>'p_army')::bigint);
+ when 'peris_recall_guild_reinforcements' then answer:=public.peris_recall_guild_reinforcements((p_args->>'p_id')::bigint);
  when 'peris_empire_command' then answer:=public.peris_empire_command(p_args->'p_command');
  when 'peris_campaign_farm_command' then answer:=public.peris_campaign_farm_command(p_args->'p_command');
  when 'peris_research_unit' then answer:=public.peris_research_unit((p_args->>'p_city')::bigint,p_args->>'p_unit');

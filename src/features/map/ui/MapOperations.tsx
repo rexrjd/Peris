@@ -21,13 +21,14 @@ const cityFilters: { value: EmpireActivityFilter; label: string }[] = [
 const mapFilters: { value: EmpireActivityFilter; label: string }[] = [
     { value: 'all', label: 'All' }, { value: 'armies', label: 'Armies' }, { value: 'cities', label: 'Cities' },
 ];
-function remaining(event: MapActivity, now: number) {
+function remaining(event: MapActivity, now: number, rate:1|10|100=1) {
+    if(event.supportStatus==='stationed')return 'Stationed';
     if (event.live) return 'Live';
     if (event.startedAt !== null && event.startedAt > now &&
         (event.kind === 'construction' || event.kind === 'recruitment')) return 'Queued';
     if (event.endsAt === null) return 'Pending';
     if (event.endsAt <= now) return event.category === 'armies' ? 'Arriving' : 'Finishing';
-    const seconds = Math.ceil((event.endsAt - now) / 1000);
+    const seconds = Math.ceil((event.endsAt - now) / 1000 / rate);
     return seconds >= 3600 ? Math.floor(seconds / 3600) + 'h ' + Math.floor(seconds % 3600 / 60) + 'm' : clock(seconds);
 }
 /** One Events widget on City and Map; City defaults to ALL ongoing activity
@@ -41,6 +42,7 @@ export function MapOperations({ world, playerId, now, busy, run, open, onToggle,
     const [full, setFull] = useState(false);
     const [section, setSection] = useState<'activity' | 'transfer'>('activity');
     const [selectedShipmentId, setSelectedShipmentId] = useState<number | null>(null);
+    const [selectedSupportId,setSelectedSupportId]=useState<number|null>(null);
     const [filter, setFilter] = useState<EmpireActivityFilter>('all');
     const [cityFilter, setCityFilter] = useState<string>('all');
     const selectionRef = useRef<HTMLDivElement>(null), listRef = useRef<HTMLDivElement>(null);
@@ -52,6 +54,8 @@ export function MapOperations({ world, playerId, now, busy, run, open, onToggle,
     const selectedEvent = selectedShipmentId === null ? undefined : events.find(event => event.kind === 'reinforcement' && event.shipmentId === selectedShipmentId);
     const selectedShipment = selectedEvent && world.city_reinforcements?.find(row => row.id === selectedShipmentId && row.owner_id === playerId);
     const selectedSource = selectedEvent && world.settlements.find(city => city.id === selectedEvent.sourceCityId && city.owner_id === playerId);
+    const supportEvent=events.find(e=>e.guildReinforcementId===selectedSupportId);
+    const support=world.guild_reinforcements?.find(s=>s.id===selectedSupportId&&(s.owner_id===playerId||s.recipient_id===playerId));
     const ownedCities = world.settlements.filter(city => city.owner_id === playerId && !city.ruined_at);
     const scopedCity = cityFilter === 'all' ? undefined : Number(cityFilter);
     const scopedEvents = filterEmpireActivity(events, 'all', scopedCity);
@@ -98,28 +102,29 @@ export function MapOperations({ world, playerId, now, busy, run, open, onToggle,
                         </div>}
                     </>}
                     <div className="ops-event-scroll" ref={listRef}>
-                        {visible.length ? <ol className="ops-events">
+                        {visible.length ? <ol className="ops-events" aria-label={showFilters&&filter==='all'&&scopedCity===undefined?'All events':showFilters?'Filtered events':'Recent movements'}>
                             {visible.map(event => <li key={event.id} className={'ops-event event-' + event.kind}>
                                 <button type="button" className="ops-event-main" onClick={() => {
-                                    if (event.kind === 'reinforcement' && event.shipmentId !== undefined) setSelectedShipmentId(event.shipmentId);
+                                    if(event.guildReinforcementId!==undefined)setSelectedSupportId(event.guildReinforcementId);
+                                    else if (event.kind === 'reinforcement' && event.shipmentId !== undefined) setSelectedShipmentId(event.shipmentId);
                                     else onLocate(event);
                                 }}
                                     aria-haspopup={event.kind === 'reinforcement' ? 'dialog' : undefined}
                                     aria-label={event.kind === 'reinforcement'
-                                        ? `Reinforcement details: ${event.detail} to ${event.destination ?? 'Unknown city'}, ${event.troops ?? 0} soldiers, ${remaining(event, now)} remaining`
+                                        ? `Reinforcement details: ${event.detail} to ${event.destination ?? 'Unknown city'}, ${event.troops ?? 0} soldiers, ${remaining(event, now, world.game_clock?.rate)} remaining`
                                         : 'View ' + labels[event.kind].name.toLowerCase() + ': ' + event.title + (isCity ? ', ' + locationLabel(event) : '')}
                                     title={event.kind === 'reinforcement' ? `View reinforcement details · ${reinforcementRouteLabel(event)}` : [labels[event.kind].name, event.title, locationLabel(event)].filter(Boolean).join(' · ')}>
                                     <Icon name={labels[event.kind].icon} size={15}/>
                                     <span className="ops-event-content">
                                         {event.kind === 'reinforcement' ? <>
                                             <strong className="ops-event-route">{reinforcementRouteLabel(event)}</strong>
-                                            <small><span>{event.troops?.toLocaleString() ?? '0'} reinforcements</span> · {event.endsAt !== null && event.endsAt <= now ? 'Arriving' : 'In transit'}</small>
+                                            <small><span>{event.troops?.toLocaleString() ?? '0'} reinforcements</span> · {event.supportStatus==='stationed'?'Defending':event.supportStatus==='returning'?'Returning':event.guildReinforcementId?'Guild support':event.endsAt !== null && event.endsAt <= now ? 'Arriving' : 'In transit'}</small>
                                         </> : <>
                                             <strong>{isCity ? event.title : <><span className="ops-event-kind">{labels[event.kind].short} · </span>{event.title}</>}</strong>
                                             {(isCity || full) && <small><span>{labels[event.kind].short}</span> · {locationLabel(event)}</small>}
                                         </>}
                                     </span>
-                                    <span className="ops-event-time">{remaining(event, now)}</span>
+                                    <span className="ops-event-time">{remaining(event, now, world.game_clock?.rate)}</span>
                                 </button>
                                 {event.cancel && <button type="button" className="ops-event-cancel" disabled={busy}
                                     aria-label={'Cancel departure: ' + event.title}
@@ -137,10 +142,14 @@ export function MapOperations({ world, playerId, now, busy, run, open, onToggle,
         </div>
         {!open && children && <div className="ops-selection" ref={selectionRef} key={selectionKey}>{children}</div>}
         {selectedEvent && selectedShipment && <ReinforcementDetailsDialog key={selectedShipment.id}
+            rate={world.game_clock?.rate}
             event={selectedEvent} shipment={selectedShipment} faction={factionOf(selectedSource?.faction)} now={now}
             onClose={() => setSelectedShipmentId(null)} onLocate={() => {
                 setSelectedShipmentId(null);
                 onLocate(selectedEvent);
             }}/>} 
+        {supportEvent&&support&&<ReinforcementDetailsDialog key={'guild:'+support.id} event={supportEvent} shipment={support} support={support} faction={factionOf(support.faction)} now={now} rate={world.game_clock?.rate}
+            onClose={()=>setSelectedSupportId(null)} onLocate={()=>{setSelectedSupportId(null);onLocate(supportEvent);}} busy={busy}
+            onRecall={support.owner_id===playerId?()=>run({type:'recallGuildReinforcements',reinforcementId:support.id},'Reinforcements are returning to a safe home city.'):undefined}/>}
     </aside>;
 }

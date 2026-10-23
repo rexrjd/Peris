@@ -9,10 +9,9 @@ begin
  if exists(select 1 from public.players where id=p_owner and defeated_at is not null)then return;end if;
  perform public.peris_ruin_advance(p_owner,p_until);
  perform public.peris_city_reinforcements_advance(p_owner,p_until);
-<<<<<<< Updated upstream
-=======
- perform public.peris_guild_reinforcements_advance(p_owner,p_until);
->>>>>>> Stashed changes
+ if to_regprocedure('public.peris_guild_reinforcements_advance(uuid,timestamp with time zone)')is not null then
+  perform public.peris_guild_reinforcements_advance(p_owner,p_until);
+ end if;
  for s in select * from public.settlements where owner_id=p_owner and ruined_at is null order by id for update loop
  perform public.peris_city_migrate(s.id);if not s.population_ready then perform public.peris_city_economy(s.id);end if;
  end loop;

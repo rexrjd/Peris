@@ -35,7 +35,7 @@ export async function accountServer(){
     if(path.startsWith('/rest/v1/rpc/')){
      const name=path.split('/').at(-1);
      // Only existing named test RPCs, with parameters bound as values.
-     const args={peris_login:['p_display_name'],peris_enter_account:['p_display_name','p_mode','p_faction','p_creation_id'],peris_account_directory:['p_search','p_faction','p_activity','p_sort','p_offset','p_limit'],peris_social_snapshot:[],peris_social_directory:['p_kind','p_search','p_focus','p_offset'],peris_social_guild:['p_id'],peris_social_thread:['p_kind','p_id','p_before'],peris_social_command:['p_request_id','p_command'],peris_snapshot:[],peris_read_reports:['p_report_ids'],peris_read_all_reports:[],peris_report_page:['p_before_id'],sync_my_state:[],peris_map_snapshot:['p_min_x','p_min_y','p_max_x','p_max_y'],peris_rename:['p_name'],peris_submit_command:['p_request_id','p_function','p_args']};
+     const args={peris_login:['p_display_name'],peris_enter_account:['p_display_name','p_mode','p_faction','p_creation_id'],peris_account_directory:['p_search','p_faction','p_activity','p_sort','p_offset','p_limit'],peris_guild_reinforcement_targets:[],peris_guild_reinforcement_status:[],peris_social_snapshot:[],peris_social_directory:['p_kind','p_search','p_focus','p_offset'],peris_social_guild:['p_id'],peris_social_thread:['p_kind','p_id','p_before'],peris_social_command:['p_request_id','p_command'],peris_snapshot:[],peris_read_reports:['p_report_ids'],peris_read_all_reports:[],peris_report_page:['p_before_id'],sync_my_state:[],peris_map_snapshot:['p_min_x','p_min_y','p_max_x','p_max_y'],peris_rename:['p_name'],peris_submit_command:['p_request_id','p_function','p_args']};
      if(!Object.hasOwn(args,name))return result(400,{message:'Unexpected test RPC: '+name});
      const values=args[name].map(k=>body[k]);
      const rows=await tx.query(`select public.${name}(${values.map((_,i)=>'$'+(i+1)).join(',')}) result`,values);
@@ -49,7 +49,17 @@ export async function accountServer(){
    });
   }catch(error){return result(/^PT\d{3}$/.test(error.code??'')?Number(error.code.slice(2)):400,{code:error.code,message:error.message});}
  }
- return {request,logins,async cityRaidFixture(owner,rival){
+ return {request,logins,async guildSupportFixture(owner,recipient){
+  const act=async(player,command)=>db.transaction(async tx=>{await tx.exec('set local role authenticated');await tx.query("select set_config('request.jwt.claim.sub',$1,true)",[logins.find(l=>l.player_id===player).auth_id]);return(await tx.query('select public.peris_social_command($1,$2)result',[crypto.randomUUID(),JSON.stringify(command)])).rows[0].result;});
+  const guild=await act(owner,{type:'create',name:'Dawn Covenant',tag:'DAWN',description:'Hold the roads. Stand together.',motd:'',focus:'warfare',recruitment:'open',crest:{color:'#637da3',sigil:'tower'}});
+  await act(recipient,{type:'join',guild_id:guild.guild_id});
+  const source=(await db.query('select * from public.settlements where owner_id=$1 order by id limit 1',[owner])).rows[0];
+  const target=(await db.query('select * from public.settlements where owner_id=$1 order by id limit 1',[recipient])).rows[0];
+  for(const [dx,dy]of [[128,0],[-128,0],[0,128],[0,-128]]){const ok=(await db.query('select public.peris_world_walkable($1,$2)v',[source.x+dx,source.y+dy])).rows[0].v;if(ok){target.x=source.x+dx;target.y=source.y+dy;break;}}
+  await db.query('update public.settlements set name=$1,x=$2,y=$3 where id=$4',['Dawnwatch',target.x,target.y,target.id]);
+  await db.query('select public.peris_city_garrison_receive($1,$2,$3)',[owner,source.id,JSON.stringify({infantry:450,archers:120,cavalry:30})]);
+  return {source,target};
+ },async clearSupportGarrison(owner){await db.query('delete from public.peris_city_garrisons where owner_id=$1',[owner]);},async advanceGuildSupport(){await db.exec("update public.peris_guild_reinforcements set arrival_at=public.peris_game_now()-interval '1 second' where status in('outbound','returning');select public.peris_game_tick(40)");},async guildSupport(){return(await db.query('select * from public.peris_guild_reinforcements order by id')).rows;},async cityRaidFixture(owner,rival){
   const army=(await db.query('select * from public.armies where owner_id=$1 order by id limit 1',[owner])).rows[0];
   const city=(await db.query('select * from public.settlements where owner_id=$1 order by id limit 1',[rival])).rows[0];
   const camp=(await db.query('select * from public.peris_camps where bandit order by power(public.peris_wrapped_delta(x,$1),2)+power(public.peris_wrapped_delta(y,$2),2)limit 1',[army.target_x,army.target_y])).rows[0];

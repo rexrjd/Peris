@@ -1,0 +1,29 @@
+.guild-reinforcement-dialog{width:480px;max-width:calc(100vw - 24px);max-height:calc(100dvh - 32px);padding:0;margin:auto;overflow:auto;border:1px solid #455263;border-radius:16px;background:#19232f;color:#e8edf4;box-shadow:0 28px 100px #0009;font:13px/1.5 'Open Sans',Arial,sans-serif;color-scheme:dark}
+.guild-reinforcement-dialog::backdrop{background:#060c17a8;backdrop-filter:blur(4px)}
+.guild-support-heading{display:flex;align-items:center;gap:13px;padding:24px;border-bottom:1px solid #ffffff0d}
+.guild-support-emblem{display:grid;place-items:center;width:43px;height:43px;flex:none;border:1px solid #a8bedb30;border-radius:12px;background:#a8bedb0b;color:#afc7dc}
+.guild-support-eyebrow{font-size:9px;letter-spacing:.16em;color:#8298b2;font-weight:650}
+.guild-support-heading h2{font:600 20px/1.4 'Open Sans',Arial,sans-serif;letter-spacing:-.02em;margin:3px 0 0;color:#edf2f8}
+.guild-support-heading>button{margin-left:auto;align-self:flex-start;padding:5px;border:0;background:none;color:#8fa3bc;cursor:pointer}
+.guild-support-body{padding:20px 24px 0}
+.guild-support-recipient{display:flex;align-items:center;gap:11px;margin-bottom:6px}
+.guild-support-avatar{display:grid;place-items:center;width:36px;height:36px;border-radius:50%;background:#a8bedb12;color:#afc7dc;border:1px solid #a8bedb1f;font-size:15px}
+.guild-support-recipient>div{flex:1;min-width:0}.guild-support-recipient small{display:block;color:#8ba0b9;font-size:10px}.guild-support-recipient strong{font-size:14px;font-weight:600;overflow-wrap:anywhere}.guild-support-recipient>span:last-child{color:#8ba0b9;font-size:10px}
+.guild-support-destination{display:flex;gap:7px;align-items:center;color:#9fb2c9;font-size:11px;margin:6px 0 20px 47px}
+.guild-support-label{display:grid;gap:7px;color:#a5b5c8;font-size:11px;margin:18px 0}
+.guild-support-label select{width:100%;min-width:0;padding:11px 12px;background:#111c28;border:1px solid #a8bedb24;border-radius:8px;color:#d9e3ef;font:12px 'Open Sans',Arial,sans-serif}
+.guild-support-roster-heading{display:flex;align-items:center;gap:12px;border-bottom:1px solid #ffffff0d;padding:4px 0 11px;margin-top:20px;color:#c6d1df;font-size:12px}
+.guild-support-roster-heading>span{flex:1}.guild-support-roster-heading small{display:block;color:#7f95af;font-size:10px;margin-top:2px}
+.guild-support-roster-heading button,.guild-support-unit>button{padding:4px 0;border:0;background:none;color:#a8bedb;font:11px 'Open Sans',Arial,sans-serif;cursor:pointer}
+.guild-support-units{max-height:290px;overflow-y:auto;scrollbar-color:#44576c transparent}
+.guild-support-unit{display:grid;grid-template-columns:36px minmax(0,1fr) 66px 30px;gap:10px;align-items:center;padding:11px 0;border-bottom:1px solid #ffffff08}
+.guild-support-unit .troop-icon{width:34px;height:34px;flex:none}.guild-support-unit label{min-width:0}.guild-support-unit strong{display:block;font-size:12px;font-weight:500;overflow-wrap:anywhere}.guild-support-unit small{display:block;font-size:10px;color:#7f95af;margin-top:2px}
+.guild-support-unit input{width:100%;min-width:0;padding:8px 5px;text-align:center;background:#101b27;border:1px solid #a8bedb24;border-radius:7px;color:#e7edf5;font:13px 'Open Sans',Arial,sans-serif;appearance:textfield;-moz-appearance:textfield}.guild-support-unit input::-webkit-inner-spin-button{appearance:none}
+.guild-support-eta{display:flex;gap:8px;align-items:center;padding:16px 0;color:#91a6bf;font-size:11px;min-height:47px}
+.guild-support-note{font-size:12px;color:#9bacc1;line-height:1.7;margin:14px 0}.guild-support-error{font-size:12px;color:#efb4b5;background:#bd646311;border:1px solid #bd646333;border-radius:8px;padding:10px 12px;margin:12px 0}.guild-support-error button{display:block;margin-top:8px;color:inherit;background:transparent;border:1px solid currentColor;border-radius:5px;padding:5px 8px}
+.guild-support-footer{display:flex;align-items:center;gap:10px;border-top:1px solid #ffffff0d;background:#121c2733;padding:17px 24px}.guild-support-footer>div{flex:1;white-space:nowrap}.guild-support-footer strong{font-size:17px;font-weight:600}.guild-support-footer span{font-size:10px;color:#7f95af}
+.guild-support-footer button{display:flex;align-items:center;justify-content:center;gap:7px;min-height:39px;padding:9px 12px;font:600 11px 'Open Sans',Arial,sans-serif;border:1px solid #a8bedb24;border-radius:8px;cursor:pointer}.guild-support-cancel{background:transparent;color:#a2b3c8}.guild-support-send{background:#aec5dc;color:#142332;border-color:#aec5dc!important}
+.guild-reinforcement-dialog button:disabled{opacity:.4;cursor:default}.guild-reinforcement-dialog :is(button,input,select):focus-visible{outline:2px solid #aec5dc;outline-offset:3px}.guild-support-send:not(:disabled):hover{background:#c0d4e7}
+.guild-member-list article>.guild-member-reinforce{width:auto;display:flex;gap:6px;align-items:center;padding:7px 10px;font-size:10px;white-space:nowrap;background:#a8bedb0c;border-color:#a8bedb24;color:#bfd0e3}
+@media(max-width:600px){.guild-member-reinforce span{display:none}.guild-member-list article>.guild-member-reinforce{width:32px;min-height:32px;justify-content:center;padding:7px}}
+@media(max-width:420px){.guild-support-heading{padding:19px 17px;gap:10px}.guild-support-heading h2{font-size:18px}.guild-support-body{padding:16px 17px 0}.guild-support-footer{padding:14px 17px;gap:8px;flex-wrap:wrap}.guild-support-footer>div{min-width:100%}.guild-support-footer button{flex:1}.guild-support-unit{grid-template-columns:31px minmax(0,1fr) 59px 28px;gap:7px}.guild-support-unit strong{font-size:11px}.guild-support-recipient>span:last-child{font-size:9px}}

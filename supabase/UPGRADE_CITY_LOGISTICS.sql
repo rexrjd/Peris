@@ -41,6 +41,32 @@ alter table public.battles alter column last_tick_at set default public.peris_ga
 alter table public.settlements alter column resources_updated_at set default public.peris_game_now();
 alter table public.peris_challenges alter column expires_at set default public.peris_game_now()+interval '90 seconds';
 
+-- Optional hooks keep focused upgrades usable before guild support is installed.
+-- No public reads, schema mutation, or synthetic troop state on older worlds.
+create or replace function public.peris_optional_guild_reinforcements()returns jsonb
+language plpgsql stable security definer set search_path='' as $$
+begin
+ if to_regprocedure('public.peris_guild_reinforcement_status()')is null then return '[]'::jsonb;end if;
+ return public.peris_guild_reinforcement_status();
+end $$;
+revoke all on function public.peris_optional_guild_reinforcements()from public,anon,authenticated;
+
+create or replace function public.peris_due_guild_reinforcements()returns table(owner_id uuid,due timestamptz)
+language plpgsql stable security definer set search_path='' as $$
+begin
+ if to_regclass('public.peris_guild_reinforcements')is null then return;end if;
+ return query
+ select r.owner_id,min(r.arrival_at)from public.peris_guild_reinforcements r
+ where r.status in('outbound','returning')and r.arrival_at<=public.peris_game_now()group by r.owner_id
+ union all
+ select r.owner_id,min(public.peris_game_now())from public.peris_guild_reinforcements r
+ join public.settlements s on s.id=r.target_settlement_id
+ where r.status='stationed'and (s.ruined_at is not null or not exists(
+  select 1 from public.peris_guild_members a join public.peris_guild_members b on b.guild_id=a.guild_id
+  where a.player_id=r.owner_id and b.player_id=r.recipient_id))group by r.owner_id;
+end $$;
+revoke all on function public.peris_due_guild_reinforcements()from public,anon,authenticated;
+
 do $$ begin if to_regclass('public.peris_city_garrisons') is null or to_regprocedure('public.peris_ruin_city(bigint)') is null then raise exception 'Apply the existing City Ruins and City Garrisons updates first'; end if; end $$;
 -- Logistics belong to their real city, never to a synthetic/zero-cost hero.
 -- Old recruitment orders retain their original legion destination.
@@ -210,6 +236,9 @@ begin
  if exists(select 1 from public.players where id=p_owner and defeated_at is not null)then return;end if;
  perform public.peris_ruin_advance(p_owner,p_until);
  perform public.peris_city_reinforcements_advance(p_owner,p_until);
+ if to_regprocedure('public.peris_guild_reinforcements_advance(uuid,timestamp with time zone)')is not null then
+  perform public.peris_guild_reinforcements_advance(p_owner,p_until);
+ end if;
  for s in select * from public.settlements where owner_id=p_owner and ruined_at is null order by id for update loop
  perform public.peris_city_migrate(s.id);if not s.population_ready then perform public.peris_city_economy(s.id);end if;
  end loop;
@@ -439,6 +468,9 @@ begin
   update public.players set defeated_at=coalesce(defeated_at,now()),culture_points=0 where id=city.owner_id;
   delete from public.peris_ruin_evacuations where owner_id=city.owner_id;
   delete from public.peris_city_reinforcements where owner_id=city.owner_id;
+  if to_regclass('public.peris_guild_reinforcements')is not null then
+   delete from public.peris_guild_reinforcements where owner_id=city.owner_id;
+  end if;
   delete from public.peris_garrisons where owner_id=city.owner_id;
   delete from public.peris_orders where owner_id=city.owner_id;
   update public.peris_settler_expeditions set status='returned'where owner_id=city.owner_id and status='travelling';
@@ -486,6 +518,7 @@ begin
    from public.peris_reports r join public.peris_camps c on c.id=r.camp_id and c.bandit left join public.battles b on b.id=r.battle_id where r.owner_id=u and r.result?'delivered'
   )s where s.rank=1),'[]'::jsonb),
  'garrisons',coalesce((select jsonb_agg(g order by row,col)from public.peris_garrisons g where owner_id=u),'[]'::jsonb),
+ 'guild_reinforcements',public.peris_optional_guild_reinforcements(),
  'city_reinforcements',coalesce((select jsonb_agg(r order by r.arrival_at,r.id)from public.peris_city_reinforcements r where r.owner_id=u),'[]'::jsonb),
  'city_garrisons',coalesce((select jsonb_agg(to_jsonb(g)||jsonb_build_object('infantry',public.peris_roster_class(g.unit_roster,'infantry'),'archers',public.peris_roster_class(g.unit_roster,'archers'),'cavalry',public.peris_roster_class(g.unit_roster,'cavalry'))order by g.settlement_id)from public.peris_city_garrisons g where g.owner_id=u),'[]'::jsonb),
  'ruin_evacuations',coalesce((select jsonb_agg(e order by e.arrival_at)from public.peris_ruin_evacuations e where e.owner_id=u),'[]'::jsonb),
@@ -527,6 +560,7 @@ begin
   union all select owner_id,min(arrival_at)from public.peris_settler_expeditions where status='travelling'and arrival_at<=public.peris_game_now()group by owner_id
   union all select owner_id,min(arrival_at)from public.peris_ruin_evacuations where arrival_at<=public.peris_game_now()group by owner_id
   union all select owner_id,min(arrival_at)from public.peris_city_reinforcements where arrival_at<=public.peris_game_now()group by owner_id
+  union all select owner_id,due from public.peris_due_guild_reinforcements()
   union all select owner_id,min(finish_at)from public.peris_orders where finish_at<=public.peris_game_now()group by owner_id
   union all select owner_id,min(public.peris_science_deadline(owner_id))from public.peris_account_science where active_id is not null and public.peris_science_deadline(owner_id)<=public.peris_game_now()group by owner_id
   union all select owner_id,min(next_at)from public.peris_campaign_farms where enabled and next_at<=public.peris_game_now()group by owner_id
@@ -570,6 +604,70 @@ begin
   begin perform public.peris_camp_accrue(camp_id);exception when others then camp_failed:=camp_failed+1;end;
  end loop;
  return jsonb_build_object('processed',processed,'attempted',attempted,'failed',failed,'battles',battles,'camps_failed',camp_failed,'duration_ms',extract(epoch from(clock_timestamp()-started))*1000);
+end $$;
+create or replace function public.peris_ruin_city(p_city bigint)returns boolean
+language plpgsql security definer set search_path='' as $$
+declare city public.settlements%rowtype;garrison public.peris_city_garrisons%rowtype;g public.peris_garrisons%rowtype;a public.armies%rowtype;route jsonb;
+ old_fields text[];city_key text;pos jsonb;target_key text;living_count integer;
+begin
+ select * into city from public.settlements where id=p_city for update;
+ if city.id is null or city.ruined_at is not null then return false;end if;
+ if exists(select 1 from public.buildings where settlement_id=p_city and level>0)
+    or exists(select 1 from public.peris_city_slots where settlement_id=p_city and level>0)then return false;end if;
+ city_key:=floor(city.x/128.0)::integer||':'||floor(city.y/128.0)::integer;
+ select array_append(coalesce(array_agg(col||':'||row),array[]::text[]),city_key)into old_fields from public.peris_map_plots where settlement_id=p_city;
+ update public.settlements set ruined_at=now(),wood=0,stone=0,food=0,gold=0,
+    wood_rate=0,stone_rate=0,food_rate=0,gold_rate=0,settlers=0,population=0 where id=p_city;
+ delete from public.peris_orders where settlement_id=p_city;
+ update public.peris_settler_expeditions set status='returned' where origin_settlement_id=p_city and status='travelling';
+ -- Dedicated city defenders evacuate using the same no-commander transport.
+ for garrison in select * from public.peris_city_garrisons where settlement_id=p_city and owner_id=city.owner_id for update loop
+  route:=public.peris_ruin_route(city.owner_id,city.x,city.y);
+  if route is not null and public.peris_roster_total(garrison.unit_roster)>0 then
+   insert into public.peris_ruin_evacuations(owner_id,origin_settlement_id,target_settlement_id,origin_x,origin_y,troops,departure_at,arrival_at)
+   values(city.owner_id,city.id,(route->>'city_id')::bigint,city.x,city.y,public.peris_roster(garrison.unit_roster),public.peris_game_now(),
+     public.peris_game_now()+make_interval(secs=>greatest(2,(route->>'distance')::numeric/22)::double precision));
+  end if;
+  delete from public.peris_city_garrisons where settlement_id=p_city and owner_id=city.owner_id;
+ end loop;
+ -- Transport surviving station pools before abandoning the claimed fields.
+ for g in select * from public.peris_garrisons where owner_id=city.owner_id and (col||':'||row)=any(old_fields)for update loop
+  route:=public.peris_ruin_route(city.owner_id,g.col*128+64,g.row*128+64);
+  if route is not null and public.peris_roster_total(public.peris_roster(to_jsonb(g)))>0 then
+   insert into public.peris_ruin_evacuations(owner_id,origin_settlement_id,target_settlement_id,origin_x,origin_y,troops,departure_at,arrival_at)
+   values(city.owner_id,city.id,(route->>'city_id')::bigint,g.col*128+64,g.row*128+64,public.peris_roster(to_jsonb(g)),public.peris_game_now(),
+    public.peris_game_now()+make_interval(secs=>greatest(2,(route->>'distance')::numeric/22)::double precision));
+  end if;
+  delete from public.peris_garrisons where owner_id=g.owner_id and col=g.col and row=g.row;
+ end loop;
+ delete from public.peris_map_plots where settlement_id=p_city;
+ select count(*)into living_count from public.settlements where owner_id=city.owner_id and ruined_at is null;
+ if living_count=0 then
+  update public.players set defeated_at=coalesce(defeated_at,now()),culture_points=0 where id=city.owner_id;
+  delete from public.peris_ruin_evacuations where owner_id=city.owner_id;
+  delete from public.peris_city_reinforcements where owner_id=city.owner_id;
+  if to_regclass('public.peris_guild_reinforcements')is not null then
+   delete from public.peris_guild_reinforcements where owner_id=city.owner_id;
+  end if;
+  delete from public.peris_garrisons where owner_id=city.owner_id;
+  delete from public.peris_orders where owner_id=city.owner_id;
+  update public.peris_settler_expeditions set status='returned'where owner_id=city.owner_id and status='travelling';
+  update public.peris_campaign_farms set enabled=false where owner_id=city.owner_id;
+  for a in select * from public.armies where owner_id=city.owner_id for update loop
+   perform public.peris_write_roster(a.id,public.peris_roster('{}'));
+   update public.armies set status='idle',raid_city_id=null,raid_target_id=null,raid_reserve=null,march_path=null,march_distance=null,march_origin=null,march_returning=false,march_sent_at=null,march_cancel_until=null,carried_loot=null,updated_at=now()where id=a.id;
+  end loop;
+  return true;
+ end if;
+ for a in select * from public.armies where owner_id=city.owner_id order by id for update loop
+  pos:=public.peris_army_position(a);
+  target_key:=floor(a.target_x/128.0)::integer||':'||floor(a.target_y/128.0)::integer;
+  if a.home_settlement_id=city.id or target_key=any(old_fields) or
+   (a.status='idle' and (floor((pos->>'x')::numeric/128.0)::integer||':'||floor((pos->>'y')::numeric/128.0)::integer)=any(old_fields))then
+   perform public.peris_ruin_redirect_army(a.id);
+  end if;
+ end loop;
+ return true;
 end $$;
 notify pgrst,'reload schema';
 commit;

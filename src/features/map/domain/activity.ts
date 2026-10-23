@@ -18,6 +18,7 @@ export type MapActivity = {
     startedAt: number | null; endsAt: number | null; live?: boolean;
     selection: Exclude<MapSelection, null>; point: { x: number; y: number };
     cancel?: { armyId: number; sentAt: string; until: number };
+    guildReinforcementId?: number; supportStatus?: 'outbound'|'stationed'|'returning';
 };
 const timestamp = (value?: string | null) => {
     const n = value ? Date.parse(value) : NaN;
@@ -90,6 +91,19 @@ export function mapActivity(world: World, owner: string, now: number): MapActivi
             destination: target.name, troops: total, cityId: target.id, sourceCityId: origin.id, shipmentId: shipment.id,
             startedAt: timestamp(shipment.departure_at), endsAt: timestamp(shipment.arrival_at),
             selection: { kind: 'settlement', id: target.id }, point: { x: target.x, y: target.y } });
+    }
+    for (const support of world.guild_reinforcements ?? []) {
+        if(support.owner_id!==owner&&support.recipient_id!==owner)continue;
+        const returning=support.status==='returning';
+        const cityId=support.owner_id===owner?(returning?support.target_settlement_id:support.source_settlement_id):(support.recipient_city_id??(!returning?support.target_settlement_id:undefined));
+        const destination=world.settlements.find(s=>s.id===support.target_settlement_id);
+        const total=rosterTotal(support.troops);
+        events.push({id:'guild-reinforcement:'+support.id,kind:'reinforcement',category:'armies',
+            title:total.toLocaleString()+' guild reinforcements',detail:returning?support.recipient_city??'Guild support':support.source_city,
+            destination:support.target_city,troops:total,cityId,sourceCityId:support.owner_id===owner?support.source_settlement_id:undefined,
+            guildReinforcementId:support.id,supportStatus:support.status,
+            startedAt:timestamp(support.departure_at),endsAt:timestamp(support.arrival_at),
+            selection:destination?{kind:'settlement',id:destination.id}:{kind:'cell',...activityField({x:support.target_x,y:support.target_y})},point:{x:support.target_x,y:support.target_y}});
     }
     for (const order of world.orders) {
         if (order.owner_id !== owner) continue;
