@@ -80,7 +80,6 @@ export function settleLocal(w: World, owner: string, now = worldGameNow(w), trav
     accrueCulture(w, owner, now);
     for (const city of w.settlements.filter(s => s.owner_id === owner && !s.ruined_at)) accrueResources(city, now);
     unloadWaitingCaravans(w,owner,now);
-    advanceTradeRoutes(w,owner,now,()=>nextEntityId(w));
     if (travel) for (const army of w.armies.filter(a => a.owner_id === owner)) {
         if(army.raid_target_id===null&&army.raid_city_id===null&& !ownedStation(w,owner,{x:army.target_x,y:army.target_y})) redirectFromLostStation(w,army,now);
         const arriving = army.status === 'moving' && Date.parse(army.arrival_at) <= now;
@@ -92,4 +91,6 @@ export function settleLocal(w: World, owner: string, now = worldGameNow(w), trav
             army.march_sent_at = null; army.march_cancel_until = null;
         }
     }
+    // Partial raid/import settlement leaves scheduled departures for the full arrival pass.
+    if(travel)advanceTradeRoutes(w,owner,now,()=>nextEntityId(w));
 }

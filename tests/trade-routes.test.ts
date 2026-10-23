@@ -37,6 +37,13 @@ test('two deliveries in a run wait for the first caravan to return',()=>{
  const f=fixture();f.save({deliveries:2});f.advance(f.now);const r=f.world.trade_routes![0],first=f.world.trade_caravans![0];assert.equal(r.deliveries_left,1);assert.equal(r.next_run_at,first.return_at);
  f.advance(Date.parse(first.arrival_at));assert.equal(r.sent,1);f.advance(Date.parse(first.return_at));assert.equal(r.sent,2);assert.equal(r.deliveries_left,0);assert.ok(Date.parse(r.next_run_at)>Date.parse(first.return_at));
 });
+
+test('arriving army loot is available before a current-time automatic departure',()=>{
+ const f=fixture(),army=f.world.armies[0],home=homeArmyPosition(f.source);f.source.wood=0;f.save();
+ Object.assign(army,{home_settlement_id:f.source.id,status:'moving',start_x:home.x,start_y:home.y,target_x:home.x,target_y:home.y,departure_at:new Date(f.now-10000).toISOString(),arrival_at:f.context.now,raid_target_id:null,raid_city_id:null,carried_loot:{wood:100,stone:0,food:0,gold:0},loot_report_id:null});
+ settleLocal(f.world,f.context.playerId,f.now,false);assert.equal(f.world.trade_routes![0].sent,0);assert.equal(f.world.trade_routes![0].skipped,0);
+ f.advance(f.now);assert.equal(army.carried_loot,null);assert.equal(f.world.trade_routes![0].sent,1);assert.equal(f.source.wood,0);
+});
 test('stock or carrying shortages skip the cycle with no partial cargo or debit',()=>{
  const f=fixture();f.save({deliveries:3});f.source.wood=1;f.advance(f.now);const r=f.world.trade_routes![0];assert.equal(r.sent,0);assert.equal(r.skipped,1);assert.equal(r.deliveries_left,0);assert.match(r.last_status,/resources|stores|stock/i);assert.equal(f.source.wood,1);
  f.source.wood=2000;f.advance(Date.parse(r.next_run_at));assert.equal(r.sent,1);
