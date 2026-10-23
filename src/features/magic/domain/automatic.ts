@@ -23,7 +23,7 @@ export function chooseAutomaticSpell(b:Battle,fs:Formation[],side:Formation['sid
             let value=0;
             affected.forEach((f,i)=>{
                 if(friendly){
-                    const missing=f.initial_soldiers-f.soldiers,threat=enemies.some(e=>dist(e,f)<260);
+                    const missing=f.initial_soldiers-(f.starvation_losses??0)-f.soldiers,threat=enemies.some(e=>dist(e,f)<260);
                     if(missing>=Math.min(spell.heal*power*.5,Math.max(1,f.initial_soldiers*.15)))value+=Math.min(missing,Math.ceil(spell.heal*power))*(f.status==='routed'&&spell.revive?1.5:1.1);
                     if(f.soldiers>0){
                         value+=spell.morale>0?Math.min(spell.morale,Math.max(0,70-f.morale))*.3:0;

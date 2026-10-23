@@ -4,7 +4,8 @@ import {advanceTradeRoutes} from '../../city/domain/tradeRoutes';
 import { settleCityReinforcements } from '../../city/domain/cityReinforcements';
 import { cityGarrisonAt, type CityGarrison } from '../../city/domain/cityGarrison';
 import { addRosters, emptyRoster, readRoster, writeRoster } from '../../army/domain/roster';
-import {ensureScience,advanceResearch} from '../../research/domain/science';
+import {ensureScience,advanceResearch,researchDeadline} from '../../research/domain/science';
+import {refreshTroopUpkeep} from '../../city/domain/troopSupply';
 import { isDefeated, settleRuinEvacuations, redirectFromLostStation } from '../../city/domain/ruins';
 import { accrueResources } from '../../city/domain/economy';
 import { completeUpgrade } from '../../city/domain/construction';
@@ -20,6 +21,20 @@ import { ownedStation } from '../../map/domain/garrisons';
 
 /** Complete all cities' queues in time order; every order belongs to one city/army. */
 export function settleLocal(w: World, owner: string, now = worldGameNow(w), travel = true) {
+    if(w.troop_upkeep_version===1){settleWithTroopSupply(w,owner,now,travel);return;}
+    settleLegacy(w,owner,now,travel);
+}
+
+/** Legacy armies were free: finish that period before activating the new rules. */
+export function activateTroopUpkeep(w:World,at:number){
+    if(w.troop_upkeep_version===1){refreshTroopUpkeep(w,at);return;}
+    for(const s of w.settlements)delete s.food_troop_upkeep;
+    for(const p of w.players)settleLegacy(w,p.id,at);
+    w.troop_upkeep_version=1;refreshTroopUpkeep(w,at);
+}
+
+/** Retained for old-save catch-up and as the queue completion kernel. */
+function settleLegacy(w: World, owner: string, now:number, travel=true, routes=true) {
     const player = w.players.find(p => p.id === owner);
     if (!player || isDefeated(w,owner)) return;
     settleRuinEvacuations(w,owner,now);
@@ -92,5 +107,49 @@ export function settleLocal(w: World, owner: string, now = worldGameNow(w), trav
         }
     }
     // Partial raid/import settlement leaves scheduled departures for the full arrival pass.
-    if(travel)advanceTradeRoutes(w,owner,now,()=>nextEntityId(w));
+    if(travel&&routes)advanceTradeRoutes(w,owner,now,()=>nextEntityId(w));
+}
+
+/** Advance all connected suppliers before applying any transition at that instant. */
+function settleWithTroopSupply(w:World,owner:string,until:number,routes:boolean){
+    if(!w.players.some(p=>p.id===owner)||isDefeated(w,owner))return;
+    const owners=new Set([owner]);
+    for(let changed=true;changed;){changed=false;
+        for(const p of [...(w.guild_reinforcements??[]),...(w.trade_caravans??[]).filter(c=>c.status!=='completed')]){
+            if(owners.has(p.owner_id)||owners.has(p.recipient_id))for(const id of [p.owner_id,p.recipient_id])if(!owners.has(id)){owners.add(id);changed=true;}
+        }
+    }
+    const cities=()=>w.settlements.filter(s=>owners.has(s.owner_id)&&!s.ruined_at);
+    let cursor=Math.min(until,...cities().map(s=>Date.parse(s.resources_updated_at)));
+    const complete=(at:number)=>{
+        for(const id of [...owners].sort())settleLegacy(w,id,at,true,false);
+        for(const p of w.guild_reinforcements??[]){
+            if(!owners.has(p.owner_id)||p.status==='stationed'||!p.arrival_at||Date.parse(p.arrival_at)>at)continue;
+            const target=w.settlements.find(s=>s.id===p.target_settlement_id&&!s.ruined_at);
+            if(p.status==='outbound'&&target&&target.owner_id===p.recipient_id){p.status='stationed';continue;}
+            if(p.status==='returning'&&target?.owner_id===p.owner_id){
+                const g=cityGarrisonAt(w,target.id,p.owner_id);
+                if(g)writeRoster(g,addRosters(readRoster(g),p.troops));
+                else{const fresh:CityGarrison={owner_id:p.owner_id,settlement_id:target.id,...emptyRoster()};writeRoster(fresh,p.troops);(w.city_garrisons??=[]).push(fresh);}
+                w.guild_reinforcements=w.guild_reinforcements?.filter(row=>row!==p);
+            }
+        }
+        refreshTroopUpkeep(w,at);
+    };
+    refreshTroopUpkeep(w,cursor);complete(cursor);
+    while(cursor<until){
+        const boundaries:number[]=[until];
+        const add=(value:string|null|undefined)=>{if(value){const at=Date.parse(value);if(at>cursor&&at<=until)boundaries.push(at);}};
+        for(const o of w.orders)if(owners.has(o.owner_id))add(o.finish_at);
+        for(const e of w.settler_expeditions??[])if(owners.has(e.owner_id)&&e.status==='travelling')add(e.arrival_at);
+        for(const a of w.armies)if(owners.has(a.owner_id)&&a.status==='moving'){add(a.departure_at);add(a.arrival_at);}
+        for(const p of [...(w.city_reinforcements??[]),...(w.ruin_evacuations??[])])if(owners.has(p.owner_id))add(p.arrival_at);
+        for(const p of w.guild_reinforcements??[])if(owners.has(p.owner_id)&&p.status!=='stationed')add(p.arrival_at);
+        for(const id of owners){for(const t of tradeEvents(w,id,until))if(t.at>cursor)boundaries.push(t.at);const due=researchDeadline(w,id);if(due>cursor&&due<=until)boundaries.push(due);}
+        const at=Math.min(...boundaries);
+        for(const s of cities().sort((a,b)=>a.id-b.id))accrueResources(s,at,w);
+        cursor=at;complete(at);
+    }
+    if(routes)for(const id of [...owners].sort())advanceTradeRoutes(w,id,until,()=>nextEntityId(w));
+    refreshTroopUpkeep(w,until);
 }

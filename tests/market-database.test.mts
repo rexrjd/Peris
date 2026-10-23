@@ -17,7 +17,9 @@ for(const rate of [1,10,100]){
   if(rate===10){
    // An existing live world without the Market subsystem exercises optional hooks before upgrade.
    const marketSource=(await readFile('supabase/modules/city/market.sql','utf8')).replaceAll('\r\n','\n');
-   const preMarket=fresh.replaceAll('\r\n','\n').replace(marketSource,'').replace("grant execute on function public.peris_trade_targets(),public.peris_trade_status()to authenticated;",'');
+   const cropSource=(await readFile('supabase/modules/city/crop-upkeep.sql','utf8')).replaceAll('\r\n','\n');
+   // A historical world has neither Market nor its later crop coordinator.
+   const preMarket=fresh.replaceAll('\r\n','\n').replace(cropSource,'').replace(marketSource,'').replace("grant execute on function public.peris_trade_targets(),public.peris_trade_status()to authenticated;",'');
    assert.notEqual(preMarket,fresh);
    await db.exec(preMarket);
   }else{await db.exec(fresh);await db.exec(fresh);}

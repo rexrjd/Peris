@@ -11,6 +11,21 @@ const body=upgrade.replace(/^begin;\s*$/gm,'').replace(/^commit;\s*$/gm,'')
 const fresh=(await readSource(path.join(root,'supabase/modules/install/fresh-base.sql')))+body+(await readSource(path.join(root,'supabase/modules/install/fresh-tail.sql')))
 const signupFix='-- PERIS multiplayer signup hotfix for an existing V10-V13 world.\n-- Replaces allocation only; preserves accounts, cities, armies, loot and world data.\n-- Run this entire file in Supabase SQL Editor, then retry the same ruler name.\nbegin;\n\n'+(await readSource(path.join(root,'supabase/modules/accounts/create_player.sql')))+"\nrevoke all on function public.create_player(text) from public,anon;\ngrant execute on function public.create_player(text) to authenticated;\nnotify pgrst,'reload schema';\ncommit;\n"
 const outputs={'UPGRADE_TO_V13.sql':upgrade,'FRESH_INSTALL_V13.sql':fresh,'UPGRADE_TO_V12.sql':upgrade,'FRESH_INSTALL_V12.sql':fresh,'UPGRADE_TO_V11.sql':upgrade,'FRESH_INSTALL_V11.sql':fresh,'UPGRADE_TO_V10.sql':upgrade,'FRESH_INSTALL_V10.sql':fresh,'UPGRADE_TO_V9.sql':upgrade,'FRESH_INSTALL_V9.sql':fresh,'UPGRADE_TO_V8.sql':upgrade,'UPGRADE_TO_V7.sql':upgrade,'UPGRADE_V5_TO_V6.sql':upgrade,'schema.sql':upgrade,'FRESH_INSTALL_V8.sql':fresh,'FRESH_INSTALL_V7.sql':fresh,'FRESH_INSTALL_V6.sql':fresh}
+const cropSource=await readSource(path.join(root,'supabase/modules/city/crop-upkeep.sql'))
+outputs['UPGRADE_HOUSING_AND_POPULATION.sql']=['-- PERIS housing and population. Generated from modular source.','begin;',await readSource(path.join(root,'supabase/modules/city/population.sql')),"notify pgrst,'reload schema';",'commit;'].join('\n')
+const cropDependencies=[]
+for(const[file,names]of[
+ ['city/population.sql',['peris_city_economy']],
+ ['city/guild-reinforcements.sql',['peris_guild_reinforcement_return','peris_guild_reinforcements_advance','peris_recall_guild_reinforcements']],
+ ['battle/peris_finish.sql',['peris_finish']],
+ ['campaign/player-raids.sql',['peris_finish_city_raid']],
+ ['snapshot/peris_snapshot.sql',['peris_snapshot']],
+ ['campaign/game-worker.sql',['peris_game_tick']],
+]){
+ const source=await readSource(path.join(root,'supabase/modules',file))
+ for(const name of names){const defs=(source.match(/create or replace function public\.[\s\S]*?\$\$;/g)??[]).filter(x=>x.startsWith('create or replace function public.'+name+'('));if(!defs.length)throw Error('Missing crop dependency '+name);cropDependencies.push(...defs)}
+}
+outputs['UPGRADE_CROP_UPKEEP.sql']=['-- PERIS crop upkeep. Apply after V19, City Logistics, Guild Reinforcements and Market Routes. Review before deployment.','begin;',"do $$begin if to_regprocedure('public.peris_market_settle(uuid,timestamptz)')is null or to_regclass('public.peris_guild_reinforcements')is null then raise exception 'Install the current Market, routes and guild support updates first';end if;end $$;",cropSource,...cropDependencies,'revoke all on function public.peris_guild_reinforcement_return(bigint,timestamptz)from public,anon,authenticated;',"notify pgrst,'reload schema';",'commit;'].join('\n')
 const citySlotsSource=await readSource(path.join(root,'supabase/modules/city/city-slots.sql'))
 const slotFunctionStart=citySlotsSource.indexOf('create or replace function public.peris_queue_slot(')
 const slotFunctionEnd=citySlotsSource.indexOf('\nrevoke all on function',slotFunctionStart)
@@ -233,6 +248,11 @@ const settleCore=(settleSource.match(/create or replace function public\.[\s\S]*
 const gameClock=await readSource(path.join(root,'supabase/modules/time/game-clock.sql'))
 for(const[name,content]of Object.entries(outputs)){
  let complete=content
+ // Rerunning an older focused installer must retain an already activated crop economy.
+ if(name!=='UPGRADE_CROP_UPKEEP.sql'&&!complete.includes('create or replace function public.peris_supply_rows(')&&/create or replace function public\.(peris_market_settle|peris_finish|peris_finish_city_raid|peris_population_accrue|peris_city_economy)\(/.test(complete)){
+  const restore="\ndo $restore_crop$begin if to_regclass('public.peris_crop_version')is not null then execute $crop_definition$"+cropSource+"$crop_definition$;end if;end $restore_crop$;\n"
+  complete=complete.replace(/commit;\s*$/,()=>restore+'commit;\n')
+ }
  if((complete.includes('public.peris_optional_trade_routes()')||complete.includes('public.peris_due_trade_routes()')||complete.includes('public.peris_trade_route_edges()')||complete.includes('public.peris_optional_advance_trade_routes('))&&!complete.includes('create or replace function public.peris_optional_trade_routes()'))complete=complete.replace(/^begin;$/m,()=> 'begin;\n'+tradeRouteHooks)
  if(complete.includes('public.peris_settle_core(')&&!complete.includes('create or replace function public.peris_settle_core('))complete=complete.replace(/^begin;$/m,()=> 'begin;\n'+settleCore+'\nrevoke all on function public.peris_settle_core(uuid,timestamptz)from public,anon,authenticated;\n')
  if((complete.includes('public.peris_optional_trade_caravans()')||complete.includes('public.peris_due_trade_caravans()'))&&!complete.includes('create or replace function public.peris_optional_trade_caravans()'))complete=complete.replace(/^begin;$/m,()=> 'begin;\n'+marketHooks)

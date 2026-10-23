@@ -24,6 +24,8 @@ import { emptyResources, RESOURCES } from '../../../shared/model/resources';
 import { recordBattleEconomics } from './reportEconomics';
 import { settleLocal } from './settlement';
 import { deliverCampLoot } from './loot';
+import {settleBattleFood} from '../../city/domain/battleFood';
+import {refreshTroopUpkeep} from '../../city/domain/troopSupply';
 
 export function beginCityRaid(world:World, owner:string, armyId:number, nextId:()=>number, now=worldGameNow(world)):Battle|undefined {
     const army=world.armies.find(row=>row.id===armyId&&row.owner_id===owner);
@@ -73,6 +75,7 @@ export function settleCityRaid(world:World,battle:Battle,nextId:()=>number,now=w
     const city=world.settlements.find(row=>row.id===battle.raid_city_id)!, army=world.armies.find(row=>row.id===battle.attacker_army_id)!;
     const result=battle.result, won=battle.winner_side==='attacker';
     for(const owner of [battle.attacker_owner_id,battle.defender_owner_id!])settleLocal(world,owner,now,false);
+    settleBattleFood(world,battle);
     const roster=(side:'attacker'|'defender',initial=false)=>{
         const bag=emptyRoster();
         for(const row of world.formations.filter(row=>row.battle_id===battle.id&&row.side===side))bag[row.recruit_unit??row.unit_type]+=initial?row.initial_soldiers:row.soldiers;
@@ -85,7 +88,7 @@ export function settleCityRaid(world:World,battle:Battle,nextId:()=>number,now=w
     result.attacker_faction=battle.attacker_faction??world.settlements.find(row=>row.id===army.home_settlement_id)?.faction;
     result.defender_faction=battle.defender_faction??city.faction;result.raid_city={id:city.id,name:city.name};
     const cumulative=emptyRoster();
-    for(const party of battle.city_defenders??[]){
+    for(const party of world.troop_upkeep_version===1?[]:battle.city_defenders??[]){
         const force=party.army_id?world.armies.find(row=>row.id===party.army_id&&row.owner_id===city.owner_id):party.city_garrison_id?cityGarrisonAt(world,city.id,city.owner_id):garrisonAt(world,city.owner_id,city);
         const loss=emptyRoster();
         for(const unit of RECRUIT_UNITS){
@@ -96,7 +99,7 @@ export function settleCityRaid(world:World,battle:Battle,nextId:()=>number,now=w
         if(force){const current=readRoster(force);writeRoster(force,Object.fromEntries(RECRUIT_UNITS.map(unit=>[unit,Math.max(0,current[unit]-loss[unit])])) as typeof current);}
     }
     world.garrisons=world.garrisons?.filter(row=>rosterTotal(readRoster(row))>0);
-    writeRoster(army,attacking);restoreRaidReserve(army);
+    if(world.troop_upkeep_version!==1)writeRoster(army,attacking);restoreRaidReserve(army);
     result.loot=won?takeLoot(city,Math.floor(carryingCapacity(attacking)*researchFactor(world,army.owner_id,'carry'))):emptyResources();
     for(const key of RESOURCES)city[key]-=result.loot[key];
     const engines=emptyRoster();
@@ -119,4 +122,5 @@ export function settleCityRaid(world:World,battle:Battle,nextId:()=>number,now=w
         const home=homeArmyPosition(safe);
         army.start_x=army.target_x=home.x;army.start_y=army.target_y=home.y;army.status='idle';deliverCampLoot(world,army);
     }
+    refreshTroopUpkeep(world,now);
 }

@@ -21,7 +21,8 @@ test('a Market is a unique ordinary city building, including while under constru
  assert.throws(()=>queueSlot(context,{type:'buildSlot',slot:1,item:'bazaar'}),/one Market/i);
  assert.equal(world.buildings.find(b=>b.building_type==='market')!.level,0);
 });
-function cities(){const f=fixture(),s=f.world.settlements[0];let target={...structuredClone(s),id:2,name:'Second city',x:s.x+128};
+function cities(){const f=fixture(),s=f.world.settlements[0];delete f.world.troop_upkeep_version;delete s.food_troop_upkeep; // Fixed-income legacy fixture isolates cargo conservation.
+let target={...structuredClone(s),id:2,name:'Second city',x:s.x+128};
  for(const [dx,dy]of [[128,0],[-128,0],[0,128],[0,-128]]){target={...target,x:s.x+dx,y:s.y+dy};if(findMarchPath(homeArmyPosition(s),homeArmyPosition(target)))break;}
  f.world.settlements.push(target);f.world.buildings.push(...f.world.buildings.filter(b=>b.settlement_id===s.id).map(b=>({...b,id:b.id+100,settlement_id:2})));
  f.world.city_slots=[{settlement_id:s.id,slot_index:0,building_type:'bazaar',level:2}];

@@ -12,7 +12,7 @@ export function populationPlan(w:World,sid:number){
 }
 export function populationRates(s:Settlement,p=s.population??POPULATION_START){
  const staffing=Math.min(1,p/Math.max(1,s.workers_required??0)),gross=(18+(s.field_food_rate??0)+(s.food_bonus??0)*staffing)*(s.food_research??1),upkeep=p*FOOD_PER_PERSON;
- return {wood_rate:(14+(s.field_wood_rate??0)+(s.wood_bonus??0)*staffing)*(s.wood_research??1),stone_rate:(12+(s.field_stone_rate??0)+(s.stone_bonus??0)*staffing)*(s.stone_research??1),food_rate:gross-upkeep,gold_rate:(3+(s.field_gold_rate??0)*(s.trade_research??1)+(s.gold_bonus??0)*staffing)*(s.gold_research??1),food_gross_rate:gross,food_upkeep:upkeep};
+ return {wood_rate:(14+(s.field_wood_rate??0)+(s.wood_bonus??0)*staffing)*(s.wood_research??1),stone_rate:(12+(s.field_stone_rate??0)+(s.stone_bonus??0)*staffing)*(s.stone_research??1),food_rate:gross-upkeep-(s.food_troop_upkeep??0),gold_rate:(3+(s.field_gold_rate??0)*(s.trade_research??1)+(s.gold_bonus??0)*staffing)*(s.gold_research??1),food_gross_rate:gross,food_upkeep:upkeep};
 }
 const EPS=1e-9;
 /** Earliest positive crossing of a resource boundary under a linear changing rate. */
@@ -22,12 +22,15 @@ function crossing(value:number,rate:number,slope:number,target:number){
  const root=Math.sqrt(discriminant);return [(-rate-root)/slope,(-rate+root)/slope].filter(t=>Number.isFinite(t)&&t>EPS);
 }
 /** Integrate only at growth/food/staffing boundaries; frequent ticks and long absences agree. */
-export function advancePopulationEconomy(s:Settlement,until:number){
+export function advancePopulationEconomy(s:Settlement,until:number,onStarvation?:(at:number)=>number){
  let remaining=Math.max(0,until-Date.parse(s.resources_updated_at))/60000;
+ const start=Date.parse(s.resources_updated_at),total=remaining,enabled=s.food_troop_upkeep!==undefined;
  const cap=s.population_capacity??40,jobs=s.workers_required??0,foodCap=s.food_capacity??s.capacity;
  s.population=Math.max(POPULATION_FLOOR,Math.min(cap,s.population??POPULATION_START));
- for(let iteration=0;remaining>EPS&&iteration<64;iteration++){
-  const p=s.population,r=populationRates(s,p),growth=s.food>EPS||r.food_rate>EPS?p<cap-EPS?1:0:r.food_rate< -EPS&&p>POPULATION_FLOOR+EPS?-1:0;
+ for(let iteration=0;remaining>(enabled?1e-8:EPS)&&(enabled||iteration<64);iteration++){
+  const p=s.population,r=populationRates(s,p);
+  if(enabled&&s.food<=EPS&&r.food_rate< -EPS&&onStarvation){const refund=onStarvation(start+(total-remaining)*60000);if(refund>0){s.food=Math.min(foodCap,s.food+refund);continue;}}
+  const growth=s.food>EPS||r.food_rate>EPS?p<cap-EPS?1:0:!enabled&&r.food_rate< -EPS&&p>POPULATION_FLOOR+EPS?-1:0;
   const below=jobs>0&&(p<jobs-EPS||Math.abs(p-jobs)<EPS&&growth<0),factor=below?growth/jobs:0,foodSlope=(s.food_bonus??0)*factor*(s.food_research??1)-FOOD_PER_PERSON*growth;
   let dt=remaining;if(growth>0)dt=Math.min(dt,cap-p);if(growth<0)dt=Math.min(dt,p-POPULATION_FLOOR);
   if(growth&&((growth>0&&p<jobs-EPS)||(growth<0&&p>jobs+EPS)))dt=Math.min(dt,Math.abs(jobs-p));
@@ -41,6 +44,6 @@ export function advancePopulationEconomy(s:Settlement,until:number){
  Object.assign(s,populationRates(s));s.resources_updated_at=new Date(Math.max(until,Date.parse(s.resources_updated_at))).toISOString();
 }
 export function populationGrowth(s:Settlement){
- if(s.food<=EPS&&s.food_rate< -EPS&&s.population!>POPULATION_FLOOR+EPS)return -1;
+ if(s.food_troop_upkeep===undefined&&s.food<=EPS&&s.food_rate< -EPS&&s.population!>POPULATION_FLOOR+EPS)return -1;
  return (s.food>EPS||s.food_rate>EPS)&&s.population!<s.population_capacity!-EPS?1:0;
 }

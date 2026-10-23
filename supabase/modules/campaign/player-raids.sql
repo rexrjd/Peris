@@ -123,6 +123,7 @@ declare b public.battles%rowtype;c public.settlements%rowtype;a public.armies%ro
 begin
  select * into b from public.battles where id=p_bid for update;if b.id is null or b.status<>'active'or b.raid_city_id is null then return;end if;
  if p_winner not in('attacker','defender','draw')then raise exception 'Invalid battle outcome';end if;
+ if to_regprocedure('public.peris_food_finish(bigint)')is not null then perform public.peris_food_finish(p_bid);select * into b from public.battles where id=p_bid;end if;
  if not public.peris_lock_battle_participants(b.attacker_owner_id,b.defender_owner_id)then raise lock_not_available;end if;
  perform public.peris_settle(b.attacker_owner_id);perform public.peris_settle(b.defender_owner_id);
  select * into c from public.settlements where id=b.raid_city_id for update;
@@ -139,6 +140,7 @@ begin
    losses:=jsonb_set(losses,array[unit_name],to_jsonb(case when total=0 then 0 else floor(lost::numeric*(start_count+party_count)/total)::integer-floor(lost::numeric*start_count/total)::integer end));
    cumulative:=jsonb_set(cumulative,array[unit_name],to_jsonb(start_count+party_count));
   end loop;
+  if to_regprocedure('public.peris_food_defender_losses(bigint,jsonb)')is not null then losses:=public.peris_food_defender_losses(b.id,party);end if;
   if party ? 'army_id'then
    select public.peris_roster(to_jsonb(d))into current_roster from public.armies d where id=(party->>'army_id')::bigint and owner_id=b.defender_owner_id for update;
    perform public.peris_write_roster((party->>'army_id')::bigint,public.peris_roster_add(current_roster,losses,-1));
@@ -167,7 +169,9 @@ begin
    end if;
   end if;
  end loop;
- perform public.peris_write_roster(a.id,public.peris_roster_add(survivors,coalesce(a.raid_reserve,'{}')));
+ current_roster:=survivors;
+ if to_regprocedure('public.peris_food_roster_after(bigint,text,jsonb)')is not null then current_roster:=public.peris_food_roster_after(b.id,'attacker',public.peris_roster(to_jsonb(a)));end if;
+ perform public.peris_write_roster(a.id,public.peris_roster_add(current_roster,coalesce(a.raid_reserve,'{}')));
  select coalesce(sum(f.soldiers*u.carry),0)into carry from public.battle_formations f join public.peris_unit_catalog u on u.unit=coalesce(f.recruit_unit,f.unit_type)where f.battle_id=b.id and f.side='attacker';
  carry:=floor(carry*public.peris_research_factor(b.attacker_owner_id,'carry'));
  if p_winner='attacker'then

@@ -39,7 +39,7 @@ $$;
 revoke all on function public.peris_guild_reinforcement_targets() from public,anon;
 grant execute on function public.peris_guild_reinforcement_targets() to authenticated;
 
-create or replace function public.peris_guild_reinforcement_return(p_id bigint) returns boolean
+create or replace function public.peris_guild_reinforcement_return(p_id bigint,p_at timestamptz) returns boolean
 language plpgsql security definer set search_path='' as $$
 declare r public.peris_guild_reinforcements%rowtype;target jsonb;pace numeric;
 begin
@@ -53,11 +53,13 @@ begin
  if target is null then delete from public.peris_guild_reinforcements where id=r.id;return false;end if;
  update public.peris_guild_reinforcements set target_settlement_id=(target->>'city_id')::bigint,
   march_path=target->'path',target_x=(target->>'x')::integer,target_y=(target->>'y')::integer,
-  status='returning',departure_at=public.peris_game_now(),arrival_at=public.peris_game_now()+make_interval(secs=>greatest(2,(target->>'distance')::numeric/pace)::double precision)
+  status='returning',departure_at=p_at,arrival_at=p_at+make_interval(secs=>greatest(2,(target->>'distance')::numeric/pace)::double precision)
  where id=r.id;
  return true;
 end $$;
-revoke all on function public.peris_guild_reinforcement_return(bigint) from public,anon,authenticated;
+create or replace function public.peris_guild_reinforcement_return(p_id bigint)returns boolean
+language sql security definer set search_path='' as $$select public.peris_guild_reinforcement_return(p_id,public.peris_game_now())$$;
+revoke all on function public.peris_guild_reinforcement_return(bigint),public.peris_guild_reinforcement_return(bigint,timestamptz) from public,anon,authenticated;
 
 create or replace function public.peris_recall_guild_reinforcements(p_id bigint) returns jsonb
 language plpgsql security definer set search_path='' as $$
@@ -69,6 +71,7 @@ begin
  select * into r from public.peris_guild_reinforcements where id=p_id and owner_id=u for update;
  if r.id is null or r.status<>'stationed' then raise exception 'Only stationed reinforcements you sent can be recalled';end if;
  if exists(select 1 from public.battles where raid_city_id=r.target_settlement_id and status='active')then raise exception 'Wait for the city battle to end before recalling reinforcements';end if;
+ perform public.peris_settle(u,public.peris_game_now());
  perform public.peris_guild_reinforcement_return(r.id);
  return jsonb_build_object('ok',true);
 end $$;
@@ -141,14 +144,14 @@ begin
   select exists(select 1 from public.peris_guild_members a join public.peris_guild_members b on b.guild_id=a.guild_id where a.player_id=r.owner_id and b.player_id=r.recipient_id)into is_guild;
   if r.status='stationed' then
    if exists(select 1 from public.battles where raid_city_id=r.target_settlement_id and status='active')then continue;end if;
-   if not is_guild or city.id is null then perform public.peris_guild_reinforcement_return(r.id);end if;
+   if not is_guild or city.id is null then perform public.peris_guild_reinforcement_return(r.id,p_until);end if;
   elsif r.status='outbound' then
    if is_guild and city.id is not null then
     update public.peris_guild_reinforcements set status='stationed',arrival_at=null where id=r.id;
-   else perform public.peris_guild_reinforcement_return(r.id);end if;
+   else perform public.peris_guild_reinforcement_return(r.id,p_until);end if;
   elsif r.status='returning' then
    select * into city from public.settlements where id=r.target_settlement_id and owner_id=r.owner_id and ruined_at is null;
-   if city.id is null then perform public.peris_guild_reinforcement_return(r.id);
+   if city.id is null then perform public.peris_guild_reinforcement_return(r.id,p_until);
    else perform public.peris_city_garrison_receive(r.owner_id,city.id,r.troops);
     delete from public.peris_guild_reinforcements where id=r.id;end if;
   end if;

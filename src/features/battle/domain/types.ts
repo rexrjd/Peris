@@ -4,6 +4,8 @@ import type { Faction } from '../../factions/domain/factions';
 export type Terrain = 'plains' | 'woods' | 'highlands' | 'river' | 'farmland' | 'desert' | 'snow' | 'marsh' | 'coast' | 'darkland';
 export type Difficulty = 'easy' | 'normal' | 'hard';
 export type Battle = {
+    starvation_sources?: Record<string, import('../../army/domain/roster').UnitRoster>;
+    food_settled?: boolean;
     balance_version?: import('../../army/domain/unitBalance').UnitBalanceVersion;
     id: number;
     attacker_owner_id: string;
@@ -39,6 +41,7 @@ export type Battle = {
 };
 export type FormationStatus = 'idle' | 'moving' | 'engaged' | 'routed';
 export type Formation = {
+    starvation_losses?: number;
     recruit_unit?: import('../../army/domain/roster').RecruitUnit; unit_attack?: number; unit_defence?: number; unit_speed?: number;
     id: number;
     battle_id: number;

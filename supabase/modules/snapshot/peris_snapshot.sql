@@ -5,6 +5,9 @@ begin
  perform public.peris_note_account_activity();
  perform public.peris_science_ensure(u);
  perform public.peris_city_migrate(s.id) from public.settlements s where s.owner_id=u;
+ if to_regprocedure('public.peris_supply_refresh(bigint,timestamp with time zone)')is not null then
+  execute 'select public.peris_supply_refresh(id,public.peris_game_now())from public.settlements where owner_id=$1 and ruined_at is null'using u;
+ end if;
  select jsonb_build_object('version',6,'server_now',public.peris_game_now(),'game_clock',public.peris_clock_snapshot(),
  'debug_enabled',coalesce((select enabled from public.peris_debug_config where id),false),
  'map',jsonb_build_object('version',4,'cols',200,'rows',200,'cell_size',128,'seed',1346720329,
@@ -52,6 +55,7 @@ begin
  'progress',coalesce((select jsonb_agg(p)from public.peris_progress p where owner_id=u),'[]'::jsonb),
  'claims',coalesce((select jsonb_agg(c)from public.peris_claims c where owner_id=u),'[]'::jsonb),
  'challenges',coalesce((select jsonb_agg(c)from public.peris_challenges c where (attacker_owner_id=u or defender_owner_id=u)and status='pending'and expires_at>public.peris_game_now()),'[]'::jsonb))into result;
+ if to_regprocedure('public.peris_supply_refresh(bigint,timestamp with time zone)')is not null then result:=result||jsonb_build_object('troop_upkeep_version',1);end if;
  return result;
 end $$;
 

@@ -17,6 +17,7 @@ import { useResearchNavigation } from '../../research/ui/ResearchNavigation';
 import { TROOP_PRESENTATION, troopMultiplier, troopNumber } from './troopPresentation';
 import { troopCardStats } from '../domain/troopCardStats';
 import { TroopStatSummary } from './TroopStatSummary';
+import {UNIT_CROP_PER_HOUR} from '../../city/domain/troopSupply';
 
 export function TroopStatsDialog({ world, army, city, unit, now, onClose, onUnit, onRecruit }: {
     world: World; army: Army; city: Settlement; unit: RecruitUnit; now: number;
@@ -30,6 +31,7 @@ export function TroopStatsDialog({ world, army, city, unit, now, onClose, onUnit
     const heading = useRef<HTMLElement>(null);
     useEffect(() => { const panel = heading.current?.closest('.army-troop-modal'); if (panel) panel.scrollTop = 0; }, [unit]);
     const rows = [
+        ...(world.troop_upkeep_version===1?[{label:'Crop upkeep',icon:'food',base:`${UNIT_CROP_PER_HOUR[unit]} / hour`,current:`${UNIT_CROP_PER_HOUR[unit]} / hour`,help:'Crop consumed per soldier per game hour. Empty reserves cause starvation when production cannot cover upkeep.'}]:[]),
         { label: 'Battle speed', icon: 'horse', base: `${troopNumber(rule.speed)} /s`, current: `${troopNumber(stats.speed)} /s`, help: 'Tactical distance per second on open ground. World travel uses the slowest troop, commander and research.' },
         { label: 'Attack range', icon: 'bow', base: stats.range ? troopNumber(stats.range) : 'Contact', current: stats.range ? troopNumber(stats.range) : 'Contact', help: 'Ranged distance in tactical units. Melee reach depends on formation size.' },
         { label: 'Loot capacity', icon: 'gold', base: troopNumber(rule.carry), current: troopNumber(stats.carry), help: 'Resources carried per surviving soldier, including account carry research.' },

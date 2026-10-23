@@ -10,7 +10,8 @@ import {changeFaction,debugCity} from '../../features/factions/domain/debug';
 import { type GameEngine } from '../contracts';
 import { type Command, type LocalCommandContext } from '../../shared/model/commands';
 import { type World } from '../../shared/model/world';
-import { settleLocal } from '../../features/campaign/domain/settlement';
+import { settleLocal,activateTroopUpkeep } from '../../features/campaign/domain/settlement';
+import {refreshTroopUpkeep} from '../../features/city/domain/troopSupply';
 import { SAVE_KEY } from '../../platform/storage/solo';
 import { stepBattle } from '../../features/battle/domain/simulation';
 import { beginRaid } from '../../features/campaign/domain/raids';
@@ -77,13 +78,14 @@ export class LocalEngine implements GameEngine {
         this.snapshot.battles.filter(b => b.status === 'resolved').forEach(b => this.finalized.add(b.id));
         const resumed=this.active();
         if(resumed?.phase==='combat')this.battleDebt=Math.min(900,Math.max(0,(this.nowGameMs()-Date.parse(resumed.last_tick_at))/1000));
+        activateTroopUpkeep(world,this.nowGameMs());
         settleLocal(world, this.playerId);
         this.advanceFarms();
         this.timer = window.setInterval(() => this.tick(), 50);
         this.save();
     }
     subscribe = (fn: () => void) => { this.listeners.add(fn); return () => this.listeners.delete(fn); };
-    private publish() { this.snapshot = { ...this.snapshot, server_now: new Date(this.nowGameMs()).toISOString() }; this.listeners.forEach(fn => fn()); }
+    private publish() { refreshTroopUpkeep(this.snapshot,this.nowGameMs());this.snapshot = { ...this.snapshot, server_now: new Date(this.nowGameMs()).toISOString() }; this.listeners.forEach(fn => fn()); }
     private save() { if (this.persistent)
         try {
             localStorage.setItem(SAVE_KEY, JSON.stringify(this.snapshot));

@@ -39,7 +39,7 @@ export function castSpell(context:LocalCommandContext,cmd:Extract<Command,{type:
  b[manaKey]=mana-spell.mana;b[readyKey]=b.elapsed+SPELL_COOLDOWN;
  affected.forEach((f,index)=>{
   const damage=Math.ceil((spell.chain?Math.max(0,spell.damage-index*6):spell.damage)*bonuses.spell*(1-(f.magic_defence??0)));
-  f.soldiers=Math.max(0,Math.min(f.initial_soldiers,f.soldiers-damage+Math.ceil(spell.heal*bonuses.spell)));
+  f.soldiers=Math.max(0,Math.min(f.initial_soldiers-(f.starvation_losses??0),f.soldiers-damage+Math.ceil(spell.heal*bonuses.spell)));
   f.morale=spell.revive?Math.max(f.morale,spell.morale):clamp(f.morale+spell.morale,0,100);
   f.stamina=clamp(f.stamina+spell.stamina,0,100);
   if(spell.attack)f.magic_attack=Math.min(1.5,(f.magic_attack??1)+spell.attack);

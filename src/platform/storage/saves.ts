@@ -188,6 +188,20 @@ export function validateSave(data: unknown): World {
     if(!w||w.version!==6||!Array.isArray(w.players)||w.players.length!==1||w.players[0]?.id!=='solo-ruler')invalid();
     for(const key of ['settlements','armies','buildings','camps','orders','battles','formations','reports','progress','claims','challenges'] as const)
         if(!Array.isArray(w[key])||w[key].length>15000||w[key].some(r=>!r||typeof r!=='object'))invalid();
+    if(w.troop_upkeep_version!==undefined&&w.troop_upkeep_version!==1)invalid();
+    for(const s of w.settlements){
+        if(s.food_troop_upkeep!==undefined&&(!Number.isFinite(s.food_troop_upkeep)||s.food_troop_upkeep<0||s.food_troop_upkeep>1e7))invalid();
+        if(s.starvation_losses!==undefined&&(!Number.isSafeInteger(s.starvation_losses)||s.starvation_losses<0))invalid();
+        if(s.starvation_last_at!=null&&(typeof s.starvation_last_at!=='string'||!Number.isFinite(Date.parse(s.starvation_last_at))))invalid();
+    }
+    for(const f of w.formations)if(f.starvation_losses!==undefined&&(!Number.isSafeInteger(f.starvation_losses)||f.starvation_losses<0||f.starvation_losses>f.initial_soldiers||f.soldiers>f.initial_soldiers-f.starvation_losses))invalid();
+    for(const b of w.battles){
+        if(b.food_settled!==undefined&&typeof b.food_settled!=='boolean')invalid();
+        if(b.starvation_sources!==undefined){
+            if(!b.starvation_sources||typeof b.starvation_sources!=='object'||Array.isArray(b.starvation_sources)||Object.keys(b.starvation_sources).length>1000)invalid();
+            for(const [key,roster]of Object.entries(b.starvation_sources))if(!/^(army|reserve|city|reinforcement|guild|evacuation):[1-9]\d*$|^station:solo-ruler:-?\d+:-?\d+$/.test(key)||!validateRoster(roster,100000))invalid();
+        }
+    }
     if(w.settlements.length<1||w.settlements.length>10||w.armies.length<1||w.armies.length>20)invalid();
     if(w.unit_balance_version!==undefined&&w.unit_balance_version!==1&&w.unit_balance_version!==2)invalid();
     for(const entry of [...w.battles,...w.battles.flatMap(b=>b.result?[b.result]:[]),...w.reports.map(r=>r.result)]){

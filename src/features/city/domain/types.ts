@@ -31,6 +31,10 @@ export type Settlement = Resources & {
     gold_bonus?: number;
     food_gross_rate?: number;
     food_upkeep?: number;
+    /** Troop crop consumption per game minute, absent on legacy servers. */
+    food_troop_upkeep?: number;
+    starvation_losses?: number;
+    starvation_last_at?: string | null;
     field_wood_rate?: number;
     field_stone_rate?: number;
     field_food_rate?: number;

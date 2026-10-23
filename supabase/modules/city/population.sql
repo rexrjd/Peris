@@ -80,7 +80,7 @@ begin
   wood_research=s.wood_research,stone_research=s.stone_research,food_research=s.food_research,gold_research=s.gold_research,trade_research=s.trade_research,
   field_wood_rate=fw,field_stone_rate=fs,field_food_rate=ff,field_gold_rate=fg,
   wood_bonus=8*lumber,stone_bonus=7*quarry,food_bonus=10*farm+8*fish,gold_bonus=3*main,
-  wood_rate=(14+fw+8*lumber*staff)*s.wood_research,stone_rate=(12+fs+7*quarry*staff)*s.stone_research,food_gross_rate=(18+ff+(10*farm+8*fish)*staff)*s.food_research,food_upkeep=.12*s.population,food_rate=(18+ff+(10*farm+8*fish)*staff)*s.food_research-.12*s.population,gold_rate=(3+fg*s.trade_research+3*main*staff)*s.gold_research,
+  wood_rate=(14+fw+8*lumber*staff)*s.wood_research,stone_rate=(12+fs+7*quarry*staff)*s.stone_research,food_gross_rate=(18+ff+(10*farm+8*fish)*staff)*s.food_research,food_upkeep=.12*s.population,food_rate=(18+ff+(10*farm+8*fish)*staff)*s.food_research-.12*s.population-coalesce((to_jsonb(s)->>'food_troop_upkeep')::numeric,0),gold_rate=(3+fg*s.trade_research+3*main*staff)*s.gold_research,
   capacity=floor((5000+2500*coalesce((select sum(level) from public.peris_city_slots where settlement_id=p_sid and building_type='warehouse'),0))*public.peris_research_factor(s.owner_id,'storage')),
   food_capacity=floor((5000+2500*coalesce((select sum(level) from public.peris_city_slots where settlement_id=p_sid and building_type='granary'),0))*public.peris_research_factor(s.owner_id,'storage'))where id=p_sid;
 end $$;

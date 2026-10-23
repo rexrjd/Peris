@@ -15,6 +15,9 @@ try{
  await db.exec(`create schema auth;create table auth.users(id uuid primary key);create role anon;create role authenticated;create role service_role;create function auth.uid()returns uuid language sql as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;grant usage on schema public,auth to authenticated,anon;grant execute on function auth.uid()to authenticated,anon;create publication supabase_realtime`);
  await db.exec(await readFile('supabase/FRESH_INSTALL_V19.sql','utf8'));
  await rpc('peris_configure_test_clock',[rate]);await admin("update public.peris_world_clock set game_anchor='2030-01-01T00:00:00Z'");
+ // Step event dates explicitly: a 100x short return must not finish between assertions.
+ // Clock scaling itself is exercised by the separate game-clock suites.
+ await admin("create or replace function public.peris_game_now()returns timestamptz language sql stable security definer set search_path='' as $$select game_anchor from public.peris_world_clock where id$$");
  for(const [i,id] of ids.entries()){await admin(`insert into auth.users values('${id}')`);await login(id);await rpc('create_player',['Support '+i]);}
  await login(ids[0]);const from=(await rpc('peris_snapshot')).settlements[0],army=(await rpc('peris_snapshot')).armies[0];
  const guild=await social({type:'create',name:'Support Guild',tag:'SUP',description:'',motd:'',focus:'balanced',recruitment:'open',crest:{color:'#547a69',sigil:'sun'}});

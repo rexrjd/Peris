@@ -26,6 +26,7 @@ begin
   union all select owner_id,due from public.peris_due_trade_routes()
   union all select owner_id,due from public.peris_due_trade_caravans()
   union all select owner_id,due from public.peris_due_guild_reinforcements()
+  union all select owner_id,min(resources_updated_at+interval '1 minute')from public.settlements s where ruined_at is null and to_jsonb(s)->>'troop_upkeep_ready'='true'and(coalesce((to_jsonb(s)->>'food_troop_upkeep')::numeric,0)>0 or food_rate<0)and resources_updated_at<=public.peris_game_now()-interval '1 minute'group by owner_id
   union all select owner_id,min(finish_at)from public.peris_orders where finish_at<=public.peris_game_now()group by owner_id
   union all select owner_id,min(public.peris_science_deadline(owner_id))from public.peris_account_science where active_id is not null and public.peris_science_deadline(owner_id)<=public.peris_game_now()group by owner_id
   union all select owner_id,min(next_at)from public.peris_campaign_farms where enabled and next_at<=public.peris_game_now()group by owner_id

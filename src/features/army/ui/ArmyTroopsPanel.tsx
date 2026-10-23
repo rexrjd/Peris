@@ -18,6 +18,7 @@ import { TroopStatsDialog } from './TroopStatsDialog';
 import { TROOP_PRESENTATION } from './troopPresentation';
 import { troopCardStats } from '../domain/troopCardStats';
 import { TroopStatSummary } from './TroopStatSummary';
+import {troopFoodPerHour} from '../../city/domain/troopSupply';
 
 export function ArmyTroopsPanel({ world, army, city, now, run, busy, onCity, onOpenCity, onLogistics }: {
     world: World; army: Army; city: Settlement; now: number; busy: boolean; run: (command: Command, message?: string) => void;
@@ -29,6 +30,7 @@ export function ArmyTroopsPanel({ world, army, city, now, run, busy, onCity, onO
     const dialog = recruit && <Modal title="Recruit troops" heading={false} className="army-recruit-modal army-command-dialog" backdropClassName="army-recruit-backdrop" onClose={() => setRecruit(null)}><header className="army-recruit-heading"><span>{army.name}</span><h2>Recruit troops</h2></header><RecruitmentPanel key={recruit} formOnly initialUnit={recruit} world={world} army={army} city={city} now={now} run={run} busy={busy} onCity={onCity} onOpenCity={onOpenCity}/></Modal>;
     const statsDialog = inspect && <TroopStatsDialog world={world} army={army} city={city} now={now} unit={inspect} onUnit={setInspect} onClose={() => setInspect(null)} onRecruit={unit => { setInspect(null); setRecruit(unit); }}/>;
     return <div className="army-troops-workspace">
+        {world.troop_upkeep_version===1&&<p className="command-muted" aria-label="Army crop upkeep">Crop upkeep: {troopFoodPerHour(roster).toLocaleString()} / game hour{army.raid_reserve?` · ${troopFoodPerHour(readRoster(army.raid_reserve)).toLocaleString()} / hour for reserves at home`:''}.</p>}
         <section className="army-troops-section" aria-label="Army composition"><header><div><h2>Troops</h2><span>{count(overview.free)} spaces available{overview.queued > 0 ? ` · ${overview.queued} in training` : ''}</span></div><div><button className="command-button primary" onClick={() => setRecruit('infantry')}><Icon name="plus" size={16}/>Recruitment</button></div></header>
             <div className="army-troop-grid">{RECRUIT_UNITS.map(unit => {
                 const unlocked = unitUnlocked(world, army.owner_id, city.id, unit, now), stats = troopCardStats(world, army, city, unit, now);
