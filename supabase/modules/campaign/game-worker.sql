@@ -10,7 +10,7 @@ revoke all on public.peris_worker_owners from public,anon,authenticated;
 -- The same persistent world advances without a browser. All helpers are private.
 create or replace function public.peris_game_tick(p_limit integer default 40)returns jsonb
 language plpgsql security definer set search_path='' as $$
-declare owner uuid;farm public.peris_campaign_farms%rowtype;processed integer:=0;camp_id integer;
+declare owner uuid;farm public.peris_campaign_farms%rowtype;processed integer:=0;camp_id integer;preparation jsonb;
  attempted integer:=0;failed integer:=0;camp_failed integer:=0;
  started timestamptz:=clock_timestamp();pass_started timestamptz;battles jsonb;
 begin
@@ -23,6 +23,7 @@ begin
   union all select owner_id,min(arrival_at)from public.peris_settler_expeditions where status='travelling'and arrival_at<=public.peris_game_now()group by owner_id
   union all select owner_id,min(arrival_at)from public.peris_ruin_evacuations where arrival_at<=public.peris_game_now()group by owner_id
   union all select owner_id,min(arrival_at)from public.peris_city_reinforcements where arrival_at<=public.peris_game_now()group by owner_id
+  union all select owner_id,due from public.peris_due_scouts()
   union all select owner_id,due from public.peris_due_trade_routes()
   union all select owner_id,due from public.peris_due_trade_caravans()
   union all select owner_id,due from public.peris_due_guild_reinforcements()
@@ -43,9 +44,9 @@ begin
     exit when extract(epoch from(clock_timestamp()-pass_started))*1000>=2000;
     begin
      if farm.route is null then raise exception 'Start this target manually once to establish its land route';end if;
-     perform public.peris_prepare_raid_for(owner,farm.army_id,farm.camp_id,farm.route,farm.troops);
+     preparation:=public.peris_prepare_raid_for(owner,farm.army_id,farm.camp_id,farm.route,farm.troops);
      update public.armies set farm_list_id=farm.list_id where id=farm.army_id;
-     update public.peris_campaign_farms set last_status='Raid preparing',sent=sent+1 where id=farm.id;
+     update public.peris_campaign_farms set last_status=case when preparation?'mission_id'then 'Scouting preparing'else 'Raid preparing'end,sent=sent+1 where id=farm.id;
     exception when others then update public.peris_campaign_farms set last_status=sqlerrm,skipped=skipped+1 where id=farm.id;end;
     update public.peris_campaign_farms set next_at=public.peris_game_now()+make_interval(secs=>farm.interval_seconds)where id=farm.id;
    end loop;

@@ -12,6 +12,7 @@ export function normalizeRealm(world: World, now = world.server_now, associateOr
     for(const battle of world.battles)battle.balance_version??=1;
     world.unit_balance_version=2;
     world.conquest_version=1;
+    world.scouting_version=1;
     for(const city of world.settlements){city.loyalty??=100;city.loyalty_updated_at??=city.resources_updated_at;}
     if(world.version===6){
         if (world.camp_balance_version !== 1) {

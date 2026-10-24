@@ -11,6 +11,7 @@ import type { Report } from '../domain/types';
 import { reportIsReturning, reportSide } from '../domain/reportEconomics';
 import { ReportEconomics } from './ReportEconomics';
 import { ReportInbox } from './ReportInbox';
+import {ScoutingReportDetails} from '../../scouting/ui/ScoutingReportDetails';
 import { SiegeSummary } from './SiegeSummary';
 import { type World } from '../../../shared/model/world';
 import { type Command } from '../../../shared/model/commands';
@@ -32,6 +33,7 @@ export function ResultBody({ result, won, draw = false, side = 'attacker', enemy
     practice?: boolean;
     returning?: boolean;
 }) {
+    if(result.scouting)return <ScoutingReportDetails scouting={result.scouting} defender={side==='defender'}/>;
     const loss = side === 'attacker' ? result.attacker_losses : result.defender_losses, enemyLoss = side === 'attacker' ? result.defender_losses : result.attacker_losses, survivors = side === 'attacker' ? result.attacker_survivors : result.defender_survivors;
     const initialRoster = side === 'attacker' ? result.attacker_roster : result.defender_roster, survivorRoster = side === 'attacker' ? result.attacker_survivor_roster : result.defender_survivor_roster, rosterFaction = side === 'attacker' ? result.attacker_faction : result.defender_faction;
     const title = draw ? 'Stalemate' : won ? 'Victory' : 'Defeat';
@@ -72,7 +74,7 @@ export function SavedReportDialog({ world, playerId, report, onClose, onReadRepo
     if (report.owner_id !== playerId) return null;
     const side = reportSide(world, report, playerId), battle = world.battles.find(row => row.id === report.battle_id);
     return <Modal title="Saved battle report" className="result-modal battle-rewards-modal rally-saved-report" onClose={onClose}>
-        {side ? <ResultBody result={report.result} won={report.won} draw={battle?.winner_side === 'draw'} side={side} enemyName={report.title} returning={reportIsReturning(world, report)}/> : <>
+        {report.result.scouting?<ScoutingReportDetails scouting={report.result.scouting} defender={report.result.report_side==='defender'}/>:side ? <ResultBody result={report.result} won={report.won} draw={battle?.winner_side === 'draw'} side={side} enemyName={report.title} returning={reportIsReturning(world, report)}/> : <>
             <h3>{report.title}</h3><p>{new Date(report.created_at).toLocaleString()} · {report.won ? 'Victory' : 'No victory'} · {clock(report.result.duration)}</p><p>{report.result.reason}</p>
             {(['attacker', 'defender'] as const).map(force => <section key={force} aria-label={force === 'attacker' ? 'Attacking forces' : 'Defending forces'}><h3>{force === 'attacker' ? 'Attacking forces' : 'Defending forces'}</h3><dl><div><dt>Sent</dt><dd>{report.result[`${force}_initial`]}</dd></div><div><dt>Survived</dt><dd>{report.result[`${force}_survivors`]}</dd></div><div><dt>Lost</dt><dd>{report.result[`${force}_losses`]}</dd></div></dl>{report.result[`${force}_survivor_roster`] && <TroopSummary troops={report.result[`${force}_survivor_roster`]!} faction={report.result[`${force}_faction`]}/>}</section>)}
             <section><h3>Resource spoils</h3><Cost cost={report.result.loot} compact showZero/></section><p>This receipt no longer has its original battle record. Forces are labelled by battle side.</p>

@@ -13,10 +13,12 @@ import { ReportEconomics } from './ReportEconomics';
 import { clock } from '../../../shared/time/clock';
 import { SiegeSummary } from './SiegeSummary';
 import {ConquestSummary} from './ConquestSummary';
+import {ScoutingReportDetails} from '../../scouting/ui/ScoutingReportDetails';
 
 export function ReportDetails({world, playerId, report, onLocate}: {
     world: World; playerId: string; report: Report; onLocate?: (camp: World['camps'][number]) => void;
 }) {
+    if(report.result.scouting)return <ScoutingReportDetails scouting={report.result.scouting} defender={report.result.report_side==='defender'}/>;
     const receipt = inboxReceipt(world, report, playerId), result = report.result;
     const title = receipt.outcome === 'draw' ? 'Stalemate' : receipt.outcome === 'victory' ? 'Victory' : 'Defeat';
     const side = receipt.side, returning = reportIsReturning(world, report), reward = result.hero_reward;

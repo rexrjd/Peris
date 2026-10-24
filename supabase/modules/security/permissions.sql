@@ -14,7 +14,7 @@ do $$declare r record;signature text;begin
 end $$;
 revoke all on function public.create_player(text),public.sync_my_state(),public.move_army(integer,integer),public.retreat_from_battle(bigint)from public,anon;
 grant execute on function public.create_player(text),public.sync_my_state(),public.move_army(integer,integer),public.retreat_from_battle(bigint)to authenticated;
-grant execute on function public.peris_empire_command(jsonb)to authenticated;
+grant execute on function public.peris_empire_command(jsonb),public.peris_scout_command(jsonb)to authenticated;
 grant execute on function public.peris_submit_command(uuid,text,jsonb)to authenticated;
 grant execute on function public.peris_campaign_farm_command(jsonb)to authenticated;
 grant execute on function public.peris_research_unit(bigint,text)to authenticated;

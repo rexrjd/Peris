@@ -115,6 +115,12 @@ Run `npm run build:sql` after editing server source. Then `npm run check:sql`, `
 
 ZIP extraction does not delete moved paths. `node scripts/clean-legacy-paths.mjs` removes only legacy source/art files whose contents match a known v5/v6/v7 version. `--check` previews candidates. Modified files are preserved and flagged; merge those personal edits into the new owner modules before building. It never touches accounts, database data, save storage, Git metadata or environment configuration.
 
+## Scouting
+
+`features/scouting/domain` owns scout detachments, counter-scout strength, immutable intelligence receipts and save validation. Scouting joins the canonical campaign settlement timeline and crop supply. Returning scouts arrive before observations at a tied deadline. Scout-only raids and farm entries dispatch reconnaissance; mixed armies retain their combat flow. Scouts use the existing role, research and faction artwork.
+
+The existing Reports inbox renders `BattleResult.scouting` snapshots. Resolved `mode:'scouting'` battle rows satisfy the report foreign key only: they have no defender owner, combat formations or rewards. A separate defender notice contains only intercepted scout counts. Mission rows are owner-only and excluded from the public map. SQL modules under `scouting/` integrate participant locks, camp mutation cutoffs, worker deadlines and repeatable focused installers. Generate `UPGRADE_SCOUTING.sql` from the modules; it remains a separate deployment step.
+
 ## Account research (V18)
 
 `features/research/domain` owns the shared 210-node catalog, bonus selectors, account science and project timing. Its private World arrays serialize through the existing engine and save path. `features/research/ui` owns the linked tree and navigation context. Academies remain ordinary repeatable city slots. SQL sources live in `supabase/modules/research`; generate catalog and V18 bundles with `npm run build:sql`. Owner-scoped science/progress stay outside public map and player metadata. Existing worker settlement includes research deadlines. See `RESEARCH_ACADEMY_UPDATE.md` for installation and balance.

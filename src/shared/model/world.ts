@@ -25,6 +25,8 @@ export type Order = {
     finish_at: string;
 };
 export type World = {
+    scouting_version?: 1;
+    scouting_missions?: import('../../features/scouting/domain/types').ScoutingMission[];
     conquest_version?: 1;
     troop_upkeep_version?: 1;
     unit_balance_version?: import('../../features/army/domain/unitBalance').UnitBalanceVersion;

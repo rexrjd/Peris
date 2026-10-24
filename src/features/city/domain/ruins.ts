@@ -139,6 +139,7 @@ export function ruinCity(world: World, cityId: number, now = worldGameNow(world)
     if (!livingCities(world,owner).length) {
         const player=world.players.find(p=>p.id===owner);
         if(player) player.defeated_at??=stamp;
+        for(const mission of world.scouting_missions??[])if(mission.owner_id===owner&&(mission.status==='outbound'||mission.status==='returning')){mission.scouts=0;mission.status='completed';}
         world.orders=world.orders.filter(order=>order.owner_id!==owner);
         world.garrisons=world.garrisons?.filter(row=>row.owner_id!==owner);
         world.ruin_evacuations=world.ruin_evacuations?.filter(row=>row.owner_id!==owner);

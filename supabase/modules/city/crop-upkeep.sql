@@ -59,6 +59,10 @@ begin
   source:=coalesce(case when r.status='stationed'then(select id from public.settlements where id=r.target_settlement_id and owner_id=r.recipient_id and ruined_at is null)else coalesce((select id from public.settlements where id=r.source_settlement_id and owner_id=r.owner_id and ruined_at is null),(select id from public.settlements where id=r.target_settlement_id and owner_id=r.owner_id and ruined_at is null))end,(select min(id)from public.settlements where owner_id=r.owner_id and ruined_at is null));
   if source=p_sid then kind:='guild';key:='guild:'||r.id;owner_id:=r.owner_id;tier:=case when r.status='stationed'then 1 else 4 end;troops:=public.peris_roster(r.troops);return next;end if;
  end loop;
+ for r in select * from public.peris_optional_scout_missions() loop
+  source:=coalesce((select id from public.settlements where id=r.source_settlement_id and owner_id=r.owner_id and ruined_at is null),(select min(id)from public.settlements where owner_id=r.owner_id and ruined_at is null));
+  if source=p_sid then kind:='scout';key:='scout:'||r.id;owner_id:=r.owner_id;tier:=4;troops:=public.peris_roster(jsonb_build_object('scout',r.scouts));return next;end if;
+ end loop;
  for r in select * from public.peris_ruin_evacuations loop
   source:=coalesce((select id from public.settlements where id=r.target_settlement_id and owner_id=r.owner_id and ruined_at is null),(select min(id)from public.settlements where owner_id=r.owner_id and ruined_at is null));
   if source=p_sid then kind:='evacuation';key:='evacuation:'||r.id;owner_id:=r.owner_id;tier:=4;troops:=public.peris_roster(r.troops);return next;end if;
@@ -181,6 +185,7 @@ begin
  elsif r.kind='station'then update public.peris_garrisons set unit_roster=roster,infantry=public.peris_roster_class(roster,'infantry'),archers=public.peris_roster_class(roster,'archers'),cavalry=public.peris_roster_class(roster,'cavalry')where owner_id=r.owner_id and col=parts[3]::integer and row=parts[4]::integer;
  elsif r.kind='reinforcement'then update public.peris_city_reinforcements set troops=roster where id=parts[2]::bigint;
  elsif r.kind='guild'then update public.peris_guild_reinforcements set troops=roster where id=parts[2]::bigint;
+ elsif r.kind='scout'then execute 'update public.peris_scout_missions set scouts=$1 where id=$2'using(roster->>'scout')::integer,parts[2]::bigint;
  elsif r.kind='evacuation'then update public.peris_ruin_evacuations set troops=roster where id=parts[2]::bigint;end if;
  perform public.peris_supply_battle_loss(r.key,casualty_unit);
  select (rule#>>'{cost,food}')::numeric into refund from public.peris_unit_balance where version=2 and peris_unit_balance.unit=casualty_unit;
@@ -233,6 +238,7 @@ create or replace function public.peris_trade_participants(p_owner uuid)returns 
 language sql stable security definer set search_path='' as $$
  with recursive participants(id)as(select p_owner union select case when r.owner_id=p.id then r.recipient_id else r.owner_id end
  from participants p join(select owner_id,recipient_id from public.peris_trade_caravans where status<>'completed' union select owner_id,recipient_id from public.peris_trade_route_edges()
+ union select owner_id,recipient_id from public.peris_scout_edges()
  union select owner_id,recipient_id from public.peris_guild_reinforcements
  union select attacker_owner_id,defender_owner_id from public.battles where status='active'and defender_owner_id is not null)r on(r.owner_id=p.id or r.recipient_id=p.id))
  select array_agg(id order by id)from participants
@@ -253,6 +259,7 @@ begin
  cursor_at:=least(coalesce(cursor_at,p_until),p_until);
  foreach participant in array participants loop perform public.peris_settle_core(participant,cursor_at);end loop;
  for r in select id from public.peris_trade_caravans where owner_id=any(participants)and(status='outbound'and arrival_at<=cursor_at or status='returning'and least(return_at,case when public.peris_trade_volume(returning_resources)>0 then redirect_at end)<=cursor_at)order by id loop perform public.peris_trade_event(r.id,cursor_at);end loop;
+ perform public.peris_optional_advance_scouts(participants,cursor_at);
  for city in select id from public.settlements where owner_id=any(participants)and ruined_at is null order by id loop perform public.peris_supply_refresh(city.id,cursor_at);end loop;
  loop
   select min(at_time)into event_at from(
@@ -265,12 +272,14 @@ begin
    union all select arrival_at from public.peris_ruin_evacuations where owner_id=any(participants)
    union all select arrival_at from public.peris_settler_expeditions where owner_id=any(participants)and status='travelling'
    union all select case when status='outbound'then arrival_at else least(return_at,case when public.peris_trade_volume(returning_resources)>0 then redirect_at end)end from public.peris_trade_caravans where owner_id=any(participants)and status in('outbound','returning')
+   union all select arrival_at from public.peris_optional_scout_missions()where owner_id=any(participants)
    union all select p_until
   )events where at_time>cursor_at and at_time<=p_until;
   exit when event_at is null;
   for city in select id from public.settlements where owner_id=any(participants)and ruined_at is null order by id loop perform public.peris_population_accrue(city.id,event_at);end loop;
   foreach participant in array participants loop perform public.peris_settle_core(participant,event_at);end loop;
   for r in select id from public.peris_trade_caravans where owner_id=any(participants)and(status='outbound'and arrival_at<=event_at or status='returning'and least(return_at,case when public.peris_trade_volume(returning_resources)>0 then redirect_at end)<=event_at)order by id loop perform public.peris_trade_event(r.id,event_at);end loop;
+  perform public.peris_optional_advance_scouts(participants,event_at);
   for city in select id from public.settlements where owner_id=any(participants)and ruined_at is null order by id loop perform public.peris_supply_refresh(city.id,event_at);end loop;
   cursor_at:=event_at;
  end loop;

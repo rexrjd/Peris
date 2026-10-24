@@ -86,7 +86,8 @@ type BaseCommand = {type:'saveTradeRoute';id?:number;settlementId:number;targetC
     id: number;
     accept: boolean;
 } | { type:'reinforceGuild'; settlementId:number; targetCityId:number; armyId?:number; troops:ArmyTroops; route:[number,number][] } | { type:'recallGuildReinforcements'; reinforcementId:number } | { type: 'reinforceCity'; settlementId: number; targetCityId: number; troops: ArmyTroops; route?: [number, number][] } | { type: 'manageCityGarrison'; settlementId: number; armyId: number; action: 'station' | 'withdraw'; troops: ArmyTroops } | { type: 'trainSettlers'; quantity: number } | { type: 'foundCity'; col: number; row: number; name: string; route?: [number, number][] } | { type: 'recruitHero'; name: string; heroClass: 'knight' | 'ranger' | 'mage' } | { type: 'heroSkill'; heroId: number; stat: 'attack' | 'defence' | 'power' | 'knowledge' } | { type: 'equipArtifact'; heroId: number; artifactId: number; equip: boolean } | { type: 'transferTroops'; targetArmyId: number; infantry: number; archers: number; cavalry: number; troops?: ArmyTroops } | { type: 'rebaseArmy' };
-export type Command = BaseCommand & { settlementId?: number; armyId?: number };
+type ScoutingCommand={type:'scout';targetCityId?:number;campId?:number;quantity:number;mode:import('../../features/scouting/domain/types').ScoutingMode;route?:[number,number][]}|{type:'cancelScouting';missionId:number;sentAt:string};
+export type Command = (BaseCommand|ScoutingCommand) & { settlementId?: number; armyId?: number };
 export type LocalCommandContext = {
     world: World;
     settlementId?: number;

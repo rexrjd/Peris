@@ -85,7 +85,7 @@ declare
 
  preset jsonb;list_name text;losses_only boolean;list public.peris_campaign_farm_lists;farm public.peris_campaign_farms;v_duplicate_id bigint;
 
- started integer:=0;skipped jsonb:='[]';batch_path jsonb;previous_army text;previous_city text;target_army public.armies%rowtype;repeat_enabled boolean;repeat_interval integer;
+ started integer:=0;skipped jsonb:='[]';batch_path jsonb;preparation jsonb;previous_army text;previous_city text;target_army public.armies%rowtype;repeat_enabled boolean;repeat_interval integer;
  selected_ids bigint[];selected_id jsonb;selected_count integer;v_action text;
 
 begin
@@ -181,11 +181,12 @@ begin
 
     perform set_config('peris.army_id',farm.army_id::text,true);perform set_config('peris.city_id',target_army.home_settlement_id::text,true);
 
-    perform public.peris_prepare_raid(farm.camp_id,batch_path,preset);
+    preparation:=public.peris_prepare_raid(farm.camp_id,batch_path,preset);
+    if preparation?'mission_id'then execute 'select march_path from public.peris_scout_missions where id=$1'into batch_path using(preparation->>'mission_id')::bigint;else select march_path into batch_path from public.armies where id=farm.army_id;end if;
 
     update public.armies set farm_list_id=farm.list_id where id=farm.army_id;
 
-    update public.peris_campaign_farms set route=(select march_path from public.armies where id=farm.army_id),last_status='Raid preparing',sent=sent+1 where id=farm.id;
+    update public.peris_campaign_farms set route=batch_path,last_status=case when preparation?'mission_id'then 'Scouting preparing'else 'Raid preparing'end,sent=sent+1 where id=farm.id;
     started:=started+1;
 
    exception when others then

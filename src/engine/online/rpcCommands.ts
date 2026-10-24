@@ -1,5 +1,6 @@
 import type { Command } from '../../shared/model/commands';
 export function rpcCommand(cmd: Command) {
+    if(cmd.type==='scout'||cmd.type==='cancelScouting')return {fn:'peris_scout_command',args:{p_command:cmd}};
     if(['saveTradeRoute','setTradeRouteEnabled','deleteTradeRoute'].includes(cmd.type))return {fn:'peris_trade_route_command',args:{p_command:cmd}};
     if(cmd.type==='sendResources')return {fn:'peris_send_resources',args:{p_source:cmd.settlementId,p_target:cmd.targetCityId,p_resources:cmd.resources,p_path:cmd.route??null}};
     if(cmd.type==='reinforceGuild')return {fn:'peris_send_guild_reinforcements',args:{p_source:cmd.settlementId,p_target:cmd.targetCityId,p_troops:cmd.troops,p_path:cmd.route,p_army:cmd.armyId??null}};

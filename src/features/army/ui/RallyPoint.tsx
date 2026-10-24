@@ -16,7 +16,7 @@ import { rallyPointState, type RallyMovement, type RallyPlace } from '../domain/
 import { TroopSummary } from './TroopSummary';
 import { RallyArmyDetails } from './RallyArmyDetails';
 import { RallyOrdersDialog } from './RallyOrdersDialog';
-import { RallyMovements, RallyMovementRow } from './RallyMovements';
+import { RallyMovements, RallyMovementRow, rallyMovementKey } from './RallyMovements';
 import '../styles/rally-point.css';
 
 type Tab = 'overview' | 'movements' | 'farms' | 'reports';
@@ -65,10 +65,10 @@ export function RallyPoint({ world, playerId, cityId, now, busy, run, onCity, on
         if (report.owner_id !== playerId) return;
         onReadReport?.(report.battle_id);
         const battle = world.battles.find(battle => battle.id === report.battle_id);
-        if (battle && reportSide(world, report, playerId)) onReport({ ...battle, result: report.result }); else setSavedReport(report);
+        if (!report.result.scouting&&battle && reportSide(world, report, playerId)) onReport({ ...battle, result: report.result }); else setSavedReport(report);
     };
     const locationButton = (place: RallyPlace) => <button className="rally-location" title={`Locate ${place.name}${place.kind === 'field' ? '' : ` ${coordinates(place)}`} on the world map`} onClick={() => onLocate(place)}><span>{place.name}</span>{place.kind !== 'field' && <small>{coordinates(place)}</small>}<Icon name="focus" size={13}/></button>;
-    const movementCard = (move: RallyMovement) => <RallyMovementRow key={move.armyId} world={world} move={move} now={now} busy={busy} direction={state.incoming.some(row => row.armyId === move.armyId) ? "incoming" : "outgoing"} run={run} onLocate={onLocate} onMapArmy={onMapArmy}/>;
+    const movementCard = (move: RallyMovement) => <RallyMovementRow key={rallyMovementKey(move)} world={world} move={move} now={now} busy={busy} direction={state.incoming.some(row => rallyMovementKey(row)===rallyMovementKey(move)) ? "incoming" : "outgoing"} run={run} onLocate={onLocate} onMapArmy={onMapArmy}/>;
     return <section className="rally-point" aria-label="Rally Point">
         <header className="rally-heading"><div><span className="eyebrow">LEGIONS &amp; OPERATIONS</span><h1>Rally Point</h1><p>Your troops, routes and raid plans in one place.</p></div><label>City<select aria-label="Rally Point city" value={cityId} onChange={event => onCity(Number(event.target.value))}>{cities.map(city => <option key={city.id} value={city.id}>{city.name}</option>)}</select></label></header>
         <nav className="rally-tabs" role="tablist" aria-label="Rally Point sections">{tabs.map((item, index) => <button key={item.id} id={`rally-tab-${item.id}`} role="tab" aria-selected={tab === item.id} aria-controls={`rally-panel-${item.id}`} tabIndex={tab === item.id ? 0 : -1} onClick={() => setTab(item.id)} onKeyDown={event => changeTab(event, index)}><Icon name={item.icon} size={16}/><span>{item.label}</span>{item.count !== undefined && <b>{item.count}</b>}</button>)}</nav>

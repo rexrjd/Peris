@@ -1,4 +1,5 @@
 import { worldGameNow } from '../../../shared/time/gameClock';
+import {sendScouts} from '../../scouting/domain/scouting';
 import {captureCultureReason} from '../../city/domain/conquest';
 import { commandArmy } from '../../empire/domain/context';
 import { isDefeated, livingCities } from '../../city/domain/ruins';
@@ -80,6 +81,10 @@ export function marchArmy(context: LocalCommandContext, cmd: Extract<Command, {
     type: 'move' | 'raid' | 'raidCity';
 }>) {
     const w = context.world, a = commandArmy(context), now = context.now, clock = Date.parse(now);
+    const selected=cmd.troops??readRoster(a);
+    if(w.scouting_version===1&&cmd.type!=='move'&&validateRoster(selected)&&rosterTotal(selected)>0&&selected.scout===rosterTotal(selected)){
+        sendScouts({...context,armyId:a.id},{type:'scout',armyId:a.id,...(cmd.type==='raidCity'?{targetCityId:cmd.targetCityId}:{campId:cmd.campId}),quantity:selected.scout,mode:'resources'});return;
+    }
     if(isDefeated(w,context.playerId))throw new Error('This ruler has been defeated.');
     if (w.battles.some(battle => battle.status === 'active' && (battle.attacker_owner_id === context.playerId || battle.defender_owner_id === context.playerId))) throw new Error('Finish the current battle first.');
     if (w.orders.some(o => o.kind === 'recruit' && o.recruit_destination !== 'garrison' && (o.army_id ?? w.armies[0].id) === a.id))

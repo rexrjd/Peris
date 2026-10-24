@@ -173,7 +173,7 @@ function Realm({ engine, onExit, onLoad, onRetry, onUnitPreview }: {
     const chooseArmy=(id:number)=>{if(ownedArmies.some(a=>a.id===id)){setArmyId(id);setMoveMode(false);}};
     const selectMap=(next:MapSelection)=>{setSelection(next);if(next?.kind==='army')chooseArmy(next.id);if(next?.kind==='settlement')chooseCity(next.id);};
     const player = world.players.find(p => p.id === engine.playerId)!, done = conquered(world, engine.playerId), active = world.battles.find(b => b.status === 'active');
-    const quietCampBattle = (battle: Battle) => !!battle.raid_city_id || battle.mode === 'pve' && world.camps.some(camp => camp.id === battle.camp_id && camp.bandit);
+    const quietCampBattle = (battle: Battle) => battle.mode==='scouting'||!!battle.result?.scouting||!!battle.raid_city_id || battle.mode === 'pve' && world.camps.some(camp => camp.id === battle.camp_id && camp.bandit);
     const visibleBattle = active && !quietCampBattle(active) ? active : undefined;
     const rallyActive = view === 'rally' && !empireOpen && !visibleBattle;
     const rallyRequestedFaction = factionOf(town.faction);

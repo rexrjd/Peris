@@ -1,4 +1,6 @@
 import {ensureScience,startResearch,pauseResearch,debugResearch} from '../../features/research/domain/science';
+import {sendScouts,cancelScouting} from '../../features/scouting/domain/scouting';
+import {advanceScouting} from '../../features/scouting/domain/advance';
 import { EngineClock } from '../clock';
 import { autoCastSpells } from '../../features/magic/domain/automatic';
 import { normalizeRealm } from '../../features/empire/domain/normalization';
@@ -79,6 +81,7 @@ export class LocalEngine implements GameEngine {
         const resumed=this.active();
         if(resumed?.phase==='combat')this.battleDebt=Math.min(900,Math.max(0,(this.nowGameMs()-Date.parse(resumed.last_tick_at))/1000));
         activateTroopUpkeep(world,this.nowGameMs());
+        advanceScouting(world,this.playerId,this.nowGameMs(),()=>++this.nextId);
         settleLocal(world, this.playerId);
         this.advanceFarms();
         this.timer = window.setInterval(() => this.tick(), 50);
@@ -114,6 +117,7 @@ export class LocalEngine implements GameEngine {
         }
         if(!b||this.paused)this.battleDebt=0;
         if (Math.floor(now / 250) !== Math.floor((now - dt * 1000) / 250)) {
+            advanceScouting(this.snapshot,this.playerId,this.nowGameMs(),()=>++this.nextId);
             settleLocal(this.snapshot, this.playerId);
             this.advanceFarms();
             for(const army of this.snapshot.armies.filter(row=>row.owner_id===this.playerId&&row.raid_city_id&&row.status==='idle'))if(!this.active()){
@@ -152,6 +156,7 @@ export class LocalEngine implements GameEngine {
     }
     command = async (cmd: Command) => {
         if (isDefeated(this.snapshot,this.playerId)) throw new Error('This ruler has been defeated. Your cities remain as ruins.');
+        advanceScouting(this.snapshot,this.playerId,this.nowGameMs(),()=>++this.nextId);
         settleLocal(this.snapshot, this.playerId);
         this.advanceFarms();
         const active = this.active();
@@ -160,6 +165,8 @@ export class LocalEngine implements GameEngine {
         this.snapshot.server_now = new Date(this.nowGameMs()).toISOString();
         const context: LocalCommandContext = { world: this.snapshot, playerId: this.playerId, settlementId: cmd.settlementId, armyId: cmd.armyId, nextId: () => this.nextId = Math.max(this.nextId + 1, nextEntityId(this.snapshot)), active, now: new Date(this.nowGameMs()).toISOString(), paused: value => { this.paused = value; }, finalize: id => this.finalize(id) };
         switch (cmd.type) {
+            case 'scout':sendScouts(context,cmd);break;
+            case 'cancelScouting':cancelScouting(context,cmd);break;
             case 'sendResources': sendResources(context,cmd); break;
             case 'saveTradeRoute':case 'setTradeRouteEnabled':case 'deleteTradeRoute':commandTradeRoute(context,cmd);break;
             case 'reinforceGuild': case 'recallGuildReinforcements': throw new Error('Enter the shared world to send guild reinforcements.');

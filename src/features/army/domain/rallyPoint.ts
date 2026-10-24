@@ -27,7 +27,9 @@ export type RallyMovement = {
     armyId: number;
     armyName: string;
     homeCityId: number;
-    kind: 'raid' | 'march' | 'return';
+    kind: 'raid' | 'march' | 'return' | 'scouting';
+    missionId?: number; scoutReturning?: boolean;
+    scoutCancel?: {missionId:number;sentAt:string;until:number};
     from: RallyPlace;
     to: RallyPlace;
     troops: UnitRoster;
@@ -111,6 +113,18 @@ export function rallyPointState(world: World, owner: string, cityId: number, now
     }
     const fighting = new Set(world.battles.filter(battle => battle.status === 'active')
         .flatMap(battle => [battle.attacker_army_id, battle.defender_army_id]));
+    for(const mission of world.scouting_missions??[]){
+        if(mission.owner_id!==owner||!['outbound','returning'].includes(mission.status))continue;
+        const returning=mission.status==='returning',first=mission.march_path[0],last=mission.march_path.at(-1);
+        const from=place(world,first?{x:first[0],y:first[1]}:{x:mission.origin_x,y:mission.origin_y}),to=place(world,last?{x:last[0],y:last[1]}:{x:mission.target_x,y:mission.target_y});
+        const sent=timestamp(mission.sent_at),stored=timestamp(mission.cancel_until),departure=timestamp(mission.departure_at);
+        const until=sent!==null&&stored!==null&&departure!==null?Math.min(stored,sent+30000*(world.game_clock?.rate??1),departure):null;
+        const event:RallyMovement={armyId:mission.source_army_id,armyName:mission.scouts.toLocaleString()+' scouts',homeCityId:mission.source_settlement_id,kind:'scouting',missionId:mission.id,scoutReturning:returning,
+            from,to:!returning?{...to,name:mission.target_name}:to,troops:{...emptyRoster(),scout:mission.scouts},startedAt:departure,endsAt:timestamp(mission.arrival_at),selection:{kind:'army',id:mission.source_army_id},point:to.point,
+            ...(!returning&&sent!==null&&until!==null&&now>=sent&&now<until?{scoutCancel:{missionId:mission.id,sentAt:mission.sent_at,until}}:{})};
+        if(!returning&&stations.has(key(event.from)))result.outgoing.push(event);
+        if(returning&&stations.has(key(event.to)))result.incoming.push(event);
+    }
     for (const army of world.armies) {
         if (army.owner_id !== owner || fighting.has(army.id)) continue;
         if (army.status === 'idle') {

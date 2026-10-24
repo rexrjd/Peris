@@ -19,7 +19,7 @@ export type Battle = {
     phase: 'deployment' | 'combat' | 'finished';
     attacker_ready: boolean;
     defender_ready: boolean;
-    mode: 'pve' | 'pvp' | 'practice';
+    mode: 'pve' | 'pvp' | 'practice' | 'scouting';
     camp_id: number | null;
     raid_city_id?: number | null;
     siege_target?: import('../../city/domain/siege').SiegeTarget;
@@ -77,6 +77,7 @@ export type Formation = {
     updated_at: string;
 };
 export type BattleResult = {
+    scouting?: import('../../scouting/domain/types').ScoutingResult;
     conquest?: import('../../city/domain/conquest').ConquestResult;
     balance_version?: import('../../army/domain/unitBalance').UnitBalanceVersion;
     report_side?: 'attacker'|'defender';

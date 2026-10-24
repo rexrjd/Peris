@@ -289,6 +289,35 @@ outputs['UPGRADE_CITY_CAPTURE.sql']=[
  "do $$begin if to_regclass('public.peris_crop_version')is null or to_regclass('public.peris_trade_routes')is null then raise exception 'Install current Crop Upkeep and Market Routes first';end if;end $$;",
  captureSource,"notify pgrst,'reload schema';",'commit;',
 ].join('\n')
+// Scouting joins the crop event timeline and stays private across focused reruns.
+const scoutingHooks=await readSource(path.join(root,'supabase/modules/scouting/hooks.sql'))
+const scoutingDefinitions=[]
+for(const[file,names]of[
+ ['city/crop-upkeep.sql',['peris_trade_participants']],
+ ['map/march-orders.sql',['peris_prepare_raid_for']],
+ ['campaign/farms.sql',['peris_campaign_farm_command']],
+ ['campaign/peris_start_raid.sql',['peris_start_raid']],
+ ['battle/peris_finish.sql',['peris_finish']],
+ ['campaign/player-raids.sql',['peris_prepare_city_raid']],
+ ['campaign/camp-schema.sql',['peris_camp_accrue']],
+ ['snapshot/peris_snapshot.sql',['peris_snapshot']],
+ ['campaign/game-worker.sql',['peris_game_tick']],
+ ['security/command-receipts.sql',['peris_submit_command']],
+]){
+ const source=await readSource(path.join(root,'supabase/modules',file))
+ const defs=source.match(/create or replace function public\.[\s\S]*?\$\$;/g)??[]
+ for(const name of names){const def=defs.find(x=>x.startsWith('create or replace function public.'+name+'('));if(!def)throw Error('Missing scouting dependency '+name);scoutingDefinitions.push(def)}
+}
+const scoutingSource=[scoutingHooks,await readSource(path.join(root,'supabase/modules/scouting/scouting.sql')),cropSource,...scoutingDefinitions,
+ 'revoke all on function public.peris_start_raid(uuid,integer),public.peris_finish(bigint,text,text),public.peris_prepare_raid_for(uuid,bigint,integer,jsonb,jsonb),public.peris_prepare_city_raid(uuid,bigint,bigint,jsonb,jsonb,text),public.peris_trade_participants(uuid),public.peris_game_tick(integer),public.peris_submit_command(uuid,text,jsonb),public.peris_snapshot()from public,anon,authenticated;',
+ 'grant execute on function public.peris_game_tick(integer)to service_role;',
+ 'grant execute on function public.peris_submit_command(uuid,text,jsonb),public.peris_snapshot(),public.peris_scout_command(jsonb)to authenticated;'].join('\n')
+outputs['UPGRADE_SCOUTING.sql']=[
+ '-- PERIS private scouting. Apply after current V19, Crop Upkeep and City Capture. Repeatable; never deployed automatically.',
+ 'begin;',
+ "do $$begin if to_regclass('public.peris_crop_version')is null or to_regclass('public.peris_conquest_version')is null then raise exception 'Install current Crop Upkeep and City Capture first';end if;end $$;",
+ scoutingSource,"notify pgrst,'reload schema';",'commit;'
+].join('\n')
 for(const[name,content]of Object.entries(outputs)){
  let complete=content
  // Rerunning an older focused installer must retain an already activated crop economy.
@@ -310,6 +339,10 @@ for(const[name,content]of Object.entries(outputs)){
  }
  if(!complete.includes('create table if not exists public.peris_conquest_version')&&/^begin;$/m.test(complete)&&/create or replace function public\.(peris_snapshot|peris_finish|peris_finish_city_raid|peris_population_accrue|peris_city_economy|peris_roster|peris_market_settle|peris_settle|peris_queue_recruit)/.test(complete)){
   complete=complete.replace(/commit;\s*$/,()=> '\ndo $restore_conquest$begin if to_regclass(\'public.peris_conquest_version\')is not null then execute $conquest_definition$'+captureSource+'$conquest_definition$;end if;end $restore_conquest$;\ncommit;\n')
+ }
+ if(!complete.includes('create or replace function public.peris_optional_scout_missions()')&&/^begin;$/m.test(complete)&&/public\.(peris_optional_scout_missions|peris_scout_edges|peris_due_scouts|peris_optional_advance_scouts|peris_scout_camp_cutoff|peris_optional_scout_camp_mutation)\(/.test(complete))complete=complete.replace(/^begin;$/m,()=> 'begin;\n'+scoutingHooks)
+ if(!complete.includes('create table if not exists public.peris_scout_missions')&&/^begin;$/m.test(complete)&&/create or replace function public\.(peris_snapshot|peris_market_settle|peris_supply_rows|peris_starve_one|peris_trade_participants|peris_game_tick|peris_submit_command)/.test(complete)){
+  complete=complete.replace(/commit;\s*$/,()=> '\ndo $restore_scouting$begin if to_regclass(\'public.peris_scout_missions\')is not null and to_regclass(\'public.peris_crop_version\')is not null then execute $scouting_definition$'+scoutingSource+'$scouting_definition$;end if;end $restore_scouting$;\ncommit;\n')
  }
  outputs[name]=complete
 }

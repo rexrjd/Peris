@@ -40,6 +40,8 @@ import { SavedReportDialog } from '../../campaign/ui/Chronicle';
 import type { ArmyTroops } from '../../army/domain/types';
 import { garrisonAt } from '../domain/garrisons';
 import { CitySelector } from '../../city/ui/CitySelector';
+import {ScoutingDialog,type ScoutingTarget} from '../../scouting/ui/ScoutingDialog';
+import '../../scouting/styles/scouting.css';
 import '../styles/atlas.css';
 import '../styles/territory.css';
 import '../styles/operations.css';
@@ -84,6 +86,7 @@ export function WorldView({ world, playerId, selection, setSelection, moveMode, 
     const [marchRequest, setMarchRequest] = useState<{ destination: MarchDestination; armyId: number; troops?: ArmyTroops } | null>(null);
     const [farmRequest, setFarmRequest] = useState<{ campId: number; target?: CampaignFarmTarget } | null>(null);
     const [campReport, setCampReport] = useState<Report | null>(null);
+    const [scoutingTarget,setScoutingTarget]=useState<ScoutingTarget|null>(null);
     const player = world.players.find(p => p.id === playerId)!, town = world.settlements.find(s => s.owner_id === playerId && (cityId===undefined||s.id===cityId))!, army = world.armies.find(a => a.owner_id === playerId && (armyId===undefined||a.id===armyId))!;
     const done = conquered(world, playerId), next = nextCampaign(world, playerId), camp = selection?.kind === 'camp' ? world.camps.find(c => c.id === selection.id) : null, selectedTown = selection?.kind === 'settlement' ? world.settlements.find(s => s.id === selection.id) : null, selectedArmy = selection?.kind === 'army' ? world.armies.find(a => a.id === selection.id) : null;
     const moving = army.status === 'moving' && Date.parse(army.arrival_at) > now, training = world.orders.filter(o => o.owner_id === playerId && o.kind === 'recruit' && (o.army_id??world.armies[0].id)===army.id), outgoing = world.challenges.some(c => c.attacker_owner_id === playerId), cooldown = camp && !camp.bandit ? world.progress.find(p => p.owner_id === playerId && p.camp_id === camp.id) : null, cooling = !!(cooldown && Date.parse(cooldown.available_at) > now);
@@ -174,6 +177,7 @@ export function WorldView({ world, playerId, selection, setSelection, moveMode, 
       <p className="camp-route-info" title="The selected legion's actual connected land route, including terrain detours. It is checked again when an order is sent.">{campRoute ? `${(campRoute.distance / CELL_SIZE).toFixed(2)} fields by land · ${clock(Math.max(2, campRoute.distance / marchSpeed(world, army)), world.game_clock?.rate ?? 1)} with this legion` : 'No connected land route from this legion'}</p>
       <div className="ops-camp-actions">
        <button className="button gold" aria-label={cooling ? 'Camp regrouping' : 'March and engage'} disabled={busy || cooling} onClick={() => setMarchRequest({ destination: { kind: 'raid', campId: camp.id }, armyId: army.id })}>{cooling ? clock((Date.parse(cooldown!.available_at) - now) / 1000, world.game_clock?.rate ?? 1) : 'Raid camp'}<Icon name="arrow" size={14}/></button>
+       {world.scouting_version===1&&<button className="button outline" disabled={busy} onClick={()=>setScoutingTarget({campId:camp.id})}>Scout camp<Icon name="focus" size={14}/></button>}
        {camp.bandit && <button className="button outline" aria-label="Add to farm list" onClick={() => setFarmRequest({ campId: camp.id })}><Icon name="flag" size={14}/>Farm list</button>}
       </div>
       <details className="ops-extra"><summary>Details</summary>
@@ -192,7 +196,7 @@ export function WorldView({ world, playerId, selection, setSelection, moveMode, 
       {selectedTown.owner_id === playerId ? <>
        {selectedTown.ruined_at ? <p className="ops-ruin-note">Ruins of {selectedTown.name} · Fallen {new Date(realTimeForGameDate(world, selectedTown.ruined_at)).toLocaleDateString()}. This city can never be rebuilt.</p> : <button className="button gold" onClick={() => { onCity?.(selectedTown.id); navigate('settlement'); }}>Enter the city<Icon name="arrow" size={14}/></button>}
        <details className="ops-extra"><summary>Details</summary><div className="town-summary"><span>{world.buildings.filter(b => b.settlement_id === selectedTown.id).reduce((n, b) => n + b.level, 0)} development</span><span>{world.armies.filter(a => a.home_settlement_id === selectedTown.id && a.owner_id === playerId).reduce((n, a) => n + soldierTotal(a), 0)} soldiers</span></div></details>
-      </> : <><p>Ruled by {playerName(world.players, selectedTown.owner_id)}.</p>{selectedTown.ruined_at ? <p className="ops-ruin-note">The city lies in ruins. There is nothing left to siege.</p> : <><button className="button gold" disabled={busy} onClick={()=>setMarchRequest({destination:{kind:'raidCity',cityId:selectedTown.id},armyId:army.id})}>Raid city<Icon name="army" size={16}/></button>{world.conquest_version===1&&<button className="button outline" disabled={busy} onClick={()=>setMarchRequest({destination:{kind:'raidCity',cityId:selectedTown.id,capture:true},armyId:army.id})}>Capture city<Icon name="crown" size={16}/></button>}</>}<details className="ops-extra"><summary>More</summary><button className="button outline" disabled={busy || outgoing} onClick={() => run({ type: 'challenge', ownerId: selectedTown.owner_id }, 'Battle invitation sent')}>Invite to a live duel</button></details></>}
+      </> : <><p>Ruled by {playerName(world.players, selectedTown.owner_id)}.</p>{selectedTown.ruined_at ? <p className="ops-ruin-note">The city lies in ruins. There is nothing left to siege.</p> : <><button className="button gold" disabled={busy} onClick={()=>setMarchRequest({destination:{kind:'raidCity',cityId:selectedTown.id},armyId:army.id})}>Raid city<Icon name="army" size={16}/></button>{world.scouting_version===1&&<button className="button outline" disabled={busy} onClick={()=>setScoutingTarget({cityId:selectedTown.id})}>Scout city<Icon name="focus" size={16}/></button>}{world.conquest_version===1&&<button className="button outline" disabled={busy} onClick={()=>setMarchRequest({destination:{kind:'raidCity',cityId:selectedTown.id,capture:true},armyId:army.id})}>Capture city<Icon name="crown" size={16}/></button>}</>}<details className="ops-extra"><summary>More</summary><button className="button outline" disabled={busy || outgoing} onClick={() => run({ type: 'challenge', ownerId: selectedTown.owner_id }, 'Battle invitation sent')}>Invite to a live duel</button></details></>}
      </>}
      {selectedArmy && <MapArmyDetails world={world} army={selectedArmy} playerId={playerId} now={now} busy={busy} outgoing={outgoing} onLocate={focusSelection}
       onMarch={() => { onArmy?.(selectedArmy.id); setMoveMode(true); setMapClaimMode(false); setFindOpen(false); setSelection(null); }}
@@ -211,6 +215,7 @@ export function WorldView({ world, playerId, selection, setSelection, moveMode, 
   </section>
   </div>
   {marchRequest && <MarchDialog world={world} playerId={playerId} now={now} busy={busy} initialArmyId={marchRequest.armyId} initialTroops={marchRequest.troops} destination={marchRequest.destination} run={run} onArmy={onArmy} onClose={() => setMarchRequest(null)} />}
+  {scoutingTarget&&<ScoutingDialog world={world} playerId={playerId} now={now} busy={busy} initialArmyId={army.id} target={scoutingTarget} run={run} onClose={()=>setScoutingTarget(null)}/>}
   {campReport && <SavedReportDialog world={world} playerId={playerId} report={campReport} onReadReport={onReadReport} onClose={() => setCampReport(null)}/>}
   {farmRequest && (() => { const targetCamp = world.camps.find(camp => camp.id === farmRequest.campId); return targetCamp && <CampaignFarmTargetDialog world={world} playerId={playerId} busy={busy} run={run} camp={targetCamp} initialArmyId={army.id} target={farmRequest.target} onClose={() => setFarmRequest(null)} />; })()}
   {farmOpen && !farmRequest && <CampaignFarmLists world={world} playerId={playerId} busy={busy} now={now} run={run} onClose={() => onFarmClose?.()} onRaid={target => { onFarmClose?.(); setMarchRequest({ destination: { kind: 'raid', campId: target.camp_id }, armyId: target.army_id, troops: target.troops }); }} onEdit={target => setFarmRequest({ campId: target.camp_id, target })} onLocate={camp => { onFarmClose?.(); chooseCamp(camp.id); focusPoint(camp.x, camp.y, 1.7); }} />}

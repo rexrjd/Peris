@@ -28,12 +28,16 @@ begin
  select * into a from public.armies where id=p_army and owner_id=p_owner for update;
  select * into c from public.settlements where id=p_city and owner_id<>p_owner;
  if a.id is null or c.id is null or to_jsonb(c)->>'ruined_at' is not null then raise exception 'Choose your legion and another player''s living city';end if;
- if public.peris_social_relation(p_owner,c.owner_id)in('guild','alliance','nap')then raise exception 'Your guild or diplomatic pact protects this city';end if;
+
  available:=public.peris_roster(to_jsonb(a));chosen:=public.peris_garrison_troops(coalesce(nullif(p_troops,'null'::jsonb),available));
  if public.peris_roster_total(chosen)=0 then raise exception 'Send at least one soldier';end if;
  foreach unit_name in array array['infantry','spearmen','archers','elite','cavalry','scout','heavyCavalry','ram','catapult','diplomat']loop
   if(chosen->>unit_name)::integer>(available->>unit_name)::integer then raise exception 'Choose troops currently available in this legion';end if;
  end loop;
+ if public.peris_roster_total(chosen)=coalesce((chosen->>'scout')::integer,0)and to_regprocedure('public.peris_scout_command_for(uuid,jsonb)')is not null then
+  return public.peris_scout_command_for(p_owner,jsonb_build_object('type','scout','armyId',a.id,'targetCityId',c.id,'quantity',(chosen->>'scout')::integer,'mode','resources','route',p_path));
+ end if;
+ if public.peris_social_relation(p_owner,c.owner_id)in('guild','alliance','nap')then raise exception 'Your guild or diplomatic pact protects this city';end if;
  perform public.peris_march_for_target(p_owner,a.id,c.x,c.y,p_path,null,c.id);
  perform public.peris_garrison_add(p_owner,floor(a.target_x/128.0)::integer,floor(a.target_y/128.0)::integer,public.peris_roster_add(available,chosen,-1));
  perform public.peris_write_roster(a.id,chosen);

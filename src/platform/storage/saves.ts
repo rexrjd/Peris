@@ -1,4 +1,5 @@
 import {validateResearch} from '../../features/research/domain/science';
+import {validateScouting,validateScoutingResult} from '../../features/scouting/domain/validation';
 import {validateTradeCaravans} from '../../features/city/domain/trade';
 import {validateTradeRoutes} from '../../features/city/domain/tradeRoutes';
 import {researchUnitStatLimit} from '../../features/research/domain/effects';
@@ -190,6 +191,7 @@ export function validateSave(data: unknown): World {
         if(!Array.isArray(w[key])||w[key].length>15000||w[key].some(r=>!r||typeof r!=='object'))invalid();
     if(w.troop_upkeep_version!==undefined&&w.troop_upkeep_version!==1)invalid();
     if(w.conquest_version!==undefined&&w.conquest_version!==1)invalid();
+    validateScouting(w);
     if(w.players[0].research_faction!==undefined&&!isFaction(w.players[0].research_faction))invalid();
     for(const s of w.settlements){
         if(s.loyalty!==undefined&&(!Number.isFinite(s.loyalty)||s.loyalty<0||s.loyalty>100))invalid();
@@ -200,6 +202,7 @@ export function validateSave(data: unknown): World {
     }
     for(const f of w.formations)if(f.starvation_losses!==undefined&&(!Number.isSafeInteger(f.starvation_losses)||f.starvation_losses<0||f.starvation_losses>f.initial_soldiers||f.soldiers>f.initial_soldiers-f.starvation_losses))invalid();
     for(const b of w.battles){
+        if(b.mode==='scouting'&&(b.status!=='resolved'||b.defender_owner_id!==null||!b.food_settled||!b.result?.scouting||w.formations.some(f=>f.battle_id===b.id)))invalid();
         if(b.food_settled!==undefined&&typeof b.food_settled!=='boolean')invalid();
         if(b.starvation_sources!==undefined){
             if(!b.starvation_sources||typeof b.starvation_sources!=='object'||Array.isArray(b.starvation_sources)||Object.keys(b.starvation_sources).length>1000)invalid();
@@ -247,6 +250,7 @@ export function validateSave(data: unknown): World {
     }
     for (const entry of [...w.battles, ...w.reports]) if (entry.result) {
         const result = entry.result;
+        if(result.scouting!==undefined)validateScoutingResult(result.scouting);
         if(result.conquest!==undefined){
             const c=result.conquest;
             if(!c||!Number.isSafeInteger(c.city_id)||c.city_id<1||!Number.isFinite(c.before)||c.before<0||c.before>100||!Number.isFinite(c.after)||c.after<0||c.after>100||!Number.isSafeInteger(c.diplomats)||c.diplomats<0||c.diplomats>1000||!Number.isFinite(c.reduction)||c.reduction<0||c.reduction>25||Math.abs(c.before-c.after-c.reduction)>1e-7||typeof c.captured!=='boolean'||!Number.isSafeInteger(c.culture_cost)||c.culture_cost<0||c.culture_cost>30000||typeof c.former_owner_id!=='string'||c.former_owner_id.length>100||c.new_owner_id!==undefined&&(typeof c.new_owner_id!=='string'||c.new_owner_id.length>100)||c.reason!==undefined&&(typeof c.reason!=='string'||c.reason.length>500)||c.captured&&(c.after!==0||!c.new_owner_id||c.diplomats<1)||!c.captured&&c.culture_cost!==0)invalid();

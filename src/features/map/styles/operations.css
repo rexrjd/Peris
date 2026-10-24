@@ -219,3 +219,9 @@
 .map-operations .ops-reinforcement-actions button:hover{filter:brightness(1.12)}
 @media(max-width:400px){.map-operations .ops-reinforcement-units{grid-template-columns:1fr}.map-operations .ops-reinforcement-times{gap:9px}.map-operations .ops-reinforcement-body{padding-inline:12px}.map-operations .ops-reinforcement-route{gap:5px}}
 @media(prefers-reduced-motion:reduce){.map-operations .ops-reinforcement-progress span{transition:none}}
+
+/* The portrait city card includes its loyalty strip. Keep Events below both so
+ * touch users can open and cancel time-sensitive departures. */
+@media(max-width:620px) and (min-height:551px){
+ .realm-shell.game-shell .operations-workspace:has(.map-city-card)>.map-operations{top:256px;max-height:calc(100% - 272px)}
+}

@@ -54,7 +54,7 @@ $$;
 create or replace function public.peris_trade_participants(p_owner uuid)returns uuid[]
 language sql stable security definer set search_path='' as $$
  with recursive participants(id)as(select p_owner union select case when r.owner_id=p.id then r.recipient_id else r.owner_id end
- from participants p join(select owner_id,recipient_id from public.peris_trade_caravans where status<>'completed' union select owner_id,recipient_id from public.peris_trade_route_edges())r on(r.owner_id=p.id or r.recipient_id=p.id))
+ from participants p join(select owner_id,recipient_id from public.peris_trade_caravans where status<>'completed' union select owner_id,recipient_id from public.peris_trade_route_edges() union select owner_id,recipient_id from public.peris_scout_edges())r on(r.owner_id=p.id or r.recipient_id=p.id))
  select array_agg(id order by id)from participants
 $$;
 

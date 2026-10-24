@@ -16,7 +16,8 @@ type MovementProps = {
     run: (command: Command, message?: string) => void;
     onLocate: (place: RallyPlace) => void; onMapArmy: (id: number) => void;
 };
-const movementName = (move: RallyMovement) => move.kind === 'return' ? 'Returning' : move.kind === 'raid' ? 'Raid' : 'Reinforcement';
+export const rallyMovementKey=(move:RallyMovement)=>move.missionId===undefined?'army:'+move.armyId:'scouting:'+move.missionId;
+const movementName = (move: RallyMovement) => move.kind==='scouting'?move.scoutReturning?'Scouts returning':'Scouting':move.kind === 'return' ? 'Returning' : move.kind === 'raid' ? 'Raid' : 'Reinforcement';
 const dateTime = (time: number, world: World) => new Date(realTimeForGameDate(world, time)).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
 /** Presentation of an authoritative movement; cancellation is never inferred from the UI timer. */
@@ -30,13 +31,14 @@ export function RallyMovementRow({ world, move, now, busy, direction, run, onLoc
     </button>;
     return <article className={`rally-movement direction-${direction}`} aria-label={`${movementName(move)}: ${move.armyName}`}>
         <header><span className={`rally-order-kind ${move.kind}`}><Icon name={direction === 'incoming' ? 'shield' : 'army'} size={18}/>{movementName(move)}</span>
-            <button className="rally-link" title="Follow this legion on the map" onClick={() => onMapArmy(move.armyId)}>{move.armyName}<Icon name="focus" size={18}/></button></header>
+            <button className="rally-link" title={move.missionId===undefined?'Follow this legion on the map':'Locate this scouting destination'} onClick={() => move.missionId===undefined?onMapArmy(move.armyId):onLocate(move.to)}>{move.armyName}<Icon name="focus" size={18}/></button></header>
         <div className="rally-route">{location(move.from)}<Icon name="arrow" size={18}/>{location(move.to)}</div>
         <div className="rally-party"><strong>{rosterTotal(move.troops).toLocaleString()} troops</strong><details className="rally-troop-details"><summary>Troop breakdown<Icon name="chevron" size={14}/></summary><TroopSummary troops={move.troops} faction={armyFaction(world, army)}/></details></div>
         {move.kind === 'return' && army?.carried_loot && Object.values(army.carried_loot).some(amount => amount > 0) && <div className="rally-carried-spoils"><span title="Credited to storage when this legion arrives.">Carried spoils</span><Cost cost={army.carried_loot} compact/></div>}
         <footer><div className="rally-arrival"><small>Arrives in</small><strong title={move.endsAt === null ? 'Arrival time unavailable' : dateTime(move.endsAt, world)}>{remaining === null ? 'Time unavailable' : remaining <= 0 ? 'Awaiting arrival update' : clock(remaining, world.game_clock?.rate ?? 1)}</strong>
             <small>{pending ? `Departure in ${clock((move.startedAt! - now) / 1000, world.game_clock?.rate ?? 1)}` : move.endsAt !== null ? `Arrival ${dateTime(move.endsAt, world)}` : 'Awaiting order timing'}</small></div>
-            {move.cancel && <div className="rally-cancel"><small>{clock((move.cancel.until - now) / 1000, world.game_clock?.rate ?? 1)} to cancel</small><button className="button outline" disabled={busy} title="Cancel this order and restore its troops at the origin station" onClick={() => run({ type: 'cancelMarch', armyId: move.armyId, sentAt: move.cancel!.sentAt }, 'March cancelled. Troops restored at their origin.')}>Cancel order</button></div>}</footer>
+            {move.cancel && <div className="rally-cancel"><small>{clock((move.cancel.until - now) / 1000, world.game_clock?.rate ?? 1)} to cancel</small><button className="button outline" disabled={busy} title="Cancel this order and restore its troops at the origin station" onClick={() => run({ type: 'cancelMarch', armyId: move.armyId, sentAt: move.cancel!.sentAt }, 'March cancelled. Troops restored at their origin.')}>Cancel order</button></div>}
+            {move.scoutCancel&&<div className="rally-cancel"><small>{clock((move.scoutCancel.until-now)/1000,world.game_clock?.rate??1)} to cancel</small><button className="button outline" disabled={busy} onClick={()=>run({type:'cancelScouting',missionId:move.scoutCancel!.missionId,sentAt:move.scoutCancel!.sentAt},'Scouting cancelled. Scouts restored at their source city.')}>Cancel scouting</button></div>}</footer>
         <div className="rally-travel-progress" role="progressbar" aria-label={`${move.armyName} travel progress`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress)}><i style={{ width: `${progress}%` }}/></div>
     </article>;
 }
@@ -44,8 +46,8 @@ export function RallyMovementRow({ world, move, now, busy, direction, run, onLoc
 export function RallyMovements({ state, ...props }: Omit<MovementProps, 'move' | 'direction'> & { state: RallyPointState }) {
     const [filter, setFilter] = useState<'all' | 'incoming' | 'outgoing'>('all');
     // An internal reinforcement can appear in both domain lists. Show it once in All.
-    const incomingIds = new Set(state.incoming.map(move => move.armyId));
-    const uniqueOutgoing = state.outgoing.filter(move => !incomingIds.has(move.armyId));
+    const incomingIds = new Set(state.incoming.map(rallyMovementKey));
+    const uniqueOutgoing = state.outgoing.filter(move => !incomingIds.has(rallyMovementKey(move)));
     const filters = [
         { id: 'all', label: 'All', count: state.incoming.length + uniqueOutgoing.length },
         { id: 'incoming', label: 'Incoming', count: state.incoming.length },
@@ -60,7 +62,7 @@ export function RallyMovements({ state, ...props }: Omit<MovementProps, 'move' |
             return <section className={`rally-movement-group ${direction}`} key={direction} aria-label={`${direction === 'incoming' ? 'Incoming' : 'Outgoing'} troop movements`}>
                 <header><h3><Icon name={direction === 'incoming' ? 'shield' : 'army'} size={20}/>{direction === 'incoming' ? 'Incoming' : 'Outgoing'} <span>({movements.length})</span></h3>
                     <p>{direction === 'incoming' ? 'Your returning legions and reinforcements.' : 'Raids and reinforcements leaving your stations.'}</p></header>
-                <div className="rally-movements">{movements.map(move => <RallyMovementRow key={move.armyId} {...props} move={move} direction={direction}/>)}</div>
+                <div className="rally-movements">{movements.map(move => <RallyMovementRow key={rallyMovementKey(move)} {...props} move={move} direction={direction}/>)}</div>
                 {!movements.length && <div className="rally-empty"><Icon name={direction === 'incoming' ? 'shield' : 'army'} size={28}/><h3>No {direction} movements</h3><p>{direction === 'incoming' ? 'Returning legions appear here on their way home.' : 'Send a reviewed raid from a farm list or the map to track it here.'}</p></div>}
             </section>;
         })}

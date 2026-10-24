@@ -1,4 +1,5 @@
 import { worldGameNow } from '../../../shared/time/gameClock';
+import {resolveScoutingEvent} from '../../scouting/domain/scouting';
 import {tradeEvents,advanceTradeEvent,unloadWaitingCaravans} from '../../city/domain/trade';
 import {advanceTradeRoutes} from '../../city/domain/tradeRoutes';
 import { settleCityReinforcements } from '../../city/domain/cityReinforcements';
@@ -118,6 +119,10 @@ function settleWithTroopSupply(w:World,owner:string,until:number,routes:boolean)
         for(const p of [...(w.guild_reinforcements??[]),...(w.trade_caravans??[]).filter(c=>c.status!=='completed')]){
             if(owners.has(p.owner_id)||owners.has(p.recipient_id))for(const id of [p.owner_id,p.recipient_id])if(!owners.has(id)){owners.add(id);changed=true;}
         }
+        for(const m of (w.scouting_missions??[]).filter(m=>m.status==='outbound'||m.status==='returning')){
+            const participants=[m.owner_id,...(m.target_owner_id&&m.status==='outbound'?[m.target_owner_id]:[])];
+            if(participants.some(id=>owners.has(id)))for(const id of participants)if(!owners.has(id)){owners.add(id);changed=true;}
+        }
     }
     const cities=()=>w.settlements.filter(s=>owners.has(s.owner_id)&&!s.ruined_at);
     let cursor=Math.min(until,...cities().map(s=>Date.parse(s.resources_updated_at)));
@@ -134,6 +139,7 @@ function settleWithTroopSupply(w:World,owner:string,until:number,routes:boolean)
                 w.guild_reinforcements=w.guild_reinforcements?.filter(row=>row!==p);
             }
         }
+        for(const m of (w.scouting_missions??[]).filter(m=>owners.has(m.owner_id)&&(m.status==='outbound'||m.status==='returning')&&Date.parse(m.arrival_at)<=at).sort((a,b)=>Date.parse(a.arrival_at)-Date.parse(b.arrival_at)||Number(a.status!=='returning')-Number(b.status!=='returning')||a.id-b.id))resolveScoutingEvent(w,m,()=>nextEntityId(w));
         refreshTroopUpkeep(w,at);
     };
     refreshTroopUpkeep(w,cursor);complete(cursor);
@@ -143,6 +149,7 @@ function settleWithTroopSupply(w:World,owner:string,until:number,routes:boolean)
         for(const o of w.orders)if(owners.has(o.owner_id))add(o.finish_at);
         for(const e of w.settler_expeditions??[])if(owners.has(e.owner_id)&&e.status==='travelling')add(e.arrival_at);
         for(const a of w.armies)if(owners.has(a.owner_id)&&a.status==='moving'){add(a.departure_at);add(a.arrival_at);}
+        for(const m of w.scouting_missions??[])if(owners.has(m.owner_id)&&(m.status==='outbound'||m.status==='returning')){if(m.status==='outbound')add(m.departure_at);add(m.arrival_at);}
         for(const p of [...(w.city_reinforcements??[]),...(w.ruin_evacuations??[])])if(owners.has(p.owner_id))add(p.arrival_at);
         for(const p of w.guild_reinforcements??[])if(owners.has(p.owner_id)&&p.status!=='stationed')add(p.arrival_at);
         for(const id of owners){for(const t of tradeEvents(w,id,until))if(t.at>cursor)boundaries.push(t.at);const due=researchDeadline(w,id);if(due>cursor&&due<=until)boundaries.push(due);}

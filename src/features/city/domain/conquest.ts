@@ -48,6 +48,7 @@ function transferCity(w:World,city:Settlement,attackerId:number,newOwner:string,
  }
  if(!homes.length){
   const player=w.players.find(p=>p.id===oldOwner);if(player)player.defeated_at??=stamp;
+  for(const mission of w.scouting_missions??[])if(mission.owner_id===oldOwner&&(mission.status==='outbound'||mission.status==='returning')){mission.scouts=0;mission.status='completed';}
   w.orders=w.orders.filter(o=>o.owner_id!==oldOwner);w.city_reinforcements=w.city_reinforcements?.filter(p=>p.owner_id!==oldOwner);w.ruin_evacuations=w.ruin_evacuations?.filter(p=>p.owner_id!==oldOwner);w.guild_reinforcements=w.guild_reinforcements?.filter(p=>p.owner_id!==oldOwner);
  }
  for(const a of w.armies.filter(a=>a.owner_id===oldOwner)){

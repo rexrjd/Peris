@@ -40,6 +40,7 @@ export function foodForceRows(w:World,at:number):FoodForceRow[]{
   push('guild',String(p.id),p.owner_id,host??source,host?(host.owner_id===p.owner_id?2:1):4,p.troops,r=>{p.troops=r;});
  }
  for(const p of w.ruin_evacuations??[])push('evacuation',String(p.id),p.owner_id,live(p.target_settlement_id,p.owner_id)??fallback(p.owner_id),4,p.troops,r=>{p.troops=r;});
+ for(const m of w.scouting_missions??[])if(m.status==='outbound'||m.status==='returning')push('scouting',String(m.id),m.owner_id,live(m.source_settlement_id,m.owner_id)??fallback(m.owner_id),4,{...emptyRoster(),scout:m.scouts},r=>{m.scouts=r.scout;});
  return rows;
 }
 

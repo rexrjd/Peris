@@ -9,6 +9,7 @@ import { ReinforcementDetailsDialog } from './ReinforcementDetailsDialog';
 import { factionOf } from '../../factions/domain/factions';
 
 const labels: Record<ActivityKind, { name: string; short: string; icon: string }> = {
+    scouting:{name:'Scouting',short:'Scout',icon:'focus'},
     trade:{name:'Trading',short:'Trade',icon:'transfer'},
     raid: { name: 'Raiding', short: 'Raid', icon: 'army' }, return: { name: 'Returning', short: 'Return', icon: 'transfer' }, march: { name: 'Marching', short: 'March', icon: 'flag' },
     reinforcement: { name: 'Reinforcing', short: 'Troops', icon: 'transfer' },
@@ -132,6 +133,9 @@ export function MapOperations({ world, playerId, now, busy, run, open, onToggle,
                                     aria-label={'Cancel departure: ' + event.title}
                                     title={'Cancel departure · ' + clock((event.cancel.until - now) / 1000) + ' left'}
                                     onClick={() => run({ type: 'cancelMarch', armyId: event.cancel!.armyId, sentAt: event.cancel!.sentAt }, 'March cancelled. Troops remain at their departure station.')}>×</button>}
+                                {event.scoutCancel && <button type="button" className="ops-event-cancel" disabled={busy} aria-label={'Cancel scouting: '+event.title}
+                                    title={'Cancel scouting departure · '+clock((event.scoutCancel.until-now)/1000,world.game_clock?.rate??1)+' left'}
+                                    onClick={()=>run({type:'cancelScouting',missionId:event.scoutCancel!.missionId,sentAt:event.scoutCancel!.sentAt},'Scouting cancelled. Scouts restored at their source city.')}>×</button>}
                             </li>)}
                         </ol> : <p className="ops-empty">{!events.length ? isCity ? 'No ongoing events in your empire' : 'No ongoing events' : isCity || full ? 'No events match these filters' : 'No troops on the move'}</p>}
                     </div>

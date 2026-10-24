@@ -24,6 +24,7 @@ create index if not exists peris_farms_due on public.peris_campaign_farms(next_a
 create or replace function public.peris_camp_accrue(p_camp integer,p_until timestamptz default public.peris_game_now())returns void language plpgsql security definer set search_path='' as $$
 declare c public.peris_camps%rowtype;s public.peris_camp_stock%rowtype;rates integer[];capacity integer;batch_min integer;batch_max integer;cap integer;minutes numeric;r text;i integer:=1;amount integer;steps integer:=0;stock jsonb;
 begin
+ p_until:=public.peris_scout_camp_cutoff(p_camp,p_until);
  select * into c from public.peris_camps where id=p_camp and bandit for update;if c.id is null then return;end if;
  select * into s from public.peris_camp_stock where camp_id=p_camp for update;
  if s.camp_id is null then return;end if;

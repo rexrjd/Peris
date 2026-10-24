@@ -10,7 +10,7 @@ import { FIELD_BUILDINGS } from './territory';
 import {RESOURCES} from '../../../shared/model/resources';
 import { RECRUIT_RULES, RECRUIT_UNITS, rosterTotal, type RecruitUnit } from '../../army/domain/roster';
 
-export type ActivityKind = 'raid' | 'return' | 'march' | 'battle' | 'construction' | 'recruitment' | 'research' | 'settlers' | 'reinforcement' | 'trade';
+export type ActivityKind = 'scouting' | 'raid' | 'return' | 'march' | 'battle' | 'construction' | 'recruitment' | 'research' | 'settlers' | 'reinforcement' | 'trade';
 const unitNames: Record<RecruitUnit, string> = { infantry: 'infantry', spearmen: 'spearmen', archers: 'archers', elite: 'elite soldiers', cavalry: 'cavalry', scout: 'scouts', heavyCavalry: 'heavy cavalry', ram: 'rams', catapult: 'catapults',diplomat:'diplomats' };
 const unitName = (unit: string) => RECRUIT_UNITS.includes(unit as RecruitUnit) ? unitNames[unit as RecruitUnit] : 'soldiers';
 export type MapActivity = {
@@ -19,6 +19,7 @@ export type MapActivity = {
     startedAt: number | null; endsAt: number | null; live?: boolean;
     selection: Exclude<MapSelection, null>; point: { x: number; y: number };
     cancel?: { armyId: number; sentAt: string; until: number };
+    scoutingMissionId?: number; scoutCancel?: {missionId:number;sentAt:string;until:number};
     guildReinforcementId?: number; supportStatus?: 'outbound'|'stationed'|'returning';
 };
 const timestamp = (value?: string | null) => {
@@ -51,6 +52,17 @@ function constructionTitle(world: World, order: Order, cityId: number) {
 export function mapActivity(world: World, owner: string, now: number): MapActivity[] {
     const events: MapActivity[] = [], fighting = new Set<number>();
     const cities = world.settlements.filter(s => s.owner_id === owner);
+    for(const mission of world.scouting_missions??[]){
+        if(mission.owner_id!==owner||!['outbound','returning'].includes(mission.status))continue;
+        const returning=mission.status==='returning',last=mission.march_path.at(-1),point=last?{x:last[0],y:last[1]}:{x:mission.target_x,y:mission.target_y};
+        const targetCity=returning?cities.find(city=>activityField(city).col===activityField(point).col&&activityField(city).row===activityField(point).row):world.settlements.find(city=>city.id===mission.target_city_id);
+        const until=timestamp(mission.cancel_until),sent=timestamp(mission.sent_at),departure=timestamp(mission.departure_at);
+        const cancellable=!returning&&until!==null&&sent!==null&&departure!==null&&now>=sent&&now<Math.min(until,sent+30000*(world.game_clock?.rate??1),departure);
+        events.push({id:'scouting:'+mission.id,kind:'scouting',category:'armies',title:mission.scouts.toLocaleString()+' scouts',detail:returning?'Scouts returning':cancellable?'Preparing scouting departure':'Scouting mission',
+            destination:returning?placeName(world,point):mission.target_name,troops:mission.scouts,cityId:mission.source_settlement_id,sourceCityId:mission.source_settlement_id,scoutingMissionId:mission.id,
+            startedAt:departure,endsAt:timestamp(mission.arrival_at),point,selection:targetCity?{kind:'settlement',id:targetCity.id}:!returning&&mission.target_camp_id!==null?{kind:'camp',id:mission.target_camp_id}:{kind:'cell',...activityField(point)},
+            ...(cancellable?{scoutCancel:{missionId:mission.id,sentAt:mission.sent_at,until:Math.min(until!,sent!+30000*(world.game_clock?.rate??1),departure!)}}:{})});
+    }
     for(const c of world.trade_caravans??[]){
         const sent=c.owner_id===owner,received=c.recipient_id===owner;
         if(c.status==='completed'||!sent&&!received||!sent&&c.status!=='outbound')continue;

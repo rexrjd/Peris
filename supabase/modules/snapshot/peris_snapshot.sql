@@ -58,6 +58,10 @@ begin
  'challenges',coalesce((select jsonb_agg(c)from public.peris_challenges c where (attacker_owner_id=u or defender_owner_id=u)and status='pending'and expires_at>public.peris_game_now()),'[]'::jsonb))into result;
  if to_regprocedure('public.peris_supply_refresh(bigint,timestamp with time zone)')is not null then result:=result||jsonb_build_object('troop_upkeep_version',1);end if;
  if to_regclass('public.peris_conquest_version')is not null then result:=result||jsonb_build_object('conquest_version',1);end if;
+ if to_regclass('public.peris_scout_missions')is not null and to_regclass('public.peris_crop_version')is not null then
+  result:=result||jsonb_build_object('scouting_version',1);
+  execute 'select $1||jsonb_build_object(''scouting_missions'',coalesce((select jsonb_agg(to_jsonb(m)order by m.id)from public.peris_scout_missions m where owner_id=$2 and(status in(''outbound'',''returning'')or id in(select id from public.peris_scout_missions where owner_id=$2 and status in(''completed'',''cancelled'')order by id desc limit 200))),''[]''::jsonb))'into result using result,u;
+ end if;
  return result;
 end $$;
 

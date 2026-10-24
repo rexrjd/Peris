@@ -41,7 +41,7 @@ begin
  if c.id is null then raise exception 'Camp not found';end if;
  if a.id is null or a.infantry+a.archers+a.cavalry=0 then raise exception 'Recruit soldiers before starting a raid';end if;
  if a.status<>'idle' or a.raid_target_id is not null or a.raid_city_id is not null or a.raid_reserve is not null then raise exception 'This legion already has a march or raid';end if;
- if not c.bandit and exists(select 1 from public.peris_progress where owner_id=u and camp_id=p_camp and available_at>public.peris_game_now())then raise exception 'The camp is still regrouping';end if;
+ available:=public.peris_roster(to_jsonb(a));preset:=available;
  if p_troops is not null then
   if jsonb_typeof(p_troops)<>'object' then raise exception 'Choose troops currently available in this legion';end if;
   available:=public.peris_roster(to_jsonb(a));preset:=public.peris_garrison_troops(p_troops);
@@ -56,6 +56,10 @@ begin
   route:=jsonb_build_array(jsonb_build_array(a.target_x,a.target_y));
   for i in 1..steps loop route:=route||jsonb_build_array(jsonb_build_array(public.peris_wrap_world(round(a.target_x+public.peris_wrapped_delta(a.target_x,c.x)*i/steps)::integer),public.peris_wrap_world(round(a.target_y+public.peris_wrapped_delta(a.target_y,c.y)*i/steps)::integer)));end loop;
  end if;
+ if public.peris_roster_total(preset)>0 and public.peris_roster_total(preset)=coalesce((preset->>'scout')::integer,0)and to_regprocedure('public.peris_scout_command_for(uuid,jsonb)')is not null then
+  return public.peris_scout_command_for(u,jsonb_build_object('type','scout','armyId',a.id,'campId',c.id,'quantity',(preset->>'scout')::integer,'mode','resources','route',route));
+ end if;
+ if not c.bandit and exists(select 1 from public.peris_progress where owner_id=u and camp_id=p_camp and available_at>public.peris_game_now())then raise exception 'The camp is still regrouping';end if;
  perform public.peris_march_for(u,a.id,c.x,c.y,route,c.id);
  update public.armies set raid_target_id=c.id where id=a.id;
  if p_troops is not null then

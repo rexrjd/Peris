@@ -1,5 +1,43 @@
 -- PERIS city capture and diplomats. Apply after current V19 + Crop Upkeep. Repeatable; never deployed automatically.
 begin;
+-- Optional hooks keep earlier focused migrations usable without enabling scouting.
+create or replace function public.peris_optional_scout_missions()returns table(id bigint,owner_id uuid,target_owner_id uuid,source_settlement_id bigint,target_city_id bigint,status text,scouts integer,departure_at timestamptz,arrival_at timestamptz)
+language plpgsql stable security definer set search_path='' as $$
+begin
+ if to_regclass('public.peris_scout_missions')is not null then return query execute 'select id,owner_id,target_owner_id,source_settlement_id,target_city_id,status,scouts,departure_at,arrival_at from public.peris_scout_missions where status in(''outbound'',''returning'')';end if;
+end $$;
+create or replace function public.peris_scout_edges()returns table(owner_id uuid,recipient_id uuid)
+language plpgsql stable security definer set search_path='' as $$
+begin
+ return query select m.owner_id,m.target_owner_id from public.peris_optional_scout_missions()m where m.target_owner_id is not null
+ union select m.owner_id,s.owner_id from public.peris_optional_scout_missions()m join public.settlements s on s.id=m.target_city_id;
+ if to_regclass('public.peris_scout_missions')is not null then
+  return query execute 'select m.owner_id,a.owner_id from public.peris_scout_missions m join public.armies a on a.raid_target_id=m.target_camp_id where m.status=''outbound''
+   union select m.owner_id,b.attacker_owner_id from public.peris_scout_missions m join public.battles b on b.camp_id=m.target_camp_id and b.status=''active''where m.status=''outbound''
+   union select m.owner_id,n.owner_id from public.peris_scout_missions m join public.peris_scout_missions n on n.target_camp_id=m.target_camp_id and n.id>m.id where m.status=''outbound''and n.status=''outbound''';
+ end if;
+end $$;
+create or replace function public.peris_due_scouts()returns table(owner_id uuid,due timestamptz)
+language sql stable security definer set search_path='' as $$select owner_id,min(arrival_at)from public.peris_optional_scout_missions()where arrival_at<=public.peris_game_now()group by owner_id$$;
+create or replace function public.peris_optional_advance_scouts(p_owners uuid[],p_at timestamptz)returns void
+language plpgsql security definer set search_path='' as $$
+begin if to_regprocedure('public.peris_scout_advance(uuid[],timestamp with time zone)')is not null then execute 'select public.peris_scout_advance($1,$2)'using p_owners,p_at;end if;end $$;
+revoke all on function public.peris_optional_scout_missions(),public.peris_scout_edges(),public.peris_due_scouts(),public.peris_optional_advance_scouts(uuid[],timestamptz)from public,anon,authenticated;
+
+create or replace function public.peris_scout_camp_cutoff(p_camp integer,p_until timestamptz)returns timestamptz
+language plpgsql stable security definer set search_path='' as $$
+declare cutoff timestamptz;
+begin
+ if to_regclass('public.peris_scout_missions')is not null then execute 'select min(arrival_at)from public.peris_scout_missions where target_camp_id=$1 and status=''outbound'''into cutoff using p_camp;end if;
+ return least(p_until,coalesce(cutoff,p_until));
+end $$;
+revoke all on function public.peris_scout_camp_cutoff(integer,timestamptz)from public,anon,authenticated;
+
+create or replace function public.peris_optional_scout_camp_mutation(p_camp integer,p_at timestamptz,p_owner uuid)returns void
+language plpgsql security definer set search_path='' as $$
+begin if p_camp is not null and to_regprocedure('public.peris_scout_flush_camp(integer,timestamp with time zone,uuid)')is not null then execute 'select public.peris_scout_flush_camp($1,$2,$3)'using p_camp,p_at,p_owner;end if;end $$;
+revoke all on function public.peris_optional_scout_camp_mutation(integer,timestamptz,uuid)from public,anon,authenticated;
+
 -- One backend is one world. Operational/security/audit clocks remain real UTC.
 create table if not exists public.peris_world_clock(
  id boolean primary key default true check(id),
@@ -646,6 +684,10 @@ begin
   source:=coalesce(case when r.status='stationed'then(select id from public.settlements where id=r.target_settlement_id and owner_id=r.recipient_id and ruined_at is null)else coalesce((select id from public.settlements where id=r.source_settlement_id and owner_id=r.owner_id and ruined_at is null),(select id from public.settlements where id=r.target_settlement_id and owner_id=r.owner_id and ruined_at is null))end,(select min(id)from public.settlements where owner_id=r.owner_id and ruined_at is null));
   if source=p_sid then kind:='guild';key:='guild:'||r.id;owner_id:=r.owner_id;tier:=case when r.status='stationed'then 1 else 4 end;troops:=public.peris_roster(r.troops);return next;end if;
  end loop;
+ for r in select * from public.peris_optional_scout_missions() loop
+  source:=coalesce((select id from public.settlements where id=r.source_settlement_id and owner_id=r.owner_id and ruined_at is null),(select min(id)from public.settlements where owner_id=r.owner_id and ruined_at is null));
+  if source=p_sid then kind:='scout';key:='scout:'||r.id;owner_id:=r.owner_id;tier:=4;troops:=public.peris_roster(jsonb_build_object('scout',r.scouts));return next;end if;
+ end loop;
  for r in select * from public.peris_ruin_evacuations loop
   source:=coalesce((select id from public.settlements where id=r.target_settlement_id and owner_id=r.owner_id and ruined_at is null),(select min(id)from public.settlements where owner_id=r.owner_id and ruined_at is null));
   if source=p_sid then kind:='evacuation';key:='evacuation:'||r.id;owner_id:=r.owner_id;tier:=4;troops:=public.peris_roster(r.troops);return next;end if;
@@ -768,6 +810,7 @@ begin
  elsif r.kind='station'then update public.peris_garrisons set unit_roster=roster,infantry=public.peris_roster_class(roster,'infantry'),archers=public.peris_roster_class(roster,'archers'),cavalry=public.peris_roster_class(roster,'cavalry')where owner_id=r.owner_id and col=parts[3]::integer and row=parts[4]::integer;
  elsif r.kind='reinforcement'then update public.peris_city_reinforcements set troops=roster where id=parts[2]::bigint;
  elsif r.kind='guild'then update public.peris_guild_reinforcements set troops=roster where id=parts[2]::bigint;
+ elsif r.kind='scout'then execute 'update public.peris_scout_missions set scouts=$1 where id=$2'using(roster->>'scout')::integer,parts[2]::bigint;
  elsif r.kind='evacuation'then update public.peris_ruin_evacuations set troops=roster where id=parts[2]::bigint;end if;
  perform public.peris_supply_battle_loss(r.key,casualty_unit);
  select (rule#>>'{cost,food}')::numeric into refund from public.peris_unit_balance where version=2 and peris_unit_balance.unit=casualty_unit;
@@ -820,6 +863,7 @@ create or replace function public.peris_trade_participants(p_owner uuid)returns 
 language sql stable security definer set search_path='' as $$
  with recursive participants(id)as(select p_owner union select case when r.owner_id=p.id then r.recipient_id else r.owner_id end
  from participants p join(select owner_id,recipient_id from public.peris_trade_caravans where status<>'completed' union select owner_id,recipient_id from public.peris_trade_route_edges()
+ union select owner_id,recipient_id from public.peris_scout_edges()
  union select owner_id,recipient_id from public.peris_guild_reinforcements
  union select attacker_owner_id,defender_owner_id from public.battles where status='active'and defender_owner_id is not null)r on(r.owner_id=p.id or r.recipient_id=p.id))
  select array_agg(id order by id)from participants
@@ -840,6 +884,7 @@ begin
  cursor_at:=least(coalesce(cursor_at,p_until),p_until);
  foreach participant in array participants loop perform public.peris_settle_core(participant,cursor_at);end loop;
  for r in select id from public.peris_trade_caravans where owner_id=any(participants)and(status='outbound'and arrival_at<=cursor_at or status='returning'and least(return_at,case when public.peris_trade_volume(returning_resources)>0 then redirect_at end)<=cursor_at)order by id loop perform public.peris_trade_event(r.id,cursor_at);end loop;
+ perform public.peris_optional_advance_scouts(participants,cursor_at);
  for city in select id from public.settlements where owner_id=any(participants)and ruined_at is null order by id loop perform public.peris_supply_refresh(city.id,cursor_at);end loop;
  loop
   select min(at_time)into event_at from(
@@ -852,12 +897,14 @@ begin
    union all select arrival_at from public.peris_ruin_evacuations where owner_id=any(participants)
    union all select arrival_at from public.peris_settler_expeditions where owner_id=any(participants)and status='travelling'
    union all select case when status='outbound'then arrival_at else least(return_at,case when public.peris_trade_volume(returning_resources)>0 then redirect_at end)end from public.peris_trade_caravans where owner_id=any(participants)and status in('outbound','returning')
+   union all select arrival_at from public.peris_optional_scout_missions()where owner_id=any(participants)
    union all select p_until
   )events where at_time>cursor_at and at_time<=p_until;
   exit when event_at is null;
   for city in select id from public.settlements where owner_id=any(participants)and ruined_at is null order by id loop perform public.peris_population_accrue(city.id,event_at);end loop;
   foreach participant in array participants loop perform public.peris_settle_core(participant,event_at);end loop;
   for r in select id from public.peris_trade_caravans where owner_id=any(participants)and(status='outbound'and arrival_at<=event_at or status='returning'and least(return_at,case when public.peris_trade_volume(returning_resources)>0 then redirect_at end)<=event_at)order by id loop perform public.peris_trade_event(r.id,event_at);end loop;
+  perform public.peris_optional_advance_scouts(participants,event_at);
   for city in select id from public.settlements where owner_id=any(participants)and ruined_at is null order by id loop perform public.peris_supply_refresh(city.id,event_at);end loop;
   cursor_at:=event_at;
  end loop;
@@ -1093,7 +1140,7 @@ begin
  if c.id is null then raise exception 'Camp not found';end if;
  if a.id is null or a.infantry+a.archers+a.cavalry=0 then raise exception 'Recruit soldiers before starting a raid';end if;
  if a.status<>'idle' or a.raid_target_id is not null or a.raid_city_id is not null or a.raid_reserve is not null then raise exception 'This legion already has a march or raid';end if;
- if not c.bandit and exists(select 1 from public.peris_progress where owner_id=u and camp_id=p_camp and available_at>public.peris_game_now())then raise exception 'The camp is still regrouping';end if;
+ available:=public.peris_roster(to_jsonb(a));preset:=available;
  if p_troops is not null then
   if jsonb_typeof(p_troops)<>'object' then raise exception 'Choose troops currently available in this legion';end if;
   available:=public.peris_roster(to_jsonb(a));preset:=public.peris_garrison_troops(p_troops);
@@ -1108,6 +1155,10 @@ begin
   route:=jsonb_build_array(jsonb_build_array(a.target_x,a.target_y));
   for i in 1..steps loop route:=route||jsonb_build_array(jsonb_build_array(public.peris_wrap_world(round(a.target_x+public.peris_wrapped_delta(a.target_x,c.x)*i/steps)::integer),public.peris_wrap_world(round(a.target_y+public.peris_wrapped_delta(a.target_y,c.y)*i/steps)::integer)));end loop;
  end if;
+ if public.peris_roster_total(preset)>0 and public.peris_roster_total(preset)=coalesce((preset->>'scout')::integer,0)and to_regprocedure('public.peris_scout_command_for(uuid,jsonb)')is not null then
+  return public.peris_scout_command_for(u,jsonb_build_object('type','scout','armyId',a.id,'campId',c.id,'quantity',(preset->>'scout')::integer,'mode','resources','route',route));
+ end if;
+ if not c.bandit and exists(select 1 from public.peris_progress where owner_id=u and camp_id=p_camp and available_at>public.peris_game_now())then raise exception 'The camp is still regrouping';end if;
  perform public.peris_march_for(u,a.id,c.x,c.y,route,c.id);
  update public.armies set raid_target_id=c.id where id=a.id;
  if p_troops is not null then
@@ -1334,12 +1385,16 @@ begin
  select * into a from public.armies where id=p_army and owner_id=p_owner for update;
  select * into c from public.settlements where id=p_city and owner_id<>p_owner;
  if a.id is null or c.id is null or to_jsonb(c)->>'ruined_at' is not null then raise exception 'Choose your legion and another player''s living city';end if;
- if public.peris_social_relation(p_owner,c.owner_id)in('guild','alliance','nap')then raise exception 'Your guild or diplomatic pact protects this city';end if;
+
  available:=public.peris_roster(to_jsonb(a));chosen:=public.peris_garrison_troops(coalesce(nullif(p_troops,'null'::jsonb),available));
  if public.peris_roster_total(chosen)=0 then raise exception 'Send at least one soldier';end if;
  foreach unit_name in array array['infantry','spearmen','archers','elite','cavalry','scout','heavyCavalry','ram','catapult','diplomat']loop
   if(chosen->>unit_name)::integer>(available->>unit_name)::integer then raise exception 'Choose troops currently available in this legion';end if;
  end loop;
+ if public.peris_roster_total(chosen)=coalesce((chosen->>'scout')::integer,0)and to_regprocedure('public.peris_scout_command_for(uuid,jsonb)')is not null then
+  return public.peris_scout_command_for(p_owner,jsonb_build_object('type','scout','armyId',a.id,'targetCityId',c.id,'quantity',(chosen->>'scout')::integer,'mode','resources','route',p_path));
+ end if;
+ if public.peris_social_relation(p_owner,c.owner_id)in('guild','alliance','nap')then raise exception 'Your guild or diplomatic pact protects this city';end if;
  perform public.peris_march_for_target(p_owner,a.id,c.x,c.y,p_path,null,c.id);
  perform public.peris_garrison_add(p_owner,floor(a.target_x/128.0)::integer,floor(a.target_y/128.0)::integer,public.peris_roster_add(available,chosen,-1));
  perform public.peris_write_roster(a.id,chosen);
@@ -1661,9 +1716,1214 @@ begin
  'challenges',coalesce((select jsonb_agg(c)from public.peris_challenges c where (attacker_owner_id=u or defender_owner_id=u)and status='pending'and expires_at>public.peris_game_now()),'[]'::jsonb))into result;
  if to_regprocedure('public.peris_supply_refresh(bigint,timestamp with time zone)')is not null then result:=result||jsonb_build_object('troop_upkeep_version',1);end if;
  if to_regclass('public.peris_conquest_version')is not null then result:=result||jsonb_build_object('conquest_version',1);end if;
+ if to_regclass('public.peris_scout_missions')is not null and to_regclass('public.peris_crop_version')is not null then
+  result:=result||jsonb_build_object('scouting_version',1);
+  execute 'select $1||jsonb_build_object(''scouting_missions'',coalesce((select jsonb_agg(to_jsonb(m)order by m.id)from public.peris_scout_missions m where owner_id=$2 and(status in(''outbound'',''returning'')or id in(select id from public.peris_scout_missions where owner_id=$2 and status in(''completed'',''cancelled'')order by id desc limit 200))),''[]''::jsonb))'into result using result,u;
+ end if;
  return result;
 end $$;
 revoke all on function public.peris_account_faction(uuid)from public,anon,authenticated;
 revoke all on function public.peris_add_formations(bigint,uuid,text,integer,integer,integer,numeric),public.peris_prepare_city_raid(uuid,bigint,bigint,jsonb,jsonb,text),public.peris_start_city_raid(uuid,bigint),public.peris_finish_city_raid(bigint,text,text),public.peris_found_complete(bigint),public.peris_settle_core(uuid,timestamptz),public.peris_settle(uuid,timestamptz)from public,anon,authenticated;
 notify pgrst,'reload schema';
+
+do $restore_scouting$begin if to_regclass('public.peris_scout_missions')is not null and to_regclass('public.peris_crop_version')is not null then execute $scouting_definition$-- Optional hooks keep earlier focused migrations usable without enabling scouting.
+create or replace function public.peris_optional_scout_missions()returns table(id bigint,owner_id uuid,target_owner_id uuid,source_settlement_id bigint,target_city_id bigint,status text,scouts integer,departure_at timestamptz,arrival_at timestamptz)
+language plpgsql stable security definer set search_path='' as $$
+begin
+ if to_regclass('public.peris_scout_missions')is not null then return query execute 'select id,owner_id,target_owner_id,source_settlement_id,target_city_id,status,scouts,departure_at,arrival_at from public.peris_scout_missions where status in(''outbound'',''returning'')';end if;
+end $$;
+create or replace function public.peris_scout_edges()returns table(owner_id uuid,recipient_id uuid)
+language plpgsql stable security definer set search_path='' as $$
+begin
+ return query select m.owner_id,m.target_owner_id from public.peris_optional_scout_missions()m where m.target_owner_id is not null
+ union select m.owner_id,s.owner_id from public.peris_optional_scout_missions()m join public.settlements s on s.id=m.target_city_id;
+ if to_regclass('public.peris_scout_missions')is not null then
+  return query execute 'select m.owner_id,a.owner_id from public.peris_scout_missions m join public.armies a on a.raid_target_id=m.target_camp_id where m.status=''outbound''
+   union select m.owner_id,b.attacker_owner_id from public.peris_scout_missions m join public.battles b on b.camp_id=m.target_camp_id and b.status=''active''where m.status=''outbound''
+   union select m.owner_id,n.owner_id from public.peris_scout_missions m join public.peris_scout_missions n on n.target_camp_id=m.target_camp_id and n.id>m.id where m.status=''outbound''and n.status=''outbound''';
+ end if;
+end $$;
+create or replace function public.peris_due_scouts()returns table(owner_id uuid,due timestamptz)
+language sql stable security definer set search_path='' as $$select owner_id,min(arrival_at)from public.peris_optional_scout_missions()where arrival_at<=public.peris_game_now()group by owner_id$$;
+create or replace function public.peris_optional_advance_scouts(p_owners uuid[],p_at timestamptz)returns void
+language plpgsql security definer set search_path='' as $$
+begin if to_regprocedure('public.peris_scout_advance(uuid[],timestamp with time zone)')is not null then execute 'select public.peris_scout_advance($1,$2)'using p_owners,p_at;end if;end $$;
+revoke all on function public.peris_optional_scout_missions(),public.peris_scout_edges(),public.peris_due_scouts(),public.peris_optional_advance_scouts(uuid[],timestamptz)from public,anon,authenticated;
+
+create or replace function public.peris_scout_camp_cutoff(p_camp integer,p_until timestamptz)returns timestamptz
+language plpgsql stable security definer set search_path='' as $$
+declare cutoff timestamptz;
+begin
+ if to_regclass('public.peris_scout_missions')is not null then execute 'select min(arrival_at)from public.peris_scout_missions where target_camp_id=$1 and status=''outbound'''into cutoff using p_camp;end if;
+ return least(p_until,coalesce(cutoff,p_until));
+end $$;
+revoke all on function public.peris_scout_camp_cutoff(integer,timestamptz)from public,anon,authenticated;
+
+create or replace function public.peris_optional_scout_camp_mutation(p_camp integer,p_at timestamptz,p_owner uuid)returns void
+language plpgsql security definer set search_path='' as $$
+begin if p_camp is not null and to_regprocedure('public.peris_scout_flush_camp(integer,timestamp with time zone,uuid)')is not null then execute 'select public.peris_scout_flush_camp($1,$2,$3)'using p_camp,p_at,p_owner;end if;end $$;
+revoke all on function public.peris_optional_scout_camp_mutation(integer,timestamptz,uuid)from public,anon,authenticated;
+
+-- Separate private scout detachments. Resolved battle rows are report receipts only.
+create table if not exists public.peris_scout_missions(
+ id bigint generated always as identity primary key,
+ owner_id uuid not null references public.players(id)on delete cascade,
+ source_settlement_id bigint not null references public.settlements(id),source_army_id bigint not null references public.armies(id),
+ target_city_id bigint references public.settlements(id),target_camp_id integer references public.peris_camps(id),target_owner_id uuid references public.players(id),
+ target_name text not null,faction text not null,mode text not null check(mode in('resources','defences')),
+ initial_scouts integer not null check(initial_scouts between 1 and 1000),scouts integer not null check(scouts between 0 and 1000),
+ status text not null default 'outbound'check(status in('outbound','returning','completed','cancelled')),
+ origin_x integer not null,origin_y integer not null,target_x integer not null,target_y integer not null,
+ sent_at timestamptz not null,departure_at timestamptz not null,arrival_at timestamptz not null,cancel_until timestamptz not null,
+ march_path jsonb not null,march_distance numeric not null,report_battle_id bigint references public.battles(id),
+ check((target_city_id is null)<>(target_camp_id is null)),check(scouts<=initial_scouts),check(arrival_at>=departure_at)
+);
+alter table public.battles drop constraint if exists peris_scout_receipt_only;
+alter table public.battles add constraint peris_scout_receipt_only check(mode<>'scouting'or(status='resolved'and defender_owner_id is null and defender_army_id is null));
+create index if not exists peris_scout_due on public.peris_scout_missions(owner_id,arrival_at)where status in('outbound','returning');
+create index if not exists peris_scout_inbound on public.peris_scout_missions(target_owner_id,arrival_at)where status='outbound';
+alter table public.peris_scout_missions enable row level security;
+revoke all on public.peris_scout_missions from public,anon,authenticated;
+grant select on public.peris_scout_missions to authenticated;
+drop policy if exists "own scout missions"on public.peris_scout_missions;
+create policy "own scout missions"on public.peris_scout_missions for select to authenticated using(owner_id=public.peris_player_id());
+
+create or replace function public.peris_scout_speed(p_owner uuid)returns numeric
+language sql stable security definer set search_path='' as $$select 22.0*speed/40*public.peris_research_factor(p_owner,'march')from public.peris_unit_catalog where unit='scout'$$;
+create or replace function public.peris_scout_smithy(p_city bigint,p_owner uuid)returns numeric
+language sql stable security definer set search_path='' as $$select 1+.04*coalesce(sum(c.level),0)from public.peris_city_slots c join public.settlements s on s.id=c.settlement_id where s.id=p_city and s.owner_id=p_owner and s.ruined_at is null and c.building_type='smithy'$$;
+
+-- Return credits use the same authoritative city ownership and legion capacity checks.
+create or replace function public.peris_scout_deliver(p_id bigint,p_city bigint)returns void
+language plpgsql security definer set search_path='' as $$
+declare m public.peris_scout_missions%rowtype;a public.armies%rowtype;s public.settlements%rowtype;room integer;merged integer:=0;pos jsonb;home jsonb;
+begin
+ select * into m from public.peris_scout_missions where id=p_id for update;
+ select * into s from public.settlements where id=p_city and owner_id=m.owner_id and ruined_at is null for update;
+ if s.id is null or m.scouts=0 then return;end if;
+ select * into a from public.armies where id=m.source_army_id and owner_id=m.owner_id for update;
+ pos:=public.peris_army_position(a);home:=public.peris_home_army_position(s.x,s.y);
+ if floor((pos->>'x')::numeric/128)=floor(s.x/128.0)and floor((pos->>'y')::numeric/128)=floor(s.y/128.0)and a.status='idle'and a.raid_city_id is null and a.raid_target_id is null and a.raid_reserve is null and sqrt(power(public.peris_wrapped_delta((pos->>'x')::numeric,(home->>'x')::numeric),2)+power(public.peris_wrapped_delta((pos->>'y')::numeric,(home->>'y')::numeric),2))<=90 then
+  room:=greatest(0,1000-public.peris_roster_total(public.peris_roster(to_jsonb(a)))-coalesce((select sum(quantity)::integer from public.peris_orders where army_id=a.id and kind='recruit'and recruit_destination='legion'),0));
+  merged:=least(room,m.scouts);
+  if merged>0 then perform public.peris_write_roster(a.id,public.peris_roster_add(public.peris_roster(to_jsonb(a)),jsonb_build_object('scout',merged)));end if;
+ end if;
+ if m.scouts>merged then perform public.peris_city_garrison_receive(m.owner_id,s.id,jsonb_build_object('scout',m.scouts-merged));end if;
+ update public.peris_scout_missions set scouts=0 where id=m.id;
+end $$;
+
+-- Count only pools physically present at the observation deadline. Guild pools keep their own upgrades.
+create or replace function public.peris_scout_defenders(p_city bigint,p_at timestamptz)returns table(owner_id uuid,smithy_city bigint,troops jsonb)
+language plpgsql stable security definer set search_path='' as $$
+#variable_conflict use_column
+declare s public.settlements%rowtype;r record;position jsonb;
+begin
+ select * into s from public.settlements where id=p_city and ruined_at is null;if s.id is null then return;end if;
+ for r in select * from public.armies a where a.owner_id=s.owner_id and(a.status='idle'or a.status='moving'and a.departure_at>p_at)loop
+  position:=case when r.status='moving'then jsonb_build_object('x',r.start_x,'y',r.start_y)else jsonb_build_object('x',r.target_x,'y',r.target_y)end;
+  if floor((position->>'x')::numeric/128)=floor(s.x/128.0)and floor((position->>'y')::numeric/128)=floor(s.y/128.0)then owner_id:=s.owner_id;smithy_city:=s.id;troops:=public.peris_roster(to_jsonb(r));return next;end if;
+ end loop;
+ for r in select * from public.peris_optional_scout_missions()m where m.owner_id=s.owner_id and m.source_settlement_id=s.id and m.status='outbound'and m.departure_at>p_at loop owner_id:=s.owner_id;smithy_city:=s.id;troops:=public.peris_roster(jsonb_build_object('scout',r.scouts));return next;end loop;
+ for r in select * from public.peris_city_garrisons g where g.settlement_id=s.id and g.owner_id=s.owner_id loop owner_id:=s.owner_id;smithy_city:=s.id;troops:=public.peris_roster(r.unit_roster);return next;end loop;
+ for r in select * from public.peris_garrisons g where g.owner_id=s.owner_id and g.col=floor(s.x/128.0)and g.row=floor(s.y/128.0)loop owner_id:=s.owner_id;smithy_city:=s.id;troops:=public.peris_roster(to_jsonb(r));return next;end loop;
+ for r in select * from public.peris_guild_reinforcements g where g.status='stationed'and g.target_settlement_id=s.id and g.recipient_id=s.owner_id and exists(select 1 from public.peris_guild_members a join public.peris_guild_members b on b.guild_id=a.guild_id where a.player_id=g.owner_id and b.player_id=g.recipient_id)loop owner_id:=r.owner_id;smithy_city:=r.source_settlement_id;troops:=public.peris_roster(r.troops);return next;end loop;
+end $$;
+
+create or replace function public.peris_scout_event(p_id bigint,p_at timestamptz)returns void
+language plpgsql security definer set search_path='' as $$
+declare m public.peris_scout_missions%rowtype;s public.settlements%rowtype;c public.peris_camps%rowtype;r record;bag jsonb;troops jsonb:=public.peris_roster('{}');
+ info jsonb;receipt jsonb;notice jsonb;target jsonb;bid bigint;route jsonb;path jsonb;city bigint;wall integer:=0;main integer:=0;attack numeric;defence numeric:=0;killed integer:=0;survivors integer;reason text;success boolean:=false;pace numeric;distance numeric;tx integer;ty integer;
+begin
+ select * into m from public.peris_scout_missions where id=p_id for update;
+ if m.id is null or m.status not in('outbound','returning')or m.arrival_at>p_at then return;end if;
+ if exists(select 1 from public.players where id=m.owner_id and defeated_at is not null)or not exists(select 1 from public.settlements where owner_id=m.owner_id and ruined_at is null)then update public.peris_scout_missions set scouts=0,status='completed'where id=m.id;return;end if;
+ if m.status='returning'then
+  select id into city from public.settlements where owner_id=m.owner_id and ruined_at is null and floor(x/128.0)=floor(m.target_x/128.0)and floor(y/128.0)=floor(m.target_y/128.0)order by id limit 1;
+  if city is not null then perform public.peris_scout_deliver(m.id,city);update public.peris_scout_missions set status='completed'where id=m.id;return;end if;
+ else
+  target:=jsonb_build_object('kind',case when m.target_city_id is null then 'camp'else 'city'end,'id',coalesce(m.target_city_id,m.target_camp_id),'name',m.target_name,'owner_id',m.target_owner_id,'faction',coalesce((select faction from public.settlements where id=m.target_city_id),(select faction from public.peris_camps where id=m.target_camp_id),'orc'),'x',m.target_x,'y',m.target_y);
+  if m.scouts=0 then reason:='no_surviving_scouts';
+  elsif m.target_city_id is not null then
+   select * into s from public.settlements where id=m.target_city_id;
+   if s.id is null or s.ruined_at is not null then reason:='invalid_target';elsif s.owner_id is distinct from m.target_owner_id then reason:='ownership_changed';
+   else
+    select coalesce(level,0)into wall from public.buildings where settlement_id=s.id and building_type='wall';wall:=coalesce(wall,0);
+    select coalesce(level,0)into main from public.buildings where settlement_id=s.id and building_type='market';main:=coalesce(main,0);
+    for r in select * from public.peris_scout_defenders(s.id,m.arrival_at)loop
+     troops:=public.peris_roster_add(troops,r.troops);
+     defence:=defence+coalesce((r.troops->>'scout')::integer,0)*20*public.peris_scout_smithy(r.smithy_city,r.owner_id)*public.peris_research_factor(r.owner_id,'defence');
+    end loop;
+    defence:=defence*(1+public.peris_wall_defence_bonus(wall));bag:=jsonb_build_object('wood',s.wood,'stone',s.stone,'food',s.food,'gold',s.gold);
+   end if;
+  else
+   perform public.peris_camp_accrue(m.target_camp_id,m.arrival_at);select * into c from public.peris_camps where id=m.target_camp_id;
+   if c.id is null then reason:='invalid_target';else troops:=public.peris_roster(jsonb_build_object('infantry',c.infantry,'archers',c.archers,'cavalry',c.cavalry));select resources into bag from public.peris_camp_stock where camp_id=c.id;bag:=coalesce(bag,jsonb_build_object('wood',0,'stone',0,'food',0,'gold',0));end if;
+  end if;
+  if reason is null then
+   city:=coalesce((select id from public.settlements where id=m.source_settlement_id and owner_id=m.owner_id and ruined_at is null),(select min(id)from public.settlements where owner_id=m.owner_id and ruined_at is null));
+   attack:=m.scouts*35*public.peris_scout_smithy(city,m.owner_id)*public.peris_research_factor(m.owner_id,'attack');
+   killed:=case when defence=0 then 0 else least(m.scouts,round(m.scouts*power(defence/greatest(attack,.000001),1.5))::integer)end;
+  end if;
+  if killed>0 then update public.settlements set food=least(food_capacity,food+killed*coalesce((select(rule#>>'{cost,food}')::numeric from public.peris_unit_balance where version=2 and unit='scout'),0))where id=city and owner_id=m.owner_id and ruined_at is null;end if;
+  survivors:=m.scouts-killed;success:=reason is null and survivors>0;if reason is null and not success then reason:='all_scouts_lost';end if;
+  info:=jsonb_build_object('mission_id',m.id,'mode',m.mode,'target',target,'observed_at',m.arrival_at,'scouts_sent',m.initial_scouts,'scouts_lost',m.initial_scouts-survivors,'scouts_survived',survivors,'detected',killed>0,'success',success);
+  if reason is not null then info:=info||jsonb_build_object('reason',reason);end if;
+  if success then info:=info||jsonb_build_object('troops',troops);if m.mode='resources'then info:=info||jsonb_build_object('resources',bag);else info:=info||jsonb_build_object('defences',jsonb_build_object('wall',wall,'main',main));end if;end if;
+  receipt:=jsonb_build_object('report_side','attacker','balance_version',2,'attacker_initial',m.initial_scouts,'attacker_survivors',survivors,'attacker_losses',m.initial_scouts-survivors,'defender_initial',0,'defender_survivors',0,'defender_losses',0,'loot',jsonb_build_object('wood',0,'stone',0,'food',0,'gold',0),'duration',0,'reason','Scouting','scouting',info);
+  insert into public.battles(attacker_owner_id,defender_owner_id,attacker_army_id,defender_army_id,status,mode,phase,enemy_name,started_at,ended_at,winner_side,result,food_settled)
+   values(m.owner_id,null,m.source_army_id,null,'resolved','scouting','combat',m.target_name,m.arrival_at,m.arrival_at,case when success then 'attacker'else 'defender'end,receipt,true)returning id into bid;
+  insert into public.peris_reports(owner_id,battle_id,title,won,result,created_at)values(m.owner_id,bid,'Scouting: '||m.target_name,success,receipt,m.arrival_at)on conflict do nothing;
+  if killed>0 and m.target_owner_id is not null then
+   notice:=receipt||jsonb_build_object('report_side','defender','attacker_initial',killed,'attacker_survivors',0,'attacker_losses',killed,'scouting',(info-'troops'-'resources'-'defences'-'reason')||jsonb_build_object('scouts_sent',killed,'scouts_lost',killed,'scouts_survived',0,'success',false,'reason','Enemy scouts intercepted.','sender_name',(select display_name from public.players where id=m.owner_id)));
+   insert into public.peris_reports(owner_id,battle_id,title,won,result,created_at)values(m.target_owner_id,bid,'Scouts detected: '||m.target_name,true,notice,m.arrival_at)on conflict do nothing;
+  end if;
+  update public.peris_scout_missions set scouts=survivors,report_battle_id=bid where id=m.id;
+  if survivors=0 then update public.peris_scout_missions set status='completed'where id=m.id;return;end if;
+  if exists(select 1 from public.settlements where id=m.source_settlement_id and owner_id=m.owner_id and ruined_at is null)then
+   select jsonb_agg(value order by ord desc)into path from jsonb_array_elements(m.march_path)with ordinality p(value,ord);
+   tx:=m.origin_x;ty:=m.origin_y;distance:=m.march_distance;
+  end if;
+ end if;
+ if path is null then
+  route:=public.peris_ruin_route(m.owner_id,m.target_x,m.target_y);
+  if route is null then update public.peris_scout_missions set scouts=0,status='completed'where id=m.id;return;end if;
+  path:=route->'path';tx:=(route->>'x')::integer;ty:=(route->>'y')::integer;distance:=(route->>'distance')::numeric;
+ end if;
+ update public.peris_scout_missions set status='returning',march_path=path,march_distance=distance,target_x=tx,target_y=ty,departure_at=m.arrival_at,arrival_at=m.arrival_at+make_interval(secs=>greatest(2,distance/public.peris_scout_speed(m.owner_id))::double precision)where id=m.id;
+end $$;
+
+create or replace function public.peris_scout_advance(p_owners uuid[],p_at timestamptz)returns void
+language plpgsql security definer set search_path='' as $$
+declare m record;
+begin
+ for m in select id from public.peris_scout_missions where owner_id=any(p_owners)and status in('outbound','returning')and arrival_at<=p_at order by arrival_at,case when status='returning'then 0 else 1 end,id for update loop perform public.peris_scout_event(m.id,p_at);end loop;
+end $$;
+
+create or replace function public.peris_scout_command_for(p_owner uuid,p_command jsonb)returns jsonb
+language plpgsql security definer set search_path='' as $$
+declare u uuid:=p_owner;a public.armies%rowtype;s public.settlements%rowtype;t public.settlements%rowtype;c public.peris_camps%rowtype;m public.peris_scout_missions%rowtype;
+ position jsonb;home jsonb;path jsonb;distance numeric;new_id bigint;quantity integer;target_x integer;target_y integer;target_name text;faction text;target_owner uuid;sent timestamptz;staging numeric;participants uuid[];steps integer;i integer;
+begin
+ if u is null then raise exception 'Authentication required';end if;
+ if to_regclass('public.peris_crop_version')is null or to_regclass('public.peris_conquest_version')is null then raise exception 'Scouting is unavailable until the current crop and capture updates are installed';end if;
+ if exists(select 1 from public.players where id=u and defeated_at is not null)then raise exception 'This ruler has been permanently defeated';end if;
+ if p_command is null or jsonb_typeof(p_command)<>'object'then raise exception 'Choose a scouting order';end if;
+ if not pg_try_advisory_xact_lock(72320)then raise lock_not_available;end if;
+ if p_command->>'type'='cancelScouting'then
+  perform public.peris_settle(u);
+  select * into m from public.peris_scout_missions where id=(p_command->>'missionId')::bigint and owner_id=u for update;
+  if m.id is null or m.sent_at is distinct from(p_command->>'sentAt')::timestamptz then raise exception 'This scouting mission is no longer the same order';end if;
+  if m.status='cancelled'then return jsonb_build_object('ok',true);end if;
+  if m.status<>'outbound'or public.peris_game_now()>=m.cancel_until or public.peris_game_now()<m.sent_at then raise exception 'Scouting can only be cancelled during the first 30 seconds';end if;
+  if not exists(select 1 from public.settlements where id=m.source_settlement_id and owner_id=u and ruined_at is null)then raise exception 'The source city is no longer yours';end if;
+  perform public.peris_scout_deliver(m.id,m.source_settlement_id);update public.peris_scout_missions set status='cancelled'where id=m.id;
+  return jsonb_build_object('ok',true);
+ elsif p_command->>'type'<>'scout'then raise exception 'Choose a scouting order';end if;
+ if jsonb_typeof(p_command->'quantity')<>'number'or(p_command->>'quantity')::numeric<>trunc((p_command->>'quantity')::numeric)or(p_command->>'quantity')::numeric not between 1 and 1000 or p_command->>'mode'not in('resources','defences')then raise exception 'Choose 1-1000 scouts and an intelligence mode';end if;
+ quantity:=(p_command->>'quantity')::integer;
+ if(select count(*)from public.peris_scout_missions where owner_id=u and status in('outbound','returning'))>=100 then raise exception 'At most 100 active scouting missions are allowed';end if;
+ if(p_command->>'targetCityId'is null)=(p_command->>'campId'is null)then raise exception 'Choose one scouting target';end if;
+ if p_command->>'targetCityId'is not null then
+  select * into t from public.settlements where id=(p_command->>'targetCityId')::bigint and ruined_at is null and owner_id<>u;
+  if t.id is null then raise exception 'Choose a foreign living city';end if;
+  target_x:=t.x;target_y:=t.y;target_name:=t.name;target_owner:=t.owner_id;faction:=t.faction;
+ else
+  select * into c from public.peris_camps where id=(p_command->>'campId')::integer;
+  if c.id is null then raise exception 'Choose a camp';end if;
+  target_x:=c.x;target_y:=c.y;target_name:=c.name;faction:='orc';
+ end if;
+ -- Lock both existing connected components before adding their new private edge.
+ select array_agg(distinct id order by id)into participants from unnest(public.peris_trade_participants(u)||coalesce(public.peris_trade_participants(target_owner),array[]::uuid[]))id where id is not null;
+ perform 1 from public.players where id=any(participants)order by id for update nowait;
+ perform public.peris_settle(u);if target_owner is not null then perform public.peris_settle(target_owner);end if;
+ select * into a from public.armies where id=(p_command->>'armyId')::bigint and owner_id=u for update;
+ if a.id is null or a.status<>'idle'or a.raid_target_id is not null or a.raid_city_id is not null or a.raid_reserve is not null or exists(select 1 from public.battles where status='active'and(attacker_army_id=a.id or defender_army_id=a.id))then raise exception 'Choose an idle legion';end if;
+ if exists(select 1 from public.peris_orders where army_id=a.id and kind='recruit'and recruit_destination='legion')then raise exception 'Finish training before sending scouts';end if;
+ position:=public.peris_army_position(a);
+ select city.* into s from public.settlements city cross join lateral(select public.peris_home_army_position(city.x,city.y)pos)q where city.owner_id=u and city.ruined_at is null and floor((position->>'x')::numeric/128)=floor(city.x/128.0)and floor((position->>'y')::numeric/128)=floor(city.y/128.0)and sqrt(power(public.peris_wrapped_delta((position->>'x')::numeric,(q.pos->>'x')::numeric),2)+power(public.peris_wrapped_delta((position->>'y')::numeric,(q.pos->>'y')::numeric),2))<=90 order by city.id limit 1 for update of city;
+ if s.id is null then raise exception 'Depart from one of your living cities';end if;
+ if coalesce((public.peris_roster(to_jsonb(a))->>'scout')::integer,0)<quantity then raise exception 'Choose available scouts from this legion';end if;
+ if t.id is not null and not exists(select 1 from public.settlements where id=t.id and owner_id=target_owner and ruined_at is null)then raise exception 'Target ownership changed';end if;
+ path:=nullif(p_command->'route','null'::jsonb);
+ if path is null then
+  steps:=greatest(1,ceil(greatest(abs(public.peris_wrapped_delta((position->>'x')::numeric,target_x)),abs(public.peris_wrapped_delta((position->>'y')::numeric,target_y)))/64)::integer);
+  path:=jsonb_build_array(jsonb_build_array((position->>'x')::numeric,(position->>'y')::numeric));
+  for i in 1..steps loop path:=path||jsonb_build_array(jsonb_build_array(public.peris_wrap_world(round((position->>'x')::numeric+public.peris_wrapped_delta((position->>'x')::numeric,target_x)*i/steps)::integer),public.peris_wrap_world(round((position->>'y')::numeric+public.peris_wrapped_delta((position->>'y')::numeric,target_y)*i/steps)::integer)));end loop;
+ end if;
+ distance:=public.peris_route_distance((position->>'x')::numeric,(position->>'y')::numeric,target_x,target_y,path);
+ sent:=public.peris_game_now();select 30*rate into staging from public.peris_world_clock where id;
+ perform public.peris_write_roster(a.id,public.peris_roster_add(public.peris_roster(to_jsonb(a)),jsonb_build_object('scout',quantity),-1));
+ insert into public.peris_scout_missions(owner_id,source_settlement_id,source_army_id,target_city_id,target_camp_id,target_owner_id,target_name,faction,mode,initial_scouts,scouts,origin_x,origin_y,target_x,target_y,sent_at,departure_at,arrival_at,cancel_until,march_path,march_distance)
+ values(u,s.id,a.id,t.id,c.id,target_owner,target_name,s.faction,p_command->>'mode',quantity,quantity,(position->>'x')::integer,(position->>'y')::integer,target_x,target_y,sent,sent+make_interval(secs=>staging::double precision),sent+make_interval(secs=>(staging+greatest(2,distance/public.peris_scout_speed(u)))::double precision),sent+make_interval(secs=>staging::double precision),path,distance)returning id into new_id;
+ delete from public.peris_scout_missions old where old.owner_id=u and old.status in('completed','cancelled')and old.id not in(select id from public.peris_scout_missions where owner_id=u and status in('completed','cancelled')order by id desc limit 200);
+ perform public.peris_supply_refresh(s.id,sent);
+ return jsonb_build_object('ok',true,'mission_id',new_id);
+end $$;
+
+create or replace function public.peris_scout_command(p_command jsonb)returns jsonb
+language plpgsql security definer set search_path='' as $$
+begin return public.peris_scout_command_for(public.peris_player_id(),p_command);end $$;
+revoke all on function public.peris_scout_command_for(uuid,jsonb)from public,anon,authenticated;
+
+create or replace function public.peris_scout_defeat()returns trigger language plpgsql security definer set search_path='' as $$
+begin if new.defeated_at is not null then update public.peris_scout_missions set scouts=0,status='completed'where owner_id=new.id and status in('outbound','returning');end if;return new;end $$;
+drop trigger if exists peris_scout_defeat on public.players;
+create trigger peris_scout_defeat after update of defeated_at on public.players for each row execute function public.peris_scout_defeat();
+revoke all on function public.peris_scout_speed(uuid),public.peris_scout_smithy(bigint,uuid),public.peris_scout_deliver(bigint,bigint),public.peris_scout_defenders(bigint,timestamptz),public.peris_scout_event(bigint,timestamptz),public.peris_scout_advance(uuid[],timestamptz),public.peris_scout_command(jsonb),public.peris_scout_defeat()from public,anon,authenticated;
+grant execute on function public.peris_scout_command(jsonb)to authenticated;
+
+create or replace function public.peris_scout_no_formations()returns trigger language plpgsql security definer set search_path='' as $$
+begin if exists(select 1 from public.battles where id=new.battle_id and mode='scouting')then raise exception 'Scouting receipts cannot have combat formations';end if;return new;end $$;
+drop trigger if exists peris_scout_no_formations on public.battle_formations;
+create trigger peris_scout_no_formations before insert or update of battle_id on public.battle_formations for each row execute function public.peris_scout_no_formations();
+revoke all on function public.peris_scout_no_formations()from public,anon,authenticated;
+
+-- Camp starts/finalizers also preserve earlier scout deadlines when called without march intent.
+create or replace function public.peris_scout_flush_camp(p_camp integer,p_at timestamptz,p_owner uuid)returns void
+language plpgsql security definer set search_path='' as $$
+declare participants uuid[];participant uuid;
+begin
+ if not exists(select 1 from public.peris_scout_missions where target_camp_id=p_camp and status='outbound'and arrival_at<=p_at)then return;end if;
+ if not pg_try_advisory_xact_lock(72320)then raise lock_not_available;end if;
+ select array_agg(distinct id order by id)into participants from(
+  select p_owner owner_id union select owner_id from public.peris_scout_missions where target_camp_id=p_camp and status='outbound'
+ )owners cross join lateral unnest(public.peris_trade_participants(owners.owner_id))id;
+ perform 1 from public.players where id=any(participants)order by id for update nowait;
+ foreach participant in array participants loop perform public.peris_settle(participant,p_at);end loop;
+end $$;
+revoke all on function public.peris_scout_flush_camp(integer,timestamptz,uuid)from public,anon,authenticated;
+
+-- Hourly combat troop crop consumption. Private helpers; never a public economy feed.
+alter table public.settlements add column if not exists food_troop_upkeep numeric not null default 0;
+alter table public.settlements add column if not exists starvation_losses bigint not null default 0;
+alter table public.settlements add column if not exists starvation_last_at timestamptz;
+alter table public.settlements add column if not exists troop_upkeep_ready boolean not null default false;
+alter table public.battle_formations add column if not exists starvation_losses integer not null default 0;
+alter table public.battles add column if not exists starvation_sources jsonb not null default '{}';
+alter table public.battles add column if not exists food_settled boolean not null default false;
+create table if not exists public.peris_crop_version(id boolean primary key default true check(id),activated_at timestamptz);
+alter table public.peris_crop_version enable row level security;
+revoke all on public.peris_crop_version from public,anon,authenticated;
+insert into public.peris_crop_version(id)values(true)on conflict do nothing;
+
+-- Preserve the pre-feature integrator and completion logic for non-retroactive migration.
+do $$begin
+ if to_regprocedure('public.peris_population_accrue_legacy(bigint,timestamptz)')is null then
+  execute replace(pg_get_functiondef('public.peris_population_accrue(bigint,timestamptz)'::regprocedure),'public.peris_population_accrue(','public.peris_population_accrue_legacy(');
+ end if;
+ if to_regprocedure('public.peris_market_settle_legacy(uuid,timestamptz)')is null then
+  execute replace(pg_get_functiondef('public.peris_market_settle(uuid,timestamptz)'::regprocedure),'public.peris_market_settle(','public.peris_market_settle_legacy(');
+ end if;
+end $$;
+
+create or replace function public.peris_troop_upkeep(p_roster jsonb)returns numeric
+language sql immutable set search_path='' as $$
+ select coalesce(sum(greatest(0,coalesce((p_roster->>unit)::numeric,0))*case when unit='catapult'then 4 when unit='ram'then 3 when unit in('cavalry','scout','heavyCavalry')then 2 else 1 end),0)/60
+ from unnest(array['infantry','spearmen','archers','elite','cavalry','scout','heavyCavalry','ram','catapult','diplomat'])unit
+$$;
+
+create or replace function public.peris_supply_city(p_owner uuid,p_col integer,p_row integer)returns bigint
+language sql stable security definer set search_path='' as $$
+ select id from public.settlements where owner_id=p_owner and ruined_at is null and public.peris_wrap_cell(floor(x/128.0)::integer)=public.peris_wrap_cell(p_col)and public.peris_wrap_cell(floor(y/128.0)::integer)=public.peris_wrap_cell(p_row)
+ union all select s.id from public.peris_map_plots p join public.settlements s on s.id=p.settlement_id and s.ruined_at is null where p.owner_id=p_owner and p.col=public.peris_wrap_cell(p_col)and p.row=public.peris_wrap_cell(p_row)limit 1
+$$;
+
+create or replace function public.peris_supply_rows(p_sid bigint,p_at timestamptz)returns table(kind text,key text,owner_id uuid,tier integer,troops jsonb)
+language plpgsql stable security definer set search_path='' as $$
+#variable_conflict use_column
+declare a public.armies%rowtype;r record;source bigint;home bigint;station bigint;origin jsonb;travelling boolean;
+begin
+ for a in select * from public.armies loop
+  home:=coalesce((select id from public.settlements where id=a.home_settlement_id and owner_id=a.owner_id and ruined_at is null),(select min(id)from public.settlements where owner_id=a.owner_id and ruined_at is null));
+  origin:=a.march_origin;
+  source:=coalesce(case when origin is not null then public.peris_supply_city(a.owner_id,floor((origin->>'x')::numeric/128)::integer,floor((origin->>'y')::numeric/128)::integer)end,home);
+  travelling:=a.status='moving'and a.departure_at<=p_at or a.raid_target_id is not null or a.raid_city_id is not null or exists(select 1 from public.battles b where b.attacker_army_id=a.id and b.mode<>'practice'and b.status='active'and not b.food_settled);
+  if a.status='moving'and a.departure_at>p_at then station:=coalesce(public.peris_supply_city(a.owner_id,floor(a.start_x/128.0)::integer,floor(a.start_y/128.0)::integer),source);travelling:=false;
+  elsif travelling then station:=source;
+  else station:=coalesce(public.peris_supply_city(a.owner_id,floor(a.target_x/128.0)::integer,floor(a.target_y/128.0)::integer),home);end if;
+  if station=p_sid then kind:='army';key:='army:'||a.id;owner_id:=a.owner_id;tier:=case when travelling then 4 when station<>home then 2 else 3 end;troops:=public.peris_roster(to_jsonb(a));return next;end if;
+  if a.raid_reserve is not null and home=p_sid then kind:='reserve';key:='reserve:'||a.id;owner_id:=a.owner_id;tier:=3;troops:=public.peris_roster(a.raid_reserve);return next;end if;
+ end loop;
+ for r in select * from public.peris_city_garrisons where settlement_id=p_sid loop kind:='city';key:='city:'||p_sid;owner_id:=r.owner_id;tier:=3;troops:=public.peris_roster(r.unit_roster);return next;end loop;
+ for r in select g.* from public.peris_garrisons g where public.peris_supply_city(g.owner_id,g.col,g.row)=p_sid loop kind:='station';key:='station:'||r.owner_id||':'||r.col||':'||r.row;owner_id:=r.owner_id;tier:=3;troops:=public.peris_roster(to_jsonb(r));return next;end loop;
+ for r in select * from public.peris_city_reinforcements loop
+  source:=coalesce((select id from public.settlements where id=r.source_settlement_id and owner_id=r.owner_id and ruined_at is null),(select id from public.settlements where id=r.target_settlement_id and owner_id=r.owner_id and ruined_at is null),(select min(id)from public.settlements where owner_id=r.owner_id and ruined_at is null));
+  if source=p_sid then kind:='reinforcement';key:='reinforcement:'||r.id;owner_id:=r.owner_id;tier:=4;troops:=public.peris_roster(r.troops);return next;end if;
+ end loop;
+ for r in select * from public.peris_guild_reinforcements loop
+  source:=coalesce(case when r.status='stationed'then(select id from public.settlements where id=r.target_settlement_id and owner_id=r.recipient_id and ruined_at is null)else coalesce((select id from public.settlements where id=r.source_settlement_id and owner_id=r.owner_id and ruined_at is null),(select id from public.settlements where id=r.target_settlement_id and owner_id=r.owner_id and ruined_at is null))end,(select min(id)from public.settlements where owner_id=r.owner_id and ruined_at is null));
+  if source=p_sid then kind:='guild';key:='guild:'||r.id;owner_id:=r.owner_id;tier:=case when r.status='stationed'then 1 else 4 end;troops:=public.peris_roster(r.troops);return next;end if;
+ end loop;
+ for r in select * from public.peris_optional_scout_missions() loop
+  source:=coalesce((select id from public.settlements where id=r.source_settlement_id and owner_id=r.owner_id and ruined_at is null),(select min(id)from public.settlements where owner_id=r.owner_id and ruined_at is null));
+  if source=p_sid then kind:='scout';key:='scout:'||r.id;owner_id:=r.owner_id;tier:=4;troops:=public.peris_roster(jsonb_build_object('scout',r.scouts));return next;end if;
+ end loop;
+ for r in select * from public.peris_ruin_evacuations loop
+  source:=coalesce((select id from public.settlements where id=r.target_settlement_id and owner_id=r.owner_id and ruined_at is null),(select min(id)from public.settlements where owner_id=r.owner_id and ruined_at is null));
+  if source=p_sid then kind:='evacuation';key:='evacuation:'||r.id;owner_id:=r.owner_id;tier:=4;troops:=public.peris_roster(r.troops);return next;end if;
+ end loop;
+end $$;
+
+create or replace function public.peris_supply_refresh(p_sid bigint,p_at timestamptz)returns void
+language plpgsql security definer set search_path='' as $$
+declare amount numeric;
+begin
+ select coalesce(sum(public.peris_troop_upkeep(troops)),0)into amount from public.peris_supply_rows(p_sid,p_at);
+ update public.settlements set food_troop_upkeep=amount,food_rate=food_gross_rate-food_upkeep-amount where id=p_sid and troop_upkeep_ready and ruined_at is null;
+end $$;
+
+create or replace function public.peris_supply_battle_loss(p_key text,p_unit text)returns void
+language plpgsql security definer set search_path='' as $$
+declare b public.battles%rowtype;party jsonb;captured integer;already integer;formation bigint;own_side text;source_key text;
+begin
+ for b in select * from public.battles where status='active'and mode<>'practice'and not food_settled order by id for update loop
+  own_side:=null;captured:=0;
+  if p_key='army:'||b.attacker_army_id then own_side:='attacker';
+  elsif b.raid_city_id is null and p_key='army:'||b.defender_army_id then own_side:='defender';
+  elsif b.raid_city_id is not null then
+   for party in select value from jsonb_array_elements(b.city_defenders)loop
+    source_key:=case when party?'army_id'then 'army:'||(party->>'army_id')when party?'city_garrison_id'then 'city:'||(party->>'city_garrison_id')when party?'guild_reinforcement_id'then 'guild:'||(party->>'guild_reinforcement_id')else 'station:'||b.defender_owner_id||':'||(party->>'col')||':'||(party->>'row')end;
+    if source_key=p_key then own_side:='defender';captured:=coalesce((party->'troops'->>p_unit)::integer,0);exit;end if;
+   end loop;
+  end if;
+  if own_side is null then continue;end if;
+  if b.raid_city_id is null or own_side='attacker'then select coalesce(sum(initial_soldiers),0)into captured from public.battle_formations where battle_id=b.id and side=own_side and coalesce(recruit_unit,unit_type)=p_unit;end if;
+  already:=coalesce((b.starvation_sources#>>array[p_key,p_unit])::integer,0);
+  if already>=captured then continue;end if;
+  select id into formation from public.battle_formations where battle_id=b.id and side=own_side and coalesce(recruit_unit,unit_type)=p_unit and starvation_losses<initial_soldiers order by initial_soldiers-starvation_losses desc,id limit 1 for update;
+  if formation is null then continue;end if;
+  update public.battles set starvation_sources=jsonb_set(starvation_sources,array[p_key],coalesce(starvation_sources->p_key,'{}')||jsonb_build_object(p_unit,already+1))where id=b.id;
+  update public.battle_formations set starvation_losses=starvation_losses+1,soldiers=least(soldiers,initial_soldiers-starvation_losses-1),status=case when least(soldiers,initial_soldiers-starvation_losses-1)=0 then 'routed'else status end where id=formation;
+ end loop;
+end $$;
+
+-- Every healing path, including future spells, obeys permanent starvation caps.
+create or replace function public.peris_starvation_cap()returns trigger language plpgsql set search_path='' as $$
+begin new.starvation_losses:=greatest(0,least(new.initial_soldiers,new.starvation_losses));new.soldiers:=least(new.soldiers,new.initial_soldiers-new.starvation_losses);return new;end $$;
+drop trigger if exists peris_starvation_cap on public.battle_formations;
+create trigger peris_starvation_cap before insert or update on public.battle_formations for each row execute function public.peris_starvation_cap();
+
+create or replace function public.peris_supply_party_key(p_party jsonb,p_owner uuid)returns text language sql immutable set search_path='' as $$
+ select case when p_party?'army_id'then 'army:'||(p_party->>'army_id')when p_party?'city_garrison_id'then 'city:'||(p_party->>'city_garrison_id')when p_party?'guild_reinforcement_id'then 'guild:'||(p_party->>'guild_reinforcement_id')else 'station:'||p_owner||':'||(p_party->>'col')||':'||(p_party->>'row')end
+$$;
+
+create or replace function public.peris_food_roster_after(p_bid bigint,p_side text,p_current jsonb)returns jsonb
+language plpgsql stable security definer set search_path='' as $$
+declare b public.battles%rowtype;initial jsonb;remaining jsonb;starved jsonb;source_key text;unit text;loss integer;result jsonb:=public.peris_roster(p_current);
+begin
+ select * into b from public.battles where id=p_bid;
+ source_key:='army:'||case when p_side='attacker'then b.attacker_army_id else b.defender_army_id end;
+ starved:=coalesce(b.starvation_sources->source_key,'{}');
+ for unit in select c.unit from public.peris_unit_catalog c loop
+  select greatest(0,coalesce(sum(initial_soldiers-soldiers),0)-coalesce((starved->>unit)::integer,0))into loss from public.battle_formations where battle_id=p_bid and side=p_side and coalesce(recruit_unit,unit_type)=unit;
+  result:=jsonb_set(result,array[unit],to_jsonb(greatest(0,coalesce((result->>unit)::integer,0)-loss)));
+ end loop;return result;
+end $$;
+
+create or replace function public.peris_food_finish(p_bid bigint)returns void
+language plpgsql security definer set search_path='' as $$
+declare b public.battles%rowtype;owner uuid;city record;party jsonb;row_item record;source_key text;side_name text;initial integer;survivors integer;starved integer;loss integer;credit numeric;source_city bigint;role text;
+begin
+ select * into b from public.battles where id=p_bid for update;if b.id is null or b.status<>'active'or b.mode='practice'or b.food_settled then return;end if;
+ if not public.peris_lock_battle_participants(b.attacker_owner_id,b.defender_owner_id)then raise lock_not_available;end if;
+ -- Supply is still the committed backing roster up to irreversible finalization.
+ perform public.peris_settle(b.attacker_owner_id);if b.defender_owner_id is not null then perform public.peris_settle(b.defender_owner_id);end if;
+ select * into b from public.battles where id=p_bid;
+ for side_name in select unnest(array['attacker','defender'])loop
+  owner:=case when side_name='attacker'then b.attacker_owner_id else b.defender_owner_id end;if owner is null then continue;end if;
+  source_key:='army:'||case when side_name='attacker'then b.attacker_army_id else b.defender_army_id end;
+  if side_name='defender'and b.raid_city_id is not null then source_city:=b.raid_city_id;
+  else select s.id into source_city from public.settlements s cross join lateral public.peris_supply_rows(s.id,public.peris_game_now())r where s.ruined_at is null and r.key=source_key limit 1;end if;
+  if source_city is null then continue;end if;credit:=0;
+  for role in select c.unit from public.peris_unit_catalog c loop
+   select coalesce(sum(initial_soldiers),0),coalesce(sum(soldiers),0),coalesce(sum(starvation_losses),0)into initial,survivors,starved from public.battle_formations where battle_id=b.id and side=side_name and coalesce(recruit_unit,unit_type)=role;
+   loss:=greatest(0,initial-starved-survivors);
+   credit:=credit+loss*coalesce((select (rule#>>'{cost,food}')::numeric from public.peris_unit_balance where version=2 and unit=role),0);
+  end loop;
+  update public.settlements set food=least(food_capacity,food+credit)where id=source_city and owner_id=owner and ruined_at is null;
+ end loop;
+ update public.battles set food_settled=true where id=b.id;
+end $$;
+
+-- Allocate permanent combat deaths against captured survivors, excluding already-debited famine.
+create or replace function public.peris_food_defender_losses(p_bid bigint,p_party jsonb)returns jsonb
+language plpgsql stable security definer set search_path='' as $$
+declare b public.battles%rowtype;party jsonb;unit_name text;source_key text;total integer;prefix integer;amount integer;survivors integer;lost integer;result jsonb:=public.peris_roster('{}');seen boolean;
+begin
+ select * into b from public.battles where id=p_bid;
+ foreach unit_name in array array['infantry','spearmen','archers','elite','cavalry','scout','heavyCavalry','ram','catapult','diplomat']loop
+  total:=0;prefix:=0;amount:=0;seen:=false;
+  for party in select value from jsonb_array_elements(b.city_defenders)loop
+   source_key:=public.peris_supply_party_key(party,b.defender_owner_id);
+   lost:=greatest(0,coalesce((party->'troops'->>unit_name)::integer,0)-coalesce((b.starvation_sources#>>array[source_key,unit_name])::integer,0));
+   total:=total+lost;
+   if party=p_party then amount:=lost;seen:=true;elsif not seen then prefix:=prefix+lost;end if;
+  end loop;
+  select coalesce(sum(soldiers),0)into survivors from public.battle_formations where battle_id=p_bid and side='defender'and coalesce(recruit_unit,unit_type)=unit_name;
+  lost:=greatest(0,total-survivors);
+  result:=jsonb_set(result,array[unit_name],to_jsonb(case when total=0 then 0 else floor(lost::numeric*(prefix+amount)/total)::integer-floor(lost::numeric*prefix/total)::integer end));
+ end loop;return result;
+end $$;
+revoke all on function public.peris_food_defender_losses(bigint,jsonb)from public,anon,authenticated;
+
+create or replace function public.peris_starve_one(p_sid bigint,p_at timestamptz)returns numeric
+language plpgsql security definer set search_path='' as $$
+declare r record;casualty_unit text;roster jsonb;refund numeric;ident bigint;parts text[];
+begin
+ select * into r from public.peris_supply_rows(p_sid,p_at)where public.peris_roster_total(troops)>0 order by tier,public.peris_roster_total(troops)desc,kind,key limit 1;
+ if r.key is null then return 0;end if;
+ select role into casualty_unit from unnest(array['infantry','spearmen','archers','elite','cavalry','scout','heavyCavalry','ram','catapult','diplomat'])with ordinality u(role,seq)order by coalesce((r.troops->>role)::integer,0)desc,seq limit 1;
+ roster:=jsonb_set(r.troops,array[casualty_unit],to_jsonb((r.troops->>casualty_unit)::integer-1));parts:=string_to_array(r.key,':');
+ if r.kind='army'then perform public.peris_write_roster(parts[2]::bigint,roster);
+ elsif r.kind='reserve'then update public.armies set raid_reserve=roster where id=parts[2]::bigint;
+ elsif r.kind='city'then update public.peris_city_garrisons set unit_roster=roster where settlement_id=p_sid;
+ elsif r.kind='station'then update public.peris_garrisons set unit_roster=roster,infantry=public.peris_roster_class(roster,'infantry'),archers=public.peris_roster_class(roster,'archers'),cavalry=public.peris_roster_class(roster,'cavalry')where owner_id=r.owner_id and col=parts[3]::integer and row=parts[4]::integer;
+ elsif r.kind='reinforcement'then update public.peris_city_reinforcements set troops=roster where id=parts[2]::bigint;
+ elsif r.kind='guild'then update public.peris_guild_reinforcements set troops=roster where id=parts[2]::bigint;
+ elsif r.kind='scout'then execute 'update public.peris_scout_missions set scouts=$1 where id=$2'using(roster->>'scout')::integer,parts[2]::bigint;
+ elsif r.kind='evacuation'then update public.peris_ruin_evacuations set troops=roster where id=parts[2]::bigint;end if;
+ perform public.peris_supply_battle_loss(r.key,casualty_unit);
+ select (rule#>>'{cost,food}')::numeric into refund from public.peris_unit_balance where version=2 and peris_unit_balance.unit=casualty_unit;
+ update public.settlements set starvation_losses=starvation_losses+1,starvation_last_at=p_at where id=p_sid;
+ return coalesce(refund,0);
+end $$;
+
+create or replace function public.peris_population_accrue(p_sid bigint,p_until timestamptz)returns void
+language plpgsql security definer set search_path='' as $$
+declare s public.settlements%rowtype;remaining double precision;p double precision;cap double precision;jobs double precision;staff double precision;growth double precision;factor double precision;food_slope double precision;net double precision;gross double precision;dt double precision;zero_at double precision;food_full boolean;troop numeric;refund numeric;at_time timestamptz;merchant public.peris_trade_caravans%rowtype;cargo jsonb;
+begin
+ select * into s from public.settlements where id=p_sid for update;if s.id is null or s.ruined_at is not null then return;end if;
+ if not s.troop_upkeep_ready then perform public.peris_population_accrue_legacy(p_sid,p_until);return;end if;
+ remaining:=greatest(0,extract(epoch from(p_until-s.resources_updated_at)))/60;at_time:=s.resources_updated_at;
+ p:=greatest(10,least(s.population_capacity,s.population));cap:=s.population_capacity;jobs:=s.workers_required;
+ select coalesce(sum(public.peris_troop_upkeep(troops)),0)into troop from public.peris_supply_rows(s.id,at_time);
+ while remaining>1e-9 loop
+  staff:=least(1,p/greatest(1,jobs));gross:=(18+s.field_food_rate+s.food_bonus*staff)*s.food_research;net:=gross-.12*p-troop;
+  if s.food<=1e-8 and net< -1e-9 then
+   select * into merchant from public.peris_trade_caravans where status='waiting'and owner_id=s.owner_id and coalesce(return_settlement_id,source_settlement_id)=s.id and coalesce((returning_resources->>'food')::numeric,0)>0 order by id limit 1 for update;
+   if merchant.id is not null then
+    refund:=least(s.food_capacity,(merchant.returning_resources->>'food')::numeric);cargo:=jsonb_set(merchant.returning_resources,'{food}',to_jsonb((merchant.returning_resources->>'food')::numeric-refund));
+    update public.peris_trade_caravans set returning_resources=cargo,status=case when public.peris_trade_volume(cargo)=0 then 'completed'else 'waiting'end,completed_at=case when public.peris_trade_volume(cargo)=0 then at_time else null end where id=merchant.id;
+    s.food:=least(s.food_capacity,s.food+refund);continue;
+   end if;
+   refund:=public.peris_starve_one(s.id,at_time);
+   if refund>0 then s.food:=least(s.food_capacity,s.food+refund);select coalesce(sum(public.peris_troop_upkeep(troops)),0)into troop from public.peris_supply_rows(s.id,at_time);continue;end if;
+  end if;
+  growth:=case when (s.food>1e-9 or net>1e-9)and p<cap-1e-9 then 1 else 0 end;
+  factor:=case when jobs>0 and p<jobs-1e-9 then growth/jobs else 0 end;food_slope:=s.food_bonus*factor*s.food_research-.12*growth;
+  dt:=remaining;if growth>0 then dt:=least(dt,cap-p);end if;
+  if growth>0 and p<jobs-1e-9 then dt:=least(dt,jobs-p);end if;
+  food_full:=s.food>=s.food_capacity-1e-9 and (net>1e-9 or abs(net)<=1e-9 and food_slope>=0);
+  if not food_full then dt:=public.peris_population_event(s.food::double precision,net,food_slope,0,dt);dt:=public.peris_population_event(s.food::double precision,net,food_slope,s.food_capacity,dt);end if;
+  if abs(food_slope)>1e-9 then zero_at:=-net/food_slope;if zero_at>1e-9 then dt:=least(dt,zero_at);end if;end if;
+  if dt<=1e-9 then raise exception 'Crop integrator made no progress';end if;
+  s.wood:=least(s.capacity,greatest(0,s.wood+((14+s.field_wood_rate+s.wood_bonus*staff)*dt+s.wood_bonus*factor*dt*dt/2)*s.wood_research));
+  s.stone:=least(s.capacity,greatest(0,s.stone+((12+s.field_stone_rate+s.stone_bonus*staff)*dt+s.stone_bonus*factor*dt*dt/2)*s.stone_research));
+  s.gold:=least(s.capacity,greatest(0,s.gold+((3+s.field_gold_rate*s.trade_research+s.gold_bonus*staff)*dt+s.gold_bonus*factor*dt*dt/2)*s.gold_research));
+  s.food:=greatest(0,least(s.food_capacity,case when food_full then s.food_capacity else s.food+net*dt+food_slope*dt*dt/2 end));
+  p:=greatest(10,least(cap,p+growth*dt));remaining:=remaining-dt;at_time:=at_time+make_interval(secs=>dt*60);
+ end loop;
+ staff:=least(1,p/greatest(1,jobs));gross:=(18+s.field_food_rate+s.food_bonus*staff)*s.food_research;
+ update public.settlements set population=p,wood=s.wood,stone=s.stone,food=s.food,gold=s.gold,
+  wood_rate=(14+s.field_wood_rate+s.wood_bonus*staff)*s.wood_research,stone_rate=(12+s.field_stone_rate+s.stone_bonus*staff)*s.stone_research,gold_rate=(3+s.field_gold_rate*s.trade_research+s.gold_bonus*staff)*s.gold_research,food_rate=gross-.12*p-troop,food_gross_rate=gross,food_upkeep=.12*p,food_troop_upkeep=troop,
+  resources_updated_at=greatest(resources_updated_at,p_until)where id=s.id;
+end $$;
+
+create or replace function public.peris_trade_participants(p_owner uuid)returns uuid[]
+language sql stable security definer set search_path='' as $$
+ with recursive participants(id)as(select p_owner union select case when r.owner_id=p.id then r.recipient_id else r.owner_id end
+ from participants p join(select owner_id,recipient_id from public.peris_trade_caravans where status<>'completed' union select owner_id,recipient_id from public.peris_trade_route_edges()
+ union select owner_id,recipient_id from public.peris_scout_edges()
+ union select owner_id,recipient_id from public.peris_guild_reinforcements
+ union select attacker_owner_id,defender_owner_id from public.battles where status='active'and defender_owner_id is not null)r on(r.owner_id=p.id or r.recipient_id=p.id))
+ select array_agg(id order by id)from participants
+$$;
+
+create or replace function public.peris_market_settle(p_owner uuid,p_until timestamptz)returns void
+language plpgsql security definer set search_path='' as $$
+declare participants uuid[];participant uuid;event_at timestamptz;cursor_at timestamptz;city record;r record;
+begin
+ if not exists(select 1 from public.peris_crop_version where activated_at is not null)then perform public.peris_market_settle_legacy(p_owner,p_until);return;end if;
+ if not pg_try_advisory_xact_lock(72320)then raise lock_not_available;end if;
+ participants:=public.peris_trade_participants(p_owner);
+ if exists(select 1 from public.peris_settler_expeditions where owner_id=any(participants)and status='travelling'and arrival_at<=p_until)and not pg_try_advisory_xact_lock(204200)then raise lock_not_available;end if;
+ perform 1 from public.players where id=any(participants)order by id for update nowait;
+ if participants is distinct from public.peris_trade_participants(p_owner)then raise lock_not_available;end if;
+ perform 1 from public.settlements where owner_id=any(participants)order by id for update nowait;
+ select min(resources_updated_at)into cursor_at from public.settlements where owner_id=any(participants)and ruined_at is null;
+ cursor_at:=least(coalesce(cursor_at,p_until),p_until);
+ foreach participant in array participants loop perform public.peris_settle_core(participant,cursor_at);end loop;
+ for r in select id from public.peris_trade_caravans where owner_id=any(participants)and(status='outbound'and arrival_at<=cursor_at or status='returning'and least(return_at,case when public.peris_trade_volume(returning_resources)>0 then redirect_at end)<=cursor_at)order by id loop perform public.peris_trade_event(r.id,cursor_at);end loop;
+ perform public.peris_optional_advance_scouts(participants,cursor_at);
+ for city in select id from public.settlements where owner_id=any(participants)and ruined_at is null order by id loop perform public.peris_supply_refresh(city.id,cursor_at);end loop;
+ loop
+  select min(at_time)into event_at from(
+   select finish_at at_time from public.peris_orders where owner_id=any(participants)
+   union all select public.peris_science_deadline(owner_id)from public.peris_account_science where owner_id=any(participants)and active_id is not null
+   union all select arrival_at from public.armies where owner_id=any(participants)and status='moving'
+   union all select departure_at from public.armies where owner_id=any(participants)and status='moving'
+   union all select arrival_at from public.peris_city_reinforcements where owner_id=any(participants)
+   union all select arrival_at from public.peris_guild_reinforcements where (owner_id=any(participants)or recipient_id=any(participants))and status<>'stationed'
+   union all select arrival_at from public.peris_ruin_evacuations where owner_id=any(participants)
+   union all select arrival_at from public.peris_settler_expeditions where owner_id=any(participants)and status='travelling'
+   union all select case when status='outbound'then arrival_at else least(return_at,case when public.peris_trade_volume(returning_resources)>0 then redirect_at end)end from public.peris_trade_caravans where owner_id=any(participants)and status in('outbound','returning')
+   union all select arrival_at from public.peris_optional_scout_missions()where owner_id=any(participants)
+   union all select p_until
+  )events where at_time>cursor_at and at_time<=p_until;
+  exit when event_at is null;
+  for city in select id from public.settlements where owner_id=any(participants)and ruined_at is null order by id loop perform public.peris_population_accrue(city.id,event_at);end loop;
+  foreach participant in array participants loop perform public.peris_settle_core(participant,event_at);end loop;
+  for r in select id from public.peris_trade_caravans where owner_id=any(participants)and(status='outbound'and arrival_at<=event_at or status='returning'and least(return_at,case when public.peris_trade_volume(returning_resources)>0 then redirect_at end)<=event_at)order by id loop perform public.peris_trade_event(r.id,event_at);end loop;
+  perform public.peris_optional_advance_scouts(participants,event_at);
+  for city in select id from public.settlements where owner_id=any(participants)and ruined_at is null order by id loop perform public.peris_supply_refresh(city.id,event_at);end loop;
+  cursor_at:=event_at;
+ end loop;
+ -- Complete zero-time arrivals/queues and expose current rates without charging twice.
+ foreach participant in array participants loop perform public.peris_settle_core(participant,p_until);end loop;
+ for r in select id from public.peris_trade_caravans where owner_id=any(participants)and status in('waiting','stranded')order by id loop perform public.peris_trade_event(r.id,p_until);end loop;
+ foreach participant in array participants loop perform public.peris_optional_advance_trade_routes(participant,p_until);end loop;
+ for city in select id from public.settlements where owner_id=any(participants)and ruined_at is null order by id loop perform public.peris_supply_refresh(city.id,p_until);end loop;
+ delete from public.peris_trade_caravans c where c.owner_id=any(participants)and c.status='completed'and c.id not in(select keep.id from public.peris_trade_caravans keep where keep.owner_id=c.owner_id and keep.status='completed'order by keep.completed_at desc,keep.id desc limit 50);
+end $$;
+
+-- Only a first install settles free legacy progress to this activation boundary.
+do $$declare owner uuid;city record;activation timestamptz:=public.peris_game_now();begin
+ if not exists(select 1 from public.peris_crop_version where activated_at is not null)then
+  for owner in select id from public.players order by id loop perform public.peris_market_settle_legacy(owner,activation);end loop;
+  update public.settlements set troop_upkeep_ready=true;update public.peris_crop_version set activated_at=activation;
+ end if;
+ for city in select id from public.settlements where ruined_at is null loop perform public.peris_supply_refresh(city.id,activation);end loop;
+end $$;
+alter table public.settlements alter column troop_upkeep_ready set default true;
+
+revoke all on function public.peris_starvation_cap(),public.peris_supply_party_key(jsonb,uuid),public.peris_food_roster_after(bigint,text,jsonb),public.peris_food_finish(bigint),public.peris_population_accrue_legacy(bigint,timestamptz),public.peris_market_settle_legacy(uuid,timestamptz),public.peris_troop_upkeep(jsonb),public.peris_supply_city(uuid,integer,integer),public.peris_supply_rows(bigint,timestamptz),public.peris_supply_refresh(bigint,timestamptz),public.peris_supply_battle_loss(text,text),public.peris_starve_one(bigint,timestamptz),public.peris_population_accrue(bigint,timestamptz),public.peris_market_settle(uuid,timestamptz),public.peris_trade_participants(uuid)from public,anon,authenticated;
+
+create or replace function public.peris_trade_participants(p_owner uuid)returns uuid[]
+language sql stable security definer set search_path='' as $$
+ with recursive participants(id)as(select p_owner union select case when r.owner_id=p.id then r.recipient_id else r.owner_id end
+ from participants p join(select owner_id,recipient_id from public.peris_trade_caravans where status<>'completed' union select owner_id,recipient_id from public.peris_trade_route_edges()
+ union select owner_id,recipient_id from public.peris_scout_edges()
+ union select owner_id,recipient_id from public.peris_guild_reinforcements
+ union select attacker_owner_id,defender_owner_id from public.battles where status='active'and defender_owner_id is not null)r on(r.owner_id=p.id or r.recipient_id=p.id))
+ select array_agg(id order by id)from participants
+$$;
+create or replace function public.peris_prepare_raid_for(p_owner uuid,p_army bigint,p_camp integer,p_path jsonb default null,p_troops jsonb default null)returns jsonb
+language plpgsql security definer set search_path='' as $$
+declare u uuid:=p_owner;a public.armies%rowtype;c public.peris_camps%rowtype;inf integer;arc integer;cav integer;route jsonb;steps integer;i integer;available jsonb;preset jsonb;unit_name text;
+begin
+ if u is null then raise exception 'Authentication required';end if;
+ perform public.peris_settle(u);
+ select * into a from public.armies where id=p_army and owner_id=u for update;
+ select * into c from public.peris_camps where id=p_camp;
+ if c.id is null then raise exception 'Camp not found';end if;
+ if a.id is null or a.infantry+a.archers+a.cavalry=0 then raise exception 'Recruit soldiers before starting a raid';end if;
+ if a.status<>'idle' or a.raid_target_id is not null or a.raid_city_id is not null or a.raid_reserve is not null then raise exception 'This legion already has a march or raid';end if;
+ available:=public.peris_roster(to_jsonb(a));preset:=available;
+ if p_troops is not null then
+  if jsonb_typeof(p_troops)<>'object' then raise exception 'Choose troops currently available in this legion';end if;
+  available:=public.peris_roster(to_jsonb(a));preset:=public.peris_garrison_troops(p_troops);
+  foreach unit_name in array array['infantry','spearmen','archers','elite','cavalry','scout','heavyCavalry','ram','catapult','diplomat']loop
+   if (preset->>unit_name)::integer>(available->>unit_name)::integer then raise exception 'Choose troops currently available in this legion';end if;
+  end loop;
+  if public.peris_roster_total(preset)=0 then raise exception 'Send at least one soldier';end if;
+ end if;
+ route:=p_path;
+ if route is null then
+  steps:=greatest(1,ceil(greatest(abs(public.peris_wrapped_delta(a.target_x,c.x)),abs(public.peris_wrapped_delta(a.target_y,c.y)))/64)::integer);
+  route:=jsonb_build_array(jsonb_build_array(a.target_x,a.target_y));
+  for i in 1..steps loop route:=route||jsonb_build_array(jsonb_build_array(public.peris_wrap_world(round(a.target_x+public.peris_wrapped_delta(a.target_x,c.x)*i/steps)::integer),public.peris_wrap_world(round(a.target_y+public.peris_wrapped_delta(a.target_y,c.y)*i/steps)::integer)));end loop;
+ end if;
+ if public.peris_roster_total(preset)>0 and public.peris_roster_total(preset)=coalesce((preset->>'scout')::integer,0)and to_regprocedure('public.peris_scout_command_for(uuid,jsonb)')is not null then
+  return public.peris_scout_command_for(u,jsonb_build_object('type','scout','armyId',a.id,'campId',c.id,'quantity',(preset->>'scout')::integer,'mode','resources','route',route));
+ end if;
+ if not c.bandit and exists(select 1 from public.peris_progress where owner_id=u and camp_id=p_camp and available_at>public.peris_game_now())then raise exception 'The camp is still regrouping';end if;
+ perform public.peris_march_for(u,a.id,c.x,c.y,route,c.id);
+ update public.armies set raid_target_id=c.id where id=a.id;
+ if p_troops is not null then
+  perform public.peris_garrison_add(u,floor(a.target_x/128.0)::integer,floor(a.target_y/128.0)::integer,public.peris_roster_add(available,preset,-1));
+  perform public.peris_write_roster(a.id,preset);
+  -- The route was validated before selecting troops. Recompute the accepted deadline for the chosen party.
+  update public.armies set arrival_at=departure_at+make_interval(secs=>greatest(2,march_distance/public.peris_march_speed(id))::double precision)where id=a.id;
+ end if;
+ return jsonb_build_object('ok',true);
+end $$;
+create or replace function public.peris_campaign_farm_command(p_command jsonb)
+
+returns jsonb language plpgsql security definer set search_path='' as $$
+
+declare
+
+ u uuid:=public.peris_player_id();kind text:=p_command->>'type';v_entry_id bigint;v_list_id bigint;v_camp_id integer;v_army_id bigint;
+
+ preset jsonb;list_name text;losses_only boolean;list public.peris_campaign_farm_lists;farm public.peris_campaign_farms;v_duplicate_id bigint;
+
+ started integer:=0;skipped jsonb:='[]';batch_path jsonb;preparation jsonb;previous_army text;previous_city text;target_army public.armies%rowtype;repeat_enabled boolean;repeat_interval integer;
+ selected_ids bigint[];selected_id jsonb;selected_count integer;v_action text;
+
+begin
+
+ if u is null then raise exception 'Authentication required';end if;
+
+ if jsonb_typeof(p_command) is distinct from 'object' then raise exception 'Choose a campaign farm command';end if;
+
+ -- Settlement takes the global founding lock before its owner lock when needed.
+
+ if kind='startCampaignFarmList' then perform public.peris_settle(u);end if;
+
+ -- Serialize one owner's saves/deletes so list limits and duplicate checks are atomic.
+
+ perform 1 from public.players where id=u for update;
+
+ if not found then raise exception 'Create your realm first';end if;
+
+ if p_command ? 'id' then
+
+  if jsonb_typeof(p_command->'id') is distinct from 'number' or (p_command->>'id')::numeric<>trunc((p_command->>'id')::numeric) or (p_command->>'id')::numeric not between 1 and 9007199254740991 then raise exception 'Choose a valid saved farm';end if;
+
+  v_entry_id:=(p_command->>'id')::bigint;
+
+ end if;
+
+ if kind='manageCampaignFarmTargets' then
+  if jsonb_typeof(p_command->'ids') is distinct from 'array' then raise exception 'Choose saved targets';end if;
+  selected_count:=jsonb_array_length(p_command->'ids');
+  if selected_count not between 1 and 100 then raise exception 'Choose up to 100 targets';end if;
+  selected_ids:=array[]::bigint[];
+  for selected_id in select value from jsonb_array_elements(p_command->'ids')loop
+   if jsonb_typeof(selected_id) is distinct from 'number' then raise exception 'Choose valid saved targets';end if;
+   if selected_id::text::numeric<>trunc(selected_id::text::numeric) or selected_id::text::numeric not between 1 and 9007199254740991 then raise exception 'Choose valid saved targets';end if;
+   selected_ids:=array_append(selected_ids,selected_id::text::bigint);
+  end loop;
+  if (select count(distinct id)from unnest(selected_ids)ids(id))<>selected_count or (select count(*)from public.peris_campaign_farms where owner_id=u and id=any(selected_ids))<>selected_count then raise exception 'Choose your own saved targets';end if;
+  v_action:=p_command->>'action';
+  if v_action='delete' then delete from public.peris_campaign_farms where owner_id=u and id=any(selected_ids);
+  elsif v_action='move' then
+   if jsonb_typeof(p_command->'listId') is distinct from 'number' then raise exception 'Choose your own destination list';end if;
+   if (p_command->>'listId')::numeric<>trunc((p_command->>'listId')::numeric) then raise exception 'Choose your own destination list';end if;
+   v_list_id:=(p_command->>'listId')::bigint;
+   if not exists(select 1 from public.peris_campaign_farm_lists where id=v_list_id and owner_id=u)then raise exception 'Choose your own destination list';end if;
+   if (select count(*)from public.peris_campaign_farms where list_id=v_list_id and not(id=any(selected_ids)))+selected_count>100 then raise exception 'A campaign farm list holds up to 100 targets';end if;
+   if exists(select camp_id from public.peris_campaign_farms where (list_id=v_list_id and not(id=any(selected_ids)))or(owner_id=u and id=any(selected_ids))group by camp_id having count(*)>1)then raise exception 'A selected camp is already in the destination list';end if;
+   update public.peris_campaign_farms set list_id=v_list_id where owner_id=u and id=any(selected_ids);
+  else raise exception 'Choose move or delete';end if;
+  return jsonb_build_object('ok',true,'changed',selected_count);
+ elsif kind in('setCampaignFarmListEnabled','applyCampaignFarmListTroops')then
+  select * into list from public.peris_campaign_farm_lists where id=v_entry_id and owner_id=u;
+  if not found then raise exception 'Choose your own farm list';end if;
+  if kind='applyCampaignFarmListTroops'then
+   preset:=public.peris_campaign_farm_troops(list.troops,false);
+   update public.peris_campaign_farms set troops=preset where list_id=list.id and owner_id=u;
+  else
+   if jsonb_typeof(p_command->'enabled') is distinct from 'boolean'then raise exception 'Choose a repeat preference';end if;
+   repeat_enabled:=(p_command->>'enabled')::boolean;
+   update public.peris_campaign_farms set enabled=repeat_enabled,next_at=case when repeat_enabled then public.peris_game_now()+make_interval(secs=>interval_seconds)else null end,last_status=case when repeat_enabled then 'Scheduled'else 'Paused'end where list_id=list.id and owner_id=u and enabled is distinct from repeat_enabled;
+  end if;
+  return jsonb_build_object('ok',true);
+ elsif kind='startCampaignFarmList' then
+
+  if not exists(select 1 from public.peris_campaign_farm_lists where id=v_entry_id and owner_id=u)then raise exception 'Choose your own farm list';end if;
+
+  if p_command ? 'routes' and jsonb_typeof(p_command->'routes') is distinct from 'array' then raise exception 'Choose valid farm routes';end if;
+
+  previous_army:=current_setting('peris.army_id',true);previous_city:=current_setting('peris.city_id',true);
+
+  for farm in select f.* from public.peris_campaign_farms f where f.list_id=v_entry_id and f.owner_id=u order by f.id for update loop
+
+   -- A failed target rolls back its own preparation; other available legions still depart.
+
+   begin
+
+    select * into target_army from public.armies where id=farm.army_id and owner_id=u for update;
+
+    if target_army.id is null then raise exception 'Choose your own legion';end if;
+
+    if not exists(select 1 from public.peris_camps where id=farm.camp_id and bandit)then raise exception 'Only bandit camps can be started from a farm list';end if;
+
+    preset:=public.peris_campaign_farm_troops(farm.troops,false);
+
+    batch_path:=null;
+
+    if p_command ? 'routes' then
+
+     select r->'path' into batch_path from jsonb_array_elements(p_command->'routes')r where r->>'targetId'=farm.id::text limit 1;
+
+     if batch_path is null then raise exception 'No connected land route is available for this target';end if;
+
+    end if;
+
+    perform set_config('peris.army_id',farm.army_id::text,true);perform set_config('peris.city_id',target_army.home_settlement_id::text,true);
+
+    preparation:=public.peris_prepare_raid(farm.camp_id,batch_path,preset);
+    if preparation?'mission_id'then execute 'select march_path from public.peris_scout_missions where id=$1'into batch_path using(preparation->>'mission_id')::bigint;else select march_path into batch_path from public.armies where id=farm.army_id;end if;
+
+    update public.armies set farm_list_id=farm.list_id where id=farm.army_id;
+
+    update public.peris_campaign_farms set route=batch_path,last_status=case when preparation?'mission_id'then 'Scouting preparing'else 'Raid preparing'end,sent=sent+1 where id=farm.id;
+    started:=started+1;
+
+   exception when others then
+
+    update public.peris_campaign_farms set last_status=sqlerrm,skipped=peris_campaign_farms.skipped+1 where id=farm.id;
+    skipped:=skipped||jsonb_build_array(jsonb_build_object('targetId',farm.id,'reason',sqlerrm));
+
+   end;
+
+  end loop;
+
+  perform set_config('peris.army_id',coalesce(previous_army,''),true);perform set_config('peris.city_id',coalesce(previous_city,''),true);
+
+  if started=0 then raise exception 'No raids started. %',coalesce(skipped->0->>'reason','Add camp targets to this list first.');end if;
+
+  return jsonb_build_object('started',started,'skipped',skipped);
+
+ elsif kind='saveCampaignFarmList' then
+
+  if jsonb_typeof(p_command->'name') is distinct from 'string' then raise exception 'Use a farm list name of 2–40 characters';end if;
+
+  list_name:=btrim(p_command->>'name');
+
+  if char_length(list_name) not between 2 and 40 then raise exception 'Use a farm list name of 2–40 characters';end if;
+
+  if jsonb_typeof(p_command->'casualtiesOnly') is distinct from 'boolean' then raise exception 'Choose a report preference';end if;
+
+  preset:=public.peris_campaign_farm_troops(p_command->'troops',true);losses_only:=(p_command->>'casualtiesOnly')::boolean;
+
+  if v_entry_id is null then
+
+   if (select count(*)from public.peris_campaign_farm_lists where owner_id=u)>=50 then raise exception 'You can save up to 50 campaign farm lists';end if;
+
+   insert into public.peris_campaign_farm_lists(owner_id,name,troops,casualties_only)values(u,list_name,preset,losses_only)returning * into list;
+
+  else
+
+   update public.peris_campaign_farm_lists set name=list_name,troops=preset,casualties_only=losses_only where id=v_entry_id and owner_id=u returning * into list;
+
+   if not found then raise exception 'Choose your own farm list';end if;
+
+  end if;
+
+  return to_jsonb(list);
+
+ elsif kind='saveCampaignFarm' then
+
+  foreach list_name in array array['listId','campId','armyId'] loop
+
+   if jsonb_typeof(p_command->list_name) is distinct from 'number' or (p_command->>list_name)::numeric<>trunc((p_command->>list_name)::numeric) or (p_command->>list_name)::numeric not between 1 and 9007199254740991 then raise exception 'Choose a farm list, camp and legion';end if;
+
+  end loop;
+
+  v_list_id:=(p_command->>'listId')::bigint;v_camp_id:=(p_command->>'campId')::integer;v_army_id:=(p_command->>'armyId')::bigint;
+
+  if not exists(select 1 from public.peris_campaign_farm_lists l where l.id=v_list_id and l.owner_id=u)then raise exception 'Choose your own farm list';end if;
+
+  if not exists(select 1 from public.peris_camps c where c.id=v_camp_id and c.bandit)then raise exception 'Only bandit camps can be saved. Story locations are manual encounters';end if;
+
+  perform 1 from public.armies a where a.id=v_army_id and a.owner_id=u for share;
+
+  if not found then raise exception 'Choose your own legion';end if;
+
+  preset:=public.peris_campaign_farm_troops(p_command->'troops',false);
+
+  select f.id into v_duplicate_id from public.peris_campaign_farms f where f.owner_id=u and f.list_id=v_list_id and f.camp_id=v_camp_id;
+
+  if v_entry_id is null then v_entry_id:=v_duplicate_id;
+
+  else
+
+   select * into farm from public.peris_campaign_farms f where f.id=v_entry_id and f.owner_id=u;
+
+   if not found then raise exception 'Choose your own saved farm';end if;
+
+   if v_duplicate_id is not null and v_duplicate_id<>v_entry_id then raise exception 'This camp is already in that farm list';end if;
+
+  end if;
+
+  if v_entry_id is not null and farm.id is null then select * into farm from public.peris_campaign_farms f where f.id=v_entry_id and f.owner_id=u;end if;
+
+  if (farm.id is null or farm.list_id<>v_list_id) and (select count(*)from public.peris_campaign_farms f where f.list_id=v_list_id)>=100 then raise exception 'A campaign farm list holds up to 100 targets';end if;
+
+  if v_entry_id is null then
+
+   insert into public.peris_campaign_farms(owner_id,list_id,camp_id,army_id,troops)values(u,v_list_id,v_camp_id,v_army_id,preset)returning * into farm;
+
+  else
+
+   update public.peris_campaign_farms f set list_id=v_list_id,camp_id=v_camp_id,army_id=v_army_id,troops=preset,route=case when f.army_id=v_army_id and f.camp_id=v_camp_id then f.route else null end where f.id=v_entry_id and f.owner_id=u returning * into farm;
+
+  end if;
+
+  if p_command ? 'enabled' and jsonb_typeof(p_command->'enabled')<>'boolean'then raise exception 'Choose a repeat preference';end if;
+  repeat_enabled:=coalesce((p_command->>'enabled')::boolean,farm.enabled,false);
+  repeat_interval:=coalesce((p_command->>'intervalSeconds')::integer,farm.interval_seconds,300);
+  if repeat_interval not between 60 and 86400 then raise exception 'Use a repeat interval of 60–86400 seconds';end if;
+  update public.peris_campaign_farms set enabled=repeat_enabled,interval_seconds=repeat_interval,
+   next_at=case when repeat_enabled then case when enabled and interval_seconds=repeat_interval then coalesce(next_at,public.peris_game_now()+make_interval(secs=>repeat_interval))else public.peris_game_now()+make_interval(secs=>repeat_interval)end else null end
+   where id=farm.id returning * into farm;
+  return to_jsonb(farm);
+
+ elsif kind='deleteCampaignFarm' then
+
+  delete from public.peris_campaign_farms where id=v_entry_id and owner_id=u;
+
+  if not found then raise exception 'Choose your own saved farm';end if;
+
+ elsif kind='deleteCampaignFarmList' then
+
+  if not exists(select 1 from public.peris_campaign_farm_lists where id=v_entry_id and owner_id=u)then raise exception 'Choose your own farm list';end if;
+
+  if exists(select 1 from public.peris_campaign_farms f where f.list_id=v_entry_id)then raise exception 'Remove or move this list’s targets before deleting it';end if;
+
+  delete from public.peris_campaign_farm_lists where id=v_entry_id and owner_id=u;
+
+ else raise exception 'Choose a campaign farm command';
+
+ end if;
+
+ return jsonb_build_object('ok',true);
+
+end $$;
+create or replace function public.peris_start_raid(p_owner uuid,p_camp integer) returns bigint
+language plpgsql security definer set search_path='' as $$
+declare a public.armies%rowtype;c public.peris_camps%rowtype;bid bigint;mor numeric;shared_stock boolean;
+begin
+ perform public.peris_optional_scout_camp_mutation(p_camp,public.peris_game_now(),p_owner);
+ select * into a from public.armies where id=public.peris_army_id(p_owner) for update;
+ select * into c from public.peris_camps where id=p_camp for update;
+ if c.id is null or a.id is null then raise exception 'Army or camp not found';end if;
+ shared_stock:=c.bandit and to_regclass('public.peris_camp_stock')is not null;
+ if shared_stock then
+  perform public.peris_camp_accrue(p_camp);
+  if exists(select 1 from public.peris_camp_stock where camp_id=p_camp and engaged_battle_id is not null)then return null;end if;
+  select * into c from public.peris_camps where id=p_camp;
+ end if;
+ if a.infantry+a.archers+a.cavalry=0 then raise exception 'Your army has no soldiers';end if;
+ if exists(select 1 from public.battles where status='active' and (attacker_owner_id=p_owner or defender_owner_id=p_owner)) then raise exception 'Finish the current battle first';end if;
+ if not shared_stock and exists(select 1 from public.peris_progress where owner_id=p_owner and camp_id=p_camp and available_at>public.peris_game_now()) then raise exception 'The camp is still regrouping';end if;
+ insert into public.battles(attacker_owner_id,defender_owner_id,attacker_army_id,defender_army_id,mode,phase,camp_id,terrain,difficulty,enemy_name,defender_ready,defender_faction)
+ values(p_owner,null,a.id,null,'pve','combat',c.id,public.peris_battle_terrain(c.x,c.y),case when c.tier>=6 then 'hard' when c.tier<=2 then 'easy' else 'normal' end,c.name,true,c.faction) returning id into bid;
+ if shared_stock then update public.peris_camp_stock set engaged_battle_id=bid where camp_id=c.id;end if;
+ select 90+2*level into mor from public.buildings where settlement_id=a.home_settlement_id and building_type='wall';
+ perform public.peris_add_formations(bid,p_owner,'attacker',a.infantry,a.archers,a.cavalry,coalesce(mor,92));
+ perform public.peris_add_formations(bid,null,'defender',c.infantry,c.archers,c.cavalry,case when c.tier>=6 then 100 when c.tier<=2 then 78 else 90 end);
+ update public.armies set raid_target_id=null where id=a.id;
+ return bid;
+end $$;
+create or replace function public.peris_finish(p_bid bigint,p_winner text,p_reason text) returns void
+language plpgsql security definer set search_path='' as $$
+declare b public.battles%rowtype;ai integer;di integer;asur integer;dsur integer;r jsonb;loot jsonb:='{"wood":0,"stone":0,"food":0,"gold":0}';tier integer;u uuid;name text;a public.armies%rowtype;s public.settlements%rowtype;winner uuid;home jsonb;camp public.peris_camps%rowtype;stock jsonb;remaining jsonb;carry numeric;take numeric;key text;delivered jsonb;overflow jsonb;
+begin
+ select * into b from public.battles where id=p_bid for update;if b.id is null or b.status='resolved' then return;end if;
+ perform public.peris_optional_scout_camp_mutation(b.camp_id,public.peris_game_now(),b.attacker_owner_id);
+ if to_regprocedure('public.peris_food_finish(bigint)')is not null then perform public.peris_food_finish(p_bid);select * into b from public.battles where id=p_bid;end if;
+ if not public.peris_lock_battle_participants(b.attacker_owner_id,b.defender_owner_id)then raise lock_not_available;end if;
+ if b.raid_city_id is not null then perform public.peris_finish_city_raid(p_bid,p_winner,p_reason);return;end if;
+ select coalesce(sum(initial_soldiers)filter(where side='attacker'),0),coalesce(sum(initial_soldiers)filter(where side='defender'),0),
+ coalesce(sum(soldiers)filter(where side='attacker'),0),coalesce(sum(soldiers)filter(where side='defender'),0) into ai,di,asur,dsur from public.battle_formations where battle_id=b.id;
+ winner:=case p_winner when 'attacker' then b.attacker_owner_id when 'defender' then b.defender_owner_id else null end;
+ select * into camp from public.peris_camps where id=b.camp_id;
+ if b.mode='pve' and p_winner='attacker' and not camp.bandit then
+ tier:=camp.tier;
+ loot:=jsonb_build_object('wood',180*tier,'stone',140*tier,'food',220*tier,'gold',60*tier);
+ insert into public.peris_progress(owner_id,camp_id,defeated,available_at) values(b.attacker_owner_id,b.camp_id,1,public.peris_game_now()+interval '2 minutes')
+ on conflict(owner_id,camp_id)do update set defeated=peris_progress.defeated+1,available_at=excluded.available_at;
+ end if;
+ if camp.bandit then
+  tier:=camp.tier;
+  perform public.peris_camp_accrue(camp.id);
+  select resources into stock from public.peris_camp_stock where camp_id=camp.id for update;
+  if p_winner='attacker'then
+   select coalesce(sum(f.soldiers*c.carry),0)into carry from public.battle_formations f join public.peris_unit_catalog c on c.unit=coalesce(f.recruit_unit,f.unit_type)where f.battle_id=b.id and f.side='attacker';
+ carry:=floor(carry*public.peris_research_factor(b.attacker_owner_id,'carry'));
+   loot:=public.peris_take_camp_loot(stock,carry);
+   foreach key in array array['wood','stone','food','gold']loop stock:=jsonb_set(stock,array[key],to_jsonb((stock->>key)::numeric-(loot->>key)::numeric));end loop;
+  end if;
+  update public.peris_camp_stock set resources=stock,engaged_battle_id=null,next_recruit_at=public.peris_game_now()+make_interval(secs=>60+floor(random()*241)::integer)where camp_id=camp.id;
+  update public.peris_camps set
+   infantry=coalesce((select sum(soldiers)from public.battle_formations where battle_id=b.id and side='defender'and unit_type='infantry'),0),
+   archers=coalesce((select sum(soldiers)from public.battle_formations where battle_id=b.id and side='defender'and unit_type='archers'),0),
+   cavalry=coalesce((select sum(soldiers)from public.battle_formations where battle_id=b.id and side='defender'and unit_type='cavalry'),0)where id=camp.id;
+ end if;
+ r:=jsonb_build_object('balance_version',b.balance_version,'attacker_initial',ai,'defender_initial',di,'attacker_survivors',asur,'defender_survivors',dsur,'attacker_losses',ai-asur,'defender_losses',di-dsur,'loot',loot,'duration',round(b.elapsed),'reason',p_reason);
+ r:=r||jsonb_build_object('attacker_roster',(select public.peris_roster(coalesce(jsonb_object_agg(unit,sum_initial),'{}'::jsonb))from(select coalesce(recruit_unit,unit_type)as unit,sum(initial_soldiers)as sum_initial from public.battle_formations where battle_id=b.id and side='attacker'group by coalesce(recruit_unit,unit_type))q),
+  'attacker_survivor_roster',(select public.peris_roster(coalesce(jsonb_object_agg(unit,sum_remaining),'{}'::jsonb))from(select coalesce(recruit_unit,unit_type)as unit,sum(soldiers)as sum_remaining from public.battle_formations where battle_id=b.id and side='attacker'group by coalesce(recruit_unit,unit_type))q),
+  'defender_roster',(select public.peris_roster(coalesce(jsonb_object_agg(unit,sum_initial),'{}'::jsonb))from(select coalesce(recruit_unit,unit_type)as unit,sum(initial_soldiers)as sum_initial from public.battle_formations where battle_id=b.id and side='defender'group by coalesce(recruit_unit,unit_type))q),
+  'defender_survivor_roster',(select public.peris_roster(coalesce(jsonb_object_agg(unit,sum_remaining),'{}'::jsonb))from(select coalesce(recruit_unit,unit_type)as unit,sum(soldiers)as sum_remaining from public.battle_formations where battle_id=b.id and side='defender'group by coalesce(recruit_unit,unit_type))q),
+  'defender_faction',coalesce(b.defender_faction,camp.faction),
+  'attacker_faction',coalesce(b.attacker_faction,(select s0.faction from public.armies a0 join public.settlements s0 on s0.id=a0.home_settlement_id where a0.id=b.attacker_army_id)));
+ select coalesce(sum(f.soldiers*c.carry),0)into carry from public.battle_formations f join public.peris_unit_catalog c on c.unit=coalesce(f.recruit_unit,f.unit_type)where f.battle_id=b.id and f.side='attacker';
+ carry:=floor(carry*public.peris_research_factor(b.attacker_owner_id,'carry'));
+ r:=r||jsonb_build_object('replacement_cost',public.peris_roster_loss_cost(r->'attacker_roster',r->'attacker_survivor_roster',b.balance_version),'carrying_capacity',carry);
+ if (loot->>'wood')::numeric+(loot->>'stone')::numeric+(loot->>'food')::numeric+(loot->>'gold')::numeric=0 then r:=r||jsonb_build_object('estimated_profit',public.peris_resource_difference(loot,r->'replacement_cost'));end if;
+ update public.battles set status='resolved' ,phase='finished',winner_side=p_winner,winner_owner_id=winner,ended_at=public.peris_game_now(),result=r where id=b.id;
+ for u in select id from public.players where id in(b.attacker_owner_id,b.defender_owner_id) order by id loop
+ perform public.peris_settle(u);
+ select * into a from public.armies where id=case when u=b.attacker_owner_id then b.attacker_army_id else b.defender_army_id end;
+ select * into s from public.settlements where id=a.home_settlement_id;
+ home:=public.peris_home_army_position(s.x,s.y);
+ select public.peris_roster(coalesce(jsonb_object_agg(unit_name,survivors),'{}'))into remaining from(select coalesce(recruit_unit,unit_type)as unit_name,sum(soldiers)as survivors from public.battle_formations where battle_id=b.id and owner_id=u group by coalesce(recruit_unit,unit_type))q;
+ if to_regprocedure('public.peris_food_roster_after(bigint,text,jsonb)')is not null then
+  remaining:=public.peris_food_roster_after(b.id,case when u=b.attacker_owner_id then 'attacker'else 'defender'end,public.peris_roster(to_jsonb(a)));
+ end if;
+ perform public.peris_write_roster(a.id,public.peris_roster_add(remaining,coalesce(a.raid_reserve,'{}')));
+ update public.armies a0 set
+ status='idle',raid_target_id=null,raid_reserve=null,march_sent_at=null,march_cancel_until=null,
+ start_x=case when a.march_origin is null then (home->>'x')::integer else a.target_x end,start_y=case when a.march_origin is null then (home->>'y')::integer else a.target_y end,
+ target_x=case when a.march_origin is null then (home->>'x')::integer else a.target_x end,target_y=case when a.march_origin is null then (home->>'y')::integer else a.target_y end,
+ arrival_at=public.peris_game_now(),departure_at=public.peris_game_now(),updated_at=now() where id=a.id;
+ if camp.bandit and u=b.attacker_owner_id then update public.armies set carried_loot=loot,loot_report_id=b.id where id=a.id;end if;
+ if not public.peris_return_raid(a.id)then update public.armies set march_path=null,march_distance=null,march_returning=false where id=a.id;end if;
+ if u=winner then update public.players set victories=victories+1,prestige=prestige+coalesce(tier,1)*25 where id=u;end if;
+ if u=b.attacker_owner_id and b.mode='pve' and p_winner='attacker' and not camp.bandit then
+ delivered:='{}';overflow:='{}';
+ foreach key in array array['wood','stone','food','gold']loop
+  take:=least((loot->>key)::numeric,greatest(0,case when key='food'then s.food_capacity else s.capacity end-(to_jsonb(s)->>key)::numeric));
+  delivered:=delivered||jsonb_build_object(key,take);overflow:=overflow||jsonb_build_object(key,(loot->>key)::numeric-take);
+ end loop;
+ r:=r||jsonb_build_object('delivered',delivered,'overflow',overflow,'delivered_at',now(),'estimated_profit',public.peris_resource_difference(delivered,r->'replacement_cost'));
+ update public.settlements set wood=least(capacity,wood+(loot->>'wood')::integer),stone=least(capacity,stone+(loot->>'stone')::integer),
+ food=least(food_capacity,food+(loot->>'food')::integer),gold=least(capacity,gold+(loot->>'gold')::integer)where id=s.id;
+ end if;
+ if b.mode='pve' and u=b.attacker_owner_id then
+  r:=r||jsonb_build_object('hero_reward',public.peris_battle_hero_reward(a.id,(di-dsur)*2+case when u=winner then 50 else 20 end,case when u=winner then b.camp_id else null end,b.id));
+  update public.battles set result=r where id=b.id;
+ else
+  perform public.peris_hero_reward(a.id,case when u=b.attacker_owner_id then (di-dsur)*2 else(ai-asur)*2 end+case when u=winner then 50 else 20 end,null);
+ end if;
+ name:=case when b.mode='pve' then b.enemy_name else 'Duel against '||coalesce((select display_name from public.players where id=case when u=b.attacker_owner_id then b.defender_owner_id else b.attacker_owner_id end),'rival') end;
+ insert into public.peris_reports(owner_id,battle_id,title,won,result,camp_id,farm_list_id)values(u,b.id,name,coalesce(u=winner,false),r,b.camp_id,a.farm_list_id)on conflict(owner_id,battle_id)do nothing;
+ if camp.bandit and u=b.attacker_owner_id and not (select march_returning from public.armies where id=a.id)then perform public.peris_deliver_loot(a.id);end if;
+ end loop;
+end $$;
+create or replace function public.peris_prepare_city_raid(p_owner uuid,p_army bigint,p_city bigint,p_path jsonb,p_troops jsonb,p_target text default 'auto')returns jsonb
+language plpgsql security definer set search_path='' as $$
+declare a public.armies%rowtype;c public.settlements%rowtype;available jsonb;chosen jsonb;unit_name text;
+begin
+ if p_owner is null then raise exception 'Authentication required';end if;
+ if p_target not in('auto','market','barracks','stables','workshop','smithy','warehouse','granary','housing','mage_tower','fishery','lumber','quarry','farm','storehouse','trading_post')then raise exception 'Choose a valid catapult target';end if;
+ perform public.peris_settle(p_owner);
+ select * into a from public.armies where id=p_army and owner_id=p_owner for update;
+ select * into c from public.settlements where id=p_city and owner_id<>p_owner;
+ if a.id is null or c.id is null or to_jsonb(c)->>'ruined_at' is not null then raise exception 'Choose your legion and another player''s living city';end if;
+
+ available:=public.peris_roster(to_jsonb(a));chosen:=public.peris_garrison_troops(coalesce(nullif(p_troops,'null'::jsonb),available));
+ if public.peris_roster_total(chosen)=0 then raise exception 'Send at least one soldier';end if;
+ foreach unit_name in array array['infantry','spearmen','archers','elite','cavalry','scout','heavyCavalry','ram','catapult','diplomat']loop
+  if(chosen->>unit_name)::integer>(available->>unit_name)::integer then raise exception 'Choose troops currently available in this legion';end if;
+ end loop;
+ if public.peris_roster_total(chosen)=coalesce((chosen->>'scout')::integer,0)and to_regprocedure('public.peris_scout_command_for(uuid,jsonb)')is not null then
+  return public.peris_scout_command_for(p_owner,jsonb_build_object('type','scout','armyId',a.id,'targetCityId',c.id,'quantity',(chosen->>'scout')::integer,'mode','resources','route',p_path));
+ end if;
+ if public.peris_social_relation(p_owner,c.owner_id)in('guild','alliance','nap')then raise exception 'Your guild or diplomatic pact protects this city';end if;
+ perform public.peris_march_for_target(p_owner,a.id,c.x,c.y,p_path,null,c.id);
+ perform public.peris_garrison_add(p_owner,floor(a.target_x/128.0)::integer,floor(a.target_y/128.0)::integer,public.peris_roster_add(available,chosen,-1));
+ perform public.peris_write_roster(a.id,chosen);
+ update public.armies set siege_target=p_target,arrival_at=departure_at+make_interval(secs=>greatest(2,march_distance/public.peris_march_speed(id))::double precision)where id=a.id;
+ return jsonb_build_object('ok',true);
+end $$;
+create or replace function public.peris_camp_accrue(p_camp integer,p_until timestamptz default public.peris_game_now())returns void language plpgsql security definer set search_path='' as $$
+declare c public.peris_camps%rowtype;s public.peris_camp_stock%rowtype;rates integer[];capacity integer;batch_min integer;batch_max integer;cap integer;minutes numeric;r text;i integer:=1;amount integer;steps integer:=0;stock jsonb;
+begin
+ p_until:=public.peris_scout_camp_cutoff(p_camp,p_until);
+ select * into c from public.peris_camps where id=p_camp and bandit for update;if c.id is null then return;end if;
+ select * into s from public.peris_camp_stock where camp_id=p_camp for update;
+ if s.camp_id is null then return;end if;
+ rates:=case when c.tier>=6 then array[24,15,15,6]when c.tier<=2 then array[3,2,2,1]else array[9,6,6,3]end;
+ cap:=greatest(case when c.tier>=6 then 250 when c.tier<=2 then 30 else 100 end,ceil((array[30,50,80,120,180,260,360,480,610,720])[least(10,greatest(1,c.tier))]*1.08)::integer);
+ batch_min:=case when c.tier>=6 then 4 when c.tier<=2 then 1 else 2 end;batch_max:=case when c.tier>=6 then 10 when c.tier<=2 then 3 else 6 end;
+ if s.engaged_battle_id is null then
+  while s.next_recruit_at<=p_until and steps<1024 loop
+   steps:=steps+1;
+   amount:=greatest(0,least(cap-c.infantry-c.archers-c.cavalry,batch_min+floor(random()*(batch_max-batch_min+1))::integer));
+   case (s.recruit_sequence % case when c.tier<=2 then 2 else 3 end)
+    when 0 then c.infantry:=c.infantry+amount;when 1 then c.archers:=c.archers+amount;else c.cavalry:=c.cavalry+amount;end case;
+   s.recruit_sequence:=s.recruit_sequence+1;s.next_recruit_at:=s.next_recruit_at+make_interval(secs=>60+floor(random()*241)::integer);
+   if c.infantry+c.archers+c.cavalry>=cap then s.next_recruit_at:=greatest(p_until,s.next_recruit_at)+make_interval(secs=>60+floor(random()*241)::integer);exit;end if;
+  end loop;
+  update public.peris_camps set infantry=c.infantry,archers=c.archers,cavalry=c.cavalry where id=c.id;
+ end if;
+ minutes:=greatest(0,extract(epoch from(p_until-s.stock_updated_at))/60);stock:=s.resources;
+ foreach r in array array['wood','stone','food','gold']loop
+  stock:=jsonb_set(stock,array[r],to_jsonb(least(rates[i]*30,coalesce((stock->>r)::numeric,0)+rates[i]*minutes)));i:=i+1;
+ end loop;
+ update public.peris_camp_stock set resources=stock,stock_updated_at=greatest(p_until,s.stock_updated_at),next_recruit_at=s.next_recruit_at,recruit_sequence=s.recruit_sequence where camp_id=c.id;
+end $$;
+create or replace function public.peris_snapshot()returns jsonb language plpgsql security definer set search_path='' as $$
+declare u uuid:=public.peris_player_id();result jsonb;
+begin
+ if u is null then raise exception 'Authentication required';end if;
+ perform public.peris_note_account_activity();
+ perform public.peris_science_ensure(u);
+ if to_regprocedure('public.peris_loyalty_accrue(bigint,timestamp with time zone)')is not null then perform public.peris_loyalty_accrue(s.id,public.peris_game_now())from public.settlements s where s.owner_id=u;end if;
+ perform public.peris_city_migrate(s.id) from public.settlements s where s.owner_id=u;
+ if to_regprocedure('public.peris_supply_refresh(bigint,timestamp with time zone)')is not null then
+  execute 'select public.peris_supply_refresh(id,public.peris_game_now())from public.settlements where owner_id=$1 and ruined_at is null'using u;
+ end if;
+ select jsonb_build_object('version',6,'server_now',public.peris_game_now(),'game_clock',public.peris_clock_snapshot(),
+ 'debug_enabled',coalesce((select enabled from public.peris_debug_config where id),false),
+ 'map',jsonb_build_object('version',4,'cols',200,'rows',200,'cell_size',128,'seed',1346720329,
+   'total_players',(select count(*) from public.players),'total_settlements',(select count(*) from public.settlements)),
+ 'gameplay_version',1,'unit_balance_version',2,
+ 'account_science',coalesce((select jsonb_agg(s)from public.peris_account_science s where s.owner_id=u),'[]'::jsonb),
+ 'research_progress',coalesce((select jsonb_agg(p order by technology_id)from public.peris_research_progress p where p.owner_id=u),'[]'::jsonb),
+ 'heroes',coalesce((select jsonb_agg(h order by id)from public.peris_heroes h where owner_id=u),'[]'::jsonb),
+ 'hero_artifacts',coalesce((select jsonb_agg(i order by id)from public.peris_hero_artifacts i where owner_id=u),'[]'::jsonb),
+ 'settler_expeditions',coalesce((select jsonb_agg(e order by id)from public.peris_settler_expeditions e where owner_id=u),'[]'::jsonb),
+ 'campaign_farm_lists',coalesce((select jsonb_agg(l order by id)from public.peris_campaign_farm_lists l where owner_id=u),'[]'::jsonb),
+ 'campaign_farms',coalesce((select jsonb_agg(f order by id)from public.peris_campaign_farms f where owner_id=u),'[]'::jsonb),
+ 'campaign_farm_stats',coalesce((select jsonb_agg(jsonb_build_object('owner_id',u,'camp_id',s.camp_id,'raids',s.raids,'last_raid_at',coalesce(s.result->>'delivered_at',s.created_at::text),'last_loot',s.delivered,'total_loot',s.total_loot,'last_result',coalesce(s.winner_side,case when s.won then 'attacker'else 'defender'end),'last_losses',coalesce((s.result->>'attacker_losses')::integer,0))order by s.camp_id)from(
+   select r.*,b.winner_side,coalesce((r.result#>>'{delivered,wood}')::numeric,0)+coalesce((r.result#>>'{delivered,stone}')::numeric,0)+coalesce((r.result#>>'{delivered,food}')::numeric,0)+coalesce((r.result#>>'{delivered,gold}')::numeric,0)as delivered,
+    count(*)over(partition by r.camp_id)as raids,
+    sum(coalesce((r.result#>>'{delivered,wood}')::numeric,0)+coalesce((r.result#>>'{delivered,stone}')::numeric,0)+coalesce((r.result#>>'{delivered,food}')::numeric,0)+coalesce((r.result#>>'{delivered,gold}')::numeric,0))over(partition by r.camp_id)as total_loot,
+    row_number()over(partition by r.camp_id order by coalesce((r.result->>'delivered_at')::timestamptz,r.created_at)desc,r.id desc)as rank
+   from public.peris_reports r join public.peris_camps c on c.id=r.camp_id and c.bandit left join public.battles b on b.id=r.battle_id where r.owner_id=u and r.result?'delivered'
+  )s where s.rank=1),'[]'::jsonb),
+ 'garrisons',coalesce((select jsonb_agg(g order by row,col)from public.peris_garrisons g where owner_id=u),'[]'::jsonb),
+ 'trade_routes',public.peris_optional_trade_routes(),
+ 'trade_caravans',public.peris_optional_trade_caravans(),
+ 'guild_reinforcements',public.peris_optional_guild_reinforcements(),
+ 'city_reinforcements',coalesce((select jsonb_agg(r order by r.arrival_at,r.id)from public.peris_city_reinforcements r where r.owner_id=u),'[]'::jsonb),
+ 'city_garrisons',coalesce((select jsonb_agg(to_jsonb(g)||jsonb_build_object('infantry',public.peris_roster_class(g.unit_roster,'infantry'),'archers',public.peris_roster_class(g.unit_roster,'archers'),'cavalry',public.peris_roster_class(g.unit_roster,'cavalry'))order by g.settlement_id)from public.peris_city_garrisons g where g.owner_id=u),'[]'::jsonb),
+ 'ruin_evacuations',coalesce((select jsonb_agg(e order by e.arrival_at)from public.peris_ruin_evacuations e where e.owner_id=u),'[]'::jsonb),
+ 'players',coalesce((select jsonb_agg(p order by created_at)from public.players p where p.id=u
+   or exists(select 1 from public.battles b where (b.attacker_owner_id=u or b.defender_owner_id=u) and (b.attacker_owner_id=p.id or b.defender_owner_id=p.id))
+   or exists(select 1 from public.peris_challenges c where c.status='pending' and c.expires_at>public.peris_game_now() and (c.attacker_owner_id=u or c.defender_owner_id=u) and (c.attacker_owner_id=p.id or c.defender_owner_id=p.id))),'[]'::jsonb),
+ 'settlements',coalesce((select jsonb_agg(s order by id)from public.settlements s where s.owner_id=u),'[]'::jsonb),
+ 'buildings',coalesce((select jsonb_agg(b order by b.id)from public.buildings b join public.settlements s on s.id=b.settlement_id where s.owner_id=u),'[]'::jsonb),
+ 'unit_research',coalesce((select jsonb_agg(r order by r.unit)from public.peris_unit_research r join public.settlements s on s.id=r.settlement_id where s.owner_id=u),'[]'::jsonb),
+ 'spell_research',coalesce((select jsonb_agg(r order by r.spell_id)from public.peris_spell_research r join public.settlements s on s.id=r.settlement_id where s.owner_id=u),'[]'::jsonb),
+ 'city_slots',coalesce((select jsonb_agg(c order by c.slot_index)from public.peris_city_slots c join public.settlements s on s.id=c.settlement_id where s.owner_id=u),'[]'::jsonb),
+ 'map_plots',coalesce((select jsonb_agg(p order by p.row,p.col)from public.peris_map_plots p where p.owner_id=u),'[]'::jsonb),
+ 'armies',coalesce((select jsonb_agg(a order by id)from public.armies a where a.owner_id=u),'[]'::jsonb),
+ 'camps',coalesce((select jsonb_agg(to_jsonb(c)||jsonb_build_object('resources',stock.resources,'stock_updated_at',stock.stock_updated_at)order by c.id)from public.peris_camps c left join public.peris_camp_stock stock on stock.camp_id=c.id),'[]'::jsonb),
+ 'orders',coalesce((select jsonb_agg(o order by finish_at)from public.peris_orders o where owner_id=u),'[]'::jsonb),
+ 'battles',coalesce((select jsonb_agg(b order by id)from public.battles b where attacker_owner_id=u or defender_owner_id=u),'[]'::jsonb),
+ 'formations',coalesce((select jsonb_agg(f order by f.id)from public.battle_formations f join public.battles b on b.id=f.battle_id where b.status='active'and (b.attacker_owner_id=u or b.defender_owner_id=u)),'[]'::jsonb),
+ 'reports',coalesce((select jsonb_agg(r order by id desc)from (select * from public.peris_reports where owner_id=u and (coalesce((peris_reports.result->>'attacker_losses')::integer,0)>0 or not exists(select 1 from public.peris_campaign_farm_lists l where l.id=peris_reports.farm_list_id and l.owner_id=u and l.casualties_only)) order by id desc limit 50)r),'[]'::jsonb),
+ 'report_count',(select count(*)from public.peris_reports r where owner_id=u and (coalesce((r.result->>'attacker_losses')::integer,0)>0 or not exists(select 1 from public.peris_campaign_farm_lists l where l.id=r.farm_list_id and l.owner_id=u and l.casualties_only))),
+ 'hidden_report_count',(select count(*)from public.peris_reports r where owner_id=u and coalesce((r.result->>'attacker_losses')::integer,0)=0 and exists(select 1 from public.peris_campaign_farm_lists l where l.id=r.farm_list_id and l.owner_id=u and l.casualties_only)),
+ 'unread_report_count',(select count(*)from public.peris_reports r where owner_id=u and r.read_at is null and (coalesce((r.result->>'attacker_losses')::integer,0)>0 or not exists(select 1 from public.peris_campaign_farm_lists l where l.id=r.farm_list_id and l.owner_id=u and l.casualties_only))),
+ 'progress',coalesce((select jsonb_agg(p)from public.peris_progress p where owner_id=u),'[]'::jsonb),
+ 'claims',coalesce((select jsonb_agg(c)from public.peris_claims c where owner_id=u),'[]'::jsonb),
+ 'challenges',coalesce((select jsonb_agg(c)from public.peris_challenges c where (attacker_owner_id=u or defender_owner_id=u)and status='pending'and expires_at>public.peris_game_now()),'[]'::jsonb))into result;
+ if to_regprocedure('public.peris_supply_refresh(bigint,timestamp with time zone)')is not null then result:=result||jsonb_build_object('troop_upkeep_version',1);end if;
+ if to_regclass('public.peris_conquest_version')is not null then result:=result||jsonb_build_object('conquest_version',1);end if;
+ if to_regclass('public.peris_scout_missions')is not null and to_regclass('public.peris_crop_version')is not null then
+  result:=result||jsonb_build_object('scouting_version',1);
+  execute 'select $1||jsonb_build_object(''scouting_missions'',coalesce((select jsonb_agg(to_jsonb(m)order by m.id)from public.peris_scout_missions m where owner_id=$2 and(status in(''outbound'',''returning'')or id in(select id from public.peris_scout_missions where owner_id=$2 and status in(''completed'',''cancelled'')order by id desc limit 200))),''[]''::jsonb))'into result using result,u;
+ end if;
+ return result;
+end $$;
+create or replace function public.peris_game_tick(p_limit integer default 40)returns jsonb
+language plpgsql security definer set search_path='' as $$
+declare owner uuid;farm public.peris_campaign_farms%rowtype;processed integer:=0;camp_id integer;preparation jsonb;
+ attempted integer:=0;failed integer:=0;camp_failed integer:=0;
+ started timestamptz:=clock_timestamp();pass_started timestamptz;battles jsonb;
+begin
+ if p_limit is null or p_limit not between 1 and 100 then raise exception 'Use a worker budget of 1Ã¢â‚¬“100 owners';end if;
+ if not pg_try_advisory_xact_lock(204215)then return jsonb_build_object('busy',true);end if;
+ delete from public.peris_worker_owners w where not exists(select 1 from public.players p where p.id=w.owner_id);
+ battles:=public.peris_advance_battles(20,2000);pass_started:=clock_timestamp();
+ for owner in select q.owner_id from(
+  select owner_id,min(arrival_at)as due from public.armies where (status='moving' or raid_target_id is not null or raid_city_id is not null)and arrival_at<=public.peris_game_now() group by owner_id
+  union all select owner_id,min(arrival_at)from public.peris_settler_expeditions where status='travelling'and arrival_at<=public.peris_game_now()group by owner_id
+  union all select owner_id,min(arrival_at)from public.peris_ruin_evacuations where arrival_at<=public.peris_game_now()group by owner_id
+  union all select owner_id,min(arrival_at)from public.peris_city_reinforcements where arrival_at<=public.peris_game_now()group by owner_id
+  union all select owner_id,due from public.peris_due_scouts()
+  union all select owner_id,due from public.peris_due_trade_routes()
+  union all select owner_id,due from public.peris_due_trade_caravans()
+  union all select owner_id,due from public.peris_due_guild_reinforcements()
+  union all select owner_id,min(resources_updated_at+interval '1 minute')from public.settlements s where ruined_at is null and to_jsonb(s)->>'troop_upkeep_ready'='true'and(coalesce((to_jsonb(s)->>'food_troop_upkeep')::numeric,0)>0 or food_rate<0)and resources_updated_at<=public.peris_game_now()-interval '1 minute'group by owner_id
+  union all select owner_id,min(finish_at)from public.peris_orders where finish_at<=public.peris_game_now()group by owner_id
+  union all select owner_id,min(public.peris_science_deadline(owner_id))from public.peris_account_science where active_id is not null and public.peris_science_deadline(owner_id)<=public.peris_game_now()group by owner_id
+  union all select owner_id,min(next_at)from public.peris_campaign_farms where enabled and next_at<=public.peris_game_now()group by owner_id
+ )q left join public.peris_worker_owners w on w.owner_id=q.owner_id
+ where w.next_attempt_at is null or w.next_attempt_at<=clock_timestamp()
+ group by q.owner_id,w.last_processed_at,w.last_attempt_at order by coalesce(w.last_attempt_at,w.last_processed_at,'1970-01-01'::timestamptz),min(q.due),q.owner_id limit p_limit loop
+  exit when extract(epoch from(clock_timestamp()-pass_started))*1000>=2000;
+  attempted:=attempted+1;
+  begin
+   if exists(select 1 from public.peris_settler_expeditions where owner_id=owner and status='travelling'and arrival_at<=public.peris_game_now())and not pg_try_advisory_xact_lock(204200)then raise lock_not_available;end if;
+   perform 1 from public.players where id=owner for update nowait;
+   perform public.peris_sync_owner(owner);
+   for farm in select * from public.peris_campaign_farms where owner_id=owner and enabled and next_at<=public.peris_game_now()order by next_at,id limit 100 for update skip locked loop
+    exit when extract(epoch from(clock_timestamp()-pass_started))*1000>=2000;
+    begin
+     if farm.route is null then raise exception 'Start this target manually once to establish its land route';end if;
+     preparation:=public.peris_prepare_raid_for(owner,farm.army_id,farm.camp_id,farm.route,farm.troops);
+     update public.armies set farm_list_id=farm.list_id where id=farm.army_id;
+     update public.peris_campaign_farms set last_status=case when preparation?'mission_id'then 'Scouting preparing'else 'Raid preparing'end,sent=sent+1 where id=farm.id;
+    exception when others then update public.peris_campaign_farms set last_status=sqlerrm,skipped=skipped+1 where id=farm.id;end;
+    update public.peris_campaign_farms set next_at=public.peris_game_now()+make_interval(secs=>farm.interval_seconds)where id=farm.id;
+   end loop;
+   insert into public.peris_worker_owners(owner_id,last_processed_at,last_attempt_at,next_attempt_at,consecutive_failures,last_sqlstate)
+    values(owner,clock_timestamp(),clock_timestamp(),null,0,null)on conflict(owner_id)do update set
+    last_processed_at=excluded.last_processed_at,last_attempt_at=excluded.last_attempt_at,next_attempt_at=null,consecutive_failures=0,last_sqlstate=null;
+   processed:=processed+1;
+  exception when lock_not_available then
+   insert into public.peris_worker_owners(owner_id,last_attempt_at,next_attempt_at)values(owner,clock_timestamp(),clock_timestamp()+interval '1 second')
+    on conflict(owner_id)do update set last_attempt_at=excluded.last_attempt_at,next_attempt_at=excluded.next_attempt_at;
+  when others then
+   failed:=failed+1;
+   insert into public.peris_worker_owners(owner_id,last_attempt_at,next_attempt_at,consecutive_failures,last_sqlstate)
+    values(owner,clock_timestamp(),clock_timestamp()+interval '5 seconds',1,sqlstate)on conflict(owner_id)do update set
+    last_attempt_at=excluded.last_attempt_at,next_attempt_at=clock_timestamp()+make_interval(secs=>least(300,5*power(2,least(6,public.peris_worker_owners.consecutive_failures)))::double precision),
+    consecutive_failures=public.peris_worker_owners.consecutive_failures+1,last_sqlstate=excluded.last_sqlstate;
+  end;
+ end loop;
+ pass_started:=clock_timestamp();
+ for camp_id in select s.camp_id from public.peris_camp_stock s where s.next_recruit_at<=public.peris_game_now() or s.stock_updated_at<=public.peris_game_now()-interval '1 minute'order by least(s.next_recruit_at,s.stock_updated_at+interval '1 minute'),s.camp_id limit 100 loop
+  exit when extract(epoch from(clock_timestamp()-pass_started))*1000>=500;
+  begin perform public.peris_camp_accrue(camp_id);exception when others then camp_failed:=camp_failed+1;end;
+ end loop;
+ return jsonb_build_object('processed',processed,'attempted',attempted,'failed',failed,'battles',battles,'camps_failed',camp_failed,'duration_ms',extract(epoch from(clock_timestamp()-started))*1000);
+end $$;
+create or replace function public.peris_submit_command(p_request_id uuid,p_function text,p_args jsonb)
+returns jsonb language plpgsql security definer set search_path='' as $$
+declare u uuid:=public.peris_player_id();previous public.peris_command_receipts%rowtype;answer jsonb;
+begin
+ if u is null or not exists(select 1 from public.players where id=u)then raise exception 'Authentication required';end if;
+ if p_request_id is null or p_function is null or p_args is null or jsonb_typeof(p_args)<>'object' or octet_length(p_args::text)>100000 then raise exception 'Choose a valid command';end if;
+ perform pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended(u::text||':'||p_request_id::text,0));
+ select * into previous from public.peris_command_receipts where owner_id=u and request_id=p_request_id;
+ if previous.request_id is not null then
+  if previous.function_name is distinct from p_function or previous.arguments is distinct from p_args then raise exception 'This request belongs to a different command';end if;
+  return previous.response;
+ end if;
+ if exists(select 1 from public.players where id=u and defeated_at is not null)then raise exception 'This ruler has been permanently defeated';end if;
+ -- A fixed whitelist keeps the receipt endpoint from invoking private helpers.
+ case p_function
+ when 'peris_scout_command' then answer:=public.peris_scout_command(p_args->'p_command');
+ when 'peris_trade_route_command' then answer:=public.peris_trade_route_command(p_args->'p_command');
+ when 'peris_send_resources' then answer:=public.peris_send_resources((p_args->>'p_source')::bigint,(p_args->>'p_target')::bigint,p_args->'p_resources',p_args->'p_path');
+ when 'peris_send_guild_reinforcements' then answer:=public.peris_send_guild_reinforcements((p_args->>'p_source')::bigint,(p_args->>'p_target')::bigint,p_args->'p_troops',p_args->'p_path',(p_args->>'p_army')::bigint);
+ when 'peris_recall_guild_reinforcements' then answer:=public.peris_recall_guild_reinforcements((p_args->>'p_id')::bigint);
+ when 'peris_empire_command' then answer:=public.peris_empire_command(p_args->'p_command');
+ when 'peris_campaign_farm_command' then answer:=public.peris_campaign_farm_command(p_args->'p_command');
+ when 'peris_research_unit' then answer:=public.peris_research_unit((p_args->>'p_city')::bigint,p_args->>'p_unit');
+ when 'peris_collect_garrison' then answer:=public.peris_collect_garrison((p_args->>'p_army')::bigint,nullif(p_args->'p_troops','null'::jsonb));
+ when 'peris_claim_field' then answer:=public.peris_claim_field((p_args->>'p_col')::integer,(p_args->>'p_row')::integer);
+ when 'peris_queue_field' then answer:=public.peris_queue_field((p_args->>'p_col')::integer,(p_args->>'p_row')::integer,p_args->>'p_type');
+ when 'peris_set_faction' then perform public.peris_set_faction(p_args->>'p_faction');answer:='{}'::jsonb;
+ when 'peris_debug_city' then perform public.peris_debug_city(p_args->>'p_action',p_args->>'p_target',(p_args->>'p_value')::integer);answer:='{}'::jsonb;
+ when 'peris_research_spell' then answer:=public.peris_research_spell(p_args->>'p_spell');
+ when 'peris_queue_slot' then answer:=public.peris_queue_slot((p_args->>'p_slot')::integer,p_args->>'p_type');
+ when 'peris_queue_upgrade' then answer:=public.peris_queue_upgrade(p_args->>'p_type');
+ when 'peris_queue_recruit' then answer:=public.peris_queue_recruit(p_args->>'p_type',(p_args->>'p_quantity')::integer);
+ when 'peris_march' then answer:=public.peris_march((p_args->>'p_target_x')::integer,(p_args->>'p_target_y')::integer,p_args->'p_path');
+ when 'move_army' then answer:=public.move_army((p_args->>'p_target_x')::integer,(p_args->>'p_target_y')::integer);
+ when 'peris_raid' then answer:=public.peris_raid((p_args->>'p_camp_id')::integer);
+ when 'peris_ready' then answer:=public.peris_ready((p_args->>'p_battle_id')::bigint);
+ when 'retreat_from_battle' then answer:=public.retreat_from_battle((p_args->>'p_battle_id')::bigint);
+ when 'peris_claim' then answer:=public.peris_claim(p_args->>'p_quest_id');
+ when 'peris_rename' then answer:=public.peris_rename(p_args->>'p_name');
+ when 'peris_challenge' then answer:=public.peris_challenge((p_args->>'p_defender')::uuid);
+ when 'peris_respond' then answer:=public.peris_respond((p_args->>'p_id')::bigint,(p_args->>'p_accept')::boolean);
+ else raise exception 'This command is not available';
+ end case;
+ insert into public.peris_command_receipts(owner_id,request_id,function_name,arguments,response)values(u,p_request_id,p_function,p_args,coalesce(answer,'{}'::jsonb));
+ return coalesce(answer,'{}'::jsonb);
+end $$;
+revoke all on function public.peris_start_raid(uuid,integer),public.peris_finish(bigint,text,text),public.peris_prepare_raid_for(uuid,bigint,integer,jsonb,jsonb),public.peris_prepare_city_raid(uuid,bigint,bigint,jsonb,jsonb,text),public.peris_trade_participants(uuid),public.peris_game_tick(integer),public.peris_submit_command(uuid,text,jsonb),public.peris_snapshot()from public,anon,authenticated;
+grant execute on function public.peris_game_tick(integer)to service_role;
+grant execute on function public.peris_submit_command(uuid,text,jsonb),public.peris_snapshot(),public.peris_scout_command(jsonb)to authenticated;$scouting_definition$;end if;end $restore_scouting$;
 commit;
