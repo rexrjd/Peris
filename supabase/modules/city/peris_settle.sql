@@ -13,6 +13,7 @@ begin
   perform public.peris_guild_reinforcements_advance(p_owner,p_until);
  end if;
  for s in select * from public.settlements where owner_id=p_owner and ruined_at is null order by id for update loop
+ if to_regprocedure('public.peris_loyalty_accrue(bigint,timestamp with time zone)')is not null then perform public.peris_loyalty_accrue(s.id,p_until);end if;
  perform public.peris_city_migrate(s.id);if not s.population_ready then perform public.peris_city_economy(s.id);end if;
  end loop;
  for event in select id,finish_at as at_time,false as expedition from public.peris_orders where owner_id=p_owner and finish_at<=p_until

@@ -4,6 +4,7 @@ begin
  if u is null then raise exception 'Authentication required';end if;
  perform public.peris_note_account_activity();
  perform public.peris_science_ensure(u);
+ if to_regprocedure('public.peris_loyalty_accrue(bigint,timestamp with time zone)')is not null then perform public.peris_loyalty_accrue(s.id,public.peris_game_now())from public.settlements s where s.owner_id=u;end if;
  perform public.peris_city_migrate(s.id) from public.settlements s where s.owner_id=u;
  if to_regprocedure('public.peris_supply_refresh(bigint,timestamp with time zone)')is not null then
   execute 'select public.peris_supply_refresh(id,public.peris_game_now())from public.settlements where owner_id=$1 and ruined_at is null'using u;
@@ -56,6 +57,7 @@ begin
  'claims',coalesce((select jsonb_agg(c)from public.peris_claims c where owner_id=u),'[]'::jsonb),
  'challenges',coalesce((select jsonb_agg(c)from public.peris_challenges c where (attacker_owner_id=u or defender_owner_id=u)and status='pending'and expires_at>public.peris_game_now()),'[]'::jsonb))into result;
  if to_regprocedure('public.peris_supply_refresh(bigint,timestamp with time zone)')is not null then result:=result||jsonb_build_object('troop_upkeep_version',1);end if;
+ if to_regclass('public.peris_conquest_version')is not null then result:=result||jsonb_build_object('conquest_version',1);end if;
  return result;
 end $$;
 

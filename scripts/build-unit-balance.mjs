@@ -2,9 +2,9 @@ import {readFile,writeFile} from 'node:fs/promises';
 const root=new URL('../',import.meta.url),data=JSON.parse(await readFile(new URL('src/features/army/domain/unitBalance.json',root),'utf8'));
 const quote=v=>"'"+String(v).replaceAll("'","''")+"'",json=v=>quote(JSON.stringify(v))+'::jsonb';
 const units=Object.keys(data.versions[1]),classes=['infantry','archers','cavalry'];
-if(units.length!==9||Object.keys(data.profiles).length!==11)throw Error('Expected nine roles and eleven factions');
+if(units.length!==10||Object.keys(data.profiles).length!==11)throw Error('Expected ten roles and eleven factions');
 for(const [version,rules]of Object.entries(data.versions))for(const [unit,r]of Object.entries(rules)){
- if(!units.includes(unit)||!classes.includes(r.combatClass)||!['barracks','stables','workshop'].includes(r.building))throw Error('Invalid unit '+version+'/'+unit);
+ if(!units.includes(unit)||!classes.includes(r.combatClass)||!['barracks','stables','workshop','main'].includes(r.building))throw Error('Invalid unit '+version+'/'+unit);
  for(const n of [r.attack,r.defence,r.speed,r.trainSeconds])if(!Number.isFinite(n)||n<=0)throw Error('Invalid stats');
  for(const n of [...Object.values(r.cost),...Object.values(r.researchCost),r.trainSeconds,r.researchSeconds,r.carry])if(!Number.isSafeInteger(n)||n<0)throw Error('Invalid cost/time');
 }

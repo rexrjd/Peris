@@ -1,0 +1,8 @@
+import type {BattleResult} from '../../battle/domain/types';
+import {Icon} from '../../../shared/ui/Icons';
+export function ConquestSummary({conquest}:{conquest:BattleResult['conquest']}){
+ if(!conquest)return null;
+ const number=(value:number)=>value.toLocaleString(undefined,{maximumFractionDigits:1});
+ const reasons:Record<string,string>={attacker_did_not_win:'Your army did not win the battle. Loyalty was not reduced.',insufficient_culture:'Insufficient culture when the battle ended. Loyalty was not reduced.',city_limit:'The ten-city limit, including reserved colonies, prevented persuasion.',no_surviving_diplomats:'No participating diplomats survived to persuade the city.',ownership_changed:'The city changed ownership before persuasion could be applied.',city_ruined:'The city was reduced to ruins and cannot be captured.',ruler_defeated:'Your ruler was defeated before persuasion could be applied.'};
+ return <section className="report-conquest" aria-label="City capture"><h3><Icon name="crown" size={17}/>{conquest.captured?'City captured':conquest.reduction>0?'Loyalty reduced':'Capture unsuccessful'}</h3><dl><div><dt>Loyalty</dt><dd>{number(conquest.before)} → {number(conquest.after)} / 100</dd></div><div><dt>Surviving diplomats</dt><dd>{conquest.diplomats}</dd></div>{conquest.captured&&<div><dt>Culture spent</dt><dd>{conquest.culture_cost.toLocaleString()}</dd></div>}</dl>{conquest.reason&&<p>{reasons[conquest.reason]??conquest.reason}</p>}{conquest.captured?<p>One diplomat establishes the new government. Your surviving army occupies the captured city. Loyalty recovers by 25 per game hour.</p>:conquest.reduction>0?<p>The city remains with its ruler. Loyalty recovers by 25 per game hour.</p>:null}</section>;
+}

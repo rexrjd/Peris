@@ -46,7 +46,7 @@ export function Battle3DCanvas({ state, actions, onUnavailable, onInspectionChan
                     release=()=>{ownedNear.dispose();ownedFar.dispose();enemyNear.dispose();enemyFar.dispose();};
                     setPilotNotice(applied ? `${art.pilotReview.name} · ${art.pilotReview.edition} · Work in progress; ${applied} replacement ${applied === 1 ? 'role' : 'roles'}. Other units use the standard preview models.` : 'Orc review could not load. Standard preview models remain available.');
                 }
-                factory = createArmyFactory(ownArmy,loaded[1].value,refs.current.state.playerId,refs.current.state.world.formations,ownFar,loaded[3].value);
+                factory = createArmyFactory(ownArmy,loaded[1].value,refs.current.state.playerId,refs.current.state.world.formations,ownFar,loaded[3].value,art.faction,art.enemy);
             }
             if (cancelled) { release(); return; }
             if (!canvas.current || !labels.current || !selection.current) { release(); return; }

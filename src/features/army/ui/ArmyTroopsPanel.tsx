@@ -19,6 +19,7 @@ import { TROOP_PRESENTATION } from './troopPresentation';
 import { troopCardStats } from '../domain/troopCardStats';
 import { TroopStatSummary } from './TroopStatSummary';
 import {troopFoodPerHour} from '../../city/domain/troopSupply';
+import {visibleRecruitUnits} from './visibleRecruitUnits';
 
 export function ArmyTroopsPanel({ world, army, city, now, run, busy, onCity, onOpenCity, onLogistics }: {
     world: World; army: Army; city: Settlement; now: number; busy: boolean; run: (command: Command, message?: string) => void;
@@ -32,7 +33,7 @@ export function ArmyTroopsPanel({ world, army, city, now, run, busy, onCity, onO
     return <div className="army-troops-workspace">
         {world.troop_upkeep_version===1&&<p className="command-muted" aria-label="Army crop upkeep">Crop upkeep: {troopFoodPerHour(roster).toLocaleString()} / game hour{army.raid_reserve?` · ${troopFoodPerHour(readRoster(army.raid_reserve)).toLocaleString()} / hour for reserves at home`:''}.</p>}
         <section className="army-troops-section" aria-label="Army composition"><header><div><h2>Troops</h2><span>{count(overview.free)} spaces available{overview.queued > 0 ? ` · ${overview.queued} in training` : ''}</span></div><div><button className="command-button primary" onClick={() => setRecruit('infantry')}><Icon name="plus" size={16}/>Recruitment</button></div></header>
-            <div className="army-troop-grid">{RECRUIT_UNITS.map(unit => {
+            <div className="army-troop-grid">{visibleRecruitUnits(world).map(unit => {
                 const unlocked = unitUnlocked(world, army.owner_id, city.id, unit, now), stats = troopCardStats(world, army, city, unit, now);
                 return <article key={unit} className="army-troop-card" data-unit={unit} data-empty={!roster[unit]}><button className="army-troop-inspect" data-unit={unit} data-empty={!roster[unit]} aria-haspopup="dialog" aria-label={`${factionTroopName(faction, unit)} · ${count(roster[unit])} in army · View stats`} title={`View ${factionTroopName(faction, unit)} stats${unlocked ? '' : ' · Research required to recruit'}`} onClick={() => setInspect(unit)}><TroopIcon faction={faction} unit={unit}/><span><strong>{factionTroopName(faction, unit)}</strong><small>{TROOP_PRESENTATION[unit].category}</small><b>{count(roster[unit])}</b></span><span className="army-troop-card-hint" title={unlocked ? 'View full stats' : 'Research required'}><Icon name={unlocked ? 'arrow' : 'book'} size={13}/></span></button><TroopStatSummary {...stats}/></article>;
             })}</div>

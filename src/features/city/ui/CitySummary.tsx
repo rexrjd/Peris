@@ -16,9 +16,11 @@ import { FACTIONS, type Faction } from '../../factions/domain/factions';
 import { factionTroopName } from '../../frontier/ui/roster';
 import { territoryAllowance, territoryPopulation } from '../../map/domain/territory';
 import { cityMilitaryOverview, sameCityStation as sameStation } from '../domain/militaryOverview';
+import {TroopIcon} from '../../frontier/ui/TroopIcon';
 
 const resourceLabel = { wood: 'Timber', stone: 'Stone', food: 'Food', gold: 'Gold' } as const;
 function VillageTroopIcon({ unit, faction }: { unit: RecruitUnit; faction: Faction }) {
+    if(unit==='diplomat')return <TroopIcon faction={faction} unit={unit}/>;
     const cell = ['line_infantry','spear_guard','archer','elite','scout','light_cavalry','heavy_cavalry','ram','catapult'].indexOf(RECRUIT_RULES[unit].role);
     return <span className="village-troop-icon" aria-hidden="true" style={{ backgroundImage: `url(/art/battle/roster/${faction}.png)`, backgroundPosition: `${cell % 3 * 50}% ${Math.floor(cell / 3) * 50}%` }}/>;
 }
@@ -56,7 +58,7 @@ export function CityArmySummary({ world, sid, owner, now, onSelect }: {
     const { town, own, stationed, pool, cityDefenders, troopsByFaction, totals, reserved, training, movements } = cityMilitaryOverview(world, sid, owner, now);
     const recruitmentPlot = citySlots(world, sid).find(slot => slot.building_type === 'barracks' && slot.level > 0);
     const openRecruitment = (unit: RecruitUnit) => {
-        const building = RECRUIT_RULES[unit].building, slot = citySlots(world,sid).filter(slot=>slot.building_type===building).sort((a,b)=>b.level-a.level)[0];
+        const trainingBuilding=RECRUIT_RULES[unit].building,building=trainingBuilding==='main'?'market':trainingBuilding, slot = citySlots(world,sid).filter(slot=>slot.building_type===building).sort((a,b)=>b.level-a.level)[0];
         onSelect(slot ? `slot:${slot.slot_index}` : world.buildings.some(entry=>entry.settlement_id===sid&&entry.building_type===building) ? building : 'market');
     };
     return <aside className="village-rail village-army" aria-label="Village troops and movements"><section><h3><Icon name="shield" size={16}/>Army at home <b>{rosterTotal(totals).toLocaleString()}</b></h3><p className="village-muted">Ready troops in this village</p><div className="village-troops" aria-label="Troops stationed in this village">{[...troopsByFaction].flatMap(([culture, troops]) => UNIT_TYPES.filter(type => ['infantry','archers','cavalry'].includes(type) || troops[type] > 0).map(type => <button key={`${culture}:${type}`} data-faction={culture} onClick={()=>openRecruitment(type)} title={`${FACTIONS[culture].name} · ${factionTroopName(culture, type)} · Open ${RECRUIT_RULES[type].building} recruitment · Carry ${RECRUIT_RULES[type].carry} each. Includes legions and unassigned troops physically stationed here. Travelling and unfinished training are excluded.`}><VillageTroopIcon faction={culture} unit={type}/><span>{factionTroopName(culture, type)}</span><strong data-troop={type}>{troops[type].toLocaleString()}</strong></button>))}</div>

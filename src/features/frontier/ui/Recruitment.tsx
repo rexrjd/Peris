@@ -9,8 +9,8 @@ import { Resources } from './Resources';
 import { factionTroopName } from './roster';
 import { TroopIcon } from './TroopIcon';
 
-const buildingNames = { barracks: 'Barracks', stables: 'Stables', workshop: 'Workshop' };
-const buildingCopy = { barracks: 'Train your foot troops and research stronger guards.', stables: 'Train mounted troops and research scouts and heavy cavalry.', workshop: 'Research and build siege units. They carry no loot; building damage is a future feature.' };
+const buildingNames = { barracks: 'Barracks', stables: 'Stables', workshop: 'Workshop',main:'Main building' };
+const buildingCopy = { barracks: 'Train your foot troops and research stronger guards.', stables: 'Train mounted troops and research scouts and heavy cavalry.', workshop: 'Research and build siege units. They carry no loot; building damage is a future feature.',main:'Diplomatic envoys require account research in the main game.' };
 
 export function Recruitment({ state, now, locked, run, building, onBuilding }: {
     state: FrontierSnapshot; now: number; locked: boolean;

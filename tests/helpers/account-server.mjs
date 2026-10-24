@@ -71,10 +71,24 @@ export async function accountServer(){
   await db.query('select public.peris_write_roster($1,$2)',[army.id,JSON.stringify(roster)]);
   await db.query("select public.peris_write_roster(id,'{\"infantry\":30,\"archers\":0,\"cavalry\":0}')from public.armies where owner_id=$1",[rival]);
   return {city:{...city,x:camp.x,y:camp.y},armyId:army.id,roster};
+ },async captureFixture(owner,rival){
+  const fixture=await this.cityRaidFixture(owner,rival);
+  const roster={...fixture.roster,diplomat:30};
+  await db.query('select public.peris_write_roster($1,$2)',[fixture.armyId,JSON.stringify(roster)]);
+  await db.query('update public.players set culture_points=10000,culture_updated_at=public.peris_game_now()where id=$1',[owner]);
+  await db.query("update public.buildings set level=2 where settlement_id=(select id from public.settlements where owner_id=$1 order by id limit 1)and building_type='market'",[owner]);
+  await db.query('update public.settlements set loyalty=5,loyalty_updated_at=public.peris_game_now()where id=$1',[fixture.city.id]);
+  await db.query("insert into public.peris_research_progress(owner_id,technology_id,seconds,completed_at)select $1,id,seconds,public.peris_game_now()from public.peris_technology_catalog where id in('command','logistics','diplomacy')on conflict(owner_id,technology_id)do update set seconds=excluded.seconds,completed_at=excluded.completed_at",[owner]);
+  return {...fixture,roster};
+ },async captureCity(id){return(await db.query('select id,owner_id,loyalty from public.settlements where id=$1',[id])).rows[0];
+ },async startCityRaid(id){
+  const army=(await db.query('select * from public.armies where id=$1',[id])).rows[0];
+  await db.query("update public.armies set march_sent_at=public.peris_game_now()-interval '35 seconds',march_cancel_until=public.peris_game_now()-interval '5 seconds',departure_at=public.peris_game_now()-interval '5 seconds',arrival_at=public.peris_game_now()-interval '1 second'where id=$1",[id]);
+  await db.query('select public.peris_sync_owner($1)',[army.owner_id]);
+  return(await db.query("select id from public.battles where attacker_army_id=$1 and status='active'and raid_city_id is not null",[id])).rows[0]?.id;
  },async raidArmy(id){return(await db.query('select * from public.armies where id=$1',[id])).rows[0];},async resolveCityRaid(id){
   const army=(await db.query('select * from public.armies where id=$1',[id])).rows[0];
-  await db.query("update public.armies set march_sent_at=now()-interval '35 seconds',march_cancel_until=now()-interval '5 seconds',departure_at=now()-interval '5 seconds',arrival_at=now()-interval '1 second'where id=$1",[id]);
-  await db.query('select public.peris_sync_owner($1)',[army.owner_id]);
+  if(!(await db.query("select id from public.battles where attacker_army_id=$1 and status='active'and raid_city_id is not null",[id])).rows.length)await this.startCityRaid(id);
   const battle=(await db.query("select id from public.battles where attacker_army_id=$1 and status='active'and raid_city_id is not null",[id])).rows[0];
   await db.query("update public.battle_formations set soldiers=0,status='routed'where battle_id=$1 and side='defender'",[battle.id]);
   await db.query("select public.peris_finish($1,'attacker','Army routed')",[battle.id]);

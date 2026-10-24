@@ -18,7 +18,7 @@ type Recipe=Partial<UnitRoster>;
 type Profiles=Record<Faction,number[][]>;
 export const recipes:Recipe[]=[{infantry:60,archers:30,cavalry:12},{infantry:90,archers:10,cavalry:12},{infantry:30,archers:45,cavalry:18}];
 export function economy(roster:Recipe){
- const spend:Resources={wood:0,stone:0,food:0,gold:0},training={barracks:0,stables:0,workshop:0};
+ const spend:Resources={wood:0,stone:0,food:0,gold:0},training={barracks:0,stables:0,workshop:0,main:0};
  for(const unit of RECRUIT_UNITS){const r=unitRule(unit,2),n=roster[unit]??0;for(const key of RESOURCES)spend[key]+=n*r.cost[key];training[r.building]+=n*r.trainSeconds;}
  return {spend,training};
 }

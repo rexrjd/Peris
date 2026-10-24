@@ -1,6 +1,7 @@
 [
   "schema/base.sql",
   "time/game-clock.sql",
+  "city/conquest-schema.sql",
   "city/ruins-columns.sql",
   "accounts/sessions.sql",
   "empire/schema.sql",
@@ -72,6 +73,7 @@
   "battle/automatic.sql",
   "campaign/player-raids.sql",
   "city/crop-upkeep.sql",
+  "city/conquest.sql",
   "accounts/policies.sql",
   "campaign/battle-worker.sql",
   "campaign/game-worker.sql",

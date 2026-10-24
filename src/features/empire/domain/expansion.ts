@@ -79,7 +79,9 @@ export function nextEntityId(world: World) {
 }
 export function completeExpedition(world: World, expedition: SettlerExpedition) {
     if (expedition.status !== 'travelling') return;
-    if (world.players.find(p=>p.id===expedition.owner_id)?.defeated_at||world.settlements.find(s=>s.id===expedition.origin_settlement_id)?.ruined_at){expedition.status='returned';return;}
+    let origin=world.settlements.find(s=>s.id===expedition.origin_settlement_id&&s.owner_id===expedition.owner_id&&!s.ruined_at);
+    if(!origin){origin=world.settlements.filter(s=>s.owner_id===expedition.owner_id&&!s.ruined_at).sort((a,b)=>a.id-b.id)[0];if(origin)expedition.origin_settlement_id=origin.id;}
+    if (world.players.find(p=>p.id===expedition.owner_id)?.defeated_at||!origin){expedition.status='returned';return;}
     // Exclude this reservation when rechecking the site at arrival.
     const check = { ...world, settler_expeditions: world.settler_expeditions?.filter(e => e !== expedition) };
     if (foundingReason(check, expedition.owner_id, expedition.col, expedition.row)) {
@@ -92,7 +94,7 @@ export function completeExpedition(world: World, expedition: SettlerExpedition) 
         return;
     }
     const id = nextEntityId(world), point = cellCenter(expedition.col, expedition.row), source = world.settlements.find(s => s.id === expedition.origin_settlement_id)!;
-    world.settlements.push({ id, owner_id: expedition.owner_id, name: expedition.name, ...point, faction: source.faction, settlers: 0, wood: 750, stone: 600, food: 800, gold: 250, capacity: 5000, food_capacity: 5000, wood_rate: 14, stone_rate: 12, food_rate: 18, gold_rate: 3, resources_updated_at: expedition.arrival_at, created_at: expedition.arrival_at });
+    world.settlements.push({ id, owner_id: expedition.owner_id, name: expedition.name, ...point, faction: source.faction, settlers: 0, wood: 750, stone: 600, food: 800, gold: 250, capacity: 5000, food_capacity: 5000, wood_rate: 14, stone_rate: 12, food_rate: 18, gold_rate: 3, resources_updated_at: expedition.arrival_at, created_at: expedition.arrival_at,...(world.conquest_version===1?{loyalty:100,loyalty_updated_at:expedition.arrival_at}:{}) });
     const types: BuildingType[] = ['lumber', 'quarry', 'farm', 'market', 'barracks', 'stables', 'wall', 'storehouse'];
     world.buildings.push(...types.map((type, index) => ({ id: id + index + 1, settlement_id: id, building_type: type, level: 0, updated_at: expedition.arrival_at })));
     refreshCityEconomy(world, id); expedition.status = 'founded'; expedition.settlement_id = id;

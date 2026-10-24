@@ -34,7 +34,8 @@ export function CitySceneWorkspace({ world, owner, sid, now, plots, scene, onCit
             const current = world.orders.find(row => `order:${row.id}` === event.id && row.owner_id === owner);
             if (current?.kind === 'upgrade') { onSelect(constructionTarget(current)); return; }
             if (current?.kind === 'recruit') {
-                const buildingType = RECRUIT_RULES[current.item as RecruitUnit]?.building;
+                const recruitmentBuilding = RECRUIT_RULES[current.item as RecruitUnit]?.building;
+                const buildingType=recruitmentBuilding==='main'?'market':recruitmentBuilding;
                 const buildingPlot = plots.find(plot => plot.type === buildingType && plot.level > 0);
                 if (buildingPlot) { onSelect(buildingPlot.key); return; }
             }

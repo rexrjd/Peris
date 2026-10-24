@@ -26,6 +26,7 @@ import { settleLocal } from './settlement';
 import { deliverCampLoot } from './loot';
 import {settleBattleFood} from '../../city/domain/battleFood';
 import {refreshTroopUpkeep} from '../../city/domain/troopSupply';
+import {applyCityConquest} from '../../city/domain/conquest';
 
 export function beginCityRaid(world:World, owner:string, armyId:number, nextId:()=>number, now=worldGameNow(world)):Battle|undefined {
     const army=world.armies.find(row=>row.id===armyId&&row.owner_id===owner);
@@ -99,13 +100,16 @@ export function settleCityRaid(world:World,battle:Battle,nextId:()=>number,now=w
         if(force){const current=readRoster(force);writeRoster(force,Object.fromEntries(RECRUIT_UNITS.map(unit=>[unit,Math.max(0,current[unit]-loss[unit])])) as typeof current);}
     }
     world.garrisons=world.garrisons?.filter(row=>rosterTotal(readRoster(row))>0);
-    if(world.troop_upkeep_version!==1)writeRoster(army,attacking);restoreRaidReserve(army);
-    result.loot=won?takeLoot(city,Math.floor(carryingCapacity(attacking)*researchFactor(world,army.owner_id,'carry'))):emptyResources();
+    if(world.troop_upkeep_version!==1)writeRoster(army,attacking);
+    const sameDefender=city.owner_id===battle.defender_owner_id&&!city.ruined_at;
+    result.loot=won&&sameDefender?takeLoot(city,Math.floor(carryingCapacity(attacking)*researchFactor(world,army.owner_id,'carry'))):emptyResources();
     for(const key of RESOURCES)city[key]-=result.loot[key];
     const engines=emptyRoster();
     for(const row of world.formations.filter(row=>row.battle_id===battle.id&&row.side==='attacker'&&row.status!=='routed'))engines[row.recruit_unit??row.unit_type]+=row.soldiers;
-    result.siege_damage=won?damageCity(world,city.id,engines,battle.siege_target,new Date(now).toISOString(),army.owner_id):[];
-    army.carried_loot={...result.loot};army.loot_report_id=battle.id;
+    result.siege_damage=won&&sameDefender?damageCity(world,city.id,engines,battle.siege_target,new Date(now).toISOString(),army.owner_id):[];
+    const conquest=applyCityConquest(world,battle,attacking.diplomat,nextId,now);
+    if(conquest?.captured){for(const key of RESOURCES)city[key]+=result.loot[key];result.loot=emptyResources();army.carried_loot=null;army.loot_report_id=null;}
+    else{restoreRaidReserve(army);army.carried_loot={...result.loot};army.loot_report_id=battle.id;}
     recordBattleEconomics(result);
     for(const side of ['attacker','defender'] as const){
         const owner=side==='attacker'?battle.attacker_owner_id:battle.defender_owner_id!;
@@ -116,7 +120,7 @@ export function settleCityRaid(world:World,battle:Battle,nextId:()=>number,now=w
         if(victory){const player=world.players.find(row=>row.id===owner)!;player.victories++;player.prestige+=25;}
         world.reports.unshift({id:nextId(),owner_id:owner,battle_id:battle.id,title:side==='attacker'?city.name:`Defence of ${city.name}`,won:victory,result:{...result,loot:{...result.loot},report_side:side,hero_reward:reward},created_at:new Date(now).toISOString()});
     }
-    if(!startRaidReturn(world,army,now)){
+    if(!conquest?.captured&&!startRaidReturn(world,army,now)){
         const safe=world.settlements.find(row=>row.id===army.home_settlement_id&&!row.ruined_at)??livingCities(world,army.owner_id)[0];
         if(!safe) return;
         const home=homeArmyPosition(safe);

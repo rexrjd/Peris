@@ -224,6 +224,29 @@
           "food": 100,
           "gold": 60
         }
+      },
+      "diplomat": {
+        "role": "diplomat",
+        "building": "main",
+        "combatClass": "infantry",
+        "cost": {
+          "wood": 400,
+          "stone": 200,
+          "food": 600,
+          "gold": 100
+        },
+        "carry": 0,
+        "speed": 30,
+        "trainSeconds": 200,
+        "attack": 0.1,
+        "defence": 0.5,
+        "researchSeconds": 90,
+        "researchCost": {
+          "wood": 800,
+          "stone": 400,
+          "food": 1200,
+          "gold": 200
+        }
       }
     },
     "2": {
@@ -432,6 +455,29 @@
           "stone": 180,
           "food": 100,
           "gold": 60
+        }
+      },
+      "diplomat": {
+        "role": "diplomat",
+        "building": "main",
+        "combatClass": "infantry",
+        "cost": {
+          "wood": 400,
+          "stone": 200,
+          "food": 600,
+          "gold": 100
+        },
+        "carry": 0,
+        "speed": 30,
+        "trainSeconds": 200,
+        "attack": 0.1,
+        "defence": 0.5,
+        "researchSeconds": 90,
+        "researchCost": {
+          "wood": 800,
+          "stone": 400,
+          "food": 1200,
+          "gold": 200
         }
       }
     }

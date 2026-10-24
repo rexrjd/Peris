@@ -246,6 +246,49 @@ const marketHooks=await readSource(path.join(root,'supabase/modules/city/market-
 const settleSource=await readSource(path.join(root,'supabase/modules/city/peris_settle.sql'))
 const settleCore=(settleSource.match(/create or replace function public\.[\s\S]*?\$\$;/g)??[]).find(x=>x.startsWith('create or replace function public.peris_settle_core('))
 const gameClock=await readSource(path.join(root,'supabase/modules/time/game-clock.sql'))
+// Capture is an explicit capability. A focused rerun must preserve it once
+// installed, including ten-role functions and the cached crop integrators.
+const captureDefinitions=[]
+for(const[file,names]of[
+ ['research/schema.sql',['peris_account_faction','peris_research_bonus']],
+ ['research/science.sql',['peris_research_command']],
+ ['factions/city-factions.sql',['peris_set_faction']],
+ ['map/garrisons.sql',['peris_garrison_collect_for','peris_collect_garrison']],
+ ['map/march-orders.sql',['peris_cancel_march','peris_prepare_raid_for']],
+ ['city/city-garrisons.sql',['peris_manage_city_garrison']],
+ ['city/garrison-logistics.sql',['peris_send_city_reinforcements','peris_city_reinforcements_advance']],
+ ['city/guild-reinforcements.sql',['peris_send_guild_reinforcements','peris_guild_reinforcements_advance']],
+ ['battle/peris_add_formations.sql',['peris_add_formations']],
+ ['campaign/player-raids.sql',['peris_prepare_city_raid','peris_start_city_raid','peris_finish_city_raid']],
+ ['empire/gameplay.sql',['peris_found_complete']],
+ ['city/peris_settle.sql',['peris_settle_core','peris_settle']],
+ ['snapshot/peris_snapshot.sql',['peris_snapshot']],
+]){
+ const source=await readSource(path.join(root,'supabase/modules',file))
+ const defs=source.match(/create or replace function public\.[\s\S]*?\$\$;/g)??[]
+ for(const name of names){const def=defs.find(x=>x.startsWith('create or replace function public.'+name+'('));if(!def)throw Error('Missing capture dependency '+name);captureDefinitions.push(def)}
+}
+const captureSource=[
+ participantLocks,
+ "alter table public.players add column if not exists research_faction text check(research_faction in('roman','spartan','persian','egyptian','orc','elf','dwarf','gnome','pandaren','undead','demon'));",
+ await readSource(path.join(root,'supabase/modules/city/conquest-schema.sql')),
+ await readSource(path.join(root,'supabase/modules/army/unit-balance-catalog.sql')),
+ await readSource(path.join(root,'supabase/modules/research/catalog.sql')),
+ await readSource(path.join(root,'supabase/modules/army/roster.sql')),
+ 'alter table public.battle_formations drop constraint if exists battle_formations_unit_attack_check;alter table public.battle_formations add constraint battle_formations_unit_attack_check check(unit_attack between .1 and 20);',
+ await readSource(path.join(root,'supabase/modules/army/peris_queue_recruit.sql')),
+ cropSource,
+ await readSource(path.join(root,'supabase/modules/city/conquest.sql')),
+ ...captureDefinitions,
+ 'revoke all on function public.peris_account_faction(uuid)from public,anon,authenticated;',
+ 'revoke all on function public.peris_add_formations(bigint,uuid,text,integer,integer,integer,numeric),public.peris_prepare_city_raid(uuid,bigint,bigint,jsonb,jsonb,text),public.peris_start_city_raid(uuid,bigint),public.peris_finish_city_raid(bigint,text,text),public.peris_found_complete(bigint),public.peris_settle_core(uuid,timestamptz),public.peris_settle(uuid,timestamptz)from public,anon,authenticated;',
+].join('\n')
+outputs['UPGRADE_CITY_CAPTURE.sql']=[
+ '-- PERIS city capture and diplomats. Apply after current V19 + Crop Upkeep. Repeatable; never deployed automatically.',
+ 'begin;',
+ "do $$begin if to_regclass('public.peris_crop_version')is null or to_regclass('public.peris_trade_routes')is null then raise exception 'Install current Crop Upkeep and Market Routes first';end if;end $$;",
+ captureSource,"notify pgrst,'reload schema';",'commit;',
+].join('\n')
 for(const[name,content]of Object.entries(outputs)){
  let complete=content
  // Rerunning an older focused installer must retain an already activated crop economy.
@@ -264,6 +307,9 @@ for(const[name,content]of Object.entries(outputs)){
  if(complete.includes('public.peris_game_now()')&&!complete.includes('create or replace function public.peris_game_now()')){
   if(!/^begin;$/m.test(complete))throw Error('Missing transaction boundary for clock dependency: '+name)
   complete=complete.replace(/^begin;$/m,()=> 'begin;\n'+gameClock)
+ }
+ if(!complete.includes('create table if not exists public.peris_conquest_version')&&/^begin;$/m.test(complete)&&/create or replace function public\.(peris_snapshot|peris_finish|peris_finish_city_raid|peris_population_accrue|peris_city_economy|peris_roster|peris_market_settle|peris_settle|peris_queue_recruit)/.test(complete)){
+  complete=complete.replace(/commit;\s*$/,()=> '\ndo $restore_conquest$begin if to_regclass(\'public.peris_conquest_version\')is not null then execute $conquest_definition$'+captureSource+'$conquest_definition$;end if;end $restore_conquest$;\ncommit;\n')
  }
  outputs[name]=complete
 }

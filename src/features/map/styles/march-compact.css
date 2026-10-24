@@ -1,4 +1,6 @@
 .modal-backdrop.march-compact-backdrop{background:#080c1240;backdrop-filter:none;padding:12px}
+.march-conquest{border:1px solid #cbb17b45;border-radius:7px;background:#cbb17b08;padding:9px 11px;margin:10px 0;color:#b9c9dc;font-size:10px;line-height:1.55}
+.march-conquest>strong{color:#e0c58e;font-size:11px}.march-conquest p{margin:6px 0}.march-conquest dl{margin:8px 0}.march-conquest dl>div{display:flex;justify-content:space-between;gap:8px}.march-conquest dt{color:#91a3bd}.march-conquest dd{margin:0;color:#e1e9f4}.march-conquest dd small{color:#91a3bd}
 .march-compact-backdrop .modal.march-compact{display:flex;flex-direction:column;width:min(510px,calc(100vw - 24px));max-height:min(610px,calc(100dvh - 44px));padding:16px 16px 0;background:#171d26;border:1px solid #ffffff19;border-radius:12px;overflow:hidden;color:#dce6f3}
 .march-compact .modal-close{top:12px;right:12px;width:28px;height:28px;min-height:28px;font:22px/1 Arial,sans-serif;background:none;border:0;color:#889bb7}
 .march-compact-heading{display:flex;align-items:center;gap:10px;flex:none;padding:0 34px 12px 0;border-bottom:1px solid #ffffff0c}

@@ -3,7 +3,7 @@ import type { World } from '../../../shared/model/world';
 import type { Army, ArmyTroops } from './types';
 import type { Settlement } from '../../city/domain/types';
 import { liveResources, affordable } from '../../city/domain/economy';
-import { armyAttack, slotLevels } from '../../city/domain/slots';
+import { armyAttack } from '../../city/domain/slots';
 import { armyPosition } from '../../map/domain/movement';
 import { wrappedWorldDelta } from '../../map/domain/dimensions';
 import { homeArmyPosition } from '../../map/domain/garrisons';
@@ -13,6 +13,7 @@ import { heroBonuses } from '../../heroes/domain/heroes';
 import { recruitSeconds } from './recruitment';
 import {unitRule,worldBalanceVersion} from './unitBalance';
 import { RECRUIT_RULES, RECRUIT_UNITS, readRoster, rosterTotal, validateRoster, type RecruitUnit } from './roster';
+import {unitTrainingLevel} from './trainingBuildings';
 
 export const ARMY_CAPACITY = 1000;
 export const STAT_NAMES = { attack: 'Attack', defence: 'Defence', power: 'Spell power', knowledge: 'Knowledge' } as const;
@@ -42,7 +43,7 @@ export function recruitmentPlan(world: World, army: Army, city: Settlement, type
     const version=worldBalanceVersion(world),rule=unitRule(type,version);
     const orders = destination === 'garrison' ? world.orders.filter(o => o.kind === 'recruit' && o.owner_id === army.owner_id && o.settlement_id === city.id && o.recruit_destination === 'garrison') : trainingOrders(world, army), queued = orders.reduce((n, o) => n + o.quantity, 0);
     const free = destination === 'garrison' ? 200 : Math.max(0, ARMY_CAPACITY - soldierTotal(army) - queued), resources = liveResources(city, now), cost = multiply(rule.cost, quantity);
-    const building = rule.building, level = slotLevels(world, city.id, building);
+    const building = rule.building, level = unitTrainingLevel(world, city.id, type);
     const near = atRecruitmentCity(army, city, now);
     const max = Math.max(0, Math.min(200, free, ...RESOURCES.filter(k => rule.cost[k] > 0).map(k => Math.floor(resources[k] / rule.cost[k]))));
     const reason = !unitUnlocked(world,army.owner_id,city.id,type,now) ? 'Unlock this unit in Research first.' : city.owner_id !== army.owner_id ? 'Choose one of your cities.' : destination === 'legion' && army.status === 'moving' ? 'Stop at a city before recruiting.' : destination === 'legion' && !near ? `Bring this army to ${city.name}.` : !level ? `Build ${building} in ${city.name}.` : orders.length >= 3 ? 'All three training slots are occupied.' : free === 0 ? 'This army has no room for more soldiers.' : !Number.isInteger(quantity) || quantity < 1 || quantity > 200 ? 'Choose 1–200 soldiers.' : quantity > free ? `Only ${free} spaces remain, including queued troops.` : !affordable(resources, cost) ? `${city.name} needs more supplies for this batch.` : null;

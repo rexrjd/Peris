@@ -1,4 +1,6 @@
 /* Shared identity for the live City and Map. All preview geometry is static. */
+.city-loyalty{display:flex;align-items:center;gap:7px;width:fit-content;max-width:100%;margin-top:5px;padding:6px 10px;border:1px solid #ffffff21;border-radius:8px;background:#242d33ed;color:#d8c197;font-size:11px}
+.city-loyalty strong{font-weight:600;color:#f0e7d7}.city-loyalty small{display:block;margin-top:1px;font-size:9px;color:#b6bdb8}
 .city-ruin-tabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin:4px 3px 7px;padding:3px;border-radius:8px;background:#141c22}
 .city-ruin-tabs button{padding:7px 4px;border:0;border-radius:6px;background:transparent;color:#b3bcc2;font-size:11px;cursor:pointer}
 .city-ruin-tabs button.selected{background:#45505a;color:#f1e7d4}

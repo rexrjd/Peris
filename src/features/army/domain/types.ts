@@ -1,5 +1,5 @@
 export type UnitType = 'infantry' | 'archers' | 'cavalry';
-export type ArmyTroops = Record<UnitType, number> & Partial<Record<'spearmen' | 'elite' | 'scout' | 'heavyCavalry' | 'ram' | 'catapult', number>>;
+export type ArmyTroops = Record<UnitType, number> & Partial<Record<'spearmen' | 'elite' | 'scout' | 'heavyCavalry' | 'ram' | 'catapult' | 'diplomat', number>>;
 export type Army = {
     unit_roster?: ArmyTroops | null;
     carried_loot?: import('../../../shared/model/resources').Resources | null;

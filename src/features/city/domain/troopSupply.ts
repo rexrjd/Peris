@@ -6,7 +6,7 @@ import {unitRule,worldBalanceVersion} from '../../army/domain/unitBalance';
 import {stationCell} from '../../map/domain/garrisons';
 import {populationRates} from './population';
 
-export const UNIT_CROP_PER_HOUR={infantry:1,spearmen:1,archers:1,elite:1,cavalry:2,scout:2,heavyCavalry:2,ram:3,catapult:4} as const;
+export const UNIT_CROP_PER_HOUR={infantry:1,spearmen:1,archers:1,elite:1,cavalry:2,scout:2,heavyCavalry:2,ram:3,catapult:4,diplomat:1} as const;
 export const troopFoodPerHour=(troops:ArmyTroops)=>RECRUIT_UNITS.reduce((n,u)=>n+(troops[u]??0)*UNIT_CROP_PER_HOUR[u],0);
 export type FoodForceRow={key:string;kind:string;ownerId:string;supplyingCityId:number;priority:1|2|3|4;roster:UnitRoster;write:(troops:UnitRoster)=>void};
 

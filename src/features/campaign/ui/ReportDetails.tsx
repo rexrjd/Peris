@@ -12,6 +12,7 @@ import { ARTIFACT_RARITY } from '../../heroes/domain/battleRewards';
 import { ReportEconomics } from './ReportEconomics';
 import { clock } from '../../../shared/time/clock';
 import { SiegeSummary } from './SiegeSummary';
+import {ConquestSummary} from './ConquestSummary';
 
 export function ReportDetails({world, playerId, report, onLocate}: {
     world: World; playerId: string; report: Report; onLocate?: (camp: World['camps'][number]) => void;
@@ -32,6 +33,7 @@ export function ReportDetails({world, playerId, report, onLocate}: {
         {!!reward?.artifacts.length && <section className="report-equipment" aria-label="Equipment received"><h3>Equipment received <span>{reward.artifacts.length}</span></h3><div>{reward.artifacts.map(item=>{const artifact=ARTIFACTS[item.artifact_id];if(!artifact)return null;const rarity=ARTIFACT_RARITY[item.artifact_id as keyof typeof ARTIFACT_RARITY]??'Common';return <article key={item.id} title={artifact.description}><ArtifactArt artifactId={item.artifact_id}/><div><strong>{artifact.name}</strong><small className={`rarity-${rarity.toLowerCase()}`}>{rarity}</small></div></article>;})}</div><p>In your shared backpack. Equip from Armies.</p></section>}
         {reward?.inventory_full && <p className="report-note">Backpack full. No equipment was added.</p>}
         <SiegeSummary damage={result.siege_damage}/>
+        <ConquestSummary conquest={result.conquest}/>
         <section className="report-resource-detail" aria-label="Resource delivery"><h3>{side==='defender'&&result.raid_city?'Taken from this city':result.delivered ? 'Delivered to your home city' : returning ? 'Travelling home' : 'Recorded spoils'}</h3><Cost cost={result.delivered ?? result.loot} compact showZero/>{side!=='defender'&&!result.delivered && receipt.loot > 0 && <p>{returning ? 'Final net resources are available after return.' : 'Home delivery is not recorded in this receipt.'}</p>}{Object.values(result.overflow ?? {}).some(value=>value>0) && <details><summary>Storage overflow</summary><Cost cost={result.overflow!} compact showZero/></details>}</section>
         {side && <ReportEconomics result={result} side={side} returning={returning && !result.delivered}/>}
         {side && <section className="report-troops" aria-label="Surviving troops"><h3>Surviving troops <span>{survived?.toLocaleString()}</span></h3>{troops ? <TroopSummary troops={troops} faction={result[`${side}_faction`]}/> : <p>Troop identities were not recorded.</p>}</section>}

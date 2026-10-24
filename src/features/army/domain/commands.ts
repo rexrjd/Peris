@@ -10,7 +10,7 @@ import { soldierTotal } from './units';
 import { RECRUIT_RULES, RECRUIT_UNITS } from './roster';
 import {unitRule,worldBalanceVersion} from './unitBalance';
 import { recruitSeconds } from './recruitment';
-import { slotLevels } from '../../city/domain/slots';
+import {unitTrainingLevel,trainingBuildingName} from './trainingBuildings';
 import { homeArmyPosition } from '../../map/domain/garrisons';
 export function recruitSoldiers(context: LocalCommandContext, cmd: Extract<Command, {
     type: 'recruit';
@@ -31,8 +31,8 @@ export function recruitSoldiers(context: LocalCommandContext, cmd: Extract<Comma
         throw new Error('Army capacity is 1,000 soldiers.');
     if (w.orders.filter(o => o.kind === 'recruit' && (destination === 'garrison' ? o.settlement_id === s.id && o.recruit_destination === 'garrison' : o.recruit_destination !== 'garrison' && (o.army_id ?? w.armies[0].id) === a!.id)).length >= 3)
         throw new Error('Training queue is full.');
-    const level = slotLevels(w,s.id,rule.building);
-    if (!level) throw new Error(`Build ${rule.building} first.`);
+    const level = unitTrainingLevel(w,s.id,cmd.item);
+    if (!level) throw new Error(rule.building==='main'?'Upgrade the Main building to level 2 first.':`Build ${trainingBuildingName(rule.building)} first.`);
     spend(multiply(rule.cost, cmd.quantity));
     const start = Math.max(Date.parse(now), ...w.orders.filter(o => o.kind === 'recruit' && o.settlement_id === s.id && RECRUIT_RULES[o.item as keyof typeof RECRUIT_RULES]?.building === rule.building).map(o => Date.parse(o.finish_at)));
     w.orders.push({ id: context.nextId(), owner_id: context.playerId, settlement_id: s.id, army_id: a?.id, recruit_destination: destination, kind: 'recruit', item: cmd.item, quantity: cmd.quantity, started_at: new Date(start).toISOString(), finish_at: new Date(start + recruitSeconds(cmd.item, cmd.quantity, level,trainingBoost(w,context.playerId),version) * 1000).toISOString() });

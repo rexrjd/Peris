@@ -1,4 +1,4 @@
--- Canonical nine-role inventories in the existing realm. Legacy class totals remain compatible.
+-- Canonical ten-role inventories in the existing realm. Legacy class totals remain compatible.
 alter table public.armies add column if not exists unit_roster jsonb;
 alter table public.armies add column if not exists carried_loot jsonb;
 alter table public.armies add column if not exists farm_list_id bigint;
@@ -18,7 +18,7 @@ create or replace function public.peris_roster(p jsonb) returns jsonb language p
 declare unit_name text;value numeric;source jsonb:=coalesce(nullif(p->'unit_roster','null'::jsonb),p);result jsonb:='{}';
 begin
  if jsonb_typeof(source) is distinct from 'object' then raise exception 'Choose whole troop counts';end if;
- foreach unit_name in array array['infantry','spearmen','archers','elite','cavalry','scout','heavyCavalry','ram','catapult'] loop
+ foreach unit_name in array array['infantry','spearmen','archers','elite','cavalry','scout','heavyCavalry','ram','catapult','diplomat'] loop
   if source ? unit_name and jsonb_typeof(source->unit_name) is distinct from 'number' then raise exception 'Choose whole troop counts';end if;
   value:=coalesce((source->>unit_name)::numeric,0);
   if value<>trunc(value) or value<0 or value>1000000 then raise exception 'Choose nonnegative whole troop counts';end if;
@@ -51,7 +51,7 @@ begin
 end $$;
 
 -- Unit attributes are independent of hero and magical modifiers.
-alter table public.battle_formations add column if not exists unit_attack numeric not null default 1 check(unit_attack between .4 and 20);
+alter table public.battle_formations add column if not exists unit_attack numeric not null default 1 check(unit_attack between .1 and 20);
 alter table public.battle_formations add column if not exists unit_defence numeric not null default 1 check(unit_defence between .5 and 20);
 alter table public.battle_formations add column if not exists unit_speed numeric not null default 1 check(unit_speed between .15 and 3);
 create or replace function public.peris_roster_take_classes(p_roster jsonb,p_classes jsonb)returns jsonb
@@ -61,7 +61,7 @@ begin
  foreach typ in array array['infantry','archers','cavalry']loop
   remaining:=(p_classes->>typ)::integer;
   if remaining is null or remaining<0 then raise exception 'Choose available soldiers';end if;
-  foreach unit_name in array array['infantry','spearmen','archers','elite','cavalry','scout','heavyCavalry','ram','catapult']loop
+  foreach unit_name in array array['infantry','spearmen','archers','elite','cavalry','scout','heavyCavalry','ram','catapult','diplomat']loop
    if (select combat_class from public.peris_unit_catalog where unit=unit_name)<>typ then continue;end if;
    amount:=least(remaining,(available->>unit_name)::integer);remaining:=remaining-amount;
    chosen:=jsonb_set(chosen,array[unit_name],to_jsonb(amount));

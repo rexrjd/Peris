@@ -14,15 +14,15 @@ try{
  await db.exec(`create schema auth;create table auth.users(id uuid primary key);create role anon;create role authenticated;create role service_role;create function auth.uid()returns uuid language sql as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;grant usage on schema public,auth to authenticated,anon,service_role;grant execute on function auth.uid()to authenticated,anon;create publication supabase_realtime;`);
  await db.exec(await readFile('supabase/FRESH_INSTALL_V16.sql','utf8'));
  await admin(`insert into auth.users values('${owner}')`);await login();await rpc('create_player',['Role parity']);let world=await snap(),army=world.armies[0],city=world.settlements[0];
- const initial={...emptyRoster(),infantry:12,spearmen:4,archers:5,elite:3,cavalry:8,scout:6,heavyCavalry:2,ram:1,catapult:2};
+ const initial={...emptyRoster(),infantry:12,spearmen:4,archers:5,elite:3,cavalry:8,scout:6,heavyCavalry:2,ram:1,catapult:2,diplomat:3};
  await admin(`select public.peris_write_roster(${army.id},'${JSON.stringify(initial)}'::jsonb);update public.settlements set gold=5000,wood=5000,stone=5000,food=5000,resources_updated_at=now()where id=${city.id};`);await login();
  await rpc('peris_empire_command',[{type:'recruitHero',settlementId:city.id,name:'Receiving legion',heroClass:'ranger'}]);world=await snap();const second=world.armies.find((entry:any)=>entry.id!==army.id);assert.ok(second);
- const selected={...emptyRoster(),elite:2,scout:3,catapult:1};await rpc('peris_empire_command',[{type:'transferTroops',armyId:army.id,targetArmyId:second.id,infantry:0,archers:0,cavalry:0,troops:selected}]);world=await snap();
+ const selected={...emptyRoster(),elite:2,scout:3,catapult:1,diplomat:2};await rpc('peris_empire_command',[{type:'transferTroops',armyId:army.id,targetArmyId:second.id,infantry:0,archers:0,cavalry:0,troops:selected}]);world=await snap();
  assert.deepEqual(readRoster(world.armies.find((entry:any)=>entry.id===second.id)),selected);assert.deepEqual(addRosters(readRoster(world.armies.find((entry:any)=>entry.id===army.id)),selected),initial);
  for(const troops of [{...emptyRoster(),scout:100},{...emptyRoster(),scout:1.5},{...emptyRoster(),catapult:-1},emptyRoster()])await assert.rejects(()=>rpc('peris_empire_command',[{type:'transferTroops',armyId:army.id,targetArmyId:second.id,infantry:0,archers:0,cavalry:0,troops}]));
  assert.deepEqual(readRoster((await snap()).armies.find((entry:any)=>entry.id===second.id)),selected);
  await rpc('peris_empire_command',[{type:'transferTroops',armyId:army.id,targetArmyId:second.id,infantry:2,archers:0,cavalry:1}]);world=await snap();assert.equal(readRoster(world.armies.find((entry:any)=>entry.id===second.id)).infantry,2);assert.equal(readRoster(world.armies.find((entry:any)=>entry.id===second.id)).cavalry,1);
- console.log('PASS · exact nine-role transfer keeps identities, rejects invalid counts atomically and supports old class commands');
+ console.log('PASS · exact ten-role transfer keeps identities, rejects invalid counts atomically and supports old class commands');
  await admin(`select public.peris_write_roster(${army.id},'${JSON.stringify(initial)}'::jsonb)`);await login();world=await snap();army=world.armies.find((entry:any)=>entry.id===army.id);const origin={x:army.target_x,y:army.target_y};
  await assert.rejects(()=>rpc('peris_march_speed',[army.id]),/permission/);
  const camp=world.camps.filter((entry:any)=>entry.bandit).find((entry:any)=>findMarchPath(origin,entry));assert.ok(camp);const route=findMarchPath(origin,camp)!;

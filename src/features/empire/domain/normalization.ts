@@ -11,6 +11,8 @@ export function normalizeRealm(world: World, now = world.server_now, associateOr
     // receipts retain their old version; future local commands use the new rules.
     for(const battle of world.battles)battle.balance_version??=1;
     world.unit_balance_version=2;
+    world.conquest_version=1;
+    for(const city of world.settlements){city.loyalty??=100;city.loyalty_updated_at??=city.resources_updated_at;}
     if(world.version===6){
         if (world.camp_balance_version !== 1) {
             const definitions = new Map([...CAMPS, ...BANDIT_CAMPS].map(camp => [camp.id, camp]));

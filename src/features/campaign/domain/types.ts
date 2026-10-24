@@ -26,6 +26,8 @@ export type Player = {
     upgrades: number;
     culture_points?: number;
     culture_updated_at?: string;
+    /** Account heritage stays stable when cities change hands. */
+    research_faction?: import('../../factions/domain/factions').Faction;
 };
 export type Report = {
     camp_id?: number; farm_list_id?: number | null;

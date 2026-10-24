@@ -64,18 +64,20 @@ try{
  assert.deepEqual(delivered.estimated_profit,{wood:-32,stone:-23,food:-24,gold:-9},'historical return uses v1 fallback prices');
  const afterDelivery=await snapshot();await db.query('select public.peris_deliver_loot($1)',[army.id]);assert.deepEqual(await snapshot(),afterDelivery);
  await db.exec(`update public.battles set status='resolved',phase='finished';delete from public.peris_orders;delete from public.peris_research_progress;
- insert into public.peris_city_slots(settlement_id,slot_index,building_type,level)values(${army.home_settlement_id},0,'barracks',1),(${army.home_settlement_id},1,'stables',1),(${army.home_settlement_id},2,'workshop',1)on conflict(settlement_id,slot_index)do update set building_type=excluded.building_type,level=1;
+ update public.buildings set level=2 where settlement_id=${army.home_settlement_id} and building_type='market';
+ insert into public.peris_research_progress(owner_id,technology_id,seconds,completed_at)select '${owner}',id,seconds,public.peris_game_now()from public.peris_technology_catalog where id='diplomacy';
+ insert into public.peris_city_slots(settlement_id,slot_index,building_type,level)values(${army.home_settlement_id},0,'barracks',1),(${army.home_settlement_id},1,'stables',1),(${army.home_settlement_id},2,'workshop',1),(${army.home_settlement_id},3,'warehouse',2),(${army.home_settlement_id},4,'granary',2)on conflict(settlement_id,slot_index)do update set building_type=excluded.building_type,level=excluded.level;
  insert into public.peris_unit_research(settlement_id,unit,completes_at)select ${army.home_settlement_id},unit,now()-interval '1 day'from public.peris_unit_catalog on conflict(settlement_id,unit)do update set completes_at=excluded.completes_at;`);
  for(const faction of Object.keys(FACTIONS) as Faction[])for(const unit of RECRUIT_UNITS){
-  await db.query("update public.settlements set faction=$1,wood=5000,stone=5000,food=5000,gold=5000,resources_updated_at=now()+interval '1 hour' where id=$2",[faction,army.home_settlement_id]);
+  await db.query("update public.settlements set faction=$1,wood=10000,stone=10000,food=10000,gold=10000,resources_updated_at=now()+interval '1 hour' where id=$2",[faction,army.home_settlement_id]);
   await db.exec('set role authenticated');await db.query('select public.peris_queue_recruit($1,10)',[unit]);await db.exec('reset role');
   const city=(await db.query<any>('select wood,stone,food,gold from public.settlements where id=$1',[army.home_settlement_id])).rows[0];
   const stats=unitStats(unit,{version:2,faction});
-  for(const key of ['wood','stone','food','gold'] as const)assert.equal(Number(city[key]),5000-stats.cost[key]*10,`${faction}/${unit} ${key}`);
+  for(const key of ['wood','stone','food','gold'] as const)assert.equal(Number(city[key]),10000-stats.cost[key]*10,`${faction}/${unit} ${key}`);
   const seconds=(await db.query<any>("select extract(epoch from finish_at-started_at) seconds from public.peris_orders where kind='recruit'")).rows[0].seconds;
-  assert.equal(Number(seconds),stats.trainSeconds*10);await db.exec('delete from public.peris_orders');
+  assert.equal(Number(seconds),unit==='diplomat'?Math.ceil(stats.trainSeconds*10/1.18):stats.trainSeconds*10);await db.exec('delete from public.peris_orders');
  }
  await db.exec('set role authenticated');
  await assert.rejects(()=>db.query("select public.peris_unit_stats('infantry','roman',2)"),/permission/i);
- console.log('PASS · 198 stat combinations, 99 authoritative recruitment batches, captured doctrines, repeated hero application, versioned receipts, private helper and twice-applied populated upgrade');
+ console.log('PASS · 220 stat combinations, 110 authoritative recruitment batches including Diplomacy/Main-building administrators, captured doctrines, repeated hero application, versioned receipts, private helper and twice-applied populated upgrade');
 }catch(error:any){console.error(error.message);if(error.where)console.error(error.where);process.exitCode=1;}finally{await db.close();}

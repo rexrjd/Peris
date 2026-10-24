@@ -58,7 +58,7 @@ function settleLegacy(w: World, owner: string, now:number, travel=true, routes=t
             events.sort(compareEvents);continue;
         }
         if (event.expedition) {
-            const source = w.settlements.find(s => s.id === event.expedition!.origin_settlement_id && !s.ruined_at);
+            const source = w.settlements.find(s => s.id === event.expedition!.origin_settlement_id && s.owner_id===owner && !s.ruined_at)??w.settlements.filter(s=>s.owner_id===owner&&!s.ruined_at).sort((a,b)=>a.id-b.id)[0];
             if(!source){event.expedition.status='returned';continue;}
             if (source) accrueResources(source, event.at);
             completeExpedition(w, event.expedition); continue;

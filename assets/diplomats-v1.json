@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "license": "original",
+  "author": "Peris",
+  "created": "2026-10-24",
+  "description": "Original editable SVG civic portraits and instanced procedural robed envoys. No external artwork, raster images or GLB files.",
+  "sources": [
+    "src/features/army/ui/diplomatPresentation.tsx",
+    "src/features/battle/rendering/three/soldiers.ts",
+    "src/features/battle/rendering/soldiers.ts"
+  ],
+  "factions": ["roman", "spartan", "persian", "egyptian", "orc", "elf", "dwarf", "gnome", "pandaren", "undead", "demon"],
+  "identity": "Faction colors, robed civic silhouette, scroll and seal, staff with civic standard. Original faction names are recorded in DIPLOMAT_NAMES."
+}

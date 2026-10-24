@@ -1,4 +1,5 @@
 import { worldGameNow } from '../../../shared/time/gameClock';
+import {captureCultureReason} from '../../city/domain/conquest';
 import { commandArmy } from '../../empire/domain/context';
 import { isDefeated, livingCities } from '../../city/domain/ruins';
 import { SIEGE_TARGETS } from '../../city/domain/siege';
@@ -116,6 +117,7 @@ export function marchArmy(context: LocalCommandContext, cmd: Extract<Command, {
     if (troops && (!validateRoster(troops) || RECRUIT_UNITS.some(unit => (troops[unit] ?? 0) > available[unit])))
         throw new Error('Choose troops currently available in this legion.');
     if (troops && !rosterTotal(troops)) throw new Error('Send at least one soldier.');
+    if(cmd.type==='raidCity'&&(troops??available).diplomat){const reason=captureCultureReason(w,context.playerId,clock);if(reason)throw new Error(reason);}
     if (!isWalkable(Math.floor(x / CELL_SIZE), Math.floor(y / CELL_SIZE))) throw new Error('Land armies cannot march across the sea.');
     const pos = wrapWorldPoint(armyPosition(a, clock));
     // Legacy saves may already have an army resting on neutral land. Let it

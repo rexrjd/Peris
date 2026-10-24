@@ -5,7 +5,7 @@ import type {RecruitUnit} from '../../army/domain/roster';
 import type {Formation} from '../../battle/domain/types';
 import {RECRUIT_RULES} from '../../army/domain/roster';
 import {TECHNOLOGY_BY_ID,TECHNOLOGIES} from './catalog';
-export const accountFaction=(w:World,owner:string)=>w.settlements.filter(s=>s.owner_id===owner).sort((a,b)=>a.id-b.id)[0]?.faction??'roman';
+export const accountFaction=(w:World,owner:string)=>w.players.find(p=>p.id===owner)?.research_faction??w.settlements.filter(s=>s.owner_id===owner).sort((a,b)=>a.id-b.id)[0]?.faction??'roman';
 export function researchBonuses(w:World,owner:string){
  const bonus:Record<string,number>={},faction=accountFaction(w,owner);
  for(const row of w.research_progress??[]){if(row.owner_id!==owner||!row.completed_at)continue;const t=TECHNOLOGY_BY_ID.get(row.technology_id);if(!t||t.faction&&t.faction!==faction)continue;for(const [key,value]of Object.entries(t.effects))bonus[key]=Math.min(3,(bonus[key]??0)+value);}
@@ -13,6 +13,7 @@ export function researchBonuses(w:World,owner:string){
 }
 export const researchFactor=(w:World,owner:string,key:string)=>1+(researchBonuses(w,owner)[key]??0);
 export function unitUnlocked(w:World,owner:string,sid:number,unit:RecruitUnit,now=worldGameNow(w)){
+ if(unit==='diplomat')return w.conquest_version===1&&(researchBonuses(w,owner).unlock_diplomat??0)>0;
  return !RECRUIT_RULES[unit].researchSeconds||(researchBonuses(w,owner)['unlock_'+unit]??0)>0||!!w.unit_research?.some(r=>r.settlement_id===sid&&r.unit===unit&&Date.parse(r.completes_at)<=now);
 }
 export const unitTechnology=(unit:RecruitUnit)=>TECHNOLOGIES.find(t=>t.effects['unlock_'+unit]);

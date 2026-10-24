@@ -11,7 +11,7 @@ type GalleryPack = { sourceEdition?: string; near?: { sha256?: string }; far?: {
 export default function UnitGallery({ initialFaction, onClose, onBattle }: { initialFaction?: Faction; onClose?: () => void; onBattle?: (faction: Faction) => void } = {}) {
     const params = new URLSearchParams(location.search);
     const [faction, setFaction] = useState<Faction>(() => initialFaction ?? factionOf(params.get('faction') || 'orc'));
-    const [role, setRole] = useState<ArmyRole>(() => ARMY_ROLES.includes(params.get('unit') as ArmyRole) ? params.get('unit') as ArmyRole : 'line_infantry');
+    const [role, setRole] = useState<ArmyRole>(() => (ARMY_ROLES as readonly string[]).includes(params.get('unit')??'') ? params.get('unit') as ArmyRole : 'line_infantry');
     const [detail, setDetail] = useState<'near' | 'far'>('near'), [motion, setMotion] = useState<GalleryMotion>('idle'), [view, setView] = useState<GalleryView>('three');
     const [frame, setFrame] = useState(0), [playing, setPlaying] = useState(false), [status, setStatus] = useState('Preparing viewer…');
     const [pilot, setPilot] = useState<PilotReview>(), [available, setAvailable] = useState<Set<string>>(new Set()), [loaded, setLoaded] = useState(false);

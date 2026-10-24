@@ -63,7 +63,7 @@ export function redirectFromLostStation(world: World, army: Army, now: number) {
 export function settleRuinEvacuations(world: World, owner: string, now: number) {
     const transports=world.ruin_evacuations ?? [];
     for(const entry of transports.filter(item=>item.owner_id===owner&&Date.parse(item.arrival_at)<=now)) {
-        const destination=world.settlements.find(city=>city.id===entry.target_settlement_id&&!city.ruined_at);
+        const destination=world.settlements.find(city=>city.id===entry.target_settlement_id&&city.owner_id===owner&&!city.ruined_at);
         if (destination) addStationGarrison(world, owner, destination, entry.troops);
         else {
             const previous=world.settlements.find(city=>city.id===entry.origin_settlement_id);

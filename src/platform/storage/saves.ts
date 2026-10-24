@@ -189,7 +189,11 @@ export function validateSave(data: unknown): World {
     for(const key of ['settlements','armies','buildings','camps','orders','battles','formations','reports','progress','claims','challenges'] as const)
         if(!Array.isArray(w[key])||w[key].length>15000||w[key].some(r=>!r||typeof r!=='object'))invalid();
     if(w.troop_upkeep_version!==undefined&&w.troop_upkeep_version!==1)invalid();
+    if(w.conquest_version!==undefined&&w.conquest_version!==1)invalid();
+    if(w.players[0].research_faction!==undefined&&!isFaction(w.players[0].research_faction))invalid();
     for(const s of w.settlements){
+        if(s.loyalty!==undefined&&(!Number.isFinite(s.loyalty)||s.loyalty<0||s.loyalty>100))invalid();
+        if(s.loyalty_updated_at!==undefined&&(typeof s.loyalty_updated_at!=='string'||!Number.isFinite(Date.parse(s.loyalty_updated_at))))invalid();
         if(s.food_troop_upkeep!==undefined&&(!Number.isFinite(s.food_troop_upkeep)||s.food_troop_upkeep<0||s.food_troop_upkeep>1e7))invalid();
         if(s.starvation_losses!==undefined&&(!Number.isSafeInteger(s.starvation_losses)||s.starvation_losses<0))invalid();
         if(s.starvation_last_at!=null&&(typeof s.starvation_last_at!=='string'||!Number.isFinite(Date.parse(s.starvation_last_at))))invalid();
@@ -222,7 +226,7 @@ export function validateSave(data: unknown): World {
         if (camp.recruit_sequence !== undefined && (!Number.isSafeInteger(camp.recruit_sequence) || camp.recruit_sequence < 0 || camp.recruit_sequence > 1e9)) invalid();
     }
     if (w.unit_research !== undefined) {
-        if (!Array.isArray(w.unit_research) || w.unit_research.length > 90) invalid();
+        if (!Array.isArray(w.unit_research) || w.unit_research.length > 100) invalid();
         const known = new Set<string>();
         for (const research of w.unit_research) {
             const key = `${research.settlement_id}:${research.unit}`;
@@ -243,6 +247,10 @@ export function validateSave(data: unknown): World {
     }
     for (const entry of [...w.battles, ...w.reports]) if (entry.result) {
         const result = entry.result;
+        if(result.conquest!==undefined){
+            const c=result.conquest;
+            if(!c||!Number.isSafeInteger(c.city_id)||c.city_id<1||!Number.isFinite(c.before)||c.before<0||c.before>100||!Number.isFinite(c.after)||c.after<0||c.after>100||!Number.isSafeInteger(c.diplomats)||c.diplomats<0||c.diplomats>1000||!Number.isFinite(c.reduction)||c.reduction<0||c.reduction>25||Math.abs(c.before-c.after-c.reduction)>1e-7||typeof c.captured!=='boolean'||!Number.isSafeInteger(c.culture_cost)||c.culture_cost<0||c.culture_cost>30000||typeof c.former_owner_id!=='string'||c.former_owner_id.length>100||c.new_owner_id!==undefined&&(typeof c.new_owner_id!=='string'||c.new_owner_id.length>100)||c.reason!==undefined&&(typeof c.reason!=='string'||c.reason.length>500)||c.captured&&(c.after!==0||!c.new_owner_id||c.diplomats<1)||!c.captured&&c.culture_cost!==0)invalid();
+        }
         for (const side of ['attacker', 'defender'] as const) {
             const faction = result[`${side}_faction`]; if (faction !== undefined && !isFaction(faction)) invalid();
             for (const suffix of ['roster', 'survivor_roster'] as const) { const roster = result[`${side}_${suffix}`]; if (roster !== undefined && !validateRoster(roster, 4000)) invalid(); }

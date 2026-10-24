@@ -1,4 +1,11 @@
 -- Private account-wide research. Existing campaigns and accepted orders are retained.
+alter table public.players add column if not exists research_faction text check(research_faction in('roman','spartan','persian','egyptian','orc','elf','dwarf','gnome','pandaren','undead','demon'));
+create or replace function public.peris_account_faction(p_owner uuid)returns text language plpgsql stable security definer set search_path='' as $$
+begin
+ return coalesce((select research_faction from public.players where id=p_owner),(select faction from public.settlements where owner_id=p_owner order by id limit 1),'roman');
+end
+$$;
+revoke all on function public.peris_account_faction(uuid)from public,anon,authenticated;
 create table if not exists public.peris_technology_catalog(
  id text primary key,name text not null,branch text not null,era integer not null,
  faction text,cost integer not null check(cost>0),seconds integer not null check(seconds>0),
@@ -28,7 +35,7 @@ drop policy if exists "own technology progress" on public.peris_research_progres
 create policy "own technology progress" on public.peris_research_progress for select to authenticated using(owner_id=public.peris_player_id());
 create or replace function public.peris_research_bonus(p_owner uuid,p_key text)returns numeric language sql stable security definer set search_path='' as $$
  select least(3,coalesce(sum((c.effects->>p_key)::numeric),0))from public.peris_research_progress p join public.peris_technology_catalog c on c.id=p.technology_id
- where p.owner_id=p_owner and p.completed_at is not null and (c.faction is null or c.faction=coalesce((select faction from public.settlements where owner_id=p_owner order by id limit 1),'roman'))
+ where p.owner_id=p_owner and p.completed_at is not null and (c.faction is null or c.faction=public.peris_account_faction(p_owner))
 $$;
 create or replace function public.peris_research_factor(p_owner uuid,p_key text)returns numeric language sql stable security definer set search_path='' as $$select 1+public.peris_research_bonus(p_owner,p_key)$$;
 alter table public.settlements add column if not exists wood_research numeric not null default 1;

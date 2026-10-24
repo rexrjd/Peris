@@ -5,6 +5,7 @@ import { factionOf } from '../../factions/domain/factions';
 import type { BattleArt } from '../rendering/Battle3DCanvas';
 import { armyRole } from '../rendering/three/armyAssets';
 import rosters from '../../../../assets/concepts/faction-sheets-v1/expanded-rosters.json';
+import {DIPLOMAT_NAMES} from '../../army/ui/diplomatPresentation';
 
 export function battleArt(world: World, battle: Battle, playerId: string): BattleArt {
     const attacker = factionOf(battle.attacker_faction ?? armyFaction(world, world.armies.find(a => a.id === battle.attacker_army_id) ?? { owner_id: battle.attacker_owner_id, home_settlement_id: -1 }));
@@ -22,7 +23,7 @@ export function battlePresentation(world: World, battle: Battle, playerId: strin
     return { ...world, formations: world.formations.map((f: Formation) => {
         if (f.battle_id !== battle.id) return f;
         const role = armyRole(f, formations), faction = f.owner_id === playerId ? art.faction : art.enemy;
-        const name = profiles.get(faction)?.troops.find(unit => unit.id === role)?.name ?? f.label;
+        const name = role==='diplomat'?DIPLOMAT_NAMES[faction]:profiles.get(faction)?.troops.find(unit => unit.id === role)?.name ?? f.label;
         const peers = formations.filter(other => other.owner_id === f.owner_id && armyRole(other, formations) === role).sort((a, b) => a.id - b.id);
         return { ...f, label: peers.length > 1 ? `${name} ${peers.findIndex(other => other.id === f.id) + 1}` : name };
     }) };

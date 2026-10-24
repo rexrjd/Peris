@@ -2,11 +2,11 @@ import { AnimationMixer, Box3, DataTexture, FloatType, Group, InstancedBufferAtt
 import { publishedArmyUrl } from './publication';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { type Faction } from '../../../factions/domain/factions';
-import { soldierSlots, strikeAnimation, type SoldierFrame, type SoldierVisualFactory } from './soldiers';
+import { soldierSlots, strikeAnimation, createDiplomatSoldiers, type SoldierFrame, type SoldierVisualFactory } from './soldiers';
 import type { Formation } from '../../domain/types';
 
 export const ARMY_ROLES = ['line_infantry', 'spear_guard', 'archer', 'elite', 'scout', 'light_cavalry', 'heavy_cavalry', 'ram', 'catapult'] as const;
-export type ArmyRole = typeof ARMY_ROLES[number];
+export type ArmyRole = typeof ARMY_ROLES[number] | 'diplomat';
 
 /** Explicit mesh ownership wins over stale metadata on a copied mount rig. */
 export function armyMeshMatchesRole(mesh: Object3D, role: ArmyRole) {
@@ -168,7 +168,7 @@ export function loadArmyRole(url: string, role: ArmyRole): Promise<Army> {
 
 /** Load a batch once so its roles share imported textures and rig resources. */
 export function loadArmyRoles(url: string, roles: readonly ArmyRole[]): Promise<Army> {
-    if (!roles.length || new Set(roles).size !== roles.length || roles.some(role => !ARMY_ROLES.includes(role))) throw new Error('Expected distinct army roles');
+    if (!roles.length || new Set(roles).size !== roles.length || roles.some(role => !(ARMY_ROLES as readonly string[]).includes(role))) throw new Error('Expected distinct army roles');
     return loadArmySource(url, roles, false);
 }
 
@@ -211,14 +211,15 @@ export function overlayArmyRolesPair(baseNear: Army, baseFar: Army, roles: reado
 }
 
 export function armyRole(f: Formation, formations: readonly Formation[]): ArmyRole {
-    if (f.recruit_unit) return ({ infantry: 'line_infantry', spearmen: 'spear_guard', elite: 'elite', archers: 'archer', cavalry: 'light_cavalry', scout: 'scout', heavyCavalry: 'heavy_cavalry', ram: 'ram', catapult: 'catapult' } as const)[f.recruit_unit];
+    if (f.recruit_unit) return ({ infantry: 'line_infantry', spearmen: 'spear_guard', elite: 'elite', archers: 'archer', cavalry: 'light_cavalry', scout: 'scout', heavyCavalry: 'heavy_cavalry', ram: 'ram', catapult: 'catapult',diplomat:'diplomat' } as const)[f.recruit_unit];
     const peers = formations.filter(other => other.owner_id === f.owner_id && other.unit_type === f.unit_type && other.battle_id === f.battle_id).sort((a, b) => a.id - b.id);
     const index = peers.findIndex(other => other.id === f.id);
     return f.unit_type === 'archers' ? 'archer' : f.unit_type === 'cavalry' ? (['scout','light_cavalry','heavy_cavalry'] as const)[Math.max(0,index)%3] : (['line_infantry','spear_guard','elite'] as const)[Math.max(0,index)%3];
 }
 
-export function createArmyFactory(own: Army, enemy: Army, playerId: string, formations: readonly Formation[], ownFar?: Army, enemyFar?: Army): SoldierVisualFactory {
+export function createArmyFactory(own: Army, enemy: Army, playerId: string, formations: readonly Formation[], ownFar?: Army, enemyFar?: Army,ownFaction:Faction='roman',enemyFaction:Faction='persian'): SoldierVisualFactory {
     return formation => {
+        if(formation.recruit_unit==='diplomat')return createDiplomatSoldiers(formation,formation.owner_id===playerId?ownFaction:enemyFaction);
         const role=armyRole(formation, formations), ours=formation.owner_id===playerId;
         const army=ours ? own : enemy,parts=army.parts.get(role)!;
         // Oversized fantasy mounts need room for their actual anatomy. These

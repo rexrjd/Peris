@@ -4,6 +4,7 @@ import { Icon } from '../../../shared/ui/Icons';
 import { armyFaction } from '../domain/faction';
 import { readRoster, RECRUIT_RULES, RECRUIT_UNITS, type RecruitUnit } from '../domain/roster';
 import { TROOP_PRESENTATION, troopNumber } from './troopPresentation';
+import {visibleRecruitUnits} from './visibleRecruitUnits';
 import { factionTroopName } from '../../frontier/ui/roster';
 import { TroopIcon } from '../../frontier/ui/TroopIcon';
 import { HERO_CLASSES, heroForArmy, heroLevel } from '../../heroes/domain/heroes';
@@ -77,7 +78,7 @@ export function RallyArmyDetails({ world, playerId, armyId, now, busy, onManage,
         </div>
 
         <div className="rp-unit-cards" aria-label="Legion troop roster">
-            {RECRUIT_UNITS.map(unit => {
+            {visibleRecruitUnits(world).map(unit => {
                 const name = factionTroopName(faction, unit);
                 const quantity = roster?.[unit] ?? 0;
                 return <article key={unit} className={`rp-unit-card${selectedUnit === unit ? ' active' : ''}`}><button type="button" className="rp-unit-inspect" aria-pressed={selectedUnit === unit} aria-label={`Inspect ${name}, ${quantity.toLocaleString()} in this legion`} title={`${name} · ${TROOP_PRESENTATION[unit].category} · ${quantity.toLocaleString()} troops`} onClick={() => setSelection({ armyId, unit })}>

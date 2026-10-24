@@ -45,7 +45,7 @@ begin
  if p_troops is not null then
   if jsonb_typeof(p_troops)<>'object' then raise exception 'Choose troops currently available in this legion';end if;
   available:=public.peris_roster(to_jsonb(a));preset:=public.peris_garrison_troops(p_troops);
-  foreach unit_name in array array['infantry','spearmen','archers','elite','cavalry','scout','heavyCavalry','ram','catapult']loop
+  foreach unit_name in array array['infantry','spearmen','archers','elite','cavalry','scout','heavyCavalry','ram','catapult','diplomat']loop
    if (preset->>unit_name)::integer>(available->>unit_name)::integer then raise exception 'Choose troops currently available in this legion';end if;
   end loop;
   if public.peris_roster_total(preset)=0 then raise exception 'Send at least one soldier';end if;

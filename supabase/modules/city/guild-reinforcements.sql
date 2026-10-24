@@ -111,7 +111,7 @@ begin
   if public.peris_wrap_cell(floor((origin->>'x')::numeric/128)::integer)<>public.peris_wrap_cell(floor(s.x/128.0)::integer)or public.peris_wrap_cell(floor((origin->>'y')::numeric/128)::integer)<>public.peris_wrap_cell(floor(s.y/128.0)::integer)then raise exception 'Bring the army into your sending city first';end if;
   stock:=public.peris_roster(to_jsonb(army));
  end if;
- foreach role in array array['infantry','spearmen','archers','elite','cavalry','scout','heavyCavalry','ram','catapult']loop
+ foreach role in array array['infantry','spearmen','archers','elite','cavalry','scout','heavyCavalry','ram','catapult','diplomat']loop
   if (selected->>role)::integer>(stock->>role)::integer then raise exception 'Insufficient troops in the selected source';end if;
  end loop;
  arrival:=public.peris_home_army_position(d.x,d.y);

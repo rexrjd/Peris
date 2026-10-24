@@ -25,6 +25,7 @@ export type Order = {
     finish_at: string;
 };
 export type World = {
+    conquest_version?: 1;
     troop_upkeep_version?: 1;
     unit_balance_version?: import('../../features/army/domain/unitBalance').UnitBalanceVersion;
     account_science?: import('../../features/research/domain/types').AccountScience[];

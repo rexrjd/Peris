@@ -19,6 +19,7 @@ export function settleBattleFood(w:World,b:Battle){
    const source=rows.find(r=>r.key===p.key),loss=emptyRoster();
    for(const u of RECRUIT_UNITS){const lost=Math.max(0,total[u]-survivors[u]);loss[u]=total[u]?Math.floor(lost*(cumulative[u]+p.troops[u])/total[u])-Math.floor(lost*cumulative[u]/total[u]):0;cumulative[u]+=p.troops[u];}
    if(!source)continue;
+   if(source.kind!=='guild'&&source.ownerId!==(side==='attacker'?b.attacker_owner_id:b.defender_owner_id))continue;
    const next=readRoster(source.roster);let crop=0;
    for(const u of RECRUIT_UNITS){const actual=Math.min(next[u],loss[u]);next[u]-=actual;crop+=actual*unitRule(u,worldBalanceVersion(w)).cost.food;}
    source.write(next);refunds.set(source.supplyingCityId,(refunds.get(source.supplyingCityId)??0)+crop);

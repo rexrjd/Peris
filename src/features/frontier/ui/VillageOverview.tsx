@@ -1,13 +1,13 @@
 import { RESOURCES } from '../../../shared/model/resources';
 import { Icon } from '../../../shared/ui/Icons';
-import { FRONTIER_UNITS, FRONTIER_UNIT_TYPES } from '../domain/units';
+import { FRONTIER_UNITS, FRONTIER_UNIT_TYPES,type RecruitmentBuilding } from '../domain/units';
 import type { FrontierSnapshot } from '../domain/types';
 import { number, remaining, totalTroops } from './format';
 import { TroopIcon } from './TroopIcon';
 import { factionTroopName } from './roster';
 import { Help } from './Help';
 
-export function VillageOverview({ state, now, onRecruit }: { state: FrontierSnapshot; now: number; onRecruit: (building: 'barracks' | 'stables' | 'workshop') => void }) {
+export function VillageOverview({ state, now, onRecruit }: { state: FrontierSnapshot; now: number; onRecruit: (building: RecruitmentBuilding) => void }) {
     const outbound = state.raids.filter(raid => raid.status === 'outbound');
     const returning = state.raids.filter(raid => raid.status === 'returning');
     const present = FRONTIER_UNIT_TYPES.filter(unit => (state.village.troops[unit] ?? 0) > 0);

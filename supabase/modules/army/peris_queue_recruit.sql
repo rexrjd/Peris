@@ -1,3 +1,12 @@
+-- Main is the legacy market building, separate from the Market caravan slot.
+create or replace function public.peris_training_level(p_city bigint,p_unit text)returns integer
+language sql stable security definer set search_path='' as $$
+ select case when c.building='main'then coalesce((select max(level)from public.buildings where settlement_id=p_city and building_type='market'),0)
+ else coalesce((select sum(level)from public.peris_city_slots where settlement_id=p_city and building_type=c.building),0)::integer end
+ from public.peris_unit_catalog c where c.unit=p_unit
+$$;
+revoke all on function public.peris_training_level(bigint,text)from public,anon,authenticated;
+
 -- Dedicated destination is recorded on the order; training is still queued in the
 -- city's ordinary recruitment building and resolves on the same offline tick.
 create or replace function public.peris_queue_recruit_to(p_type text,p_quantity integer,p_destination text)returns jsonb
@@ -9,6 +18,7 @@ begin
  if p_destination not in('legion','garrison')or p_destination is null then raise exception 'Choose a recruitment destination';end if;
  select * into r from public.peris_unit_catalog where unit=p_type;
  if r.unit is null or p_quantity is null or p_quantity<1 or p_quantity>200 then raise exception 'Choose between 1 and 200 soldiers';end if;
+ if p_type='diplomat'and to_regclass('public.peris_conquest_version')is null then raise exception 'City capture is unavailable on this world';end if;
  perform public.peris_settle(u);
  if exists(select 1 from public.battles where status='active'and(attacker_owner_id=u or defender_owner_id=u))then raise exception 'Finish the current battle first';end if;
  select * into s from public.settlements where id=public.peris_city_id(u) and owner_id=u and ruined_at is null for update;
@@ -28,7 +38,9 @@ begin
   select count(*)into queue_size from public.peris_orders where owner_id=u and settlement_id=s.id and kind='recruit'and recruit_destination='garrison';
   if queue_size>=3 then raise exception 'Garrison training queue is full';end if;
  end if;
- select coalesce(sum(level),0)into l from public.peris_city_slots where settlement_id=s.id and building_type=r.building;
+ l:=public.peris_training_level(s.id,p_type);
+ if p_type='diplomat'and l<2 then raise exception 'Main building level 2 is required';end if;
+ if p_type='diplomat'and public.peris_research_bonus(u,'unlock_diplomat')=0 then raise exception 'Research Diplomacy first';end if;
  if l=0 then raise exception 'Build % first',r.building;end if;
  if r.research_seconds>0 and public.peris_research_bonus(u,'unlock_'||p_type)=0
   and not exists(select 1 from public.peris_unit_research where settlement_id=s.id and unit=p_type and completes_at<=public.peris_game_now())then
@@ -64,7 +76,8 @@ begin
  select * into r from public.peris_unit_catalog where unit=p_unit;
  if s.id is null or r.unit is null then raise exception 'Choose your own village and a known unit';end if;
  if r.research_seconds=0 or exists(select 1 from public.peris_unit_research where settlement_id=s.id and unit=r.unit)then raise exception 'This unit is already researched or queued';end if;
- if not exists(select 1 from public.peris_city_slots where settlement_id=s.id and building_type=r.building and level>0)then raise exception 'Build % first',r.building;end if;
+ if p_unit='diplomat'then raise exception 'Research Diplomacy in the account research tree';end if;
+ if public.peris_training_level(s.id,p_unit)<1 then raise exception 'Build % first',r.building;end if;
  if s.wood<(r.research_cost->>'wood')::integer or s.stone<(r.research_cost->>'stone')::integer or s.food<(r.research_cost->>'food')::integer or s.gold<(r.research_cost->>'gold')::integer then raise exception 'Your stores cannot cover this research';end if;
  select greatest(public.peris_game_now(),coalesce(max(research.completes_at),public.peris_game_now()))into at_time from public.peris_unit_research research join public.peris_unit_catalog c on c.unit=research.unit where research.settlement_id=s.id and c.building=r.building;
  update public.settlements set wood=wood-(r.research_cost->>'wood')::integer,stone=stone-(r.research_cost->>'stone')::integer,food=food-(r.research_cost->>'food')::integer,gold=gold-(r.research_cost->>'gold')::integer where id=s.id;

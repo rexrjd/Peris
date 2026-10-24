@@ -11,6 +11,7 @@ export function changeFaction(ctx:LocalCommandContext,cmd:Extract<Command,{type:
  if(!isFaction(cmd.faction))throw new Error('Unknown faction.');
  const town=commandCity(ctx);if(!town)throw new Error('Settlement missing.');const isMain=ctx.world.settlements.filter(s=>s.owner_id===ctx.playerId).sort((a,b)=>a.id-b.id)[0]?.id===town.id;
  if(isMain){const active=ctx.world.account_science?.find(s=>s.owner_id===ctx.playerId)?.active_id;const tech=active?TECHNOLOGY_BY_ID.get(active):undefined;if(tech?.faction&&tech.faction!==cmd.faction)pauseResearch(ctx.world,ctx.playerId,Date.parse(ctx.now));}
+ if(isMain){const player=ctx.world.players.find(p=>p.id===ctx.playerId);if(player)player.research_faction=cmd.faction;}
  town.faction=cmd.faction;for(const c of ctx.world.settlements.filter(s=>s.owner_id===ctx.playerId))refreshCityEconomy(ctx.world,c.id,c.population!==undefined);
 }
 /** Explicit debug actions only touch the current ruler's settlement. */

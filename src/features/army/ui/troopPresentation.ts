@@ -10,6 +10,7 @@ export const TROOP_PRESENTATION: Record<RecruitUnit, { category: string; descrip
     heavyCavalry: { category: 'Heavy cavalry', description: 'Armoured cavalry with stronger attack and defence. Slower than light cavalry, but better in a fight.' },
     ram: { category: 'Wall siege', description: 'Durable siege engines that weaken city walls during an assault. They carry no loot.' },
     catapult: { category: 'Building siege', description: 'Slow ranged siege engines with powerful attacks. Surviving engines can damage a city building after victory.' },
+    diplomat: {category:'Diplomacy',description:'Fragile foot envoys. After defeating a city’s defenders, each surviving participating diplomat lowers loyalty by one, up to 25 per attack. At zero loyalty one diplomat establishes your government. Sufficient culture is required.'},
 };
 
 export const troopNumber = (value: number) => value.toLocaleString(undefined, { maximumFractionDigits: 3 });

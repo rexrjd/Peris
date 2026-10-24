@@ -6,7 +6,7 @@ import type { Resources } from '../../../shared/model/resources';
 export type UnitBalanceVersion = 1 | 2;
 export type UnitBalanceContext = {version:UnitBalanceVersion;faction:Faction};
 export type BalanceUnit = keyof typeof catalog.versions['1'];
-export type RecruitmentBuilding = 'barracks'|'stables'|'workshop';
+export type RecruitmentBuilding = 'barracks'|'stables'|'workshop'|'main';
 export type UnitRule = {
     role:string;building:RecruitmentBuilding;combatClass:UnitType;cost:Resources;
     carry:number;speed:number;trainSeconds:number;attack:number;defence:number;

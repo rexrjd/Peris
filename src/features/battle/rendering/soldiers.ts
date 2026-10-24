@@ -3,6 +3,7 @@ import { type Formation } from '../domain/types';
 import { ellipse } from '../../../shared/rendering/primitives';
 import { unitSprite } from '../../../shared/rendering/assets';
 import { preferences } from '../../../platform/preferences/preferences';
+import {FACTIONS,factionOf} from '../../factions/domain/factions';
 export function drawSoldier(ctx: RenderContext, x: number, y: number, f: Formation, index: number, time: number, dead = false) {
     const c=ctx.c,own=f.owner_id===ctx.state().playerId,moving=f.status==='moving'||f.status==='routed';
     const elapsed=ctx.state().battle?.elapsed??0,interval=f.unit_type==='cavalry'?1.4:1.2;
@@ -16,6 +17,16 @@ export function drawSoldier(ctx: RenderContext, x: number, y: number, f: Formati
     c.beginPath();
     c.ellipse(1.5, 2.5, f.unit_type === 'cavalry' ? 7 : 3.2, 2, 0, 0, Math.PI * 2);
     c.fill();
+    if(f.recruit_unit==='diplomat'){
+        const state=ctx.state(),army=state.world.armies.find(army=>army.id===(f.side==='attacker'?state.battle?.attacker_army_id:state.battle?.defender_army_id));
+        const faction=factionOf(army?.faction??state.world.settlements.find(city=>city.owner_id===f.owner_id)?.faction),p=FACTIONS[faction],hex=(v:number)=>`#${v.toString(16).padStart(6,'0')}`;
+        c.fillStyle=dead?'#644039':hex(p.roof);c.beginPath();c.moveTo(-4,3);c.lineTo(-2,-3);c.lineTo(3,-3);c.lineTo(5,3);c.closePath();c.fill();
+        c.fillStyle=hex(p.skin);c.beginPath();c.arc(0,-1,2,0,Math.PI*2);c.fill();
+        c.strokeStyle=hex(p.gold);c.lineWidth=1;c.strokeRect(-3,-4,6,2);
+        c.fillStyle='#eddaad';c.fillRect(3,0,4,2);c.fillStyle=hex(p.gold);c.fillRect(5,0,1,2);
+        c.strokeStyle=hex(p.wood);c.beginPath();c.moveTo(-5,-5);c.lineTo(-5,4);c.stroke();c.fillStyle=hex(p.roofLight);c.fillRect(-6,-5,3,3);
+        c.restore();return;
+    }
     const sprite = unitSprite(f.unit_type, own);
     if (sprite && !dead) {
         if (moving && !preferences().reducedMotion)

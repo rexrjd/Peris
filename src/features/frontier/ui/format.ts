@@ -2,8 +2,8 @@ import type { Resources } from '../../../shared/model/resources';
 import type { Troops } from '../domain/types';
 import { troopTotal } from '../domain/units';
 
-export const unitLabels = { infantry: 'Infantry', spearmen: 'Spear guard', archers: 'Archers', elite: 'Elite guard', cavalry: 'Light cavalry', scout: 'Mounted scout', heavyCavalry: 'Heavy cavalry', ram: 'Ram', catapult: 'Catapult' } as const;
-export const unitIcons = { infantry: 'shield', spearmen: 'shield', archers: 'bow', elite: 'shield', cavalry: 'horse', scout: 'horse', heavyCavalry: 'horse', ram: 'town', catapult: 'town' } as const;
+export const unitLabels = { infantry: 'Infantry', spearmen: 'Spear guard', archers: 'Archers', elite: 'Elite guard', cavalry: 'Light cavalry', scout: 'Mounted scout', heavyCavalry: 'Heavy cavalry', ram: 'Ram', catapult: 'Catapult',diplomat:'Diplomat' } as const;
+export const unitIcons = { infantry: 'shield', spearmen: 'shield', archers: 'bow', elite: 'shield', cavalry: 'horse', scout: 'horse', heavyCavalry: 'horse', ram: 'town', catapult: 'town',diplomat:'crown' } as const;
 export const number = (value: number) => Math.floor(value).toLocaleString();
 export const totalResources = (resources: Resources) => resources.wood + resources.stone + resources.food + resources.gold;
 export const totalTroops = (troops: Troops) => troopTotal(troops);

@@ -88,7 +88,15 @@ create or replace function public.peris_found_complete(p_id bigint)returns void 
 declare e public.peris_settler_expeditions%rowtype;s public.settlements%rowtype;sid bigint;reason text;
 begin
  select * into e from public.peris_settler_expeditions where id=p_id for update;if e.id is null or e.status<>'travelling'then return;end if;
- if exists(select 1 from public.players where id=e.owner_id and defeated_at is not null)or exists(select 1 from public.settlements where id=e.origin_settlement_id and ruined_at is not null)then update public.peris_settler_expeditions set status='returned' where id=e.id;return;end if;
+ if not exists(select 1 from public.settlements where id=e.origin_settlement_id and owner_id=e.owner_id and ruined_at is null)or exists(select 1 from public.players where id=e.owner_id and defeated_at is not null)then
+  update public.peris_settler_expeditions set status='returned'where id=e.id;
+  select * into s from public.settlements where owner_id=e.owner_id and ruined_at is null order by id limit 1 for update;
+  if s.id is not null then
+   perform public.peris_population_accrue(s.id,e.arrival_at);
+   update public.settlements set settlers=least(6,settlers+3),wood=least(capacity,wood+500),stone=least(capacity,stone+400),food=least(food_capacity,food+600),gold=least(capacity,gold+150)where id=s.id and owner_id=e.owner_id;
+   update public.players set culture_points=least(1000000000,culture_points+e.culture_cost)where id=e.owner_id;
+  end if;return;
+ end if;
  perform pg_advisory_xact_lock(204200);
  perform public.peris_population_accrue(e.origin_settlement_id,e.arrival_at);
  reason:=public.peris_found_reason(e.col,e.row,e.id);

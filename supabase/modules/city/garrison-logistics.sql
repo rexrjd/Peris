@@ -56,7 +56,7 @@ begin
  select g.unit_roster into stock from public.peris_city_garrisons g where g.settlement_id=p_source and g.owner_id=p_owner for update;
  if stock is null then raise exception 'No permanent defenders are stationed in the sending city';end if;
  stock:=public.peris_roster(stock);
- foreach role in array array['infantry','spearmen','archers','elite','cavalry','scout','heavyCavalry','ram','catapult']loop
+ foreach role in array array['infantry','spearmen','archers','elite','cavalry','scout','heavyCavalry','ram','catapult','diplomat']loop
   if (selected->>role)::integer>(stock->>role)::integer then raise exception 'Choose soldiers currently in the sending garrison';end if;
  end loop;
  origin:=public.peris_home_army_position(source_city.x,source_city.y);

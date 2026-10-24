@@ -51,7 +51,7 @@ begin
  legion:=public.peris_roster(to_jsonb(army));
  select g.unit_roster into stationed from public.peris_city_garrisons g where g.settlement_id=p_city and g.owner_id=p_owner for update;
  stationed:=public.peris_roster(coalesce(stationed,'{}'::jsonb));
- foreach unit_name in array array['infantry','spearmen','archers','elite','cavalry','scout','heavyCavalry','ram','catapult']loop
+ foreach unit_name in array array['infantry','spearmen','archers','elite','cavalry','scout','heavyCavalry','ram','catapult','diplomat']loop
   if (selected->>unit_name)::integer>(case when p_action='station'then (legion->>unit_name)::integer else (stationed->>unit_name)::integer end)then
    raise exception 'Choose troops actually available in this location';end if;
  end loop;

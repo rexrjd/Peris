@@ -179,14 +179,14 @@ test('automatic camp combat is reproducible, conserves troops, and retains route
     assert.throws(() => resolveRaidCombat({ ...troops, infantry: -1 }, defenders, { col: 0, row: 0 }, 'low'), /whole numbers/);
 });
 
-test('every faction has nine named recruitment roles and advanced units retain their identities in combat', () => {
+test('every faction has ten named recruitment roles and advanced units retain their identities in combat', () => {
     for (const faction of Object.keys(FACTIONS) as Faction[]) {
         const names = FRONTIER_UNIT_TYPES.map(unit => factionTroopName(faction, unit));
-        assert.equal(names.length, 9);
+        assert.equal(names.length, 10);
         assert.ok(names.every(name => name.length > 2));
-        assert.equal(new Set(names).size, 9);
+        assert.equal(new Set(names).size, 10);
     }
-    const troops = { infantry: 12, archers: 5, cavalry: 4, spearmen: 7, elite: 5, scout: 3, heavyCavalry: 3, ram: 1, catapult: 1 };
+    const troops = { infantry: 12, archers: 5, cavalry: 4, spearmen: 7, elite: 5, scout: 3, heavyCavalry: 3, ram: 1, catapult: 1, diplomat: 2 };
     const before = structuredClone(troops);
     const empty = resolveRaidCombat(troops, emptyTroops(), { col: 13, row: 53 }, 'low');
     assert.deepEqual(empty.survivors, troops, 'Empty camps cannot convert advanced units into base troops');

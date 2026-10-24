@@ -77,6 +77,7 @@ export type Formation = {
     updated_at: string;
 };
 export type BattleResult = {
+    conquest?: import('../../city/domain/conquest').ConquestResult;
     balance_version?: import('../../army/domain/unitBalance').UnitBalanceVersion;
     report_side?: 'attacker'|'defender';
     raid_city?: {id:number;name:string};

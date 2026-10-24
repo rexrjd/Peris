@@ -24,7 +24,7 @@ end $$;
 create or replace function public.peris_troop_upkeep(p_roster jsonb)returns numeric
 language sql immutable set search_path='' as $$
  select coalesce(sum(greatest(0,coalesce((p_roster->>unit)::numeric,0))*case when unit='catapult'then 4 when unit='ram'then 3 when unit in('cavalry','scout','heavyCavalry')then 2 else 1 end),0)/60
- from unnest(array['infantry','spearmen','archers','elite','cavalry','scout','heavyCavalry','ram','catapult'])unit
+ from unnest(array['infantry','spearmen','archers','elite','cavalry','scout','heavyCavalry','ram','catapult','diplomat'])unit
 $$;
 
 create or replace function public.peris_supply_city(p_owner uuid,p_col integer,p_row integer)returns bigint
@@ -56,7 +56,7 @@ begin
   if source=p_sid then kind:='reinforcement';key:='reinforcement:'||r.id;owner_id:=r.owner_id;tier:=4;troops:=public.peris_roster(r.troops);return next;end if;
  end loop;
  for r in select * from public.peris_guild_reinforcements loop
-  source:=coalesce(case when r.status='stationed'then(select id from public.settlements where id=r.target_settlement_id and ruined_at is null)else coalesce((select id from public.settlements where id=r.source_settlement_id and owner_id=r.owner_id and ruined_at is null),(select id from public.settlements where id=r.target_settlement_id and owner_id=r.owner_id and ruined_at is null))end,(select min(id)from public.settlements where owner_id=r.owner_id and ruined_at is null));
+  source:=coalesce(case when r.status='stationed'then(select id from public.settlements where id=r.target_settlement_id and owner_id=r.recipient_id and ruined_at is null)else coalesce((select id from public.settlements where id=r.source_settlement_id and owner_id=r.owner_id and ruined_at is null),(select id from public.settlements where id=r.target_settlement_id and owner_id=r.owner_id and ruined_at is null))end,(select min(id)from public.settlements where owner_id=r.owner_id and ruined_at is null));
   if source=p_sid then kind:='guild';key:='guild:'||r.id;owner_id:=r.owner_id;tier:=case when r.status='stationed'then 1 else 4 end;troops:=public.peris_roster(r.troops);return next;end if;
  end loop;
  for r in select * from public.peris_ruin_evacuations loop
@@ -141,7 +141,7 @@ begin
    loss:=greatest(0,initial-starved-survivors);
    credit:=credit+loss*coalesce((select (rule#>>'{cost,food}')::numeric from public.peris_unit_balance where version=2 and unit=role),0);
   end loop;
-  update public.settlements set food=least(food_capacity,food+credit)where id=source_city and ruined_at is null;
+  update public.settlements set food=least(food_capacity,food+credit)where id=source_city and owner_id=owner and ruined_at is null;
  end loop;
  update public.battles set food_settled=true where id=b.id;
 end $$;
@@ -152,7 +152,7 @@ language plpgsql stable security definer set search_path='' as $$
 declare b public.battles%rowtype;party jsonb;unit_name text;source_key text;total integer;prefix integer;amount integer;survivors integer;lost integer;result jsonb:=public.peris_roster('{}');seen boolean;
 begin
  select * into b from public.battles where id=p_bid;
- foreach unit_name in array array['infantry','spearmen','archers','elite','cavalry','scout','heavyCavalry','ram','catapult']loop
+ foreach unit_name in array array['infantry','spearmen','archers','elite','cavalry','scout','heavyCavalry','ram','catapult','diplomat']loop
   total:=0;prefix:=0;amount:=0;seen:=false;
   for party in select value from jsonb_array_elements(b.city_defenders)loop
    source_key:=public.peris_supply_party_key(party,b.defender_owner_id);
@@ -173,7 +173,7 @@ declare r record;casualty_unit text;roster jsonb;refund numeric;ident bigint;par
 begin
  select * into r from public.peris_supply_rows(p_sid,p_at)where public.peris_roster_total(troops)>0 order by tier,public.peris_roster_total(troops)desc,kind,key limit 1;
  if r.key is null then return 0;end if;
- select role into casualty_unit from unnest(array['infantry','spearmen','archers','elite','cavalry','scout','heavyCavalry','ram','catapult'])with ordinality u(role,seq)order by coalesce((r.troops->>role)::integer,0)desc,seq limit 1;
+ select role into casualty_unit from unnest(array['infantry','spearmen','archers','elite','cavalry','scout','heavyCavalry','ram','catapult','diplomat'])with ordinality u(role,seq)order by coalesce((r.troops->>role)::integer,0)desc,seq limit 1;
  roster:=jsonb_set(r.troops,array[casualty_unit],to_jsonb((r.troops->>casualty_unit)::integer-1));parts:=string_to_array(r.key,':');
  if r.kind='army'then perform public.peris_write_roster(parts[2]::bigint,roster);
  elsif r.kind='reserve'then update public.armies set raid_reserve=roster where id=parts[2]::bigint;

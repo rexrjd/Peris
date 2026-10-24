@@ -19,10 +19,10 @@ function fixture() {
     return { world, army, owner, render };
 }
 
-test('Rally tray presents nine recruited identities and base totals from the saved legion', () => {
+test('Rally tray presents ten recruited identities and base totals from the saved legion', () => {
     const f = fixture(), before = JSON.stringify(f.world), html = f.render();
-    assert.equal((html.match(/class="rp-unit-card(?: active)?"/g) ?? []).length, 9);
-    assert.equal((html.match(/class="rp-unit-count"/g) ?? []).length, 9);
+    assert.equal((html.match(/class="rp-unit-card(?: active)?"/g) ?? []).length, 10);
+    assert.equal((html.match(/class="rp-unit-count"/g) ?? []).length, 10);
     for (const count of [1, 2, 3, 4, 5, 6, 7, 8, 9]) assert.ok(html.includes(`<span class="rp-unit-count">${count}</span>`));
     assert.match(html, /Troops<\/span><strong>45<\/strong>/);
     assert.match(html, /Base carrying capacity<\/span><strong>580<\/strong>/);

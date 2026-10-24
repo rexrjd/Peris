@@ -11,7 +11,7 @@ import {RESOURCES} from '../../../shared/model/resources';
 import { RECRUIT_RULES, RECRUIT_UNITS, rosterTotal, type RecruitUnit } from '../../army/domain/roster';
 
 export type ActivityKind = 'raid' | 'return' | 'march' | 'battle' | 'construction' | 'recruitment' | 'research' | 'settlers' | 'reinforcement' | 'trade';
-const unitNames: Record<RecruitUnit, string> = { infantry: 'infantry', spearmen: 'spearmen', archers: 'archers', elite: 'elite soldiers', cavalry: 'cavalry', scout: 'scouts', heavyCavalry: 'heavy cavalry', ram: 'rams', catapult: 'catapults' };
+const unitNames: Record<RecruitUnit, string> = { infantry: 'infantry', spearmen: 'spearmen', archers: 'archers', elite: 'elite soldiers', cavalry: 'cavalry', scout: 'scouts', heavyCavalry: 'heavy cavalry', ram: 'rams', catapult: 'catapults',diplomat:'diplomats' };
 const unitName = (unit: string) => RECRUIT_UNITS.includes(unit as RecruitUnit) ? unitNames[unit as RecruitUnit] : 'soldiers';
 export type MapActivity = {
     id: string; kind: ActivityKind; category: 'armies' | 'cities'; title: string; detail: string;

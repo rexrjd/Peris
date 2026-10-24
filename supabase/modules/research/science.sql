@@ -55,7 +55,7 @@ begin
  elsif kind='startResearch'then
   select * into c from public.peris_technology_catalog where id=p_command->>'technologyId';
   if c.id is null then raise exception 'Unknown technology';end if;
-  if c.faction is not null and c.faction is distinct from coalesce((select faction from public.settlements where owner_id=u order by id limit 1),'roman')then raise exception 'This technology belongs to another faction';end if;
+  if c.faction is not null and c.faction is distinct from public.peris_account_faction(u)then raise exception 'This technology belongs to another faction';end if;
   select * into p from public.peris_research_progress where owner_id=u and technology_id=c.id;
   if p.completed_at is not null then raise exception 'Already researched';end if;
   if exists(select 1 from jsonb_array_elements_text(c.prerequisites)r(id)where not exists(select 1 from public.peris_research_progress where owner_id=u and technology_id=r.id and completed_at is not null))then raise exception 'Research the prerequisites first';end if;
@@ -71,6 +71,6 @@ end $$;
 create index if not exists peris_science_active on public.peris_account_science(active_since)where active_id is not null;
 
 alter table public.battle_formations drop constraint if exists battle_formations_unit_attack_check;
-alter table public.battle_formations add constraint battle_formations_unit_attack_check check(unit_attack between .4 and 20);
+alter table public.battle_formations add constraint battle_formations_unit_attack_check check(unit_attack between .1 and 20);
 alter table public.battle_formations drop constraint if exists battle_formations_unit_defence_check;
 alter table public.battle_formations add constraint battle_formations_unit_defence_check check(unit_defence between .5 and 20);

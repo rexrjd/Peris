@@ -2,6 +2,7 @@ import { BoxGeometry, BufferGeometry, CylinderGeometry, DynamicDrawUsage, Group,
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { type Formation } from '../../domain/types';
 import { disposeObject } from './dispose';
+import {FACTIONS,type Faction} from '../../../factions/domain/factions';
 
 export type FormationPose = { x: number; y: number; facing: number };
 export type SoldierFrame = { formation: Formation; pose: FormationPose; time: number; battleTime?: number; dt: number; animate: boolean; detail?: 'near' | 'far'; height: (x: number, y: number) => number };
@@ -42,7 +43,7 @@ class LowPolySoldiers implements SoldierVisual {
     readonly object = new Group();
     private readonly parts: InstancedMesh[] = [];
     private readonly dummy = new Object3D();
-    constructor(f: Formation) {
+    constructor(f: Formation,faction:Faction=f.side==='attacker'?'roman':'persian') {
         const cavalry = f.unit_type === 'cavalry', lift = cavalry ? 4 : 0;
         const material = (color: string) => new MeshStandardMaterial({ color, roughness: .85, flatShading: true });
         const add = (geometry: BufferGeometry, color: string) => {
@@ -50,6 +51,21 @@ class LowPolySoldiers implements SoldierVisual {
             mesh.instanceMatrix.setUsage(DynamicDrawUsage); mesh.castShadow = true; mesh.frustumCulled = false;
             this.parts.push(mesh); this.object.add(mesh);
         };
+        if(f.recruit_unit==='diplomat'){
+            const p=FACTIONS[faction],hex=(color:number)=>`#${color.toString(16).padStart(6,'0')}`;
+            // A wide ankle-length robe, civic mantle, sealed scroll and staff
+            // distinguish the envoy from shield infantry at battlefield scale.
+            add(new CylinderGeometry(1.35,2.4,5.8,7).translate(0,3.5,0),hex(p.roof));
+            add(combine([new BoxGeometry(3.7,1.3,3).translate(0,6.1,0),new BoxGeometry(.6,4.1,2.9).translate(0,4.6,0)]),hex(p.light));
+            add(new CylinderGeometry(1.2,1.1,1.7,7).translate(0,7.5,0),hex(p.skin));
+            add(new CylinderGeometry(1.5,1.4,.8,7).translate(0,8.6,0),hex(p.gold));
+            add(new CylinderGeometry(.22,.22,10,5).translate(0,5,2.9),hex(p.wood));
+            add(combine([new BoxGeometry(.25,2.5,1.6).translate(0,8.1,3.6),new BoxGeometry(.5,1,1.2).translate(0,9.3,3.6)]),hex(p.roofLight));
+            add(new CylinderGeometry(.65,.65,3.3,6).rotateX(Math.PI/2).rotateY(-.3).translate(1.9,4.5,-.7),'#eddaad');
+            add(new CylinderGeometry(.45,.45,.25,6).rotateZ(Math.PI/2).translate(2.5,4.5,-.7),hex(p.gold));
+            this.object.userData.peris_role='diplomat';this.object.userData.faction=faction;
+            return;
+        }
         add(combine([
             new BoxGeometry(2.8, 3.4, 2.6).translate(0, 4.8 + lift, 0),
             new BoxGeometry(1.2, 3, 1).translate(0, 1.5 + lift, -1),
@@ -90,3 +106,4 @@ class LowPolySoldiers implements SoldierVisual {
     dispose() { disposeObject(this.object); }
 }
 export const createLowPolySoldiers: SoldierVisualFactory = f => new LowPolySoldiers(f);
+export const createDiplomatSoldiers=(f:Formation,faction:Faction)=>new LowPolySoldiers(f,faction);

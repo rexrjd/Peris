@@ -1,5 +1,22 @@
 # Original Peris artwork
 
+## Diplomatic envoys and city capture
+
+The tenth troop role uses original editable SVG portraits in
+`src/features/army/ui/diplomatPresentation.tsx`. Eleven civic titles, faction
+palettes, headwear, scrolls and wax seals give every faction a distinct envoy.
+These vectors do not reuse a combat portrait or alter the existing nine-cell atlases.
+`assets/diplomats-v1.json` records the sources and original Peris ownership.
+
+The battlefield factory renders diplomats as instanced native geometry: long
+robes, a civic mantle, sealed scroll and a staff with a standard. Faction colours
+follow the two battle armies. The Canvas compatibility renderer draws the same
+robe, scroll and standard identity. Animation follows existing formation updates,
+reduced-motion settings and resource disposal. Existing GLBs, rigs and clips are
+retained; no new raster, external asset, Blender source or model export is used.
+Desktop/mobile UI and screenshots cover the capture review, main-building
+recruitment and finalized loyalty receipts. Frame-rate targets remain unmeasured.
+
 ## Market buildings and caravans
 
 The live 3D City Market uses original procedural geometry in `city/rendering/three/market.ts`.
