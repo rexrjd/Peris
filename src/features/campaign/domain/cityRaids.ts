@@ -1,4 +1,5 @@
 import { worldGameNow } from '../../../shared/time/gameClock';
+import {captureBattleRanking} from '../../rankings/domain/rankings';
 import {applyResearchFormations,researchFactor} from '../../research/domain/effects';
 import { cityGarrisonAt, wallDefenseBonus } from '../../city/domain/cityGarrison';
 import { livingCities } from '../../city/domain/ruins';
@@ -66,6 +67,7 @@ export function beginCityRaid(world:World, owner:string, armyId:number, nextId:(
         b[side==='attacker'?'mana_attacker':'mana_defender']! *= researchFactor(world,player,'mana');
     }
     world.battles.push(b);world.formations.push(...instance.formations);
+    captureBattleRanking(world,b.id);
     army.raid_city_id=null;
     return b;
 }

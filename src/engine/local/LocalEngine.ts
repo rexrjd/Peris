@@ -1,4 +1,7 @@
 import {ensureScience,startResearch,pauseResearch,debugResearch} from '../../features/research/domain/science';
+import {ensureRankings,captureBattleRanking,finalizeRankedBattle,syncRankingsPopulation,rankingsResponse} from '../../features/rankings/domain/rankings';
+import {validateRankings} from '../../features/rankings/domain/validation';
+import type {RankingPeriod,RankingsResponse} from '../../features/rankings/domain/types';
 import {sendScouts,cancelScouting} from '../../features/scouting/domain/scouting';
 import {advanceScouting} from '../../features/scouting/domain/advance';
 import { EngineClock } from '../clock';
@@ -75,6 +78,8 @@ export class LocalEngine implements GameEngine {
         if(world.settlements[0].population===undefined)settleLocal(world,this.playerId,this.nowGameMs());
         for (const city of world.settlements.filter(s=>s.owner_id===this.playerId)) refreshCityEconomy(world,city.id);
         this.mode = persistent ? 'solo' : 'practice';
+        validateRankings(world);
+        if(this.mode==='solo')ensureRankings(world,Date.now());
         this.persistent = persistent;
         this.nextId = Math.max(100, Date.now() % 100000000, nextEntityId(world));
         this.snapshot.battles.filter(b => b.status === 'resolved').forEach(b => this.finalized.add(b.id));
@@ -88,6 +93,7 @@ export class LocalEngine implements GameEngine {
         this.save();
     }
     subscribe = (fn: () => void) => { this.listeners.add(fn); return () => this.listeners.delete(fn); };
+    rankings = async (period:RankingPeriod):Promise<RankingsResponse> => rankingsResponse(this.snapshot,this.playerId,period,Date.now());
     private publish() { refreshTroopUpkeep(this.snapshot,this.nowGameMs());this.snapshot = { ...this.snapshot, server_now: new Date(this.nowGameMs()).toISOString() }; this.listeners.forEach(fn => fn()); }
     private save() { if (this.persistent)
         try {
@@ -149,8 +155,13 @@ export class LocalEngine implements GameEngine {
             return;
         this.finalized.add(id);
         const b = this.snapshot.battles.find(b => b.id === id)!;
+        captureBattleRanking(this.snapshot,id);
         if (b.mode !== 'practice')
             settleBattle(this.snapshot, id, this.playerId, () => ++this.nextId);
+        if(this.mode==='solo'){
+            finalizeRankedBattle(this.snapshot,id,Date.now());
+            syncRankingsPopulation(this.snapshot,Date.now());
+        }
         this.publish();
         this.save();
     }
@@ -221,6 +232,10 @@ export class LocalEngine implements GameEngine {
                 renameCity(context, cmd);
                 break;
             default: throw new Error('Live challenges are available in multiplayer.');
+        }
+        if(this.mode==='solo'){
+            for(const battle of this.snapshot.battles)if(battle.status==='active')captureBattleRanking(this.snapshot,battle.id);
+            syncRankingsPopulation(this.snapshot,Date.now());
         }
         this.publish();
         this.save();

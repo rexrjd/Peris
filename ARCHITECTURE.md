@@ -115,6 +115,19 @@ Run `npm run build:sql` after editing server source. Then `npm run check:sql`, `
 
 ZIP extraction does not delete moved paths. `node scripts/clean-legacy-paths.mjs` removes only legacy source/art files whose contents match a known v5/v6/v7 version. `--check` previews candidates. Modified files are preserved and flagged; merge those personal edits into the new owner modules before building. It never touches accounts, database data, save storage, Git metadata or environment configuration.
 
+## Weekly rankings
+
+`features/rankings/domain` owns the pure local weekly scoring, saved receipts,
+defender attribution and population baselines. `features/rankings/ui` displays
+five bounded public Top 10 boards through the engine's optional `rankings` read
+method; `platform/client` validates the shared DTO. Weeks use real Monday UTC
+boundaries, independent of the accelerated game clock. Private SQL aggregates
+and narrow triggers in `supabase/modules/rankings` score finalized outcomes and
+actual population changes exactly once. The authenticated read RPC publishes
+only names, guild tags, scores and ranks, with no private reports or troop data.
+Generate `UPGRADE_WEEKLY_RANKINGS.sql` from source; deployment is separate.
+See `WEEKLY_RANKINGS.md` for rules and installation.
+
 ## Scouting
 
 `features/scouting/domain` owns scout detachments, counter-scout strength, immutable intelligence receipts and save validation. Scouting joins the canonical campaign settlement timeline and crop supply. Returning scouts arrive before observations at a tied deadline. Scout-only raids and farm entries dispatch reconnaissance; mixed armies retain their combat flow. Scouts use the existing role, research and faction artwork.

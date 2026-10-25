@@ -25,6 +25,7 @@ export type Order = {
     finish_at: string;
 };
 export type World = {
+    rankings?: import('../../features/rankings/domain/types').LocalRankingState;
     scouting_version?: 1;
     scouting_missions?: import('../../features/scouting/domain/types').ScoutingMission[];
     conquest_version?: 1;

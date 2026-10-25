@@ -1,0 +1,6 @@
+/* Seven destinations share the existing command strip and mobile dock. */
+.game-header .game-navigation{gap:2px}
+.game-header .game-navigation button{padding-inline:7px;gap:5px}
+.game-header .game-navigation button[aria-label=Rankings]>svg{color:#d6b879;flex:none}
+@media(max-width:1180px) and (min-width:761px){.game-header .game-navigation button{padding-inline:5px;gap:4px}.game-header .game-navigation button .nav-label{font-size:10px}}
+@media(max-width:760px){.game-header .game-navigation,.rp-shell .game-header .game-navigation{grid-template-columns:repeat(7,minmax(0,1fr))!important;gap:1px}.game-header .game-navigation button{padding-inline:1px}.game-header .game-navigation .nav-label{font-size:8px;gap:2px;letter-spacing:-.15px}.game-header .game-navigation .nav-count{font-size:8px}.rp-shell .game-header .game-navigation button{padding-inline:1px}}

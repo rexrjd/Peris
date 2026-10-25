@@ -1,4 +1,5 @@
 import {validateResearch} from '../../features/research/domain/science';
+import {validateRankings} from '../../features/rankings/domain/validation';
 import {validateScouting,validateScoutingResult} from '../../features/scouting/domain/validation';
 import {validateTradeCaravans} from '../../features/city/domain/trade';
 import {validateTradeRoutes} from '../../features/city/domain/tradeRoutes';
@@ -189,6 +190,7 @@ export function validateSave(data: unknown): World {
     if(!w||w.version!==6||!Array.isArray(w.players)||w.players.length!==1||w.players[0]?.id!=='solo-ruler')invalid();
     for(const key of ['settlements','armies','buildings','camps','orders','battles','formations','reports','progress','claims','challenges'] as const)
         if(!Array.isArray(w[key])||w[key].length>15000||w[key].some(r=>!r||typeof r!=='object'))invalid();
+    validateRankings(w);
     if(w.troop_upkeep_version!==undefined&&w.troop_upkeep_version!==1)invalid();
     if(w.conquest_version!==undefined&&w.conquest_version!==1)invalid();
     validateScouting(w);

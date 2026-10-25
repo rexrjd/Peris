@@ -17,6 +17,8 @@ import { expiredSession } from '../../platform/backend/accountLogin';
 import { rememberRuler } from '../../platform/backend/accountStorage';
 import {PollBackoff,statePollInterval} from '../../platform/backend/polling';
 import { EngineClock } from '../clock';
+import type { RankingPeriod } from '../../features/rankings/domain/types';
+import { readRankings } from '../../features/rankings/platform/client';
 
 type MapBounds = { minX: number; minY: number; maxX: number; maxY: number };
 type PublicMapSnapshot = {
@@ -126,6 +128,7 @@ export class OnlineEngine implements GameEngine {
         else if (snapshot.map) void this.refreshMap();
     }
     subscribe = (fn: () => void) => { this.listeners.add(fn); return () => this.listeners.delete(fn); };
+    rankings = (period: RankingPeriod) => readRankings(period, (fn,args) => this.rpc(fn,args));
     private watch(table: string, filter: string) {
         this.channel.on('postgres_changes', { event: '*', schema: 'public', table, filter }, () => {
             if (!this.alive || this.realtimeTimer !== undefined) return;

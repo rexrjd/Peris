@@ -23,7 +23,7 @@ export type Battle = {
     camp_id: number | null;
     raid_city_id?: number | null;
     siege_target?: import('../../city/domain/siege').SiegeTarget;
-    city_defenders?: {army_id?:number;col?:number;row?:number;city_garrison_id?:number;troops:import('../../army/domain/roster').UnitRoster}[];
+    city_defenders?: {army_id?:number;col?:number;row?:number;city_garrison_id?:number;owner_id?:string;guild_reinforcement_id?:number;troops:import('../../army/domain/roster').UnitRoster}[];
     terrain: Terrain;
     difficulty: Difficulty;
     enemy_name: string;

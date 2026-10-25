@@ -64,6 +64,8 @@
 @import '../../features/city/styles/city-garrison.css';
 @import './scene-theme.css';
 @import './city-ruins.css';
+@import '../../features/rankings/styles/rankings.css';
+@import './rankings-navigation.css';
 
 .realm-presentation { display: contents; }
 .rp-art-status { color: var(--rp-paper); font-size: 12px; }

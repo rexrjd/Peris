@@ -1,4 +1,5 @@
 import { worldGameNow } from '../../../shared/time/gameClock';
+import {syncRankingsPopulation} from '../../rankings/domain/rankings';
 import {resolveScoutingEvent} from '../../scouting/domain/scouting';
 import {tradeEvents,advanceTradeEvent,unloadWaitingCaravans} from '../../city/domain/trade';
 import {advanceTradeRoutes} from '../../city/domain/tradeRoutes';
@@ -22,8 +23,9 @@ import { ownedStation } from '../../map/domain/garrisons';
 
 /** Complete all cities' queues in time order; every order belongs to one city/army. */
 export function settleLocal(w: World, owner: string, now = worldGameNow(w), travel = true) {
-    if(w.troop_upkeep_version===1){settleWithTroopSupply(w,owner,now,travel);return;}
-    settleLegacy(w,owner,now,travel);
+    if(w.troop_upkeep_version===1)settleWithTroopSupply(w,owner,now,travel);
+    else settleLegacy(w,owner,now,travel);
+    syncRankingsPopulation(w,Date.now());
 }
 
 /** Legacy armies were free: finish that period before activating the new rules. */

@@ -35,7 +35,7 @@ export async function accountServer(){
     if(path.startsWith('/rest/v1/rpc/')){
      const name=path.split('/').at(-1);
      // Only existing named test RPCs, with parameters bound as values.
-     const args={peris_login:['p_display_name'],peris_enter_account:['p_display_name','p_mode','p_faction','p_creation_id'],peris_account_directory:['p_search','p_faction','p_activity','p_sort','p_offset','p_limit'],peris_trade_targets:[],peris_guild_reinforcement_targets:[],peris_guild_reinforcement_status:[],peris_social_snapshot:[],peris_social_directory:['p_kind','p_search','p_focus','p_offset'],peris_social_guild:['p_id'],peris_social_thread:['p_kind','p_id','p_before'],peris_social_command:['p_request_id','p_command'],peris_snapshot:[],peris_read_reports:['p_report_ids'],peris_read_all_reports:[],peris_report_page:['p_before_id'],sync_my_state:[],peris_map_snapshot:['p_min_x','p_min_y','p_max_x','p_max_y'],peris_rename:['p_name'],peris_submit_command:['p_request_id','p_function','p_args']};
+     const args={peris_login:['p_display_name'],peris_enter_account:['p_display_name','p_mode','p_faction','p_creation_id'],peris_account_directory:['p_search','p_faction','p_activity','p_sort','p_offset','p_limit'],peris_trade_targets:[],peris_guild_reinforcement_targets:[],peris_guild_reinforcement_status:[],peris_social_snapshot:[],peris_social_directory:['p_kind','p_search','p_focus','p_offset'],peris_social_guild:['p_id'],peris_social_thread:['p_kind','p_id','p_before'],peris_social_command:['p_request_id','p_command'],peris_rankings:['p_period'],peris_snapshot:[],peris_read_reports:['p_report_ids'],peris_read_all_reports:[],peris_report_page:['p_before_id'],sync_my_state:[],peris_map_snapshot:['p_min_x','p_min_y','p_max_x','p_max_y'],peris_rename:['p_name'],peris_submit_command:['p_request_id','p_function','p_args']};
      if(!Object.hasOwn(args,name))return result(400,{message:'Unexpected test RPC: '+name});
      const values=args[name].map(k=>body[k]);
      const rows=await tx.query(`select public.${name}(${values.map((_,i)=>'$'+(i+1)).join(',')}) result`,values);
@@ -92,6 +92,26 @@ export async function accountServer(){
   const battle=(await db.query("select id from public.battles where attacker_army_id=$1 and status='active'and raid_city_id is not null",[id])).rows[0];
   await db.query("update public.battle_formations set soldiers=0,status='routed'where battle_id=$1 and side='defender'",[battle.id]);
   await db.query("select public.peris_finish($1,'attacker','Army routed')",[battle.id]);
+ },async rankingsFixture(owner){
+  // Exercise real population mutations and a real camp finalizer; never write
+  // the private ranking aggregates directly from a browser fixture.
+  const factions=['roman','spartan','persian','egyptian','orc','elf','dwarf','gnome','pandaren','undead','demon'];
+  const grow=async(player,amount)=>{
+   const city=(await db.query('select id from public.settlements where owner_id=$1 order by id limit 1',[player])).rows[0].id;
+   await db.query("insert into public.peris_city_slots(settlement_id,slot_index,building_type,level)values($1,0,'housing',5)on conflict(settlement_id,slot_index)do update set building_type='housing',level=5",[city]);
+   await db.query('select public.peris_city_economy($1)',[city]);
+   await db.query('update public.settlements set population=population+$1 where id=$2',[amount,city]);
+  };
+  for(let i=0;i<12;i++){const leader=await this.seed('Ranking leader '+String(i+1).padStart(2,'0'),factions[i%factions.length]);await grow(leader.player_id,20+i);}
+  await grow(owner,4);
+  const army=(await db.query('select id from public.armies where owner_id=$1 order by id limit 1',[owner])).rows[0].id;
+  const camp=(await db.query('select id from public.peris_camps where bandit order by id limit 1')).rows[0].id;
+  await db.query('select public.peris_write_roster($1,$2)',[army,JSON.stringify({infantry:100,archers:20,cavalry:10})]);
+  await db.query("update public.peris_camp_stock set resources='{\"wood\":100,\"stone\":100,\"food\":100,\"gold\":100}',stock_updated_at=public.peris_game_now()where camp_id=$1",[camp]);
+  const battle=(await db.query('select public.peris_start_raid($1,$2)id',[owner,camp])).rows[0].id;
+  await db.query("update public.battle_formations set soldiers=case when side='defender'then 0 else soldiers end,status=case when side='defender'then 'routed'else status end where battle_id=$1",[battle]);
+  await db.query("select public.peris_finish($1,'attacker','Army routed')",[battle]);
+  return {army,camp,battle};
  },async seedReports(owner,quantity=2){
   const army=(await db.query('select id from public.armies where owner_id=$1 order by id limit 1',[owner])).rows[0].id;
   const result={attacker_initial:20,defender_initial:10,attacker_survivors:20,defender_survivors:0,attacker_losses:0,defender_losses:10,loot:{wood:0,stone:0,food:0,gold:0},duration:12,reason:'Army routed'};

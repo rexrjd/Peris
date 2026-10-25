@@ -17,11 +17,11 @@ test('legacy online camps with null culture still show their troop names and pic
 });
 
 test('horizontal navigation exposes all destinations and exactly one current page', () => {
-  for (const view of ['world', 'settlement', 'rally', 'army', 'research', 'chronicle'] as GameView[]) {
+  for (const view of ['world', 'settlement', 'rally', 'army', 'research', 'rankings', 'chronicle'] as GameView[]) {
     const html = renderToStaticMarkup(React.createElement(GameNavigation, { view, rewards: false, onNavigate: () => {} }));
-    assert.equal((html.match(/<button/g) ?? []).length, 6);
+    assert.equal((html.match(/<button/g) ?? []).length, 7);
     assert.equal((html.match(/aria-current="page"/g) ?? []).length, 1);
-    for (const label of ['Map', 'City', 'Rally Point', 'Armies', 'Research', 'Reports']) assert.ok(html.includes(label));
+    for (const label of ['Map', 'City', 'Rally Point', 'Armies', 'Research', 'Rankings', 'Reports']) assert.ok(html.includes(label));
     assert.ok(!html.includes('side-rail'));
   }
 });

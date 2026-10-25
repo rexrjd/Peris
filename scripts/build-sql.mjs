@@ -357,5 +357,13 @@ outputs['UPGRADE_CITY_RAID_RESOURCE_FIX.sql']=[
  'revoke all on function public.peris_finish_city_raid(bigint,text,text)from public,anon,authenticated;',
  "notify pgrst,'reload schema';",'commit;',
 ].join('\n')
+// Defined after dependency restoration: this focused migration only installs rankings.
+outputs['UPGRADE_WEEKLY_RANKINGS.sql']=[
+ '-- PERIS weekly rankings. Apply after current V19, Crop Upkeep, City Capture and Scouting. Repeatable; never deployed automatically.',
+ 'begin;',
+ "do $$begin if to_regprocedure('public.peris_scout_command(jsonb)')is null or to_regclass('public.peris_crop_version')is null then raise exception 'Install current V19, Crop Upkeep, City Capture and Scouting first';end if;end $$;",
+ await readSource(path.join(root,'supabase/modules/rankings/rankings.sql')),
+ "notify pgrst,'reload schema';",'commit;',
+].join('\n')
 for(const[file,content]of Object.entries(outputs)){const target=path.join(root,'supabase',file);if(process.argv.includes('--check')){if(await readSource(target)!==content)throw Error('Stale SQL bundle: '+file)}else{let existing;try{existing=await readSource(target)}catch(error){if(error.code!=='ENOENT')throw error}if(existing!==content)await fs.writeFile(target,content)}}
 console.log(process.argv.includes('--check')?'SQL bundles match modular source':'SQL bundles rebuilt')

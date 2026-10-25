@@ -4,6 +4,7 @@ import { type UnitType } from '../features/army/domain/types';
 import { type Battle, type BattleOrder } from '../features/battle/domain/types';
 import { type World } from '../shared/model/world';
 import type { Report } from '../features/campaign/domain/types';
+import type { RankingPeriod, RankingsResponse } from '../features/rankings/domain/types';
 export interface GameEngine {
     readonly playerId: string;
     readonly mode: 'solo' | 'online' | 'practice';
@@ -19,4 +20,6 @@ export interface GameEngine {
     setMapViewport?: (bounds: { minX: number; minY: number; maxX: number; maxY: number }) => void;
     /** Private older receipts; each page is scoped to the signed-in ruler. */
     reportPage?: (beforeId: number) => Promise<Report[]>;
+    /** Bounded public standings; this read never settles gameplay or sends orders. */
+    rankings?: (period: RankingPeriod) => Promise<RankingsResponse>;
 }
