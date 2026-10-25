@@ -90,7 +90,7 @@ this artwork change does not deploy SQL. No GPU frame-rate claim is made.
 
 ## Rally Point operations ledger
 
-Armies, Rally Point and Research use the same compact faction materials as Map,
+Armies, Rally Point, Research and Reports use the same compact faction materials as Map,
 live 3D City and Rankings through `scene-theme.css` and `scene-management.css`.
 Dark textured surfaces, fine faction borders, Cinzel headings and Open Sans
 controls follow the selected city. Existing faction crests, commander portraits
@@ -98,6 +98,12 @@ and troop icons remain tied to the actual city and legion. The earlier large
 faction backgrounds and frames remain artwork sources; management surfaces use
 only the quiet material textures. Recruitment, troop dossiers and bonus tooltips
 retain their faction theme when rendered in body portals.
+
+Reports retains its small inbox overlay over the active screen. Its list,
+receipts, scouting observations and milestones use the selected city's materials,
+compact separators and bounded scrolling. A local scene wrapper keeps this
+palette consistent over the compatible painted City without changing that view.
+Losses, outcome icons and equipment rarity retain distinct semantic colors.
 
 On phones, four compact Rally section tabs stay above their scrolling panel;
 the bottom dock retains the shared game destinations. Movements combines
