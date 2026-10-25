@@ -42,14 +42,13 @@ export function CitySelector({ world, owner, sid, now, onCity, onReport, onLand,
         }
     }}>
         <div className="city-selector-card">
-            <button ref={trigger} className="city-selector-trigger" aria-label={`Current city: ${selected.name}`} aria-describedby={`${id}-counts ${id}-land`} aria-haspopup={switchable ? 'menu' : undefined} aria-expanded={switchable ? open : undefined} aria-controls={switchable ? id : undefined} disabled={!switchable} onClick={() => setOpen(value => !value)}>
+            <button ref={trigger} className="city-selector-trigger" aria-label={`Current city: ${selected.name}`} aria-describedby={`${id}-counts ${id}-land${world.conquest_version===1?` ${id}-loyalty`:''}`} aria-haspopup={switchable ? 'menu' : undefined} aria-expanded={switchable ? open : undefined} aria-controls={switchable ? id : undefined} disabled={!switchable} onClick={() => setOpen(value => !value)}>
                 <CityThumbnail world={world} sid={selected.id}/>
                 <span className="city-selector-info"><span className="city-selector-heading"><strong>{selected.name}</strong>{switchable && <span className="city-selector-chevron" aria-hidden="true">⌄</span>}</span><CityCounts id={`${id}-counts`} city={selected}/></span>
             </button>
             {onReport && <button className="city-selector-report" title="City report" aria-label="Open city economy report" onClick={onReport}><Icon name="report" size={17}/></button>}
-            <div className="city-selector-land"><span id={`${id}-land`}><Icon name="world" size={13}/>Land <strong>{selected.land} / {selected.landAllowance}</strong></span>{onLand && <button aria-label={claimingLand ? 'Finish choosing land' : `Choose land: ${selected.land} of ${selected.landAllowance} fields claimed`} aria-pressed={claimingLand} onClick={onLand}>{claimingLand ? 'Done' : 'Choose land'}<Icon name={claimingLand ? 'check' : 'plus'} size={12}/></button>}</div>
+            <div className="city-selector-land"><div className="city-selector-land-stats"><span id={`${id}-land`}><Icon name="world" size={13}/>Land <strong>{selected.land} / {selected.landAllowance}</strong></span>{world.conquest_version===1&&<CityLoyalty compact id={`${id}-loyalty`} city={world.settlements.find(city=>city.id===selected.id)!} owner={owner} now={now}/>}</div>{onLand && <button aria-label={claimingLand ? 'Finish choosing land' : `Choose land: ${selected.land} of ${selected.landAllowance} fields claimed`} aria-pressed={claimingLand} onClick={onLand}>{claimingLand ? 'Done' : 'Choose land'}<Icon name={claimingLand ? 'check' : 'plus'} size={12}/></button>}</div>
         </div>
-        {world.conquest_version===1&&<CityLoyalty city={world.settlements.find(city=>city.id===selected.id)!} owner={owner} now={now}/>}
         {open && <div ref={menu} id={id} className="city-selector-menu" role="menu" aria-label="Your cities">
             <div className="city-ruin-tabs" role="group" aria-label="City list sections">
                 <button className={!ruinTab ? 'selected' : ''} aria-pressed={!ruinTab} onClick={() => setRuinTab(false)}>Cities ({cities.length})</button>

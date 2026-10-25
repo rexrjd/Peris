@@ -8,6 +8,7 @@ import {PlayerFinder} from './GuildsPanel';
 import {Empty,SharedWorldOnly,SocialStatus} from './SocialShared';
 import type {SocialController} from './useSocial';
 import {PollBackoff} from '../../../platform/backend/polling';
+import '../styles/scene-social.css';
 export type MessageTarget={player?:SocialPlayer;guild?:boolean;request:number};
 export function MessagesPanel({social,target,onClose}:{social:SocialController;target?:MessageTarget;onClose:()=>void}) {
   const [selected,setSelected]=useState<{id:string;kind:'direct'|'guild'}|null>(null),[draft,setDraft]=useState<SocialPlayer|null>(null),[compose,setCompose]=useState(false),[filter,setFilter]=useState<'all'|'unread'|'archived'>('all'),[query,setQuery]=useState(''),[blocks,setBlocks]=useState(false);

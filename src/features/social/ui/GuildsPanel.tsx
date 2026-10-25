@@ -10,6 +10,7 @@ import {guildDetail,socialDirectory} from '../platform/client';
 import type {SocialController} from './useSocial';
 import {Crest} from './Crest';
 import {Empty,SharedWorldOnly,SocialStatus} from './SocialShared';
+import '../styles/scene-social.css';
 type Tab='overview'|'members'|'diplomacy'|'ranks'|'settings';
 type Cities={id:number;name:string}[];
 type Props={now:number;world:World;busy:boolean;pending:boolean;onSendReinforcements:(command:Command)=>Promise<void>;onRetryOrder:()=>Promise<void>;social:SocialController;cities:Cities;onClose:()=>void;onMessage:(player?:SocialPlayer,guild?:boolean)=>void;onGuildChange?:()=>void};

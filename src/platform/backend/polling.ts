@@ -1,5 +1,13 @@
 import type {World} from '../../shared/model/world';
 
+/** PostgreSQL lock conflicts roll back the current transaction and can clear on a later poll. */
+export function isLockContention(error: unknown): boolean {
+ const cause = error as {code?: string; message?: string} | null;
+ return cause?.code === '55P03' || (!cause?.code && cause?.message === 'lock_not_available');
+}
+
+export const WORLD_BUSY = 'The shared world is busy settling orders. Retrying automatically…';
+
 /** Polling observes authoritative timestamps; it never advances the simulation. */
 export function statePollInterval(world:World,owner:string,hidden:boolean):number {
  if(world.battles.some(b=>b.status==='active'))return 850;
@@ -22,5 +30,5 @@ export class PollBackoff {
  private until=0;
  ready(now:number){return now>=this.until;}
  reset(){this.failures=0;this.until=0;}
- fail(now:number){this.failures=Math.min(this.failures+1,5);this.until=now+Math.min(60000,5000*2**(this.failures-1));}
+ fail(now:number){this.failures=Math.min(this.failures+1,5);this.until=now+Math.min(60000,5000*2**(this.failures-1));return this.failures;}
 }

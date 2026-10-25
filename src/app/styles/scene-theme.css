@@ -12,11 +12,11 @@
 .scene-theme[data-scene-faction=demon]{--scene-ink:#2d1817;--scene-panel:#41211c;--scene-edge:#b96740;--scene-accent:#ffca88;--scene-muted:#d4b5a6;--scene-radius:2px}
 
 /* Quiet single-line frames retain faction colors without ornate artwork. */
-.scene-theme :is(.city-selector-card,.city-selector-menu,.army-map-dock,.map-army-options,.ops-widget,.ops-selection,.map-field-search,.map-command-hint,.march-cancel-panel,.station-reinforcement-panel,.map-focus-controls,.map-view-controls,.scene-minimap,.city-scene-plate,.city-camera-controls,.building-inspector,.modal,.peris-quick-panel,.game-menu>div,.game-navigation,.social-navigation,.game-header-actions){
+.scene-theme :is(.city-selector-card,.city-selector-menu,.army-map-dock,.map-army-options,.ops-widget,.ops-selection,.map-field-search,.map-command-hint,.march-cancel-panel,.station-reinforcement-panel,.map-focus-controls,.map-rotation-controls,.map-view-controls,.scene-minimap,.city-scene-plate,.city-camera-controls,.building-inspector,.modal,.peris-quick-panel,.game-menu>div,.game-navigation,.social-navigation,.game-header-actions){
  background-color:var(--scene-ink);background-image:var(--scene-material);background-size:auto,360px auto;border-color:color-mix(in srgb,var(--scene-edge) 55%,transparent);border-radius:var(--scene-radius);color:var(--scene-text);box-shadow:0 3px 10px #080c0933;--cmd-bg:var(--scene-ink);--cmd-panel:var(--scene-panel);--cmd-text:var(--scene-text);--cmd-muted:var(--scene-muted);--cmd-accent:var(--scene-accent);--cmd-border:var(--scene-edge);--city-accent:var(--scene-accent);--city-muted:var(--scene-muted);--ops-text:var(--scene-text);--ops-muted:var(--scene-muted);--ops-line:color-mix(in srgb,var(--scene-edge) 30%,transparent)
 }
 .scene-theme :is(.city-selector-card,.city-selector-menu,.map-army-options,.ops-widget,.map-view-controls,.scene-minimap,.social-navigation,.game-header-actions){position:relative}
-.scene-theme :is(.city-selector-card,.city-selector-menu,.army-map-dock,.map-army-options,.ops-widget,.ops-selection,.map-field-search,.map-focus-controls,.map-view-controls,.scene-minimap,.city-scene-plate,.city-camera-controls,.building-inspector,.modal,.game-navigation,.social-navigation,.game-header-actions)::after{content:'';position:absolute;inset:0;z-index:2;border:1px solid color-mix(in srgb,var(--scene-edge) 55%,transparent);border-radius:inherit;pointer-events:none}
+.scene-theme :is(.city-selector-card,.city-selector-menu,.army-map-dock,.map-army-options,.ops-widget,.ops-selection,.map-field-search,.map-focus-controls,.map-rotation-controls,.map-view-controls,.scene-minimap,.city-scene-plate,.city-camera-controls,.building-inspector,.modal,.game-navigation,.social-navigation,.game-header-actions)::after{content:'';position:absolute;inset:0;z-index:2;border:1px solid color-mix(in srgb,var(--scene-edge) 55%,transparent);border-radius:inherit;pointer-events:none}
 .scene-theme :is(.city-selector-menu,.map-army-options){position:absolute}
 .scene-theme .city-selector-card{flex-wrap:wrap;padding:8px 10px 4px}
 .scene-theme .city-selector .city-selector-trigger{flex-basis:calc(100% - 36px)}
@@ -46,16 +46,19 @@
 .scene-theme button:hover:not(:disabled){background-color:color-mix(in srgb,var(--scene-accent) 12%,transparent);color:var(--scene-text)}
 .scene-theme button[aria-pressed=true]{color:var(--scene-accent);background-color:color-mix(in srgb,var(--scene-accent) 15%,transparent)}
 
-/* Camera and view controls belong to the minimap; only rotation stays centred. */
+/* Camera and view controls are grouped beside and above the minimap. */
 .scene-minimap-dock{position:absolute;right:17px;bottom:18px;z-index:5;display:flex;align-items:flex-end;gap:10px;pointer-events:none}
 .scene-minimap-dock>*{pointer-events:auto}
+.scene-minimap-column{display:flex;flex-direction:column;gap:6px;align-items:stretch}
+.map-rotation-controls{position:relative;display:flex;align-items:center;justify-content:center;gap:3px;padding:3px;border:1px solid color-mix(in srgb,var(--scene-edge,#a58050) 55%,transparent);border-radius:var(--scene-radius,4px);background:var(--scene-ink,#251a15);color:var(--scene-accent,#dfbd81)}
+.map-rotation-controls>button{display:grid;place-items:center;flex:1;min-width:32px;min-height:28px;padding:2px;border:0;border-radius:var(--scene-radius,4px);background:transparent;color:inherit;font:22px/1 Georgia,serif;cursor:pointer}
+.map-rotation-controls>button:focus-visible{outline:2px solid var(--scene-accent,#dfbd81);outline-offset:0}
 .scene-minimap-dock .scene-minimap{position:relative;inset:auto;width:170px;flex:none;overflow:visible}
 .scene-minimap-dock .scene-minimap>canvas{border-radius:var(--scene-radius,3px) var(--scene-radius,3px) 0 0}
 .scene-minimap-dock .scene-minimap>span{background:var(--scene-ink,#1a3025);color:var(--scene-muted,#c8bb8c);letter-spacing:.5px}
 .map-view-controls{display:grid;grid-template-columns:repeat(2,34px);gap:3px;padding:6px;border:1px solid #a58050;background:#251a15e8;border-radius:4px}
 .map-view-controls>button{display:grid;place-items:center;width:34px;height:34px;min-height:34px;padding:0;border:1px solid color-mix(in srgb,var(--scene-edge,#a58050) 40%,transparent);border-radius:var(--scene-radius,3px);background:transparent;color:var(--scene-muted,#c1b29a);font:20px/1 Georgia,serif;cursor:pointer}
 .map-view-controls>button:last-child:nth-child(odd){grid-column:1/-1;width:100%}
-.game-shell .scene-stage .world-map-wrap:has(>.map-city-card) .map-focus-controls{top:auto;bottom:18px;left:50%;right:auto;transform:translateX(-50%);translate:none}
 .game-shell .operations-workspace:has(.map-city-card)>.map-operations{top:76px;max-height:calc(100% - 300px)}
 .game-shell .scene-stage .world-map-wrap:has(>.map-city-card)>.map-field-search{top:auto;bottom:228px;right:16px}
 .game-shell .scene-stage .world-map-wrap:has(>.map-city-card)>.map-command-hint{top:218px;left:16px}
@@ -87,7 +90,6 @@
  .map-view-controls{grid-template-columns:repeat(3,32px);padding:5px;gap:3px}
  .map-view-controls>button{width:32px;height:32px;min-height:32px}
  .map-view-controls>button:last-child:nth-child(odd){grid-column:auto;width:32px}
- .game-shell .scene-stage .world-map-wrap:has(>.map-city-card) .map-focus-controls{left:12px;bottom:12px;transform:none}
  .game-shell .scene-stage .world-map-wrap:has(>.map-city-card)>.map-command-hint{top:204px;left:12px;max-width:calc(100% - 24px)}
  .game-shell .scene-stage .world-map-wrap:has(>.map-city-card)>.map-field-search{bottom:140px;right:12px}
  .scene-theme .city-selector-info strong{font-size:12px}

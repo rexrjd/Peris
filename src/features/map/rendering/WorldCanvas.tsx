@@ -44,9 +44,11 @@ export function WorldCanvas({ state, actions, viewControls }: { state: RenderSta
                 {!state.mapPurpose && <button aria-label="Focus your army" title="Focus army (F)" onClick={() => renderer.current?.focusMap('army')}><Icon name="army" size={16}/></button>}
                 {viewControls}
             </div>
-            {!compatibility && <div className="scene-minimap"><canvas ref={mini} width={256} height={256} tabIndex={0} aria-label="World minimap. Click or drag to navigate."/><span>WORLD · 200 × 200</span></div>}
+            {!compatibility && <div className="scene-minimap-column">
+                <div className="map-rotation-controls" role="group" aria-label="Map rotation"><button className="scene-rotate" aria-label="Rotate camera left" title="Rotate left (Q)" onClick={() => { if (renderer.current instanceof WorldScene) renderer.current.rotate(-Math.PI / 8); }}>↶</button><button className="scene-rotate" aria-label="Rotate camera right" title="Rotate right (E)" onClick={() => { if (renderer.current instanceof WorldScene) renderer.current.rotate(Math.PI / 8); }}>↷</button></div>
+                <div className="scene-minimap"><canvas ref={mini} width={256} height={256} tabIndex={0} aria-label="World minimap. Click or drag to navigate."/><span>WORLD · 200 × 200</span></div>
+            </div>}
         </div>
-        {!compatibility && <div className="map-focus-controls"><button className="scene-rotate" aria-label="Rotate camera left" title="Rotate left (Q)" onClick={() => { if (renderer.current instanceof WorldScene) renderer.current.rotate(-Math.PI / 8); }}>↶</button><button className="scene-rotate" aria-label="Rotate camera right" title="Rotate right (E)" onClick={() => { if (renderer.current instanceof WorldScene) renderer.current.rotate(Math.PI / 8); }}>↷</button></div>}
         {hoverText && <div className="scene-hover" role="status">{hoverText}</div>}
         {compatibility && <div className="scene-compatibility">Compatibility map · 3D graphics unavailable</div>}
     </div>;

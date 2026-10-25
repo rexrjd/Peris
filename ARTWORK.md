@@ -90,7 +90,7 @@ this artwork change does not deploy SQL. No GPU frame-rate claim is made.
 
 ## Rally Point operations ledger
 
-Armies, Rally Point, Research and Reports use the same compact faction materials as Map,
+Armies, Rally Point, Research, Reports, Guilds and Messages use the same compact faction materials as Map,
 live 3D City and Rankings through `scene-theme.css` and `scene-management.css`.
 Dark textured surfaces, fine faction borders, Cinzel headings and Open Sans
 controls follow the selected city. Existing faction crests, commander portraits
@@ -104,6 +104,13 @@ receipts, scouting observations and milestones use the selected city's materials
 compact separators and bounded scrolling. A local scene wrapper keeps this
 palette consistent over the compatible painted City without changing that view.
 Losses, outcome icons and equipment rarity retain distinct semantic colors.
+
+Guilds and Messages share those materials through the locally scoped
+`scene-social.css`, including native trade and reinforcement dialogs. Forms,
+directories and conversation panes keep bounded scrolling and compact controls.
+The owned-city preview places loyalty beside Land in its stats strip, with
+recovery details on hover or keyboard focus. Map rotation buttons sit directly
+above the minimap, beside the existing map-view controls.
 
 On phones, four compact Rally section tabs stay above their scrolling panel;
 the bottom dock retains the shared game destinations. Movements combines

@@ -21,7 +21,7 @@ test('shared city card previews actual cities and retains City and Map selection
     await page.goto('/'); await page.getByRole('button', { name: 'Continue campaign', exact: true }).click();
     await page.getByRole('button', { name: 'City', exact: true }).click();
     await page.getByRole('button', { name: '3D', exact: true }).click();
-    const card = page.locator('.city-selector'), preview = card.locator('.city-selector-card .city-selector-preview');
+    const card = page.locator('.city-selector:not(.city-garrison-dock)'), preview = card.locator('.city-selector-preview[data-preview-state]');
     await expect(preview).toHaveAttribute('data-preview-state', 'ready');
     await expect(card).toContainText('Population'); await expect(card).toContainText('Army 186');
     const first = await preview.locator('.city-selector-model').getAttribute('src');
@@ -49,7 +49,7 @@ test('shared city card previews actual cities and retains City and Map selection
     expect(controls.x + controls.width).toBeLessThanOrEqual(minimap.x);
     const header = (await page.locator('.game-header').boundingBox())!;
     expect(bounds.y).toBeGreaterThanOrEqual(header.y + header.height);
-    const focus = (await page.locator('.map-focus-controls').boundingBox())!;
+    const focus = (await page.getByRole('group', { name: 'Map rotation', exact: true }).boundingBox())!;
     expect(focus.y).toBeGreaterThanOrEqual(bounds.y + bounds.height);
     await trigger.click(); await page.keyboard.press('Tab');
     await expect(page.getByRole('menu', { name: 'Your cities' })).toHaveCount(0);

@@ -15,7 +15,7 @@ import type { AccountEntry } from '../../platform/backend/accountLogin';
 import type { Report } from '../../features/campaign/domain/types';
 import { expiredSession } from '../../platform/backend/accountLogin';
 import { rememberRuler } from '../../platform/backend/accountStorage';
-import {PollBackoff,statePollInterval} from '../../platform/backend/polling';
+import {PollBackoff,statePollInterval,isLockContention,WORLD_BUSY} from '../../platform/backend/polling';
 import { EngineClock } from '../clock';
 import type { RankingPeriod } from '../../features/rankings/domain/types';
 import { readRankings } from '../../features/rankings/platform/client';
@@ -164,6 +164,16 @@ export class OnlineEngine implements GameEngine {
         return this.reconnecting;
     }
     private message(error: unknown) { return (error as { message?: string })?.message ?? 'Connection interrupted. Your realm is safe; reconnecting…'; }
+    private pollMessage(error: unknown, failures: number, previous: string | null) {
+        // Keep the last good snapshot while short lock conflicts clear through
+        // the existing bounded backoff. Prolonged contention remains visible;
+        // genuine failures and any warning already shown retain their visibility.
+        if (isLockContention(error)) {
+            if (previous && previous !== WORLD_BUSY) return previous;
+            return failures < 3 ? previous : WORLD_BUSY;
+        }
+        return this.message(error);
+    }
     private clampBounds(bounds: MapBounds): MapBounds {
         const axis = (low: number, high: number, min: number, max: number) => {
             if (high - low >= max - min) return [min, max];
@@ -259,9 +269,9 @@ export class OnlineEngine implements GameEngine {
                 this.publish();
             }
         } catch (e) {
-            this.mapBackoff.fail(Date.now());
+            const failures = this.mapBackoff.fail(Date.now());
             if (this.alive && revision === this.mapRevision) {
-                this.mapError = (e as { code?: string })?.code === 'PGRST202' ? WORLD_UPGRADE : this.message(e);
+                this.mapError = (e as { code?: string })?.code === 'PGRST202' ? WORLD_UPGRADE : this.pollMessage(e, failures, this.mapError);
                 this.publish();
             }
         } finally {
@@ -294,8 +304,8 @@ export class OnlineEngine implements GameEngine {
                 if (!hadMap && this.core.map) void this.refreshMap();
             }
         } catch (e) {
-            this.coreBackoff.fail(Date.now());
-            if (this.alive) { this.coreError = this.message(e); this.publish(); }
+            const failures = this.coreBackoff.fail(Date.now());
+            if (this.alive) { this.coreError = this.pollMessage(e, failures, this.coreError); this.publish(); }
         } finally {
             this.busy = false;
             if (this.dirty && this.alive) {
@@ -319,8 +329,8 @@ export class OnlineEngine implements GameEngine {
             }
             if (this.alive) await this.refresh(false);
         } catch (e) {
-            this.coreBackoff.fail(Date.now());
-            if (this.alive) { this.coreError = this.message(e); this.publish(); }
+            const failures = this.coreBackoff.fail(Date.now());
+            if (this.alive) { this.coreError = this.pollMessage(e, failures, this.coreError); this.publish(); }
         } finally { this.ticking = false; }
     }
     reportPage = async (beforeId: number): Promise<Report[]> => {

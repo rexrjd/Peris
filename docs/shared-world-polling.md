@@ -27,8 +27,16 @@ lookup does not slow a healthy battle. Explicit player commands retain their
 existing receipt IDs and retry rules; this policy never replays a mutation.
 A forced post-command read is preserved even if an older in-flight read fails.
 
-Only request scheduling changes. Server simulation, combat rules, rewards,
-casualties, saves, password protection and legacy name-only access are unchanged.
+Private-state, sync and public-map polls treat PostgreSQL lock contention
+(`55P03`) as temporary. They retain the last loaded state and retry through that
+same backoff. After three consecutive failures, a readable busy status explains
+automatic recovery; an existing genuine error remains visible until a successful
+read clears it. The raw `lock_not_available` token is not shown for these polls.
+Initial account state loading makes at most three attempts, waiting 500ms then
+1000ms, without re-entering the account or replaying player orders.
+
+Server simulation, combat rules, rewards, casualties, saves, password protection
+and legacy name-only access are unchanged by polling and connection-status recovery.
 No database migration is needed. The database worker continues while browsers
 are hidden, disconnected or closed.
 

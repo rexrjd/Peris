@@ -1,5 +1,6 @@
 import type { World } from '../../shared/model/world';
 import { isFaction, type Faction } from '../../features/factions/domain/factions';
+import { isLockContention } from './polling';
 export type AccountEntry = { mode: 'login'; password?: string } | { mode: 'create'; faction: Faction; creationId: string; password?: string };
 export type RulerLogin = { player_id: string; display_name: string; created: boolean; password_protected?: boolean };
 export type AccountBackend = {
@@ -31,6 +32,7 @@ export function accountEntryError(cause: unknown, entry: AccountEntry): Error & 
     const error = cause as { code?: string; status?: number; message?: string } | null;
     const message = error?.code === 'PT401' ? 'This ruler requires a valid password. Enter it and retry.'
         : entry.password ? 'The account could not be opened. Check your ruler name and password, then retry.'
+        : isLockContention(error) ? 'The shared world is busy settling orders. Please try again shortly.'
         : error?.message || 'The shared world could not be reached. Retry the same ruler name.';
     const code = typeof error?.code === 'string' && /^[A-Z0-9_]{1,40}$/.test(error.code) && error.code !== entry.password ? error.code : undefined;
     return Object.assign(new Error(message), { code, status: typeof error?.status === 'number' ? error.status : undefined });
@@ -46,7 +48,7 @@ async function loadRulerState(backend: AccountBackend): Promise<World> {
         try { await backend.sync(); return await backend.snapshot(); }
         catch (error) {
             const e = error as { code?: string; status?: number };
-            const transient = [0, 500, 502, 503, 504].includes(e.status ?? -1) || e.code === '57014' || error instanceof TypeError;
+            const transient = [0, 500, 502, 503, 504].includes(e.status ?? -1) || e.code === '57014' || isLockContention(error) || error instanceof TypeError;
             if (attempt >= 2 || !transient || expired(error)) throw error;
             await (backend.wait ?? (ms => new Promise<void>(resolve => setTimeout(resolve, ms))))(500 * (attempt + 1));
         }

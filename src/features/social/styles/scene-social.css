@@ -1,0 +1,172 @@
+/* Social overlays inherit the selected city's shared scene materials. */
+.social-scene .social-backdrop .modal.social-panel,
+.social-scene .guild-reinforcement-dialog {
+  --social-line: color-mix(in srgb, var(--scene-edge) 30%, transparent);
+  --social-muted: var(--scene-muted);
+  --social-blue: var(--scene-accent);
+  --social-panel: var(--scene-panel);
+  background-color: var(--scene-ink);
+  background-image: var(--scene-material);
+  background-size: auto, 360px auto;
+  color: var(--scene-text);
+  border: 1px solid color-mix(in srgb, var(--scene-edge) 55%, transparent);
+  border-radius: var(--scene-radius);
+  box-shadow: 0 8px 30px #080c0955;
+  color-scheme: dark;
+  font: 12px/1.5 'Open Sans', Arial, sans-serif;
+}
+.social-scene .social-backdrop { background: #080e1848; backdrop-filter: blur(2px); }
+.social-scene .social-panel :is(h2,h3,h4),
+.social-scene .guild-support-heading h2 {
+  font-family: 'Cinzel', Georgia, serif;
+  color: var(--scene-accent);
+  letter-spacing: 0;
+}
+.social-scene .social-panel h2,
+.social-scene .guild-support-heading h2 { font-size: 19px; font-weight: 600; line-height: 1.3; margin: 0; }
+.social-scene .social-panel h3 { font-size: 15px; }
+.social-scene .social-panel h4 { font-size: 12px; margin: 16px 0 8px; }
+.social-scene .social-heading { min-height: 60px; padding: 10px 52px 10px 16px; gap: 8px; }
+.social-scene .social-heading > div { min-width: 0; }
+.social-scene .social-panel .modal-close { top: 15px; right: 12px; color: var(--scene-muted); border-radius: var(--scene-radius); }
+.social-scene .social-panel :is(button,input,select,textarea,summary) { border-radius: var(--scene-radius); }
+.social-scene .social-panel button { background-color: color-mix(in srgb, var(--scene-panel) 65%, transparent); }
+.social-scene :is(.social-panel,.guild-reinforcement-dialog) :is(button,summary,input,select,textarea):focus-visible {
+  outline: 2px solid var(--scene-accent); outline-offset: 2px;
+}
+.social-scene .social-panel :is(input,select,textarea),
+.social-scene .social-panel .social-search {
+  background: color-mix(in srgb, var(--scene-ink) 85%, transparent);
+  color: var(--scene-text); border-color: var(--social-line);
+}
+.social-scene .social-panel :is(input,select,textarea) { padding: 7px 9px; }
+.social-scene .modal.social-panel input { margin: 0; }
+.social-scene .modal.social-panel :is(input:not([type=checkbox]),select) { min-height: 32px; }
+.social-scene .social-panel .social-search input { background: transparent; padding: 8px 0; }
+.social-scene .social-panel :is(input,textarea)::placeholder { color: var(--scene-muted); opacity: .8; }
+.social-scene .social-panel input[type=checkbox] { accent-color: var(--scene-accent); padding: 0; }
+.social-scene .social-panel :is(input,select,textarea):focus,
+.social-scene .social-panel .social-search:focus-within { border-color: var(--scene-accent); }
+.social-scene .social-panel :is(.social-primary,.is-active,[aria-pressed=true]),
+.social-scene .social-panel .social-tabs button[aria-current=page] {
+  color: var(--scene-accent); background: color-mix(in srgb, var(--scene-accent) 12%, transparent);
+  border-color: color-mix(in srgb, var(--scene-edge) 55%, transparent);
+}
+.social-scene .social-panel .social-tabs button[aria-current=page]:after { background: var(--scene-accent); }
+.social-scene .social-panel :is(.social-danger,.social-form-error),
+.social-scene .guild-support-error { color: #ffaba5; }
+.social-scene .social-panel :is(label,legend,.social-eyebrow,.guild-directory-caption,.guild-directory-name>span,.guild-directory-name>small,.guild-banner-meta,.guild-description,.guild-stat-line span,.guild-activity>div,.guild-treasury>p,.guild-form-heading p,.guild-public-members span,.guild-danger-zone p,.guild-member-name span,.guild-applications p,.guild-rank-list span,.social-search svg,.guild-directory-row>svg:last-child) { color: var(--scene-muted); }
+.social-scene .social-panel :is(.guild-stat-line b,.guild-notice p,.guild-member-name strong,.guild-directory-name strong,.social-player-results strong) { color: var(--scene-text); }
+.social-scene .social-panel :is(.social-tabs b,.message-unread-count) { background: var(--scene-accent); color: var(--scene-ink); border-radius: var(--scene-radius); }
+.social-scene .social-panel :is(.social-alert,.social-confirm) { background: color-mix(in srgb, var(--scene-panel) 88%, transparent); border-color: var(--social-line); color: var(--scene-accent); border-radius: var(--scene-radius); }
+.social-scene .social-panel :is(.social-body,.message-history,.message-thread-list) { scrollbar-color: var(--scene-edge) transparent; }
+.social-scene .social-panel .social-world-only h3 { font-size: 17px; }
+.social-scene .social-panel :is(.social-world-only svg,.social-pagination button,.guild-ledger b) { color: var(--scene-accent); }
+.social-scene .social-panel .guild-ledger .is-negative { color: #ffaba5; }
+.social-scene .guild-finder,
+.social-scene .guild-content { padding: 16px; }
+.social-scene .social-panel .guild-directory-row { padding: 10px 12px; background: color-mix(in srgb, var(--scene-panel) 70%, transparent); border-color: var(--social-line); }
+.social-scene .guild-banner { padding: 12px 16px; gap: 12px; background: color-mix(in srgb, var(--scene-accent) 5%, transparent); }
+.social-scene .social-panel .guild-banner h3 { font-size: 19px; }
+.social-scene .guild-banner .social-eyebrow { color: var(--scene-muted); }
+.social-scene .social-tabs { padding: 0 12px; gap: 5px; }
+.social-scene .social-panel .social-tabs button { padding: 9px 8px; color: var(--scene-muted); background: transparent; }
+.social-scene .guild-overview { gap: 22px; }
+.social-scene .guild-stat-line { gap: 24px; margin-bottom: 16px; }
+.social-scene .guild-stat-line b { font-size: 20px; }
+.social-scene .guild-treasury { padding-left: 20px; }
+.social-scene .social-panel :is(.guild-notice,.guild-invites,.guild-rank-editor,.member-menu>div,.message-options>div) { background: var(--scene-panel); border-color: var(--social-line); border-radius: var(--scene-radius); }
+.social-scene .guild-notice { padding: 10px 12px; }
+.social-scene .guild-activity>div,
+.social-scene .guild-ledger>div { border-color: var(--social-line); }
+.social-scene .guild-activity i { background: var(--scene-edge); }
+.social-scene .social-body>.guild-form { padding: 16px; }
+.social-scene .guild-form-layout { gap: 20px; }
+.social-scene .guild-form-fields { gap: 12px; }
+.social-scene .guild-form-heading { margin-bottom: 16px; }
+.social-scene .social-panel .guild-form-heading h3 { font-size: 18px; }
+.social-scene .social-panel .crest-swatches button[aria-pressed=true] { outline-color: var(--scene-accent); }
+.social-scene .guild-member-list article { padding: 10px 3px; gap: 10px; }
+.social-scene .guild-member-trade button,
+.social-scene .social-panel .guild-member-reinforce { color: var(--scene-accent); border-color: var(--social-line); background: color-mix(in srgb, var(--scene-accent) 8%, transparent); }
+.social-scene .social-panel .presence { background: var(--scene-edge); }
+.social-scene .social-panel .presence.is-online { background: #acd098; box-shadow: none; }
+.social-scene .message-inbox { background: color-mix(in srgb, var(--scene-ink) 75%, transparent); padding-top: 10px; }
+.social-scene .message-filters { border-color: var(--social-line); }
+.social-scene .social-panel .message-filters button { background: transparent; }
+.social-scene .social-panel .message-filters button[aria-pressed=true] { color: var(--scene-accent); background: color-mix(in srgb, var(--scene-accent) 12%, transparent); }
+.social-scene .social-panel .message-thread { padding: 10px 8px; background: transparent; border: 1px solid transparent; }
+.social-scene .social-panel .message-thread.is-unread { background: color-mix(in srgb, var(--scene-accent) 5%, transparent); }
+.social-scene .social-panel .message-thread.is-selected { background: color-mix(in srgb, var(--scene-accent) 12%, transparent); border-color: var(--social-line); }
+.social-scene .social-panel :is(.message-thread-content>strong,.message-thread.is-unread strong,.message-bubble p) { color: var(--scene-text); }
+.social-scene .social-panel :is(.message-thread-content>span,.message-welcome p,.message-day,.message-bubble time,.message-reply>div small) { color: var(--scene-muted); }
+.social-scene .social-panel :is(.message-avatar,.message-bubble) { background: var(--scene-panel); border-color: var(--social-line); color: var(--scene-accent); border-radius: var(--scene-radius); }
+.social-scene .social-panel .message-bubble { padding: 8px 11px; }
+.social-scene .social-panel .message-bubble.is-own { background: color-mix(in srgb, var(--scene-accent) 14%, var(--scene-panel)); border-color: var(--social-line); }
+.social-scene .social-panel .message-bubble.is-announcement { background: color-mix(in srgb, var(--scene-accent) 8%, var(--scene-panel)); border-color: var(--scene-edge); }
+.social-scene .social-panel :is(.message-bubble>strong,.message-welcome>svg,.message-back,.message-load-older,h2 small) { color: var(--scene-accent); }
+.social-scene .message-day:before,
+.social-scene .message-day:after { background: var(--social-line); }
+.social-scene .message-reply { background: color-mix(in srgb, var(--scene-panel) 65%, transparent); padding: 10px 14px; }
+.social-scene .message-conversation-heading { padding: 10px 14px; }
+.social-scene .social-panel .message-conversation-heading h3 { font: 600 13px/1.4 'Open Sans', Arial, sans-serif; overflow-wrap: anywhere; }
+.social-scene .message-thread-content>strong { overflow-wrap: anywhere; }
+.social-scene .message-options>div { max-width: calc(100vw - 48px); }
+.social-scene .message-blocked-notice { color: var(--scene-muted); }
+
+/* Native nested support dialogs stay in this same faction scope. */
+.social-scene .guild-reinforcement-dialog::backdrop { background: #080e1870; backdrop-filter: blur(2px); }
+.social-scene .guild-support-heading { position: sticky; top: 0; z-index: 2; padding: 14px 16px; gap: 10px; background: var(--scene-ink); border-color: var(--social-line); }
+.social-scene .guild-support-heading>button { color: var(--scene-muted); min-width: 28px; min-height: 28px; padding: 4px; }
+.social-scene .guild-support-emblem { width: 34px; height: 34px; background: var(--scene-panel); border-color: var(--social-line); border-radius: var(--scene-radius); color: var(--scene-accent); }
+.social-scene :is(.guild-support-eyebrow,.guild-support-recipient small,.guild-support-recipient>span:last-child,.guild-support-destination,.guild-support-label,.guild-support-roster-heading small,.guild-support-unit small,.guild-support-eta,.guild-support-note,.guild-support-footer span) { color: var(--scene-muted); }
+.social-scene .guild-support-avatar { background: var(--scene-panel); border-color: var(--social-line); color: var(--scene-accent); }
+.social-scene .guild-support-body { padding: 14px 16px 0; }
+.social-scene .guild-trade-body { padding: 14px 16px 16px; }
+.social-scene .guild-support-label { margin: 14px 0; }
+.social-scene .guild-reinforcement-dialog :is(input:not([type=checkbox]),select) { min-height: 32px; background: var(--scene-ink); border-color: var(--social-line); border-radius: var(--scene-radius); color: var(--scene-text); padding: 8px; }
+.social-scene .guild-support-roster-heading { color: var(--scene-text); border-color: var(--social-line); margin-top: 14px; }
+.social-scene .guild-support-unit { border-color: var(--social-line); padding: 9px 0; }
+.social-scene .guild-support-units { scrollbar-color: var(--scene-edge) transparent; }
+.social-scene :is(.guild-support-roster-heading button,.guild-support-unit>button) { color: var(--scene-accent); }
+.social-scene .guild-support-footer { background: var(--scene-ink); border-color: var(--social-line); padding: 12px 16px; }
+.social-scene .guild-support-footer button,
+.social-scene .guild-trade-dialog .market-panel button,
+.social-scene .guild-trade-dialog .building-inspector-primary { border-radius: var(--scene-radius); border-color: var(--social-line); color: var(--scene-accent); background: var(--scene-panel); }
+.social-scene .guild-support-send { background: var(--scene-panel); color: var(--scene-accent); border-color: var(--scene-edge)!important; }
+.social-scene .guild-support-send:not(:disabled):hover { background: color-mix(in srgb, var(--scene-accent) 16%, var(--scene-panel)); }
+.social-scene .guild-support-cancel { color: var(--scene-muted); }
+.social-scene .guild-support-error { background: #bd646311; border-radius: var(--scene-radius); }
+.social-scene .guild-trade-dialog .market-panel { color: var(--scene-text); font-size: 12px; }
+.social-scene .guild-trade-dialog :is(.market-capacity,.market-review,.market-schedule,.market-route-list article,.market-caravans li) { background: color-mix(in srgb, var(--scene-panel) 60%, transparent); border-color: var(--social-line); border-radius: var(--scene-radius); }
+.social-scene .guild-trade-dialog .market-modes>button[aria-pressed=true] { color: var(--scene-accent); background: color-mix(in srgb, var(--scene-accent) 12%, transparent)!important; border-color: var(--scene-edge)!important; }
+.social-scene .guild-trade-dialog :is(.market-destination option,.market-destination optgroup) { background: var(--scene-ink); color: var(--scene-text); }
+.social-scene .guild-trade-dialog .market-route-status { color: var(--scene-muted); }
+
+@media(max-width:760px) {
+  .social-scene .social-backdrop .modal.social-panel { width: calc(100vw - 20px); height: min(660px,calc(100dvh - 32px)); border-radius: var(--scene-radius); }
+  .social-scene .guild-treasury { padding: 16px 0 0; }
+  .social-scene .guild-overview { gap: 16px; }
+}
+@media(max-width:540px) {
+  .social-scene .social-heading { padding-left: 12px; padding-right: 46px; }
+  .social-scene .guild-content,
+  .social-scene .guild-finder,
+  .social-scene .social-body>.guild-form { padding: 12px; }
+  .social-scene .guild-banner { padding: 12px; gap: 8px; flex-wrap: wrap; }
+  .social-scene .guild-banner-actions { margin-left: auto; }
+  .social-scene .social-panel .guild-banner h3 { font-size: 17px; }
+  .social-scene .guild-member-list article { gap: 6px; flex-wrap: wrap; }
+  .social-scene .guild-member-name { flex-basis: calc(100% - 25px); }
+  .social-scene .guild-member-list :is(.guild-member-trade,.guild-member-reinforce) { flex: none; }
+  .social-scene .guild-member-trade { margin-left: 12px; }
+  .social-scene .social-tabs { padding: 0 8px; }
+  .social-scene .social-tabs button { flex: none; }
+  .social-scene .social-panel .message-filters button { min-width: 0; flex: 1; }
+  .social-scene .guild-support-heading { padding: 12px; gap: 8px; }
+  .social-scene .guild-support-heading h2 { font-size: 17px; }
+  .social-scene .guild-support-body { padding: 12px 12px 0; }
+  .social-scene .guild-trade-body { padding: 12px; }
+  .social-scene .guild-support-footer { padding: 12px; }
+  .social-scene .guild-support-recipient>span:last-child { display: none; }
+}

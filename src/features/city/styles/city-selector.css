@@ -1,6 +1,17 @@
 /* Shared identity for the live City and Map. All preview geometry is static. */
 .city-loyalty{display:flex;align-items:center;gap:7px;width:fit-content;max-width:100%;margin-top:5px;padding:6px 10px;border:1px solid #ffffff21;border-radius:8px;background:#242d33ed;color:#d8c197;font-size:11px}
 .city-loyalty strong{font-weight:600;color:#f0e7d7}.city-loyalty small{display:block;margin-top:1px;font-size:9px;color:#b6bdb8}
+.city-selector-card{position:relative}
+.city-selector .city-selector-land{flex-wrap:wrap;gap:4px 8px}
+.city-selector-land-stats{display:flex;align-items:center;flex:1;flex-wrap:wrap;gap:5px 12px;min-width:0}
+.city-selector-land-stats>span{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.city-selector .city-loyalty.is-compact{display:inline-flex;align-items:center;gap:4px;flex:none;width:auto;margin:0;padding:0;border:0;border-radius:0;background:transparent;color:var(--scene-muted,#aebbc7);font:10px/1.5 'Open Sans',Arial,sans-serif}
+.city-loyalty.is-compact>span{display:inline-flex;align-items:center;gap:4px}
+.city-loyalty.is-compact>svg{color:var(--scene-accent,#d8c197);flex:none}
+.city-loyalty.is-compact strong{font:500 10px/1.5 'Open Sans',Arial,sans-serif;color:var(--scene-text,#f0e7d7);white-space:nowrap;font-variant-numeric:tabular-nums}
+.city-loyalty.is-compact:focus-visible{outline:2px solid var(--scene-accent,#dfbd81);outline-offset:3px}
+.city-loyalty.is-compact small{position:absolute;z-index:35;left:8px;right:8px;top:calc(100% + 6px);margin:0;padding:8px 10px;border:1px solid var(--scene-edge,#a58050);border-radius:var(--scene-radius,4px);background:var(--scene-ink,#251a15);color:var(--scene-text,#f3e9d6);box-shadow:0 3px 10px #080c0933;font:11px/1.45 'Open Sans',Arial,sans-serif;white-space:normal;pointer-events:none}
+.city-loyalty.is-compact small[hidden]{display:none}
 .city-ruin-tabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin:4px 3px 7px;padding:3px;border-radius:8px;background:#141c22}
 .city-ruin-tabs button{padding:7px 4px;border:0;border-radius:6px;background:transparent;color:#b3bcc2;font-size:11px;cursor:pointer}
 .city-ruin-tabs button.selected{background:#45505a;color:#f1e7d4}
