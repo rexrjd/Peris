@@ -71,7 +71,9 @@ test('weekly shared-world tables use real scored outcomes and retain your rank o
     await expect(categories.getByRole('tab',{name:'Growth',exact:true})).toBeFocused();
     await page.keyboard.press('Home');
     await expect(categories.getByRole('tab',{name:'Top 10',exact:true})).toBeFocused();
-    await page.keyboard.press('Tab');
+    await page.keyboard.press('Shift+Tab');
+    await expect(page.getByRole('button',{name:'Last week',exact:true})).toBeFocused();
+    await page.keyboard.press('Shift+Tab');
     const currentWeek=page.getByRole('button',{name:'This week',exact:true});
     await expect(currentWeek).toBeFocused();
     expect(await currentWeek.evaluate(element=>{
@@ -83,7 +85,8 @@ test('weekly shared-world tables use real scored outcomes and retain your rank o
     })).toBe(true);
     await page.getByRole('button',{name:'Last week',exact:true}).click();
     await expect(page.getByRole('button',{name:'Last week',exact:true})).toHaveAttribute('aria-pressed','true');
-    await expect(page.locator('.ranking-camps')).toContainText('No ranked activity this week.');
+    await expect(page.locator('.ranking-camps .ranking-score')).toHaveText('0');
+    await expect(page.locator('.ranking-camps').getByRole('cell',{name:'Unranked',exact:true})).toBeVisible();
     await expect(growth(page).locator('.ranking-personal')).toContainText('Rankings Scribe');
     await capture(page,info,'rankings-shared-previous');
     await page.getByText('Scoring & weekly reset',{exact:false}).click();
@@ -100,6 +103,40 @@ test('weekly shared-world tables use real scored outcomes and retain your rank o
     expect(periods).toContain('current');expect(periods).toContain('previous');
     expect(errors).toEqual([]);
   }finally{await context.unroute('**/*.supabase.co/**');await server.close();}
+});
+
+test('Rankings shares the selected city materials with Map and City and keeps sparse tables compact',async({page},info)=>{
+  const world=createSolo('Rank Theme'),town=world.settlements[0],buildings=world.buildings;
+  const factions=['roman','persian','elf'] as const;
+  world.settlements=factions.map((faction,index)=>({...town,id:index+1,name:`Rank ${faction}`,faction,x:town.x+index*512}));
+  world.buildings=factions.flatMap((_,index)=>buildings.map(building=>({...building,id:index*100+building.id,settlement_id:index+1})));
+  await page.addInitScript(w=>{
+    localStorage.setItem('peris-campaign-v6',JSON.stringify(w));
+    localStorage.setItem('peris-settings',JSON.stringify({sound:false,music:false,reducedMotion:true}));
+    localStorage.setItem(`peris-welcome:${w.players[0].id}:${w.players[0].created_at}`,'yes');
+    sessionStorage.setItem(`peris-city-view:${w.players[0].id}`,'3d');
+  },world);
+  await page.goto('/');await page.getByRole('button',{name:'Continue campaign',exact:true}).click();
+  const material=()=>nav(page).evaluate(element=>({color:getComputedStyle(element).backgroundColor,image:getComputedStyle(element).backgroundImage}));
+  for(const faction of factions){
+    await nav(page).getByRole('button',{name:'Map',exact:true}).click();
+    await page.getByRole('button',{name:/^Current city:/}).click();
+    await page.getByRole('menuitemradio',{name:new RegExp(`^Rank ${faction},`)}).click();
+    const mapMaterial=await material();
+    expect(mapMaterial.image).toContain(`${faction}-texture.webp`);
+    await nav(page).getByRole('button',{name:'City',exact:true}).click();
+    await expect(page.locator('.city-3d-scene.ready')).toBeVisible();
+    await expect.poll(material).toEqual(mapMaterial);
+    await nav(page).getByRole('button',{name:'Rankings',exact:true}).click();
+    await expect(page.locator('.rankings-page')).toBeVisible();
+    expect(await material()).toEqual(mapMaterial);
+    const sheet=await page.locator('.rankings-page').evaluate(element=>({color:getComputedStyle(element).backgroundColor,image:getComputedStyle(element).backgroundImage}));
+    expect(sheet).toEqual(mapMaterial);
+    const rows=await page.locator('.ranking-board tbody tr').evaluateAll(elements=>elements.map(element=>element.getBoundingClientRect().height));
+    expect(Math.max(...rows)).toBeLessThanOrEqual(24);
+    if(info.project.name.includes('desktop'))expect((await page.locator('.rankings-page').boundingBox())!.height).toBeLessThanOrEqual(440);
+    await capture(page,info,`rankings-${faction}-compact`);
+  }
 });
 
 test('compact rankings fit a 320px screen with long player names and large scores',async({page},info)=>{
@@ -133,7 +170,7 @@ test('compact rankings fit a 320px screen with long player names and large score
   await capture(page,info,'rankings-320-long-name');
   await tabs.getByRole('tab',{name:'Growth',exact:true}).click();
   await expect(growth(page).locator('.ranking-score')).toHaveText('-1,234');
-  await expect(page.locator('.ranking-growth footer')).toContainText('Unranked');
+  await expect(growth(page).getByRole('cell',{name:'Unranked',exact:true})).toBeVisible();
 });
 
 test('ranking reads recover from network failure and explain an older world without the RPC',async({page,context},info)=>{
@@ -177,7 +214,7 @@ test('solo Rankings opens from the top navigation and preserves campaign scope a
   await expect(growth(page)).toBeVisible();
   await expect(page.getByText(/Solo campaign standings/)).toBeVisible();
   await expect(growth(page)).toContainText('Solo Standings');
-  await expect(page.locator('.ranking-growth footer')).toContainText('Unranked');
+  await expect(growth(page).getByRole('cell',{name:'Unranked',exact:true})).toBeVisible();
   await capture(page,info,'rankings-solo');
   await page.reload();await page.getByRole('button',{name:'Continue campaign',exact:true}).click();
   await nav(page).getByRole('button',{name:'Rankings',exact:true}).click();

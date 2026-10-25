@@ -2,7 +2,7 @@
 
 Rankings is a top-level destination in the game navigation. The five weekly Top 10 boards show public ruler names, current guild tags, scores and the signed-in ruler's own rank, including players outside the Top 10. This week and Last week are available. Solo campaigns show their own campaign standings.
 
-The interface uses a compact light statistics sheet with green category tabs, separate player/guild columns and highlighted personal rows. Top 10 shows all five boards; each category tab focuses one board. Arrow keys, Home and End move between categories. Scoring and tracking details expand below the tables.
+The interface uses the selected city's shared map/3D City colors, material texture and controls, with compact category tabs, separate player/guild columns and highlighted personal rows. Top 10 shows all five boards across three desktop columns; each category tab focuses one board. Arrow keys, Home and End move between categories. Scoring and tracking details expand below the tables. Unranked personal rows use a dash with an accessible label and tooltip; repeated rank summaries are omitted.
 
 | Board | Score |
 | --- | --- |

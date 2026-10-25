@@ -6,10 +6,10 @@ import {RankingsError} from '../platform/client';
 import {startRankingsRead,type RankingsState} from './reader';
 
 const categories:Record<RankingCategory,{name:string;heading:string;icon:string;unit:string;description:string}>={
-  attack:{name:'Attack',heading:'Attackers of the week',icon:'army',unit:'Crop-weighted kills',description:'Enemy player troops killed while attacking, weighted by hourly crop upkeep.'},
-  defense:{name:'Defense',heading:'Defenders of the week',icon:'shield',unit:'Crop-weighted kills',description:'Attacking player troops killed. Shared defenses divide points among the committed defenders.'},
-  robbers:{name:'Robbers',heading:'Robbers of the week',icon:'gold',unit:'Resources stolen',description:'Wood, stone, food and gold taken in finalized raids, after carrying limits.'},
-  camps:{name:'Camps',heading:'Camp raiders of the week',icon:'flag',unit:'Crop-weighted kills',description:'NPC camp troops killed while attacking, weighted by hourly crop upkeep.'},
+  attack:{name:'Attack',heading:'Attackers',icon:'army',unit:'Crop-weighted kills',description:'Enemy player troops killed while attacking, weighted by hourly crop upkeep.'},
+  defense:{name:'Defense',heading:'Defenders',icon:'shield',unit:'Crop-weighted kills',description:'Attacking player troops killed. Shared defenses divide points among the committed defenders.'},
+  robbers:{name:'Robbers',heading:'Robbers',icon:'gold',unit:'Resources stolen',description:'Wood, stone, food and gold taken in finalized raids, after carrying limits.'},
+  camps:{name:'Camps',heading:'Camp raiders',icon:'flag',unit:'Crop-weighted kills',description:'NPC camp troops killed while attacking, weighted by hourly crop upkeep.'},
   growth:{name:'Growth',heading:'Population growth',icon:'people',unit:'Net population',description:'Net population gained across living cities, including founding, conquests and losses.'},
 };
 type RankingSelection='all'|RankingCategory;
@@ -49,12 +49,14 @@ export function RankingsContent({state,period,solo,onPeriod,onRetry}:{state:Rank
     event.preventDefault();setCategory(tabs[next].id);tabButtons.current[next]?.focus();
   };
   return <section className="rankings-page" aria-labelledby="rankings-title">
-    <header className="rankings-heading"><h1 id="rankings-title">Rankings</h1><p>{solo?'Solo campaign standings':'Shared world · Weekly standings'}</p></header>
+    <header className="rankings-heading"><div><h1 id="rankings-title">Rankings</h1><p>{solo?'Solo campaign standings':'Shared world'}</p></div>
+      <div className="rankings-period" role="group" aria-label="Ranking week"><button aria-pressed={period==='current'} onClick={()=>onPeriod('current')}>This week</button><button aria-pressed={period==='previous'} onClick={()=>onPeriod('previous')}>Last week</button></div>
+    </header>
+    <div className="rankings-toolbar">
     <div className="rankings-tabs" role="tablist" aria-label="Ranking category">
       {tabs.map((tab,index)=><button key={tab.id} ref={node=>{tabButtons.current[index]=node;}} id={`rankings-tab-${tab.id}`} role="tab" aria-selected={category===tab.id} aria-controls="rankings-panel" tabIndex={category===tab.id?0:-1} onClick={()=>setCategory(tab.id)} onKeyDown={event=>changeTab(event,index)}>{tab.label}</button>)}
     </div>
-    <div className="rankings-week"><div><strong>{data?`${date(data.week_start)} – ${date(new Date(Date.parse(data.week_end)-1).toISOString())}`:'Weekly standings'}</strong><span>Weeks reset Monday 00:00 UTC</span></div>
-      <div className="rankings-period" role="group" aria-label="Ranking week"><button aria-pressed={period==='current'} onClick={()=>onPeriod('current')}>This week</button><button aria-pressed={period==='previous'} onClick={()=>onPeriod('previous')}>Last week</button></div>
+    <p className="rankings-week">{data?`${date(data.week_start)} – ${date(new Date(Date.parse(data.week_end)-1).toISOString())}`:'Weekly standings'}</p>
     </div>
     <div id="rankings-panel" role="tabpanel" aria-labelledby={`rankings-tab-${category}`} tabIndex={0} className="rankings-panel">
     {error&&<div className="rankings-feedback" role="alert"><Icon name="world" size={18}/><div><strong>{error instanceof RankingsError&&error.kind==='unavailable'?'Rankings are not available in this world yet':'Standings could not be refreshed'}</strong><p>{error.message}</p></div><button className="rankings-retry" onClick={onRetry} disabled={loading}>Retry</button></div>}
@@ -63,12 +65,11 @@ export function RankingsContent({state,period,solo,onPeriod,onRetry}:{state:Rank
       const board=data.boards.find(board=>board.category===id)!;const info=categories[id];
       const outside=board.self&&!board.entries.some(row=>row.player_id===board.self!.player_id);
       return <article key={id} className={`ranking-board ranking-${id}`} aria-labelledby={`ranking-${id}`}>
-        <header><h2 id={`ranking-${id}`}><Icon name={info.icon} size={16}/>{info.heading}</h2></header>
+        <header><h2 id={`ranking-${id}`}><Icon name={info.icon} size={13}/>{info.heading}</h2><span>{board.total_players.toLocaleString()} ranked</span></header>
         <table><caption className="rankings-sr-only">{info.name} weekly Top 10, {info.unit.toLowerCase()}</caption><thead><tr><th scope="col">Rank</th><th scope="col">Player</th><th scope="col">Guild</th><th scope="col">{id==='growth'?'People':id==='robbers'?'Resources':'Points'}</th></tr></thead>
-          <tbody>{board.entries.map(row=><RankingRow key={row.player_id} entry={row}/>)}{!board.entries.length&&<tr><td colSpan={4} className="ranking-empty">{period==='previous'?'No ranked activity this week.':'No ranked players yet.'}</td></tr>}</tbody>
-          {outside&&<tbody className="ranking-personal"><RankingRow entry={board.self!}/></tbody>}
+          <tbody>{board.entries.map(row=><RankingRow key={row.player_id} entry={row}/>)}{!board.entries.length&&!board.self&&<tr><td colSpan={4} className="ranking-empty">No ranked players yet.</td></tr>}</tbody>
+          {outside&&<tbody className="ranking-personal" aria-label={`Your rank: ${board.self!.rank??'Unranked'}`}><RankingRow entry={board.self!}/></tbody>}
         </table>
-        <footer><span>Your rank <strong>{board.self?.rank??'Unranked'}</strong></span><span>{board.total_players.toLocaleString()} ranked</span></footer>
       </article>;
     })}</div>}
     </div>
@@ -80,11 +81,12 @@ export function RankingsContent({state,period,solo,onPeriod,onRetry}:{state:Rank
           {data&&<p>Tracking since {date(data.tracking_since)} (UTC).{partial&&(Date.parse(data.tracking_since)>=Date.parse(data.week_end)?' Tracking began after this week. No earlier activity is included.':' Tracking began during this week. Only activity since tracking started is included.')}</p>}
         </div>
       </details>
+      <span className="rankings-reset">Weeks reset Monday 00:00 UTC</span>
       {data&&<p className="rankings-updated">Updated {new Intl.DateTimeFormat('en-GB',{hour:'2-digit',minute:'2-digit',timeZone:'UTC'}).format(new Date(data.server_now))} UTC{loading?' · Refreshing…':''}</p>}
     </footer>
   </section>;
 }
 
 function RankingRow({entry}:{entry:RankingEntry}) {
-  return <tr className={entry.is_you?'is-you':undefined}><td className={entry.rank!==null&&entry.rank<=3?'ranking-podium':undefined}>{entry.rank??'—'}</td><th scope="row"><span className="ranking-ruler">{entry.display_name}{entry.is_you&&<small>You</small>}</span></th><td className="ranking-guild">{entry.guild_tag?`[${entry.guild_tag}]`:'—'}</td><td className="ranking-score">{score(entry.score)}</td></tr>;
+  return <tr className={entry.is_you?'is-you':undefined}><td className={entry.rank!==null&&entry.rank<=3?'ranking-podium':undefined} aria-label={entry.rank===null?'Unranked':undefined} title={entry.rank===null?'Unranked':undefined}>{entry.rank??'—'}</td><th scope="row"><span className="ranking-ruler">{entry.display_name}{entry.is_you&&<small>You</small>}</span></th><td className="ranking-guild">{entry.guild_tag?`[${entry.guild_tag}]`:'—'}</td><td className="ranking-score">{score(entry.score)}</td></tr>;
 }
