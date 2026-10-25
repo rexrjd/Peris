@@ -2138,16 +2138,20 @@ begin
  select coalesce(sum(f.soldiers*u.carry),0)into carry from public.battle_formations f join public.peris_unit_catalog u on u.unit=coalesce(f.recruit_unit,f.unit_type)where f.battle_id=b.id and f.side='attacker';
  carry:=floor(carry*public.peris_research_factor(b.attacker_owner_id,'carry'));
  if p_winner='attacker'and c.owner_id=b.defender_owner_id and c.ruined_at is null then
-
+  -- Take loot before siege: destroying the last building clears all city stores.
+  -- Keep the local game's ordering and never debit a pre-siege snapshot afterward.
+  loot:=public.peris_take_camp_loot(jsonb_build_object('wood',floor(c.wood),'stone',floor(c.stone),'food',floor(c.food),'gold',floor(c.gold)),carry);
+  update public.settlements set wood=wood-(loot->>'wood')::numeric,stone=stone-(loot->>'stone')::numeric,food=food-(loot->>'food')::numeric,gold=gold-(loot->>'gold')::numeric where id=c.id;
   select public.peris_roster(coalesce(jsonb_object_agg(unit,n),'{}'))into engines from(select coalesce(f.recruit_unit,f.unit_type)unit,sum(f.soldiers)n from public.battle_formations f where f.battle_id=b.id and f.side='attacker'and f.status<>'routed'group by coalesce(f.recruit_unit,f.unit_type))q;
   engines:=jsonb_set(jsonb_set(engines,'{ram}',to_jsonb(floor((engines->>'ram')::integer*public.peris_research_factor(b.attacker_owner_id,'siege'))::integer)),'{catapult}',to_jsonb(floor((engines->>'catapult')::integer*public.peris_research_factor(b.attacker_owner_id,'siege'))::integer));
   damage:=public.peris_damage_city(c.id,engines,b.siege_target);
   if coalesce((initial->>'diplomat')::integer,0)>0 and to_regprocedure('public.peris_apply_city_conquest(bigint,uuid,integer,timestamp with time zone)')is not null then
    conquest:=public.peris_apply_city_conquest(c.id,b.attacker_owner_id,coalesce((survivors->>'diplomat')::integer,0),public.peris_game_now());
   end if;
-  if not coalesce((conquest->>'captured')::boolean,false)then
-  loot:=public.peris_take_camp_loot(jsonb_build_object('wood',floor(c.wood),'stone',floor(c.stone),'food',floor(c.food),'gold',floor(c.gold)),carry);
-  update public.settlements set wood=wood-(loot->>'wood')::numeric,stone=stone-(loot->>'stone')::numeric,food=food-(loot->>'food')::numeric,gold=gold-(loot->>'gold')::numeric where id=c.id;
+  if coalesce((conquest->>'captured')::boolean,false)then
+   -- Captured cities retain their resources; no loot leaves with the attacker.
+   update public.settlements set wood=wood+(loot->>'wood')::numeric,stone=stone+(loot->>'stone')::numeric,food=food+(loot->>'food')::numeric,gold=gold+(loot->>'gold')::numeric where id=c.id;
+   loot:=jsonb_build_object('wood',0,'stone',0,'food',0,'gold',0);
   end if;
  else
   damage:='[]';

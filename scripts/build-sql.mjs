@@ -346,5 +346,16 @@ for(const[name,content]of Object.entries(outputs)){
  }
  outputs[name]=complete
 }
+// A targeted rule replacement uses installed dependencies without rerunning capability migrations.
+outputs['UPGRADE_CITY_RAID_RESOURCE_FIX.sql']=[
+ '-- PERIS city raid resource hotfix for the current V19 world. Review before deployment.',
+ '-- Replaces raid finalization and its private participant guard. No data rewrite or constraint removal; safe to rerun.',
+ 'begin;',
+ "do $$begin if to_regprocedure('public.peris_finish_city_raid(bigint,text,text)')is null then raise exception 'Install current city raids first';end if;end $$;",
+ participantLocks,
+ cropDependencies.find(def=>def.startsWith('create or replace function public.peris_finish_city_raid(')),
+ 'revoke all on function public.peris_finish_city_raid(bigint,text,text)from public,anon,authenticated;',
+ "notify pgrst,'reload schema';",'commit;',
+].join('\n')
 for(const[file,content]of Object.entries(outputs)){const target=path.join(root,'supabase',file);if(process.argv.includes('--check')){if(await readSource(target)!==content)throw Error('Stale SQL bundle: '+file)}else{let existing;try{existing=await readSource(target)}catch(error){if(error.code!=='ENOENT')throw error}if(existing!==content)await fs.writeFile(target,content)}}
 console.log(process.argv.includes('--check')?'SQL bundles match modular source':'SQL bundles rebuilt')
