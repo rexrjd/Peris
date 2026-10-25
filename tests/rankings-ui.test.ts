@@ -20,6 +20,15 @@ test('five boards expose units, outside Top 10 own rows, negative growth and par
  for(const label of ['Attack','Defense','Robbers','Camps','Growth','Resources stolen','Net population','Crop-weighted kills','Your rank','Unranked','Partial week','Solo campaign','Monday 00:00 UTC','This week','Last week'])assert.ok(html.includes(label),label);
  assert.match(html,/>12<\/td>/);assert.match(html,/-3/);assert.match(html,/Tracking since/);
 });
+test('weekly overview has accessible category navigation and a distinct guild column in every table',()=>{
+ const html=renderToStaticMarkup(React.createElement(RankingsContent,{state:{data:fixture(),loading:false,error:null},period:'current',solo:false,onPeriod:()=>{},onRetry:()=>{}}));
+ assert.match(html,/role="tablist" aria-label="Ranking category"/);
+ assert.equal((html.match(/role="tab"/g)??[]).length,6);
+ assert.match(html,/aria-selected="true"[^>]*>Top 10/);
+ assert.equal((html.match(/<th scope="col">Guild<\/th>/g)??[]).length,5);
+ assert.match(html,/<td class="ranking-guild">\[SUN\]<\/td>/);
+ assert.match(html,/<details class="rankings-help"/);
+});
 test('loading, older worlds and connection failures have helpful recoverable states',()=>{
  const render=(error:Error|null,loading=false)=>renderToStaticMarkup(React.createElement(RankingsContent,{state:{data:null,loading,error},period:'current',solo:false,onPeriod:()=>{},onRetry:()=>{}}));
  assert.match(render(null,true),/Loading standings/);
