@@ -7,6 +7,8 @@ import { HeroPortrait } from './HeroPortrait';
 import { Modal } from '../../../shared/ui/Shared';
 import { Icon } from '../../../shared/ui/Icons';
 import { liveResources } from '../../city/domain/economy';
+import {factionOf} from '../../factions/domain/factions';
+import {rallyFactionStyle} from '../../army/ui/rallyFactionTheme';
 
 export function HireArmyDialog({ world, owner, cityId, now, busy, run, onClose, onCreated }: { world: World; owner: string; cityId: number; now: number; busy: boolean; run: (cmd: Command, message?: string) => void; onClose: () => void; onCreated: (id: number) => void }) {
     const [name, setName] = useState(''), [heroClass, setClass] = useState<HeroClass>('knight'), [chosenCity, setCity] = useState(cityId);
@@ -22,5 +24,5 @@ export function HireArmyDialog({ world, owner, cityId, now, busy, run, onClose, 
         <div className="command-note"><Icon name="army"/><p>Your new army starts with no soldiers. Recruit in its city or transfer troops from an army nearby.</p></div>
         <footer className="raise-army-footer"><div><strong>{armies.length} / {limit} armies raised</strong><small>Each city supports two armies.</small></div><button className="command-button primary" type="submit" disabled={busy || !!reason}>Raise army · {HERO_COST} gold<Icon name="arrow" size={17}/></button><p className="raise-army-reason">{busy ? 'Raising your army…' : reason ?? `${Math.floor(gold).toLocaleString()} gold in ${city?.name}`}</p></footer>
     </form></Modal>;
-    return typeof document === 'undefined' ? dialog : createPortal(dialog, document.body);
+    return typeof document === 'undefined' ? dialog : createPortal(<div className="realm-presentation scene-theme" data-scene-faction={factionOf(city?.faction)} style={rallyFactionStyle(factionOf(city?.faction))}>{dialog}</div>, document.body);
 }

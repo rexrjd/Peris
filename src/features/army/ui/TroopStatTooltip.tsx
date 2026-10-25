@@ -1,6 +1,8 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import type { TroopStat, TroopStatSource } from '../domain/troopCardStats';
+import {factionOf, type Faction} from '../../factions/domain/factions';
+import {rallyFactionStyle} from './rallyFactionTheme';
 
 const number = (value: number) => value.toLocaleString(undefined, { maximumFractionDigits: 2 });
 const signed = (value: number) => `${value < 0 ? '−' : '+'}${number(Math.abs(value))}`;
@@ -9,6 +11,7 @@ export function TroopStatTooltip({ label, stat, children }: { label: string; sta
     const id = useId(), trigger = useRef<HTMLButtonElement>(null), panel = useRef<HTMLDivElement>(null);
     const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
     const [open, setOpen] = useState(false);
+    const [sceneFaction,setSceneFaction]=useState<Faction>();
     const [position, setPosition] = useState<{ left: number; top?: number; bottom?: number; maxHeight: number; paper: boolean }>({ left: 8, top: 8, maxHeight: 300, paper: false });
     const keepOpen = () => clearTimeout(timer.current);
     const show = () => {
@@ -16,10 +19,12 @@ export function TroopStatTooltip({ label, stat, children }: { label: string; sta
         const box = trigger.current?.getBoundingClientRect();
         if (!box) return;
         const above = box.top > innerHeight / 2;
+        const scene=trigger.current?.closest<HTMLElement>('.scene-theme');
+        setSceneFaction(scene ? factionOf(scene.dataset.sceneFaction) : undefined);
         setPosition({ left: Math.max(8, Math.min(box.left - 60, innerWidth - Math.min(320, innerWidth - 16) - 8)),
             ...(above ? { bottom: innerHeight - box.top + 8 } : { top: box.bottom + 8 }),
             maxHeight: Math.max(100, (above ? box.top : innerHeight - box.bottom) - 16),
-            paper: !!trigger.current?.closest('.rp-shell, .rp-overlay-theme') });
+            paper: !scene && !!trigger.current?.closest('.rp-shell, .rp-overlay-theme') });
         setOpen(true);
     };
     const delayClose = () => { timer.current = setTimeout(() => setOpen(false), 150); };
@@ -48,10 +53,10 @@ export function TroopStatTooltip({ label, stat, children }: { label: string; sta
         aria-describedby={open ? id : undefined} aria-expanded={open} onMouseEnter={show}
         onMouseLeave={() => { if (document.activeElement !== trigger.current) delayClose(); }}
         onFocus={show} onBlur={delayClose} onClick={event => { event.stopPropagation(); show(); }}>{children}</button>
-        {open && createPortal(<div ref={panel} id={id} role="tooltip" className="troop-stat-tooltip" data-theme={position.paper ? 'paper' : 'dark'}
+        {open && createPortal(<div className={`realm-presentation${sceneFaction ? ' scene-theme' : ''}`} data-scene-faction={sceneFaction} style={sceneFaction ? rallyFactionStyle(sceneFaction) : undefined}><div ref={panel} id={id} role="tooltip" className="troop-stat-tooltip" data-theme={position.paper ? 'paper' : 'dark'}
             style={{ left: position.left, top: position.top, bottom: position.bottom, maxHeight: position.maxHeight }} onMouseEnter={keepOpen} onMouseLeave={delayClose}>
             <strong>{label} bonus breakdown</strong><p>Base {number(stat.base)} → Current {number(stat.current)}{stat.maximum !== undefined && `–${number(stat.maximum)}`}</p>
             {stat.variants ? stat.variants.map((row, i) => <section key={i}><h4>{row.label} · {number(row.current)}</h4>{sources(row.sources)}</section>) : sources(stat.sources)}
             <p className="troop-stat-tooltip-note">Bonuses multiply in order. Contributions are rounded. Press Escape or tap outside to close.</p>
-        </div>, document.body)}</>;
+        </div></div>, document.body)}</>;
 }

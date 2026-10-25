@@ -121,7 +121,7 @@ test('Rally unit cards explain bonuses on hover or tap without changing the sele
     const trigger = card.getByRole('button', { name: 'Explain Attack bonuses and penalties', exact: true });
     if (isMobile) await trigger.click(); else await trigger.hover();
     const tooltip = page.getByRole('tooltip');
-    await expect(tooltip).toHaveAttribute('data-theme', 'paper');
+    await expect(tooltip).toHaveAttribute('data-theme', 'dark');
     await expect(tooltip).toContainText('Home-city smithies');
     await expect(tooltip).toContainText('Commander & equipment');
     await expect(select).toHaveAttribute('aria-pressed', 'false');
@@ -140,7 +140,7 @@ function campaignIdentity(world: World) {
     };
 }
 
-test('ivory movement ledger filters real returns and raids without losing city scope or cancellation', async ({ page }, info) => {
+test('faction movement ledger filters real returns and raids without losing city scope or cancellation', async ({ page }, info) => {
     await page.setViewportSize({ width: 390, height: 844 });
     const f = fixture();
     f.world.armies.find(army => army.id === 300)!.carried_loot = { wood: 1492, stone: 1593, food: 1588, gold: 1304 };
@@ -156,8 +156,8 @@ test('ivory movement ledger filters real returns and raids without losing city s
     await expect(returning.getByRole('button', { name: 'Cancel order', exact: true })).toHaveCount(0);
     await expect(movements.getByRole('article', { name: 'Raid: Camp raiders', exact: true }).getByRole('button', { name: 'Cancel order', exact: true })).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-    expect(await returning.locator('.rally-location span').first().evaluate(el => parseFloat(getComputedStyle(el).fontSize))).toBeGreaterThanOrEqual(14);
-    await capture(page, info, 'ivory-movements-mobile');
+    expect(await returning.locator('.rally-location span').first().evaluate(el => parseFloat(getComputedStyle(el).fontSize))).toBeGreaterThanOrEqual(12);
+    await capture(page, info, 'faction-movements-mobile');
     await movements.getByRole('button', { name: 'Incoming 1', exact: true }).click();
     await expect(movements.getByRole('article')).toHaveCount(1);
     await expect(returning).toBeVisible();
@@ -171,16 +171,16 @@ test('ivory movement ledger filters real returns and raids without losing city s
     await expect(movements.getByRole('article', { name: 'Reinforcement: Eastern reinforcement', exact: true })).toContainText('Dawnwatch');
     await page.getByRole('tab', { name: 'Reports', exact: true }).click();
     await expect(page.getByLabel('Battle report ledger').getByRole('article')).toHaveCount(3);
-    await capture(page, info, 'ivory-reports-mobile');
+    await capture(page, info, 'faction-reports-mobile');
     await page.getByLabel('Filter reports by camp').selectOption({ label: f.camp.name });
     await expect(page.getByLabel('Battle report ledger').getByRole('article')).toHaveCount(2);
     await expect(page.getByRole('button', { name: /Older saved raid/ })).toHaveCount(0);
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.getByLabel('Filter reports by camp').selectOption('all');
-    await capture(page, info, 'ivory-reports-desktop');
+    await capture(page, info, 'faction-reports-desktop');
     await page.getByRole('tab', { name: 'Movements', exact: true }).click();
     await movements.getByRole('button', { name: 'All 1', exact: true }).click();
-    await capture(page, info, 'ivory-movements-desktop');
+    await capture(page, info, 'faction-movements-desktop');
     expect(errors).toEqual([]);
 });
 
@@ -191,7 +191,7 @@ test('integrated Rally follows the selected city faction and stays scoped to thi
     const shell = page.locator('.game-shell');
     await expect(shell).toHaveClass(/rp-shell/);
     await expect(shell).toHaveAttribute('data-rally-faction', 'roman');
-    await expect(page.locator('.rp-unit-card')).toHaveCount(9);
+    await expect(page.locator('.rp-unit-card')).toHaveCount(10);
     const identity = campaignIdentity(await saved(page));
     await expect(page.getByLabel('Rally Point appearance')).toHaveCount(0);
     await expect(page.getByRole('button', { name: 'Explore appearances', exact: true })).toHaveCount(0);
@@ -209,8 +209,8 @@ test('integrated Rally follows the selected city faction and stays scoped to thi
     await expect(page.locator('.rp-commander img')).toHaveAttribute('src', /portraits\/roman\//);
     expect(campaignIdentity(await saved(page))).toEqual(identity);
     await page.evaluate(async () => { await document.fonts.ready; });
-    await expect(page.locator('.rally-note').first()).toHaveCSS('font-family', /Crimson Text/);
-    await expect(page.locator('.rally-heading p')).toHaveCSS('font-family', /Crimson Text/);
+    await expect(page.locator('.rally-note').first()).toHaveCSS('font-family', /Open Sans/);
+    await expect(page.locator('.rally-heading p')).toHaveCSS('font-family', /Open Sans/);
     await expect(page.locator('.rp-nation-title strong')).toHaveCSS('font-family', /Cinzel/);
     await expect(page.locator('.rp-command-caption h2')).toHaveCSS('font-family', /Cinzel/);
     expect(await page.locator('.rally-panel').evaluate(el => el.scrollHeight > el.clientHeight && getComputedStyle(el).overflowY === 'auto')).toBe(true);
@@ -242,7 +242,7 @@ test('integrated Rally selected station legion reviews a real raid and can cance
     const tray = page.getByRole('region', { name: 'Legion details: Field watch', exact: true });
     await expect(station.getByRole('button', { name: 'Field watch', exact: true })).toHaveAttribute('aria-pressed', 'true');
     await expect(tray.getByRole('heading', { name: 'Field watch', exact: true })).toBeVisible();
-    await expect(tray.locator('.rp-unit-card')).toHaveCount(9);
+    await expect(tray.locator('.rp-unit-card')).toHaveCount(10);
     await expect(page.getByRole('navigation', { name: 'Game navigation' }).getByRole('button', { name: 'Rally Point', exact: true })).toHaveAttribute('aria-current', 'page');
     await tray.getByRole('button', { name: 'Issue orders', exact: true }).click();
     const picker = page.getByRole('dialog', { name: 'Issue orders', exact: true });
@@ -388,7 +388,7 @@ test('Rally Point opens real report details even when an older battle has been p
     await page.getByRole('tab', { name: 'Reports', exact: true }).click();
     await page.getByRole('button', { name: /Stored camp victory/ }).click();
     let report = page.getByRole('dialog', { name: 'Battle result', exact: true });
-    await expect(report).toHaveCSS('background-color', 'rgb(252, 249, 241)');
+    await expect(report).toHaveCSS('background-color', 'rgb(48, 35, 27)');
     await expect(report.getByRole('heading', { name: 'Victory', exact: true })).toBeVisible();
     await expect(report).toContainText('Stored camp victory');
     await page.keyboard.press('Escape');
@@ -396,7 +396,7 @@ test('Rally Point opens real report details even when an older battle has been p
     await page.getByRole('tab', { name: 'Reports', exact: true }).click();
     await page.getByRole('button', { name: /Older saved raid/ }).click();
     report = page.getByRole('dialog', { name: 'Saved battle report', exact: true });
-    await expect(report).toHaveCSS('background-color', 'rgb(252, 249, 241)');
+    await expect(report).toHaveCSS('background-color', 'rgb(48, 35, 27)');
     await expect(report).toContainText('Older saved raid');
     await expect(report).toContainText('Attacking forces');
     await expect(report).toContainText('Defending forces');

@@ -1,0 +1,126 @@
+/* Management screens inherit the faction palette used by Map, 3D City and Rankings. */
+.scene-theme :is(.armies-workspace,.technology-page){--paper:var(--scene-text);--muted:var(--scene-muted);color:var(--scene-text);font:12px/1.4 'Open Sans',Arial,sans-serif;color-scheme:dark}
+.scene-theme .realm-content:has(>.armies-workspace),.scene-theme .realm-content:has(>.technology-page){background:color-mix(in srgb,var(--scene-ink) 72%,#080c09)}
+.scene-theme .technology-page{background:transparent}
+.scene-theme .army-command.armies-workspace{background:none}
+.scene-theme :is(.army-commander-card,.army-management-workspace,.tech-board-panel,.tech-detail,.research-active-strip,.science-sources,.tech-bonus-summary,.rp-army-details,.rally-stations>article,.rally-metrics>div,.rally-metrics>button){background-color:var(--scene-ink);background-image:var(--scene-material);background-size:auto,360px auto;border:1px solid color-mix(in srgb,var(--scene-edge) 32%,transparent);border-radius:var(--scene-radius);color:var(--scene-text);box-shadow:0 3px 10px #080c0922}
+body .scene-theme :is(.armies-toolbar h1,.technology-heading h1){font:600 19px/1.3 'Cinzel',Georgia,serif;letter-spacing:0;color:var(--scene-text);margin:0}
+.scene-theme .technology-heading{gap:10px;min-height:38px;margin-bottom:10px}
+.scene-theme .technology-heading .tech-eyebrow,.scene-theme .rally-heading .eyebrow{display:none}
+.scene-theme .technology-heading p{margin-top:3px}
+.scene-theme .science-wallet{min-width:150px;padding:5px 9px;column-gap:6px;border-radius:var(--scene-radius)}
+.scene-theme .science-wallet strong{font-size:18px}
+.scene-theme .research-active-strip{min-height:36px;padding:6px 10px;margin-bottom:10px}
+.scene-theme .research-active-strip>img{width:32px;height:32px}
+.scene-theme .tech-toolbar :is(input,select),.scene-theme .tech-zoom button{padding-block:6px}
+.scene-theme .technology-page .tech-search input{min-height:28px;padding:4px 0;border:0;border-radius:0;box-shadow:none;background:transparent;color:var(--scene-text)}
+.scene-theme .tech-board-footer{padding:7px 9px;color:var(--scene-muted)}
+.scene-theme .tech-era-row,.scene-theme .tech-era-row>span{height:32px}
+.scene-theme .tech-card{box-shadow:none}
+.scene-theme .tech-card.is-selected{outline-width:1px;outline-offset:2px}
+.scene-theme .tech-card.is-active{box-shadow:inset 3px 0 var(--scene-accent)}
+.scene-theme .tech-card.is-complete{border-color:#83b278}
+.scene-theme .tech-card.is-locked{opacity:.7}
+.scene-theme .tech-card.is-dim{opacity:.23}
+.scene-theme .tech-card small{font-size:9px}
+.scene-theme .tech-detail-art{margin:0 0 8px}
+.scene-theme .tech-detail h2{font-family:'Cinzel',Georgia,serif;margin:7px 0 9px}
+.scene-theme .tech-effect-list{gap:6px;margin:10px 0}
+.scene-theme .tech-prerequisites{padding-top:10px;margin:12px 0}
+.scene-theme .tech-detail-cost{padding-top:10px;margin:12px 0}
+.scene-theme .tech-primary{padding:8px 10px;min-height:32px;color:var(--scene-ink);border-color:var(--scene-accent)}
+.scene-theme .tech-primary.secondary{color:var(--scene-text);border-color:var(--scene-edge)}
+.scene-theme .tech-tree-scroll{scrollbar-color:var(--scene-edge) var(--scene-ink)}
+.scene-theme .modal:is(.army-recruit-modal,.raise-army-modal,.army-troop-modal){--paper:var(--scene-text);--muted:var(--scene-muted);--cmd-text:var(--scene-text);--cmd-accent:var(--scene-accent);--cmd-muted:var(--scene-muted);--cmd-bg:var(--scene-ink);--cmd-panel:var(--scene-panel);--cmd-border:var(--scene-edge);color:var(--scene-text);background-color:var(--scene-ink);background-image:var(--scene-material);background-size:auto,360px auto;border-color:var(--scene-edge);border-radius:var(--scene-radius);font-family:'Open Sans',Arial,sans-serif;color-scheme:dark}
+body .scene-theme :is(.army-recruit-modal,.raise-army-modal,.army-troop-modal) :is(p,small){color:var(--scene-muted)}
+body .scene-theme :is(.army-recruit-modal,.raise-army-modal,.army-troop-modal) :is(h2,h3,strong){color:var(--scene-text)}
+.scene-theme .army-troop-card{padding:10px;background:color-mix(in srgb,var(--scene-panel) 65%,transparent);border-color:color-mix(in srgb,var(--scene-edge) 32%,transparent);border-radius:var(--scene-radius);color:var(--scene-text)}
+.scene-theme .army-troop-card .fw-troop-icon{width:48px;height:56px;border-radius:var(--scene-radius);background-color:var(--scene-ink)}
+.scene-theme .army-troop-grid .army-troop-inspect{gap:8px}
+.scene-theme .armies-workspace .army-troop-grid .troop-stat-current{color:var(--scene-text)}
+.scene-theme :is(.army-troop-inspect .army-troop-card-hint,.army-troop-empty-note,.army-troop-quick-stats){color:var(--scene-muted)}
+.scene-theme .army-commander-card{padding:12px;gap:12px}
+.scene-theme .armies-workspace .army-command-body{padding:12px}
+.scene-theme .armies-workspace .army-command-tabs{padding-inline:8px;gap:4px;min-height:34px}
+.scene-theme .armies-workspace .army-command-tabs>button{padding:8px;min-height:34px}
+.scene-theme .army-management-workspace :is(.command-attributes>article,.command-effects>div,.command-artifact-detail,.command-artifact-grid>button,.command-equipment-slots>button,.command-spells>article,.command-base){border-radius:var(--scene-radius)}
+.scene-theme .armies-workspace :is(button,input,select):focus-visible{outline-color:var(--scene-accent)}
+.scene-theme .troop-stat-tooltip{--troop-positive:#a6d69a;--troop-negative:#ffaba5;background-color:var(--scene-ink);background-image:var(--scene-material);background-size:auto,360px auto;color:var(--scene-text);border-color:var(--scene-edge);font:12px/1.45 'Open Sans',Arial,sans-serif}
+.scene-theme .rp-shell{--troop-positive:#a6d69a;--troop-negative:#ffaba5}
+.scene-theme .rp-shell.game-shell{padding-bottom:0}
+.scene-theme .rp-shell.game-shell>.rp-nation-banner{max-width:1200px;padding:4px 12px}
+.scene-theme .rp-shell.game-shell>.realm-content.rally-content.rp-stage{max-width:1200px}
+.scene-theme .rp-shell .rp-nation-title{gap:8px}
+.scene-theme .rp-shell .rp-nation-title>svg{width:24px;height:24px}
+body .scene-theme .rp-nation-banner .rp-nation-title strong{font-size:11px;color:var(--scene-accent)}
+.scene-theme .rp-shell .rp-nation-title small{font-size:10px;margin:0}
+.scene-theme .rp-shell .rally-point{padding:0 12px}
+.scene-theme .rp-shell .rally-heading{padding:10px 0;gap:12px}
+body .scene-theme .rp-shell .rally-heading h1{font-size:19px;line-height:1.3;margin:0 0 3px}
+.scene-theme .rp-shell .rally-heading p{font-size:11px}
+.scene-theme .rp-shell .rally-heading label{font-size:10px;width:200px;min-width:0;gap:3px}
+body .scene-theme.rp-overlay-theme .rally-heading select{font-size:12px;min-height:30px;padding:4px 7px}
+.scene-theme .rp-shell .rally-tabs{border-radius:0;background:transparent;border-width:0 0 1px}
+.scene-theme .rp-shell .rally-tabs button{font:600 11px/1.3 'Open Sans',Arial,sans-serif;min-height:32px;padding:7px 10px;border-right:0;color:var(--scene-muted)}
+.scene-theme .rp-shell .rally-tabs button[aria-selected=true]{background:color-mix(in srgb,var(--scene-accent) 8%,transparent);color:var(--scene-accent);box-shadow:inset 0 -2px var(--scene-accent)}
+.scene-theme .rp-shell .rally-tabs b{font-size:10px;min-width:16px;height:16px;border-radius:3px;background:var(--scene-panel);color:var(--scene-accent)}
+.scene-theme .rp-shell .rally-panel{padding:12px 1px 20px}
+.scene-theme .rp-shell .rally-metrics{gap:8px;margin-bottom:12px}
+.scene-theme .rp-shell .rally-metrics> :is(div,button){padding:8px;grid-template-columns:20px 1fr;gap:2px 7px}
+.scene-theme .rp-shell .rally-metrics svg{width:20px;height:20px}
+.scene-theme .rp-shell .rally-metrics b{font-size:19px}
+.scene-theme .rp-shell .rally-metrics span{font-size:10px}
+.scene-theme .rp-movement-summaries{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:14px}
+.scene-theme .rp-movement-summary{min-width:0;border:1px solid var(--rp-border);border-radius:var(--scene-radius);background:color-mix(in srgb,var(--scene-panel) 65%,transparent)}
+.scene-theme .rp-movement-summary-header{display:flex;align-items:center;gap:8px;padding:7px 9px;list-style:none;cursor:pointer;color:var(--scene-accent)}
+.scene-theme .rp-movement-summary-header::-webkit-details-marker{display:none}
+.scene-theme .rp-movement-summary-title{display:grid;gap:2px;flex:1;min-width:0}
+.scene-theme .rp-movement-summary-title strong{font-size:11px}
+.scene-theme .rp-movement-summary-title small{font-size:10px}
+.scene-theme .rp-movement-summary-total{display:flex;gap:5px;align-items:baseline;color:var(--scene-muted);font-size:10px}
+.scene-theme .rp-movement-summary-total b{color:var(--scene-text);font-size:14px}
+.scene-theme .rp-movement-summary[open]>.rp-movement-summary-header{border-bottom:1px solid var(--rp-border)}
+.scene-theme .rp-movement-summary[open]>.rp-movement-summary-header>svg:last-child{transform:rotate(180deg)}
+.scene-theme .rp-movement-summary-empty{padding:9px;margin:0;font-size:11px}
+.scene-theme .rp-movement-summary-rows{padding:0 8px}
+.scene-theme .rp-shell .rp-unit-cards{grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:7px}
+.scene-theme .rp-shell .rp-unit-card .fw-troop-icon.fw-troop-portrait{width:52px;height:58px;aspect-ratio:auto;margin:auto}
+.scene-theme .rp-shell .rp-unit-name{min-height:28px;font-size:11px}
+.scene-theme .rp-shell .rp-unit-inspect>small{font-size:10px}
+.scene-theme .rp-shell .rp-unit-card>.troop-card-stats{margin-top:5px;padding:5px 0 0}
+.scene-theme .rp-shell .rp-unit-card .troop-card-stats{grid-template-columns:minmax(34px,1fr) repeat(3,auto);column-gap:3px}
+.scene-theme .rp-shell .rp-unit-card .troop-stat-current{font-size:11px}
+.scene-theme .rp-shell .rp-unit-card .troop-card-stat{font-size:10px}
+.scene-theme .rp-shell .rp-unit-inspector{background:transparent}
+@media(max-width:760px){
+ .scene-theme .rp-shell.game-shell{padding-bottom:calc(60px + env(safe-area-inset-bottom))}
+ .scene-theme .rp-shell .rally-point{padding-inline:8px}
+ .scene-theme .rp-shell .rally-heading label{width:130px;flex-basis:130px}
+ .scene-theme .rp-shell .rally-heading select{font-size:12px;min-height:30px;padding:5px}
+ .scene-theme .rp-shell .rally-tabs{order:0;display:flex;width:100%;margin:0;padding:0;border-bottom:1px solid var(--rp-border);border-top:0}
+ .scene-theme .rp-shell .rally-tabs button{flex-direction:row;gap:4px;padding:7px 3px;white-space:nowrap;font-size:10px}
+ .scene-theme .rp-shell .rally-tabs button>svg{width:14px;height:14px}
+ .scene-theme .rp-shell .rally-tabs b{position:static;min-width:14px;height:14px;font-size:9px}
+ .scene-theme .rp-shell .rally-panel{border-top:0}
+ .scene-theme .rp-movement-summaries{grid-template-columns:1fr}
+ .scene-theme .rp-shell .rp-unit-cards{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .scene-theme .armies-workspace .army-command-tabs{justify-content:space-between;gap:0;padding-inline:3px}
+ .scene-theme .armies-workspace .army-command-tabs>button{padding:9px 5px;font-size:10px;gap:3px}
+ .scene-theme .armies-workspace .army-command-body{padding:10px}
+ .scene-theme .army-troop-card .fw-troop-icon{width:38px;height:46px}
+ .scene-theme .technology-heading p{max-width:180px;font-size:10px}
+ .scene-theme .science-wallet{min-width:104px;padding:5px}
+ .scene-theme .science-wallet small span{display:block;margin-left:0}
+ .scene-theme .technology-page .tech-toolbar{gap:5px}
+ .scene-theme .technology-page .tech-toolbar select{max-width:calc(50% - 8px);flex:1 1 40%}
+ .scene-theme .tech-zoom{margin-left:auto}
+}
+@media(max-width:380px){
+ .scene-theme .armies-toolbar{flex-wrap:wrap}
+ .scene-theme .armies-toolbar>div{flex:1}
+ .scene-theme .armies-search{order:2;width:100%;margin:0}
+ .scene-theme .army-troop-grid{grid-template-columns:1fr}
+ .scene-theme .rp-shell .rally-tabs button>svg{display:none}
+ .scene-theme .technology-heading{align-items:flex-start}
+ .scene-theme .technology-heading p{max-width:160px}
+}

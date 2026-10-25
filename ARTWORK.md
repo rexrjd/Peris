@@ -90,14 +90,17 @@ this artwork change does not deploy SQL. No GPU frame-rate claim is made.
 
 ## Rally Point operations ledger
 
-The Rally Point uses the approved ivory operations-ledger presentation in
-`src/features/army/styles/rally-ledger.css`: light paper surfaces, oxblood accents,
-fine gold rules, and the bundled Cinzel and Crimson Text fonts. Existing faction
-crests, commander portraits, and nine-role troop icons remain tied to the actual
-city and legion. The earlier faction paintings are retained as artwork sources;
-the ledger no longer downloads or waits for those large background/frame images.
+Armies, Rally Point and Research use the same compact faction materials as Map,
+live 3D City and Rankings through `scene-theme.css` and `scene-management.css`.
+Dark textured surfaces, fine faction borders, Cinzel headings and Open Sans
+controls follow the selected city. Existing faction crests, commander portraits
+and troop icons remain tied to the actual city and legion. The earlier large
+faction backgrounds and frames remain artwork sources; management surfaces use
+only the quiet material textures. Recruitment, troop dossiers and bonus tooltips
+retain their faction theme when rendered in body portals.
 
-On phones, four Rally sections occupy the bottom navigation. Movements combines
+On phones, four compact Rally section tabs stay above their scrolling panel;
+the bottom dock retains the shared game destinations. Movements combines
 owned incoming and outgoing orders with filters, arrival countdowns, carried
 spoils, and expandable troop breakdowns. Reports adds a camp filter and keeps full
 resource receipts one tap away. These are presentation changes over the existing movement, privacy,
@@ -284,7 +287,7 @@ Research references: Anno 117's official Roads & building in the grid and UI vis
 
 ## Ornate faction Rally Point (V19.6)
 
-The Rally Point uses the approved original ornate prototype's eleven faction
+The earlier ornate Rally Point prototype supplied eleven faction
 backgrounds, transparent frames and quiet material textures. All 33 individual
 paintings were generated for Peris with the built-in image tool on 2026-10-12.
 Untouched PNGs are preserved in `assets/source/rally-point-v1/`;

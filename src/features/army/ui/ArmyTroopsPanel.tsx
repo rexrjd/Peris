@@ -20,6 +20,8 @@ import { troopCardStats } from '../domain/troopCardStats';
 import { TroopStatSummary } from './TroopStatSummary';
 import {troopFoodPerHour} from '../../city/domain/troopSupply';
 import {visibleRecruitUnits} from './visibleRecruitUnits';
+import {factionOf} from '../../factions/domain/factions';
+import {rallyFactionStyle} from './rallyFactionTheme';
 
 export function ArmyTroopsPanel({ world, army, city, now, run, busy, onCity, onOpenCity, onLogistics }: {
     world: World; army: Army; city: Settlement; now: number; busy: boolean; run: (command: Command, message?: string) => void;
@@ -45,7 +47,6 @@ export function ArmyTroopsPanel({ world, army, city, now, run, busy, onCity, onO
             return <li key={order.id}><TroopIcon faction={faction} unit={order.item as RecruitUnit}/><div><strong>{order.quantity} {factionTroopName(faction, order.item as RecruitUnit)}</strong><small>{queued ? 'Queued' : 'Training'}<span className="army-training-meter" role="progressbar" aria-label={`${factionTroopName(faction, order.item as RecruitUnit)} training progress`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.floor(progress)}><i style={{ width: `${progress}%` }}/></span></small></div><time dateTime={order.finish_at}>{clock(Math.max(0, (finish - now) / 1000), world.game_clock?.rate ?? 1)}</time></li>;
         })}</ol>}</section>
         {research.length > 0 && <section className="army-training-section" aria-label="Building research queue"><header><h2>City unit research</h2><span>{city.name}</span></header><ol className="command-queue-list">{research.map(entry => <li key={entry.unit}><TroopIcon faction={city.faction ?? faction} unit={entry.unit}/><div><strong>{factionTroopName(city.faction ?? faction, entry.unit)}</strong><small>Researching</small></div><time dateTime={entry.completes_at}>{clock(Math.max(0, (Date.parse(entry.completes_at) - now) / 1000), world.game_clock?.rate ?? 1)}</time></li>)}</ol></section>}
-        {dialog && (typeof document === 'undefined' ? dialog : createPortal(dialog, document.body))}
-        {statsDialog && (typeof document === 'undefined' ? statsDialog : createPortal(statsDialog, document.body))}
+        {(dialog || statsDialog) && (typeof document === 'undefined' ? <>{dialog}{statsDialog}</> : createPortal(<div className="realm-presentation scene-theme" data-scene-faction={factionOf(city.faction)} style={rallyFactionStyle(factionOf(city.faction))}>{dialog}{statsDialog}</div>, document.body))}
     </div>;
 }
