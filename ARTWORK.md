@@ -294,12 +294,14 @@ item ID, painting and rarity. No other game's equipment artwork is included.
 
 Original Guilds and Messages navigation pictures use the same ivory, sandstone and slate-blue low-poly style as the existing HUD. The built-in Imagegen tool created the transparent sources under `assets/source/ui-low-poly-v1/`; prompts and export paths are recorded in `assets/ui-low-poly-v1.json` and `assets/social-art-prompts.json`. `npm run build:ui-icons` exports their 96px WebP assets, and `npm run check:ui-icons` verifies the complete set. Guild crests are original editable SVG compositions with six sigils and six preset colors, rendered by `features/social/ui/Crest.tsx`. No Travian or Albion artwork is shipped.
 
-Rankings uses an original solid gold crown with slate-blue gems from that same
-low-poly HUD set, replacing its outline glyph. The built-in image tool generated
-`assets/source/ui-low-poly-v1/rankings.png` using the City, Reports and Research
+Rankings uses five ascending sandstone columns, following the statistics motif
+in the user's Travian reference and matching the existing low-poly HUD set.
+The built-in image tool generated
+`assets/source/ui-low-poly-v1/rankings.png` using the City and Reports
 icons as style references. Its prompt, references and ownership are recorded in
 `assets/ui-low-poly-v1.json`; the existing icon exporter produces the transparent
-96px `public/art/ui/low-poly-v1/rankings.webp`. Desktop and mobile share the normal
+96px `public/art/ui/low-poly-v1/rankings.webp`. The earlier crown artwork is retained
+in Git history at `8fc6d94`. Desktop and mobile share the normal
 `LowPolyIcon` component and unchanged Rankings action.
 
 ## V19.4 live 3D city
