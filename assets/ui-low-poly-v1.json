@@ -68,6 +68,21 @@
       "prompt": "Use case: stylized-concept. Asset type: tiny fantasy strategy game navigation picture. Create one original minimal low-poly isometric MESSAGES icon: a single thick folded ivory parchment envelope with three clean angular folds and a broad slate-blue wax seal on the front. Restrained sandstone ivory and slate-blue palette, warm gold highlight only. Simple flat faceted surfaces, softly lit, readable chunky silhouette at 24 pixels, matching low-poly map and citadel icons. Square, isolated centred object fills 80% of canvas. No text, no words, no letters, no background, no scenery, no frame, no floor, no base tile, no extra objects or tiny details, no outline. Actual transparent background.",
       "source": "assets/source/ui-low-poly-v1/messages.png",
       "image": "/art/ui/low-poly-v1/messages.webp"
+    },
+    {
+      "id": "rankings",
+      "created": "2026-10-26",
+      "license": "original",
+      "author": "Peris",
+      "generator": "Built-in image_gen tool",
+      "prompt": "Use case: stylized-concept. Asset type: one tiny Peris fantasy strategy game navigation icon, transparent square PNG. Primary request: one original solid gold CROWN for the Rankings button, matching the illustrated low-poly object icons in the three reference images. References are style only: the same faceted geometry, softly painted natural materials, restrained ivory, warm gold and slate-blue palette, upper-left soft studio lighting, three-quarter slightly elevated isometric view. Subject: a compact, thick, open royal crown with a broad gold band and five simple tapered points, a small slate-blue central inset gem, warm gold highlights and softly shaded bronze inner surfaces. Strong simple chunky silhouette readable at 24px. Match the icon density and tangible miniature-object treatment of the reference citadel, scroll and armillary book. Composition: one complete crown centered, occupying 80% of the square; genuinely transparent empty background. No character, cushion, pedestal, surrounding objects, text, letters, numbers, logo, frame, tile, outline glyph, heavy black contour, scenery or external cast shadow. One icon only; no contact sheet. This must look like a little dimensional painted gold object, not a thin line crown.",
+      "references": [
+        "public/art/ui/low-poly-v1/city.webp",
+        "public/art/ui/low-poly-v1/reports.webp",
+        "public/art/ui/low-poly-v1/research.webp"
+      ],
+      "source": "assets/source/ui-low-poly-v1/rankings.png",
+      "image": "/art/ui/low-poly-v1/rankings.webp"
     }
   ]
 }

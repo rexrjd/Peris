@@ -11,7 +11,7 @@ import type {RankingsResponse} from '../src/features/rankings/domain/types';
 const fixture=():RankingsResponse=>({version:1,period:'current',week_start:'2026-10-19T00:00:00Z',week_end:'2026-10-26T00:00:00Z',server_now:'2026-10-25T12:00:00Z',tracking_since:'2026-10-22T10:00:00Z',boards:['attack','defense','robbers','camps','growth'].map(category=>({category:category as 'attack',entries:[{rank:1,player_id:'rival',display_name:'Rival',guild_tag:'SUN',score:50,is_you:false}],self:{rank:12,player_id:'me',display_name:'Your ruler',guild_tag:null,score:12,is_you:true},total_players:12}))});
 test('navigation includes Rankings and keeps Reports as an unread dialog action',()=>{
  const html=renderToStaticMarkup(React.createElement(GameNavigation,{view:'rankings',unreadReports:2,onNavigate:()=>{}}));
- assert.equal((html.match(/<button /g)??[]).length,7);assert.match(html,/aria-label="Rankings" aria-current="page"/);assert.match(html,/aria-label="Reports, 2 unread" aria-haspopup="dialog"/);assert.doesNotMatch(html,/rankings\.webp/);
+ assert.equal((html.match(/<button /g)??[]).length,7);assert.match(html,/aria-label="Rankings" aria-current="page"/);assert.match(html,/aria-label="Reports, 2 unread" aria-haspopup="dialog"/);assert.match(html,/src="\/art\/ui\/low-poly-v1\/rankings\.webp"/);
 });
 test('five boards expose units, outside Top 10 own rows, negative growth and partial solo scope',()=>{
  const data=fixture();data.boards[0].self!.rank=null;data.boards[0].self!.score=0;data.boards[4].self!.score=-3;data.boards[4].self!.rank=null;

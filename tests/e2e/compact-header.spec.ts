@@ -21,7 +21,7 @@ test('compact command header keeps the scene clear and all controls usable', asy
         expect(await page.evaluate(({x,y})=>document.elementFromPoint(x,y)?.tagName,{x:(left.x+left.width+right.x)/2,y:left.y+left.height/2})).toBe('CANVAS');
     }
     await expect(header.locator('.hud-stock').first()).toHaveCSS('font-size', info.project.name.includes('desktop') ? '12px' : '11px');
-    await expect(header.locator('.hud-picture')).toHaveCount(12);
+    await expect(header.locator('.hud-picture')).toHaveCount(13);
     const community=page.getByRole('navigation',{name:'Community navigation'});
     await expect(community.getByRole('button')).toHaveCount(2);
     await expect(community.getByRole('button',{name:'Guilds',exact:true})).toBeInViewport();
@@ -34,6 +34,7 @@ test('compact command header keeps the scene clear and all controls usable', asy
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     await page.getByRole('button',{name:'Focus your settlement',exact:true}).click();
     await page.screenshot({path:info.outputPath('compact-map-header.png')});
+    await nav.screenshot({path:info.outputPath('navigation-icon-set.png')});
     await header.getByRole('button', {name:/^Timber:/}).click();
     const supplies = page.getByRole('dialog', {name:'Timber supplies'});
     await expect(supplies).toContainText('per minute'); await expect(supplies).toContainText('stored');
