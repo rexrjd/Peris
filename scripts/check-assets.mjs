@@ -70,6 +70,8 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
     await buildRallyArt({ check: true });
     const { buildCityPreviewArt } = await import('./build-city-preview-art.mjs');
     await buildCityPreviewArt({ check: true });
+    const { buildDiplomatPortraits } = await import('./build-diplomat-portraits.mjs');
+    await buildDiplomatPortraits({ check: true });
     console.log(`Asset checks passed: ${files.length} registered GLB model(s).`);
   } catch (error) {
     console.error(error.message);

@@ -25,12 +25,18 @@ function fixture(){
  const rival={...city,id:909,owner_id:'rival',name:'Rival Court',x:city.x+128,loyalty:13,loyalty_updated_at:world.server_now};
  world.settlements.push(rival);return {world,owner,city,army,rival,now:Date.parse(world.server_now)};
 }
-test('all eleven diplomats have their own readable original vector and faction name',()=>{
+test('all eleven diplomats render distinct painted portraits with one accessible faction name',()=>{
  const names=new Set<string>();
  for(const faction of Object.keys(FACTIONS) as Faction[]){
   const name=factionTroopName(faction,'diplomat');names.add(name);
-  const output=html(React.createElement(TroopIcon,{faction,unit:'diplomat',portrait:true}));
-  assert.match(output,/<svg/);assert.match(output,/data-diplomat-faction=/);assert.ok(output.includes(name));assert.doesNotMatch(output,/roster\/|background-position/);
+  for(const portrait of [false,true]){
+   const output=html(React.createElement(TroopIcon,{faction,unit:'diplomat',portrait}));
+   assert.match(output,/<span[^>]*role="img"/);assert.ok(output.includes(`aria-label="${name}"`));
+   assert.match(output,new RegExp(`<img[^>]*data-diplomat-faction="${faction}"`));
+   assert.ok(output.includes(`src="/art/battle/diplomats-v2/${faction}.webp"`));
+   assert.match(output,/<img[^>]*alt=""[^>]*aria-hidden="true"/);
+   assert.doesNotMatch(output,/<svg|roster\/|background-position/);
+  }
  }
  assert.equal(names.size,11);
 });

@@ -33,7 +33,7 @@ test('live 3D main building links Diplomacy research and trains a named diplomat
  await expect.poll(()=>page.evaluate(()=>JSON.parse(localStorage.getItem('peris-campaign-v6')!).orders.filter((order:{kind:string;item:string})=>order.kind==='recruit'&&order.item==='diplomat').length)).toBe(1);
  await page.screenshot({path:info.outputPath('main-building-diplomat-recruitment.png')});await page.keyboard.press('Escape');
  await page.getByRole('navigation',{name:'Game navigation'}).getByRole('button',{name:'Armies',exact:true}).click();await page.locator('.army-troop-inspect[data-unit="diplomat"]').click();
- const stats=page.getByRole('dialog',{name:/Senator stats/});await expect(stats).toContainText('Main building');await expect(stats.locator('svg[data-diplomat-faction="roman"]')).toBeVisible();
+ const stats=page.getByRole('dialog',{name:/Senator stats/});await expect(stats).toContainText('Main building');await expect(stats.locator('img[data-diplomat-faction="roman"]')).toBeVisible();
  await page.screenshot({path:info.outputPath('diplomat-dossier.png')});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);expect(errors).toEqual([]);
 });
 

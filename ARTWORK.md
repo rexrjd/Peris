@@ -2,18 +2,30 @@
 
 ## Diplomatic envoys and city capture
 
-The tenth troop role uses original editable SVG portraits in
-`src/features/army/ui/diplomatPresentation.tsx`. Eleven civic titles, faction
-palettes, headwear, scrolls and wax seals give every faction a distinct envoy.
-These vectors do not reuse a combat portrait or alter the existing nine-cell atlases.
-`assets/diplomats-v1.json` records the sources and original Peris ownership.
+The tenth troop role uses eleven original painted portraits matching the existing
+faction rosters: detailed civic clothing, species anatomy, dark olive backdrops
+and thin aged-gold frames. The Roman Senator and the other ten envoys retain their
+civic titles, scrolls and seals. The shared portrait component in
+`src/features/army/ui/diplomatPresentation.tsx` supplies the same artwork to Army,
+Rally Point, recruitment, troop details and battle interfaces. Existing nine-cell
+combat atlases remain intact.
+
+The built-in image-generation tool produced the original transparent PNGs under
+`assets/source/diplomats-v2/`, using each faction's shipped roster as a style
+reference. `assets/diplomats-v2.json` records the complete prompts, references,
+ownership, hashes and export settings. `npm run build:diplomat-art` exports eleven
+512px WebPs under `public/art/battle/diplomats-v2/`; `npm run check:diplomat-art`
+verifies the complete set, source/export agreement, alpha and file-size budget.
+These paintings replace the earlier flat SVG portraits recorded historically in
+`assets/diplomats-v1.json`.
 
 The battlefield factory renders diplomats as instanced native geometry: long
 robes, a civic mantle, sealed scroll and a staff with a standard. Faction colours
 follow the two battle armies. The Canvas compatibility renderer draws the same
 robe, scroll and standard identity. Animation follows existing formation updates,
 reduced-motion settings and resource disposal. Existing GLBs, rigs and clips are
-retained; no new raster, external asset, Blender source or model export is used.
+retained. The portrait update adds no external artwork, Blender source or model
+export and does not change these battlefield models or their animation.
 Desktop/mobile UI and screenshots cover the capture review, main-building
 recruitment and finalized loyalty receipts. Frame-rate targets remain unmeasured.
 

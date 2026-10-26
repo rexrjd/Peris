@@ -1,0 +1,215 @@
+{
+  "version": 2,
+  "created": "2026-10-26",
+  "license": "original",
+  "author": "Peris",
+  "generator": "Built-in image_gen tool",
+  "description": "Original faction-specific civic diplomat portraits matching the shipped painted unit atlases. Replaces the original flat UI portraits; faction names and procedural battle models are unchanged.",
+  "output": {
+    "width": 512,
+    "height": 512,
+    "format": "webp",
+    "quality": 90,
+    "alphaQuality": 100,
+    "maxBytes": 160000
+  },
+  "portraits": [
+    {
+      "faction": "roman",
+      "name": "Senator",
+      "prompt": "Use case: historical-scene. Asset type: one square game unit portrait tile for Peris. Create ONE original Roman Senator civic diplomat matching the art of ONE CELL of the supplied Roman unit atlas, not a sheet. The reference is STYLE ONLY: same highly detailed hand-painted fantasy strategy-game rendering, realistic anatomy and tactile materials, warm upper-left key light, crisp readable silhouette, dark olive vignette background, thin aged-gold rounded square frame. Character: mature Roman-inspired human statesman, short greying curls, dignified stern face, ivory wool toga with broad deep crimson stripe, antique gold fibula, holds a rolled parchment charter with a crimson wax seal across the lower torso. No military helmet, weapon or shield. Composition: waist-up three-quarter pose, full head visible, face near upper center; body and hands fill the lower part. Frame inset roughly 6 percent from the square edges, dark olive background only INSIDE frame; genuinely transparent outside frame. Match reference portrait framing and character scale closely so this belongs beside Legionary and Eagle Guard at 48px. Not a flat vector icon, not a modern cartoon, not a giant head avatar, no labels, writing, text, lettering, logo or watermark. One single square tile only; do not reproduce the nine-cell atlas.",
+      "references": [
+        "public/art/battle/roster/roman.png"
+      ],
+      "source": "assets/source/diplomats-v2/roman.png",
+      "runtime": "public/art/battle/diplomats-v2/roman.webp",
+      "sourceSha256": "2b256c6a60ccaf19d923c236aae2248ead2e64ad113486c27638a836dee85c3c",
+      "sourceSize": [
+        1254,
+        1254
+      ],
+      "runtimeSha256": "ec0a50363bec5db66a9055ee3a2df3165b12788960e7d6c58e271cce43553957",
+      "runtimeBytes": 70080
+    },
+    {
+      "faction": "spartan",
+      "name": "Ephor",
+      "prompt": "Use case: stylized-concept. Asset type: ONE square original Peris civic diplomat portrait tile, not an atlas or contact sheet. Image 1 is the existing faction unit atlas: use it for this faction's anatomy, materials, palette and painted rendering style. Image 2 is the new Roman Senator: use it ONLY for single-tile framing, square layout, character scale, detailed rendering and lighting consistency, never for identity or costume. Match the existing roster: highly detailed painted fantasy strategy-game portrait, realistic tactile fabric/leather/metal or fur/bone, clear sharp silhouette and face, warm upper-left directional light, olive-charcoal vignette inside a thin aged-gold square frame with modest rounded corners (clipped corners for dwarf). Frame inset around six percent on all sides; fully transparent outside the framed tile, dark olive only inside. Waist-up three-quarter civic figure, full head/horns/ears visible, face near upper center and hands/sealed charter readable in the lower torso. Subject: An elderly Spartan-inspired human civic magistrate with a weathered resolute face, short grey beard, deep crimson wool himation over an ivory tunic, modest bronze fastening and thin civic headband. Holds a folded parchment decree and bronze wax-seal stamp. No military helmet, armor or shield. Constraints: one character and one square framed portrait only. No text, letters, labels, writing, logos or watermarks. No flat vector, no modern cartoon, no giant avatar head, no reused fighter. Do not copy atlas cells or reproduce multiple panels. This should sit naturally beside that faction's existing unit portraits at 48px.",
+      "references": [
+        "public/art/battle/roster/spartan.png",
+        "assets/source/diplomats-v2/roman.png"
+      ],
+      "source": "assets/source/diplomats-v2/spartan.png",
+      "runtime": "public/art/battle/diplomats-v2/spartan.webp",
+      "sourceSha256": "a0871acbba2aff1a5c970006578199abeb6ff3dcc0794b58b043f617b7598638",
+      "sourceSize": [
+        1254,
+        1254
+      ],
+      "runtimeSha256": "10b2706ab380d3fa6fd141eaf95be9ad0e04912b453421f3180ee3159000ae25",
+      "runtimeBytes": 81634
+    },
+    {
+      "faction": "persian",
+      "name": "Shah’s Envoy",
+      "prompt": "Use case: stylized-concept. Asset type: ONE square original Peris civic diplomat portrait tile, not an atlas or contact sheet. Image 1 is the existing faction unit atlas: use it for this faction's anatomy, materials, palette and painted rendering style. Image 2 is the new Roman Senator: use it ONLY for single-tile framing, square layout, character scale, detailed rendering and lighting consistency, never for identity or costume. Match the existing roster: highly detailed painted fantasy strategy-game portrait, realistic tactile fabric/leather/metal or fur/bone, clear sharp silhouette and face, warm upper-left directional light, olive-charcoal vignette inside a thin aged-gold square frame with modest rounded corners (clipped corners for dwarf). Frame inset around six percent on all sides; fully transparent outside the framed tile, dark olive only inside. Waist-up three-quarter civic figure, full head/horns/ears visible, face near upper center and hands/sealed charter readable in the lower torso. Subject: A Persian-inspired human court emissary with warm brown skin, carefully curled dark beard, layered turquoise silk robe with elegant antique gold brocade, cream inner tunic and modest patterned formal cap, a gold seal ring. Holds a rolled parchment treaty sealed with turquoise wax. Courtly, dignified and distinctly Persian, not a king or warrior. Constraints: one character and one square framed portrait only. No text, letters, labels, writing, logos or watermarks. No flat vector, no modern cartoon, no giant avatar head, no reused fighter. Do not copy atlas cells or reproduce multiple panels. This should sit naturally beside that faction's existing unit portraits at 48px.",
+      "references": [
+        "public/art/battle/roster/persian.png",
+        "assets/source/diplomats-v2/roman.png"
+      ],
+      "source": "assets/source/diplomats-v2/persian.png",
+      "runtime": "public/art/battle/diplomats-v2/persian.webp",
+      "sourceSha256": "2bad4b83a580628718ad4088e6eb54c64138f7219990107692e320c3d4efee06",
+      "sourceSize": [
+        1254,
+        1254
+      ],
+      "runtimeSha256": "b123361a445c75209eb259bb4afeedbff6c27814eec53da16ca9d8ac6667e98e",
+      "runtimeBytes": 82552
+    },
+    {
+      "faction": "egyptian",
+      "name": "Vizier",
+      "prompt": "Use case: stylized-concept. Asset type: ONE square original Peris civic diplomat portrait tile, not an atlas or contact sheet. Image 1 is the existing faction unit atlas: use it for this faction's anatomy, materials, palette and painted rendering style. Image 2 is the new Roman Senator: use it ONLY for single-tile framing, square layout, character scale, detailed rendering and lighting consistency, never for identity or costume. Match the existing roster: highly detailed painted fantasy strategy-game portrait, realistic tactile fabric/leather/metal or fur/bone, clear sharp silhouette and face, warm upper-left directional light, olive-charcoal vignette inside a thin aged-gold square frame with modest rounded corners (clipped corners for dwarf). Frame inset around six percent on all sides; fully transparent outside the framed tile, dark olive only inside. Waist-up three-quarter civic figure, full head/horns/ears visible, face near upper center and hands/sealed charter readable in the lower torso. Subject: An Egyptian-inspired human vizier with brown skin, shaved head and a modest dark-blue linen cap, ivory pleated linen robes, a deep lapis-blue and gold broad collar, gold wrist cuffs. Holds a rolled papyrus charter and small reed pen, with a formal clay seal. Dignified administrative official, not a pharaoh and not a soldier. Constraints: one character and one square framed portrait only. No text, letters, labels, writing, logos or watermarks. No flat vector, no modern cartoon, no giant avatar head, no reused fighter. Do not copy atlas cells or reproduce multiple panels. This should sit naturally beside that faction's existing unit portraits at 48px.",
+      "references": [
+        "public/art/battle/roster/egyptian.png",
+        "assets/source/diplomats-v2/roman.png"
+      ],
+      "source": "assets/source/diplomats-v2/egyptian.png",
+      "runtime": "public/art/battle/diplomats-v2/egyptian.webp",
+      "sourceSha256": "16fb681270b99336cba06f430cc704e46cdfff6973064c7ef4957bcc939f82e2",
+      "sourceSize": [
+        1254,
+        1254
+      ],
+      "runtimeSha256": "32942e0be26855bea18cc783ed3ae7f52fb70ba381c2cf378e7d3c814df91d40",
+      "runtimeBytes": 87444
+    },
+    {
+      "faction": "orc",
+      "name": "Oathspeaker",
+      "prompt": "Use case: stylized-concept. Asset type: ONE square original Peris civic diplomat portrait tile, not an atlas or contact sheet. Image 1 is the existing faction unit atlas: use it for this faction's anatomy, materials, palette and painted rendering style. Image 2 is the new Roman Senator: use it ONLY for single-tile framing, square layout, character scale, detailed rendering and lighting consistency, never for identity or costume. Match the existing roster: highly detailed painted fantasy strategy-game portrait, realistic tactile fabric/leather/metal or fur/bone, clear sharp silhouette and face, warm upper-left directional light, olive-charcoal vignette inside a thin aged-gold square frame with modest rounded corners (clipped corners for dwarf). Frame inset around six percent on all sides; fully transparent outside the framed tile, dark olive only inside. Waist-up three-quarter civic figure, full head/horns/ears visible, face near upper center and hands/sealed charter readable in the lower torso. Subject: A broad olive-green orc elder with large lower tusks, heavy brow, coarse black topknot, leathery skin and a formidable intelligent expression. Wears rough dark leather civic mantle with burnt-orange cloth and antique iron/bronze fastenings, a simple oath medallion. Massive hands hold a leather-bound treaty scroll with a bronze seal. Match the supplied orc anatomy, not a green human. Constraints: one character and one square framed portrait only. No text, letters, labels, writing, logos or watermarks. No flat vector, no modern cartoon, no giant avatar head, no reused fighter. Do not copy atlas cells or reproduce multiple panels. This should sit naturally beside that faction's existing unit portraits at 48px.",
+      "references": [
+        "public/art/battle/roster/orc.png",
+        "assets/source/diplomats-v2/roman.png"
+      ],
+      "source": "assets/source/diplomats-v2/orc.png",
+      "runtime": "public/art/battle/diplomats-v2/orc.webp",
+      "sourceSha256": "fe50731f13087ff8d34832396d59e30a579279b98854b1360b4c5e6a46dde002",
+      "sourceSize": [
+        1254,
+        1254
+      ],
+      "runtimeSha256": "b7125c3209b3655db21c45e72a9dc7e3a9a1a7525c13930246998d12300f5ba2",
+      "runtimeBytes": 92090
+    },
+    {
+      "faction": "elf",
+      "name": "Grove Emissary",
+      "prompt": "Use case: stylized-concept. Asset type: ONE square original Peris civic diplomat portrait tile, not an atlas or contact sheet. Image 1 is the existing faction unit atlas: use it for this faction's anatomy, materials, palette and painted rendering style. Image 2 is the new Roman Senator: use it ONLY for single-tile framing, square layout, character scale, detailed rendering and lighting consistency, never for identity or costume. Match the existing roster: highly detailed painted fantasy strategy-game portrait, realistic tactile fabric/leather/metal or fur/bone, clear sharp silhouette and face, warm upper-left directional light, olive-charcoal vignette inside a thin aged-gold square frame with modest rounded corners (clipped corners for dwarf). Frame inset around six percent on all sides; fully transparent outside the framed tile, dark olive only inside. Waist-up three-quarter civic figure, full head/horns/ears visible, face near upper center and hands/sealed charter readable in the lower torso. Subject: An adult high-elf female emissary with long tapered ears, refined angular face and ash-blond hair, forest-green silk and woven leaf-pattern ceremonial robe, restrained antique-gold leaf circlet and brooch. Holds a cream parchment treaty with a leaf-shaped wax seal. Calm self-possessed diplomat; no bow or military armor. Match the supplied elf faction anatomy and green-gold palette. Constraints: one character and one square framed portrait only. No text, letters, labels, writing, logos or watermarks. No flat vector, no modern cartoon, no giant avatar head, no reused fighter. Do not copy atlas cells or reproduce multiple panels. This should sit naturally beside that faction's existing unit portraits at 48px.",
+      "references": [
+        "public/art/battle/roster/elf.png",
+        "assets/source/diplomats-v2/roman.png"
+      ],
+      "source": "assets/source/diplomats-v2/elf.png",
+      "runtime": "public/art/battle/diplomats-v2/elf.webp",
+      "sourceSha256": "95e5a8df21704b6f4419c86536b4b884471bd342e14a7c455df6730a7e079b8b",
+      "sourceSize": [
+        1254,
+        1254
+      ],
+      "runtimeSha256": "c8c850f7e79b39537f1569c5e53e12d14520c4d1fc2c0ff341c4455ace069f3b",
+      "runtimeBytes": 81574
+    },
+    {
+      "faction": "dwarf",
+      "name": "Clan Lawkeeper",
+      "prompt": "Use case: stylized-concept. Asset type: ONE square original Peris civic diplomat portrait tile, not an atlas or contact sheet. Image 1 is the existing faction unit atlas: use it for this faction's anatomy, materials, palette and painted rendering style. Image 2 is the new Roman Senator: use it ONLY for single-tile framing, square layout, character scale, detailed rendering and lighting consistency, never for identity or costume. Match the existing roster: highly detailed painted fantasy strategy-game portrait, realistic tactile fabric/leather/metal or fur/bone, clear sharp silhouette and face, warm upper-left directional light, olive-charcoal vignette inside a thin aged-gold square frame with modest rounded corners (clipped corners for dwarf). Frame inset around six percent on all sides; fully transparent outside the framed tile, dark olive only inside. Waist-up three-quarter civic figure, full head/horns/ears visible, face near upper center and hands/sealed charter readable in the lower torso. Subject: A stocky dwarf elder with broad nose, deep-set eyes, a magnificent braided copper-red beard and thick eyebrows. Wears charcoal wool and leather formal clan coat, engraved brass clasps and a heavy civic chain, no helmet or weapons. Holds a compact stone-bound law ledger and rolled charter with an antique bronze seal. Match the supplied dwarf anatomy; use the reference faction's clipped-corner gold frame. Constraints: one character and one square framed portrait only. No text, letters, labels, writing, logos or watermarks. No flat vector, no modern cartoon, no giant avatar head, no reused fighter. Do not copy atlas cells or reproduce multiple panels. This should sit naturally beside that faction's existing unit portraits at 48px.",
+      "references": [
+        "public/art/battle/roster/dwarf.png",
+        "assets/source/diplomats-v2/roman.png"
+      ],
+      "source": "assets/source/diplomats-v2/dwarf.png",
+      "runtime": "public/art/battle/diplomats-v2/dwarf.webp",
+      "sourceSha256": "f60b572ac712dfb6aee5cf94b4c9ea70587fdae4ac05f711d49c1a1959d8de41",
+      "sourceSize": [
+        1254,
+        1254
+      ],
+      "runtimeSha256": "73b5352199bd00369a1e2567dd52d1783baab5a7e6a202f7b8218b5f37b9a2fe",
+      "runtimeBytes": 96426
+    },
+    {
+      "faction": "gnome",
+      "name": "Charter Minister",
+      "prompt": "Use case: stylized-concept. Asset type: ONE square original Peris civic diplomat portrait tile, not an atlas or contact sheet. Image 1 is the existing faction unit atlas: use it for this faction's anatomy, materials, palette and painted rendering style. Image 2 is the new Roman Senator: use it ONLY for single-tile framing, square layout, character scale, detailed rendering and lighting consistency, never for identity or costume. Match the existing roster: highly detailed painted fantasy strategy-game portrait, realistic tactile fabric/leather/metal or fur/bone, clear sharp silhouette and face, warm upper-left directional light, olive-charcoal vignette inside a thin aged-gold square frame with modest rounded corners (clipped corners for dwarf). Frame inset around six percent on all sides; fully transparent outside the framed tile, dark olive only inside. Waist-up three-quarter civic figure, full head/horns/ears visible, face near upper center and hands/sealed charter readable in the lower torso. Subject: A compact adult gnome civic minister with a clever slightly long-nosed face, close brown beard, burgundy cloth cap with round brass reading goggles pushed above his eyes. Wears a tailored burgundy leather-and-wool coat, antique brass buttons and a pocket watch chain. Holds a parchment charter and small brass seal stamp. Grounded realistic fantasy anatomy matching the gnome reference, not a toy or caricature. Constraints: one character and one square framed portrait only. No text, letters, labels, writing, logos or watermarks. No flat vector, no modern cartoon, no giant avatar head, no reused fighter. Do not copy atlas cells or reproduce multiple panels. This should sit naturally beside that faction's existing unit portraits at 48px.",
+      "references": [
+        "public/art/battle/roster/gnome.png",
+        "assets/source/diplomats-v2/roman.png"
+      ],
+      "source": "assets/source/diplomats-v2/gnome.png",
+      "runtime": "public/art/battle/diplomats-v2/gnome.webp",
+      "sourceSha256": "0e4fd7ec45d077b589028561ef3407c727e240ea8e68e8cfdb2993a762f276b1",
+      "sourceSize": [
+        1254,
+        1254
+      ],
+      "runtimeSha256": "6f657e7c4baecd5360fe4e5f7257fff3a5a18287879616e7bb9e9f61d3be6582",
+      "runtimeBytes": 82782
+    },
+    {
+      "faction": "pandaren",
+      "name": "Jade Mandarin",
+      "prompt": "Use case: stylized-concept. Asset type: ONE square original Peris civic diplomat portrait tile, not an atlas or contact sheet. Image 1 is the existing faction unit atlas: use it for this faction's anatomy, materials, palette and painted rendering style. Image 2 is the new Roman Senator: use it ONLY for single-tile framing, square layout, character scale, detailed rendering and lighting consistency, never for identity or costume. Match the existing roster: highly detailed painted fantasy strategy-game portrait, realistic tactile fabric/leather/metal or fur/bone, clear sharp silhouette and face, warm upper-left directional light, olive-charcoal vignette inside a thin aged-gold square frame with modest rounded corners (clipped corners for dwarf). Frame inset around six percent on all sides; fully transparent outside the framed tile, dark olive only inside. Waist-up three-quarter civic figure, full head/horns/ears visible, face near upper center and hands/sealed charter readable in the lower torso. Subject: An anthropomorphic pandaren official with a broad black-and-white panda face, round furry ears, thoughtful dark eyes and realistic dense fur. Wears a rich jade-green formal silk robe with antique gold embroidery, deep-red cords and modest black official's cap, a carved jade civic pendant. Fur-covered paws hold a bamboo scroll case and sealed parchment. Match the reference panda anatomy and restrained green-gold-red palette, not a cartoon mascot. Constraints: one character and one square framed portrait only. No text, letters, labels, writing, logos or watermarks. No flat vector, no modern cartoon, no giant avatar head, no reused fighter. Do not copy atlas cells or reproduce multiple panels. This should sit naturally beside that faction's existing unit portraits at 48px.",
+      "references": [
+        "public/art/battle/roster/pandaren.png",
+        "assets/source/diplomats-v2/roman.png"
+      ],
+      "source": "assets/source/diplomats-v2/pandaren.png",
+      "runtime": "public/art/battle/diplomats-v2/pandaren.webp",
+      "sourceSha256": "96cea21054297dd7a93b67e8a94fa3176fe5922c6b5a9f6abac5a6c2ce2f12aa",
+      "sourceSize": [
+        1254,
+        1254
+      ],
+      "runtimeSha256": "ba58209c6ae065b900e08c6fdc926ec4e16c84c6c55feb6c67eed8a8c1501db3",
+      "runtimeBytes": 85662
+    },
+    {
+      "faction": "undead",
+      "name": "Sepulchral Legate",
+      "prompt": "Use case: stylized-concept. Asset type: ONE square original Peris civic diplomat portrait tile, not an atlas or contact sheet. Image 1 is the existing faction unit atlas: use it for this faction's anatomy, materials, palette and painted rendering style. Image 2 is the new Roman Senator: use it ONLY for single-tile framing, square layout, character scale, detailed rendering and lighting consistency, never for identity or costume. Match the existing roster: highly detailed painted fantasy strategy-game portrait, realistic tactile fabric/leather/metal or fur/bone, clear sharp silhouette and face, warm upper-left directional light, olive-charcoal vignette inside a thin aged-gold square frame with modest rounded corners (clipped corners for dwarf). Frame inset around six percent on all sides; fully transparent outside the framed tile, dark olive only inside. Waist-up three-quarter civic figure, full head/horns/ears visible, face near upper center and hands/sealed charter readable in the lower torso. Subject: A regal skeletal undead civic legate with aged ivory bone skull, hollow shadowed eye sockets, visible cheekbones and jaw, wearing a muted purple ceremonial hood and black-brown brocade robes fastened with tarnished gold, a simple bone civic medallion. Holds an old parchment decree with a dark-violet wax seal. Anatomically recognizable skeletal envoy matching the reference faction, dignified and eerie, no weapon or oversized glowing effects. Constraints: one character and one square framed portrait only. No text, letters, labels, writing, logos or watermarks. No flat vector, no modern cartoon, no giant avatar head, no reused fighter. Do not copy atlas cells or reproduce multiple panels. This should sit naturally beside that faction's existing unit portraits at 48px.",
+      "references": [
+        "public/art/battle/roster/undead.png",
+        "assets/source/diplomats-v2/roman.png"
+      ],
+      "source": "assets/source/diplomats-v2/undead.png",
+      "runtime": "public/art/battle/diplomats-v2/undead.webp",
+      "sourceSha256": "8d1d54cebd5c26eb25580c3795c894674508c4b9d339e6c1227a23d0fe75e5b9",
+      "sourceSize": [
+        1254,
+        1254
+      ],
+      "runtimeSha256": "d66ca259cd3620548e728b5ddbb70ba727e5bbf3bca9cebf469a1dcb3d68a3ad",
+      "runtimeBytes": 99282
+    },
+    {
+      "faction": "demon",
+      "name": "Infernal Chancellor",
+      "prompt": "Use case: stylized-concept. Asset type: ONE square original Peris civic diplomat portrait tile, not an atlas or contact sheet. Image 1 is the existing faction unit atlas: use it for this faction's anatomy, materials, palette and painted rendering style. Image 2 is the new Roman Senator: use it ONLY for single-tile framing, square layout, character scale, detailed rendering and lighting consistency, never for identity or costume. Match the existing roster: highly detailed painted fantasy strategy-game portrait, realistic tactile fabric/leather/metal or fur/bone, clear sharp silhouette and face, warm upper-left directional light, olive-charcoal vignette inside a thin aged-gold square frame with modest rounded corners (clipped corners for dwarf). Frame inset around six percent on all sides; fully transparent outside the framed tile, dark olive only inside. Waist-up three-quarter civic figure, full head/horns/ears visible, face near upper center and hands/sealed charter readable in the lower torso. Subject: A red-skinned horned demonic chancellor with angular intelligent features, swept-back dark horns, pointed ears and subdued amber eyes. Wears layered charcoal-black and oxblood ceremonial robes, aged brass collar and obsidian civic clasp, restrained spiked trim. Clawed red hands hold a sealed black-leather parchment treaty with a dark red wax seal. Match the supplied demonic anatomy and palette; no military weapon or huge magic effects. Constraints: one character and one square framed portrait only. No text, letters, labels, writing, logos or watermarks. No flat vector, no modern cartoon, no giant avatar head, no reused fighter. Do not copy atlas cells or reproduce multiple panels. This should sit naturally beside that faction's existing unit portraits at 48px.",
+      "references": [
+        "public/art/battle/roster/demon.png",
+        "assets/source/diplomats-v2/roman.png"
+      ],
+      "source": "assets/source/diplomats-v2/demon.png",
+      "runtime": "public/art/battle/diplomats-v2/demon.webp",
+      "sourceSha256": "061bc15fc90f3c601779a346c9f7a8e6f5f560e18112151fd2f382970a250687",
+      "sourceSize": [
+        1254,
+        1254
+      ],
+      "runtimeSha256": "25dbc1bffcc9afaf1513e22d70fb4d6a940a79fb6594d2f5c838f5ed6ccc0684",
+      "runtimeBytes": 85848
+    }
+  ]
+}

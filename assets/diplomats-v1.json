@@ -3,7 +3,12 @@
   "license": "original",
   "author": "Peris",
   "created": "2026-10-24",
-  "description": "Original editable SVG civic portraits and instanced procedural robed envoys. No external artwork, raster images or GLB files.",
+  "description": "Historical first edition: original SVG civic portraits and instanced procedural robed envoys. The SVG UI artwork is superseded by the original paintings in diplomats-v2.json; the procedural battlefield models remain active.",
+  "supersededPortraits": "assets/diplomats-v2.json",
+  "historicalPortraitSource": {
+    "gitRevision": "f70426f",
+    "path": "src/features/army/ui/diplomatPresentation.tsx"
+  },
   "sources": [
     "src/features/army/ui/diplomatPresentation.tsx",
     "src/features/battle/rendering/three/soldiers.ts",
